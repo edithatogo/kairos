@@ -1,5 +1,14 @@
 # KairoECS Conductor Status
 
+## Track 70: Polars-Native Data Processing — Phase 2 Closed With Review Receipts - 23 October 2026
+
+Track 70 Phase 2 (FFI and polyglot consumers, Tasks 2.1–2.3) passed the conductor review-and-verify closeout (Task 2.4):
+- Populated owned Arrow C Data arrays/streams exported under the `native-data` feature with dual-mode explicit capability-absent ABI (no fabricated buffers/streams in default builds).
+- C headers extended with `KairoArrowArrayStream` and `kairo_ecs_export_event_log_arrow_stream` (bounded batches, validated arguments).
+- Schema v2 consumer surfaces across Python (native pyarrow capsules), TypeScript, R, and Julia, with actual-copy and unsupported-target documentation in `bindings/README.md` and per-binding READMEs; R's v1 surface was discovered and migrated during Task 2.3 (user-approved scope expansion).
+- Iterative principal-engineer review fixed two R facade precision gaps (explicit >2^53 rejection; decimal-string limb tie-breaks) and recorded cross-owner follow-ups (loader capability-flag semantics for Tracks 63/07/08; Track 66 CLI feature-default enablement).
+- All targeted Phase 2 lanes green (arrow 16+9, ffi 5+14+9/5+14+8, Python 26, TS 10, Julia 7 testsets, R 33+1 skip; phase-gates and DAG validators clean). Phase 2 is closed with approval to advance to Phase 3 pending merge of the stacked PRs #290/#291/#292 plus the closeout PR.
+
 ## Track 69: Stochastic Competing Risks & Non-Markovian Hazard Engine Review & Archival - 22 October 2026
 
 Track 69 has successfully passed implementation, comprehensive statistical and Monte Carlo validation, and Principal Software Engineer code review:

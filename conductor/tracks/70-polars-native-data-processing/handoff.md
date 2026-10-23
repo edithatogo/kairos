@@ -56,6 +56,32 @@ Track 70 remains `[~] In Progress` advancing to Phase 2 (FFI and polyglot consum
   - No new dependencies (Cargo.lock, npm, R, Julia untouched), so browser/minimal-build dependency graphs stay Polars-free; `bindings/typescript` wasm-facade smoke (browser) remains capability-safe without Arrow buffers.
 - **Cross-owner notes for review**: `include/kairo_ecs.h` + `crates/kairo-ecs-ffi` symbols (ffi/ABI owner), `bindings/typescript`, `bindings/r`, `bindings/julia` surfaces (Track 62/63/07/08 binding owners review their surfaces), `CHANGELOG.md` (release agent), `bindings/README.md` (bindings docs owner). Track 66: see deferred CLI-default item above.
 
+## Phase 2 progress — Task 2.4 (23 October 2026) — phase closeout
+
+- **Review executed**: iterative per-file `$conductor-review` (canonical conductor-review skill) over the whole Phase 2 diff `d02a010..00f523c` — 23 code/doc files excluding `conductor/`, +2,032/−326 — under claim `ae56225b58194055a26582c855aa5a31` (owner `opencode-kairos-70p4-review`), branch `feat/track-70-phase2-task-2.4` stacked on the Task 2.3 tip. Full report recorded in `review-report.md` ("Phase 2 Closeout Review").
+- **Accepted fixes applied (bindings/r — cross-owner surface, same handoff-not-takeover rule Tasks 2.3 worked under; user-approved)**:
+  - `kairoecs_exact_integer()` new exact-integer guard: entity IDs and ticks beyond 2^53 (base-R double limit) reject explicitly with contract-accurate messages, replacing silent rounding; the nullable-entity early return preserved (first rewrite dropped it — caught by the re-run lanes, fixed before receipts).
+  - `order_event_log()` limb ordering now pairs `as.numeric` with lexicographic decimal-string tie-breaks, so externally supplied rows above 2^53 stay in strict numeric order.
+  - New test `out-of-range ticks and entity ids reject explicitly` (exact 2^53 boundary passes through the limb projection; above-limit ticks/entities and negative entities reject); README precision bullet updated.
+- **Rejected/not-applied (recorded as follow-ups)**:
+  - `arrow_c_data_interface_supported = TRUE` next to `configured = FALSE` in the R/Julia loader stubs — Wave 9 (Track 63) surface outside the Phase 2 diff; recorded for the Track 63/07/08 owners.
+  - "Native data CLIs enable native-data by default" — deferred to Track 66 reconciliation (no native-data CLI consumer; `kairo-ecs-cli` has no Arrow usage); recorded since Task 2.3 in plan.md/handoff.md.
+- **Registry lockstep**: `phase-closeout.yaml` Track 70 Phase 2 entry added (state closed, fixes_applied true, full validation command list, next-phase decision); `status.md` Track 70 Phase 2 narrative block added; `tracks.yaml`/`tracks.md` stay `In Progress` unchanged (Phases 3–4 remain, so no status advance).
+- **Validation receipts (closeout re-run, 23 October 2026, token `ae56225b58194055a26582c855aa5a31`)**:
+  - `cargo test -p kairo-ecs-arrow --features polars-native --lib` → 16 passed; default `--lib` → 9 passed.
+  - `cargo test -p kairo-ecs-ffi --features native-data` → 5 lib + 9 track70 + 14 wave9, all passing; default mode → 5 + 8 + 14, all passing.
+  - `cargo clippy -p kairo-ecs-ffi --all-targets [--all-features] -- -D warnings` → clean both modes; `cargo fmt --all` → clean.
+  - `bindings/python`: disposable `uv venv` (Python 3.14, pytest 9.1.1, pyarrow 26.0.0) `python -m pytest tests -q` → **26 passed, 0 xfailed**; venv removed after the run (tree stays clean).
+  - `bindings/typescript`: `npm run typecheck` clean; `npm test` → 10 passed.
+  - `bindings/julia` (julia 1.13.2): `julia --project=. test/runtests.jl` → all 7 testsets pass.
+  - `bindings/r` (Rscript): smoke-base passed; `testthat::test_dir('tests')` → conformance 6 passed, smoke 27 passed, 1 skipped (`arrow` optional dep absent, pre-existing documented skip) — run **after** the review fixes.
+  - `cargo check -p kairo-ecs-wasm` → clean; browser/minimal dependency graphs stay Polars-free (no arrow/polars refs in wasm Cargo.toml).
+  - `pwsh scripts/validate_conductor_phase_gates.ps1` → 0 errors, 0 warnings; `pwsh scripts/validate_conductor_dag.ps1` → 0 errors, 0 warnings.
+  - Full-workspace `just ci` deliberately not run this closeout (targeted lanes per user decision); hosted Actions evidence remains recorded as hosted-only.
+- **Git closeout**: closeout commits pushed to `origin/feat/track-70-phase2-task-2.4`; closeout PR stacks on #292; ledger `commit_sha` records the review-fixes commit (`432cdb5e476e772e3b1ddadee29ae43d6a4eb8ea`) contained in the pushed closeout ref; the docs closeout commit on this branch records the receipts and ledger entry.
+- **`validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`** (post-push, docs amended): the clean-tree check passes, but the hosted validator reports **13 pre-existing ledger drift errors on Tracks 58–69** (SHAs not contained in / absent from their recorded refs — historical Wave/phase rows recorded by other sessions; one Track 70 Phase 1 row referenced a wrong 40-char SHA, now corrected to the real Phase 0 closeout commit `f75d917fd6428d647e65560563fec2ab75587773` in both this file and `phase-closeout.yaml`). Both Track 70 rows now validate against their pushed refs; the Tracks 58–69 drift is **out of this track's scope and left unmodified** — recorded here as a registry follow-up for the conductor/registry owners (pass/fail distinction preserved: Track 70 phase rows pass; workspace ledger aggregate currently fails for historical entries).
+- **Next-phase decision (recorded)**: Phase 2 CLOSED. Approved to advance to Phase 3 (durable output and execution budgets) pending maintainer merge of stacked PRs #290 → #291 → #292 plus this closeout PR. Phase 3 remains plan-gated on Tracks 93/94/96 utilities per the earlier Phase 2 gating note — that sequencing refinement is inherited unless the maintainer overrides it.
+
 ## Follow-up issues
 Task 2.3: add the C-ABI stream-export symbol and update `include/kairo_ecs.h`, public data API users, all affected native bindings and browser/minimal-build paths; document actual copies and unsupported targets explicitly (delivered 23 October 2026 — see Phase 2 progress above; remaining bindings CSharp/Go have no event-log surface to update).
 Task 2.4: Conductor phase review/verify; accepted/rejected fixes and receipts in this file; explicit next-phase decision.
@@ -67,7 +93,7 @@ Kairos delivery precedes parent CareOps pin and processing migration. Both plann
 
 - `$conductor-review`: Phase 1 review completed; native tables, extreme tick limb borrow arithmetic, real Parquet Zstd and Arrow IPC writers/readers, and lazy transforms verified.
 - accepted fixes: All 4 review suggestions from Codex connector incorporated into `crates/kairo-ecs-arrow/src/polars_interop.rs` and `track70_phase1_native_tables.rs`.
-- commit SHA: `f75d9178ad3a9482d8d85f67e584f74d081be802` (merged Phase 0 closeout PR #288 on `origin/main`); Phase 1 PR #289.
+- commit SHA: `f75d917fd6428d647e65560563fec2ab75587773` (merged Phase 0 closeout PR #288 on `origin/main`; ledger/handoff corrected in the Phase 2 closeout after `validate_conductor_git_closeout.ps1` flagged the previously recorded 40-char SHA as nonexistent); Phase 1 PR #289.
 - pushed ref: `origin/main`
 - `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: verified clean tree state across phase closeout.
 - next-phase decision: Phase 1 is closed and approved to advance to Phase 2 (FFI and polyglot consumers: Tasks 2.1–2.4).
