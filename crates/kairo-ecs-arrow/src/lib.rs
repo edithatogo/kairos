@@ -9,6 +9,11 @@ use std::fmt::{Display, Formatter};
 #[cfg(feature = "arrow-native")]
 pub mod native_schema;
 
+/// Track 70 Phase 1: Polars tabular processing and interchange. Default-off,
+/// so minimal-core and Wasm builds remain free of Polars.
+#[cfg(feature = "polars-native")]
+pub mod polars_interop;
+
 pub const SCHEMA_VERSION: u16 = 1;
 pub const SCHEMA_VERSION_V2: u16 = 2;
 pub const EVENT_LOG_SCHEMA_MAJOR: u16 = 1;
