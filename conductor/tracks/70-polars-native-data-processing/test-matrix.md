@@ -12,3 +12,5 @@ All runtime rows below are required future tests, not tests already implemented 
 | phase-closeout-check | Conductor review, fixes, clean source, exact receipts; unavailable hardware/hosted checks remain unavailable |
 
 Planning validators: `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`; `pwsh -NoProfile -File scripts/validate_conductor_dag.ps1`. Final runtime lane: `just ci`, relevant binding and independent-reader tests. Closeout: `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`. Read-only hosted configuration: `just quality-drift`; preserve pass/drift/pending/unavailable distinctions.
+
+Inventory gate: each digest/staging/property target has a source path, owner, removal or retention decision and, where required, an exact dependent task and receipt/oracle. No affected dispatch with unresolved required work. Unrelated tasks remain eligible; all existing runtime acceptance oracles remain mandatory.

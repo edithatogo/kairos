@@ -24,3 +24,7 @@ Kairos delivery precedes parent CareOps pin and processing migration. Both plann
 - pushed ref: `origin/main`
 - `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: verified clean tree state across phase closeout.
 - next-phase decision: Phase 1 is closed and approved to advance to Phase 2 (FFI and polyglot consumers: Tasks 2.1–2.4).
+
+## Sequencing revision — 23 October 2026
+
+User-authorized planning change: supporting dependencies gate only demonstrated affected tasks. The existing implementation history and phase decisions above are preserved. No runtime paths, FMI work, pins, acceptance statuses or phase closeouts changed. See the Conductor dependency-sequencing.md decision contract.

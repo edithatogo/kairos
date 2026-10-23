@@ -787,7 +787,7 @@ Reconciled all completed work from `codex/track49-distributed-synchronization` (
 
 ## Dependency sequencing refinement
 
-See [current sequencing](dependency-sequencing.md): bounded sha2/tempfile/proptest before Polars acceptance; thiserror after CLI foundation and before RNG; diagnostics/concurrency/state-machine additions conditional. No implementation acceptance.
+See [current sequencing](dependency-sequencing.md): Polars inventory first, with sha2/tempfile/proptest gated only at demonstrated dependent tasks; thiserror after CLI foundation and before RNG; diagnostics/concurrency/state-machine additions conditional. No implementation acceptance.
 
 ## Validation/tooling refinement
 

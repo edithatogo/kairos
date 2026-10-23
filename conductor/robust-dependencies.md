@@ -30,10 +30,10 @@ One canonical track per dependency lives in its owning repository. Kairos owns g
 | Valhalla | CareOps `valhalla_transport_20261022` | Conditional, later | petgraph_spatial_routing_20261022:R31 |
 | MapLibre GL JS | CareOps `maplibre_regional_viewer_20261022` | Conditional, later | valhalla_transport_20261022:R42 + Three.js R35 |
 | SUMO | CareOps `sumo_traffic_qualification_20261022` | Conditional, later | valhalla_transport_20261022:R42 |
-| sha2 | [Track 93](tracks/93-sha2-integrity/index.md) | foundation | none; before 70 |
-| tempfile | [Track 94](tracks/94-tempfile-publication/index.md) | foundation | none; before 70 |
+| sha2 | [Track 93](tracks/93-sha2-integrity/index.md) | foundation | none; qualify retained targets during 70 inventory |
+| tempfile | [Track 94](tracks/94-tempfile-publication/index.md) | foundation | none; qualify retained targets during 70 inventory |
 | thiserror | [Track 95](tracks/95-thiserror-contracts/index.md) | foundation | 77; before 71 |
-| proptest | [Track 96](tracks/96-proptest-invariants/index.md) | foundation expansion | none; before 70 |
+| proptest | [Track 96](tracks/96-proptest-invariants/index.md) | foundation expansion | none; qualify retained targets during 70 inventory |
 | tracing | [Track 97](tracks/97-tracing-diagnostics/index.md) | conditional | 78 |
 | loom | [Track 98](tracks/98-loom-concurrency/index.md) | evaluation | 78 |
 | proptest-state-machine | [Track 99](tracks/99-proptest-state-machine/index.md) | evaluation | 96 |
@@ -41,9 +41,9 @@ One canonical track per dependency lives in its owning repository. Kairos owns g
 
 ## Immediate serial priority
 
-Kairos 93/94/96 foundations → both accepted Polars migrations → Kairos 74 Serde → 75 serde_json → 76 TOML → 77 Clap → Kairos 95 / CareOps thiserror → existing Kairos 71/CareOps rand → existing Kairos 72/CareOps rand_distr → Kairos 78 Rayon plus parent consumer verification → existing ECharts → petgraph → Three.js.
+Kairos 70 inventory → task-specific 93/94/96 work where required → both accepted Polars migrations → Kairos 74 Serde → 75 serde_json → 76 TOML → 77 Clap → Kairos 95 / CareOps thiserror → existing Kairos 71/CareOps rand → existing Kairos 72/CareOps rand_distr → Kairos 78 Rayon plus parent consumer verification → existing ECharts → petgraph → Three.js.
 
-This is scheduling priority, not a claim every library technically depends on its predecessor. Polars already owns table processing; reconcile eliminated targets rather than rebuilding them. Track 74 entry checks CareOps R14; Track 78 entry checks CareOps R25; ECharts R26.1 checks Track 78. External gates cannot be proven by either local DAG alone. Polars now has bounded integrity/tempfile/property prerequisites; see the sequencing register.
+This is scheduling priority, not a claim every library technically depends on its predecessor. Polars already owns table processing; reconcile eliminated targets rather than rebuilding them. Track 74 entry checks CareOps R14; Track 78 entry checks CareOps R25; ECharts R26.1 checks Track 78. External gates cannot be proven by either local DAG alone. Polars retains integrity, durability and property-test obligations; dependency adoption gates only demonstrated affected tasks in the sequencing register.
 
 ## Bounded secondary work
 
