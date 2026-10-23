@@ -163,7 +163,7 @@ for (const status of ['Planned', 'Spec Approved', 'In Progress', 'In Review', 'B
 assert(parsed.tracks.length > 0, 'conductor/tracks.yaml must include tracks');
 const ids = new Set();
 for (const track of parsed.tracks) {
-  assert(/^\d{2}$/.test(track.id), `Track id must be two digits: ${track.id}`);
+  assert(/^\d{2,3}$/.test(track.id), `Track id must be two or three digits: ${track.id}`);
   assert(!ids.has(track.id), `Duplicate track id: ${track.id}`);
   ids.add(track.id);
 

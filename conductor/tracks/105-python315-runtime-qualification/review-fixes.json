@@ -1,0 +1,198 @@
+{
+  "date": "2026-10-24",
+  "baseCommit": "680c58191aaeadab811f17f81d0dfcb3c61f16cd",
+  "python": "3.15.1",
+  "executable": "/Volumes/PortableSSD/codex-worktrees/kairos-python315-conductor/.venv/bin/python",
+  "cwd": "/Volumes/PortableSSD/codex-worktrees/kairos-python315-conductor",
+  "checks": [
+    {
+      "command": "PYTHONPATH=bindings/python .venv/bin/python -m pytest bindings/python/tests -q",
+      "exit": 0,
+      "passed": 21
+    },
+    {
+      "command": "node tests/conformance/ci-binding-change-classifier-check.mjs",
+      "exit": 0
+    },
+    {
+      "command": "pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem python -ExpectedVersion 3.15.1",
+      "exit": 0,
+      "controls": "3.15.10 exact mismatch and ExpectedPrefix rejected with exit1; parser rejects missing patch/prerelease/extra components"
+    },
+    {
+      "command": "node scripts/dx/validate-toolchain-docs.mjs",
+      "exit": 0
+    },
+    {
+      "command": "pwsh -NoProfile -File scripts/validate_conductor_setup.ps1 -SkipCargo",
+      "exit": 0
+    },
+    {
+      "command": "node scripts/validation/validate-track13-metadata.mjs",
+      "exit": 0,
+      "checkedTracks": 106
+    },
+    {
+      "command": "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1",
+      "exit": 0
+    },
+    {
+      "command": ".venv/bin/python -m unittest discover -s tests -p test_prepare_npm_cli.py -v",
+      "exit": 0,
+      "passed": 1
+    },
+    {
+      "command": ".venv/bin/python -m unittest discover -s tests -p test_bootstrap_postcss_pin.py -v",
+      "exit": 0,
+      "passed": 7
+    },
+    {
+      "command": ".venv/bin/python -m unittest discover -s tests -p test_strict_npm_audit_runner.py -v",
+      "exit": 0,
+      "passed": 5
+    },
+    {
+      "command": ".venv/bin/python -m unittest discover -s tests -p test_strict_npm_audit_workflow.py -v",
+      "exit": 0,
+      "passed": 7
+    },
+    {
+      "command": ".venv/bin/python -m unittest discover -s tests -p \"test_website*cache*.py\" -v",
+      "exit": 0,
+      "passed": 28
+    },
+    {
+      "command": "npm audit --prefix website --audit-level=moderate --json (pinned npm12.1.0)",
+      "exit": 0,
+      "vulnerabilities": 0
+    }
+  ],
+  "strictBootstrapAudit": {
+    "classification": "passed_zero_reported_vulnerabilities",
+    "cwd": "/Volumes/PortableSSD/codex-worktrees/kairos-python315-conductor",
+    "reviewed_source_reference_commit": "ad3379dade50ece748eec3f47e85aa56605beec7",
+    "started_at": "2026-10-23T14:05:50.823559+00:00",
+    "checks": [
+      {
+        "argv": [
+          "git",
+          "rev-parse",
+          "HEAD"
+        ],
+        "cwd": "/Volumes/PortableSSD/codex-worktrees/kairos-python315-conductor",
+        "started_at": "2026-10-23T14:05:50.827849+00:00",
+        "stdout_sha256": "2b756f07db9008204823f3ab185371343ea63252439ba8ba25b1f09ff39c18c6",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "exit": 0,
+        "finished_at": "2026-10-23T14:05:50.851777+00:00"
+      },
+      {
+        "argv": [
+          "/opt/homebrew/Cellar/node@22/22.23.4/bin/node",
+          "--version"
+        ],
+        "cwd": "/Volumes/PortableSSD/codex-worktrees/kairos-python315-conductor",
+        "started_at": "2026-10-23T14:05:50.852743+00:00",
+        "stdout_sha256": "2266957ed9a639bd7264d714bfa798a961510bf2e50695c668ab8fc0c3f4e906",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "exit": 0,
+        "finished_at": "2026-10-23T14:05:50.886265+00:00"
+      },
+      {
+        "argv": [
+          "/opt/homebrew/Cellar/node@22/22.23.4/bin/node",
+          "/Volumes/PortableSSD/codex-worktrees/kairos-python315-conductor/scripts/bootstrap-node-tools/node_modules/npm/bin/npm-cli.js",
+          "--version"
+        ],
+        "cwd": "/Volumes/PortableSSD/codex-worktrees/kairos-python315-conductor",
+        "started_at": "2026-10-23T14:05:50.889698+00:00",
+        "stdout_sha256": "a712c758275b460d18fa77a26ed3589689bb3f69dcc1ea99b913e32db92a5cd2",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "exit": 0,
+        "finished_at": "2026-10-23T14:05:51.200225+00:00"
+      },
+      {
+        "argv": [
+          "/opt/homebrew/Cellar/node@22/22.23.4/bin/node",
+          "/Volumes/PortableSSD/codex-worktrees/kairos-python315-conductor/scripts/bootstrap-node-tools/validate_npm_cli.mjs"
+        ],
+        "cwd": "/Volumes/PortableSSD/codex-worktrees/kairos-python315-conductor",
+        "started_at": "2026-10-23T14:05:51.202842+00:00",
+        "stdout_sha256": "e66040c875890b21a737bfcd6310206bc05af08fd895254dcd9b8e626ed2d4f2",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "exit": 0,
+        "finished_at": "2026-10-23T14:05:52.108463+00:00"
+      },
+      {
+        "argv": [
+          "/opt/homebrew/Cellar/node@22/22.23.4/bin/node",
+          "/Volumes/PortableSSD/codex-worktrees/kairos-python315-conductor/scripts/bootstrap-node-tools/node_modules/npm/bin/npm-cli.js",
+          "audit",
+          "--prefix",
+          "scripts/bootstrap-node-tools",
+          "--json",
+          "--registry=https://registry.npmjs.org/",
+          "--update-notifier=false"
+        ],
+        "cwd": "/Volumes/PortableSSD/codex-worktrees/kairos-python315-conductor",
+        "started_at": "2026-10-23T14:05:52.109815+00:00",
+        "stdout_sha256": "850ce8807746516182c3f35304c354d5a81a8dd3fe71842cc750ac9c9a0e3258",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "exit": 0,
+        "finished_at": "2026-10-23T14:05:55.215347+00:00"
+      }
+    ],
+    "raw_audit": {
+      "status": "executed",
+      "argv": [
+        "/opt/homebrew/Cellar/node@22/22.23.4/bin/node",
+        "/Volumes/PortableSSD/codex-worktrees/kairos-python315-conductor/scripts/bootstrap-node-tools/node_modules/npm/bin/npm-cli.js",
+        "audit",
+        "--prefix",
+        "scripts/bootstrap-node-tools",
+        "--json",
+        "--registry=https://registry.npmjs.org/",
+        "--update-notifier=false"
+      ],
+      "cwd": "/Volumes/PortableSSD/codex-worktrees/kairos-python315-conductor",
+      "started_at": "2026-10-23T14:05:52.109815+00:00",
+      "stdout_sha256": "850ce8807746516182c3f35304c354d5a81a8dd3fe71842cc750ac9c9a0e3258",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exit": 0,
+      "finished_at": "2026-10-23T14:05:55.215347+00:00"
+    },
+    "scope": "Private bootstrap tree audit; not public advisory closure or release acceptance",
+    "tool_pin_boundary": "Node path and SHA-256 are supplied by the trusted CI tool setup; this runner records and enforces that pin.",
+    "source_sha256_expected": {
+      "scripts/bootstrap-node-tools/package.json": "6fa5e6f92a147021e0953523e5f73ed8f4a12779a39593c55709e356861f23fe",
+      "scripts/bootstrap-node-tools/package-lock.json": "7c6c126c1b19b5af551baa742e47f4568d815822462f5ef9e9ecfb32011698d5",
+      "scripts/bootstrap-node-tools/prepare_npm_cli.py": "2963675f1d3c8071a889408c16d4afae950d5db06867088b144e61b782b1dc51",
+      "scripts/bootstrap-node-tools/validate_npm_cli.mjs": "44ff376d57e80047cbe1320b706aaf282220b9f7bf0e3c1a23f042422c829f46"
+    },
+    "source_sha256_observed": {
+      "scripts/bootstrap-node-tools/package.json": "6fa5e6f92a147021e0953523e5f73ed8f4a12779a39593c55709e356861f23fe",
+      "scripts/bootstrap-node-tools/package-lock.json": "7c6c126c1b19b5af551baa742e47f4568d815822462f5ef9e9ecfb32011698d5",
+      "scripts/bootstrap-node-tools/prepare_npm_cli.py": "2963675f1d3c8071a889408c16d4afae950d5db06867088b144e61b782b1dc51",
+      "scripts/bootstrap-node-tools/validate_npm_cli.mjs": "44ff376d57e80047cbe1320b706aaf282220b9f7bf0e3c1a23f042422c829f46"
+    },
+    "tool_hashes": {
+      "node_path_argument": "/opt/homebrew/Cellar/node@22/22.23.4/bin/node",
+      "node_path_resolved": "/opt/homebrew/Cellar/node@22/22.23.4/bin/node",
+      "node_sha256": "8cf1d095c8348e241a78c91fb2b6a1cb59dcb1cec1a584d4e27c68c538c3290c",
+      "npm_cli_path_resolved": "/Volumes/PortableSSD/codex-worktrees/kairos-python315-conductor/scripts/bootstrap-node-tools/node_modules/npm/bin/npm-cli.js",
+      "npm_cli_sha256": "8e5f6f3429f8cdbe693cdc29904e9d5a7b127a494bd15c804bd54c7403bfcbe7"
+    },
+    "commit": "240d5268416ffc36bb860ab38a3dba4dab3799a1",
+    "node-version": "v22.23.4",
+    "npm-version": "12.1.0",
+    "resolution": "npm 12.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-python315-conductor/scripts/bootstrap-node-tools/node_modules/npm/package.json) and make-fetch-happen 16.0.1 (/Volumes/PortableSSD/codex-worktrees/kairos-python315-conductor/scripts/bootstrap-node-tools/node_modules/make-fetch-happen/package.json) resolve the private HCS archive payload",
+    "finished_at": "2026-10-23T14:05:55.216017+00:00"
+  },
+  "priorFailures": "Initial strict audit correctly failed on newly published GHSA-rxp7-6hxx-x8q5; exact ip-address10.7.4 override/remediation passed a fresh audit. Website audit failed on Vite8.3.1; lock-only Vite8.3.5 and required transitive updates passed fresh audit. Source-hash controls refreshed after reviewed byte changes; no exception/waiver.",
+  "advisories": [
+    "https://github.com/advisories/GHSA-rxp7-6hxx-x8q5",
+    "https://github.com/advisories/GHSA-587h-7wmj-h5pm"
+  ],
+  "ownership": "Fresh CHANGELOG claim succeeded after explicit Polars-owner release; no Polars implementation, plan, worktree or environment changed.",
+  "limits": "Local focused proof only; final-head hosted checks, protected merge and main runtime readback pending."
+}
