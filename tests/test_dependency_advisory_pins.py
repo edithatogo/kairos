@@ -86,6 +86,9 @@ class DependencyAdvisoryPinTests(unittest.TestCase):
         for name in ['docs-quality.yml', 'docs.yml']:
             with self.subTest(workflow=name):
                 workflow = (ROOT / '.github/workflows' / name).read_text()
+                if name == 'docs.yml':
+                    self.assertIn('  pull_request:', workflow)
+                    self.assertIn("if: github.ref == 'refs/heads/main'", workflow)
                 command = "python3 -m unittest discover -s tests -p test_dependency_advisory_pins.py -v"
                 self.assertIn(command, workflow)
                 self.assertIn('dependency-pin-tests.log', workflow)

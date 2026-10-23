@@ -5,6 +5,17 @@ concurrency:
   cancel-in-progress: false
 
 on:
+  pull_request:
+    paths:
+      - '.github/workflows/docs.yml'
+      - 'scripts/python_runtime.py'
+      - 'tests/test_dependency_advisory_pins.py'
+      - 'tests/test_website*cache*.py'
+      - 'scripts/bootstrap-node-tools/apply_http_cache_fix.py'
+      - 'conductor/**'
+      - 'docs/**'
+      - 'website/**'
+      - '*.md'
   push:
     branches: [main]
   workflow_dispatch:
