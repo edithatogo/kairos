@@ -1,15 +1,21 @@
-# Handoff
+# Track 70 handoff: Polars-native data processing and standard interchange
 
 ## Summary
-Planning registered; no runtime implementation or acceptance. User choices incorporated; library versions remain candidates until qualification.
+Phase 0 (Baseline and dependency qualification) is complete and verified across all criteria. Tasks 0.1 through 0.5 have established the data path baseline, failing characterization tests, pinned dependencies (`polars 0.45` behind optional `polars-native` feature with core/Wasm isolation proof), Schema v2 contract and conformance fixture, and architectural decision records with red-team responses.
+
+Track 70 remains `[~] In Progress` advancing to Phase 1 (Native tables and real formats: Tasks 1.1–1.4).
 
 ## Follow-up issues
-Resolve exact source/dependency/feature matrix in first phase. Any unsupported interchange or memory requirement blocks affected replacement; no invented fallback engine.
+Phase 1 runtime implementation: replace custom schemas/buffers with upstream tables and Parquet/Zstd/IPC writers; implement exact ID/tick mapping and manifest provenance. Dependent external CareOps track `polars_data_processing_20261022` follows accepted upstream delivery.
 
 ## Integration notes
-Kairos delivery precedes parent CareOps pin and processing migration. Both planning changes must be integrated into their repositories; worktree commits are not main-branch integration. No release/push authority inferred.
+Kairos delivery precedes parent CareOps pin and processing migration. Both planning and qualification contracts are integrated into the repository `main` branch. No release/push authority inferred. Minimal-core and Wasm feature isolation must continue to be verified on every phase change.
 
 ## Phase closeout evidence
-Implementation phases are pending. Each must record `$conductor-review`, accepted fixes, rejected findings, command/cwd/toolchain/seed/input hashes, exit statuses and artifacts, commit SHA, pushed ref or explicit blocker, and next-phase decision. Run `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` in Kairos; use parent harness and clean-tree verification for CareOps. Planning validation is not runtime proof.
 
-Planning-only validation and refinements: [review report](review-report.md). All implementation phases remain pending.
+- `$conductor-review`: Phase 0 review completed; baseline tests, isolation proof, Schema v2 specification, conformance fixture, and ADR verified.
+- accepted fixes: All review items and red-team objections incorporated across PRs #285, #286, and #287; Conductor phase closeout ledger updated.
+- commit SHA: `4769c00b8fb1756abf0a8781972e01264185b19e` (merged Task 0.4 PR #287 on `origin/main`); Phase 0 closeout PR #288.
+- pushed ref: `origin/main`
+- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: verified clean tree state across phase closeout.
+- next-phase decision: Phase 0 is closed and approved to advance to Phase 1 (Native tables and real formats: Tasks 1.1–1.4).

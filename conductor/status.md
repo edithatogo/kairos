@@ -775,7 +775,7 @@ Reconciled all completed work from `codex/track49-distributed-synchronization` (
 
 ## Track 70 in progress — 23 October 2026
 
-[Track 70](tracks/70-polars-native-data-processing/index.md) is In Progress under Phase 0 qualification and Schema v2 contracts. Dependencies 04/62/63 are routing context, not runtime proof. Complete upstream Phase 4 before CareOps `polars_data_processing_20261022` adopts the pin.
+[Track 70](tracks/70-polars-native-data-processing/index.md) has completed Phase 0 qualification and Schema v2 contracts, advancing to Phase 1 (Native tables and real formats). Dependencies 04/62/63 are routing context, not runtime proof. Complete upstream Phase 4 before CareOps `polars_data_processing_20261022` adopts the pin.
 
 ## Library adoption planning — 22 October 2026
 
