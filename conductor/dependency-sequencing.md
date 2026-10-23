@@ -38,7 +38,7 @@ CareOps planning publication is reconciled; runtime candidate qualification rema
 
 If reconciliation removes every candidate target, do not install a dependency to satisfy a graph edge. Record an accepted scope-elimination decision with evidence and update the affected prerequisite registry/receipt under coordinator review before dispatch; keep adoption tasks unimplemented. A no-go decision alone does not silently satisfy an existing gate.
 
-[Planning review and validation](dependency-sequencing-review.md)
+[Current sequencing review and validation](polars-sequencing-review-20261023.md). The [22 October review](dependency-sequencing-review.md) is historical and does not validate the revised graph.
 
 ## Schema validation, existing tooling and conditional capabilities
 
