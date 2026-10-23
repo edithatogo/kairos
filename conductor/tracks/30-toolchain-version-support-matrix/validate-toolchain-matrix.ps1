@@ -60,6 +60,19 @@ function Assert-RustVersionParserContract {
 
 Assert-RustVersionParserContract
 
+function ConvertFrom-PythonVersionText {
+    param([string]$Text)
+    if ($Text -cmatch '^Python ([0-9]+\.[0-9]+\.[0-9]+)$') { return $Matches[1] }
+    throw "Could not parse exact final Python version from: $Text"
+}
+
+if ((ConvertFrom-PythonVersionText 'Python 3.15.1') -cne '3.15.1') { throw "Python parser lost the patch version." }
+foreach ($text in @('Python 3.15', 'Python 3.15.1rc1', 'Python 3.15.1.1', 'Python 3.15.1 extra')) {
+    $rejected = $false
+    try { [void](ConvertFrom-PythonVersionText $text) } catch { $rejected = $true }
+    if (-not $rejected) { throw "Python parser incorrectly accepted: $text" }
+}
+
 function Get-InstalledVersion {
     param([string]$Name)
 
@@ -70,8 +83,7 @@ function Get-InstalledVersion {
         }
         "python" {
             $text = Get-CommandOutput @("python", "--version")
-            if ($text -match "Python\s+([0-9]+\.[0-9]+)") { return $Matches[1] }
-            throw "Could not parse Python version from: $text"
+            return ConvertFrom-PythonVersionText $text
         }
         "r" {
             $text = Get-CommandOutput @("Rscript", "-e", "cat(as.character(getRversion()))")
@@ -214,10 +226,10 @@ if ($CheckInstalled) {
     }
 
     $actual = Get-InstalledVersion -Name $Ecosystem.ToLowerInvariant()
-    if ($Ecosystem -eq "rust") {
-        if ([string]::IsNullOrWhiteSpace($ExpectedVersion) -or -not [string]::IsNullOrWhiteSpace($ExpectedPrefix)) { throw "Rust checks require -ExpectedVersion and reject -ExpectedPrefix." }
-        if ($actual -ne $ExpectedVersion) { throw "Rust version mismatch: expected exact $ExpectedVersion, got $actual." }
-        Write-Host "Rust installed version check passed: exact $actual"
+    if ($Ecosystem -in @("rust", "python")) {
+        if ([string]::IsNullOrWhiteSpace($ExpectedVersion) -or -not [string]::IsNullOrWhiteSpace($ExpectedPrefix)) { throw "$Ecosystem checks require -ExpectedVersion and reject -ExpectedPrefix." }
+        if ($actual -ne $ExpectedVersion) { throw "$Ecosystem version mismatch: expected exact $ExpectedVersion, got $actual." }
+        Write-Host "$Ecosystem installed version check passed: exact $actual"
     } else {
         if ([string]::IsNullOrWhiteSpace($ExpectedPrefix) -or -not [string]::IsNullOrWhiteSpace($ExpectedVersion)) { throw "-CheckInstalled requires -ExpectedPrefix for $Ecosystem and rejects -ExpectedVersion." }
         if (-not $actual.StartsWith($ExpectedPrefix)) { throw "$Ecosystem version mismatch: expected prefix $ExpectedPrefix, got $actual." }

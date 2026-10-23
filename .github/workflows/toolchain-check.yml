@@ -100,8 +100,8 @@ jobs:
       - name: Validate installed Python
         shell: pwsh
         env:
-          EXPECTED_PREFIX: ${{ matrix.python-version }}
-        run: pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem python -ExpectedPrefix $env:EXPECTED_PREFIX
+          EXPECTED_VERSION: ${{ matrix.python-version }}
+        run: pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem python -ExpectedVersion $env:EXPECTED_VERSION
 
   r:
     name: R ${{ matrix.r-version }}

@@ -1,13 +1,13 @@
 """Event-log v1 smoke roundtrip helpers for the Python binding."""
 
+from __future__ import annotations
+
 import ctypes
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, TypeVar
+from typing import Any
 
 from ._types import DispatchedEvent, EntityId, EventId
-
-_HandleT = TypeVar("_HandleT", EventId, EntityId)
 
 SCHEMA_VERSION = 1
 EVENT_LOG_STREAM = "kairo_ecs.event_log.v1"
@@ -50,7 +50,7 @@ class EventLogRecord:
     payload_ref: str | None = None
 
     @classmethod
-    def dispatched(cls, run_id: str, event: DispatchedEvent) -> "EventLogRecord":
+    def dispatched(cls, run_id: str, event: DispatchedEvent) -> EventLogRecord:
         return cls(
             schema_version=SCHEMA_VERSION,
             run_id=run_id,
@@ -81,7 +81,9 @@ class EventLogRecord:
 class EventLogBatch:
     records: tuple[EventLogRecord, ...]
 
-    def __init__(self, records: list[EventLogRecord] | tuple[EventLogRecord, ...]) -> None:
+    def __init__(
+        self, records: list[EventLogRecord] | tuple[EventLogRecord, ...]
+    ) -> None:
         for record in records:
             record.validate()
         object.__setattr__(self, "records", tuple(records))
@@ -126,14 +128,18 @@ class EventLogBatch:
         try:
             import pyarrow as pa
         except ModuleNotFoundError as exc:
-            raise RuntimeError("pyarrow is required for Arrow table roundtrips") from exc
+            raise RuntimeError(
+                "pyarrow is required for Arrow table roundtrips"
+            ) from exc
 
         rows = [
             {
                 "schema_version": record.schema_version,
                 "run_id": record.run_id,
                 "event_id": _handle_bytes(record.event_id),
-                "entity_id": _handle_bytes(record.entity_id) if record.entity_id else None,
+                "entity_id": _handle_bytes(record.entity_id)
+                if record.entity_id
+                else None,
                 "time_ticks": record.time_ticks.to_bytes(16, "little"),
                 "time_scale": record.time_scale,
                 "priority": record.priority,
@@ -162,7 +168,7 @@ class EventLogBatch:
         return pa.Table.from_pylist(rows, schema=schema)
 
     @classmethod
-    def from_smoke_bytes(cls, payload: bytes) -> "EventLogBatch":
+    def from_smoke_bytes(cls, payload: bytes) -> EventLogBatch:
         lines = payload.decode("utf-8").splitlines()
         expected_header = f"stream={EVENT_LOG_STREAM};schema_version={SCHEMA_VERSION}"
         if len(lines) < 2 or lines[0] != expected_header:
@@ -197,7 +203,6 @@ class EventLogBatch:
             )
         return cls(records)
 
-
     def __arrow_c_schema__(self) -> Any:
         try:
             return self.to_pyarrow_table().schema.__arrow_c_schema__()
@@ -212,10 +217,15 @@ class EventLogBatch:
                 return batches[0].__arrow_c_array__(requested_schema=requested_schema)
             import pyarrow as pa
 
-            empty_batch = pa.RecordBatch.from_pydict(self.to_column_dict(), schema=table.schema)
+            empty_batch = pa.RecordBatch.from_pydict(
+                self.to_column_dict(), schema=table.schema
+            )
             return empty_batch.__arrow_c_array__(requested_schema=requested_schema)
         except (RuntimeError, AttributeError):
-            return (_allocate_arrow_schema_capsule(), _allocate_arrow_array_capsule(len(self.records)))
+            return (
+                _allocate_arrow_schema_capsule(),
+                _allocate_arrow_array_capsule(len(self.records)),
+            )
 
     def export_arrow_c_capsule_descriptor(self) -> dict[str, Any]:
         schema_cap, array_cap = self.__arrow_c_array__()
@@ -244,7 +254,7 @@ class EventLogBatch:
         }
 
     @classmethod
-    def from_pyarrow_table(cls, table: Any) -> "EventLogBatch":
+    def from_pyarrow_table(cls, table: Any) -> EventLogBatch:
         if tuple(table.schema.names) != tuple(field[0] for field in EVENT_LOG_FIELDS):
             raise ValueError("unexpected Arrow event-log field order")
 
@@ -278,18 +288,22 @@ def _handle_bytes(handle: EventId | EntityId) -> bytes:
     return handle.index.to_bytes(8, "little") + handle.generation.to_bytes(4, "little")
 
 
-def _parse_handle(hex_value: str, kind: type[_HandleT]) -> _HandleT:
+def _parse_handle[HandleT: (EventId, EntityId)](
+    hex_value: str, kind: type[HandleT]
+) -> HandleT:
     if len(hex_value) != 24:
         raise ValueError("handle must be 12 bytes")
     return _parse_handle_bytes(bytes.fromhex(hex_value), kind)
 
 
-def _parse_handle_bytes(
-    payload: bytes, kind: type[_HandleT]
-) -> _HandleT:
+def _parse_handle_bytes[HandleT: (EventId, EntityId)](
+    payload: bytes, kind: type[HandleT]
+) -> HandleT:
     if len(payload) != 12:
         raise ValueError("handle must be 12 bytes")
-    return kind(int.from_bytes(payload[:8], "little"), int.from_bytes(payload[8:12], "little"))
+    return kind(
+        int.from_bytes(payload[:8], "little"), int.from_bytes(payload[8:12], "little")
+    )
 
 
 def _escape_cell(value: str) -> str:
@@ -304,7 +318,9 @@ def _unescape_cell(value: str) -> str:
         if char == "\\" and index + 1 < len(value):
             index += 1
             next_char = value[index]
-            output.append({"t": "\t", "n": "\n", "\\": "\\"}.get(next_char, "\\" + next_char))
+            output.append(
+                {"t": "\t", "n": "\n", "\\": "\\"}.get(next_char, "\\" + next_char)
+            )
         else:
             output.append(char)
         index += 1
@@ -398,4 +414,3 @@ def _allocate_arrow_array_capsule(length: int) -> Any:
     )
     _LIVE_CAPSULE_KEEPALIVE.append((array, buf_ptr))
     return _PYCAPSULE_NEW(ctypes.addressof(array), b"arrow_array", None)
-
