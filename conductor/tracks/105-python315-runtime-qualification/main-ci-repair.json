@@ -1,0 +1,58 @@
+{
+  "date": "2026-10-24",
+  "baseCommit": "14c100168a87dcaa02d13ca2967af69a959a76cd",
+  "cwd": "/Volumes/PortableSSD/codex-worktrees/kairos-python315-conductor",
+  "python": "3.15.1",
+  "mainFindings": {
+    "docs": "Native main docs workflow omitted dependency-pin-tests.log and its source checksum; PR docs-quality workflow had both. Both now have regression coverage.",
+    "scorecard": "12 actual main Scorecard VulnerabilitiesID advisories trace to active TypeScript/template Vite/Vitest and Mermaid tooling DOMPurify/KaTeX. Bounded dependency fixes retain strict gates.",
+    "dependencyGraph": "Hosted Dependabot update-pip-graph rejected >=3.15.1,<3.16, supports only3.10\u20133.14. Upstream provider failure retained; shared adapter preparation is separately owned. No downgrade/feature disabling."
+  },
+  "checks": [
+    {
+      "command": ".venv/bin/python -m unittest discover -s tests -p test_dependency_advisory_pins.py -v",
+      "exit": 0,
+      "passed": 5
+    },
+    {
+      "command": ".venv/bin/python -m unittest discover -s tests -p test_website_cache_evidence.py -v",
+      "exit": 0,
+      "passed": 14
+    },
+    {
+      "command": "actionlint .github/workflows/docs.yml",
+      "exit": 0
+    },
+    {
+      "command": "npm ci --ignore-scripts in bindings/typescript and tools/docs-quality-node-tools",
+      "exit": 0,
+      "auditVulnerabilities": 0
+    },
+    {
+      "command": "npm --prefix bindings/typescript run typecheck / run build / test",
+      "exit": 0,
+      "testFiles": 2,
+      "testsPassed": 9
+    }
+  ],
+  "rendererRefinement": {
+    "finding": "Mermaid11.17.2 prebuilt ESM chunks embed DOMPurify3.4.12 and KaTeX0.16.47 even when package metadata resolves patched dependencies. Mermaid12.2.0 also embeds old sanitizer. Metadata-only audits do not prove renderer remediation.",
+    "experiment": "Existing website-locked esbuild bundles the published Mermaid core entry with installed patched DOMPurify3.4.17/KaTeX0.18.2. Metafile has no prebuilt ESM inputs or external imports; actual CLI/Chrome MathML SVG render passes.",
+    "artifacts": [
+      {
+        "path": "artifacts/python315-main-ci-repair/mermaid-runtime.mjs",
+        "sha256": "b2b25a5d6507d3dcf968c9eb82993028d343b5f63b5f638eb18ac65dc1ebe10d"
+      },
+      {
+        "path": "artifacts/python315-main-ci-repair/mermaid-runtime-meta.json",
+        "sha256": "cc3f7b484312202454389d0c65fe9c236ccde56250ac40ca7bf3374aee18bc05"
+      },
+      {
+        "path": "artifacts/python315-main-ci-repair/math.svg",
+        "sha256": "b25f7b860369f73a61563a02721149f8f724a330d8c4302a04f0edcf58e9bba9"
+      }
+    ],
+    "status": "Experimental local qualification only; maintained preparation, negative-control test and CI wiring are the next bounded slice."
+  },
+  "limits": "Candidate not yet PR/main accepted. No Polars source/plan/worktree/env changed; no advisory dismissed or gate relaxed."
+}
