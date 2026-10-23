@@ -53,7 +53,7 @@
 //! # Error taxonomy
 //!
 //! Errors are hand-rolled like [`crate::ArrowError`] (this crate carries no
-//! `thiserror` dependency). [`RunOutputError::NotImplementedUntilTask32`] is
+//! `thiserror` dependency). `RunOutputError::NotImplementedUntilTask32` is
 //! retained as a never-constructed variant only so the Task 3.1 test suite's
 //! imports keep compiling until it is retired with the Phase 3 closeout;
 //! every other variant is live.

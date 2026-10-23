@@ -19,8 +19,8 @@
 use kairo_ecs_ffi::{
     kairo_ecs_engine_free, kairo_ecs_engine_new, kairo_ecs_export_event_log_arrow_array,
     kairo_ecs_export_event_log_arrow_schema, kairo_ecs_export_event_log_arrow_stream,
-    kairo_ecs_schedule_at, kairo_ecs_step, KairoArrowArray, KairoArrowArrayStream, KairoArrowSchema,
-    KairoEcsStatusCode,
+    kairo_ecs_schedule_at, kairo_ecs_step, KairoArrowArray, KairoArrowArrayStream,
+    KairoArrowSchema, KairoEcsStatusCode,
 };
 // `native-data` builds exercise cancellation through the populated mixed
 // dispatch fixture below; default builds have no populated export surface, so
