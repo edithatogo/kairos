@@ -49,6 +49,7 @@ jobs:
           test -f .github/workflows/dependency-review.yml
           test -f .github/workflows/docs-link-check.yml
           test -f .github/workflows/docs-quality.yml
+          test -f .github/workflows/python-dependency-inventory.yml
           test -f .github/workflows/docs.yml
           test -f .github/workflows/fuzzing.yml
           test -f .github/workflows/gpu-free-smoke.yml
@@ -106,6 +107,7 @@ jobs:
           test -f .github/workflows/dependency-review.yml
           test -f .github/workflows/docs-link-check.yml
           test -f .github/workflows/docs-quality.yml
+          test -f .github/workflows/python-dependency-inventory.yml
           test -f .github/workflows/docs.yml
           test -f .github/workflows/fuzzing.yml
           test -f .github/workflows/gpu-free-smoke.yml
