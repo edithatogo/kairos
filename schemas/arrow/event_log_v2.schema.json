@@ -20,17 +20,33 @@
   "properties": {
     "schema_version": { "type": "integer", "const": 2 },
     "run_id": { "type": "string" },
-    "event_id_index": { "type": "integer", "minimum": 0 },
-    "event_id_gen": { "type": "integer", "minimum": 0 },
-    "entity_id_index": { "type": ["integer", "null"], "minimum": 0 },
-    "entity_id_gen": { "type": ["integer", "null"], "minimum": 0 },
-    "time_ticks_hi": { "type": "integer", "minimum": 0 },
-    "time_ticks_lo": { "type": "integer", "minimum": 0 },
+    "event_id_index": { "type": "integer", "minimum": 0, "maximum": 18446744073709551615 },
+    "event_id_gen": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+    "entity_id_index": { "type": ["integer", "null"], "minimum": 0, "maximum": 18446744073709551615 },
+    "entity_id_gen": { "type": ["integer", "null"], "minimum": 0, "maximum": 4294967295 },
+    "time_ticks_hi": { "type": "integer", "minimum": 0, "maximum": 18446744073709551615 },
+    "time_ticks_lo": { "type": "integer", "minimum": 0, "maximum": 18446744073709551615 },
     "time_scale": { "type": "string" },
-    "priority": { "type": "integer" },
-    "sequence": { "type": "integer", "minimum": 0 },
+    "priority": { "type": "integer", "minimum": -2147483648, "maximum": 2147483647 },
+    "sequence": { "type": "integer", "minimum": 0, "maximum": 18446744073709551615 },
     "event_kind": { "type": "string" },
     "status": { "type": "string", "enum": ["dispatched", "cancelled", "skipped", "error"] },
     "payload_ref": { "type": ["string", "null"] }
-  }
+  },
+  "oneOf": [
+    {
+      "properties": {
+        "entity_id_index": { "type": "integer" },
+        "entity_id_gen": { "type": "integer" }
+      },
+      "required": ["entity_id_index", "entity_id_gen"]
+    },
+    {
+      "properties": {
+        "entity_id_index": { "type": "null" },
+        "entity_id_gen": { "type": "null" }
+      },
+      "required": ["entity_id_index", "entity_id_gen"]
+    }
+  ]
 }
