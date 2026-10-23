@@ -11,7 +11,7 @@ for spec in \
 done
 if [ ! -d .venv ]; then uv venv --python 3.15.1 .venv; fi
 source .venv/bin/activate
-python -c 'import sys; assert sys.version_info[:3] == (3, 15, 1)'
+python scripts/python_runtime.py
 uv pip sync --python .venv/bin/python scripts/bootstrap-python-tools.lock
 python3 scripts/bootstrap-node-tools/prepare_npm_cli.py --check
 npm ci --ignore-scripts --prefix scripts/bootstrap-node-tools

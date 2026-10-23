@@ -53,3 +53,7 @@ AGENTS/workflow preserve focused native selectors, per-worktree pytest cache sem
 ## Active default cleanup
 
 Track 105 now reports In Progress consistently. Active website/template/release checklist claims require Python 3.15.1; dated receipt evidence stays intact. The unused pre-tomllib developer parser fallback is removed, and the actual packaging helper resolves all 27 real workspace manifests on 3.15.1. The unrelated existing archive manifest tests (2) also pass; they are not claimed as coverage of this helper. POSIX venv creation uses supported symlinks, preserving the canonical executable provenance expected by the existing Syft validator; Windows retains copied launchers. Eight runtime cases and phase/DAG checks pass. See [active-default evidence](active-default-evidence/receipt.json).
+
+## Container and platform wiring
+
+Docker creates `/work/.venv`, verifies exact Python/prefix and selects it for the telemetry plugin. Devcontainer, devbox and bootstraps use the common version/prefix guard. Hosted session jobs run the focused refusal suite on Linux/macOS; Conductor jobs now probe the real environment on Windows/Linux; the existing Docker build lane additionally probes actual container version/prefix. No local container/Windows execution is claimed. Eight guard cases, actionlint and shell syntax pass. The cloud static validator exposes a stale bare-Alpine-image assertion; it must be updated/tested before PR. See [platform wiring receipt](platform-wiring-evidence/receipt.json).

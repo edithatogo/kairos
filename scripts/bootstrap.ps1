@@ -83,7 +83,7 @@ if (-not $SkipPython) {
         if ($LASTEXITCODE -ne 0) { throw "Python environment creation failed" }
     }
     $pythonPath = Join-Path $PWD ".venv/Scripts/python.exe"
-    & $pythonPath -c 'import sys; assert sys.version_info[:3] == (3, 15, 1)'
+    & $pythonPath scripts/python_runtime.py
     if ($LASTEXITCODE -ne 0) { throw "Expected Python 3.15.1" }
     uv pip sync --python $pythonPath scripts/bootstrap-python-tools.lock
     if ($LASTEXITCODE -ne 0) { throw "Python dependency installation failed" }

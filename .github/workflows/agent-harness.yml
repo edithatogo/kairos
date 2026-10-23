@@ -44,3 +44,5 @@ jobs:
           python3 -c 'import sys; assert sys.version_info[:3] == (3, 15, 1)'
       - name: Exercise session races and context boundaries
         run: python3 -m unittest discover -s tests/agent_harness -v
+      - name: Exercise local runtime refusal cases
+        run: python -m unittest discover -s tests -p test_local_python_runtime.py -v

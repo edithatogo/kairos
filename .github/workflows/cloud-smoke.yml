@@ -109,5 +109,9 @@ jobs:
       - name: Docker image build
         run: docker build -t kairo-ecs-cli:cloud-smoke -f docker/Dockerfile .
 
+      - name: Verify actual container Python version and local prefix
+        run: |
+          docker run --rm --entrypoint /work/.venv/bin/python kairo-ecs-cli:cloud-smoke -c 'import sys; assert sys.version_info == (3, 15, 1, "final", 0); assert sys.prefix == "/work/.venv"; print(sys.version); print(sys.executable); print(sys.prefix)'
+
       - name: CLI help smoke
         run: docker run --rm kairo-ecs-cli:cloud-smoke --help

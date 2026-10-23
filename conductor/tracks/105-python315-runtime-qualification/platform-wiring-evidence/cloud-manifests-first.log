@@ -1,0 +1,11 @@
+Traceback (most recent call last):
+  File "/Volumes/PortableSSD/codex-worktrees/kairos-python315-conductor/cloud/validate_cloud_hpc.py", line 441, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Volumes/PortableSSD/codex-worktrees/kairos-python315-conductor/cloud/validate_cloud_hpc.py", line 429, in main
+    validate_docker_surface()
+    ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/Volumes/PortableSSD/codex-worktrees/kairos-python315-conductor/cloud/validate_cloud_hpc.py", line 176, in validate_docker_surface
+    assert "FROM alpine:" in dockerfile
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

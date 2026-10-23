@@ -9,7 +9,6 @@ RUN cargo build --locked --release -p kairo-ecs-cli
 
 FROM python:3.15.1-alpine3.24@sha256:54448f67d7c31c39e5cdd3ea2d6382395ce142806c284425f8e897d78a0465b3
 RUN apk add --no-cache ca-certificates tzdata bash coreutils
-RUN python3 -c 'import sys; assert sys.version_info[:3] == (3, 15, 1)'
 COPY --from=builder /src/target/release/kairo-ecs-cli /usr/local/bin/kairo-ecs-cli
 COPY docker/entrypoint.sh /usr/local/bin/kairo-ecs-entrypoint
 COPY docker/telemetry-plugin/cloud-output.py /usr/local/bin/kairo-ecs-cloud-output
@@ -20,6 +19,10 @@ RUN addgroup -S kairo \
   && chmod +x /usr/local/bin/kairo-ecs-entrypoint /usr/local/bin/kairo-ecs-cloud-output
 ENV KAIRO_OUTPUT_DIR=/var/lib/kairo/output
 WORKDIR /work
+RUN python3 -m venv .venv \
+  && .venv/bin/python -c 'import sys; assert sys.version_info[:3] == (3, 15, 1); assert sys.prefix == "/work/.venv"'
+ENV VIRTUAL_ENV=/work/.venv
+ENV PATH="/work/.venv/bin:${PATH}"
 USER kairo
 ENTRYPOINT ["/usr/local/bin/kairo-ecs-entrypoint"]
 CMD ["--help"]

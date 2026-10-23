@@ -1,0 +1,31 @@
+{
+  "cwd": "/Volumes/PortableSSD/codex-worktrees/kairos-python315-conductor",
+  "base_commit": "df0e5be81e4c823ddf8465ad5b3abdf55e5be19c",
+  "runtime": "Python 3.15.1",
+  "results": [
+    {
+      "command": ".venv/bin/python -m unittest discover -s tests -p test_local_python_runtime.py -v",
+      "count": 8,
+      "exit_status": 0
+    },
+    {
+      "command": "actionlint -oneline .github/workflows/{agent-harness,validate-conductor,cloud-smoke}.yml",
+      "exit_status": 0
+    },
+    {
+      "command": ".venv/bin/python cloud/validate_cloud_hpc.py",
+      "exit_status": 1,
+      "reason": "Existing static validator still requires a bare Alpine runtime image; needs exact Python 3.15.1 image/local-prefix policy update before PR."
+    },
+    {
+      "command": "bash -n scripts/bootstrap.sh",
+      "exit_status": 0
+    }
+  ],
+  "logs": {
+    "conductor/tracks/105-python315-runtime-qualification/platform-wiring-evidence/cloud-manifests-first.log": "dc1c36c913e5e043b6c04c8a8307103dba769ad5dd6f3f250f38aad143ae3e79",
+    "conductor/tracks/105-python315-runtime-qualification/platform-wiring-evidence/guard-tests.log": "e3b2e080dbb2992cec244d26e806db40b2be48fc89d86eac1edfb6bf6fabbe7d",
+    "conductor/tracks/105-python315-runtime-qualification/platform-wiring-evidence/actionlint.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "acceptance": "Platform wiring only; local Docker daemon unavailable in retained prior evidence. Hosted image build/runtime and Windows prefix proof remain pending."
+}

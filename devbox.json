@@ -20,7 +20,7 @@
       "rustup component add clippy rustfmt >/dev/null 2>&1 || true",
       "test -d .venv || uv venv --python 3.15.1 .venv",
       "source .venv/bin/activate",
-      "python -c \"import sys; assert sys.version_info[:3] == (3, 15, 1)\""
+      "python scripts/python_runtime.py"
     ],
     "scripts": {
       "test": [
