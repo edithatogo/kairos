@@ -1,0 +1,40 @@
+{
+  "fixture": "event_log_v2_canonical_roundtrip",
+  "version": 2,
+  "schema": "kairo_ecs.event_log.v2",
+  "schema_version": 2,
+  "records": [
+    {
+      "schema_version": 2,
+      "run_id": "test-run-v2-conformance",
+      "event_id_index": 1,
+      "event_id_gen": 1,
+      "entity_id_index": 42,
+      "entity_id_gen": 1,
+      "time_ticks_hi": 0,
+      "time_ticks_lo": 100,
+      "time_scale": "ticks",
+      "priority": 0,
+      "sequence": 1,
+      "event_kind": "custom:spawn",
+      "status": "dispatched",
+      "payload_ref": null
+    },
+    {
+      "schema_version": 2,
+      "run_id": "test-run-v2-conformance",
+      "event_id_index": 2,
+      "event_id_gen": 1,
+      "entity_id_index": null,
+      "entity_id_gen": null,
+      "time_ticks_hi": 1,
+      "time_ticks_lo": 50,
+      "time_scale": "ticks",
+      "priority": -1,
+      "sequence": 2,
+      "event_kind": "custom:telemetry",
+      "status": "dispatched",
+      "payload_ref": "payload/blob_001.bin"
+    }
+  ]
+}

@@ -48,6 +48,17 @@
       ]
     },
     {
+      "id": "event_log_v2_conformance",
+      "status": "ready",
+      "kind": "event_log",
+      "source": "event_log_v2_conformance.json",
+      "consumers": ["70"],
+      "assertions": [
+        "schema_version equals 2",
+        "generational IDs and 128-bit tick limbs validate against kairo_ecs.event_log.v2 schema"
+      ]
+    },
+    {
       "id": "zero_delay_guard_v1",
       "status": "ready",
       "kind": "scheduler",
