@@ -49,42 +49,6 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '24.22.1'
-      - name: Check Mermaid diagrams render
-        run: |
-          npm ci --prefix tools/docs-quality-node-tools
-          tools/docs-quality-node-tools/node_modules/.bin/puppeteer browsers install chrome-headless-shell
-          cat > .mermaid-puppeteer.json <<'JSON'
-          {
-            "args": ["--no-sandbox", "--disable-setuid-sandbox"]
-          }
-          JSON
-          mkdir -p /tmp/mermaid-out
-          shopt -s globstar nullglob
-          for f in **/*.mmd; do
-            echo "Rendering $f"
-            tools/docs-quality-node-tools/node_modules/.bin/mmdc -p .mermaid-puppeteer.json -i "$f" -o "/tmp/mermaid-out/$(basename "$f").svg"
-          done
-      - name: Restore Lychee cache
-        id: lychee-cache
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: .lycheecache
-          key: lychee-${{ runner.os }}-${{ github.sha }}
-          restore-keys: lychee-${{ runner.os }}-
-      - name: Markdown link check
-        uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
-        with:
-          args: --verbose --no-progress --cache --max-cache-age 1d './*.md' './docs/**/*.md' './website/**/*.md'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Save Lychee cache
-        if: always()
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: .lycheecache
-          key: ${{ steps.lychee-cache.outputs.cache-primary-key }}
-      - name: Tutorial validation
-        run: pwsh -NoProfile -ExecutionPolicy Bypass -File docs/tutorials/validate-tutorials.ps1
       - name: Install website dependencies
         env:
           PYTHONDONTWRITEBYTECODE: '1'
@@ -106,6 +70,56 @@ jobs:
           mkdir -p artifacts/website-cache-security/http-cache-semantics
           cp website/node_modules/http-cache-semantics/index.js website/node_modules/http-cache-semantics/package.json website/node_modules/http-cache-semantics/LICENSE artifacts/website-cache-security/http-cache-semantics/
           python3 website/scripts/verify_cache_security_evidence.py artifacts/website-cache-security
+      - name: Check Mermaid diagrams render
+        id: mermaid
+        run: |
+          mkdir -p artifacts/mermaid-runtime
+          npm ci --prefix tools/docs-quality-node-tools > artifacts/mermaid-runtime/install.log 2>&1
+          tools/docs-quality-node-tools/node_modules/.bin/puppeteer browsers install chrome-headless-shell > artifacts/mermaid-runtime/browser-install.log 2>&1
+          cat > .mermaid-puppeteer.json <<'JSON'
+          {
+            "args": ["--no-sandbox", "--disable-setuid-sandbox"]
+          }
+          JSON
+          node --test tests/mermaid-runtime.test.mjs > artifacts/mermaid-runtime/tests.log 2>&1
+          mkdir -p /tmp/mermaid-out
+          rendered_count=0
+          while IFS= read -r -d '' f; do
+            echo "Rendering $f"
+            mkdir -p "/tmp/mermaid-out/$(dirname "$f")"
+            tools/docs-quality-node-tools/node_modules/.bin/mmdc -p .mermaid-puppeteer.json -i "$f" -o "/tmp/mermaid-out/$f.svg"
+            rendered_count=$((rendered_count + 1))
+          done < <(git ls-files -z -- '*.mmd')
+          test "$rendered_count" -gt 0
+      - name: Retain Mermaid runtime qualification
+        if: always() && steps.mermaid.outcome != 'skipped'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: mermaid-runtime-${{ github.run_id }}
+          path: artifacts/mermaid-runtime
+          if-no-files-found: error
+          retention-days: 14
+      - name: Restore Lychee cache
+        id: lychee-cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .lycheecache
+          key: lychee-${{ runner.os }}-${{ github.sha }}
+          restore-keys: lychee-${{ runner.os }}-
+      - name: Markdown link check
+        uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
+        with:
+          args: --verbose --no-progress --cache --max-cache-age 1d './*.md' './docs/**/*.md' './website/**/*.md'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Save Lychee cache
+        if: always()
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .lycheecache
+          key: ${{ steps.lychee-cache.outputs.cache-primary-key }}
+      - name: Tutorial validation
+        run: pwsh -NoProfile -ExecutionPolicy Bypass -File docs/tutorials/validate-tutorials.ps1
       - name: Local LLMS renderer contract tests
         run: node --test website/tests/kairoecs-llms-txt.test.mjs
       - name: Search DOM XSS regression tests
