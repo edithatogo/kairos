@@ -16,8 +16,10 @@ The complete serial order includes the foundation tracks and Rayon shown below.
 
 ```mermaid
 flowchart TD
-    P[Kairos 93 sha2 / 94 tempfile / 96 proptest] --> KP[Kairos 70 Polars accepted]
-    KP --> CP[CareOps Polars R14 accepted with parent foundation gates]
+    I[Kairos 70 inventory and task-gate decisions] --> KP[Kairos 70 Polars accepted]
+    I -. required retained targets only .-> P[Separate 93 sha2 / 94 tempfile / 96 proptest tracks]
+    P -. receipts before affected tasks only .-> KP
+    KP --> CP[CareOps Polars R14 accepted with demonstrated task gates]
     CP --> F[Kairos 74–77 foundation accepted]
     F --> E[Kairos 95 and parent thiserror]
     E --> KR[Kairos 71 rand accepted]
@@ -31,7 +33,7 @@ flowchart TD
     CG --> TV[CareOps Three.js R35 accepted]
 ```
 
-Both Polars migrations, including their new bounded prerequisites, must be accepted before later foundation/RNG adoption. They preserve the existing RNG; subsequent rand and rand_distr changes each declare their own versioned trajectory break. ECharts is technically independent of routing/RNG, but follows them in this approved serial programme to prioritise maintenance reduction. No missing receipt is satisfied by a status label. External edges are explicit metadata/manual receipt gates; local task tools do not verify another repository. Accept upstream delivery before any downstream pin change. Routing waits for charts as a scheduling decision, not a Rust compile dependency.
+Both Polars migrations, including any demonstrated task-specific prerequisites, must be accepted before later foundation/RNG adoption. They preserve the existing RNG; subsequent rand and rand_distr changes each declare their own versioned trajectory break. ECharts is technically independent of routing/RNG, but follows them in this approved serial programme to prioritise maintenance reduction. No missing receipt is satisfied by a status label. External edges are explicit metadata/manual receipt gates; local task tools do not verify another repository. Accept upstream delivery before any downstream pin change. Routing waits for charts as a scheduling decision, not a Rust compile dependency.
 
 ## Architectural boundaries
 

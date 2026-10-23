@@ -1086,7 +1086,7 @@ tracks:
     name: Polars-Native Data Processing and Standard Interchange
     status: In Progress
     owner: arrow-agent + ffi-agent + conformance-agent
-    depends_on: ["04", "62", "63", "93", "94", "96"]
+    depends_on: ["04", "62", "63"]
     owned_paths:
       - conductor/tracks/70-polars-native-data-processing/
       - crates/kairo-ecs-arrow/

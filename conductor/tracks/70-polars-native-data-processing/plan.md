@@ -64,4 +64,8 @@ does not close an implementation phase or authorise publication.
 
 ## Dependency sequencing refinement — 22 October 2026
 
-Tracks 93 sha2, 94 tempfile and 96 proptest are prerequisites before runtime migration. Read-only shared inventory may start first. These tracks qualify existing retained consumers/primitives; Polars still owns real format migration and full process-interruption/durability/replay acceptance. Do not repair the obsolete pseudo-Parquet format or introduce a permanent legacy backend.
+Tracks 93 sha2, 94 tempfile and 96 proptest gate only demonstrated affected migration tasks after inventory classification; they are not whole-track prerequisites. These tracks qualify existing retained consumers/primitives; Polars still owns real format migration and full process-interruption/durability/replay acceptance. Do not repair the obsolete pseudo-Parquet format or introduce a permanent legacy backend.
+
+## Prospective inventory and dependency gate — 23 October 2026
+
+Preserve the completed inventory and phase decisions above. Before each remaining affected task, classify digest/staging/property-test targets as removed, required or independent; record the source path, owner, exact blocked migration task, prerequisite receipt and acceptance oracle. Record no-target decisions explicitly without claiming adoption. Tracks 93/94/96 are not blanket prerequisites for Track 70; unresolved required work blocks only the task that consumes it. This revision does not retroactively certify the new classification or reopen completed tasks.

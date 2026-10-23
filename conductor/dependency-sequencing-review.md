@@ -1,3 +1,5 @@
+> Historical 22 October review. Its blanket pre-Polars edges are superseded by [inventory-first sequencing](dependency-sequencing.md) on 23 October 2026; historical validation below does not validate the revised graph.
+
 # Dependency sequencing planning review — 22 October 2026
 
 Coordinator review of the authorized planning changes only; no independent runtime acceptance.

@@ -24,11 +24,11 @@ Registry dependencies []. No dependency on completed Polars for Tracks 93/94/96:
 
 ## Contract
 
-Replace naming/cleanup with TempDir and NamedTempFile where useful. Establish tested reusable staging primitive and test cleanup before Polars; Track 70 retains end-to-end durable publication acceptance. Stage beside destination; handle overwrite/no-clobber explicitly. persist alone does not prove crash durability: file/directory sync where required, manifest-last ordering, disk-full and recovery remain owner responsibilities. No filesystem randomness enters simulation seeds or output identities.
+Replace naming/cleanup with TempDir and NamedTempFile where useful. Qualify staging and cleanup for retained consumers before the specific migration task that needs them; Track 70 retains end-to-end durable publication acceptance. Stage beside destination; handle overwrite/no-clobber explicitly. persist alone does not prove crash durability: file/directory sync where required, manifest-last ordering, disk-full and recovery remain owner responsibilities. No filesystem randomness enters simulation seeds or output identities.
 
 ## Acceptance criteria
 
-Concurrent directory creation/isolation; cleanup on normal/error paths; intentional retained diagnostics; same-filesystem publication, failure before/after persist, no-clobber and old-output preservation. End-to-end process-kill/disk-full/manifest recovery remains mandatory in Polars and is not certified by this prerequisite.
+Concurrent directory creation/isolation; cleanup on normal/error paths; intentional retained diagnostics; same-filesystem publication, failure before/after persist, no-clobber and old-output preservation. End-to-end process-kill/disk-full/manifest recovery remains mandatory in Polars and is not certified by this supporting track.
 
 Record exact features/version, maintenance/security/licence/MSRV/target qualification and wrapper-inclusive code/cost budgets before adoption. No net benefit means defer/reject, not implemented.
 
