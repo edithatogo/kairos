@@ -1249,6 +1249,29 @@ entries:
     pushed_ref: "origin/feat/track-70-phase2-task-2.4"
     next_phase_decision: "Phase 2 closed. Approved to advance to Phase 3 (durable output and execution budgets) pending maintainer merge of the stacked Phase 2 PRs #290 (Task 2.1, against main), #291 (Task 2.2, against the Task 2.1 branch) and #292 (Task 2.3, against the Task 2.2 branch); merge-queue order preserves the stack."
 
+  - track_id: "70"
+    phase: "3"
+    state: closed
+    review_command: "$conductor-review"
+    review_result: "Phase 3 durable output and execution budgets completed (Tasks 3.1-3.3): contract-first run_output module (Task 3.1 stubs + 15 failing tests) implemented in Task 3.2 — unique identity-derived run dirs, bounded split parts staged/fsynced/renamed, manifest-last kairo_ecs.run_manifest.v1 (serde/serde_json behind serde-runtime within polars-native), readers requiring completed manifests with per-part hash/row/sequence re-attestation, resume watermarks with no loss/duplication, sink-injected disk-exhaustion failure with clean retry, configure-once thread budget — and Task 3.3 Criterion benchmarks (small/large/high-cardinality/concurrent/validate/manifest-read) with recorded memory/build/binary tradeoffs. Maintainer override of the Tracks 93/94/96 gate recorded with rationale (qualification tracks explicitly leave durable publication to Track 70; no sha2/tempfile/proptest adoption; content hashes are labeled non-cryptographic FNV-1a 64 pending Track 93). Contract corrections from the red-to-green transition receipted (v1 container corrected to v2 records; order-fragile budget tests merged; latent test bug fixed). Closeout fixed a 2-line pre-existing rustfmt drift in the Track 70 ffi test file (cross-owner, recorded)."
+    fixes_applied: true
+    validation_commands:
+      - "cargo test -p kairo-ecs-arrow --features polars-native --test track70_phase3_durability (14 passed; red 15-failed receipt at Task 3.1)"
+      - "cargo test -p kairo-ecs-arrow --lib (9 passed) + --features polars-native --lib (16 passed)"
+      - "cargo test -p kairo-ecs-arrow (all default suites ok)"
+      - "cargo clippy -p kairo-ecs-arrow --all-targets [--all-features] -- -D warnings (clean both modes)"
+      - "cargo fmt -p kairo-ecs-arrow -- --check (clean; closeout also fixed the pre-existing ffi test fmt drift blocking cargo fmt --all)"
+      - "cargo bench -p kairo-ecs-arrow --features polars-native --bench run_output (6 benches, two runs, no significant change)"
+      - "cargo check -p kairo-ecs-wasm (clean; browser/minimal graphs stay Polars-free)"
+      - "just ci (full workspace lane, user-selected closeout depth)"
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree"
+    git_status: "clean; stacked Phase 3 PRs #296/#298/#299 pending maintainer merge, closeout branch feat/track-70-phase3-task-3.4 stacked above them"
+    commit_sha: "4ca73d370487ccd174f0a6f94ee029a3fa230bcf"
+    pushed_ref: "origin/feat/track-70-phase3-task-3.4"
+    next_phase_decision: "Phase 3 closed. Approved to advance to Phase 4 (deletion audit and CareOps handoff) pending maintainer merge of stacked PRs #296 (Task 3.1), #298 (Task 3.2), #299 (Task 3.3) plus this closeout PR; merge-queue order preserves the stack."
+
   - track_id: "71"
     phase: "0"
     state: pending
