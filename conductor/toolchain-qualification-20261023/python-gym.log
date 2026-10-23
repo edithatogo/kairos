@@ -1,0 +1,11 @@
+test_config_rejects_invalid_space_sizes (test_env_contract.KairoGymContractTests.test_config_rejects_invalid_space_sizes) ... ok
+test_register_returns_env_id_without_optional_dependency (test_env_contract.KairoGymContractTests.test_register_returns_env_id_without_optional_dependency) ... ok
+test_reset_step_close_contract (test_env_contract.KairoGymContractTests.test_reset_step_close_contract) ... ok
+test_step_rejects_non_finite_actions (test_env_contract.KairoGymContractTests.test_step_rejects_non_finite_actions) ... ok
+test_step_rejects_non_iterable_actions (test_env_contract.KairoGymContractTests.test_step_rejects_non_iterable_actions) ... ok
+test_step_rejects_string_actions (test_env_contract.KairoGymContractTests.test_step_rejects_string_actions) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.006s
+
+OK

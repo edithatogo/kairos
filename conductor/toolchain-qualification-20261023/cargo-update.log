@@ -1,0 +1,13 @@
+    Updating crates.io index
+    Updating serde_json v1.0.151 -> v1.0.154
+note: pass `--verbose` to see 39 unchanged dependencies behind latest
+    Updating crates.io index
+      Adding chacha20 v0.10.2
+      Adding core_detect v1.0.0
+      Adding cpufeatures v0.3.1
+    Updating proptest v1.11.0 -> v1.12.0
+    Updating rand v0.9.5 -> v0.10.3
+    Removing rand_chacha v0.9.0
+    Updating rand_core v0.9.5 -> v0.10.1
+    Updating rand_xorshift v0.4.0 -> v0.5.0
+note: pass `--verbose` to see 38 unchanged dependencies behind latest

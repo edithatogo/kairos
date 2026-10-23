@@ -1,7 +1,7 @@
 [tools]
-rust = "1.99.0"
-python = "3.14.7"
-node = "lts"
+rust = "1.99.1"
+python = "3.15.1"
+node = "24.22.1"
 go = "latest"
 julia = "latest"
 R = "latest"

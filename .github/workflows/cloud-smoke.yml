@@ -53,8 +53,10 @@ jobs:
 
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14.8"
+          python-version: "3.15.1"
 
+      - name: Verify repository-local Python 3.15.1
+        run: python scripts/python_runtime.py --github
       - name: Validate cloud and HPC manifests
         run: python cloud/validate_cloud_hpc.py
 
@@ -84,7 +86,7 @@ jobs:
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: "24.22.0"
+          node-version: "24.22.1"
 
       - name: Validate free compute blocker routes
         run: node scripts/validation/validate-free-compute-routes.mjs
@@ -106,6 +108,10 @@ jobs:
 
       - name: Docker image build
         run: docker build -t kairo-ecs-cli:cloud-smoke -f docker/Dockerfile .
+
+      - name: Verify actual container Python version and local prefix
+        run: |
+          docker run --rm --entrypoint /work/.venv/bin/python kairo-ecs-cli:cloud-smoke -c 'import sys; assert sys.version_info == (3, 15, 1, "final", 0); assert sys.prefix == "/work/.venv"; print(sys.version); print(sys.executable); print(sys.prefix)'
 
       - name: CLI help smoke
         run: docker run --rm kairo-ecs-cli:cloud-smoke --help

@@ -1,9 +1,9 @@
 ---
 title: Python
-description: Python 3.10–3.14 bindings, zero-copy Arrow telemetry, and Gymnasium/PettingZoo MARL wrappers.
+description: Python 3.15.1 bindings, zero-copy Arrow telemetry, and Gymnasium/PettingZoo MARL wrappers.
 ---
 
-The Python binding (`bindings/python/`) provides a pure-Python scheduler facade for Python 3.10–3.14; native wheels and zero-copy Arrow export are planned.
+The Python binding (`bindings/python/`) provides a pure-Python scheduler facade for Python 3.15.1; native wheels and zero-copy Arrow export are planned.
 
 ## Current status
 

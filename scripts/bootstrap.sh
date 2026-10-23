@@ -9,7 +9,10 @@ for spec in \
   "cargo-llvm-cov@0.9.1"; do
   cargo install "${spec%@*}" --version "${spec#*@}" --locked || true
 done
-python -m pip install --require-hashes -r scripts/bootstrap-python-tools.lock || true
+if [ ! -d .venv ]; then uv venv --python 3.15.1 .venv; fi
+source .venv/bin/activate
+python scripts/python_runtime.py
+uv pip sync --python .venv/bin/python scripts/bootstrap-python-tools.lock
 python3 scripts/bootstrap-node-tools/prepare_npm_cli.py --check
 npm ci --ignore-scripts --prefix scripts/bootstrap-node-tools
 node scripts/bootstrap-node-tools/validate_npm_cli.mjs

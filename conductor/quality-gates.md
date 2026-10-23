@@ -13,7 +13,7 @@ cargo audit
 cargo semver-checks check-release
 ```
 
-The required `Rust core quality` GitHub check uses Rust 1.99.0 for stable
+The required `Rust core quality` GitHub check uses Rust 1.99.1 for stable
 verification, locked workspace checks, and the WebAssembly target check. On
 pull requests, these three lanes run when changed paths include Rust or
 unclassified content; a non-empty change set entirely within the known
@@ -28,10 +28,10 @@ errors fail the aggregate.
 
 ## Heavy/nightly gates
 
-Scheduled ordinary benchmarks use exact Rust 1.99.0:
+Scheduled ordinary benchmarks use exact Rust 1.99.1:
 
 ```bash
-cargo +1.99.0 bench --workspace
+cargo +1.99.1 bench --workspace
 ```
 
 Miri and fuzzing remain **UNVERIFIED** because their current workflows would require the disallowed nightly toolchain. No Miri or fuzz pass is claimed.

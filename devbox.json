@@ -4,7 +4,7 @@
     "rustup",
     "pkg-config",
     "openssl",
-    "python314",
+    "uv",
     "nodejs",
     "go",
     "julia",
@@ -17,7 +17,10 @@
   "shell": {
     "init_hook": [
       "echo 'KairoECS devbox environment ready'",
-      "rustup component add clippy rustfmt >/dev/null 2>&1 || true"
+      "rustup component add clippy rustfmt >/dev/null 2>&1 || true",
+      "test -d .venv || uv venv --python 3.15.1 .venv",
+      "source .venv/bin/activate",
+      "python scripts/python_runtime.py"
     ],
     "scripts": {
       "test": [

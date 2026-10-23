@@ -1,0 +1,2963 @@
+[
+  {
+    "name": "adler2",
+    "locked": "2.0.1",
+    "latest_stable": "2.0.1",
+    "latest_any": "2.0.1",
+    "latest_rust_version": null,
+    "updated_at": "2025-06-09T22:31:53.608434Z",
+    "changed": false
+  },
+  {
+    "name": "ahash",
+    "locked": "0.8.12",
+    "latest_stable": "0.8.12",
+    "latest_any": "0.8.12",
+    "latest_rust_version": "1.60.0",
+    "updated_at": "2025-05-08T05:05:32.999746Z",
+    "changed": false
+  },
+  {
+    "name": "aho-corasick",
+    "locked": "1.1.4",
+    "latest_stable": "1.1.5",
+    "latest_any": "1.1.5",
+    "latest_rust_version": "1.60.0",
+    "updated_at": "2026-08-03T11:44:11.111398Z",
+    "changed": true
+  },
+  {
+    "name": "alloc-no-stdlib",
+    "locked": "2.0.4",
+    "latest_stable": "3.0.0",
+    "latest_any": "3.0.0",
+    "latest_rust_version": null,
+    "updated_at": "2026-06-14T07:37:22.713662Z",
+    "changed": true
+  },
+  {
+    "name": "alloc-stdlib",
+    "locked": "0.2.4",
+    "latest_stable": "0.3.0",
+    "latest_any": "0.3.0",
+    "latest_rust_version": null,
+    "updated_at": "2026-06-14T18:42:03.107883Z",
+    "changed": true
+  },
+  {
+    "name": "allocator-api2",
+    "locked": "0.2.21",
+    "latest_stable": "0.4.0",
+    "latest_any": "0.4.0",
+    "latest_rust_version": "1.64.0",
+    "updated_at": "2025-12-11T12:20:26.230443Z",
+    "changed": true
+  },
+  {
+    "name": "android_system_properties",
+    "locked": "0.1.6",
+    "latest_stable": "0.1.6",
+    "latest_any": "0.1.6",
+    "latest_rust_version": null,
+    "updated_at": "2026-08-05T13:44:27.717073Z",
+    "changed": false
+  },
+  {
+    "name": "anes",
+    "locked": "0.1.6",
+    "latest_stable": "0.2.1",
+    "latest_any": "0.2.1",
+    "latest_rust_version": null,
+    "updated_at": "2025-07-01T14:49:33.393964Z",
+    "changed": true
+  },
+  {
+    "name": "anstream",
+    "locked": "1.0.0",
+    "latest_stable": "1.0.0",
+    "latest_any": "1.0.0",
+    "latest_rust_version": "1.66.0",
+    "updated_at": "2026-02-11T13:23:11.167553Z",
+    "changed": false
+  },
+  {
+    "name": "anstyle",
+    "locked": "1.0.14",
+    "latest_stable": "1.0.14",
+    "latest_any": "1.0.14",
+    "latest_rust_version": "1.66.0",
+    "updated_at": "2026-03-13T18:59:28.450723Z",
+    "changed": false
+  },
+  {
+    "name": "anstyle-parse",
+    "locked": "1.0.0",
+    "latest_stable": "1.0.0",
+    "latest_any": "1.0.0",
+    "latest_rust_version": "1.66.0",
+    "updated_at": "2026-02-11T13:23:08.814303Z",
+    "changed": false
+  },
+  {
+    "name": "anstyle-query",
+    "locked": "1.1.5",
+    "latest_stable": "1.1.5",
+    "latest_any": "1.1.5",
+    "latest_rust_version": "1.66.0",
+    "updated_at": "2025-11-13T17:30:22.615151Z",
+    "changed": false
+  },
+  {
+    "name": "anstyle-wincon",
+    "locked": "3.0.11",
+    "latest_stable": "3.0.11",
+    "latest_any": "3.0.11",
+    "latest_rust_version": "1.66.0",
+    "updated_at": "2025-11-13T17:30:26.488661Z",
+    "changed": false
+  },
+  {
+    "name": "ar_archive_writer",
+    "locked": "0.5.3",
+    "latest_stable": "0.5.3",
+    "latest_any": "0.5.3",
+    "latest_rust_version": "1.88.0",
+    "updated_at": "2026-07-31T15:00:01.806640Z",
+    "changed": false
+  },
+  {
+    "name": "argminmax",
+    "locked": "0.6.3",
+    "latest_stable": "0.7.1",
+    "latest_any": "0.7.1",
+    "latest_rust_version": "1.89",
+    "updated_at": "2026-10-19T15:33:01.336839Z",
+    "changed": true
+  },
+  {
+    "name": "array-init-cursor",
+    "locked": "0.2.1",
+    "latest_stable": "0.2.1",
+    "latest_any": "0.2.1",
+    "latest_rust_version": "1.75",
+    "updated_at": "2025-03-29T14:58:24.285075Z",
+    "changed": false
+  },
+  {
+    "name": "arrayvec",
+    "locked": "0.7.8",
+    "latest_stable": "0.7.8",
+    "latest_any": "0.7.8",
+    "latest_rust_version": "1.51",
+    "updated_at": "2026-07-02T12:44:35.487269Z",
+    "changed": false
+  },
+  {
+    "name": "arrow-schema",
+    "locked": "60.0.0",
+    "latest_stable": "60.0.0",
+    "latest_any": "60.0.0",
+    "latest_rust_version": "1.88",
+    "updated_at": "2026-10-15T05:01:49.519891Z",
+    "changed": false
+  },
+  {
+    "name": "ash",
+    "locked": "0.38.0+1.3.281",
+    "latest_stable": "0.38.0+1.3.281",
+    "latest_any": "0.38.0+1.3.281",
+    "latest_rust_version": "1.69.0",
+    "updated_at": "2024-04-01T19:48:47.387199Z",
+    "changed": false
+  },
+  {
+    "name": "async-stream",
+    "locked": "0.3.6",
+    "latest_stable": "0.3.6",
+    "latest_any": "0.3.6",
+    "latest_rust_version": "1.65",
+    "updated_at": "2024-10-01T19:36:32.827442Z",
+    "changed": false
+  },
+  {
+    "name": "async-stream-impl",
+    "locked": "0.3.6",
+    "latest_stable": "0.3.6",
+    "latest_any": "0.3.6",
+    "latest_rust_version": "1.65",
+    "updated_at": "2024-10-01T19:35:11.626317Z",
+    "changed": false
+  },
+  {
+    "name": "async-trait",
+    "locked": "0.1.92",
+    "latest_stable": "0.1.92",
+    "latest_any": "0.1.92",
+    "latest_rust_version": "1.71",
+    "updated_at": "2026-08-08T07:10:35.376083Z",
+    "changed": false
+  },
+  {
+    "name": "atoi",
+    "locked": "2.0.0",
+    "latest_stable": "3.1.1",
+    "latest_any": "3.1.1",
+    "latest_rust_version": "1.86.0",
+    "updated_at": "2026-10-16T19:05:15.187984Z",
+    "changed": true
+  },
+  {
+    "name": "atoi_simd",
+    "locked": "0.16.1",
+    "latest_stable": "0.18.1",
+    "latest_any": "0.18.1",
+    "latest_rust_version": "1.61",
+    "updated_at": "2026-02-09T12:24:52.257437Z",
+    "changed": true
+  },
+  {
+    "name": "atomic-waker",
+    "locked": "1.1.2",
+    "latest_stable": "1.1.2",
+    "latest_any": "1.1.2",
+    "latest_rust_version": "1.36",
+    "updated_at": "2023-09-25T17:45:09.388277Z",
+    "changed": false
+  },
+  {
+    "name": "autocfg",
+    "locked": "1.5.0",
+    "latest_stable": "1.5.1",
+    "latest_any": "1.5.1",
+    "latest_rust_version": "1.0",
+    "updated_at": "2026-05-22T11:03:04.576867Z",
+    "changed": true
+  },
+  {
+    "name": "base64",
+    "locked": "0.22.1",
+    "latest_stable": "0.23.1",
+    "latest_any": "0.23.1",
+    "latest_rust_version": "1.71.0",
+    "updated_at": "2026-08-04T12:34:31.976297Z",
+    "changed": true
+  },
+  {
+    "name": "bit-set",
+    "locked": "0.10.0",
+    "latest_stable": "0.11.1",
+    "latest_any": "0.11.1",
+    "latest_rust_version": "1.85.0",
+    "updated_at": "2026-07-10T12:48:28.097356Z",
+    "changed": true
+  },
+  {
+    "name": "bit-vec",
+    "locked": "0.9.1",
+    "latest_stable": "0.10.1",
+    "latest_any": "0.10.1",
+    "latest_rust_version": "1.85.0",
+    "updated_at": "2026-07-10T12:48:24.191676Z",
+    "changed": true
+  },
+  {
+    "name": "bitflags",
+    "locked": "2.13.2",
+    "latest_stable": "2.13.2",
+    "latest_any": "2.13.2",
+    "latest_rust_version": "1.56.0",
+    "updated_at": "2026-09-10T01:11:38.500809Z",
+    "changed": false
+  },
+  {
+    "name": "block2",
+    "locked": "0.6.2",
+    "latest_stable": "0.6.2",
+    "latest_any": "0.6.2",
+    "latest_rust_version": "1.71",
+    "updated_at": "2025-10-04T16:00:20.987008Z",
+    "changed": false
+  },
+  {
+    "name": "brotli",
+    "locked": "7.0.0",
+    "latest_stable": "9.0.0",
+    "latest_any": "9.0.0",
+    "latest_rust_version": "1.59.0",
+    "updated_at": "2026-09-02T08:48:11.649634Z",
+    "changed": true
+  },
+  {
+    "name": "brotli-decompressor",
+    "locked": "4.0.3",
+    "latest_stable": "6.1.1",
+    "latest_any": "6.1.1",
+    "latest_rust_version": null,
+    "updated_at": "2026-10-21T08:45:48.433126Z",
+    "changed": true
+  },
+  {
+    "name": "bumpalo",
+    "locked": "3.20.2",
+    "latest_stable": "3.20.3",
+    "latest_any": "3.20.3",
+    "latest_rust_version": "1.71.1",
+    "updated_at": "2026-05-22T14:59:11.132139Z",
+    "changed": true
+  },
+  {
+    "name": "bytemuck",
+    "locked": "1.25.2",
+    "latest_stable": "1.25.2",
+    "latest_any": "1.25.2",
+    "latest_rust_version": null,
+    "updated_at": "2026-07-19T19:36:16.239554Z",
+    "changed": false
+  },
+  {
+    "name": "bytemuck_derive",
+    "locked": "1.12.1",
+    "latest_stable": "1.12.1",
+    "latest_any": "1.12.1",
+    "latest_rust_version": "1.71",
+    "updated_at": "2026-09-11T20:47:15.014342Z",
+    "changed": false
+  },
+  {
+    "name": "bytes",
+    "locked": "1.12.1",
+    "latest_stable": "1.12.1",
+    "latest_any": "1.12.1",
+    "latest_rust_version": "1.57",
+    "updated_at": "2026-07-08T10:01:28.616466Z",
+    "changed": false
+  },
+  {
+    "name": "cast",
+    "locked": "0.3.0",
+    "latest_stable": "0.3.0",
+    "latest_any": "0.3.0",
+    "latest_rust_version": null,
+    "updated_at": "2021-09-04T11:07:33.449935Z",
+    "changed": false
+  },
+  {
+    "name": "castaway",
+    "locked": "0.2.4",
+    "latest_stable": "0.2.4",
+    "latest_any": "0.2.4",
+    "latest_rust_version": null,
+    "updated_at": "2025-07-12T16:49:05.343219Z",
+    "changed": false
+  },
+  {
+    "name": "cc",
+    "locked": "1.9.0",
+    "latest_stable": "1.10.0",
+    "latest_any": "1.10.0",
+    "latest_rust_version": "1.65.0",
+    "updated_at": "2026-10-23T08:35:43.203664Z",
+    "changed": true
+  },
+  {
+    "name": "cfg-if",
+    "locked": "1.0.4",
+    "latest_stable": "1.0.5",
+    "latest_any": "1.0.5",
+    "latest_rust_version": "1.32",
+    "updated_at": "2026-10-13T06:49:22.204875Z",
+    "changed": true
+  },
+  {
+    "name": "cfg_aliases",
+    "locked": "0.2.2",
+    "latest_stable": "0.2.2",
+    "latest_any": "0.2.2",
+    "latest_rust_version": null,
+    "updated_at": "2026-07-16T14:57:16.699789Z",
+    "changed": false
+  },
+  {
+    "name": "chrono",
+    "locked": "0.4.45",
+    "latest_stable": "0.4.45",
+    "latest_any": "0.4.45",
+    "latest_rust_version": "1.62.0",
+    "updated_at": "2026-06-04T12:16:42.063037Z",
+    "changed": false
+  },
+  {
+    "name": "chrono-tz",
+    "locked": "0.10.4",
+    "latest_stable": "0.10.4",
+    "latest_any": "0.10.4",
+    "latest_rust_version": "1.65",
+    "updated_at": "2025-07-11T19:08:33.700056Z",
+    "changed": false
+  },
+  {
+    "name": "ciborium",
+    "locked": "0.2.2",
+    "latest_stable": "0.2.2",
+    "latest_any": "0.2.2",
+    "latest_rust_version": "1.58",
+    "updated_at": "2024-01-24T03:04:25.973012Z",
+    "changed": false
+  },
+  {
+    "name": "ciborium-io",
+    "locked": "0.2.2",
+    "latest_stable": "0.2.2",
+    "latest_any": "0.2.2",
+    "latest_rust_version": "1.58",
+    "updated_at": "2024-01-24T03:02:36.662214Z",
+    "changed": false
+  },
+  {
+    "name": "ciborium-ll",
+    "locked": "0.2.2",
+    "latest_stable": "0.2.2",
+    "latest_any": "0.2.2",
+    "latest_rust_version": "1.58",
+    "updated_at": "2024-01-24T03:03:42.992548Z",
+    "changed": false
+  },
+  {
+    "name": "clap",
+    "locked": "4.5.61",
+    "latest_stable": "4.6.7",
+    "latest_any": "4.6.7",
+    "latest_rust_version": "1.85",
+    "updated_at": "2026-09-14T18:40:28.474794Z",
+    "changed": true
+  },
+  {
+    "name": "clap_builder",
+    "locked": "4.5.61",
+    "latest_stable": "4.6.7",
+    "latest_any": "4.6.7",
+    "latest_rust_version": "1.85",
+    "updated_at": "2026-09-14T18:40:26.377504Z",
+    "changed": true
+  },
+  {
+    "name": "clap_derive",
+    "locked": "4.5.61",
+    "latest_stable": "4.6.7",
+    "latest_any": "4.6.7",
+    "latest_rust_version": "1.85",
+    "updated_at": "2026-09-14T18:40:23.971462Z",
+    "changed": true
+  },
+  {
+    "name": "clap_lex",
+    "locked": "1.0.0",
+    "latest_stable": "1.1.1",
+    "latest_any": "1.1.1",
+    "latest_rust_version": "1.85",
+    "updated_at": "2026-09-14T18:40:24.781280Z",
+    "changed": true
+  },
+  {
+    "name": "codespan-reporting",
+    "locked": "0.13.1",
+    "latest_stable": "0.13.1",
+    "latest_any": "0.13.1",
+    "latest_rust_version": "1.67",
+    "updated_at": "2025-10-22T11:47:14.098594Z",
+    "changed": false
+  },
+  {
+    "name": "colorchoice",
+    "locked": "1.0.5",
+    "latest_stable": "1.0.5",
+    "latest_any": "1.0.5",
+    "latest_rust_version": "1.66.0",
+    "updated_at": "2026-03-13T18:59:29.020348Z",
+    "changed": false
+  },
+  {
+    "name": "comfy-table",
+    "locked": "7.2.2",
+    "latest_stable": "8.0.1",
+    "latest_any": "8.0.1",
+    "latest_rust_version": "1.88",
+    "updated_at": "2026-09-25T15:21:37.465536Z",
+    "changed": true
+  },
+  {
+    "name": "compact_str",
+    "locked": "0.8.2",
+    "latest_stable": "0.10.0",
+    "latest_any": "0.10.0",
+    "latest_rust_version": "1.71",
+    "updated_at": "2026-07-13T13:10:59.211545Z",
+    "changed": true
+  },
+  {
+    "name": "core-foundation-sys",
+    "locked": "0.8.7",
+    "latest_stable": "0.8.7",
+    "latest_any": "0.8.7",
+    "latest_rust_version": null,
+    "updated_at": "2024-08-11T00:48:27.870880Z",
+    "changed": false
+  },
+  {
+    "name": "crc32fast",
+    "locked": "1.5.3",
+    "latest_stable": "1.5.3",
+    "latest_any": "1.5.3",
+    "latest_rust_version": "1.63",
+    "updated_at": "2026-10-20T13:35:21.061575Z",
+    "changed": false
+  },
+  {
+    "name": "criterion",
+    "locked": "0.5.1",
+    "latest_stable": "0.8.2",
+    "latest_any": "0.8.2",
+    "latest_rust_version": "1.86",
+    "updated_at": "2026-02-04T10:43:03.398729Z",
+    "changed": true
+  },
+  {
+    "name": "criterion-plot",
+    "locked": "0.5.0",
+    "latest_stable": "0.8.2",
+    "latest_any": "0.8.2",
+    "latest_rust_version": null,
+    "updated_at": "2026-02-04T10:41:23.096352Z",
+    "changed": true
+  },
+  {
+    "name": "crossbeam-channel",
+    "locked": "0.5.17",
+    "latest_stable": "0.5.17",
+    "latest_any": "0.5.17",
+    "latest_rust_version": "1.60",
+    "updated_at": "2026-09-05T17:47:21.507092Z",
+    "changed": false
+  },
+  {
+    "name": "crossbeam-deque",
+    "locked": "0.8.6",
+    "latest_stable": "0.8.8",
+    "latest_any": "0.8.8",
+    "latest_rust_version": "1.61",
+    "updated_at": "2026-09-05T17:47:08.254122Z",
+    "changed": true
+  },
+  {
+    "name": "crossbeam-epoch",
+    "locked": "0.9.20",
+    "latest_stable": "0.9.21",
+    "latest_any": "0.9.21",
+    "latest_rust_version": "1.61",
+    "updated_at": "2026-09-05T17:46:49.471801Z",
+    "changed": true
+  },
+  {
+    "name": "crossbeam-queue",
+    "locked": "0.3.14",
+    "latest_stable": "0.3.14",
+    "latest_any": "0.3.14",
+    "latest_rust_version": "1.60",
+    "updated_at": "2026-09-05T17:46:34.288577Z",
+    "changed": false
+  },
+  {
+    "name": "crossbeam-utils",
+    "locked": "0.8.21",
+    "latest_stable": "0.8.23",
+    "latest_any": "0.8.23",
+    "latest_rust_version": "1.60",
+    "updated_at": "2026-09-05T17:46:14.665751Z",
+    "changed": true
+  },
+  {
+    "name": "crossterm",
+    "locked": "0.29.0",
+    "latest_stable": "0.29.0",
+    "latest_any": "0.29.0",
+    "latest_rust_version": "1.63.0",
+    "updated_at": "2025-04-05T15:21:48.500601Z",
+    "changed": false
+  },
+  {
+    "name": "crossterm_winapi",
+    "locked": "0.9.1",
+    "latest_stable": "0.9.1",
+    "latest_any": "0.9.1",
+    "latest_rust_version": null,
+    "updated_at": "2023-06-12T18:05:33.496457Z",
+    "changed": false
+  },
+  {
+    "name": "crunchy",
+    "locked": "0.2.4",
+    "latest_stable": "0.2.4",
+    "latest_any": "0.2.4",
+    "latest_rust_version": null,
+    "updated_at": "2025-06-25T12:54:43.146786Z",
+    "changed": false
+  },
+  {
+    "name": "cudarc",
+    "locked": "0.19.10",
+    "latest_stable": "0.19.10",
+    "latest_any": "0.19.10",
+    "latest_rust_version": null,
+    "updated_at": "2026-09-24T14:27:42.819049Z",
+    "changed": false
+  },
+  {
+    "name": "debug_unsafe",
+    "locked": "0.1.4",
+    "latest_stable": "0.1.4",
+    "latest_any": "0.1.4",
+    "latest_rust_version": "1.58",
+    "updated_at": "2026-02-09T12:18:49.712292Z",
+    "changed": false
+  },
+  {
+    "name": "dispatch2",
+    "locked": "0.3.1",
+    "latest_stable": "0.3.1",
+    "latest_any": "0.3.1",
+    "latest_rust_version": "1.71",
+    "updated_at": "2026-02-26T15:35:48.969374Z",
+    "changed": false
+  },
+  {
+    "name": "dlib",
+    "locked": "0.5.3",
+    "latest_stable": "0.5.3",
+    "latest_any": "0.5.3",
+    "latest_rust_version": "1.56",
+    "updated_at": "2026-02-26T03:32:04.429182Z",
+    "changed": false
+  },
+  {
+    "name": "document-features",
+    "locked": "0.2.12",
+    "latest_stable": "0.2.12",
+    "latest_any": "0.2.12",
+    "latest_rust_version": "1.56",
+    "updated_at": "2025-10-24T09:43:31.356480Z",
+    "changed": false
+  },
+  {
+    "name": "dyn-clone",
+    "locked": "1.0.20",
+    "latest_stable": "1.0.20",
+    "latest_any": "1.0.20",
+    "latest_rust_version": "1.60",
+    "updated_at": "2025-07-27T19:29:46.625527Z",
+    "changed": false
+  },
+  {
+    "name": "either",
+    "locked": "1.15.0",
+    "latest_stable": "1.19.0",
+    "latest_any": "1.19.0",
+    "latest_rust_version": "1.63.0",
+    "updated_at": "2026-10-06T18:29:04.213219Z",
+    "changed": true
+  },
+  {
+    "name": "enum_dispatch",
+    "locked": "0.3.13",
+    "latest_stable": "0.3.13",
+    "latest_any": "0.3.13",
+    "latest_rust_version": null,
+    "updated_at": "2024-03-28T16:25:44.789544Z",
+    "changed": false
+  },
+  {
+    "name": "equivalent",
+    "locked": "1.0.3",
+    "latest_stable": "1.0.3",
+    "latest_any": "1.0.3",
+    "latest_rust_version": "1.6",
+    "updated_at": "2026-10-13T23:06:49.442503Z",
+    "changed": false
+  },
+  {
+    "name": "errno",
+    "locked": "0.3.14",
+    "latest_stable": "0.3.14",
+    "latest_any": "0.3.14",
+    "latest_rust_version": "1.56",
+    "updated_at": "2025-09-09T04:35:15.362504Z",
+    "changed": false
+  },
+  {
+    "name": "ethnum",
+    "locked": "1.5.3",
+    "latest_stable": "1.5.3",
+    "latest_any": "1.5.3",
+    "latest_rust_version": null,
+    "updated_at": "2026-04-20T15:42:43.724270Z",
+    "changed": false
+  },
+  {
+    "name": "fallible-streaming-iterator",
+    "locked": "0.1.9",
+    "latest_stable": "0.1.9",
+    "latest_any": "0.1.9",
+    "latest_rust_version": null,
+    "updated_at": "2018-05-02T20:02:49.746627Z",
+    "changed": false
+  },
+  {
+    "name": "fast-float2",
+    "locked": "0.2.4",
+    "latest_stable": "0.2.4",
+    "latest_any": "0.2.4",
+    "latest_rust_version": "1.37",
+    "updated_at": "2026-08-14T02:30:24.263507Z",
+    "changed": false
+  },
+  {
+    "name": "find-msvc-tools",
+    "locked": "0.1.15",
+    "latest_stable": "0.1.15",
+    "latest_any": "0.1.15",
+    "latest_rust_version": "1.65.0",
+    "updated_at": "2026-10-19T07:39:37.580908Z",
+    "changed": false
+  },
+  {
+    "name": "flate2",
+    "locked": "1.1.10",
+    "latest_stable": "1.1.10",
+    "latest_any": "1.1.10",
+    "latest_rust_version": "1.67.0",
+    "updated_at": "2026-08-28T04:35:22.192325Z",
+    "changed": false
+  },
+  {
+    "name": "foldhash",
+    "locked": "0.1.5",
+    "latest_stable": "0.2.0",
+    "latest_any": "0.2.0",
+    "latest_rust_version": "1.60",
+    "updated_at": "2025-08-23T19:14:01.103482Z",
+    "changed": true
+  },
+  {
+    "name": "foldhash",
+    "locked": "0.2.0",
+    "latest_stable": "0.2.0",
+    "latest_any": "0.2.0",
+    "latest_rust_version": "1.60",
+    "updated_at": "2025-08-23T19:14:01.103482Z",
+    "changed": false
+  },
+  {
+    "name": "futures",
+    "locked": "0.3.32",
+    "latest_stable": "0.3.34",
+    "latest_any": "0.3.34",
+    "latest_rust_version": "1.71",
+    "updated_at": "2026-08-11T12:13:28.064590Z",
+    "changed": true
+  },
+  {
+    "name": "futures-channel",
+    "locked": "0.3.32",
+    "latest_stable": "0.3.34",
+    "latest_any": "0.3.34",
+    "latest_rust_version": "1.71",
+    "updated_at": "2026-08-11T12:13:10.334104Z",
+    "changed": true
+  },
+  {
+    "name": "futures-core",
+    "locked": "0.3.32",
+    "latest_stable": "0.3.34",
+    "latest_any": "0.3.34",
+    "latest_rust_version": "1.36",
+    "updated_at": "2026-08-11T12:13:01.547638Z",
+    "changed": true
+  },
+  {
+    "name": "futures-executor",
+    "locked": "0.3.32",
+    "latest_stable": "0.3.34",
+    "latest_any": "0.3.34",
+    "latest_rust_version": "1.71",
+    "updated_at": "2026-08-11T12:13:23.714779Z",
+    "changed": true
+  },
+  {
+    "name": "futures-io",
+    "locked": "0.3.34",
+    "latest_stable": "0.3.34",
+    "latest_any": "0.3.34",
+    "latest_rust_version": "1.36",
+    "updated_at": "2026-08-11T12:13:03.992711Z",
+    "changed": false
+  },
+  {
+    "name": "futures-macro",
+    "locked": "0.3.32",
+    "latest_stable": "0.3.34",
+    "latest_any": "0.3.34",
+    "latest_rust_version": "1.71",
+    "updated_at": "2026-08-11T12:13:14.842510Z",
+    "changed": true
+  },
+  {
+    "name": "futures-sink",
+    "locked": "0.3.34",
+    "latest_stable": "0.3.34",
+    "latest_any": "0.3.34",
+    "latest_rust_version": "1.36",
+    "updated_at": "2026-08-11T12:13:06.160611Z",
+    "changed": false
+  },
+  {
+    "name": "futures-task",
+    "locked": "0.3.32",
+    "latest_stable": "0.3.34",
+    "latest_any": "0.3.34",
+    "latest_rust_version": "1.71",
+    "updated_at": "2026-08-11T12:13:07.886026Z",
+    "changed": true
+  },
+  {
+    "name": "futures-util",
+    "locked": "0.3.32",
+    "latest_stable": "0.3.34",
+    "latest_any": "0.3.34",
+    "latest_rust_version": "1.71",
+    "updated_at": "2026-08-11T12:13:19.272525Z",
+    "changed": true
+  },
+  {
+    "name": "getrandom",
+    "locked": "0.2.17",
+    "latest_stable": "0.4.3",
+    "latest_any": "0.4.3",
+    "latest_rust_version": "1.85",
+    "updated_at": "2026-06-17T18:01:59.979552Z",
+    "changed": true
+  },
+  {
+    "name": "getrandom",
+    "locked": "0.3.4",
+    "latest_stable": "0.4.3",
+    "latest_any": "0.4.3",
+    "latest_rust_version": "1.85",
+    "updated_at": "2026-06-17T18:01:59.979552Z",
+    "changed": true
+  },
+  {
+    "name": "getrandom",
+    "locked": "0.4.3",
+    "latest_stable": "0.4.3",
+    "latest_any": "0.4.3",
+    "latest_rust_version": "1.85",
+    "updated_at": "2026-06-17T18:01:59.979552Z",
+    "changed": false
+  },
+  {
+    "name": "gl_generator",
+    "locked": "0.14.0",
+    "latest_stable": "0.14.0",
+    "latest_any": "0.14.0",
+    "latest_rust_version": null,
+    "updated_at": "2019-10-03T10:44:28.795911Z",
+    "changed": false
+  },
+  {
+    "name": "glob",
+    "locked": "0.3.4",
+    "latest_stable": "0.3.4",
+    "latest_any": "0.3.4",
+    "latest_rust_version": "1.63.0",
+    "updated_at": "2026-10-08T18:12:11.966824Z",
+    "changed": false
+  },
+  {
+    "name": "glow",
+    "locked": "0.17.0",
+    "latest_stable": "0.18.0",
+    "latest_any": "0.18.0",
+    "latest_rust_version": null,
+    "updated_at": "2026-07-09T03:15:20.938802Z",
+    "changed": true
+  },
+  {
+    "name": "glutin_wgl_sys",
+    "locked": "0.6.1",
+    "latest_stable": "0.6.1",
+    "latest_any": "0.6.1",
+    "latest_rust_version": "1.70.0",
+    "updated_at": "2025-01-12T09:52:21.238564Z",
+    "changed": false
+  },
+  {
+    "name": "gpu-allocator",
+    "locked": "0.28.0",
+    "latest_stable": "0.28.0",
+    "latest_any": "0.28.0",
+    "latest_rust_version": "1.71",
+    "updated_at": "2025-09-26T12:44:30.770875Z",
+    "changed": false
+  },
+  {
+    "name": "half",
+    "locked": "2.7.1",
+    "latest_stable": "2.7.1",
+    "latest_any": "2.7.1",
+    "latest_rust_version": "1.81",
+    "updated_at": "2025-10-14T03:59:26.575229Z",
+    "changed": false
+  },
+  {
+    "name": "hashbrown",
+    "locked": "0.14.5",
+    "latest_stable": "0.17.1",
+    "latest_any": "0.17.1",
+    "latest_rust_version": "1.85.0",
+    "updated_at": "2026-10-13T12:28:45.005326Z",
+    "changed": true
+  },
+  {
+    "name": "hashbrown",
+    "locked": "0.15.5",
+    "latest_stable": "0.17.1",
+    "latest_any": "0.17.1",
+    "latest_rust_version": "1.85.0",
+    "updated_at": "2026-10-13T12:28:45.005326Z",
+    "changed": true
+  },
+  {
+    "name": "hashbrown",
+    "locked": "0.16.1",
+    "latest_stable": "0.17.1",
+    "latest_any": "0.17.1",
+    "latest_rust_version": "1.85.0",
+    "updated_at": "2026-10-13T12:28:45.005326Z",
+    "changed": true
+  },
+  {
+    "name": "hashbrown",
+    "locked": "0.17.1",
+    "latest_stable": "0.17.1",
+    "latest_any": "0.17.1",
+    "latest_rust_version": "1.85.0",
+    "updated_at": "2026-10-13T12:28:45.005326Z",
+    "changed": false
+  },
+  {
+    "name": "heck",
+    "locked": "0.5.0",
+    "latest_stable": "0.5.0",
+    "latest_any": "0.5.0",
+    "latest_rust_version": "1.56",
+    "updated_at": "2024-03-12T22:42:23.303234Z",
+    "changed": false
+  },
+  {
+    "name": "hermit-abi",
+    "locked": "0.5.2",
+    "latest_stable": "0.5.3",
+    "latest_any": "0.5.3",
+    "latest_rust_version": null,
+    "updated_at": "2026-08-31T11:45:18.991301Z",
+    "changed": true
+  },
+  {
+    "name": "hex",
+    "locked": "0.4.3",
+    "latest_stable": "0.4.3",
+    "latest_any": "0.4.3",
+    "latest_rust_version": null,
+    "updated_at": "2021-03-03T10:48:58.682837Z",
+    "changed": false
+  },
+  {
+    "name": "home",
+    "locked": "0.5.12",
+    "latest_stable": "0.5.12",
+    "latest_any": "0.5.12",
+    "latest_rust_version": "1.88",
+    "updated_at": "2025-10-23T23:56:32.753422Z",
+    "changed": false
+  },
+  {
+    "name": "iana-time-zone",
+    "locked": "0.1.65",
+    "latest_stable": "0.1.65",
+    "latest_any": "0.1.65",
+    "latest_rust_version": "1.62.0",
+    "updated_at": "2026-01-28T08:40:52.528531Z",
+    "changed": false
+  },
+  {
+    "name": "iana-time-zone-haiku",
+    "locked": "0.1.2",
+    "latest_stable": "0.1.2",
+    "latest_any": "0.1.2",
+    "latest_rust_version": null,
+    "updated_at": "2023-05-12T08:43:45.406909Z",
+    "changed": false
+  },
+  {
+    "name": "indexmap",
+    "locked": "2.14.2",
+    "latest_stable": "2.14.2",
+    "latest_any": "2.14.2",
+    "latest_rust_version": "1.85",
+    "updated_at": "2026-09-05T01:53:48.019655Z",
+    "changed": false
+  },
+  {
+    "name": "is-terminal",
+    "locked": "0.4.17",
+    "latest_stable": "0.4.17",
+    "latest_any": "0.4.17",
+    "latest_rust_version": "1.63",
+    "updated_at": "2025-10-23T18:19:40.385809Z",
+    "changed": false
+  },
+  {
+    "name": "is_terminal_polyfill",
+    "locked": "1.70.2",
+    "latest_stable": "1.70.2",
+    "latest_any": "1.70.2",
+    "latest_rust_version": "1.70.0",
+    "updated_at": "2025-10-21T17:10:33.347971Z",
+    "changed": false
+  },
+  {
+    "name": "itertools",
+    "locked": "0.10.5",
+    "latest_stable": "0.15.0",
+    "latest_any": "0.15.0",
+    "latest_rust_version": "1.63.0",
+    "updated_at": "2026-06-16T15:09:28.880416Z",
+    "changed": true
+  },
+  {
+    "name": "itoa",
+    "locked": "1.0.18",
+    "latest_stable": "1.0.18",
+    "latest_any": "1.0.18",
+    "latest_rust_version": "1.68",
+    "updated_at": "2026-03-20T00:12:37.043881Z",
+    "changed": false
+  },
+  {
+    "name": "itoap",
+    "locked": "1.0.1",
+    "latest_stable": "1.0.1",
+    "latest_any": "1.0.1",
+    "latest_rust_version": null,
+    "updated_at": "2021-02-18T16:50:27.920486Z",
+    "changed": false
+  },
+  {
+    "name": "jni-sys",
+    "locked": "0.3.1",
+    "latest_stable": "0.4.1",
+    "latest_any": "0.4.1",
+    "latest_rust_version": "1.76.0",
+    "updated_at": "2026-03-22T16:30:17.889789Z",
+    "changed": true
+  },
+  {
+    "name": "jni-sys",
+    "locked": "0.4.1",
+    "latest_stable": "0.4.1",
+    "latest_any": "0.4.1",
+    "latest_rust_version": "1.76.0",
+    "updated_at": "2026-03-22T16:30:17.889789Z",
+    "changed": false
+  },
+  {
+    "name": "jni-sys-macros",
+    "locked": "0.4.1",
+    "latest_stable": "0.4.1",
+    "latest_any": "0.4.1",
+    "latest_rust_version": null,
+    "updated_at": "2026-01-09T00:23:44.614075Z",
+    "changed": false
+  },
+  {
+    "name": "jobserver",
+    "locked": "0.1.35",
+    "latest_stable": "0.1.35",
+    "latest_any": "0.1.35",
+    "latest_rust_version": "1.85",
+    "updated_at": "2026-07-21T07:18:23.295009Z",
+    "changed": false
+  },
+  {
+    "name": "js-sys",
+    "locked": "0.3.106",
+    "latest_stable": "0.3.106",
+    "latest_any": "0.3.106",
+    "latest_rust_version": "1.81",
+    "updated_at": "2026-09-25T07:13:42.260040Z",
+    "changed": false
+  },
+  {
+    "name": "khronos-egl",
+    "locked": "6.0.0",
+    "latest_stable": "6.0.0",
+    "latest_any": "6.0.0",
+    "latest_rust_version": null,
+    "updated_at": "2023-10-05T12:26:28.196465Z",
+    "changed": false
+  },
+  {
+    "name": "khronos_api",
+    "locked": "3.1.0",
+    "latest_stable": "3.1.0",
+    "latest_any": "3.1.0",
+    "latest_rust_version": null,
+    "updated_at": "2019-04-01T04:52:05.349671Z",
+    "changed": false
+  },
+  {
+    "name": "libc",
+    "locked": "0.2.186",
+    "latest_stable": "0.2.191",
+    "latest_any": "1.0.0-alpha.5",
+    "latest_rust_version": "1.65",
+    "updated_at": "2026-10-16T22:56:46.041660Z",
+    "changed": true
+  },
+  {
+    "name": "libloading",
+    "locked": "0.8.9",
+    "latest_stable": "0.9.0",
+    "latest_any": "0.9.0",
+    "latest_rust_version": "1.88.0",
+    "updated_at": "2025-11-05T23:15:12.937093Z",
+    "changed": true
+  },
+  {
+    "name": "libloading",
+    "locked": "0.9.0",
+    "latest_stable": "0.9.0",
+    "latest_any": "0.9.0",
+    "latest_rust_version": "1.88.0",
+    "updated_at": "2025-11-05T23:15:12.937093Z",
+    "changed": false
+  },
+  {
+    "name": "libm",
+    "locked": "0.2.16",
+    "latest_stable": "0.2.16",
+    "latest_any": "0.2.16",
+    "latest_rust_version": "1.63",
+    "updated_at": "2026-03-17T09:19:16.815251Z",
+    "changed": false
+  },
+  {
+    "name": "linux-raw-sys",
+    "locked": "0.12.1",
+    "latest_stable": "0.12.1",
+    "latest_any": "0.12.1",
+    "latest_rust_version": "1.63",
+    "updated_at": "2025-12-23T00:00:07.059646Z",
+    "changed": false
+  },
+  {
+    "name": "litrs",
+    "locked": "1.0.1",
+    "latest_stable": "1.0.1",
+    "latest_any": "1.0.1",
+    "latest_rust_version": "1.56",
+    "updated_at": "2026-10-12T11:59:37.244600Z",
+    "changed": false
+  },
+  {
+    "name": "lock_api",
+    "locked": "0.4.14",
+    "latest_stable": "0.5.0",
+    "latest_any": "0.5.0",
+    "latest_rust_version": "1.95",
+    "updated_at": "2026-10-21T10:30:36.849357Z",
+    "changed": true
+  },
+  {
+    "name": "log",
+    "locked": "0.4.34",
+    "latest_stable": "0.4.34",
+    "latest_any": "0.4.34",
+    "latest_rust_version": "1.71.0",
+    "updated_at": "2026-08-22T11:44:27.941626Z",
+    "changed": false
+  },
+  {
+    "name": "lz4",
+    "locked": "1.28.1",
+    "latest_stable": "1.28.1",
+    "latest_any": "1.28.1",
+    "latest_rust_version": null,
+    "updated_at": "2025-01-07T09:23:34.542720Z",
+    "changed": false
+  },
+  {
+    "name": "lz4-sys",
+    "locked": "1.11.1+lz4-1.10.0",
+    "latest_stable": "1.11.1+lz4-1.10.0",
+    "latest_any": "1.11.1+lz4-1.10.0",
+    "latest_rust_version": null,
+    "updated_at": "2024-09-26T11:51:34.999693Z",
+    "changed": false
+  },
+  {
+    "name": "memchr",
+    "locked": "2.8.0",
+    "latest_stable": "2.8.3",
+    "latest_any": "2.8.3",
+    "latest_rust_version": "1.61",
+    "updated_at": "2026-07-08T00:49:54.408285Z",
+    "changed": true
+  },
+  {
+    "name": "memmap2",
+    "locked": "0.9.12",
+    "latest_stable": "0.9.12",
+    "latest_any": "0.9.12",
+    "latest_rust_version": "1.65",
+    "updated_at": "2026-10-21T17:56:30.027126Z",
+    "changed": false
+  },
+  {
+    "name": "miniz_oxide",
+    "locked": "0.9.1",
+    "latest_stable": "0.9.1",
+    "latest_any": "0.9.1",
+    "latest_rust_version": null,
+    "updated_at": "2026-03-13T00:19:26.378812Z",
+    "changed": false
+  },
+  {
+    "name": "mio",
+    "locked": "1.2.4",
+    "latest_stable": "1.2.4",
+    "latest_any": "1.2.4",
+    "latest_rust_version": "1.71",
+    "updated_at": "2026-10-03T16:33:10.183266Z",
+    "changed": false
+  },
+  {
+    "name": "multiversion",
+    "locked": "0.7.4",
+    "latest_stable": "0.9.2",
+    "latest_any": "0.9.2",
+    "latest_rust_version": "1.86",
+    "updated_at": "2026-10-22T04:45:49.934585Z",
+    "changed": true
+  },
+  {
+    "name": "multiversion-macros",
+    "locked": "0.7.4",
+    "latest_stable": "0.9.2",
+    "latest_any": "0.9.2",
+    "latest_rust_version": "1.86",
+    "updated_at": "2026-10-22T04:45:48.188921Z",
+    "changed": true
+  },
+  {
+    "name": "naga",
+    "locked": "30.0.1",
+    "latest_stable": "30.0.1",
+    "latest_any": "30.0.1",
+    "latest_rust_version": "1.87",
+    "updated_at": "2026-08-22T02:53:26.446935Z",
+    "changed": false
+  },
+  {
+    "name": "naga-types",
+    "locked": "30.0.1",
+    "latest_stable": "30.0.1",
+    "latest_any": "30.0.1",
+    "latest_rust_version": null,
+    "updated_at": "2026-08-22T02:53:24.527553Z",
+    "changed": false
+  },
+  {
+    "name": "ndk-sys",
+    "locked": "0.6.0+11769913",
+    "latest_stable": "0.6.0+11769913",
+    "latest_any": "0.6.0+11769913",
+    "latest_rust_version": "1.60",
+    "updated_at": "2024-04-26T15:14:59.325509Z",
+    "changed": false
+  },
+  {
+    "name": "now",
+    "locked": "0.1.3",
+    "latest_stable": "0.1.3",
+    "latest_any": "0.1.3",
+    "latest_rust_version": null,
+    "updated_at": "2022-09-27T08:23:12.500668Z",
+    "changed": false
+  },
+  {
+    "name": "ntapi",
+    "locked": "0.4.3",
+    "latest_stable": "0.4.3",
+    "latest_any": "0.4.3",
+    "latest_rust_version": null,
+    "updated_at": "2026-02-10T12:59:29.080382Z",
+    "changed": false
+  },
+  {
+    "name": "num-traits",
+    "locked": "0.2.19",
+    "latest_stable": "0.2.19",
+    "latest_any": "0.2.19",
+    "latest_rust_version": "1.60",
+    "updated_at": "2024-05-03T21:27:39.856244Z",
+    "changed": false
+  },
+  {
+    "name": "objc2",
+    "locked": "0.6.5",
+    "latest_stable": "0.6.5",
+    "latest_any": "0.6.5",
+    "latest_rust_version": "1.71",
+    "updated_at": "2026-10-05T18:26:53.790244Z",
+    "changed": false
+  },
+  {
+    "name": "objc2-core-foundation",
+    "locked": "0.3.2",
+    "latest_stable": "0.3.2",
+    "latest_any": "0.3.2",
+    "latest_rust_version": "1.71",
+    "updated_at": "2025-10-04T15:46:51.264986Z",
+    "changed": false
+  },
+  {
+    "name": "objc2-core-graphics",
+    "locked": "0.3.2",
+    "latest_stable": "0.3.2",
+    "latest_any": "0.3.2",
+    "latest_rust_version": "1.71",
+    "updated_at": "2025-10-04T15:47:47.786249Z",
+    "changed": false
+  },
+  {
+    "name": "objc2-encode",
+    "locked": "4.1.0",
+    "latest_stable": "4.1.0",
+    "latest_any": "4.1.0",
+    "latest_rust_version": "1.71",
+    "updated_at": "2025-01-22T23:40:12.051433Z",
+    "changed": false
+  },
+  {
+    "name": "objc2-foundation",
+    "locked": "0.3.2",
+    "latest_stable": "0.3.2",
+    "latest_any": "0.3.2",
+    "latest_rust_version": "1.71",
+    "updated_at": "2025-10-04T15:47:21.149969Z",
+    "changed": false
+  },
+  {
+    "name": "objc2-io-surface",
+    "locked": "0.3.2",
+    "latest_stable": "0.3.2",
+    "latest_any": "0.3.2",
+    "latest_rust_version": "1.71",
+    "updated_at": "2025-10-04T15:47:28.561974Z",
+    "changed": false
+  },
+  {
+    "name": "objc2-metal",
+    "locked": "0.3.2",
+    "latest_stable": "0.3.2",
+    "latest_any": "0.3.2",
+    "latest_rust_version": "1.71",
+    "updated_at": "2025-10-04T15:47:38.897269Z",
+    "changed": false
+  },
+  {
+    "name": "objc2-quartz-core",
+    "locked": "0.3.2",
+    "latest_stable": "0.3.2",
+    "latest_any": "0.3.2",
+    "latest_rust_version": "1.71",
+    "updated_at": "2025-10-04T16:15:28.249318Z",
+    "changed": false
+  },
+  {
+    "name": "object",
+    "locked": "0.39.1",
+    "latest_stable": "0.40.0",
+    "latest_any": "0.40.0",
+    "latest_rust_version": "1.85",
+    "updated_at": "2026-08-01T08:06:55.680121Z",
+    "changed": true
+  },
+  {
+    "name": "once_cell",
+    "locked": "1.21.4",
+    "latest_stable": "1.21.4",
+    "latest_any": "1.21.4",
+    "latest_rust_version": "1.65",
+    "updated_at": "2026-03-12T10:59:52.512992Z",
+    "changed": false
+  },
+  {
+    "name": "once_cell_polyfill",
+    "locked": "1.70.2",
+    "latest_stable": "1.70.2",
+    "latest_any": "1.70.2",
+    "latest_rust_version": "1.70.0",
+    "updated_at": "2025-10-21T16:49:23.438855Z",
+    "changed": false
+  },
+  {
+    "name": "oorandom",
+    "locked": "11.1.5",
+    "latest_stable": "11.1.5",
+    "latest_any": "11.1.5",
+    "latest_rust_version": null,
+    "updated_at": "2025-03-07T13:10:16.263607Z",
+    "changed": false
+  },
+  {
+    "name": "ordered-float",
+    "locked": "5.5.0",
+    "latest_stable": "5.5.0",
+    "latest_any": "5.5.0",
+    "latest_rust_version": "1.90",
+    "updated_at": "2026-08-21T18:24:42.044612Z",
+    "changed": false
+  },
+  {
+    "name": "parking_lot",
+    "locked": "0.12.5",
+    "latest_stable": "0.13.0",
+    "latest_any": "0.13.0",
+    "latest_rust_version": "1.95",
+    "updated_at": "2026-10-21T10:30:45.752743Z",
+    "changed": true
+  },
+  {
+    "name": "parking_lot_core",
+    "locked": "0.9.12",
+    "latest_stable": "0.10.0",
+    "latest_any": "0.10.0",
+    "latest_rust_version": "1.95",
+    "updated_at": "2026-10-21T10:30:41.689158Z",
+    "changed": true
+  },
+  {
+    "name": "percent-encoding",
+    "locked": "2.3.2",
+    "latest_stable": "2.3.2",
+    "latest_any": "2.3.2",
+    "latest_rust_version": "1.51",
+    "updated_at": "2025-08-21T08:46:50.131801Z",
+    "changed": false
+  },
+  {
+    "name": "phf",
+    "locked": "0.12.1",
+    "latest_stable": "0.14.0",
+    "latest_any": "0.14.0",
+    "latest_rust_version": "1.85",
+    "updated_at": "2026-06-21T00:37:50.027327Z",
+    "changed": true
+  },
+  {
+    "name": "phf_shared",
+    "locked": "0.12.1",
+    "latest_stable": "0.14.0",
+    "latest_any": "0.14.0",
+    "latest_rust_version": "1.85",
+    "updated_at": "2026-06-21T00:37:12.234879Z",
+    "changed": true
+  },
+  {
+    "name": "pin-project-lite",
+    "locked": "0.2.17",
+    "latest_stable": "0.2.17",
+    "latest_any": "0.2.17",
+    "latest_rust_version": "1.37",
+    "updated_at": "2026-02-27T15:19:08.132543Z",
+    "changed": false
+  },
+  {
+    "name": "pkg-config",
+    "locked": "0.3.34",
+    "latest_stable": "0.3.34",
+    "latest_any": "0.3.34",
+    "latest_rust_version": "1.63",
+    "updated_at": "2026-08-14T08:27:51.724149Z",
+    "changed": false
+  },
+  {
+    "name": "planus",
+    "locked": "0.3.1",
+    "latest_stable": "1.3.0",
+    "latest_any": "1.3.0",
+    "latest_rust_version": "1.88",
+    "updated_at": "2026-01-25T22:15:40.687145Z",
+    "changed": true
+  },
+  {
+    "name": "plotters",
+    "locked": "0.3.7",
+    "latest_stable": "0.3.7",
+    "latest_any": "0.3.7",
+    "latest_rust_version": null,
+    "updated_at": "2024-09-08T14:48:03.071447Z",
+    "changed": false
+  },
+  {
+    "name": "plotters-backend",
+    "locked": "0.3.7",
+    "latest_stable": "0.3.7",
+    "latest_any": "0.3.7",
+    "latest_rust_version": null,
+    "updated_at": "2024-09-08T14:46:47.868379Z",
+    "changed": false
+  },
+  {
+    "name": "plotters-svg",
+    "locked": "0.3.7",
+    "latest_stable": "0.3.7",
+    "latest_any": "0.3.7",
+    "latest_rust_version": null,
+    "updated_at": "2024-09-08T14:47:23.833784Z",
+    "changed": false
+  },
+  {
+    "name": "polars",
+    "locked": "0.45.1",
+    "latest_stable": "0.55.2",
+    "latest_any": "0.55.2",
+    "latest_rust_version": null,
+    "updated_at": "2026-08-06T09:11:43.305236Z",
+    "changed": true
+  },
+  {
+    "name": "polars-arrow",
+    "locked": "0.45.1",
+    "latest_stable": "0.55.2",
+    "latest_any": "0.55.2",
+    "latest_rust_version": null,
+    "updated_at": "2026-08-06T09:03:02.070337Z",
+    "changed": true
+  },
+  {
+    "name": "polars-arrow-format",
+    "locked": "0.1.0",
+    "latest_stable": "0.2.1",
+    "latest_any": "0.2.1",
+    "latest_rust_version": null,
+    "updated_at": "2025-08-28T18:14:30.152158Z",
+    "changed": true
+  },
+  {
+    "name": "polars-compute",
+    "locked": "0.45.1",
+    "latest_stable": "0.55.2",
+    "latest_any": "0.55.2",
+    "latest_rust_version": null,
+    "updated_at": "2026-08-06T09:03:14.325945Z",
+    "changed": true
+  },
+  {
+    "name": "polars-core",
+    "locked": "0.45.1",
+    "latest_stable": "0.55.2",
+    "latest_any": "0.55.2",
+    "latest_rust_version": null,
+    "updated_at": "2026-08-06T09:04:06.146448Z",
+    "changed": true
+  },
+  {
+    "name": "polars-error",
+    "locked": "0.45.1",
+    "latest_stable": "0.55.2",
+    "latest_any": "0.55.2",
+    "latest_rust_version": null,
+    "updated_at": "2026-08-06T09:01:27.200080Z",
+    "changed": true
+  },
+  {
+    "name": "polars-expr",
+    "locked": "0.45.1",
+    "latest_stable": "0.55.2",
+    "latest_any": "0.55.2",
+    "latest_rust_version": null,
+    "updated_at": "2026-08-06T09:08:40.517732Z",
+    "changed": true
+  },
+  {
+    "name": "polars-io",
+    "locked": "0.45.1",
+    "latest_stable": "0.55.2",
+    "latest_any": "0.55.2",
+    "latest_rust_version": null,
+    "updated_at": "2026-08-06T09:07:03.429260Z",
+    "changed": true
+  },
+  {
+    "name": "polars-lazy",
+    "locked": "0.45.1",
+    "latest_stable": "0.55.2",
+    "latest_any": "0.55.2",
+    "latest_rust_version": null,
+    "updated_at": "2026-08-06T09:10:09.966466Z",
+    "changed": true
+  },
+  {
+    "name": "polars-mem-engine",
+    "locked": "0.45.1",
+    "latest_stable": "0.55.2",
+    "latest_any": "0.55.2",
+    "latest_rust_version": null,
+    "updated_at": "2026-08-06T09:08:56.107037Z",
+    "changed": true
+  },
+  {
+    "name": "polars-ops",
+    "locked": "0.45.1",
+    "latest_stable": "0.55.2",
+    "latest_any": "0.55.2",
+    "latest_rust_version": null,
+    "updated_at": "2026-08-06T09:04:55.176276Z",
+    "changed": true
+  },
+  {
+    "name": "polars-parquet",
+    "locked": "0.45.1",
+    "latest_stable": "0.55.2",
+    "latest_any": "0.55.2",
+    "latest_rust_version": null,
+    "updated_at": "2026-08-06T09:06:26.680496Z",
+    "changed": true
+  },
+  {
+    "name": "polars-parquet-format",
+    "locked": "0.1.0",
+    "latest_stable": "0.1.0",
+    "latest_any": "0.1.0",
+    "latest_rust_version": null,
+    "updated_at": "2024-10-27T10:04:23.702888Z",
+    "changed": false
+  },
+  {
+    "name": "polars-pipe",
+    "locked": "0.45.1",
+    "latest_stable": "0.48.1",
+    "latest_any": "0.48.1",
+    "latest_rust_version": null,
+    "updated_at": "2025-05-21T10:56:38.886104Z",
+    "changed": true
+  },
+  {
+    "name": "polars-plan",
+    "locked": "0.45.1",
+    "latest_stable": "0.55.2",
+    "latest_any": "0.55.2",
+    "latest_rust_version": null,
+    "updated_at": "2026-08-06T09:08:15.817902Z",
+    "changed": true
+  },
+  {
+    "name": "polars-row",
+    "locked": "0.45.1",
+    "latest_stable": "0.55.2",
+    "latest_any": "0.55.2",
+    "latest_rust_version": null,
+    "updated_at": "2026-08-06T09:03:30.564033Z",
+    "changed": true
+  },
+  {
+    "name": "polars-schema",
+    "locked": "0.45.1",
+    "latest_stable": "0.55.2",
+    "latest_any": "0.55.2",
+    "latest_rust_version": null,
+    "updated_at": "2026-08-06T09:02:51.278294Z",
+    "changed": true
+  },
+  {
+    "name": "polars-sql",
+    "locked": "0.45.1",
+    "latest_stable": "0.55.2",
+    "latest_any": "0.55.2",
+    "latest_rust_version": null,
+    "updated_at": "2026-08-06T09:11:02.438552Z",
+    "changed": true
+  },
+  {
+    "name": "polars-stream",
+    "locked": "0.45.1",
+    "latest_stable": "0.55.2",
+    "latest_any": "0.55.2",
+    "latest_rust_version": null,
+    "updated_at": "2026-08-06T09:09:57.365127Z",
+    "changed": true
+  },
+  {
+    "name": "polars-time",
+    "locked": "0.45.1",
+    "latest_stable": "0.55.2",
+    "latest_any": "0.55.2",
+    "latest_rust_version": null,
+    "updated_at": "2026-08-06T09:06:08.047428Z",
+    "changed": true
+  },
+  {
+    "name": "polars-utils",
+    "locked": "0.45.1",
+    "latest_stable": "0.55.2",
+    "latest_any": "0.55.2",
+    "latest_rust_version": null,
+    "updated_at": "2026-08-06T09:02:36.725409Z",
+    "changed": true
+  },
+  {
+    "name": "pollster",
+    "locked": "1.0.1",
+    "latest_stable": "1.0.1",
+    "latest_any": "1.0.1",
+    "latest_rust_version": "1.69",
+    "updated_at": "2026-07-10T16:05:12.778455Z",
+    "changed": false
+  },
+  {
+    "name": "portable-atomic",
+    "locked": "1.15.0",
+    "latest_stable": "1.15.0",
+    "latest_any": "1.15.0",
+    "latest_rust_version": "1.34",
+    "updated_at": "2026-08-09T17:31:27.814296Z",
+    "changed": false
+  },
+  {
+    "name": "portable-atomic-util",
+    "locked": "0.2.8",
+    "latest_stable": "0.2.8",
+    "latest_any": "0.2.8",
+    "latest_rust_version": "1.36",
+    "updated_at": "2026-09-04T14:36:47.702530Z",
+    "changed": false
+  },
+  {
+    "name": "ppv-lite86",
+    "locked": "0.2.21",
+    "latest_stable": "0.2.21",
+    "latest_any": "0.2.21",
+    "latest_rust_version": "1.61",
+    "updated_at": "2025-03-09T20:01:40.419162Z",
+    "changed": false
+  },
+  {
+    "name": "presser",
+    "locked": "0.3.1",
+    "latest_stable": "0.3.1",
+    "latest_any": "0.3.1",
+    "latest_rust_version": "1.64",
+    "updated_at": "2022-10-16T23:18:13.715970Z",
+    "changed": false
+  },
+  {
+    "name": "proc-macro2",
+    "locked": "1.0.106",
+    "latest_stable": "1.0.107",
+    "latest_any": "1.0.107",
+    "latest_rust_version": "1.71",
+    "updated_at": "2026-07-19T00:18:25.189787Z",
+    "changed": true
+  },
+  {
+    "name": "profiling",
+    "locked": "1.0.18",
+    "latest_stable": "1.0.18",
+    "latest_any": "1.0.18",
+    "latest_rust_version": "1.60",
+    "updated_at": "2026-05-04T03:33:15.842050Z",
+    "changed": false
+  },
+  {
+    "name": "proptest",
+    "locked": "1.11.0",
+    "latest_stable": "1.12.0",
+    "latest_any": "1.12.0",
+    "latest_rust_version": "1.88",
+    "updated_at": "2026-10-10T18:18:05.623491Z",
+    "changed": true
+  },
+  {
+    "name": "psm",
+    "locked": "0.1.32",
+    "latest_stable": "0.1.32",
+    "latest_any": "0.1.32",
+    "latest_rust_version": "1.88.0",
+    "updated_at": "2026-08-02T09:30:52.432582Z",
+    "changed": false
+  },
+  {
+    "name": "quote",
+    "locked": "1.0.45",
+    "latest_stable": "1.0.47",
+    "latest_any": "1.0.47",
+    "latest_rust_version": "1.71",
+    "updated_at": "2026-07-19T00:16:57.083778Z",
+    "changed": true
+  },
+  {
+    "name": "r-efi",
+    "locked": "5.3.0",
+    "latest_stable": "7.1.0",
+    "latest_any": "7.1.0",
+    "latest_rust_version": "1.68",
+    "updated_at": "2026-08-10T13:27:42.488376Z",
+    "changed": true
+  },
+  {
+    "name": "r-efi",
+    "locked": "6.0.0",
+    "latest_stable": "7.1.0",
+    "latest_any": "7.1.0",
+    "latest_rust_version": "1.68",
+    "updated_at": "2026-08-10T13:27:42.488376Z",
+    "changed": true
+  },
+  {
+    "name": "rand",
+    "locked": "0.8.8",
+    "latest_stable": "0.10.3",
+    "latest_any": "0.10.3",
+    "latest_rust_version": "1.85",
+    "updated_at": "2026-09-20T06:37:47.850624Z",
+    "changed": true
+  },
+  {
+    "name": "rand",
+    "locked": "0.9.5",
+    "latest_stable": "0.10.3",
+    "latest_any": "0.10.3",
+    "latest_rust_version": "1.85",
+    "updated_at": "2026-09-20T06:37:47.850624Z",
+    "changed": true
+  },
+  {
+    "name": "rand_chacha",
+    "locked": "0.3.1",
+    "latest_stable": "0.10.0",
+    "latest_any": "0.10.0",
+    "latest_rust_version": "1.85",
+    "updated_at": "2026-02-02T08:15:02.537641Z",
+    "changed": true
+  },
+  {
+    "name": "rand_chacha",
+    "locked": "0.9.0",
+    "latest_stable": "0.10.0",
+    "latest_any": "0.10.0",
+    "latest_rust_version": "1.85",
+    "updated_at": "2026-02-02T08:15:02.537641Z",
+    "changed": true
+  },
+  {
+    "name": "rand_core",
+    "locked": "0.6.4",
+    "latest_stable": "0.10.1",
+    "latest_any": "0.10.1",
+    "latest_rust_version": "1.85",
+    "updated_at": "2026-09-02T08:19:33.285884Z",
+    "changed": true
+  },
+  {
+    "name": "rand_core",
+    "locked": "0.9.5",
+    "latest_stable": "0.10.1",
+    "latest_any": "0.10.1",
+    "latest_rust_version": "1.85",
+    "updated_at": "2026-09-02T08:19:33.285884Z",
+    "changed": true
+  },
+  {
+    "name": "rand_distr",
+    "locked": "0.4.3",
+    "latest_stable": "0.6.0",
+    "latest_any": "0.6.0",
+    "latest_rust_version": "1.85",
+    "updated_at": "2026-02-10T13:15:01.517269Z",
+    "changed": true
+  },
+  {
+    "name": "rand_xorshift",
+    "locked": "0.4.0",
+    "latest_stable": "0.5.0",
+    "latest_any": "0.5.0",
+    "latest_rust_version": "1.85",
+    "updated_at": "2026-02-02T08:15:36.556285Z",
+    "changed": true
+  },
+  {
+    "name": "range-alloc",
+    "locked": "0.1.5",
+    "latest_stable": "0.1.5",
+    "latest_any": "0.1.5",
+    "latest_rust_version": null,
+    "updated_at": "2026-02-27T20:12:28.520394Z",
+    "changed": false
+  },
+  {
+    "name": "raw-cpuid",
+    "locked": "11.6.0",
+    "latest_stable": "11.6.0",
+    "latest_any": "11.6.0",
+    "latest_rust_version": null,
+    "updated_at": "2025-09-05T02:59:39.561516Z",
+    "changed": false
+  },
+  {
+    "name": "raw-window-handle",
+    "locked": "0.6.2",
+    "latest_stable": "0.6.2",
+    "latest_any": "0.6.2",
+    "latest_rust_version": "1.64",
+    "updated_at": "2024-05-17T19:41:38.796080Z",
+    "changed": false
+  },
+  {
+    "name": "raw-window-metal",
+    "locked": "1.1.0",
+    "latest_stable": "1.1.0",
+    "latest_any": "1.1.0",
+    "latest_rust_version": "1.71",
+    "updated_at": "2025-01-26T16:10:38.280466Z",
+    "changed": false
+  },
+  {
+    "name": "rayon",
+    "locked": "1.12.0",
+    "latest_stable": "1.12.0",
+    "latest_any": "1.12.0",
+    "latest_rust_version": "1.80",
+    "updated_at": "2026-04-14T00:56:56.454086Z",
+    "changed": false
+  },
+  {
+    "name": "rayon-core",
+    "locked": "1.13.0",
+    "latest_stable": "1.13.0",
+    "latest_any": "1.13.0",
+    "latest_rust_version": "1.80",
+    "updated_at": "2025-08-12T23:21:51.666309Z",
+    "changed": false
+  },
+  {
+    "name": "recursive",
+    "locked": "0.1.1",
+    "latest_stable": "0.1.1",
+    "latest_any": "0.1.1",
+    "latest_rust_version": null,
+    "updated_at": "2024-04-08T11:10:23.978981Z",
+    "changed": false
+  },
+  {
+    "name": "recursive-proc-macro-impl",
+    "locked": "0.1.1",
+    "latest_stable": "0.1.1",
+    "latest_any": "0.1.1",
+    "latest_rust_version": null,
+    "updated_at": "2024-04-08T11:10:12.605434Z",
+    "changed": false
+  },
+  {
+    "name": "redox_syscall",
+    "locked": "0.5.18",
+    "latest_stable": "0.9.5",
+    "latest_any": "0.9.5",
+    "latest_rust_version": null,
+    "updated_at": "2026-10-17T19:01:02.018979Z",
+    "changed": true
+  },
+  {
+    "name": "regex",
+    "locked": "1.12.3",
+    "latest_stable": "1.13.1",
+    "latest_any": "1.13.1",
+    "latest_rust_version": "1.65",
+    "updated_at": "2026-07-15T20:19:35.162139Z",
+    "changed": true
+  },
+  {
+    "name": "regex-automata",
+    "locked": "0.4.14",
+    "latest_stable": "0.4.18",
+    "latest_any": "0.4.18",
+    "latest_rust_version": "1.65",
+    "updated_at": "2026-08-04T13:10:37.385020Z",
+    "changed": true
+  },
+  {
+    "name": "regex-syntax",
+    "locked": "0.8.10",
+    "latest_stable": "0.8.11",
+    "latest_any": "0.8.11",
+    "latest_rust_version": "1.65",
+    "updated_at": "2026-06-09T15:00:25.566550Z",
+    "changed": true
+  },
+  {
+    "name": "renderdoc-sys",
+    "locked": "1.1.0",
+    "latest_stable": "1.1.0",
+    "latest_any": "1.1.0",
+    "latest_rust_version": null,
+    "updated_at": "2024-03-02T02:20:53.768859Z",
+    "changed": false
+  },
+  {
+    "name": "rustc-hash",
+    "locked": "1.1.0",
+    "latest_stable": "2.1.3",
+    "latest_any": "2.1.3",
+    "latest_rust_version": "1.77",
+    "updated_at": "2026-07-03T11:55:08.028059Z",
+    "changed": true
+  },
+  {
+    "name": "rustix",
+    "locked": "1.1.5",
+    "latest_stable": "1.1.5",
+    "latest_any": "1.1.5",
+    "latest_rust_version": "1.65",
+    "updated_at": "2026-09-16T23:05:02.319690Z",
+    "changed": false
+  },
+  {
+    "name": "rustversion",
+    "locked": "1.0.22",
+    "latest_stable": "1.0.23",
+    "latest_any": "1.0.23",
+    "latest_rust_version": "1.31",
+    "updated_at": "2026-07-07T02:10:26.015429Z",
+    "changed": true
+  },
+  {
+    "name": "ryu",
+    "locked": "1.0.23",
+    "latest_stable": "1.0.23",
+    "latest_any": "1.0.23",
+    "latest_rust_version": "1.71",
+    "updated_at": "2026-02-08T20:34:03.456199Z",
+    "changed": false
+  },
+  {
+    "name": "same-file",
+    "locked": "1.0.6",
+    "latest_stable": "1.0.6",
+    "latest_any": "1.0.6",
+    "latest_rust_version": null,
+    "updated_at": "2020-01-11T17:02:30.960838Z",
+    "changed": false
+  },
+  {
+    "name": "scopeguard",
+    "locked": "1.2.0",
+    "latest_stable": "1.2.0",
+    "latest_any": "1.2.0",
+    "latest_rust_version": null,
+    "updated_at": "2023-07-17T13:47:53.232324Z",
+    "changed": false
+  },
+  {
+    "name": "serde",
+    "locked": "1.0.229",
+    "latest_stable": "1.0.229",
+    "latest_any": "1.0.229",
+    "latest_rust_version": "1.56",
+    "updated_at": "2026-07-18T23:05:13.266456Z",
+    "changed": false
+  },
+  {
+    "name": "serde_core",
+    "locked": "1.0.229",
+    "latest_stable": "1.0.229",
+    "latest_any": "1.0.229",
+    "latest_rust_version": "1.56",
+    "updated_at": "2026-07-18T23:05:10.896830Z",
+    "changed": false
+  },
+  {
+    "name": "serde_derive",
+    "locked": "1.0.229",
+    "latest_stable": "1.0.229",
+    "latest_any": "1.0.229",
+    "latest_rust_version": "1.71",
+    "updated_at": "2026-07-18T23:05:07.504375Z",
+    "changed": false
+  },
+  {
+    "name": "serde_json",
+    "locked": "1.0.151",
+    "latest_stable": "1.0.154",
+    "latest_any": "1.0.154",
+    "latest_rust_version": "1.71",
+    "updated_at": "2026-10-11T15:31:46.076577Z",
+    "changed": true
+  },
+  {
+    "name": "shlex",
+    "locked": "2.0.1",
+    "latest_stable": "2.0.1",
+    "latest_any": "2.0.1",
+    "latest_rust_version": "1.46.0",
+    "updated_at": "2026-05-17T18:56:12.775983Z",
+    "changed": false
+  },
+  {
+    "name": "simd-adler32",
+    "locked": "0.3.10",
+    "latest_stable": "0.3.10",
+    "latest_any": "0.3.10",
+    "latest_rust_version": null,
+    "updated_at": "2026-07-14T17:42:45.047242Z",
+    "changed": false
+  },
+  {
+    "name": "simdutf8",
+    "locked": "0.1.5",
+    "latest_stable": "0.1.5",
+    "latest_any": "0.1.5",
+    "latest_rust_version": null,
+    "updated_at": "2024-09-22T09:18:22.610907Z",
+    "changed": false
+  },
+  {
+    "name": "siphasher",
+    "locked": "1.0.4",
+    "latest_stable": "1.0.4",
+    "latest_any": "1.0.4",
+    "latest_rust_version": null,
+    "updated_at": "2026-09-25T08:51:05.944322Z",
+    "changed": false
+  },
+  {
+    "name": "slab",
+    "locked": "0.4.12",
+    "latest_stable": "0.4.12",
+    "latest_any": "0.4.12",
+    "latest_rust_version": "1.51",
+    "updated_at": "2026-01-31T12:59:22.609198Z",
+    "changed": false
+  },
+  {
+    "name": "slotmap",
+    "locked": "1.1.1",
+    "latest_stable": "1.1.1",
+    "latest_any": "1.1.1",
+    "latest_rust_version": "1.58.0",
+    "updated_at": "2025-12-06T12:30:22.308199Z",
+    "changed": false
+  },
+  {
+    "name": "smallvec",
+    "locked": "1.16.3",
+    "latest_stable": "1.16.3",
+    "latest_any": "2.0.0-beta.3",
+    "latest_rust_version": null,
+    "updated_at": "2026-10-16T18:57:56.345941Z",
+    "changed": false
+  },
+  {
+    "name": "snap",
+    "locked": "1.1.2",
+    "latest_stable": "1.1.2",
+    "latest_any": "1.1.2",
+    "latest_rust_version": null,
+    "updated_at": "2026-07-15T11:40:42.657953Z",
+    "changed": false
+  },
+  {
+    "name": "socket2",
+    "locked": "0.6.5",
+    "latest_stable": "0.6.5",
+    "latest_any": "0.6.5",
+    "latest_rust_version": "1.70",
+    "updated_at": "2026-07-13T19:45:58.436336Z",
+    "changed": false
+  },
+  {
+    "name": "spirv",
+    "locked": "0.4.0+sdk-1.4.341.0",
+    "latest_stable": "0.4.0+sdk-1.4.341.0",
+    "latest_any": "0.4.0+sdk-1.4.341.0",
+    "latest_rust_version": null,
+    "updated_at": "2026-03-13T15:38:20.118579Z",
+    "changed": false
+  },
+  {
+    "name": "sqlparser",
+    "locked": "0.52.0",
+    "latest_stable": "0.63.0",
+    "latest_any": "0.63.0",
+    "latest_rust_version": null,
+    "updated_at": "2026-09-13T20:07:26.055155Z",
+    "changed": true
+  },
+  {
+    "name": "stacker",
+    "locked": "0.1.25",
+    "latest_stable": "0.1.25",
+    "latest_any": "0.1.25",
+    "latest_rust_version": "1.63",
+    "updated_at": "2026-08-02T09:31:06.457261Z",
+    "changed": false
+  },
+  {
+    "name": "static_assertions",
+    "locked": "1.1.0",
+    "latest_stable": "1.1.0",
+    "latest_any": "1.1.0",
+    "latest_rust_version": null,
+    "updated_at": "2019-11-03T17:02:11.618786Z",
+    "changed": false
+  },
+  {
+    "name": "streaming-decompression",
+    "locked": "0.1.2",
+    "latest_stable": "0.1.2",
+    "latest_any": "0.1.2",
+    "latest_rust_version": null,
+    "updated_at": "2022-07-30T16:22:06.914888Z",
+    "changed": false
+  },
+  {
+    "name": "streaming-iterator",
+    "locked": "0.1.9",
+    "latest_stable": "0.1.9",
+    "latest_any": "0.1.9",
+    "latest_rust_version": "1.56",
+    "updated_at": "2023-01-06T01:30:08.408874Z",
+    "changed": false
+  },
+  {
+    "name": "strength_reduce",
+    "locked": "0.2.4",
+    "latest_stable": "0.2.4",
+    "latest_any": "0.2.4",
+    "latest_rust_version": null,
+    "updated_at": "2022-11-08T03:46:49.572569Z",
+    "changed": false
+  },
+  {
+    "name": "strsim",
+    "locked": "0.11.1",
+    "latest_stable": "0.11.1",
+    "latest_any": "0.11.1",
+    "latest_rust_version": "1.56",
+    "updated_at": "2024-04-02T22:18:09.406790Z",
+    "changed": false
+  },
+  {
+    "name": "strum_macros",
+    "locked": "0.26.4",
+    "latest_stable": "0.28.0",
+    "latest_any": "0.28.0",
+    "latest_rust_version": "1.71",
+    "updated_at": "2026-02-22T15:46:01.148831Z",
+    "changed": true
+  },
+  {
+    "name": "syn",
+    "locked": "1.0.109",
+    "latest_stable": "3.0.9",
+    "latest_any": "3.0.9",
+    "latest_rust_version": "1.71",
+    "updated_at": "2026-10-12T15:04:09.212573Z",
+    "changed": true
+  },
+  {
+    "name": "syn",
+    "locked": "2.0.117",
+    "latest_stable": "3.0.9",
+    "latest_any": "3.0.9",
+    "latest_rust_version": "1.71",
+    "updated_at": "2026-10-12T15:04:09.212573Z",
+    "changed": true
+  },
+  {
+    "name": "syn",
+    "locked": "3.0.6",
+    "latest_stable": "3.0.9",
+    "latest_any": "3.0.9",
+    "latest_rust_version": "1.71",
+    "updated_at": "2026-10-12T15:04:09.212573Z",
+    "changed": true
+  },
+  {
+    "name": "sysinfo",
+    "locked": "0.32.1",
+    "latest_stable": "0.39.6",
+    "latest_any": "0.39.6",
+    "latest_rust_version": "1.95",
+    "updated_at": "2026-07-09T10:46:59.210840Z",
+    "changed": true
+  },
+  {
+    "name": "target-features",
+    "locked": "0.1.6",
+    "latest_stable": "0.2.0",
+    "latest_any": "0.2.0",
+    "latest_rust_version": "1.82",
+    "updated_at": "2026-09-05T05:26:31.772798Z",
+    "changed": true
+  },
+  {
+    "name": "termcolor",
+    "locked": "1.4.1",
+    "latest_stable": "1.4.1",
+    "latest_any": "1.4.1",
+    "latest_rust_version": null,
+    "updated_at": "2024-01-10T12:40:32.427230Z",
+    "changed": false
+  },
+  {
+    "name": "thiserror",
+    "locked": "2.0.21",
+    "latest_stable": "2.0.21",
+    "latest_any": "2.0.21",
+    "latest_rust_version": "1.77",
+    "updated_at": "2026-09-23T20:24:07.771104Z",
+    "changed": false
+  },
+  {
+    "name": "thiserror-impl",
+    "locked": "2.0.21",
+    "latest_stable": "2.0.21",
+    "latest_any": "2.0.21",
+    "latest_rust_version": "1.77",
+    "updated_at": "2026-09-23T20:24:05.038819Z",
+    "changed": false
+  },
+  {
+    "name": "tinytemplate",
+    "locked": "1.2.1",
+    "latest_stable": "1.2.1",
+    "latest_any": "1.2.1",
+    "latest_rust_version": null,
+    "updated_at": "2021-03-04T00:05:08.069396Z",
+    "changed": false
+  },
+  {
+    "name": "tokio",
+    "locked": "1.54.1",
+    "latest_stable": "1.54.1",
+    "latest_any": "1.54.1",
+    "latest_rust_version": "1.85",
+    "updated_at": "2026-10-21T21:05:43.950213Z",
+    "changed": false
+  },
+  {
+    "name": "tokio-util",
+    "locked": "0.7.20",
+    "latest_stable": "0.7.20",
+    "latest_any": "0.7.20",
+    "latest_rust_version": "1.85",
+    "updated_at": "2026-10-09T11:02:11.456952Z",
+    "changed": false
+  },
+  {
+    "name": "unarray",
+    "locked": "0.1.4",
+    "latest_stable": "0.1.4",
+    "latest_any": "0.1.4",
+    "latest_rust_version": null,
+    "updated_at": "2022-11-30T17:09:42.916530Z",
+    "changed": false
+  },
+  {
+    "name": "unicode-ident",
+    "locked": "1.0.24",
+    "latest_stable": "1.0.27",
+    "latest_any": "1.0.27",
+    "latest_rust_version": "1.71",
+    "updated_at": "2026-10-12T04:20:27.796258Z",
+    "changed": true
+  },
+  {
+    "name": "unicode-reverse",
+    "locked": "1.0.9",
+    "latest_stable": "1.0.9",
+    "latest_any": "1.0.9",
+    "latest_rust_version": null,
+    "updated_at": "2024-03-15T17:32:48.813752Z",
+    "changed": false
+  },
+  {
+    "name": "unicode-segmentation",
+    "locked": "1.13.3",
+    "latest_stable": "1.13.3",
+    "latest_any": "1.13.3",
+    "latest_rust_version": "1.85.0",
+    "updated_at": "2026-06-01T15:58:43.979474Z",
+    "changed": false
+  },
+  {
+    "name": "unicode-width",
+    "locked": "0.2.2",
+    "latest_stable": "0.2.2",
+    "latest_any": "0.2.2",
+    "latest_rust_version": "1.66",
+    "updated_at": "2025-10-06T14:33:47.922595Z",
+    "changed": false
+  },
+  {
+    "name": "utf8parse",
+    "locked": "0.2.2",
+    "latest_stable": "0.2.2",
+    "latest_any": "0.2.2",
+    "latest_rust_version": null,
+    "updated_at": "2024-06-08T07:07:41.813419Z",
+    "changed": false
+  },
+  {
+    "name": "uuid",
+    "locked": "1.28.0",
+    "latest_stable": "1.29.0",
+    "latest_any": "1.29.0",
+    "latest_rust_version": "1.89.0",
+    "updated_at": "2026-10-23T09:59:10.723650Z",
+    "changed": true
+  },
+  {
+    "name": "version_check",
+    "locked": "0.9.5",
+    "latest_stable": "0.9.5",
+    "latest_any": "0.9.5",
+    "latest_rust_version": null,
+    "updated_at": "2024-07-25T23:38:14.142737Z",
+    "changed": false
+  },
+  {
+    "name": "walkdir",
+    "locked": "2.5.0",
+    "latest_stable": "2.5.0",
+    "latest_any": "2.5.0",
+    "latest_rust_version": null,
+    "updated_at": "2024-03-01T17:55:09.221032Z",
+    "changed": false
+  },
+  {
+    "name": "wasi",
+    "locked": "0.11.1+wasi-snapshot-preview1",
+    "latest_stable": "0.14.7+wasi-0.2.4",
+    "latest_any": "0.14.7+wasi-0.2.4",
+    "latest_rust_version": "1.82.0",
+    "updated_at": "2025-09-15T22:01:38.940804Z",
+    "changed": true
+  },
+  {
+    "name": "wasip2",
+    "locked": "1.0.4+wasi-0.2.12",
+    "latest_stable": "2.0.1+wasi-0.2.12",
+    "latest_any": "2.0.1+wasi-0.2.12",
+    "latest_rust_version": "1.87.0",
+    "updated_at": "2026-09-22T18:05:29.796161Z",
+    "changed": true
+  },
+  {
+    "name": "wasm-bindgen",
+    "locked": "0.2.129",
+    "latest_stable": "0.2.129",
+    "latest_any": "0.2.129",
+    "latest_rust_version": "1.81",
+    "updated_at": "2026-09-25T07:13:40.367031Z",
+    "changed": false
+  },
+  {
+    "name": "wasm-bindgen-futures",
+    "locked": "0.4.79",
+    "latest_stable": "0.4.79",
+    "latest_any": "0.4.79",
+    "latest_rust_version": "1.81",
+    "updated_at": "2026-09-25T07:13:46.762707Z",
+    "changed": false
+  },
+  {
+    "name": "wasm-bindgen-macro",
+    "locked": "0.2.129",
+    "latest_stable": "0.2.129",
+    "latest_any": "0.2.129",
+    "latest_rust_version": "1.81",
+    "updated_at": "2026-09-25T07:13:38.603121Z",
+    "changed": false
+  },
+  {
+    "name": "wasm-bindgen-macro-support",
+    "locked": "0.2.129",
+    "latest_stable": "0.2.129",
+    "latest_any": "0.2.129",
+    "latest_rust_version": "1.81",
+    "updated_at": "2026-09-25T07:13:36.815330Z",
+    "changed": false
+  },
+  {
+    "name": "wasm-bindgen-shared",
+    "locked": "0.2.129",
+    "latest_stable": "0.2.129",
+    "latest_any": "0.2.129",
+    "latest_rust_version": "1.81",
+    "updated_at": "2026-09-25T07:13:33.159722Z",
+    "changed": false
+  },
+  {
+    "name": "wayland-sys",
+    "locked": "0.31.11",
+    "latest_stable": "0.31.11",
+    "latest_any": "0.31.11",
+    "latest_rust_version": "1.71",
+    "updated_at": "2026-03-31T02:20:48.724050Z",
+    "changed": false
+  },
+  {
+    "name": "web-sys",
+    "locked": "0.3.106",
+    "latest_stable": "0.3.106",
+    "latest_any": "0.3.106",
+    "latest_rust_version": "1.81",
+    "updated_at": "2026-09-25T07:13:44.661972Z",
+    "changed": false
+  },
+  {
+    "name": "wgpu",
+    "locked": "30.0.1",
+    "latest_stable": "30.0.1",
+    "latest_any": "30.0.1",
+    "latest_rust_version": "1.87.0",
+    "updated_at": "2026-08-22T02:53:38.229945Z",
+    "changed": false
+  },
+  {
+    "name": "wgpu-core",
+    "locked": "30.0.1",
+    "latest_stable": "30.0.1",
+    "latest_any": "30.0.1",
+    "latest_rust_version": "1.87",
+    "updated_at": "2026-08-22T02:53:36.028396Z",
+    "changed": false
+  },
+  {
+    "name": "wgpu-core-deps-apple",
+    "locked": "30.0.1",
+    "latest_stable": "30.0.1",
+    "latest_any": "30.0.1",
+    "latest_rust_version": "1.76",
+    "updated_at": "2026-08-22T02:53:33.261654Z",
+    "changed": false
+  },
+  {
+    "name": "wgpu-core-deps-emscripten",
+    "locked": "30.0.1",
+    "latest_stable": "30.0.1",
+    "latest_any": "30.0.1",
+    "latest_rust_version": "1.76",
+    "updated_at": "2026-08-22T02:53:33.575752Z",
+    "changed": false
+  },
+  {
+    "name": "wgpu-core-deps-windows-linux-android",
+    "locked": "30.0.1",
+    "latest_stable": "30.0.1",
+    "latest_any": "30.0.1",
+    "latest_rust_version": "1.76",
+    "updated_at": "2026-08-22T02:53:34.072065Z",
+    "changed": false
+  },
+  {
+    "name": "wgpu-hal",
+    "locked": "30.0.1",
+    "latest_stable": "30.0.1",
+    "latest_any": "30.0.1",
+    "latest_rust_version": "1.87",
+    "updated_at": "2026-08-22T02:53:30.722944Z",
+    "changed": false
+  },
+  {
+    "name": "wgpu-naga-bridge",
+    "locked": "30.0.1",
+    "latest_stable": "30.0.1",
+    "latest_any": "30.0.1",
+    "latest_rust_version": "1.87",
+    "updated_at": "2026-08-22T02:53:29.601377Z",
+    "changed": false
+  },
+  {
+    "name": "wgpu-types",
+    "locked": "30.0.1",
+    "latest_stable": "30.0.1",
+    "latest_any": "30.0.1",
+    "latest_rust_version": "1.87",
+    "updated_at": "2026-08-22T02:53:27.172546Z",
+    "changed": false
+  },
+  {
+    "name": "winapi",
+    "locked": "0.3.9",
+    "latest_stable": "0.3.9",
+    "latest_any": "0.3.9",
+    "latest_rust_version": null,
+    "updated_at": "2020-06-26T11:34:33.480855Z",
+    "changed": false
+  },
+  {
+    "name": "winapi-i686-pc-windows-gnu",
+    "locked": "0.4.0",
+    "latest_stable": "0.4.0",
+    "latest_any": "0.4.0",
+    "latest_rust_version": null,
+    "updated_at": "2018-01-18T00:55:38.910834Z",
+    "changed": false
+  },
+  {
+    "name": "winapi-util",
+    "locked": "0.1.11",
+    "latest_stable": "0.1.11",
+    "latest_any": "0.1.11",
+    "latest_rust_version": null,
+    "updated_at": "2025-09-07T12:24:31.232695Z",
+    "changed": false
+  },
+  {
+    "name": "winapi-x86_64-pc-windows-gnu",
+    "locked": "0.4.0",
+    "latest_stable": "0.4.0",
+    "latest_any": "0.4.0",
+    "latest_rust_version": null,
+    "updated_at": "2018-01-18T00:55:12.008307Z",
+    "changed": false
+  },
+  {
+    "name": "windows",
+    "locked": "0.57.0",
+    "latest_stable": "0.62.2",
+    "latest_any": "0.62.2",
+    "latest_rust_version": "1.82",
+    "updated_at": "2025-10-06T19:19:49.704461Z",
+    "changed": true
+  },
+  {
+    "name": "windows",
+    "locked": "0.62.2",
+    "latest_stable": "0.62.2",
+    "latest_any": "0.62.2",
+    "latest_rust_version": "1.82",
+    "updated_at": "2025-10-06T19:19:49.704461Z",
+    "changed": false
+  },
+  {
+    "name": "windows-collections",
+    "locked": "0.3.2",
+    "latest_stable": "0.100.0",
+    "latest_any": "0.100.0",
+    "latest_rust_version": "1.95",
+    "updated_at": "2026-09-03T16:43:47.705066Z",
+    "changed": true
+  },
+  {
+    "name": "windows-core",
+    "locked": "0.57.0",
+    "latest_stable": "0.100.0",
+    "latest_any": "0.100.0",
+    "latest_rust_version": "1.95",
+    "updated_at": "2026-09-03T16:42:56.290894Z",
+    "changed": true
+  },
+  {
+    "name": "windows-core",
+    "locked": "0.62.2",
+    "latest_stable": "0.100.0",
+    "latest_any": "0.100.0",
+    "latest_rust_version": "1.95",
+    "updated_at": "2026-09-03T16:42:56.290894Z",
+    "changed": true
+  },
+  {
+    "name": "windows-future",
+    "locked": "0.3.2",
+    "latest_stable": "0.100.0",
+    "latest_any": "0.100.0",
+    "latest_rust_version": "1.95",
+    "updated_at": "2026-09-03T16:44:03.555455Z",
+    "changed": true
+  },
+  {
+    "name": "windows-implement",
+    "locked": "0.57.0",
+    "latest_stable": "0.100.0",
+    "latest_any": "0.100.0",
+    "latest_rust_version": "1.95",
+    "updated_at": "2026-09-03T16:38:25.707732Z",
+    "changed": true
+  },
+  {
+    "name": "windows-implement",
+    "locked": "0.60.2",
+    "latest_stable": "0.100.0",
+    "latest_any": "0.100.0",
+    "latest_rust_version": "1.95",
+    "updated_at": "2026-09-03T16:38:25.707732Z",
+    "changed": true
+  },
+  {
+    "name": "windows-interface",
+    "locked": "0.57.0",
+    "latest_stable": "0.100.0",
+    "latest_any": "0.100.0",
+    "latest_rust_version": "1.95",
+    "updated_at": "2026-09-03T16:38:48.257023Z",
+    "changed": true
+  },
+  {
+    "name": "windows-interface",
+    "locked": "0.59.3",
+    "latest_stable": "0.100.0",
+    "latest_any": "0.100.0",
+    "latest_rust_version": "1.95",
+    "updated_at": "2026-09-03T16:38:48.257023Z",
+    "changed": true
+  },
+  {
+    "name": "windows-link",
+    "locked": "0.2.1",
+    "latest_stable": "0.100.0",
+    "latest_any": "0.100.0",
+    "latest_rust_version": "1.85",
+    "updated_at": "2026-09-03T16:39:03.349369Z",
+    "changed": true
+  },
+  {
+    "name": "windows-numerics",
+    "locked": "0.3.1",
+    "latest_stable": "0.100.0",
+    "latest_any": "0.100.0",
+    "latest_rust_version": "1.95",
+    "updated_at": "2026-09-03T16:44:16.620261Z",
+    "changed": true
+  },
+  {
+    "name": "windows-result",
+    "locked": "0.1.2",
+    "latest_stable": "0.100.0",
+    "latest_any": "0.100.0",
+    "latest_rust_version": "1.95",
+    "updated_at": "2026-09-03T16:41:24.764970Z",
+    "changed": true
+  },
+  {
+    "name": "windows-result",
+    "locked": "0.4.1",
+    "latest_stable": "0.100.0",
+    "latest_any": "0.100.0",
+    "latest_rust_version": "1.95",
+    "updated_at": "2026-09-03T16:41:24.764970Z",
+    "changed": true
+  },
+  {
+    "name": "windows-strings",
+    "locked": "0.5.1",
+    "latest_stable": "0.100.0",
+    "latest_any": "0.100.0",
+    "latest_rust_version": "1.95",
+    "updated_at": "2026-09-03T16:41:44.762627Z",
+    "changed": true
+  },
+  {
+    "name": "windows-sys",
+    "locked": "0.61.2",
+    "latest_stable": "0.61.2",
+    "latest_any": "0.61.2",
+    "latest_rust_version": "1.71",
+    "updated_at": "2025-10-06T19:18:30.163595Z",
+    "changed": false
+  },
+  {
+    "name": "windows-targets",
+    "locked": "0.52.6",
+    "latest_stable": "0.53.5",
+    "latest_any": "0.53.5",
+    "latest_rust_version": "1.60",
+    "updated_at": "2025-10-06T19:18:45.726277Z",
+    "changed": true
+  },
+  {
+    "name": "windows-threading",
+    "locked": "0.2.1",
+    "latest_stable": "0.100.0",
+    "latest_any": "0.100.0",
+    "latest_rust_version": "1.95",
+    "updated_at": "2026-09-03T16:41:59.294207Z",
+    "changed": true
+  },
+  {
+    "name": "windows_aarch64_gnullvm",
+    "locked": "0.52.6",
+    "latest_stable": "0.53.1",
+    "latest_any": "0.53.1",
+    "latest_rust_version": "1.60",
+    "updated_at": "2025-10-06T17:33:29.033577Z",
+    "changed": true
+  },
+  {
+    "name": "windows_aarch64_msvc",
+    "locked": "0.52.6",
+    "latest_stable": "0.53.1",
+    "latest_any": "0.53.1",
+    "latest_rust_version": "1.60",
+    "updated_at": "2025-10-06T17:33:33.380608Z",
+    "changed": true
+  },
+  {
+    "name": "windows_i686_gnu",
+    "locked": "0.52.6",
+    "latest_stable": "0.53.1",
+    "latest_any": "0.53.1",
+    "latest_rust_version": "1.60",
+    "updated_at": "2025-10-06T17:33:40.576678Z",
+    "changed": true
+  },
+  {
+    "name": "windows_i686_gnullvm",
+    "locked": "0.52.6",
+    "latest_stable": "0.53.1",
+    "latest_any": "0.53.1",
+    "latest_rust_version": "1.60",
+    "updated_at": "2025-10-06T17:33:44.926477Z",
+    "changed": true
+  },
+  {
+    "name": "windows_i686_msvc",
+    "locked": "0.52.6",
+    "latest_stable": "0.53.1",
+    "latest_any": "0.53.1",
+    "latest_rust_version": "1.60",
+    "updated_at": "2025-10-06T17:33:49.033999Z",
+    "changed": true
+  },
+  {
+    "name": "windows_x86_64_gnu",
+    "locked": "0.52.6",
+    "latest_stable": "0.53.1",
+    "latest_any": "0.53.1",
+    "latest_rust_version": "1.60",
+    "updated_at": "2025-10-06T17:33:55.996108Z",
+    "changed": true
+  },
+  {
+    "name": "windows_x86_64_gnullvm",
+    "locked": "0.52.6",
+    "latest_stable": "0.53.1",
+    "latest_any": "0.53.1",
+    "latest_rust_version": "1.60",
+    "updated_at": "2025-10-06T17:34:01.241547Z",
+    "changed": true
+  },
+  {
+    "name": "windows_x86_64_msvc",
+    "locked": "0.52.6",
+    "latest_stable": "0.53.1",
+    "latest_any": "0.53.1",
+    "latest_rust_version": "1.60",
+    "updated_at": "2025-10-06T17:34:07.266605Z",
+    "changed": true
+  },
+  {
+    "name": "wit-bindgen",
+    "locked": "0.57.1",
+    "latest_stable": "0.63.0",
+    "latest_any": "0.63.0",
+    "latest_rust_version": null,
+    "updated_at": "2026-10-14T18:03:57.394711Z",
+    "changed": true
+  },
+  {
+    "name": "xml-rs",
+    "locked": "0.8.29",
+    "latest_stable": "1.0.0",
+    "latest_any": "1.0.0",
+    "latest_rust_version": "1.85",
+    "updated_at": "2026-08-06T16:08:01.866097Z",
+    "changed": true
+  },
+  {
+    "name": "xxhash-rust",
+    "locked": "0.8.19",
+    "latest_stable": "0.8.19",
+    "latest_any": "0.8.19",
+    "latest_rust_version": null,
+    "updated_at": "2026-09-28T13:16:18.201165Z",
+    "changed": false
+  },
+  {
+    "name": "zerocopy",
+    "locked": "0.8.48",
+    "latest_stable": "0.8.63",
+    "latest_any": "0.9.0-alpha.0",
+    "latest_rust_version": "1.56.0",
+    "updated_at": "2026-10-13T20:03:04.207234Z",
+    "changed": true
+  },
+  {
+    "name": "zerocopy-derive",
+    "locked": "0.8.48",
+    "latest_stable": "0.8.63",
+    "latest_any": "0.9.0-alpha.0",
+    "latest_rust_version": null,
+    "updated_at": "2026-10-13T20:01:58.185985Z",
+    "changed": true
+  },
+  {
+    "name": "zmij",
+    "locked": "1.0.21",
+    "latest_stable": "1.0.23",
+    "latest_any": "1.0.23",
+    "latest_rust_version": "1.71",
+    "updated_at": "2026-07-13T12:58:53.705886Z",
+    "changed": true
+  },
+  {
+    "name": "zstd",
+    "locked": "0.13.3",
+    "latest_stable": "0.14.3",
+    "latest_any": "0.14.3",
+    "latest_rust_version": "1.64",
+    "updated_at": "2026-10-16T16:59:51.114469Z",
+    "changed": true
+  },
+  {
+    "name": "zstd-safe",
+    "locked": "7.3.0",
+    "latest_stable": "8.2.0",
+    "latest_any": "8.2.0",
+    "latest_rust_version": "1.64",
+    "updated_at": "2026-10-16T16:59:12.917175Z",
+    "changed": true
+  },
+  {
+    "name": "zstd-sys",
+    "locked": "2.1.2+zstd.1.5.7",
+    "latest_stable": "2.1.2+zstd.1.5.7",
+    "latest_any": "2.1.2+zstd.1.5.7",
+    "latest_rust_version": "1.64",
+    "updated_at": "2026-10-16T16:59:08.260973Z",
+    "changed": false
+  }
+]

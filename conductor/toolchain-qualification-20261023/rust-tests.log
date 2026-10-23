@@ -1,0 +1,1701 @@
+   Compiling kairo-ecs-types v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-types)
+   Compiling proc-macro2 v1.0.106
+   Compiling unicode-ident v1.0.24
+   Compiling quote v1.0.45
+   Compiling libc v0.2.186
+   Compiling cfg-if v1.0.4
+   Compiling serde_core v1.0.229
+   Compiling zerocopy v0.8.48
+   Compiling libm v0.2.16
+   Compiling autocfg v1.5.0
+   Compiling itoa v1.0.18
+   Compiling kairo-ecs-core v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-core)
+   Compiling memchr v2.8.0
+   Compiling once_cell v1.21.4
+   Compiling bitflags v2.13.2
+   Compiling serde v1.0.229
+   Compiling num-traits v0.2.19
+   Compiling version_check v0.9.5
+   Compiling thiserror v2.0.21
+   Compiling kairo-ecs-state v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-state)
+   Compiling equivalent v1.0.3
+   Compiling crossbeam-utils v0.8.21
+   Compiling foldhash v0.2.0
+   Compiling hashbrown v0.17.1
+   Compiling kairo-ecs-rng v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-rng)
+   Compiling crossbeam-epoch v0.9.20
+   Compiling shlex v2.0.1
+   Compiling jobserver v0.1.35
+   Compiling find-msvc-tools v0.1.15
+   Compiling zmij v1.0.21
+   Compiling either v1.15.0
+   Compiling syn v3.0.6
+   Compiling syn v2.0.117
+   Compiling rayon-core v1.13.0
+   Compiling cc v1.9.0
+   Compiling static_assertions v1.1.0
+   Compiling parking_lot_core v0.9.12
+   Compiling smallvec v1.16.3
+   Compiling scopeguard v1.2.0
+   Compiling serde_json v1.0.151
+   Compiling crossbeam-deque v0.8.6
+   Compiling lock_api v0.4.14
+   Compiling getrandom v0.3.4
+   Compiling regex-syntax v0.8.10
+   Compiling heck v0.5.0
+   Compiling parking_lot v0.12.5
+   Compiling unicode-width v0.2.2
+   Compiling rustversion v1.0.22
+   Compiling litrs v1.0.1
+   Compiling object v0.39.1
+   Compiling rayon v1.12.0
+   Compiling aho-corasick v1.1.4
+   Compiling document-features v0.2.12
+   Compiling getrandom v0.2.17
+   Compiling pkg-config v0.3.34
+   Compiling rand_core v0.6.4
+   Compiling ahash v0.8.12
+   Compiling array-init-cursor v0.2.1
+   Compiling zstd-sys v2.1.2+zstd.1.5.7
+   Compiling stacker v0.1.25
+   Compiling planus v0.3.1
+   Compiling kairo-ecs-pdes v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-pdes)
+   Compiling syn v1.0.109
+   Compiling indexmap v2.14.2
+   Compiling regex-automata v0.4.14
+   Compiling target-features v0.1.6
+   Compiling allocator-api2 v0.2.21
+   Compiling lz4-sys v1.11.1+lz4-1.10.0
+   Compiling castaway v0.2.4
+   Compiling polars-utils v0.45.1
+   Compiling siphasher v1.0.4
+   Compiling ryu v1.0.23
+   Compiling foldhash v0.1.5
+   Compiling zstd-safe v7.3.0
+   Compiling simdutf8 v0.1.5
+   Compiling phf_shared v0.12.1
+   Compiling memmap2 v0.9.12
+   Compiling polars-schema v0.45.1
+   Compiling raw-cpuid v11.6.0
+   Compiling bytes v1.12.1
+   Compiling zerocopy-derive v0.8.48
+   Compiling chrono-tz v0.10.4
+   Compiling cfg_aliases v0.2.2
+   Compiling phf v0.12.1
+   Compiling chrono v0.4.45
+   Compiling serde_derive v1.0.229
+   Compiling bytemuck_derive v1.12.1
+   Compiling thiserror-impl v2.0.21
+   Compiling ar_archive_writer v0.5.3
+   Compiling bytemuck v1.25.2
+   Compiling regex v1.12.3
+   Compiling polars-arrow v0.45.1
+   Compiling objc2 v0.6.5
+   Compiling psm v0.1.32
+   Compiling strum_macros v0.26.4
+   Compiling polars-compute v0.45.1
+   Compiling streaming-iterator v0.1.9
+   Compiling ethnum v1.5.3
+   Compiling strength_reduce v0.2.4
+   Compiling objc2-encode v4.1.0
+   Compiling dyn-clone v1.0.20
+   Compiling debug_unsafe v0.1.4
+   Compiling rustix v1.1.5
+   Compiling atoi_simd v0.16.1
+   Compiling errno v0.3.14
+   Compiling libloading v0.9.0
+   Compiling itoap v1.0.1
+   Compiling polars-arrow-format v0.1.0
+   Compiling compact_str v0.8.2
+   Compiling hashbrown v0.15.5
+   Compiling fast-float2 v0.2.4
+   Compiling multiversion-macros v0.7.4
+   Compiling crc32fast v1.5.3
+   Compiling alloc-no-stdlib v2.0.4
+   Compiling alloc-stdlib v0.2.4
+   Compiling crossterm v0.29.0
+   Compiling polars-core v0.45.1
+   Compiling adler2 v2.0.1
+   Compiling objc2-core-foundation v0.3.2
+   Compiling unicode-segmentation v1.13.3
+   Compiling snap v1.1.2
+   Compiling multiversion v0.7.4
+   Compiling simd-adler32 v0.3.10
+   Compiling miniz_oxide v0.9.1
+   Compiling comfy-table v7.2.2
+   Compiling brotli-decompressor v4.0.3
+   Compiling rustc-hash v1.1.0
+   Compiling fallible-streaming-iterator v0.1.9
+   Compiling xxhash-rust v0.8.19
+   Compiling streaming-decompression v0.1.2
+   Compiling naga-types v30.0.1
+   Compiling flate2 v1.1.10
+   Compiling block2 v0.6.2
+   Compiling ppv-lite86 v0.2.21
+   Compiling half v2.7.1
+   Compiling objc2-foundation v0.3.2
+   Compiling naga v30.0.1
+   Compiling hashbrown v0.14.5
+   Compiling brotli v7.0.0
+   Compiling rand_chacha v0.3.1
+   Compiling lz4 v1.28.1
+   Compiling polars-ops v0.45.1
+   Compiling rand v0.8.8
+   Compiling base64 v0.22.1
+   Compiling utf8parse v0.2.2
+   Compiling polars-error v0.45.1
+   Compiling log v0.4.34
+   Compiling polars-parquet-format v0.1.0
+   Compiling bit-vec v0.9.1
+   Compiling anstyle-parse v1.0.0
+   Compiling bit-set v0.10.0
+   Compiling objc2-core-graphics v0.3.2
+   Compiling recursive-proc-macro-impl v0.1.1
+   Compiling rand_distr v0.4.3
+   Compiling argminmax v0.6.3
+   Compiling codespan-reporting v0.13.1
+   Compiling zstd v0.13.3
+   Compiling polars-plan v0.45.1
+   Compiling anstyle v1.0.14
+   Compiling arrayvec v0.7.8
+   Compiling anstyle-query v1.1.5
+   Compiling raw-window-handle v0.6.2
+   Compiling glob v0.3.4
+   Compiling colorchoice v1.0.5
+   Compiling percent-encoding v2.3.2
+   Compiling home v0.5.12
+   Compiling is_terminal_polyfill v1.70.2
+   Compiling wgpu-types v30.0.1
+   Compiling anstream v1.0.0
+   Compiling recursive v0.1.1
+   Compiling wgpu-hal v30.0.1
+   Compiling strsim v0.11.1
+   Compiling cudarc v0.19.10
+   Compiling clap_lex v1.0.0
+   Compiling clap_derive v4.5.61
+   Compiling clap_builder v4.5.61
+   Compiling kairo-ecs-ffi v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-ffi)
+   Compiling libloading v0.8.9
+   Compiling plotters-backend v0.3.7
+   Compiling ciborium-io v0.2.2
+   Compiling profiling v1.0.18
+   Compiling ciborium-ll v0.2.2
+   Compiling objc2-metal v0.3.2
+   Compiling plotters-svg v0.3.7
+   Compiling wgpu-core v30.0.1
+   Compiling itertools v0.10.5
+   Compiling polars-lazy v0.45.1
+   Compiling cast v0.3.0
+   Compiling same-file v1.0.6
+   Compiling walkdir v2.5.0
+   Compiling plotters v0.3.7
+   Compiling ciborium v0.2.2
+   Compiling tinytemplate v1.2.1
+   Compiling criterion-plot v0.5.0
+   Compiling wgpu v30.0.1
+   Compiling is-terminal v0.4.17
+   Compiling kairo-ecs-game-theory v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-game-theory)
+   Compiling clap v4.5.61
+   Compiling polars v0.45.1
+   Compiling oorandom v11.1.5
+   Compiling anes v0.1.6
+   Compiling rand_core v0.9.5
+   Compiling arrow-schema v60.0.0
+   Compiling pollster v1.0.1
+   Compiling criterion v0.5.1
+   Compiling kairo-ecs-cuda v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-cuda)
+   Compiling wasm-bindgen-shared v0.2.129
+   Compiling kairo-ecs-des v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-des)
+   Compiling rand_xorshift v0.4.0
+   Compiling rand v0.9.5
+   Compiling rand_chacha v0.9.0
+   Compiling unarray v0.1.4
+   Compiling proptest v1.11.0
+   Compiling bumpalo v3.20.2
+   Compiling kairo-ecs-fmi v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-fmi)
+   Compiling wasm-bindgen-macro-support v0.2.129
+   Compiling wasm-bindgen v0.2.129
+   Compiling kairo-ecs-game-ontology v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-game-ontology)
+   Compiling kairo-ecs-abm v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-abm)
+   Compiling kairo-ecs-debug v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-debug)
+   Compiling kairo-ecs-mpi v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-mpi)
+   Compiling objc2-quartz-core v0.3.2
+   Compiling raw-window-metal v1.1.0
+   Compiling kairo-ecs-grpc v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-grpc)
+   Compiling kairo-ecs-viz v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-viz)
+   Compiling kairo-ecs-streaming v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-streaming)
+   Compiling kairo-ecs-ml v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-ml)
+   Compiling kairo-ecs-webgpu v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-webgpu)
+   Compiling kairo-ecs-cs-bridge v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-cs-bridge)
+   Compiling kairo-ecs-diplomat v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-diplomat)
+   Compiling kairo-ecs-uniffi v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-uniffi)
+   Compiling kairo-ecs-bench v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-bench)
+   Compiling wgpu-naga-bridge v30.0.1
+   Compiling wasm-bindgen-macro v0.2.129
+   Compiling kairo-ecs-wasm v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-wasm)
+   Compiling wgpu-core-deps-apple v30.0.1
+   Compiling polars-row v0.45.1
+   Compiling polars-parquet v0.45.1
+   Compiling kairo-ecs-cli v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-cli)
+   Compiling kairo-ecs-gpu v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-gpu)
+   Compiling polars-io v0.45.1
+   Compiling polars-expr v0.45.1
+   Compiling polars-mem-engine v0.45.1
+   Compiling kairo-ecs-arrow v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-arrow)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 8m 26s
+     Running unittests src/lib.rs (target/debug/deps/kairo_ecs_abm-ebdcc1d091f837cd)
+
+running 9 tests
+test abm_spatial_tests::hybrid_des_abm_100k_benchmark ... ok
+test tests::behavior_decision_can_despawn_agent ... ok
+test tests::behavior_simulation_replays_entity_rng ... ok
+test tests::behavior_simulation_respects_event_budget ... ok
+test tests::behavior_simulation_updates_in_scheduler_order ... ok
+test tests::despawned_agent_future_events_do_not_update_behavior ... ok
+test abm_spatial_tests::abm_spatial_grid_continuous_network_parity ... ok
+test tests::schedule_and_step ... ok
+test tests::spawn_and_attach ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/abm_behavior_update_v1.rs (target/debug/deps/abm_behavior_update_v1-222ed0929c601f3e)
+
+running 2 tests
+test abm_behavior_update_v1_replays_entity_rng_streams ... ok
+test abm_behavior_update_v1_runs_updates_in_scheduler_order ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/abm_integration.rs (target/debug/deps/abm_integration-35686337a5e8058b)
+
+running 3 tests
+test agent_with_components ... ok
+test multi_agent_scheduling ... ok
+test schedule_and_dispatch ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/dynamic_spawning.rs (target/debug/deps/dynamic_spawning-25a0bd9e00ffa90c)
+
+running 3 tests
+test test_deterministic_spawning_replay ... ok
+test test_dynamic_spawner_budget_and_stale_handles ... ok
+test test_spawn_buffer_mid_iteration_safety ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/kairo_ecs_arrow-36b54b7cb191de69)
+
+running 15 tests
+test native_schema::tests::every_declared_field_parses_to_an_arrow_type ... ok
+test native_schema::tests::arbitrary_declarations_round_trip ... ok
+test native_schema::tests::derived_schema_round_trips_to_declaration ... ok
+test native_schema::tests::native_schema_agrees_with_dependency_free_fingerprint ... ok
+test native_schema::tests::nullability_is_preserved ... ok
+test native_schema::tests::unknown_type_spellings_fail_closed ... ok
+test tests::dispatched_record_maps_core_event_fields ... ok
+test tests::event_log_batch_round_trips_smoke_bytes ... ok
+test tests::event_log_schema_matches_track_04_order ... ok
+test tests::previous_facade_still_flushes_records ... ok
+test track62_tests::official_arrow_crate_parity ... ok
+test tests::validation_rejects_incompatible_schema_version ... ok
+test track62_tests::ipc_stream_roundtrip_test ... ok
+test tests::smoke_bytes_preserve_escaped_strings_and_payload_ref ... ok
+test track62_tests::parquet_zstd_roundtrip ... ok
+
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/checkpoint_restart.rs (target/debug/deps/checkpoint_restart-8c5f31adf9825a04)
+
+running 7 tests
+test record_batch_declares_arrow_schema_and_contiguous_blocks ... ok
+test checkpoint_checksum_rejects_corrupted_record_fields ... ok
+test hdf5_checkpoint_contract_records_format_and_checksum ... ok
+test adios2_checkpoint_contract_records_format_and_checksum ... ok
+test checkpoint_manifest_round_trips_and_restores_final_tick ... ok
+test record_batch_writes_contiguous_block_contract_to_path ... ok
+test checkpoint_manifest_file_writer_round_trips_and_rejects_bad_block_layout ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/polars_isolation_proof.rs (target/debug/deps/polars_isolation_proof-35ed3630f80a0e5d)
+
+running 1 test
+test minimal_core_does_not_pull_polars ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/schema_compatibility.rs (target/debug/deps/schema_compatibility-6d4af030654bfda1)
+
+running 4 tests
+test checked_in_schema_json_matches_runtime_contract ... ok
+test event_log_schema_fingerprint_is_stable ... ok
+test event_log_smoke_roundtrip_preserves_ordering_fields ... ok
+test event_log_schema_is_stable_for_binding_consumers ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/schema_v2_contract.rs (target/debug/deps/schema_v2_contract-aec24f165c207fff)
+
+running 2 tests
+test schema_v2_field_contract_and_fingerprint ... ok
+test schema_v2_limb_subtraction_preserves_numerical_ordering ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/track70_phase0_baseline.rs (target/debug/deps/track70_phase0_baseline-4dbeb8e8759c9e07)
+
+running 3 tests
+test generational_id_requires_index_and_generation_fields - should panic ... ok
+test full_range_u128_tick_requires_high_low_limbs - should panic ... ok
+test independent_parquet_reader_rejects_pseudo_parquet_mock - should panic ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/track70_phase1_native_tables.rs (target/debug/deps/track70_phase1_native_tables-cad0457daead170e)
+
+running 6 tests
+test test_invalid_input_rejection_for_v1_records ... ok
+test test_extreme_ticks_full_u128_range_and_limb_subtraction ... ok
+test test_table_schema_v2_polars_table_creation_and_reconstruction ... ok
+test test_independent_ipc_reader_roundtrip ... ok
+test test_independent_parquet_reader_roundtrip ... ok
+test test_polars_tabular_transforms_and_aggregations ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s
+
+     Running unittests src/lib.rs (target/debug/deps/kairo_ecs_bench-c79d3b879f3e72ed)
+
+running 2 tests
+test tests::canonical_scenario_metadata_is_stable ... ok
+test tests::smoke_helpers_are_aliases_and_callable ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/main.rs (target/debug/deps/kairo_ecs_cli-24ddff2da17f41ef)
+
+running 23 tests
+test ensemble::tests::optuna_abc_smc_calibration_hook ... ok
+test ensemble::tests::sobol_lhs_crn_ensemble_runner ... ok
+test scenario::tests::load_scenario_reports_invalid_numeric_value ... ok
+test ensemble::tests::sobol_sensitivity_analyzer_test ... ok
+test scenario::tests::load_scenario_reports_missing_field ... ok
+test scenario::tests::load_scenario_parses_manifest_fields ... ok
+test ensemble::tests::abc_smc_calibrator_parallel_parity ... ok
+test scenario::tests::load_scenario_reports_invalid_kind_order ... ok
+test scenario::tests::load_seed_manifest_parses_manifest_fields ... ok
+test scenario::tests::load_seed_manifest_reports_invalid_numeric_value ... ok
+test scenario::tests::test_validate_empty_expected_kind_order ... ok
+test scenario::tests::test_validate_mismatch_base_seed ... ok
+test scenario::tests::test_validate_mismatch_fixture_id ... ok
+test scenario::tests::test_validate_mismatch_scenario_id ... ok
+test scenario::tests::load_seed_manifest_reports_missing_field ... ok
+test scenario::tests::test_validate_scenario_and_seed_success ... ok
+test scenario::tests::test_validate_missing_fixture_path ... ok
+test scenario::tests::test_validate_seed_invalid_schema ... ok
+test ensemble::tests::parallel_ensemble_runner_parity ... ok
+test scenario::tests::test_validate_scenario_invalid_schema ... ok
+test scenario::tests::test_validate_zero_max_events ... ok
+test scenario::tests::test_validate_zero_replications ... ok
+test ensemble::tests::sobol_sensitivity_analyzer_parallel_parity ... ok
+
+test result: ok. 23 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running unittests src/lib.rs (target/debug/deps/kairo_ecs_core-ddbaffa2eb0120b5)
+
+running 32 tests
+test linked_entity::tests::test_parent_child_binding_and_spawn_relationship ... ok
+test linked_entity::tests::test_lifecycle_policy_codes ... ok
+test linked_entity::tests::test_linked_entity_error_display ... ok
+test linked_entity::tests::test_model_entity_id_and_display ... ok
+test linked_entity::tests::test_parse_ndjson_line_errors ... ok
+test linked_entity::tests::test_relationship_kind_codes ... ok
+test linked_entity::tests::test_relationship_lifecycle_event_variants ... ok
+test linked_entity::tests::test_telemetry_batch_empty_and_methods ... ok
+test tests::affinity_plan_apply_and_revert_report_typed_unsupported_host ... ok
+test tests::affinity_plan_is_opt_in_and_reversible_without_binding ... ok
+test tests::cancellation_rejects_unknown_and_dispatched_events ... ok
+test tests::cancelled_future_event_does_not_force_limit_after_active_events_finish ... ok
+test tests::cancellation_skips_event_without_reordering_rest ... ok
+test tests::facade_reports_invalid_priority_without_scheduling ... ok
+test tests::core_status_codes_match_the_ffi_contract ... ok
+test tests::dispatches_by_time_priority_then_sequence ... ok
+test tests::event_arena_chunking_allocation_reset_and_metrics ... ok
+test tests::event_pool_reuses_slots_without_global_lock_contract ... ok
+test tests::facade_exposes_scheduler_stats_snapshot ... ok
+test tests::facade_maps_cancellation_and_limit_statuses ... ok
+test tests::numa_topology_discover_returns_typed_report ... ok
+test tests::facade_schedules_steps_and_exposes_status_codes ... ok
+test tests::numa_topology_reports_typed_unsupported_fallback ... ok
+test tests::recording_scheduler_exposes_cancel_run_and_state ... ok
+test tests::run_until_or_for_does_not_dispatch_past_time_limit_with_remaining_budget ... ok
+test tests::run_for_is_bounded ... ok
+test tests::event_pool_and_arena_concurrent_thread_safety ... ok
+test tests::run_for_with_zero_limit_reports_limit_reached ... ok
+test tests::run_until_or_for_reports_limit_reached_when_event_budget_is_exhausted_first ... ok
+test tests::run_until_or_for_stops_on_bounds ... ok
+test tests::run_until_stops_at_time_limit ... ok
+test tests::scheduler_stats_track_scheduled_cancelled_dispatched_and_pending ... ok
+
+test result: ok. 32 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/conformance_fixtures.rs (target/debug/deps/conformance_fixtures-855d8483f95985a0)
+
+running 4 tests
+test conformance_deterministic_ordering ... ok
+test conformance_rng_replay ... ok
+test conformance_zero_delay_guard ... ok
+test conformance_cancellation ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/integration.rs (target/debug/deps/integration-31033b3f808e405c)
+
+running 8 tests
+test test_cancel_then_schedule ... ok
+test test_deterministic_replay ... ok
+test test_empty_scheduler ... ok
+test test_run_for_bounds ... ok
+test test_trace_recorder ... ok
+test test_run_until_bounds ... ok
+test test_zero_delay_guard ... ok
+test test_large_event_count ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+     Running tests/relationship_telemetry_export.rs (target/debug/deps/relationship_telemetry_export-2365b4613e476036)
+
+running 4 tests
+test test_relationship_telemetry_duplicate_attached_link_rejection ... ok
+test test_relationship_telemetry_schema_version_validation ... ok
+test test_relationship_telemetry_self_cycle_rejection ... ok
+test test_relationship_telemetry_batch_roundtrip ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/scheduler_properties.rs (target/debug/deps/scheduler_properties-eef6edb0a00d4ebf)
+
+running 3 tests
+test repeated_equal_priority_events_keep_their_insertion_sequence ... ok
+test generated_events_follow_time_priority_and_insertion_order ... ok
+test generated_cancellations_remove_only_selected_events ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.22s
+
+     Running unittests src/lib.rs (target/debug/deps/kairo_ecs_cs_bridge-38b35078c85d6472)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/kairo_ecs_cuda-2030679832333345)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/kairo_ecs_debug-fe64fdc35fa236d4)
+
+running 12 tests
+test cow_tests::cow_delta_snapshot_memory_budget ... ok
+test tests::debugger_steps_back_and_goto_tick ... ok
+test tests::line_encoding_declares_schema ... ok
+test tests::reconstruct_at_uses_latest_snapshot_and_only_later_deltas ... ok
+test tests::replay_reconstructs_state_from_snapshot_and_deltas ... ok
+test tests::trace_line_validation_accepts_encoded_trace ... ok
+test tests::trace_line_validation_rejects_malformed_delta_fields ... ok
+test cow_tests::causal_provenance_lineage ... ok
+test tests::breakpoint_matches_event_kind ... ok
+test tests::trace_line_validation_rejects_malformed_custom_event_kind ... ok
+test tests::trace_line_validation_rejects_missing_or_unsupported_schema ... ok
+test tests::trace_line_validation_rejects_out_of_order_ticks ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/main.rs (target/debug/deps/kairo_ecs_debug-b4f80f16f101b773)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/kairo_ecs_des-b7f1c5a70dc4d02d)
+
+running 6 tests
+test tests::des_context_creates ... ok
+test tests::des_resource_preemption_reneging_simpy_parity ... ok
+test tests::resource_request_blocks ... ok
+test tests::schedule_and_step ... ok
+test tests::trajectory_records_scheduler_order ... ok
+test tests::trajectory_reports_event_budget_limit ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/boundary_channel_transit_delay.rs (target/debug/deps/boundary_channel_transit_delay-f6a4e805f3369540)
+
+running 4 tests
+test test_boundary_channel_expiry_and_cancellation ... ok
+test test_uniform_and_exponential_transit_distributions_replay_deterministically ... ok
+test test_fixed_transit_delay_preserves_ticks_and_tie_order ... ok
+test test_boundary_channel_bounded_capacity_backpressure ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/des_integration.rs (target/debug/deps/des_integration-aa53cae1751edbce)
+
+running 4 tests
+test resource_not_found ... ok
+test factory_bottleneck_smoke ... ok
+test resource_queue_fifo ... ok
+test parallel_resources ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/des_resource_queue_v1.rs (target/debug/deps/des_resource_queue_v1-3fa15e77c87d070b)
+
+running 2 tests
+test des_resource_queue_v1_preserves_fifo_admission ... ok
+test des_resource_queue_v1_replays_fixed_tick_trajectory_order ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/egress_sink_backpressure.rs (target/debug/deps/egress_sink_backpressure-901fd6fa29f52be5)
+
+running 2 tests
+test test_egress_sink_reservation_vs_occupancy_accounting ... ok
+test test_egress_sink_compensation_promotes_waiting_boarding_holds ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/independent_stream_rng_reproducibility.rs (target/debug/deps/independent_stream_rng_reproducibility-27f87c0b2cbcb044)
+
+running 2 tests
+test test_independent_entity_stream_isolation_and_replay ... ok
+test test_multithreaded_or_worker_stream_domain_noninterference ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/inter_unit_entity_conservation.rs (target/debug/deps/inter_unit_entity_conservation-c8408db3556b2878)
+
+running 1 test
+test test_two_depot_inter_unit_entity_conservation_and_idempotency ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/non_markovian_survival_clock_oracle.rs (target/debug/deps/non_markovian_survival_clock_oracle-97d81a35eb68801e)
+
+running 3 tests
+test test_covariate_update_with_residual_hazard_retention ... ok
+test test_transport_pause_and_resume_preserves_integrated_hazard ... ok
+test test_weibull_and_gompertz_age_dependent_hazard_progression ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/kairo_ecs_diplomat-eb040badff33b476)
+
+running 2 tests
+test tests::diplomat_facade_uses_ffi_lifecycle ... ok
+test tests::reexports_bridge_version ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/kairo_ecs_ffi-4aa01f49740c4e68)
+
+running 6 tests
+test tests::canonical_header_matches_generated_surface ... ok
+test tests::engine_lifecycle_is_explicit ... ok
+test tests::ffi_version_is_stable ... ok
+test tests::schedule_and_step_through_bridge ... ok
+test tests::panic_boundary_returns_panic_status ... ok
+test tests::zero_copy_layout_validation_rejects_misaligned_or_unowned_buffers ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/ffi_integration.rs (target/debug/deps/ffi_integration-1cbc74f16ef5a9f1)
+
+running 14 tests
+test test_engine_create_free ... ok
+test test_engine_double_free ... ok
+test test_engine_reset ... ok
+test test_error_message ... ok
+test test_ffi_version ... ok
+test test_run_for_limit ... ok
+test test_run_until_limit ... ok
+test test_run_until_or_for_applies_both_bounds ... ok
+test test_schedule_and_step ... ok
+test test_schedule_after_uses_current_time ... ok
+test test_schedule_cancel ... ok
+test test_schedule_ordering ... ok
+test test_stats ... ok
+test test_telemetry_flush ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/kairo_ecs_fmi-52052354467313d2)
+
+running 25 tests
+test aas::descriptor::tests::rejects_duplicate_submodel_ids ... ok
+test aas::descriptor::tests::validates_nested_submodels ... ok
+test aas::descriptor::tests::to_json_escapes_control_characters_and_preserves_unicode ... ok
+test aas::submodel::tests::property_validation_rejects_empty_and_whitespace_only_fields ... ok
+test aas::submodel::tests::submodel_validation_accepts_empty_and_valid_property_lists ... ok
+test aas::submodel::tests::constructors_preserve_fields_and_with_property_appends_in_order ... ok
+test aas::submodel::tests::submodel_validation_rejects_empty_fields_and_invalid_or_duplicate_properties ... ok
+test aas::submodel::tests::to_json_escapes_control_characters_and_preserves_unicode ... ok
+test aas::submodel::tests::to_json_escapes_quotes_and_backslashes_in_all_serialized_string_fields ... ok
+test aas::submodel::tests::to_json_omits_absent_semantic_id_and_preserves_property_order ... ok
+test digital_twin::connector::tests::publishes_initial_values_and_delta_changes_only ... ok
+test digital_twin::sync::tests::snapshot_diff_apply_round_trips ... ok
+test digital_twin::connector::tests::rejects_invalid_publication_contracts ... ok
+test digital_twin::sync::tests::checked_apply_rejects_wrong_base_tick ... ok
+test digital_twin::sync::tests::checked_snapshot_rejects_duplicate_keys ... ok
+test digital_twin::sync::tests::diff_preserves_duplicate_key_behavior_for_direct_snapshots ... ok
+test digital_twin::sync::tests::diff_preserves_unsorted_direct_snapshot_behavior ... ok
+test export::model_description::tests::rejects_duplicate_value_references ... ok
+test export::model_description::tests::renders_fmi2_model_description_with_variables ... ok
+test export::model_description::tests::validates_generated_fmi2_xml_structure ... ok
+test import::fmu_loader::tests::rejects_model_description_without_fmi_version ... ok
+test import::fmu_loader::tests::reports_missing_platform_binary_directory ... ok
+test import::fmu_loader::tests::identifies_unpacked_fmu_layout ... ok
+test export::packager::tests::validates_written_unpacked_export_layout ... ok
+test import::fmu_loader::tests::rejects_existing_extraction_tree_and_destination_symlink ... ok
+
+test result: ok. 25 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/fmi2_lifecycle.rs (target/debug/deps/fmi2_lifecycle-e38f50b2bf54ca36)
+
+running 2 tests
+test checked_constructor_rejects_null_component ... ok
+test fmi2_lifecycle_calls_are_ordered_and_cleanup_is_idempotent ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/fmi3_cosim_qualification.rs (target/debug/deps/fmi3_cosim_qualification-98e2f08232ebb156)
+
+running 1 test
+test test_fmi3_dynamic_loading_and_1000_steps ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.29s
+
+     Running tests/fmi_cosim_qualification.rs (target/debug/deps/fmi_cosim_qualification-64ed7e9b76cc692c)
+
+running 1 test
+test test_fmi_dynamic_loading_and_1000_steps ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.60s
+
+     Running tests/fmu_archive.rs (target/debug/deps/fmu_archive-055814c24520af1b)
+
+running 2 tests
+test fmu_archive_rejects_path_traversal_entries ... ok
+test fmu_archive_extracts_stored_zip_and_validates_layout ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/kairo_ecs_game_ontology-668f56962fb35eea)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/codegen.rs (target/debug/deps/codegen-fbfe7db9a0a6366d)
+
+running 4 tests
+test generation_is_deterministic_across_equivalent_sources ... ok
+test rejects_properties_without_known_domain_classes ... ok
+test regenerates_checked_in_golden_components ... ok
+test rejects_names_without_a_namespace ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/jsonld_ingestion.rs (target/debug/deps/jsonld_ingestion-046323f3d2546276)
+
+running 1 test
+test parses_jsonld_classes_and_properties ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/normalization.rs (target/debug/deps/normalization-4fb22cb4f0eed4e3)
+
+running 2 tests
+test normalizes_classes_and_properties_deterministically ... ok
+test rejects_malformed_inputs ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/turtle_ingestion.rs (target/debug/deps/turtle_ingestion-708d22d54252db1a)
+
+running 1 test
+test parses_turtle_classes_and_properties ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/kairo_ecs_game_theory-f1f2c607d3c647f9)
+
+running 2 tests
+test normal_form::mixed_nash_lemke_howson_parity ... ok
+test extensive_form::cfr_plus_extensive_form_convergence ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/extensive_form_chance_solver.rs (target/debug/deps/extensive_form_chance_solver-5439f8b05a1a2e4f)
+
+running 2 tests
+test chance_weighted_solver_uses_chance_expectation_inside_decision_nodes ... ok
+test chance_weighted_solver_aggregates_expected_payoffs_for_chance_root ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/extensive_form_components.rs (target/debug/deps/extensive_form_components-19c3ce5fb222cb2c)
+
+running 3 tests
+test extensive_form_components_store_flat_entity_id_data ... ok
+test extensive_form_components_validate_player_labels_probabilities_and_payoffs ... ok
+test extensive_form_components_live_in_dense_component_stores ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/extensive_form_information_sets.rs (target/debug/deps/extensive_form_information_sets-ccc30c2423674f09)
+
+running 3 tests
+test information_set_fixtures_reject_inconsistent_action_labels ... ok
+test information_set_fixtures_reject_player_mismatch ... ok
+test information_set_fixtures_group_nodes_with_matching_action_labels ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/extensive_form_solver.rs (target/debug/deps/extensive_form_solver-360288cee03f333b)
+
+running 3 tests
+test backward_induction_preserves_first_best_action_on_ties ... ok
+test backward_induction_solves_nested_subgames_by_current_player ... ok
+test backward_induction_selects_best_root_action_for_active_player ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/extensive_form_topology.rs (target/debug/deps/extensive_form_topology-964117c5df5fd0a3)
+
+running 4 tests
+test topology_validation_rejects_child_cycles ... ok
+test topology_validation_rejects_missing_action_targets ... ok
+test topology_validation_accepts_reachable_root_to_terminal_tree ... ok
+test topology_validation_rejects_terminal_nodes_without_terminal_utility ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/extensive_form_traversal.rs (target/debug/deps/extensive_form_traversal-c4ba24f154b0c1fa)
+
+running 3 tests
+test traversal_paths_walk_to_terminals_in_edge_order ... ok
+test traversal_reads_action_edges_from_child_entities ... ok
+test traversal_rejects_action_transition_target_mismatch ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/generated_components.rs (target/debug/deps/generated_components-2bc6cfc7cc6676df)
+
+running 1 test
+test generated_components_are_constructible_with_entity_id_edges ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/graph_relations.rs (target/debug/deps/graph_relations-23e664c5b6b08611)
+
+running 6 tests
+test children_query_scans_flat_component_store ... ok
+test descendant_traversal_stops_at_seen_entities ... ok
+test descendant_traversal_walks_entity_id_edges_without_recursion ... ok
+test relationship_components_live_in_dense_component_stores ... ok
+test relationship_components_store_entity_ids_as_copy_data ... ok
+test transition_query_reads_target_from_flat_component_store ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/normal_form.rs (target/debug/deps/normal_form-4b2ec6fdaddc2c8c)
+
+running 7 tests
+test best_response_solver_rejects_invalid_player_or_opponent_profile ... ok
+test pure_nash_solver_finds_prisoners_dilemma_equilibrium ... ok
+test best_response_solver_selects_maximum_utility_against_fixed_opponents ... ok
+test pure_nash_solver_preserves_multiple_equilibria_in_profile_order ... ok
+test strict_dominance_solver_finds_dominated_prisoners_dilemma_strategies ... ok
+test strict_dominance_solver_ignores_ties_and_rejects_invalid_player ... ok
+test best_response_solver_preserves_ties_in_strategy_order ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/normal_form_components.rs (target/debug/deps/normal_form_components-c0ebc60b4ffa377c)
+
+running 5 tests
+test normal_form_components_preserve_shape_and_ordering ... ok
+test payoff_lookup_rejects_invalid_profile_or_player ... ok
+test payoff_matrix_rejects_wrong_payoff_count ... ok
+test strategy_space_rejects_invalid_cardinality_and_names ... ok
+test utility_rejects_non_finite_values ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/kairo_ecs_gpu-98d3ebe7b3f9f474)
+
+running 16 tests
+test buffer::tests::empty_buffer_is_rejected ... ok
+test backends::cuda_backend::tests::cuda_backend_reports_not_configured_without_cuda_bindings ... ok
+test buffer::tests::typed_buffer_tracks_item_and_byte_length ... ok
+test compute::tests::abm_step_is_seed_reproducible ... ok
+test compute::tests::abm_execution_plan_tracks_state_and_transfers ... ok
+test compute::tests::des_execution_plan_accounts_for_event_roundtrip ... ok
+test compute::tests::dispatch_shape_uses_webgpu_safe_workgroups ... ok
+test compute::tests::state_footprint_tracks_flat_buffer_bytes ... ok
+test compute::tests::des_execution_plan_budget_checks_include_event_transfer_pressure ... ok
+test wgpu::backend::tests::wgpu_backend_reports_not_configured_without_device_dependencies ... ok
+test metal::tests::test_msl_kernel_source ... ok
+test transfer::tests::checked_transfer_totals_report_overflow ... ok
+test transfer::tests::transfer_plan_separates_upload_and_download_totals ... ok
+test metal::tests::test_metal_des_step_parity ... ok
+test metal::tests::test_metal_backend_capabilities ... ok
+test metal::tests::test_metal_bit_for_bit_parity_with_cpu_fallback ... ok
+
+test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.08s
+
+     Running tests/backend_initialization.rs (target/debug/deps/backend_initialization-165a34c0db8a46d0)
+
+running 3 tests
+test backend_errors_distinguish_not_configured_from_no_device ... ok
+test wgpu_init_reports_device_unavailable_without_cpu_fallback ... ok
+test cuda_init_reports_runtime_unavailable_without_cpu_fallback ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/contract_slice.rs (target/debug/deps/contract_slice-86e5ddc4e9f02636)
+
+running 5 tests
+test backend_request_distinguishes_fallback_disabled_from_optional_unavailable ... ok
+test kernel_contract_names_dispatch_and_transient_uploads ... ok
+test persistent_batch_dispatch_requires_resident_state ... ok
+test persistent_device_memory_declares_resident_buffers ... ok
+test persistent_session_batch_dispatch_matches_cpu_fallback_contract ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/contract_smoke.rs (target/debug/deps/contract_smoke-af94e061f1ce82fe)
+
+running 4 tests
+test cpu_fallback_reports_explicit_capabilities ... ok
+test des_execution_plan_budget_api_includes_event_buffers ... ok
+test execution_plans_are_public_and_backend_agnostic ... ok
+test footprint_and_dispatch_contract_are_hardware_independent ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/metal_hardware_qualification.rs (target/debug/deps/metal_hardware_qualification-fe2732896588953a)
+
+running 3 tests
+test test_metal_device_hardware_provenance_and_availability ... ok
+test test_metal_bit_for_bit_parity_large_workload ... ok
+test test_metal_persistent_memory_zero_host_roundtrip_across_ticks ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.20s
+
+     Running tests/parity.rs (target/debug/deps/parity-4a108f6285f7375e)
+
+running 1 test
+test fixed_seed_abm_parity_harness_is_deterministic ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/parity_des.rs (target/debug/deps/parity_des-4515bb48d97e2ea2)
+
+running 2 tests
+test cpu_des_error_does_not_partially_apply_events ... ok
+test fixed_seed_des_parity_harness_applies_events_in_timestamp_order ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/persistent_memory.rs (target/debug/deps/persistent_memory-838312c35a9d0c1a)
+
+running 3 tests
+test upload_once_reupload_is_counted_as_host_upload ... ok
+test persistent_des_error_does_not_partially_apply_events ... ok
+test persistent_session_keeps_state_buffers_resident_across_mixed_ticks ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/kairo_ecs_grpc-ec24a04392c863b7)
+
+running 24 tests
+test envelope::tests::test_envelope_roundtrip_root ... ok
+test envelope::tests::test_conversion_to_and_from_optimistic_message ... ok
+test envelope::tests::test_envelope_roundtrip_with_ancestry_chain ... ok
+test envelope::tests::test_rejection_oracles ... ok
+test tests::default_timeouts_keep_heartbeat_below_failure_timeout ... ok
+test tests::grpc_contract_envelopes_track_protocol_identity ... ok
+test tests::grpc_contract_rejects_empty_migration_id ... ok
+test tests::grpc_entity_migration_snapshot_preserves_generation_and_pending_events ... ok
+test tests::grpc_proto_contract_covers_generation_pending_events_heartbeats_and_antimessages ... ok
+test tests::grpc_two_process_launch_contract_requires_distinct_real_socket_endpoints ... ok
+test tests::heartbeat_classifier_marks_late_worker_failed ... ok
+test tests::local_two_node_contract_proof_covers_event_migration_telemetry_and_failure ... ok
+test tests::local_smoke_validates_peers_and_timeout_config ... ok
+test tests::migration_validator_accepts_complete_request ... ok
+test tests::migration_validator_rejects_empty_component_set ... ok
+test tests::peer_list_is_preserved ... ok
+test tests::peer_validator_rejects_duplicate_peer_ids ... ok
+test tests::protocol_emulator_includes_pending_event_timestamps_in_gvt_round ... ok
+test tests::protocol_emulator_round_trips_null_messages ... ok
+test tests::protocol_emulator_uses_current_gvt_candidate_round ... ok
+test tests::retry_policy_rejects_zero_attempts_and_inverted_backoff ... ok
+test tests::telemetry_batch_validator_requires_monotonic_tick_range ... ok
+test tests::transport_send_rejects_unknown_lp ... ok
+test tests::transport_send_rejects_unknown_source_and_destination_mismatch ... ok
+
+test result: ok. 24 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/two_process_smoke.rs (target/debug/deps/two_process_smoke-ec2fc7d604e70bbf)
+
+running 2 tests
+
+running 1 test
+test socket_transport_preserves_optimistic_migration_telemetry_heartbeat_and_rejects_https ... ok
+test two_process_smoke ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.16s
+
+test two_process_smoke ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.17s
+
+     Running unittests src/lib.rs (target/debug/deps/kairo_ecs_ml-10d4f8c06a37f475)
+
+running 13 tests
+test tests::backend_status_reports_dependency_free_scaffold ... ok
+test tests::tensor_rejects_non_finite_values ... ok
+test tests::ort_session_runs_shape_checked_inference ... ok
+test tests::metadata_rejects_blank_name_and_empty_shapes ... ok
+test tests::tensor_rejects_shape_mismatch ... ok
+test tests::tensor_rejects_zero_dimension ... ok
+test tests::tick_hook_rejects_bad_output_shape_after_predict ... ok
+test tests::tick_hook_rejects_input_shape_before_predict ... ok
+test tests::try_register_rejects_duplicate_model_name_and_version ... ok
+test tests::tick_hook_runs_matching_phase_only ... ok
+test tests::try_register_validates_model_metadata_contract ... ok
+test rayon_vecenv_1024_worlds_throughput ... ok
+test multicore_vecenv_thread_parity ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/feature_matrix.rs (target/debug/deps/feature_matrix-bbb1e0e0eb62b957)
+
+running 8 tests
+test burn_feature_exposes_native_system_alias ... ok
+test featureless_session_rejects_input_shape_mismatch_before_inference ... ok
+test featureless_session_reports_backend_not_configured ... ok
+test featureless_tick_hook_rejects_duplicate_model_registration ... ok
+test featureless_tick_hook_runs_registered_model ... ok
+test gymnasium_feature_exposes_space_contract ... ok
+test onnx_feature_exposes_session_alias ... ok
+test tensorrt_feature_is_explicitly_contract_blocked ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/kairo_ecs_mpi-54823b1ac642abe5)
+
+running 18 tests
+test tests::entity_migration_snapshot_preserves_generation_and_pending_events ... ok
+test tests::local_two_rank_contract_proof_covers_event_migration_and_telemetry ... ok
+test tests::local_smoke_validates_rank_mapping_and_protocol_tags ... ok
+test tests::message_tags_are_stable ... ok
+test tests::migration_validator_accepts_component_payloads ... ok
+test tests::migration_validator_rejects_self_migration ... ok
+test tests::rank_validator_rejects_duplicate_lps ... ok
+test tests::protocol_emulator_includes_pending_event_timestamps_in_gvt_round ... ok
+test tests::mpi_contract_reserves_antimessage_tag_for_time_warp_rollbacks ... ok
+test tests::protocol_emulator_uses_current_gvt_candidate_round ... ok
+test tests::rank_assignment_preserves_lp_mapping ... ok
+test tests::protocol_emulator_round_trips_event_messages ... ok
+test tests::telemetry_batch_validator_requires_ordered_non_empty_payload ... ok
+test tests::transport_contract_rejects_migration_without_payload_or_id ... ok
+test tests::transport_contracts_use_stable_mpi_protocol_metadata ... ok
+test tests::mpi_multirank_launch_contract_requires_real_rank_count ... ok
+test tests::transport_send_rejects_unknown_lp ... ok
+test tests::transport_send_rejects_unknown_source_and_destination_mismatch ... ok
+
+test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/multirank_smoke.rs (target/debug/deps/multirank_smoke-6b4c664e4da52974)
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+test multirank_smoke_4ranks ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+test multirank_smoke_4ranks ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+test multirank_smoke_4ranks ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
+
+test multirank_smoke_4ranks ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
+
+test multirank_smoke_4ranks ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s
+
+     Running unittests src/lib.rs (target/debug/deps/kairo_ecs_pdes-d28c10e09faa4e33)
+
+running 54 tests
+test generation_bitset::tests::instance_allocator_rejects_exhaustion_without_wrapping ... ok
+test generation_bitset::tests::every_successful_insert_invalidates_prior_handles ... ok
+test generation_bitset::tests::accepts_zero_and_max_capacity_and_rejects_oversized_capacity ... ok
+test generation_bitset::tests::rejects_inactive_slot_and_foreign_instance_handles ... ok
+test generation_bitset::tests::duplicate_insert_is_rejected_without_changing_state_or_epoch ... ok
+test generation_bitset::tests::malformed_or_mismatched_snapshots_leave_state_unchanged ... ok
+test generation_bitset::tests::identical_foreign_snapshot_restores_bits_without_transferring_authority ... ok
+test generation_bitset::tests::removal_and_reinsertion_never_revive_old_handles ... ok
+test generation_bitset::tests::covers_word_edges_last_slot_and_first_invalid_slot ... ok
+test generation_bitset::tests::epoch_exhaustion_leaves_insert_remove_and_restore_unchanged ... ok
+test generation_bitset::tests::restore_invalidates_all_handles_and_keeps_destination_identity ... ok
+test optimistic::owned_execution::private_tests::epoch_headroom_rejects_before_snapshot_and_handler ... ok
+test optimistic::owned_execution::private_tests::revision_exhaustion_rejects_before_callbacks_and_group_floor ... ok
+test optimistic::owned_execution::private_tests::cut_retains_old30_new25_bundle_at26_and_equality_then_prunes_without_head_resurrection ... ok
+test optimistic::owned_execution::private_tests::shadow_incarnation_and_id_batch_exhaustion_restore_without_allocator_leak ... ok
+test optimistic::tests::incarnation_exhaustion_in_middle_of_output_batch_poisons_before_publish ... ok
+test optimistic::tests::external_incarnation_and_epoch_exhaustion_reject_without_mutation ... ok
+test optimistic::tests::output_batch_epoch_exhaustion_poisons_without_partial_publication ... ok
+test optimistic::owned_execution::private_tests::bounded_graph_rejects_missing_cycle_fork_and_cross_cohort ... ok
+test optimistic::owned_execution::private_tests::pruning_rewires_surviving_parent_and_keeps_lifetime_root_reservation ... ok
+test optimistic::owned_execution::private_tests::actual_self_cancellation_uses_one_bundle_and_promotes_reserved_local_successor_once ... ok
+test optimistic::tests::output_batch_reserves_one_epoch_per_destination_and_publishes_together ... ok
+test optimistic::tests::rollback_requeues_multiple_inputs_with_one_checked_epoch_reservation ... ok
+test tests::anti_after_fossil_collection_preserves_committed_floor ... ok
+test tests::conservative_frontier_waits_for_every_peer ... ok
+test tests::in_memory_gvt_includes_inflight_message_timestamps ... ok
+test tests::partition_plan_rejects_invalid_inputs ... ok
+test tests::partition_plan_assigns_entities_deterministically_by_entity_id ... ok
+test tests::scheduler_ignores_stale_null_safe_time_for_local_progress ... ok
+test tests::scheduler_never_moves_lp_time_backward ... ok
+test tests::partitioned_reference_matches_sequential_final_state ... ok
+test tests::scheduler_rejects_duplicate_and_mismatched_lps ... ok
+test tests::scheduler_rejects_inbound_stragglers_before_local_time ... ok
+test tests::scheduler_rejects_overflowing_lookahead_before_remote_send ... ok
+test tests::scheduler_rejects_remote_events_before_declared_lookahead ... ok
+test tests::scheduler_reports_stalled_lps_when_safe_time_blocks_progress ... ok
+test tests::scheduler_sends_events_and_null_messages ... ok
+test tests::conservative_validator_reports_parity_gvt_and_deadlock_evidence ... ok
+test tests::time_warp_fossil_collects_only_history_before_gvt ... ok
+test tests::time_warp_antimessage_cancels_matching_positive_event ... ok
+test tests::time_warp_fossil_collection_preserves_rollback_at_or_after_gvt ... ok
+test tests::time_warp_overhead_metrics_track_local_rollback_pressure ... ok
+test tests::time_warp_rejects_pre_gvt_stragglers_and_gvt_regression ... ok
+test tests::time_warp_generation_token_rejects_stale_component_access ... ok
+test tests::time_warp_reports_cancellation_metadata_for_rollback_and_antimessage ... ok
+test tests::time_warp_straggler_rolls_back_to_prior_checkpoint ... ok
+test tests::validator_rejects_empty_or_degenerate_workloads ... ok
+test tests::time_warp_rejects_duplicate_positive_events_without_double_apply ... ok
+test tests::time_warp_spike_documents_rollback_risk ... ok
+test tests::transport_rejects_unknown_destinations_and_sources ... ok
+test tests::time_warp_state_save_restores_absent_component_after_rollback ... ok
+test tests::transport_round_trips_remote_events ... ok
+test tests::scaling_smoke_samples_cover_required_lp_counts_without_speedup_claims ... ok
+test tests::stress_reference_progresses_gvt_for_every_tick ... ok
+
+test result: ok. 54 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.22s
+
+     Running tests/optimistic_authority_envelope.rs (target/debug/deps/optimistic_authority_envelope-0d7ee790c44718af)
+
+running 4 tests
+test authority_roundtrip_preserves_native_ranges_and_does_not_change_ordering ... ok
+test scoped_positive_and_anti_reject_before_any_all_local_runtime_mutation ... ok
+test legacy_constructors_and_runtime_outputs_remain_local_preview ... ok
+test rejected_scoped_max_incarnation_does_not_advance_legacy_emission_allocation ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/optimistic_authority_envelope_heldout.rs (target/debug/deps/optimistic_authority_envelope_heldout-0b91a69b5c544a02)
+
+running 5 tests
+test authority_constructor_preserves_full_nested_envelope_without_changing_order ... ok
+test poisoned_runtime_error_precedes_scoped_authority_rejection ... ok
+test legacy_emission_and_rollback_antis_remain_local_preview ... ok
+test rejected_scoped_max_incarnation_does_not_advance_legacy_emitter ... ok
+test scoped_positive_and_anti_reject_unchanged_across_legacy_lifecycle_states ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/optimistic_bitset_heldout.rs (target/debug/deps/optimistic_bitset_heldout-300f1319cbb8c672)
+
+running 2 tests
+test bitset_restore_error_prevents_publication_of_staged_model_values_and_rng ... ok
+test real_model_rollback_restores_membership_values_rng_without_reviving_handles ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/optimistic_codec_bridge.rs (target/debug/deps/optimistic_codec_bridge-487065126a94c2be)
+
+running 4 tests
+test complete_ancestry_rejects_root_source_and_nonfuture_output_keys ... ok
+test bounded_ancestry_accepts_depth_128_and_rejects_a_129th_child ... ok
+test root_and_output_parts_roundtrip_full_native_ranges_and_message_kinds ... ok
+test actual_multi_emitter_outputs_and_their_antis_roundtrip_and_receive ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/optimistic_codec_bridge_heldout.rs (target/debug/deps/optimistic_codec_bridge_heldout-bedf3c76c81ac28f)
+
+running 5 tests
+test checked_bridge_preserves_full_ranges_and_rejects_invalid_structure ... ok
+test conflicting_decoded_metadata_and_duplicate_positive_leave_receiver_unchanged ... ok
+test full_parent_key_order_is_stable_under_root_arrival_permutations ... ok
+test state_changing_replay_survives_its_old_anti_after_public_reconstruction ... ok
+test emitted_multigeneration_messages_rebuild_and_late_old_antis_match_reference ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/optimistic_owned_construction.rs (target/debug/deps/optimistic_owned_construction-c69b39cd96a4e530)
+
+running 8 tests
+test disjoint_live_peers_seal_close_and_retry_with_exact_checked_revisions ... ok
+test configuration_rejects_incomplete_maps_and_partition_mismatch_before_snapshot ... ok
+test guarded_owned_operations_and_raw_admission_preserve_observable_state ... ok
+test topology_is_canonical_and_peer_configuration_includes_partition_and_lookahead ... ok
+test overlap_and_dropped_peer_are_rejected_without_revision_change ... ok
+test snapshots_only_real_owned_processes_and_capability_retains_immutable_full_config ... ok
+test constructor_rejects_each_configuration_boundary_before_snapshot_capture ... ok
+test overlapping_multi_lp_peer_reports_the_globally_first_lp ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/optimistic_owned_construction_heldout.rs (target/debug/deps/optimistic_owned_construction_heldout-4de2b5a280fcdf40)
+
+running 6 tests
+test peer_identity_uses_full_partition_and_canonical_topology_not_owner_subset ... ok
+test dropped_issuer_is_stale_before_or_after_seal_and_cannot_be_replaced ... ok
+test owned_raw_receive_and_legacy_issuer_remain_explicitly_gated ... ok
+test disjoint_owners_seal_then_guard_mutations_without_remote_mirrors ... ok
+test issuer_retry_overlap_and_peer_coverage_are_revision_checked ... ok
+test invalid_constructor_maps_topology_and_capacities_fail_before_snapshots ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/optimistic_owned_execution.rs (target/debug/deps/optimistic_owned_execution-0e7b64a6a3b1b9db)
+
+running 4 tests
+test invalid_staged_output_compensates_without_publishing_or_closing_inputs ... ok
+test owned_positive_round_publishes_local_children_after_complete_staging ... ok
+test native_cut_failure_reports_all_already_poisoned_participants ... ok
+test suffix_control_and_executed_anti_are_each_one_atomic_budget_unit ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/optimistic_owned_execution_heldout.rs (target/debug/deps/optimistic_owned_execution_heldout-d7eae69041b6fb7a)
+
+running 18 tests
+test native_group_cut_rejects_open_and_incomplete_participants_without_advancing_any_floor ... ok
+test changed_destination_uses_reserved_local_slot_and_gvt_keeps_old30_tombstone_for_new25 ... ok
+test budget_one_rollback_replays_the_same_seeded_state_and_committed_trace_as_all_local_control ... ok
+test group_cut_commits_common_floor_even_when_retired_snapshot_drop_panics ... ok
+test executed_descendant_cascade_restores_each_owner_and_blocks_gvt_until_final_anti ... ok
+test committed_anti_cleanup_failure_reports_its_published_descendant_anti_and_drop_peer ... ok
+test peer_drop_during_handler_revalidation_compensates_without_publishing_remote_output ... ok
+test absent_replay_coalesces_one_retirement_and_reintroduction_waits_for_applied_proof ... ok
+test mixed_local_remote_fanout_capacity_failure_publishes_neither_half_of_actual_batch ... ok
+test first_rollback_candidate_preempts_the_rest_of_the_selected_positive_vector ... ok
+test restore_error_preserves_handler_trigger_and_restores_other_selected_lp ... ok
+test local_self_retirement_uses_one_shared_receipt_and_applies_before_replay ... ok
+test restore_panic_is_a_fatal_compensation_error_and_poison_is_global ... ok
+test selected_round_compensates_every_lp_when_a_later_handler_panics ... ok
+test reduced_fanout_two_to_one_retires_omitted_ordinal_and_real_descendant ... ok
+test snapshot_panic_poison_invalidates_every_owned_lp_before_handlers_publish ... ok
+test snapshot_callback_can_drop_registered_peer_without_holding_runtime_gate ... ok
+test replacement_n2_waits_for_both_real_receiver_retirements_in_both_proof_orders ... ok
+
+test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/optimistic_owned_root_routing.rs (target/debug/deps/optimistic_owned_root_routing-5d16e635c486892e)
+
+running 4 tests
+test local_roots_enqueue_once_and_remote_roots_cross_only_the_native_join ... ok
+test identical_keys_from_a_recreated_issuer_cannot_reuse_or_poison_receipts ... ok
+test transition_reservations_are_shared_persistent_and_preflighted_before_other_bounds ... ok
+test issuer_drop_race_is_atomic_and_drop_invalidates_before_process_destructor ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/optimistic_owned_root_routing_heldout.rs (target/debug/deps/optimistic_owned_root_routing_heldout-0cbba64178490586)
+
+running 8 tests
+test sender_capabilities_are_root_specific_and_fresh_issuers_cannot_reuse_cached_receipts ... ok
+test full_width_epoch_tick_and_root_id_survive_real_admission_and_guarded_run ... ok
+test local_root_is_enqueued_once_and_consumes_no_receipt_slot ... ok
+test transition_capacity_covers_local_and_remote_roots_and_survives_ack ... ok
+test actual_ticket_issuer_and_owned_destination_are_checked_before_receipt_cache ... ok
+test pending_bound_rejects_new_ticket_without_mutation_and_keeps_exact_retry ... ok
+test outbox_and_sender_receiver_receipt_bounds_preflight_then_exact_retry_at_capacity ... ok
+test concurrent_drop_and_admission_publish_completely_or_reject_unchanged ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/optimistic_runtime.rs (target/debug/deps/optimistic_runtime-98eac74ea27e82a1)
+
+running 8 tests
+test invalid_post_handler_output_poisons_without_publishing_partial_batch ... ok
+test root_identity_is_explicit_and_initial_scheduling_closes_on_execution ... ok
+test stale_tokens_budget_resumption_and_equal_gvt_are_checked ... ok
+test gvt_lag_reports_leading_frontier_even_with_idle_logical_process ... ok
+test anti_before_positive_tombstones_exact_delivery_and_preserves_replacement ... ok
+test structural_output_order_uses_full_parent_key_after_straggler_replay ... ok
+test child_identity_uses_parent_order_key_and_advances_causal_depth ... ok
+test anti_after_positive_cancels_it_and_fossil_collection_prunes_replay_metadata ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/optimistic_runtime_heldout.rs (target/debug/deps/optimistic_runtime_heldout-98c0a7d613b092e9)
+
+running 13 tests
+test conflicting_exact_delivery_across_destination_lps_is_rejected_unchanged ... ok
+test equal_tick_reverse_source_and_sequence_arrival_matches_core_scheduler ... ok
+test replayed_output_slot_can_change_payload_route_and_tick_without_identity_conflict ... ok
+test anti_before_positive_does_not_apply_and_duplicate_delivery_is_unchanged ... ok
+test lp_state_tokens_are_runtime_bound_and_invalidated_by_mutation_and_restore ... ok
+test canceling_earlier_parent_retracts_descendants_and_replays_surviving_inputs ... ok
+test invalid_complete_batch_and_handler_fault_publish_no_partial_outputs ... ok
+test same_opaque_child_identity_from_distinct_emitters_cancels_independently ... ok
+test replacement_before_old_anti_survives_and_cascades_to_correct_final_state ... ok
+test snapshot_and_restore_faults_poison_without_publishing_replacement_outputs ... ok
+test work_at_gvt_remains_reversible_and_pre_floor_inputs_fail_unchanged ... ok
+test late_parent_children_same_tick_keep_structural_order_and_rng_state ... ok
+test canceled_queued_replays_do_not_accumulate_across_fossil_cycles ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/production_parity.rs (target/debug/deps/production_parity-4636891907fdd702)
+
+running 1 test
+test production_runtime_matches_core_scheduler_for_des_abm_and_mixed_models ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.00s
+
+     Running tests/production_protocol.rs (target/debug/deps/production_protocol-791929aa146c33cd)
+
+running 14 tests
+test emitting_event_lookahead_overflow_is_typed_and_poisoning ... ok
+test partition_process_sets_and_directed_routes_are_validated_before_execution ... ok
+test outbound_metadata_and_overflow_fail_with_typed_errors ... ok
+test invalid_outbound_batch_is_rejected_and_runtime_is_poisoned ... ok
+test handler_panic_fails_closed_and_poisons_runtime ... ok
+test eligible_process_batches_run_concurrently_across_logical_processes ... ok
+test null_bounds_are_exclusive_and_event_at_the_bound_waits ... ok
+test mixed_valid_and_invalid_outputs_commit_none_of_the_round ... ok
+test bounded_same_tick_chain_can_resume_without_corrupting_runtime ... ok
+test sparse_future_input_resumes_after_partial_horizon ... ok
+test same_lp_followups_are_ordered_by_timestamp_before_existing_events ... ok
+test empty_cyclic_topology_advances_without_per_tick_rounds ... ok
+test randomized_positive_lookahead_ring_progresses_through_ten_thousand_ticks ... ok
+test adversarial_minimum_lookahead_cycle_executes_every_tick_on_eight_lps ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.13s
+
+     Running tests/track47_conservative_runtime.rs (target/debug/deps/track47_conservative_runtime-7f12dac2a6c61d24)
+
+running 4 tests
+test conservative_lookahead_rejects_early_remote_events_and_allows_boundary_events ... ok
+test partition_plan_and_null_messages_preserve_safe_time_progression ... ok
+test sequential_partitioned_parity_covers_des_abm_and_mixed_workloads ... ok
+test deadlock_stress_and_scaling_smoke_have_progress_without_speedup_claims ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 15.05s
+
+     Running tests/track48_rollback_regressions.rs (target/debug/deps/track48_rollback_regressions-dedcc10b85ea0361)
+
+running 5 tests
+test anti_cancellation_rebuild_preserves_initial_component_seed ... ok
+test checkpoint_restore_does_not_revive_a_stale_initial_token ... ok
+test rollback_before_first_checkpoint_preserves_initial_component_seed ... ok
+test component_token_from_another_runtime_is_stale ... ok
+test rollback_recreation_does_not_resurrect_an_initial_generation_token ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/kairo_ecs_rng-759e1efdc563bc2a)
+
+running 5 tests
+test tests::different_run_seeds_diverge ... ok
+test tests::stream_replays_from_run_seed ... ok
+test tests::entity_seed_is_reproducible ... ok
+test tests::distinct_entity_inputs_diverge ... ok
+test tests::entity_stream_replays_exactly ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/competing_hazards_sampling_invariance.rs (target/debug/deps/competing_hazards_sampling_invariance-98dd80bb6ad238e4)
+
+running 4 tests
+test test_tie_breaking_order_policies ... ok
+test test_piecewise_constant_and_zero_hazard_invariance ... ok
+test test_right_censoring_boundary_behavior ... ok
+test test_analytic_exponential_cause_specific_incidence ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running unittests src/lib.rs (target/debug/deps/kairo_ecs_state-3ee04fc2e95d86fd)
+
+running 38 tests
+test query_determinism_tests::despawning_through_the_registry_drops_every_column ... ok
+test query_determinism_tests::executors_are_no_ops_for_columns_they_cannot_resolve ... ok
+test query_determinism_tests::archetypes_are_ordered_by_type_list_and_by_entity_key ... ok
+test query_determinism_tests::archetypes_are_independent_of_registration_and_insertion_order ... ok
+test query_determinism_tests::executors_visit_in_plan_order_and_mutation_is_visible ... ok
+test numa_tests::component_locality_plan_preserves_dense_order_and_node_hint ... ok
+test numa_tests::component_locality_plan_reports_cache_line_geometry ... ok
+test query_determinism_tests::component_types_are_reported_in_registration_order ... ok
+test query_determinism_tests::generation_rollover_orders_by_index_and_honours_the_live_generation ... ok
+test query_determinism_tests::an_empty_plan_visits_nothing ... ok
+test query_determinism_tests::mutable_executors_cover_every_documented_arity ... ok
+test query_determinism_tests::plan_survives_removal_history_that_shuffles_dense_rows ... ok
+test query_determinism_tests::queries_reject_conflicting_access_and_descriptors_without_a_source ... ok
+test query_determinism_tests::repeated_planning_of_an_unchanged_registry_is_identical ... ok
+test query_determinism_tests::query_order_follows_index_order_not_registration_order ... ok
+test query_determinism_tests::read_only_executors_cover_every_documented_arity ... ok
+test query_determinism_tests::query_order_is_independent_of_component_insertion_order ... ok
+test query_determinism_tests::registry_emits_no_hash_derived_ordering ... ok
+test query_determinism_tests::the_source_column_is_the_smallest_match_and_ties_break_on_ordinal ... ok
+test query_determinism_tests::with_and_without_filters_are_applied_before_the_executor_runs ... ok
+test registry_insert_tests::insert_registers_missing_store_and_keeps_normal_behavior ... ok
+test registry_insert_tests::insert_returns_false_for_an_inconsistent_typed_store ... ok
+test registry_insert_tests::register_assigns_stable_ordinals_in_first_touch_order ... ok
+test registry_insert_tests::store_in_rejects_a_layout_the_column_was_not_built_with ... ok
+test tests::both_layouts_agree_on_reads_writes_and_iteration ... ok
+test tests::cache_line_layout_aligns_the_column_base_address ... ok
+test tests::component_store_reserve_adds_capacity_after_components_exist ... ok
+test tests::cache_line_layout_grows_resident_bytes_by_the_padding ... ok
+test tests::component_store_reserve_grows_all_storage_vectors_from_empty ... ok
+test tests::cache_line_layout_pads_rows_to_a_whole_number_of_lines ... ok
+test tests::component_store_with_capacity_reserves_all_storage_vectors ... ok
+test tests::iter_ordered_is_independent_of_insertion_and_removal_history ... ok
+test tests::large_components_still_get_a_line_aligned_base_and_whole_line_rows ... ok
+test tests::test_world_despawn ... ok
+test tests::test_world_with_capacity ... ok
+test tests::tight_layout_keeps_rows_unit_stride_for_arrow_style_buffers ... ok
+test tests::world_reserve_adds_capacity_after_entities_exist ... ok
+test tests::world_reserve_grows_all_storage_vectors_from_empty ... ok
+
+test result: ok. 38 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/component_storage.rs (target/debug/deps/component_storage-eb62ca82fd20a18f)
+
+running 7 tests
+test component_registry_multi_type_and_remove ... ok
+test component_store_newer_generation_supersedes_stale_row ... ok
+test component_store_rejects_stale_generation_for_same_index ... ok
+test world_entity_lifecycle_recycles_indices_and_rejects_stale_handles ... ok
+test component_store_replaces_same_entity_without_duplicate_row ... ok
+test world_new_is_empty ... ok
+test world_snapshot_is_deterministic_across_repeated_reads ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/linked_hierarchy.rs (target/debug/deps/linked_hierarchy-946270b03a9a2f7e)
+
+running 7 tests
+test test_hierarchy_cycle_rejection ... ok
+test test_hierarchy_duplicate_relationship_rejection ... ok
+test test_hierarchy_explicit_detach_and_reparent ... ok
+test test_hierarchy_cascade_and_survive_lifecycle_parity ... ok
+test test_hierarchy_one_to_many_cardinality ... ok
+test test_hierarchy_stable_model_id_mapping ... ok
+test test_hierarchy_stale_handle_rejection ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/query_determinism.rs (target/debug/deps/query_determinism-385623a3e1b60870)
+
+running 8 tests
+test query_errors_are_typed_and_planning_never_mutates ... ok
+test query_output_is_identical_across_insertion_and_registration_order ... ok
+test tight_columns_are_reachable_and_equivalent_to_the_aligned_column ... ok
+test archetypes_partition_entities_reproducibly ... ok
+test index_reuse_after_despawn_does_not_disturb_query_order ... ok
+test filters_are_type_level_and_need_no_value ... ok
+test query_order_is_strictly_ascending_by_index ... ok
+test mutable_query_is_deterministic_and_visible ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/kairo_ecs_streaming-8e02602d381be690)
+
+running 10 tests
+test tests::event_log_contract_rejects_invalid_required_fields ... ok
+test tests::event_log_contract_rejects_missing_event_id ... ok
+test tests::event_log_contract_rejects_wrong_schema_version ... ok
+test tests::event_log_message_exposes_arrow_contract_fields ... ok
+test tests::in_memory_sink_rejects_invalid_contract_message ... ok
+test tests::in_memory_sink_rejects_sequence_regression_for_same_run ... ok
+test tests::in_memory_sink_rejects_time_regression_for_same_run ... ok
+test tests::in_memory_stream_round_trips_messages ... ok
+test tests::pacing_contract_rejects_zero_tick_duration ... ok
+test tests::snapshot_rejects_unknown_stream_name ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/feature_matrix.rs (target/debug/deps/feature_matrix-fd5566543c967e05)
+
+running 11 tests
+test arrow_flight_feature_exposes_endpoint_type ... ok
+test base_featureless_stream_contract_round_trips ... ok
+test in_memory_adapter_enforces_event_log_contract ... ok
+test in_memory_adapter_rejects_sequence_regression_per_run ... ok
+test in_memory_adapter_rejects_time_regression_per_run ... ok
+test in_memory_adapter_rejects_unversioned_event_log_contract ... ok
+test kafka_feature_exposes_adapter_type ... ok
+test nats_feature_exposes_adapter_type ... ok
+test snapshot_provider_filters_by_arrow_stream_name ... ok
+test snapshot_provider_rejects_unknown_stream_name ... ok
+test websocket_feature_exposes_adapter_type ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/kairo_ecs_types-b7f2f3e0347887ce)
+
+running 8 tests
+test tests::constructors_validate_wide_inputs ... ok
+test tests::handles_are_deterministically_ordered ... ok
+test tests::request_construction_validates_priority_range ... ok
+test tests::sim_time_checked_add_overflow_is_none ... ok
+test tests::schedule_request_and_dispatch_are_stable_and_ordered ... ok
+test tests::step_outcome_accessors_work ... ok
+test tests::versioned_wrapper_carries_version_and_value ... ok
+test tests::sim_time_uses_fixed_ticks ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/kairo_ecs_uniffi-76884f6df5cf1390)
+
+running 2 tests
+test tests::facade_schedules_and_steps ... ok
+test tests::reexports_bridge_version ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/kairo_ecs_viz-9eb45878de6c7eed)
+
+running 8 tests
+test tests::default_renderer_status_is_headless_only ... ok
+test tests::converts_dispatched_events_to_headless_markers ... ok
+test tests::converts_world_snapshot_to_deterministic_headless_frame ... ok
+test tests::rejects_blank_entity_labels ... ok
+test tests::renders_deterministic_headless_svg ... ok
+test tests::renders_deterministic_headless_text ... ok
+test tests::renders_formal_visualization_fixture_json ... ok
+test tests::summarizes_frame_without_gui_dependencies ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/feature_matrix.rs (target/debug/deps/feature_matrix-a52766580b4f10ca)
+
+running 2 tests
+test renderer_feature_state_is_explicit ... ok
+test empty_headless_frame_is_valid ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/kairo_ecs_wasm-3537ea317328a975)
+
+running 5 tests
+test tests::wasm_bindgen_browser_node_parity ... ok
+test tests::default_build_exposes_track_04_schema_constant ... ok
+test tests::explicit_free_is_idempotent_from_the_wrapper_surface ... ok
+test tests::wasm_time_travel_inspector_smoke ... ok
+test tests::engine_wraps_ffi_scheduler_statuses ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/kairo_ecs_webgpu-54bc994fdc104930)
+
+running 8 tests
+test bridge::tests::accepts_webgpu_aligned_buffer_descriptor ... ok
+test bridge::tests::rejects_misaligned_wasm_offset ... ok
+test adapter::tests::native_ci_reports_webgpu_unavailable ... ok
+test bridge::tests::rejects_zero_stride_without_panicking ... ok
+test bridge::tests::rejects_partial_elements ... ok
+test capability::tests::reports_cpu_fallback_until_browser_bindings_are_configured ... ok
+test dispatch::tests::browser_dispatch_reports_backend_not_configured ... ok
+test dispatch::tests::dispatch_uses_browser_safe_workgroup_size ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/parity_webgpu.rs (target/debug/deps/parity_webgpu-88c86f3237cfbcb1)
+
+running 3 tests
+test capability_metadata_identifies_fallback_parity_contract ... ok
+test browser_webgpu_dispatch_is_explicitly_unavailable_until_configured ... ok
+test fixed_seed_reference_contract_matches_cpu_reference ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+   Doc-tests kairo_ecs_abm
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_arrow
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_bench
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_core
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_cs_bridge
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_cuda
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_debug
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_des
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_diplomat
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_ffi
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_fmi
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_game_ontology
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_game_theory
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_gpu
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_grpc
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_ml
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_mpi
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_pdes
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_rng
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_state
+
+running 1 test
+test crates/kairo-ecs-state/src/lib.rs - ComponentRegistry::query (line 1015) ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.10s
+
+   Doc-tests kairo_ecs_streaming
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_types
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_uniffi
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_viz
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_wasm
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_webgpu
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

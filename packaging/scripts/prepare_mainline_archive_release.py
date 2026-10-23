@@ -59,8 +59,13 @@ SYFT_BUNDLE_URL = SYFT_CHECKSUM_URL + ".sigstore.json"
 SYFT_ARCHIVE_URL = "https://github.com/anchore/syft/releases/download/v1.54.0/syft_1.54.0_linux_amd64.tar.gz"
 SYFT_RELEASE_COMMIT = "cc326e45a6213360266dda4b30cc68095946d676"
 SYFT_CERT_IDENTITY = "https://github.com/anchore/syft/.github/workflows/release.yaml@refs/heads/main"
-SYFT_PYTHON_BIN = "/opt/hostedtoolcache/Python/3.14.8/x64/bin"
-SYFT_PYTHON_NAMES = {"python", "python3", "python3.14"}
+SYFT_PYTHON_BIN = "/opt/hostedtoolcache/Python/3.15.1/x64/bin"
+SYFT_PYTHON_NAMES = {"python", "python3", "python3.15"}
+# Receipt validation preserves immutable historical provenance; execution uses 3.15.1.
+SYFT_RECEIPT_PYTHONS = {
+    "3.14.8": ("/opt/hostedtoolcache/Python/3.14.8/x64/bin", {"python", "python3", "python3.14"}),
+    "3.15.1": (SYFT_PYTHON_BIN, SYFT_PYTHON_NAMES),
+}
 CLAIM_SCOPE = "local consistency only; unsigned and untrusted builder; no SLSA level or release acceptance"
 READBACK_VALIDATOR = "packaging/scripts/validate_actual_archive_release.py"
 READBACK_CLAIM_SCOPE = ("actual archive output consistency only; no build, SBOM, provenance, signature, "
@@ -607,15 +612,17 @@ def validate_original_syft_commands(original_root: Path, receipt: dict[str, Any]
     python_path = Path(python)
     toolchain_path = Path(toolchain_executable) if isinstance(toolchain_executable, str) else None
     installer_path = Path(installer)
+    receipt_version = toolchain_version.split(" ", 1)[0] if isinstance(toolchain_version, str) else ""
+    receipt_bin, receipt_names = SYFT_RECEIPT_PYTHONS.get(receipt_version, (None, set()))
     if (not installer_path.is_absolute() or "\x00" in installer
             or ".." in installer_path.parts
             or not installer_path.as_posix().endswith("/scripts/supply_chain/install_verified_syft.py")
-            or not python_path.is_absolute() or python_path.parent.as_posix() != SYFT_PYTHON_BIN
-            or python_path.name not in SYFT_PYTHON_NAMES
+            or not python_path.is_absolute() or python_path.parent.as_posix() != receipt_bin
+            or python_path.name not in receipt_names
             or toolchain_path is None or not toolchain_path.is_absolute()
             or toolchain_path.parent != python_path.parent
-            or toolchain_path.name not in SYFT_PYTHON_NAMES
-            or not isinstance(toolchain_version, str) or not toolchain_version.startswith("3.14.8 ")):
+            or toolchain_path.name not in receipt_names
+            or not isinstance(toolchain_version, str) or receipt_version not in SYFT_RECEIPT_PYTHONS):
         fail("original_syft_installer_argv_invalid")
     checksum_file = output + "/downloads/syft-checksums.txt"
     bundle_file = output + "/downloads/syft-checksums.sigstore.json"

@@ -1,0 +1,22 @@
+test_actual_out_of_scope_changes_cannot_be_omitted (test_agent_session.SessionTests.test_actual_out_of_scope_changes_cannot_be_omitted) ... ok
+test_bound_input_changes_fail_before_a_write_check (test_agent_session.SessionTests.test_bound_input_changes_fail_before_a_write_check) ... ok
+test_case_alias_cannot_expand_exact_write_scope (test_agent_session.SessionTests.test_case_alias_cannot_expand_exact_write_scope) ... ok
+test_case_and_unicode_aliases_conflict_conservatively (test_agent_session.SessionTests.test_case_and_unicode_aliases_conflict_conservatively) ... ok
+test_context_has_exact_hash_and_rejects_untracked_or_oversize (test_agent_session.SessionTests.test_context_has_exact_hash_and_rejects_untracked_or_oversize) ... ok
+test_corrupted_store_fails_closed (test_agent_session.SessionTests.test_corrupted_store_fails_closed) ... ok
+test_dirty_claim_rejects_staged_unstaged_and_untracked (test_agent_session.SessionTests.test_dirty_claim_rejects_staged_unstaged_and_untracked) ... ok
+test_expiry_never_automatically_steals_claim (test_agent_session.SessionTests.test_expiry_never_automatically_steals_claim) ... ok
+test_heartbeat_release_and_head_drift (test_agent_session.SessionTests.test_heartbeat_release_and_head_drift) ... ok
+test_ignored_build_artifacts_are_not_source_authority (test_agent_session.SessionTests.test_ignored_build_artifacts_are_not_source_authority) ... ok
+test_invalid_utf8_context_is_sanitized (test_agent_session.SessionTests.test_invalid_utf8_context_is_sanitized) ... ok
+test_malformed_json_shapes_fail_closed_without_traceback (test_agent_session.SessionTests.test_malformed_json_shapes_fail_closed_without_traceback) ... ok
+test_oversized_context_rejected_before_file_allocation (test_agent_session.SessionTests.test_oversized_context_rejected_before_file_allocation) ... ok
+test_path_traversal_symlink_and_unknown_token_rejected (test_agent_session.SessionTests.test_path_traversal_symlink_and_unknown_token_rejected) ... ok
+test_same_checkout_disjoint_paths_still_conflict (test_agent_session.SessionTests.test_same_checkout_disjoint_paths_still_conflict) ... ok
+test_separate_worktrees_share_path_reservations (test_agent_session.SessionTests.test_separate_worktrees_share_path_reservations) ... ok
+test_two_real_processes_racing_have_one_winner (test_agent_session.SessionTests.test_two_real_processes_racing_have_one_winner) ... ok
+
+----------------------------------------------------------------------
+Ran 17 tests in 32.241s
+
+OK

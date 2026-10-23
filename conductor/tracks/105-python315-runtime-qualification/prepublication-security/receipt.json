@@ -1,0 +1,11 @@
+{
+  "cwd": "/Volumes/PortableSSD/codex-worktrees/kairos-python315-conductor",
+  "base_commit": "2efe4a731f231ceafe33ef1807f9d85d36b6dec7",
+  "runtime": "Python 3.15.1",
+  "finding": "One generic-api-key match was the public secret-scan workflow source SHA256 in a receipt, recomputed against its recorded commit.",
+  "fix": "Exact historical fingerprint only; current receipt uses explicit path/sha256 records retaining all original values, preventing credential-like field names after squash. Original bytes remain in Git history.",
+  "command": "gitleaks git . --log-opts='origin/main..HEAD' --redact --no-banner --report-format json --report-path /tmp/kairos-python315-gitleaks-fixed.json",
+  "exit_status": 0,
+  "log_sha256": "3e056b31d4b19569701bff976efe88edea41ad2d3653da4b1422c2df9f55780c",
+  "scope": "New branch history only; hosted security still required."
+}

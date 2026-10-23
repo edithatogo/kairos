@@ -8,17 +8,17 @@ This document is the single source of truth for KairoECS language and runner ver
 
 | Source | Evidence used |
 |---|---|
-| `rust-toolchain.toml` | Rust channel is exactly `1.99.0`; components are `rustfmt` and `clippy`. |
+| `rust-toolchain.toml` | Rust channel is exactly `1.99.1`; components are `rustfmt` and `clippy`. |
 | `Cargo.toml` | Workspace `rust-version` is `1.99`; edition is `2021`. |
-| `mise.toml` | Repo-local developer defaults are Rust `1.99.0`, Python `3.14`, Node `lts`, Go `latest`, Julia `latest`, R `latest`, .NET `10.0`. |
-| `bindings/python/pyproject.toml` | Python binding declares `requires-python = ">=3.10"`. |
+| `mise.toml` | Repo-local developer defaults are Rust `1.99.1`, Python `3.15.1`, Node `24.22.1`, Go `latest`, Julia `latest`, R `latest`, .NET `10.0`. |
+| `bindings/python/pyproject.toml` | Python binding declares `requires-python = ">=3.15.1,<3.16"`. |
 | `bindings/r/DESCRIPTION` | R binding declares `Depends: R (>= 4.2)`. |
 | `bindings/julia/Project.toml` | Julia binding declares `[compat] julia = "1.10"`. |
 | `bindings/typescript/package.json` | TypeScript binding declares `engines.node = ">=22 <25"` for the production Node support floor. |
 | `bindings/csharp/global.json` | C# SDK default is `10.0.202` with `latestFeature` roll-forward. |
 | `bindings/csharp/src/Kairo.ECS/Kairo.ECS.csproj` | C# binding targets `net10.0;net11.0`. |
 | `bindings/go/go.mod` | Go binding declares `go 1.23`. |
-| `.github/workflows/ci-bindings.yml` | Current binding CI covers Python 3.10-3.14, .NET 10/11, Node LTS, Go stable, and Ubuntu hosted runners. |
+| `.github/workflows/ci-bindings.yml` | Current binding CI covers Python 3.15.1, .NET 10/11, Node LTS, Go stable, and Ubuntu hosted runners. |
 
 ## Support Matrix
 
@@ -30,8 +30,8 @@ Support labels:
 
 | Ecosystem | Binding track | Minimum supported version | Latest/current supported version | Experimental or preview lane | CI selector | Deprecation horizon | Linux x86_64 | Linux aarch64 | macOS x86_64 | macOS aarch64 | Windows x86_64 |
 |---|---:|---|---|---|---|---|---|---|---|---|---|
-| Rust core | 00/01/13 | Rust `1.99.0` only | Rust `1.99.0` only | None; beta/nightly are disallowed | `1.99.0` exact | Owner-directed Rust-only policy update on 2026-10-05 supersedes the prior Rust compatibility notice; this does not alter other ecosystems' drop rules. | Rust 1.99.0 checks and test suite; exact version parser rejects aliases and prerelease suffixes | best-effort | best-effort | best-effort | best-effort |
-| Python binding | 06 | CPython `3.10` | CPython `3.14.x` | CPython 3.14 free-threaded smoke where runner support exists | `3.10`, `3.11`, `3.12`, `3.13`, `3.14` | Drop only after upstream PSF security support ends and 2 cycles/6 months notice is complete. | CI-covered | best-effort | best-effort | best-effort | best-effort |
+| Rust core | 00/01/13 | Rust `1.99.1` only | Rust `1.99.1` only | None; beta/nightly are disallowed | `1.99.1` exact | Owner-directed Rust-only policy update on 2026-10-05 supersedes the prior Rust compatibility notice; this does not alter other ecosystems' drop rules. | Rust 1.99.1 checks and test suite; exact version parser rejects aliases and prerelease suffixes | best-effort | best-effort | best-effort | best-effort |
+| Python binding | 06 | CPython `3.15.1` | CPython `3.15.1` | None; no older or free-threaded compatibility lane | `3.15.1` | Human-required Python 3.15-only policy supersedes older compatibility lanes. | CI-covered | best-effort | best-effort | best-effort | best-effort |
 | R binding | 07 | R `4.2` package floor; CI floor is previous CRAN release | R `4.6.x` current release | R-devel advisory lane only | `oldrel-1`, `release` | Drop a package floor only after CRAN support pressure or dependency incompatibility is documented for 2 cycles/6 months. | CI-covered | best-effort | best-effort | best-effort | best-effort |
 | Julia binding | 08 | Julia `1.10` LTS-compatible floor | Julia `1.12.x` current stable | Julia `1.13` beta advisory lane only | `1.10`, `1.12` | Drop an LTS-compatible floor only after Julia LTS guidance changes and 2 cycles/6 months notice is complete. | CI-covered | best-effort | best-effort | best-effort | best-effort |
 | TypeScript/Wasm binding | 09 | Node `22` LTS | Node `24` Active LTS/current production lane | Node `25` current advisory lane; Wasm browser smoke best-effort | `22`, `24` | Drop an LTS major only after Node EOL and 2 cycles/6 months notice is complete. | CI-covered | best-effort | best-effort | best-effort | best-effort |
@@ -40,9 +40,9 @@ Support labels:
 
 ## Rust
 
-The Rust support row is the source of truth for the workspace Rust floor and CI lane. The owner-directed policy requires the exact `1.99.0` toolchain for development and CI; beta, nightly, and older compatibility lanes are not supported. Rust core CI runs formatting, lint, tests and coverage, doctests, docs, dependency policy, locked workspace checks, and the wasm target checks on Rust 1.99.0.
+The Rust support row is the source of truth for the workspace Rust floor and CI lane. The owner-directed policy requires the exact `1.99.1` toolchain for development and CI; beta, nightly, and older compatibility lanes are not supported. Rust core CI runs formatting, lint, tests and coverage, doctests, docs, dependency policy, locked workspace checks, and the wasm target checks on Rust 1.99.1.
 
-On Windows developer hosts, `scripts/validate_conductor_setup.ps1` resolves the exact installed `1.99.0-x86_64-pc-windows-gnu` Rust toolchain for local workspace tests. This avoids accidental resolution of Git's `link.exe` on hosts without a working MSVC linker while keeping Windows runner coverage `best-effort` until Track 13 provisions hosted or self-hosted Windows lanes.
+On Windows developer hosts, `scripts/validate_conductor_setup.ps1` resolves the exact installed `1.99.1-x86_64-pc-windows-gnu` Rust toolchain for local workspace tests. This avoids accidental resolution of Git's `link.exe` on hosts without a working MSVC linker while keeping Windows runner coverage `best-effort` until Track 13 provisions hosted or self-hosted Windows lanes.
 
 ## Python
 

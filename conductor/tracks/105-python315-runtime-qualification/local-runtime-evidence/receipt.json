@@ -1,0 +1,207 @@
+{
+  "base_commit": "873111972ed34430010da6e7822e3cd92d7d28dd",
+  "cwd": "/Volumes/PortableSSD/codex-worktrees/kairos-python315-conductor",
+  "runtime": "Python 3.15.1",
+  "source_hashes": [
+    {
+      "path": "scripts/python_runtime.py",
+      "sha256": "7f000d6742bbfb77ee05520074aaf972c2d848ab0d564a1ce400e106871b6310"
+    },
+    {
+      "path": "tests/test_local_python_runtime.py",
+      "sha256": "80aea41baec8e6be87a20297b7cc387930db5a351b7497d6648094cce079cf38"
+    },
+    {
+      "path": ".github/workflows/actions-security.yml",
+      "sha256": "b3a9f94086c2c04fa7fb566156e0536a40aaed7812ab36ce86bc2c3fe1604774"
+    },
+    {
+      "path": ".github/workflows/agent-harness.yml",
+      "sha256": "b9dcf91265829ce2ed1e1efb2146039a99b697701c7b1d67e4a89514d7cc2fc4"
+    },
+    {
+      "path": ".github/workflows/archive-supply-chain-main.yml",
+      "sha256": "e1849184546ca41ccdbddf3b3fb13a99a798d3b01a8f0123232b54380a149810"
+    },
+    {
+      "path": ".github/workflows/bench-regression.yml",
+      "sha256": "3573bfb10e3abe66678f9ad84a14d759f33575b717e9e1556663368d3d91b6e7"
+    },
+    {
+      "path": ".github/workflows/benchmark-smoke.yml",
+      "sha256": "55b16362d41f56f8cac530a017d8d1922970466d8a741954e312b7a632541acf"
+    },
+    {
+      "path": ".github/workflows/benchmarks.yml",
+      "sha256": "c311d6ecdf09cd5e79e4be200de142f3a6e0798e9c40fd0733802cb8f858ab0d"
+    },
+    {
+      "path": ".github/workflows/changelog-policy.yml",
+      "sha256": "8fdf09c14ea8cadc5c62f5ba555a25b45b327b7a7954d5ae901a6026a28a85cc"
+    },
+    {
+      "path": ".github/workflows/ci-bindings.yml",
+      "sha256": "53e38916428381aa26801a3bd7ef366fa39591bd7aac4aa1d6f01d8f9a43a9c7"
+    },
+    {
+      "path": ".github/workflows/ci-core.yml",
+      "sha256": "ee62d8ab9aed7f4f5e03b1101dc9a887df2ba2fc2c85751363e850c047a248bc"
+    },
+    {
+      "path": ".github/workflows/ci-policy.yml",
+      "sha256": "6574ffabea5871d637c6a1c3f0a70abc3c9baeb82ec64d4cc66ea3795b9eec69"
+    },
+    {
+      "path": ".github/workflows/ci-skip-guard.yml",
+      "sha256": "3739332f92bf737954ecd7f7ed3fa737f547177bea2fb3879c900cb1773643c2"
+    },
+    {
+      "path": ".github/workflows/cloud-smoke.yml",
+      "sha256": "42c4de7d3d231b7b2aa8228c7d6aca90e98b2244c6ae0d8f843278cabfbd7835"
+    },
+    {
+      "path": ".github/workflows/code-health.yml",
+      "sha256": "42a3a953eeefc96a72e6d84c89406df3a8162a880b10c3c1c13e2a6c325eec5f"
+    },
+    {
+      "path": ".github/workflows/codeql.yml",
+      "sha256": "c26908ad8e9ad13e7017fdd0f35fd642e04968f2e712de9d670b51a8cf5a2f4b"
+    },
+    {
+      "path": ".github/workflows/conductor-assessment-reminder.yml",
+      "sha256": "5adfb89b20e9bd1dcaaa031d0c1140189f5fd7574a51df275d3acd1c3890669a"
+    },
+    {
+      "path": ".github/workflows/conformance.yml",
+      "sha256": "78541a787fcae1d590170c7cacbc1ac025f54f0feffdfbd6aa38b243b668c345"
+    },
+    {
+      "path": ".github/workflows/dependency-review.yml",
+      "sha256": "6e0346d2781ec264e0e42318469afa898caa0f9aeacc323b662ec761de27b11d"
+    },
+    {
+      "path": ".github/workflows/docs-link-check.yml",
+      "sha256": "c8fca1c6851ed2c548c6ddc077962563879091a005544866a3e1f86c27582498"
+    },
+    {
+      "path": ".github/workflows/docs-quality.yml",
+      "sha256": "aa2a1056cce4f34e054dfe693f5ceeda2c7a1da7645a09aa0f282c72868c8923"
+    },
+    {
+      "path": ".github/workflows/docs.yml",
+      "sha256": "8e9b9196bb0fc41631dc1963c629a68ef19f46cb5f08abe55afc8a1994dd72d7"
+    },
+    {
+      "path": ".github/workflows/fuzzing.yml",
+      "sha256": "0c3c3fa81e10f1e1729bcf24f4da0eaff0a2d83a9fcb4e9048027e4f166c7f67"
+    },
+    {
+      "path": ".github/workflows/gpu-free-smoke.yml",
+      "sha256": "03c607117e24661e88e1beb9000742638debc862e05bc7a8870fd5dde0211118"
+    },
+    {
+      "path": ".github/workflows/hpc-registry-publish.yml",
+      "sha256": "f4afd0501b495b443f2902ffb32c30a87429ad2a24770184f33b47c9c290939d"
+    },
+    {
+      "path": ".github/workflows/nightly.yml",
+      "sha256": "0f0d097a830c3a7b40d22a21b16ee05c0b6544b83c59ca405c6b3ed1203c2fd5"
+    },
+    {
+      "path": ".github/workflows/package-dry-run.yml",
+      "sha256": "29950c7687ed2d2823dfede1505b8a7005e0610678944191b899e0ce54345000"
+    },
+    {
+      "path": ".github/workflows/registry-publish.yml",
+      "sha256": "6b7a8f2c26b1c693a628309808d87bffdd4a4043cfea827ed46dd793b2881ff8"
+    },
+    {
+      "path": ".github/workflows/release-attestations.yml",
+      "sha256": "46cef6f588ebba23301ef9ec521338b1ff7e996d45dd9b76d32d83d518b8fa99"
+    },
+    {
+      "path": ".github/workflows/release-drafter.yml",
+      "sha256": "c7f85a0b2e1c19702217f53882c9d6a07df4ad270be52ff4162ab9b20a2e1ab8"
+    },
+    {
+      "path": ".github/workflows/release-plz.yml",
+      "sha256": "fb0c1fac016986f972d735165d4a2aae45403d7a5171ba82937e68ec808c4139"
+    },
+    {
+      "path": ".github/workflows/release.yml",
+      "sha256": "9591772d900630298625d60e545b9b5acb7d2825bf6b1a62fb0c982ed3567311"
+    },
+    {
+      "path": ".github/workflows/sbom-attestations.yml",
+      "sha256": "3a8a23cb6d352c5c62e567b31f0e5475bbad1cadc837ae0c7c70fa1cd6f1e436"
+    },
+    {
+      "path": ".github/workflows/scorecard.yml",
+      "sha256": "c39d86cce594b03dae3e89fa7b3aa3b92953abe0fb2887739e11538682524673"
+    },
+    {
+      "path": ".github/workflows/secret-scan.yml",
+      "sha256": "0b7324315f7eb1d58b939539495ff1b3c895cd67cf204ae011890079219d19fc"
+    },
+    {
+      "path": ".github/workflows/stale.yml",
+      "sha256": "365247b56ee816fe3258903087688e88cc8806dc451ba99e32a2e17eabb23cc0"
+    },
+    {
+      "path": ".github/workflows/syft-linux-qualification.yml",
+      "sha256": "a63da46f13569ea990159e130d90d8a5940e8c6debdbe56f24b701aeb39e1282"
+    },
+    {
+      "path": ".github/workflows/toolchain-check.yml",
+      "sha256": "8cc4a462c7538c42eee765e1a4ffa86d1931fc40a098e08c2e6ab2e88289cde1"
+    },
+    {
+      "path": ".github/workflows/validate-conductor.yml",
+      "sha256": "1de050b3800756139eeb9d85a5d81a000bbc60b495ae1357cde72561ead3449d"
+    },
+    {
+      "path": ".github/workflows/workflow-security.yml",
+      "sha256": "f1e05df6387995828d8dbb21e0a11e09f2529a30bb58195eefa457322328b3c0"
+    }
+  ],
+  "logs": {
+    "runtime-tests.log": {
+      "count": 8,
+      "sha256": "823955d4ca45ccedbdddd976c6b9ce7691436fb8156452c7d7f23bcb71885da8",
+      "exit_status": 0
+    },
+    "archive-workflow.log": {
+      "count": 10,
+      "sha256": "be17d698e4a8a5f303802d4b78bea6c5aeaa5112df3e672aa519d440743d628a",
+      "exit_status": 0
+    },
+    "mainline-workflow.log": {
+      "count": 10,
+      "sha256": "43cd30f969936b85ff08ce159c9a18e01b04c6a37ca15c8566d997d6e1a2c438",
+      "exit_status": 0
+    },
+    "npm-workflow.log": {
+      "count": 7,
+      "sha256": "0a70883e691e2e17b13376c05f3faf108d799a59f543e87c84d72906ccc0f433",
+      "exit_status": 0
+    },
+    "install.log": {
+      "sha256": "df4dd3e84363303c05826d7c9ead2cf9b9a82ca3899e025dbdc8e5bed7afe75c",
+      "exit_status": 0
+    },
+    "actionlint.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exit_status": 0
+    }
+  },
+  "commands": [
+    "uv pip sync --python .venv/bin/python --require-hashes scripts/bootstrap-python-tools.lock",
+    "actionlint -oneline .github/workflows/*.yml",
+    ".venv/bin/python -m unittest discover -s tests -p test_local_python_runtime.py -v",
+    ".venv/bin/python -m unittest discover -s tests -p test_archive_supply_chain_main_workflow.py -v",
+    ".venv/bin/python -m unittest discover -s tests -p test_mainline_archive_release_workflow.py -v",
+    ".venv/bin/python -m unittest discover -s tests -p test_strict_npm_audit_workflow.py -v"
+  ],
+  "acceptance": "Local only. Main/hosted/native platform/handover acceptance remains open.",
+  "representation_note": "Source hash records retain all original paths and values, with explicit path/sha256 fields rather than credential-like filename keys. Original receipt bytes remain in the recorded Git history."
+}

@@ -33,3 +33,7 @@ A status label alone does not prove implementation or release acceptance.
 - [Dependency sequencing and prerequisite gates](dependency-sequencing.md)
 
 [Validation/tooling planning review](validation-tooling-review.md)
+
+## Python runtime migration
+
+[Python 3.15 migration and qualification](tracks/105-python315-runtime-qualification/index.md) records the Python 3.15.1 requirement, retained qualification and pending main/runtime handover gates.

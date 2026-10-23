@@ -13,7 +13,7 @@ KairoECS is a Rust-native discrete-event (DES), agent-based (ABM), and game-theo
 +---------------------------------------------------------------------------------------------------+
 | TIER 5: ZERO-COPY FFI & POLYGLOT LANGUAGE BINDINGS                                                |
 |  +-----------------+ +-----------------+ +-----------------+ +-----------------+ +--------------+ |
-|  | Python 3.10-3.14| | TypeScript/Wasm | | R (extendr)     | | Julia (ccall)   | | C# / Go      | |
+|  | Python 3.15.1| | TypeScript/Wasm | | R (extendr)     | | Julia (ccall)   | | C# / Go      | |
 |  | ctypes probe     | | wasm-bindgen    | | Arrow DataFrame | | Native C ABI    | | P/Invoke/cgo | |
 |  +--------+--------+ +--------+--------+ +--------+--------+ +--------+--------+ +------+-------+ |
 |           +-------------------+-------------------+-------------------+-----------------+         |
@@ -148,7 +148,7 @@ flowchart TD
 | Language | Package / Directory | Bridge Mechanism | Zero-Copy / Data Exchange | Key Capabilities |
 | :--- | :--- | :--- | :--- | :--- |
 | **Rust** | `crates/*` | Native workspace crates | Direct `ArchetypeTable` slices & `arrow_array::RecordBatch` | Full access to all 23 crates, compile-time type safety, `#![forbid(unsafe_code)]` in domain crates |
-| **Python (3.10–3.14)** | `bindings/python/` | pure-Python facade (ctypes probe; PyO3 planned) | Arrow-style export (C Data Interface not yet wired) | `Scheduler`, `PettingZooParallelEnv`, `GymnasiumVecEnv` (`kairo_gym`), deterministic replay |
+| **Python (3.15.1)** | `bindings/python/` | pure-Python facade (ctypes probe; PyO3 planned) | Arrow-style export (C Data Interface not yet wired) | `Scheduler`, `PettingZooParallelEnv`, `GymnasiumVecEnv` (`kairo_gym`), deterministic replay |
 | **TypeScript / Wasm** | `bindings/typescript/` + `crates/kairo-ecs-wasm` | `wasm-bindgen` & WebAssembly linear memory | TypedArray (`Float64Array`, `Int64Array`) views + Arrow IPC bytes | Browser & Node.js `WasmSimulation`, `WasmTimeTravelInspector`, interactive studio |
 | **R** | `bindings/r/` | `extendr` / `.Call` C ABI | Arrow table / R `data.frame` batch conversion | Deterministic event scheduling, parameter sweeps, statistical output analysis |
 | **Julia** | `bindings/julia/` | Native `ccall` into `libkairo_ecs_ffi` | `Arrow.Table` zero-copy buffer handoff | High-frequency stepping, scientific computing & DifferentialEquations.jl co-simulation |

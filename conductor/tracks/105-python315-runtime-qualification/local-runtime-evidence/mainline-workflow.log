@@ -1,0 +1,15 @@
+test_gate_precedes_retention (test_mainline_archive_release_workflow.MainlineArchiveReleaseWorkflowTests.test_gate_precedes_retention) ... ok
+test_input_expressions_are_env_data (test_mainline_archive_release_workflow.MainlineArchiveReleaseWorkflowTests.test_input_expressions_are_env_data) ... ok
+test_legacy_gates_remain_default_and_separate (test_mainline_archive_release_workflow.MainlineArchiveReleaseWorkflowTests.test_legacy_gates_remain_default_and_separate) ... ok
+test_main_only_dry_run_exact_checkout (test_mainline_archive_release_workflow.MainlineArchiveReleaseWorkflowTests.test_main_only_dry_run_exact_checkout) ... ok
+test_native_pinned_tools_and_locked_dependencies (test_mainline_archive_release_workflow.MainlineArchiveReleaseWorkflowTests.test_native_pinned_tools_and_locked_dependencies) ... ok
+test_no_rebuild_rescan_or_publication_commands (test_mainline_archive_release_workflow.MainlineArchiveReleaseWorkflowTests.test_no_rebuild_rescan_or_publication_commands) ... ok
+test_orchestrator_receives_all_explicit_inputs (test_mainline_archive_release_workflow.MainlineArchiveReleaseWorkflowTests.test_orchestrator_receives_all_explicit_inputs) ... ok
+test_required_explicit_pin_documents (test_mainline_archive_release_workflow.MainlineArchiveReleaseWorkflowTests.test_required_explicit_pin_documents) ... ok
+test_retention_excludes_fresh_binary_downloads_and_venv (test_mainline_archive_release_workflow.MainlineArchiveReleaseWorkflowTests.test_retention_excludes_fresh_binary_downloads_and_venv) ... ok
+test_unknown_profile_cannot_skip_every_gate (test_mainline_archive_release_workflow.MainlineArchiveReleaseWorkflowTests.test_unknown_profile_cannot_skip_every_gate) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.003s
+
+OK

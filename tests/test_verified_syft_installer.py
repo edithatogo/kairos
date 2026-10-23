@@ -36,19 +36,19 @@ class VerifiedSyftInstallerTests(unittest.TestCase):
         root = Path(__file__).resolve().parents[1] / "scripts/supply_chain"
         linux = root / "syft-linux-verifier.lock"
         darwin = root / "syft-darwin-verifier.lock"
-        self.assertEqual(syft.sha256_file(linux), "e8c2913539b2dc4260ef8611e1f21daa56efbdf8b55199c34882808aecd6acea")
-        self.assertEqual(syft.sha256_file(darwin), "bc22323572381258237ff65529b55f37387a3bdfddf1ccf82305d41443ddacf2")
+        self.assertEqual(syft.sha256_file(linux), "55ce82fcf34e989de6a273b31f5d2b781f42ea5a8fc9fb3561dede86a15c16ea")
+        self.assertEqual(syft.sha256_file(darwin), "97dfe508ed80ca0ce8af3da9af4627d9702a10f28aec4b99385b5cf7a6620693")
         for target in (syft.detect_target("Linux", "x86_64"), syft.detect_target("Darwin", "arm64")):
             path, raw = syft.validate_lock(target, root)
             self.assertTrue(path.is_file())
-            self.assertIn(b"sigstore==4.5.0", raw)
+            self.assertIn(b"sigstore==4.5.1", raw)
             self.assertIn(b"pypi-attestations==0.0.30", raw)
 
     def test_lock_digest_and_rows_fail_closed(self):
         target = syft.detect_target("Darwin", "arm64")
         with tempfile.TemporaryDirectory() as temporary:
             lock_dir = Path(temporary).resolve()
-            (lock_dir / target["verifier_lock"]).write_text("sigstore==4.5.0 --hash=sha256:" + "0" * 64 + "\n", encoding="utf-8")
+            (lock_dir / target["verifier_lock"]).write_text("sigstore==4.5.1 --hash=sha256:" + "0" * 64 + "\n", encoding="utf-8")
             with self.assertRaisesRegex(RuntimeError, "lock digest mismatch"):
                 syft.validate_lock(target, lock_dir)
             target["verifier_lock_sha256"] = syft.sha256_file(lock_dir / target["verifier_lock"])
@@ -441,7 +441,7 @@ class VerifiedSyftInstallerTests(unittest.TestCase):
             for value in ("--cert-identity", syft.CERT_IDENTITY, "--sha", syft.RELEASE_COMMIT,
                           "--repository", syft.REPOSITORY, "--ref", syft.WORKFLOW_REF, str(checksums)):
                 self.assertIn(value, args)
-            # Sigstore 4.5.0 verify-github hardcodes this issuer; it has no issuer flag.
+            # Sigstore 4.5.1 verify-github hardcodes this issuer; it has no issuer flag.
             self.assertEqual(syft.OIDC_ISSUER, "https://token.actions.githubusercontent.com")
             self.assertNotIn("--cert-oidc-issuer", args)
             self.assertEqual(len(captured), 1)

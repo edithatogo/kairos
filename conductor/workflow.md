@@ -170,3 +170,11 @@ Handoff.md must follow this lifecycle:
 3. **Phase 5 (Closeout)**: handoff.md is finalised with resolved risks, follow-up issues, and integration notes.
 
 CI lint rule: If a track is `In Progress` or higher and its handoff.md contains the phrase "No code files were changed", CI emits a warning — the handoff may be stale.
+
+## Focused validation and local Python
+
+Start with an affected file/node or native selector, for example `.venv/bin/python -m unittest discover -s tests -p test_local_python_runtime.py -v`, `.venv/bin/python -m pytest bindings/python/tests/test_import.py -q`, `cargo test --locked -p PACKAGE FILTER`, or the exact PowerShell validator. Use existing real nodes/files, not a guessed selection; verify tests executed. Python commands must use the verified local 3.15.1 environment described in AGENTS.md.
+
+Keep pytest cacheprovider enabled per worktree/environment. Failure-only mode is `--lf --last-failed-no-failures=none` (zero selected tests proves nothing). `--ff` still runs the whole selected suite; `--sw` is a local debug loop. Do not put selection flags in global addopts. Dependency/configuration/schema/fixture changes or unknown impact invalidate narrow selection and cached evidence. Full clean integration, package, coverage, security and release gates remain required at coherent milestones.
+
+Optional plugins require isolated Python 3.15.1 qualification before locked adoption. The reported pytest-difftest 0.3.0 source build is blocked by PyO3 supporting only through Python 3.14; no bypass or downgrade is authorized. Default retries to zero. Only demonstrated transient fictional/read-only cases may use bounded opt-in retries with the first failure retained. Native mutations/email are never runner retry targets. skip/skipif requires an actual capability condition/reason; xfail requires a known issue/reason and strict=True. Preserve meaningful unittest/Cargo/PowerShell selectors instead of converting suites for plugins.

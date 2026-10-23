@@ -1,0 +1,71 @@
+.................................................................................................................................../Volumes/PortableSSD/appdata/local-dotdir/share/uv/python/cpython-3.15.1-macos-aarch64-none/lib/python3.15/zipfile/__init__.py:1755: UserWarning: Duplicate name: 'same'
+  return self._open_to_write(zinfo, force_zip64=force_zip64)
+...................................................................E.............................s..s......F.s......................usage: acquire [-h] --run-id RUN_ID [--source-commit SOURCE_COMMIT]
+               [--head-commit HEAD_COMMIT] [--require-main-dispatch]
+               (--output OUTPUT | --acquisition-output ACQUISITION_OUTPUT)
+acquire: error: argument --acquisition-output: not allowed with argument --output
+.....usage: acquire [-h] --run-id RUN_ID [--source-commit SOURCE_COMMIT]
+               [--head-commit HEAD_COMMIT] [--require-main-dispatch]
+               (--output OUTPUT | --acquisition-output ACQUISITION_OUTPUT)
+acquire: error: positive run ID and nonexistent output required
+.....usage: acquire [-h] --run-id RUN_ID [--source-commit SOURCE_COMMIT]
+               [--head-commit HEAD_COMMIT] [--require-main-dispatch]
+               (--output OUTPUT | --acquisition-output ACQUISITION_OUTPUT)
+acquire: error: main dispatch derives source SHA from the selected run; SHA overrides are forbidden
+...................usage: build_package_archive_bundle.py [-h] [--input INPUT]
+                                       [--verify-existing] --output OUTPUT
+                                       --source-commit SOURCE_COMMIT
+build_package_archive_bundle.py: error: the following arguments are required: --source-commit
+usage: build_package_archive_bundle.py [-h] [--input INPUT]
+                                       [--verify-existing] --output OUTPUT
+                                       --source-commit SOURCE_COMMIT
+build_package_archive_bundle.py: error: --source-commit must be a full lowercase Git SHA
+usage: build_package_archive_bundle.py [-h] [--input INPUT]
+                                       [--verify-existing] --output OUTPUT
+                                       --source-commit SOURCE_COMMIT
+build_package_archive_bundle.py: error: --input is not allowed with --verify-existing
+usage: build_package_archive_bundle.py [-h] [--input INPUT]
+                                       [--verify-existing] --output OUTPUT
+                                       --source-commit SOURCE_COMMIT
+build_package_archive_bundle.py: error: --input is required when building
+..................{"reason":"release_source_commit_invalid","valid":false}
+...........................................................................................usage: python -m unittest [-h] --output-dir OUTPUT_DIR
+python -m unittest: error: unrecognized arguments: --target linux-amd64
+....................................
+======================================================================
+ERROR: test_http_cache_vendor_evidence (unittest.loader._FailedTest.test_http_cache_vendor_evidence)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_http_cache_vendor_evidence
+Traceback (most recent call last):
+  File "/Volumes/PortableSSD/appdata/local-dotdir/share/uv/python/cpython-3.15.1-macos-aarch64-none/lib/python3.15/unittest/loader.py", line 433, in _find_test_path
+    module = self._get_module_from_name(name)
+  File "/Volumes/PortableSSD/appdata/local-dotdir/share/uv/python/cpython-3.15.1-macos-aarch64-none/lib/python3.15/unittest/loader.py", line 374, in _get_module_from_name
+    __import__(name)
+    ~~~~~~~~~~^^^^^^
+  File "/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/tests/test_http_cache_vendor_evidence.py", line 13, in <module>
+    from generate_http_cache_vendor_evidence import (
+    ...<15 lines>...
+    )
+ModuleNotFoundError: No module named 'generate_http_cache_vendor_evidence'. Did you mean: 'test_http_cache_vendor_evidence'?
+
+
+======================================================================
+FAIL: test_main_retains_raw_audit_artifacts_when_approved_record_is_used (test_npm_audit_runner.NpmAuditRunnerTests.test_main_retains_raw_audit_artifacts_when_approved_record_is_used)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/tests/test_npm_audit_runner.py", line 358, in test_main_retains_raw_audit_artifacts_when_approved_record_is_used
+    self.assertEqual(result, 0)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: 1 != 0
+
+----------------------------------------------------------------------
+Ran 437 tests in 251.791s
+
+FAILED (failures=1, errors=1, skipped=3)
+verified exact-run package acquisition
+verified exact-run package acquisition
+verified exact-run package acquisition
+verified exact-run package acquisition
+verified exact-run package acquisition
+verified exact-run package acquisition
+verified 7 package archives

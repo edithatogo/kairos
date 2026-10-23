@@ -1,0 +1,115 @@
+{
+  "scope": "Historical integration references only; validators and current Polars implementation/plan unchanged. Track70 restores the last proven Phase0 closeout from PR288; PR289 explicitly describes Task1.1 characterizations, not accepted Phase1 completion. Current unmerged Polars work remains with its owner.",
+  "baseCommit": "b6b78b7533d73ed877c001ca8ad9d17b802f2154",
+  "verifiedMain": "f149d42fb4ccd24418dfd000919ad2ccdc4a98e6",
+  "python": "Python 3.15.1",
+  "beforeSha256": "eb3199c175eb197b8e00c760a3afdc780b209e3ca557f39d2242485ef7a1e012",
+  "afterSha256": "084d7d0dfe67d46595fe3704349b45717f67847488cf55121dbec439a29484ee",
+  "verification": "Every integratedCommit resolves locally and git merge-base --is-ancestor integratedCommit origin/main exited 0; PR261,268,269,288 native metadata and source history read back. No historical runtime tests were rerun or newly certified.",
+  "entries": [
+    {
+      "track": "58",
+      "priorCommit": "669520a292d4861cbe2971818100261cd62dedfc",
+      "priorRef": "origin/codex/kairos-hpc-parity-wave",
+      "integratedCommit": "669520a292d4861cbe2971818100261cd62dedfc",
+      "integratedRef": "origin/main",
+      "pullRequest": 258
+    },
+    {
+      "track": "59",
+      "priorCommit": "669520a292d4861cbe2971818100261cd62dedfc",
+      "priorRef": "origin/codex/kairos-hpc-parity-wave",
+      "integratedCommit": "669520a292d4861cbe2971818100261cd62dedfc",
+      "integratedRef": "origin/main",
+      "pullRequest": 258
+    },
+    {
+      "track": "60",
+      "priorCommit": "669520a292d4861cbe2971818100261cd62dedfc",
+      "priorRef": "origin/codex/kairos-hpc-parity-wave",
+      "integratedCommit": "669520a292d4861cbe2971818100261cd62dedfc",
+      "integratedRef": "origin/main",
+      "pullRequest": 258
+    },
+    {
+      "track": "61",
+      "priorCommit": "669520a292d4861cbe2971818100261cd62dedfc",
+      "priorRef": "origin/codex/kairos-hpc-parity-wave",
+      "integratedCommit": "669520a292d4861cbe2971818100261cd62dedfc",
+      "integratedRef": "origin/main",
+      "pullRequest": 258
+    },
+    {
+      "track": "62",
+      "priorCommit": "11b1ada5555527e504ca9df0de0889905da5f921",
+      "priorRef": "origin/main",
+      "integratedCommit": "e374a3b5378493eaac2459830fe494e2380bf769",
+      "integratedRef": "origin/main",
+      "pullRequest": 261
+    },
+    {
+      "track": "63",
+      "priorCommit": "11b1ada5555527e504ca9df0de0889905da5f921",
+      "priorRef": "origin/main",
+      "integratedCommit": "e374a3b5378493eaac2459830fe494e2380bf769",
+      "integratedRef": "origin/main",
+      "pullRequest": 261
+    },
+    {
+      "track": "64",
+      "priorCommit": "11b1ada5555527e504ca9df0de0889905da5f921",
+      "priorRef": "origin/main",
+      "integratedCommit": "e374a3b5378493eaac2459830fe494e2380bf769",
+      "integratedRef": "origin/main",
+      "pullRequest": 261
+    },
+    {
+      "track": "65",
+      "priorCommit": "11b1ada5555527e504ca9df0de0889905da5f921",
+      "priorRef": "origin/main",
+      "integratedCommit": "e374a3b5378493eaac2459830fe494e2380bf769",
+      "integratedRef": "origin/main",
+      "pullRequest": 261
+    },
+    {
+      "track": "66",
+      "priorCommit": "11b1ada5555527e504ca9df0de0889905da5f921",
+      "priorRef": "origin/main",
+      "integratedCommit": "e374a3b5378493eaac2459830fe494e2380bf769",
+      "integratedRef": "origin/main",
+      "pullRequest": 261
+    },
+    {
+      "track": "67",
+      "priorCommit": "cdd2e02410a5155cb470be31952a201b1a77e816",
+      "priorRef": "origin/main",
+      "integratedCommit": "d638dc1a344f73044b24ac54674e545f81bc471c",
+      "integratedRef": "origin/main",
+      "pullRequest": 268
+    },
+    {
+      "track": "68",
+      "priorCommit": "34e927eff266a8ad8788edb82a79053e5deaa3c7",
+      "priorRef": "origin/main",
+      "integratedCommit": "d638dc1a344f73044b24ac54674e545f81bc471c",
+      "integratedRef": "origin/main",
+      "pullRequest": 268
+    },
+    {
+      "track": "69",
+      "priorCommit": "ebb67586cb50a58fae7ea1fe7da354eefcae3ca9",
+      "priorRef": "origin/main",
+      "integratedCommit": "69d8f5e5c52efad1e82304c0c52866a40cccbe11",
+      "integratedRef": "origin/main",
+      "pullRequest": 269
+    },
+    {
+      "track": "70",
+      "priorCommit": "f75d9178ad3a9482d8d85f67e584f74d081be802",
+      "priorRef": "origin/main",
+      "integratedCommit": "f75d917fd6428d647e65560563fec2ab75587773",
+      "integratedRef": "origin/main",
+      "pullRequest": 288
+    }
+  ]
+}

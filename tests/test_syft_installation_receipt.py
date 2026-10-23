@@ -111,7 +111,7 @@ class ReceiptValidatorTests(unittest.TestCase):
                         "binary_sha256": sha(self.binary), "archive": self.archive_receipt,
                         "version_probe": self.probe,
                         "python_toolchain": {"version": "3.14.8 (fixture)"},
-                        "verifier": {"sigstore": "4.5.0", "lock_path": "syft-linux-verifier.lock", "lock_sha256": sha(self.lock)},
+                        "verifier": {"sigstore": "4.5.1", "lock_path": "syft-linux-verifier.lock", "lock_sha256": sha(self.lock)},
                         "installer_source_sha256": sha(self.source), "commands": self.records}
         self.write_receipt()
 

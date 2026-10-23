@@ -80,15 +80,17 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: '3.14.8'
+          python-version: "3.15.1"
           architecture: x64
+      - name: Verify repository-local Python 3.15.1
+        run: python scripts/python_runtime.py --github
       - name: Require native Linux and pinned Python
         shell: bash
         run: |
           set -euo pipefail
           [[ "$(uname -s)" == Linux ]]
           [[ "$(uname -m)" == x86_64 ]]
-          python3 -B -c 'import sys; assert sys.version_info[:3] == (3, 14, 8), sys.version'
+          python3 -B -c 'import sys; assert sys.version_info[:3] == (3, 15, 1), sys.version'
       - name: Retain explicit bounded dispatch inputs
         shell: bash
         env:
@@ -172,28 +174,30 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Install Rust 1.99.0
-        run: |
-          rustup toolchain install 1.99.0 --profile minimal
-      - name: Bind Rust 1.99.0 tools
-        shell: bash
-        run: |
-          task_rustc="$(rustup which --toolchain 1.99.0 rustc)"
-          task_bin="$(dirname "$task_rustc")"
-          task_cargo="$(rustup which --toolchain 1.99.0 cargo)"
-          task_rustdoc="$(rustup which --toolchain 1.99.0 rustdoc)"
-          "$task_cargo" -V | grep -E '^cargo 1\.99\.0 '
-          "$task_rustc" -V | grep -E '^rustc 1\.99\.0 '
-          "$task_rustdoc" -V | grep -E '^rustdoc 1\.99\.0 '
-          printf '%s\n' "PATH=$task_bin:$PATH" 'RUSTUP_TOOLCHAIN=1.99.0' "RUSTC=$task_rustc" "RUSTDOC=$task_rustdoc" >> "$GITHUB_ENV"
       - name: Install Python build tools
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: '3.14.8'
+          python-version: "3.15.1"
+      - name: Verify repository-local Python 3.15.1
+        run: python scripts/python_runtime.py --github
+      - name: Install Rust 1.99.1
+        run: |
+          rustup toolchain install 1.99.1 --profile minimal
+      - name: Bind Rust 1.99.1 tools
+        shell: bash
+        run: |
+          task_rustc="$(rustup which --toolchain 1.99.1 rustc)"
+          task_bin="$(dirname "$task_rustc")"
+          task_cargo="$(rustup which --toolchain 1.99.1 cargo)"
+          task_rustdoc="$(rustup which --toolchain 1.99.1 rustdoc)"
+          "$task_cargo" -V | grep -E '^cargo 1\.99\.1 '
+          "$task_rustc" -V | grep -E '^rustc 1\.99\.1 '
+          "$task_rustdoc" -V | grep -E '^rustdoc 1\.99\.1 '
+          printf '%s\n' "PATH=$task_bin:$PATH" 'RUSTUP_TOOLCHAIN=1.99.1' "RUSTC=$task_rustc" "RUSTDOC=$task_rustdoc" >> "$GITHUB_ENV"
       - name: Install Node LTS
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: '24.22.0'
+          node-version: '24.22.1'
       - name: Install .NET
         uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:

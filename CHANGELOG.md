@@ -14,6 +14,10 @@ Format:
 
 ## Unreleased
 
+- `bindings/python`, development helpers, CI, and container tooling require final Python 3.15.1 through a verified repository-local environment; older active Python runners are retired. Rust tooling is qualified on 1.99.1, preserving simulation and RNG contracts.
+- `scripts/bootstrap-node-tools` keeps its locked npm artifact reproducible across Python compression-default changes and resolves patched ip-address 10.7.4; `website/package-lock.json` resolves patched Vite 8.3.5. Strict dependency audits retain their zero-vulnerability gate.
+- Conductor closeout records now reference actual main integrations; the development-tool validator follows the devcontainer runtime guard and supports existing three-digit track identifiers.
+
 - `crates/kairo-ecs-arrow` adds Polars-native DataFrame conversion, checked 128-bit tick limb borrow arithmetic, real Parquet Zstd and Arrow IPC writers/readers, and lazy tabular transforms for Track 70 Phase 1.
 - `conformance/fixtures/event_log_v2_conformance.json` and `conformance/fixtures/manifest.json` add the canonical Schema v2 event log conformance fixture and ADR for Track 70 Task 0.4.
 - `schemas/arrow/event_log_v2.schema.json` and `crates/kairo-ecs-arrow` add the Schema v2 specification and verification contract for Track 70 Phase 0, supporting generational entity IDs (`UInt64`/`UInt32`) and full-range 128-bit simulation tick limbs (`time_ticks_hi`, `time_ticks_lo`).

@@ -40,7 +40,7 @@ POSTCSS_PARSER_SRI = (
 POSTCSS_PARSER_URL = (
     "https://registry.npmjs.org/postcss-selector-parser/-/postcss-selector-parser-7.1.6.tgz"
 )
-LOCK_SHA256 = "758ec4b68464cafe2e9835ceaee219375fd956b33d59367027ffaec447f8e913"
+LOCK_SHA256 = "7c6c126c1b19b5af551baa742e47f4568d815822462f5ef9e9ecfb32011698d5"
 REMOVED_BUNDLES = (
     *PATCHED_DEPENDENCIES,
     "ip-address",
@@ -50,7 +50,7 @@ REMOVED_BUNDLES = (
     POSTCSS_PARSER,
 )
 FIXED_DEPENDENCIES = {
-    "ip-address": "10.7.1",
+    "ip-address": "10.7.4",
     "brace-expansion": "5.0.12",
 }
 HCS_ALIAS = "@careops/http-cache-semantics-kairos-prototype"
@@ -160,7 +160,8 @@ def repack(source_data: bytes) -> bytes:
             raise RuntimeError("npm bundle layout changed: parser is no longer the expected @npmcli/query dependency")
         vulnerable_package_paths: list[str] = []
 
-        with gzip.GzipFile(fileobj=output_buffer, mode="wb", mtime=0) as gzip_output:
+        # Pin compression: Python 3.15 changed the default from 9 to 6.
+        with gzip.GzipFile(fileobj=output_buffer, mode="wb", mtime=0, compresslevel=9) as gzip_output:
             with tarfile.open(
                 fileobj=gzip_output,
                 mode="w",

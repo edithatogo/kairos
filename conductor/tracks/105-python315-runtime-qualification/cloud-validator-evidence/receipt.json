@@ -1,0 +1,34 @@
+{
+  "cwd": "/Volumes/PortableSSD/codex-worktrees/kairos-python315-conductor",
+  "base_commit": "87cfd93ba5dc336311360f3dbefa234954a8f2f2",
+  "runtime": "Python 3.15.1",
+  "results": [
+    {
+      "argv": [
+        ".venv/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_local_python_runtime.py",
+        "-v"
+      ],
+      "count": 9,
+      "exit_status": 0
+    },
+    {
+      "argv": [
+        ".venv/bin/python",
+        "cloud/validate_cloud_hpc.py"
+      ],
+      "exit_status": 0
+    }
+  ],
+  "logs": {
+    "conductor/tracks/105-python315-runtime-qualification/cloud-validator-evidence/cloud-validator.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "conductor/tracks/105-python315-runtime-qualification/cloud-validator-evidence/runtime-tests.log": "8fdda4e94bffb9ab67b6584171fffde3615dd6aafa7b6ed5495531764880c0b0"
+  },
+  "scope": "Static image/local-prefix contract and negative fixtures pass; actual Docker/Windows proof remains hosted-only pending."
+}

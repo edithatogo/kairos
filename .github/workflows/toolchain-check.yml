@@ -63,8 +63,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - channel: "1.99.0"
-            expected-version: "1.99.0"
+          - channel: "1.99.1"
+            expected-version: "1.99.1"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -87,7 +87,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+        python-version: ["3.15.1"]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -95,11 +95,13 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: ${{ matrix.python-version }}
+      - name: Verify repository-local Python 3.15.1
+        run: python scripts/python_runtime.py --github
       - name: Validate installed Python
         shell: pwsh
         env:
-          EXPECTED_PREFIX: ${{ matrix.python-version }}
-        run: pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem python -ExpectedPrefix $env:EXPECTED_PREFIX
+          EXPECTED_VERSION: ${{ matrix.python-version }}
+        run: pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem python -ExpectedVersion $env:EXPECTED_VERSION
 
   r:
     name: R ${{ matrix.r-version }}

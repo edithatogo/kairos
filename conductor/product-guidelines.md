@@ -8,7 +8,7 @@ Use precise, honest, research-friendly language. Avoid hype such as "infinitely 
 
 - Say "deterministic event-first kernel" rather than vague "AI-ready simulation" language.
 - Say "Arrow-first telemetry" rather than "all data movement is zero-copy".
-- Say "Python 3.10-3.14 coverage" and ".NET 10 stable / .NET 11 preview-to-GA coverage" explicitly.
+- Say "Python 3.15.1 coverage" and ".NET 10 stable / .NET 11 preview-to-GA coverage" explicitly.
 - Label APIs as experimental, preview, beta, or stable.
 - Explain DES and ABM in practical terms with examples.
 

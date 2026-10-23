@@ -27,7 +27,7 @@ const ARCHIVE_SRI = 'sha512-MtoYfkkiGt+8PL2ax7Gb7IQuIXfKIiR4Wde5aoC9h6BupT33oita
 const NPM_ARCHIVE_SHA256 = '3c6d8cb8da512e43f135bd254d70e21cc5d7b7962d24933892c9da614e4df783';
 const NPM_PACKAGE_SHA256 = '76a37a84bfec6c4dfba991bec5fadfe2b72c5867cca402b5d46908604fa6ae51';
 const NPM_CLI_SHA256 = '8e5f6f3429f8cdbe693cdc29904e9d5a7b127a494bd15c804bd54c7403bfcbe7';
-const LOCK_SHA256 = '758ec4b68464cafe2e9835ceaee219375fd956b33d59367027ffaec447f8e913';
+const LOCK_SHA256 = '7c6c126c1b19b5af551baa742e47f4568d815822462f5ef9e9ecfb32011698d5';
 const POSTCSS_PARSER = 'postcss-selector-parser';
 const POSTCSS_PARSER_VERSION = '7.1.6';
 const POSTCSS_PARSER_SRI = 'sha512-7qASPzhKF2l2KLboRZux8CCTRMdGiV08vWmyKzPz22qZ7ZjQBOeY7rNzNoCLSUiftJ7HUq0GERHmxw/t0dCdMw==';
@@ -264,7 +264,7 @@ function validateInstalled(root) {
   const ipAddressPackagePath = createRequire(agentPackagePath).resolve('ip-address/package.json');
   const ipAddressPackage = createRequire(agentPackagePath)(ipAddressPackagePath);
   assert.equal(dirname(ipAddressPackagePath), join(nodeModules, 'ip-address'));
-  assert.equal(ipAddressPackage.version, '10.7.1');
+  assert.equal(ipAddressPackage.version, '10.7.4');
 
   const braceExpansionPath = createRequire(npmPackagePath).resolve('brace-expansion/package.json');
   const braceExpansionPackage = createRequire(npmPackagePath)(braceExpansionPath);

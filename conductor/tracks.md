@@ -56,7 +56,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 49 | Distributed MPI/gRPC State Synchronization | In Progress | `distributed-agent + pdes-agent` | See `conductor/tracks/49-*/spec.md` |
 | 50 | NUMA Topology, Affinity & HPC Memory Lifecycle | In Progress | `core-scheduler-agent + ecs-agent + ffi-agent` | See `conductor/tracks/50-*/spec.md` |
 | 51 | Parallel I/O, Arrow Record Batches & Checkpoint Export | In Progress | `arrow-agent + cloud-agent + performance-agent` | See `conductor/tracks/51-*/spec.md` |
-| 52 | Native GPU Acceleration with Persistent Device Memory | Completed | `gpu-compute-agent + performance-agent` | See `conductor/tracks/52-*/spec.md` |
+| 52 | Native GPU Acceleration with Persistent Device Memory | Done | `gpu-compute-agent + performance-agent` | See `conductor/tracks/52-*/spec.md` |
 | 53 | FMI 2/3 Co-Simulation Master Runtime | Done | `fmi-agent + ffi-agent + interop-agent` | See `conductor/tracks/53-*/spec.md` |
 | 54 | Slurm, Container & Cloud HPC Runtime Acceptance | Done | `cloud-agent + distributed-agent + gpu-compute-agent + release-agent` | See `conductor/tracks/54-*/spec.md` |
 | 55 | End-to-End Weak/Strong Scaling Certification | Done | `performance-agent + benchmark-agent + cloud-agent + release-agent` | See `conductor/tracks/55-*/spec.md` |
@@ -74,6 +74,43 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 67 | Linked Entity Hierarchies, Dynamic Spawning & Cascaded Lifecycles | Done | `ecs-agent + abm-api-agent + contracts-agent` | See `conductor/tracks/67-*/spec.md` |
 | 68 | Inter-Unit Boundary Channels & Asynchronous Handover Sinks | Done | `des-api-agent + contracts-agent + streaming-agent` | See `conductor/tracks/68-*/spec.md` |
 | 69 | Stochastic Competing Risks & Non-Markovian Hazard Engine | Done | `des-api-agent + vv-uq-agent + core-scheduler-agent` | See `conductor/tracks/69-*/spec.md` |
+
+| 70 | Polars-Native Data Processing and Standard Interchange | In Progress | `arrow-agent + ffi-agent + conformance-agent` | See `conductor/tracks/70-*/spec.md` |
+| 71 | rand deterministic RNG adoption | Planned | `rng-agent + conformance-agent` | See `conductor/tracks/71-*/spec.md` |
+| 72 | rand_distr statistical sampling adoption | Planned | `rng-agent + vv-uq-agent + des-api-agent` | See `conductor/tracks/72-*/spec.md` |
+| 73 | petgraph spatial topology and routing adoption | Planned | `abm-api-agent + contracts-agent` | See `conductor/tracks/73-*/spec.md` |
+| 74 | Serde typed control contracts | Planned | `contracts-agent` | See `conductor/tracks/74-*/spec.md` |
+| 75 | serde_json metadata and control encoding | Planned | `contracts-agent` | See `conductor/tracks/75-*/spec.md` |
+| 76 | toml scenario configuration parsing | Planned | `contracts-agent` | See `conductor/tracks/76-*/spec.md` |
+| 77 | Clap CLI consolidation | Planned | `contracts-agent` | See `conductor/tracks/77-*/spec.md` |
+| 78 | Rayon bounded independent-work execution | Planned | `experiment-agent` | See `conductor/tracks/78-*/spec.md` |
+| 79 | zip FMU archive replacement | Planned | `fmi-agent` | See `conductor/tracks/79-*/spec.md` |
+| 80 | quick-xml FMU metadata replacement | Planned | `fmi-agent` | See `conductor/tracks/80-*/spec.md` |
+| 81 | Prost distributed envelope encoding | Planned | `distributed-agent` | See `conductor/tracks/81-*/spec.md` |
+| 82 | Tokio bounded transport runtime | Planned | `distributed-agent` | See `conductor/tracks/82-*/spec.md` |
+| 83 | Tonic interoperable RPC transport | Planned | `distributed-agent` | See `conductor/tracks/83-*/spec.md` |
+| 84 | hecs ECS storage qualification | Planned | `ecs-agent` | See `conductor/tracks/84-*/spec.md` |
+| 85 | Clarabel convex solver qualification | Planned | `vv-uq-agent` | See `conductor/tracks/85-*/spec.md` |
+| 86 | rstar continuous spatial index qualification | Planned | `abm-api-agent` | See `conductor/tracks/86-*/spec.md` |
+| 87 | geo geometry and route-position primitives | Planned | `abm-api-agent` | See `conductor/tracks/87-*/spec.md` |
+| 88 | rsmpi native MPI qualification | Planned | `distributed-agent` | See `conductor/tracks/88-*/spec.md` |
+| 89 | Tract inference qualification | Planned | `ml-integration-agent` | See `conductor/tracks/89-*/spec.md` |
+| 90 | Argmin calibration optimiser qualification | Planned | `vv-uq-agent` | See `conductor/tracks/90-*/spec.md` |
+| 91 | rust-fmi adapter qualification | Planned | `fmi-agent` | See `conductor/tracks/91-*/spec.md` |
+| 92 | Sobol sequence qualification | Planned | `experiment-agent` | See `conductor/tracks/92-*/spec.md` |
+| 93 | sha2 robustness | Planned | `arrow-agent` | See `conductor/tracks/93-*/spec.md` |
+| 94 | tempfile robustness | Planned | `arrow-agent` | See `conductor/tracks/94-*/spec.md` |
+| 95 | thiserror robustness | Planned | `contracts-agent` | See `conductor/tracks/95-*/spec.md` |
+| 96 | proptest robustness | Planned | `conformance-agent` | See `conductor/tracks/96-*/spec.md` |
+| 97 | tracing qualification | Planned | `contracts-agent` | See `conductor/tracks/97-*/spec.md` |
+| 98 | loom qualification | Planned | `conformance-agent` | See `conductor/tracks/98-*/spec.md` |
+| 99 | proptest-state-machine qualification | Planned | `conformance-agent` | See `conductor/tracks/99-*/spec.md` |
+| 100 | tracing-subscriber qualification | Planned | `contracts-agent` | See `conductor/tracks/100-*/spec.md` |
+| 101 | criterion existing-tooling | Planned | `benchmark-agent` | See `conductor/tracks/101-*/spec.md` |
+| 102 | ode_solvers conditional | Planned | `vv-uq-agent` | See `conductor/tracks/102-*/spec.md` |
+| 103 | tungstenite conditional | Planned | `streaming-agent` | See `conductor/tracks/103-*/spec.md` |
+| 104 | tokio-tungstenite conditional | Planned | `streaming-agent` | See `conductor/tracks/104-*/spec.md` |
+| 105 | Python 3.15 Runtime Migration and Qualification | In Progress | `python-agent + ci-agent + dx-agent` | See `conductor/tracks/105-*/spec.md` |
 
 ## Track status vocabulary
 
@@ -211,3 +248,7 @@ The human sole maintainer explicitly approved Track49 production scheduling afte
 ## Inventory-first Polars sequencing — 23 October 2026
 
 Polars inventory leads; sha2/tempfile/proptest are separate tracks with gates only on demonstrated dependent migration tasks. See [sequencing](dependency-sequencing.md). All implementation and acceptance statuses remain unchanged.
+
+## Python runtime migration — 23 October 2026
+
+- [~] **Track: Python 3.15 migration and qualification** — [Python 3.15 migration and qualification](tracks/105-python315-runtime-qualification/index.md); existing candidate evidence retained, main acceptance pending.

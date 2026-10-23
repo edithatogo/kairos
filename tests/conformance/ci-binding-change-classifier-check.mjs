@@ -173,7 +173,7 @@ const archiveStart = workflow.indexOf('  archive-python:\n');
 const aggregateStartIndex = workflow.indexOf('  binding-ci:\n');
 assert.ok(archiveStart >= 0 && aggregateStartIndex > archiveStart, 'archive and aggregate jobs must exist in order');
 const archiveJob = workflow.slice(archiveStart, aggregateStartIndex);
-assert.match(archiveJob, /python-version: '3\.14\.8'/);
+assert.match(archiveJob, /python-version: ['"]3\.15\.1['"]/);
 assert.match(archiveJob, /pip install --require-hashes -r scripts\/archive-python-tools\.lock/);
 assert.deepEqual(
   [...archiveJob.matchAll(/^\s+python -m unittest discover -s tests -p ([^ ]+) -v$/gm)].map((match) => match[1]),

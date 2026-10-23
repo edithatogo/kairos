@@ -32,15 +32,17 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: 3.14.8
+          python-version: "3.15.1"
           architecture: x64
+      - name: Verify repository-local Python 3.15.1
+        run: python scripts/python_runtime.py --github
       - name: Require native Linux amd64 and pinned Python
         shell: bash
         run: |
           set -euo pipefail
           [[ "$(uname -s)" == Linux ]]
           [[ "$(uname -m)" == x86_64 ]]
-          python3 -B -c 'import sys; assert sys.version_info[:3] == (3, 14, 8), sys.version'
+          python3 -B -c 'import sys; assert sys.version_info[:3] == (3, 15, 1), sys.version'
       - name: Run receipt-validator negative tests
         run: python3 -B -m unittest discover -s tests -p test_syft_installation_receipt.py -v
       - name: Authenticate and install pinned Syft release
