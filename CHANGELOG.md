@@ -14,6 +14,8 @@ Format:
 
 ## Unreleased
 
+- `crates/kairo-ecs-arrow` adds the Track 70 Phase 3 `run_output` contract module (default-off behind `polars-native`): unique run output directories, bounded per-replication parts staged beside their destination and renamed into place, manifest-last publication with `kairo_ecs.run_manifest.v1`, readers requiring a completed manifest with valid file hashes, checkpoint-to-trace resume watermarks, explicit disk-exhaustion failure injection, and a configure-once native thread budget. Task 3.1 ships the contract as explicit stubs (`RunOutputError::NotImplementedUntilTask32`) plus 15 failing contract tests; no durability behavior is exposed until Task 3.2.
+
 - `crates/kairo-ecs-ffi` and `include/kairo_ecs.h` add the `KairoArrowArrayStream` type and the C-ABI symbol `kairo_ecs_export_event_log_arrow_stream` (bounded batches; capability-absent builds keep the symbol for ABI stability and fail with an explicit feature-naming error), completing the Track 70 Phase 2 Task 2.3 header surface.
 - `bindings/typescript` migrates the event-log surface to Schema v2 (`kairo_ecs.event_log.v2`): 14 typed columns (generational-ID index/generation pairs, `time_ticks_hi`/`time_ticks_lo` limbs, decimal-string u64 projections), obsolete hex helpers removed, and documented copies/unsupported targets recorded in the binding README (Track 70 Task 2.3).
 - `bindings/r` migrates the scheduler event-log facade to Schema v2 with the same 14-column contract (u64 columns as exact decimal character strings, null-together entity columns) and updated smoke/testthat/man documentation (Track 70 Task 2.3).
