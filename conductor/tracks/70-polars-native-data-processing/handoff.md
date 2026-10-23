@@ -10,6 +10,15 @@ Phase 0 (Baseline and dependency qualification) and Phase 1 (Native tables and r
 
 Track 70 remains `[~] In Progress` advancing to Phase 2 (FFI and polyglot consumers: Tasks 2.1–2.4).
 
+## Phase 2 progress — Task 2.1 (23 October 2026)
+
+- Task 2.1 complete: failing populated multi-batch/empty/null/lifetime/release tests and affected binding consumer fixtures recorded, per the Phase 0/1 failing-characterization convention (`should_panic` probes / strict `xfail` that must be replaced with real acceptance tests by Task 2.2).
+- New Rust test target `crates/kairo-ecs-ffi/tests/track70_phase2_ffi_consumers.rs` (6 tests): populated-buffer contract, v2 schema identifiers/typed children, multi-batch stream export, schema-valid empty export, null-together generational IDs, plus a real passing release-exactly-once and struct-survives-engine-free guard.
+- New Python consumer fixture `bindings/python/tests/test_track70_phase2_native_handoff.py` (4 strict-xfail tests): v2 schema fields via Arrow C capsule import, null-together entity limbs, schema-valid empty export, explicit rejection instead of fabricated capsule fallback.
+- Baseline evidence documented: `kairo_ecs_export_event_log_arrow_array` is descriptor-only (`buffers == NULL`, `n_children == 0`); `kairo_ecs_export_event_log_arrow_schema` exposes `kairo_ecs.event_log.v1` with 0 children; Python `_arrow.py` retains the fabricated capsule fallback and the `to_pylist` row-reconstruction detour.
+- Scope decision recorded by session coordination: Tasks 2.2–2.3 runtime implementation is gated on Tracks 93 (sha2), 94 (tempfile) and 96 (proptest) closing per the 22 October 2026 dependency sequencing refinement; Task 2.1 failing tests/fixtures do not migrate runtime behavior and were validated under `cargo test -p kairo-ecs-ffi --test track70_phase2_ffi_consumers` (6 passed, incl. 5 should-panic probes) and `python -m pytest bindings/python/tests` (21 passed, 4 xfailed, Python 3.14.8 disposable uv venv, pyarrow 26.0.0). Expired leases observed on Tracks 65/66 (disjoint paths); reconciled by owner, not adopted.
+- Cross-owner note (handoff, not unilateral write): Task 2.2 touches `crates/kairo-ecs-ffi/`, `include/`, `bindings/` — FFI/binding owners review their surfaces; Track 66 CLI claim must be reconciled before any CLI changes.
+
 ## Follow-up issues
 Phase 2 runtime implementation: implement owned Arrow C Data arrays/streams and native Python-to-Polars zero-copy handoff; update C headers and polyglot bindings; document actual copies and memory boundaries.
 
