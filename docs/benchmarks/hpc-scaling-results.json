@@ -1,0 +1,1565 @@
+{
+  "schema_version": "kairoecs.hpc.scaling.local-run.v1",
+  "track_id": "55",
+  "runner": "benches/hpc-scaling-certification/local-runner.mjs",
+  "measurement_kind": "deterministic-local-placeholder",
+  "certification_status": "not-certified-live-hpc-required",
+  "host": {
+    "os": "darwin",
+    "arch": "arm64",
+    "cpus_observed": 10
+  },
+  "deterministic_seed": "track55-local-scaling-v1",
+  "profiles": [
+    {
+      "schema_version": "kairoecs.hpc.scaling.profile.v1",
+      "track_id": "55",
+      "mode": "weak",
+      "scenario_id": "des_event_queue_baseline",
+      "category": "des",
+      "upstream_track": "47",
+      "required_runtime": "pdes",
+      "measurement_kind": "deterministic-local-placeholder",
+      "resource_plan": [
+        {
+          "resource_index": 1,
+          "ranks": 1,
+          "logical_processes": 4,
+          "numa_nodes": 1,
+          "gpu_devices": 0
+        },
+        {
+          "resource_index": 2,
+          "ranks": 2,
+          "logical_processes": 8,
+          "numa_nodes": 1,
+          "gpu_devices": 0
+        },
+        {
+          "resource_index": 4,
+          "ranks": 4,
+          "logical_processes": 16,
+          "numa_nodes": 2,
+          "gpu_devices": 0
+        }
+      ],
+      "samples": [
+        {
+          "resource_index": 1,
+          "workload_events": 1000000,
+          "throughput_events_per_second": 1000000,
+          "parallel_efficiency": 1,
+          "wall_time_seconds": 1,
+          "speedup": 1,
+          "memory_gib": 0.625,
+          "io_write_gib_per_second": 0,
+          "rollback_rate": 0,
+          "gvt_lag_seconds": 0,
+          "gpu_batch_throughput": 0,
+          "fmi_step_latency_ms": 0,
+          "restart_parity": "not-applicable",
+          "final_state_parity": true
+        },
+        {
+          "resource_index": 2,
+          "workload_events": 2000000,
+          "throughput_events_per_second": 1920000,
+          "parallel_efficiency": 0.96,
+          "wall_time_seconds": 1.041667,
+          "speedup": 0.96,
+          "memory_gib": 0.75,
+          "io_write_gib_per_second": 0,
+          "rollback_rate": 0,
+          "gvt_lag_seconds": 0,
+          "gpu_batch_throughput": 0,
+          "fmi_step_latency_ms": 0,
+          "restart_parity": "not-applicable",
+          "final_state_parity": true
+        },
+        {
+          "resource_index": 4,
+          "workload_events": 4000000,
+          "throughput_events_per_second": 3680000,
+          "parallel_efficiency": 0.92,
+          "wall_time_seconds": 1.086957,
+          "speedup": 0.92,
+          "memory_gib": 1,
+          "io_write_gib_per_second": 0,
+          "rollback_rate": 0,
+          "gvt_lag_seconds": 0,
+          "gpu_batch_throughput": 0,
+          "fmi_step_latency_ms": 0,
+          "restart_parity": "not-applicable",
+          "final_state_parity": true
+        }
+      ],
+      "live_hpc_required": true,
+      "live_hpc_error": {
+        "schema_version": "kairoecs.hpc.scaling.live-error.v1",
+        "track_id": "55",
+        "code": "LIVE_HPC_REQUIRED",
+        "message": "Track 55 weak/strong scaling certification requires live HPC raw results; the deterministic local runner only emits non-certifying placeholders.",
+        "required_evidence": [
+          "weak scaling raw results with hardware metadata",
+          "strong scaling raw results with hardware metadata",
+          "scheduler or cloud job metadata",
+          "restart/parity raw evidence for PDES, MPI/gRPC, NUMA, I/O, GPU, and FMI components"
+        ]
+      }
+    },
+    {
+      "schema_version": "kairoecs.hpc.scaling.profile.v1",
+      "track_id": "55",
+      "mode": "strong",
+      "scenario_id": "des_event_queue_baseline",
+      "category": "des",
+      "upstream_track": "47",
+      "required_runtime": "pdes",
+      "measurement_kind": "deterministic-local-placeholder",
+      "resource_plan": [
+        {
+          "resource_index": 1,
+          "ranks": 1,
+          "logical_processes": 4,
+          "numa_nodes": 1,
+          "gpu_devices": 0
+        },
+        {
+          "resource_index": 2,
+          "ranks": 2,
+          "logical_processes": 8,
+          "numa_nodes": 1,
+          "gpu_devices": 0
+        },
+        {
+          "resource_index": 4,
+          "ranks": 4,
+          "logical_processes": 16,
+          "numa_nodes": 2,
+          "gpu_devices": 0
+        }
+      ],
+      "samples": [
+        {
+          "resource_index": 1,
+          "workload_events": 1000000,
+          "throughput_events_per_second": 1000000,
+          "parallel_efficiency": 1,
+          "wall_time_seconds": 1,
+          "speedup": 1,
+          "memory_gib": 0.625,
+          "io_write_gib_per_second": 0,
+          "rollback_rate": 0,
+          "gvt_lag_seconds": 0,
+          "gpu_batch_throughput": 0,
+          "fmi_step_latency_ms": 0,
+          "restart_parity": "not-applicable",
+          "final_state_parity": true
+        },
+        {
+          "resource_index": 2,
+          "workload_events": 1000000,
+          "throughput_events_per_second": 1840000,
+          "parallel_efficiency": 0.92,
+          "wall_time_seconds": 0.543478,
+          "speedup": 1.84,
+          "memory_gib": 0.75,
+          "io_write_gib_per_second": 0,
+          "rollback_rate": 0,
+          "gvt_lag_seconds": 0,
+          "gpu_batch_throughput": 0,
+          "fmi_step_latency_ms": 0,
+          "restart_parity": "not-applicable",
+          "final_state_parity": true
+        },
+        {
+          "resource_index": 4,
+          "workload_events": 1000000,
+          "throughput_events_per_second": 3360000,
+          "parallel_efficiency": 0.84,
+          "wall_time_seconds": 0.297619,
+          "speedup": 3.36,
+          "memory_gib": 1,
+          "io_write_gib_per_second": 0,
+          "rollback_rate": 0,
+          "gvt_lag_seconds": 0,
+          "gpu_batch_throughput": 0,
+          "fmi_step_latency_ms": 0,
+          "restart_parity": "not-applicable",
+          "final_state_parity": true
+        }
+      ],
+      "live_hpc_required": true,
+      "live_hpc_error": {
+        "schema_version": "kairoecs.hpc.scaling.live-error.v1",
+        "track_id": "55",
+        "code": "LIVE_HPC_REQUIRED",
+        "message": "Track 55 weak/strong scaling certification requires live HPC raw results; the deterministic local runner only emits non-certifying placeholders.",
+        "required_evidence": [
+          "weak scaling raw results with hardware metadata",
+          "strong scaling raw results with hardware metadata",
+          "scheduler or cloud job metadata",
+          "restart/parity raw evidence for PDES, MPI/gRPC, NUMA, I/O, GPU, and FMI components"
+        ]
+      }
+    },
+    {
+      "schema_version": "kairoecs.hpc.scaling.profile.v1",
+      "track_id": "55",
+      "mode": "weak",
+      "scenario_id": "abm_agent_transition_batch",
+      "category": "abm",
+      "upstream_track": "52",
+      "required_runtime": "wgpu-backend or cuda-backend",
+      "measurement_kind": "deterministic-local-placeholder",
+      "resource_plan": [
+        {
+          "resource_index": 1,
+          "ranks": 1,
+          "logical_processes": 4,
+          "numa_nodes": 1,
+          "gpu_devices": 0
+        },
+        {
+          "resource_index": 2,
+          "ranks": 2,
+          "logical_processes": 8,
+          "numa_nodes": 1,
+          "gpu_devices": 0
+        },
+        {
+          "resource_index": 4,
+          "ranks": 4,
+          "logical_processes": 16,
+          "numa_nodes": 2,
+          "gpu_devices": 0
+        }
+      ],
+      "samples": [
+        {
+          "resource_index": 1,
+          "workload_events": 1000000,
+          "throughput_events_per_second": 420000,
+          "parallel_efficiency": 1,
+          "wall_time_seconds": 2.380952,
+          "speedup": 1,
+          "memory_gib": 0.625,
+          "io_write_gib_per_second": 0,
+          "rollback_rate": 0,
+          "gvt_lag_seconds": 0,
+          "gpu_batch_throughput": 252000,
+          "fmi_step_latency_ms": 0,
+          "restart_parity": "not-applicable",
+          "final_state_parity": true
+        },
+        {
+          "resource_index": 2,
+          "workload_events": 2000000,
+          "throughput_events_per_second": 806400,
+          "parallel_efficiency": 0.96,
+          "wall_time_seconds": 2.480159,
+          "speedup": 0.96,
+          "memory_gib": 0.75,
+          "io_write_gib_per_second": 0,
+          "rollback_rate": 0,
+          "gvt_lag_seconds": 0,
+          "gpu_batch_throughput": 483840,
+          "fmi_step_latency_ms": 0,
+          "restart_parity": "not-applicable",
+          "final_state_parity": true
+        },
+        {
+          "resource_index": 4,
+          "workload_events": 4000000,
+          "throughput_events_per_second": 1545600,
+          "parallel_efficiency": 0.92,
+          "wall_time_seconds": 2.587992,
+          "speedup": 0.92,
+          "memory_gib": 1,
+          "io_write_gib_per_second": 0,
+          "rollback_rate": 0,
+          "gvt_lag_seconds": 0,
+          "gpu_batch_throughput": 927360,
+          "fmi_step_latency_ms": 0,
+          "restart_parity": "not-applicable",
+          "final_state_parity": true
+        }
+      ],
+      "live_hpc_required": true,
+      "live_hpc_error": {
+        "schema_version": "kairoecs.hpc.scaling.live-error.v1",
+        "track_id": "55",
+        "code": "LIVE_HPC_REQUIRED",
+        "message": "Track 55 weak/strong scaling certification requires live HPC raw results; the deterministic local runner only emits non-certifying placeholders.",
+        "required_evidence": [
+          "weak scaling raw results with hardware metadata",
+          "strong scaling raw results with hardware metadata",
+          "scheduler or cloud job metadata",
+          "restart/parity raw evidence for PDES, MPI/gRPC, NUMA, I/O, GPU, and FMI components"
+        ]
+      }
+    },
+    {
+      "schema_version": "kairoecs.hpc.scaling.profile.v1",
+      "track_id": "55",
+      "mode": "strong",
+      "scenario_id": "abm_agent_transition_batch",
+      "category": "abm",
+      "upstream_track": "52",
+      "required_runtime": "wgpu-backend or cuda-backend",
+      "measurement_kind": "deterministic-local-placeholder",
+      "resource_plan": [
+        {
+          "resource_index": 1,
+          "ranks": 1,
+          "logical_processes": 4,
+          "numa_nodes": 1,
+          "gpu_devices": 0
+        },
+        {
+          "resource_index": 2,
+          "ranks": 2,
+          "logical_processes": 8,
+          "numa_nodes": 1,
+          "gpu_devices": 0
+        },
+        {
+          "resource_index": 4,
+          "ranks": 4,
+          "logical_processes": 16,
+          "numa_nodes": 2,
+          "gpu_devices": 0
+        }
+      ],
+      "samples": [
+        {
+          "resource_index": 1,
+          "workload_events": 1000000,
+          "throughput_events_per_second": 420000,
+          "parallel_efficiency": 1,
+          "wall_time_seconds": 2.380952,
+          "speedup": 1,
+          "memory_gib": 0.625,
+          "io_write_gib_per_second": 0,
+          "rollback_rate": 0,
+          "gvt_lag_seconds": 0,
+          "gpu_batch_throughput": 252000,
+          "fmi_step_latency_ms": 0,
+          "restart_parity": "not-applicable",
+          "final_state_parity": true
+        },
+        {
+          "resource_index": 2,
+          "workload_events": 1000000,
+          "throughput_events_per_second": 772800,
+          "parallel_efficiency": 0.92,
+          "wall_time_seconds": 1.293996,
+          "speedup": 1.84,
+          "memory_gib": 0.75,
+          "io_write_gib_per_second": 0,
+          "rollback_rate": 0,
+          "gvt_lag_seconds": 0,
+          "gpu_batch_throughput": 463680,
+          "fmi_step_latency_ms": 0,
+          "restart_parity": "not-applicable",
+          "final_state_parity": true
+        },
+        {
+          "resource_index": 4,
+          "workload_events": 1000000,
+          "throughput_events_per_second": 1411200,
+          "parallel_efficiency": 0.84,
+          "wall_time_seconds": 0.708617,
+          "speedup": 3.36,
+          "memory_gib": 1,
+          "io_write_gib_per_second": 0,
+          "rollback_rate": 0,
+          "gvt_lag_seconds": 0,
+          "gpu_batch_throughput": 846720,
+          "fmi_step_latency_ms": 0,
+          "restart_parity": "not-applicable",
+          "final_state_parity": true
+        }
+      ],
+      "live_hpc_required": true,
+      "live_hpc_error": {
+        "schema_version": "kairoecs.hpc.scaling.live-error.v1",
+        "track_id": "55",
+        "code": "LIVE_HPC_REQUIRED",
+        "message": "Track 55 weak/strong scaling certification requires live HPC raw results; the deterministic local runner only emits non-certifying placeholders.",
+        "required_evidence": [
+          "weak scaling raw results with hardware metadata",
+          "strong scaling raw results with hardware metadata",
+          "scheduler or cloud job metadata",
+          "restart/parity raw evidence for PDES, MPI/gRPC, NUMA, I/O, GPU, and FMI components"
+        ]
+      }
+    },
+    {
+      "schema_version": "kairoecs.hpc.scaling.profile.v1",
+      "track_id": "55",
+      "mode": "weak",
+      "scenario_id": "hybrid_pdes_abm_checkpoint",
+      "category": "hybrid",
+      "upstream_track": "51",
+      "required_runtime": "parallel-io",
+      "measurement_kind": "deterministic-local-placeholder",
+      "resource_plan": [
+        {
+          "resource_index": 1,
+          "ranks": 1,
+          "logical_processes": 4,
+          "numa_nodes": 1,
+          "gpu_devices": 0
+        },
+        {
+          "resource_index": 2,
+          "ranks": 2,
+          "logical_processes": 8,
+          "numa_nodes": 1,
+          "gpu_devices": 0
+        },
+        {
+          "resource_index": 4,
+          "ranks": 4,
+          "logical_processes": 16,
+          "numa_nodes": 2,
+          "gpu_devices": 0
+        }
+      ],
+      "samples": [
+        {
+          "resource_index": 1,
+          "workload_events": 1000000,
+          "throughput_events_per_second": 300000,
+          "parallel_efficiency": 1,
+          "wall_time_seconds": 3.333333,
+          "speedup": 1,
+          "memory_gib": 0.625,
+          "io_write_gib_per_second": 0.18,
+          "rollback_rate": 0,
+          "gvt_lag_seconds": 0,
+          "gpu_batch_throughput": 0,
+          "fmi_step_latency_ms": 0,
+          "restart_parity": "placeholder-pass",
+          "final_state_parity": true
+        },
+        {
+          "resource_index": 2,
+          "workload_events": 2000000,
+          "throughput_events_per_second": 576000,
+          "parallel_efficiency": 0.96,
+          "wall_time_seconds": 3.472222,
+          "speedup": 0.96,
+          "memory_gib": 0.75,
+          "io_write_gib_per_second": 0.36,
+          "rollback_rate": 0,
+          "gvt_lag_seconds": 0,
+          "gpu_batch_throughput": 0,
+          "fmi_step_latency_ms": 0,
+          "restart_parity": "placeholder-pass",
+          "final_state_parity": true
+        },
+        {
+          "resource_index": 4,
+          "workload_events": 4000000,
+          "throughput_events_per_second": 1104000,
+          "parallel_efficiency": 0.92,
+          "wall_time_seconds": 3.623188,
+          "speedup": 0.92,
+          "memory_gib": 1,
+          "io_write_gib_per_second": 0.72,
+          "rollback_rate": 0,
+          "gvt_lag_seconds": 0,
+          "gpu_batch_throughput": 0,
+          "fmi_step_latency_ms": 0,
+          "restart_parity": "placeholder-pass",
+          "final_state_parity": true
+        }
+      ],
+      "live_hpc_required": true,
+      "live_hpc_error": {
+        "schema_version": "kairoecs.hpc.scaling.live-error.v1",
+        "track_id": "55",
+        "code": "LIVE_HPC_REQUIRED",
+        "message": "Track 55 weak/strong scaling certification requires live HPC raw results; the deterministic local runner only emits non-certifying placeholders.",
+        "required_evidence": [
+          "weak scaling raw results with hardware metadata",
+          "strong scaling raw results with hardware metadata",
+          "scheduler or cloud job metadata",
+          "restart/parity raw evidence for PDES, MPI/gRPC, NUMA, I/O, GPU, and FMI components"
+        ]
+      }
+    },
+    {
+      "schema_version": "kairoecs.hpc.scaling.profile.v1",
+      "track_id": "55",
+      "mode": "strong",
+      "scenario_id": "hybrid_pdes_abm_checkpoint",
+      "category": "hybrid",
+      "upstream_track": "51",
+      "required_runtime": "parallel-io",
+      "measurement_kind": "deterministic-local-placeholder",
+      "resource_plan": [
+        {
+          "resource_index": 1,
+          "ranks": 1,
+          "logical_processes": 4,
+          "numa_nodes": 1,
+          "gpu_devices": 0
+        },
+        {
+          "resource_index": 2,
+          "ranks": 2,
+          "logical_processes": 8,
+          "numa_nodes": 1,
+          "gpu_devices": 0
+        },
+        {
+          "resource_index": 4,
+          "ranks": 4,
+          "logical_processes": 16,
+          "numa_nodes": 2,
+          "gpu_devices": 0
+        }
+      ],
+      "samples": [
+        {
+          "resource_index": 1,
+          "workload_events": 1000000,
+          "throughput_events_per_second": 300000,
+          "parallel_efficiency": 1,
+          "wall_time_seconds": 3.333333,
+          "speedup": 1,
+          "memory_gib": 0.625,
+          "io_write_gib_per_second": 0.18,
+          "rollback_rate": 0,
+          "gvt_lag_seconds": 0,
+          "gpu_batch_throughput": 0,
+          "fmi_step_latency_ms": 0,
+          "restart_parity": "placeholder-pass",
+          "final_state_parity": true
+        },
+        {
+          "resource_index": 2,
+          "workload_events": 1000000,
+          "throughput_events_per_second": 552000,
+          "parallel_efficiency": 0.92,
+          "wall_time_seconds": 1.811594,
+          "speedup": 1.84,
+          "memory_gib": 0.75,
+          "io_write_gib_per_second": 0.36,
+          "rollback_rate": 0,
+          "gvt_lag_seconds": 0,
+          "gpu_batch_throughput": 0,
+          "fmi_step_latency_ms": 0,
+          "restart_parity": "placeholder-pass",
+          "final_state_parity": true
+        },
+        {
+          "resource_index": 4,
+          "workload_events": 1000000,
+          "throughput_events_per_second": 1008000,
+          "parallel_efficiency": 0.84,
+          "wall_time_seconds": 0.992063,
+          "speedup": 3.36,
+          "memory_gib": 1,
+          "io_write_gib_per_second": 0.72,
+          "rollback_rate": 0,
+          "gvt_lag_seconds": 0,
+          "gpu_batch_throughput": 0,
+          "fmi_step_latency_ms": 0,
+          "restart_parity": "placeholder-pass",
+          "final_state_parity": true
+        }
+      ],
+      "live_hpc_required": true,
+      "live_hpc_error": {
+        "schema_version": "kairoecs.hpc.scaling.live-error.v1",
+        "track_id": "55",
+        "code": "LIVE_HPC_REQUIRED",
+        "message": "Track 55 weak/strong scaling certification requires live HPC raw results; the deterministic local runner only emits non-certifying placeholders.",
+        "required_evidence": [
+          "weak scaling raw results with hardware metadata",
+          "strong scaling raw results with hardware metadata",
+          "scheduler or cloud job metadata",
+          "restart/parity raw evidence for PDES, MPI/gRPC, NUMA, I/O, GPU, and FMI components"
+        ]
+      }
+    },
+    {
+      "schema_version": "kairoecs.hpc.scaling.profile.v1",
+      "track_id": "55",
+      "mode": "weak",
+      "scenario_id": "distributed_time_warp_sync",
+      "category": "distributed",
+      "upstream_track": "48",
+      "required_runtime": "time-warp",
+      "measurement_kind": "deterministic-local-placeholder",
+      "resource_plan": [
+        {
+          "resource_index": 1,
+          "ranks": 1,
+          "logical_processes": 4,
+          "numa_nodes": 1,
+          "gpu_devices": 0
+        },
+        {
+          "resource_index": 2,
+          "ranks": 2,
+          "logical_processes": 8,
+          "numa_nodes": 1,
+          "gpu_devices": 0
+        },
+        {
+          "resource_index": 4,
+          "ranks": 4,
+          "logical_processes": 16,
+          "numa_nodes": 2,
+          "gpu_devices": 0
+        }
+      ],
+      "samples": [
+        {
+          "resource_index": 1,
+          "workload_events": 1000000,
+          "throughput_events_per_second": 260000,
+          "parallel_efficiency": 1,
+          "wall_time_seconds": 3.846154,
+          "speedup": 1,
+          "memory_gib": 0.625,
+          "io_write_gib_per_second": 0,
+          "rollback_rate": 0.0125,
+          "gvt_lag_seconds": 0.265,
+          "gpu_batch_throughput": 0,
+          "fmi_step_latency_ms": 0,
+          "restart_parity": "not-applicable",
+          "final_state_parity": true
+        },
+        {
+          "resource_index": 2,
+          "workload_events": 2000000,
+          "throughput_events_per_second": 499200,
+          "parallel_efficiency": 0.96,
+          "wall_time_seconds": 4.00641,
+          "speedup": 0.96,
+          "memory_gib": 0.75,
+          "io_write_gib_per_second": 0,
+          "rollback_rate": 0.025,
+          "gvt_lag_seconds": 0.28,
+          "gpu_batch_throughput": 0,
+          "fmi_step_latency_ms": 0,
+          "restart_parity": "not-applicable",
+          "final_state_parity": true
+        },
+        {
+          "resource_index": 4,
+          "workload_events": 4000000,
+          "throughput_events_per_second": 956800,
+          "parallel_efficiency": 0.92,
+          "wall_time_seconds": 4.180602,
+          "speedup": 0.92,
+          "memory_gib": 1,
+          "io_write_gib_per_second": 0,
+          "rollback_rate": 0.05,
+          "gvt_lag_seconds": 0.31,
+          "gpu_batch_throughput": 0,
+          "fmi_step_latency_ms": 0,
+          "restart_parity": "not-applicable",
+          "final_state_parity": true
+        }
+      ],
+      "live_hpc_required": true,
+      "live_hpc_error": {
+        "schema_version": "kairoecs.hpc.scaling.live-error.v1",
+        "track_id": "55",
+        "code": "LIVE_HPC_REQUIRED",
+        "message": "Track 55 weak/strong scaling certification requires live HPC raw results; the deterministic local runner only emits non-certifying placeholders.",
+        "required_evidence": [
+          "weak scaling raw results with hardware metadata",
+          "strong scaling raw results with hardware metadata",
+          "scheduler or cloud job metadata",
+          "restart/parity raw evidence for PDES, MPI/gRPC, NUMA, I/O, GPU, and FMI components"
+        ]
+      }
+    },
+    {
+      "schema_version": "kairoecs.hpc.scaling.profile.v1",
+      "track_id": "55",
+      "mode": "strong",
+      "scenario_id": "distributed_time_warp_sync",
+      "category": "distributed",
+      "upstream_track": "48",
+      "required_runtime": "time-warp",
+      "measurement_kind": "deterministic-local-placeholder",
+      "resource_plan": [
+        {
+          "resource_index": 1,
+          "ranks": 1,
+          "logical_processes": 4,
+          "numa_nodes": 1,
+          "gpu_devices": 0
+        },
+        {
+          "resource_index": 2,
+          "ranks": 2,
+          "logical_processes": 8,
+          "numa_nodes": 1,
+          "gpu_devices": 0
+        },
+        {
+          "resource_index": 4,
+          "ranks": 4,
+          "logical_processes": 16,
+          "numa_nodes": 2,
+          "gpu_devices": 0
+        }
+      ],
+      "samples": [
+        {
+          "resource_index": 1,
+          "workload_events": 1000000,
+          "throughput_events_per_second": 260000,
+          "parallel_efficiency": 1,
+          "wall_time_seconds": 3.846154,
+          "speedup": 1,
+          "memory_gib": 0.625,
+          "io_write_gib_per_second": 0,
+          "rollback_rate": 0.0125,
+          "gvt_lag_seconds": 0.265,
+          "gpu_batch_throughput": 0,
+          "fmi_step_latency_ms": 0,
+          "restart_parity": "not-applicable",
+          "final_state_parity": true
+        },
+        {
+          "resource_index": 2,
+          "workload_events": 1000000,
+          "throughput_events_per_second": 478400,
+          "parallel_efficiency": 0.92,
+          "wall_time_seconds": 2.090301,
+          "speedup": 1.84,
+          "memory_gib": 0.75,
+          "io_write_gib_per_second": 0,
+          "rollback_rate": 0.025,
+          "gvt_lag_seconds": 0.28,
+          "gpu_batch_throughput": 0,
+          "fmi_step_latency_ms": 0,
+          "restart_parity": "not-applicable",
+          "final_state_parity": true
+        },
+        {
+          "resource_index": 4,
+          "workload_events": 1000000,
+          "throughput_events_per_second": 873600,
+          "parallel_efficiency": 0.84,
+          "wall_time_seconds": 1.144689,
+          "speedup": 3.36,
+          "memory_gib": 1,
+          "io_write_gib_per_second": 0,
+          "rollback_rate": 0.05,
+          "gvt_lag_seconds": 0.31,
+          "gpu_batch_throughput": 0,
+          "fmi_step_latency_ms": 0,
+          "restart_parity": "not-applicable",
+          "final_state_parity": true
+        }
+      ],
+      "live_hpc_required": true,
+      "live_hpc_error": {
+        "schema_version": "kairoecs.hpc.scaling.live-error.v1",
+        "track_id": "55",
+        "code": "LIVE_HPC_REQUIRED",
+        "message": "Track 55 weak/strong scaling certification requires live HPC raw results; the deterministic local runner only emits non-certifying placeholders.",
+        "required_evidence": [
+          "weak scaling raw results with hardware metadata",
+          "strong scaling raw results with hardware metadata",
+          "scheduler or cloud job metadata",
+          "restart/parity raw evidence for PDES, MPI/gRPC, NUMA, I/O, GPU, and FMI components"
+        ]
+      }
+    },
+    {
+      "schema_version": "kairoecs.hpc.scaling.profile.v1",
+      "track_id": "55",
+      "mode": "weak",
+      "scenario_id": "mpi_grpc_entity_migration",
+      "category": "mpi-grpc",
+      "upstream_track": "49",
+      "required_runtime": "mpi or grpc",
+      "measurement_kind": "deterministic-local-placeholder",
+      "resource_plan": [
+        {
+          "resource_index": 1,
+          "ranks": 1,
+          "logical_processes": 4,
+          "numa_nodes": 1,
+          "gpu_devices": 0
+        },
+        {
+          "resource_index": 2,
+          "ranks": 2,
+          "logical_processes": 8,
+          "numa_nodes": 1,
+          "gpu_devices": 0
+        },
+        {
+          "resource_index": 4,
+          "ranks": 4,
+          "logical_processes": 16,
+          "numa_nodes": 2,
+          "gpu_devices": 0
+        }
+      ],
+      "samples": [
+        {
+          "resource_index": 1,
+          "workload_events": 1000000,
+          "throughput_events_per_second": 240000,
+          "parallel_efficiency": 1,
+          "wall_time_seconds": 4.166667,
+          "speedup": 1,
+          "memory_gib": 0.625,
+          "io_write_gib_per_second": 0,
+          "rollback_rate": 0,
+          "gvt_lag_seconds": 0,
+          "gpu_batch_throughput": 0,
+          "fmi_step_latency_ms": 0,
+          "restart_parity": "not-applicable",
+          "final_state_parity": true
+        },
+        {
+          "resource_index": 2,
+          "workload_events": 2000000,
+          "throughput_events_per_second": 460800,
+          "parallel_efficiency": 0.96,
+          "wall_time_seconds": 4.340278,
+          "speedup": 0.96,
+          "memory_gib": 0.75,
+          "io_write_gib_per_second": 0,
+          "rollback_rate": 0,
+          "gvt_lag_seconds": 0,
+          "gpu_batch_throughput": 0,
+          "fmi_step_latency_ms": 0,
+          "restart_parity": "not-applicable",
+          "final_state_parity": true
+        },
+        {
+          "resource_index": 4,
+          "workload_events": 4000000,
+          "throughput_events_per_second": 883200,
+          "parallel_efficiency": 0.92,
+          "wall_time_seconds": 4.528986,
+          "speedup": 0.92,
+          "memory_gib": 1,
+          "io_write_gib_per_second": 0,
+          "rollback_rate": 0,
+          "gvt_lag_seconds": 0,
+          "gpu_batch_throughput": 0,
+          "fmi_step_latency_ms": 0,
+          "restart_parity": "not-applicable",
+          "final_state_parity": true
+        }
+      ],
+      "live_hpc_required": true,
+      "live_hpc_error": {
+        "schema_version": "kairoecs.hpc.scaling.live-error.v1",
+        "track_id": "55",
+        "code": "LIVE_HPC_REQUIRED",
+        "message": "Track 55 weak/strong scaling certification requires live HPC raw results; the deterministic local runner only emits non-certifying placeholders.",
+        "required_evidence": [
+          "weak scaling raw results with hardware metadata",
+          "strong scaling raw results with hardware metadata",
+          "scheduler or cloud job metadata",
+          "restart/parity raw evidence for PDES, MPI/gRPC, NUMA, I/O, GPU, and FMI components"
+        ]
+      }
+    },
+    {
+      "schema_version": "kairoecs.hpc.scaling.profile.v1",
+      "track_id": "55",
+      "mode": "strong",
+      "scenario_id": "mpi_grpc_entity_migration",
+      "category": "mpi-grpc",
+      "upstream_track": "49",
+      "required_runtime": "mpi or grpc",
+      "measurement_kind": "deterministic-local-placeholder",
+      "resource_plan": [
+        {
+          "resource_index": 1,
+          "ranks": 1,
+          "logical_processes": 4,
+          "numa_nodes": 1,
+          "gpu_devices": 0
+        },
+        {
+          "resource_index": 2,
+          "ranks": 2,
+          "logical_processes": 8,
+          "numa_nodes": 1,
+          "gpu_devices": 0
+        },
+        {
+          "resource_index": 4,
+          "ranks": 4,
+          "logical_processes": 16,
+          "numa_nodes": 2,
+          "gpu_devices": 0
+        }
+      ],
+      "samples": [
+        {
+          "resource_index": 1,
+          "workload_events": 1000000,
+          "throughput_events_per_second": 240000,
+          "parallel_efficiency": 1,
+          "wall_time_seconds": 4.166667,
+          "speedup": 1,
+          "memory_gib": 0.625,
+          "io_write_gib_per_second": 0,
+          "rollback_rate": 0,
+          "gvt_lag_seconds": 0,
+          "gpu_batch_throughput": 0,
+          "fmi_step_latency_ms": 0,
+          "restart_parity": "not-applicable",
+          "final_state_parity": true
+        },
+        {
+          "resource_index": 2,
+          "workload_events": 1000000,
+          "throughput_events_per_second": 441600,
+          "parallel_efficiency": 0.92,
+          "wall_time_seconds": 2.264493,
+          "speedup": 1.84,
+          "memory_gib": 0.75,
+          "io_write_gib_per_second": 0,
+          "rollback_rate": 0,
+          "gvt_lag_seconds": 0,
+          "gpu_batch_throughput": 0,
+          "fmi_step_latency_ms": 0,
+          "restart_parity": "not-applicable",
+          "final_state_parity": true
+        },
+        {
+          "resource_index": 4,
+          "workload_events": 1000000,
+          "throughput_events_per_second": 806400,
+          "parallel_efficiency": 0.84,
+          "wall_time_seconds": 1.240079,
+          "speedup": 3.36,
+          "memory_gib": 1,
+          "io_write_gib_per_second": 0,
+          "rollback_rate": 0,
+          "gvt_lag_seconds": 0,
+          "gpu_batch_throughput": 0,
+          "fmi_step_latency_ms": 0,
+          "restart_parity": "not-applicable",
+          "final_state_parity": true
+        }
+      ],
+      "live_hpc_required": true,
+      "live_hpc_error": {
+        "schema_version": "kairoecs.hpc.scaling.live-error.v1",
+        "track_id": "55",
+        "code": "LIVE_HPC_REQUIRED",
+        "message": "Track 55 weak/strong scaling certification requires live HPC raw results; the deterministic local runner only emits non-certifying placeholders.",
+        "required_evidence": [
+          "weak scaling raw results with hardware metadata",
+          "strong scaling raw results with hardware metadata",
+          "scheduler or cloud job metadata",
+          "restart/parity raw evidence for PDES, MPI/gRPC, NUMA, I/O, GPU, and FMI components"
+        ]
+      }
+    },
+    {
+      "schema_version": "kairoecs.hpc.scaling.profile.v1",
+      "track_id": "55",
+      "mode": "weak",
+      "scenario_id": "numa_parallel_io_restart",
+      "category": "numa-io",
+      "upstream_track": "50",
+      "required_runtime": "numa,parallel-io",
+      "measurement_kind": "deterministic-local-placeholder",
+      "resource_plan": [
+        {
+          "resource_index": 1,
+          "ranks": 1,
+          "logical_processes": 4,
+          "numa_nodes": 1,
+          "gpu_devices": 0
+        },
+        {
+          "resource_index": 2,
+          "ranks": 2,
+          "logical_processes": 8,
+          "numa_nodes": 1,
+          "gpu_devices": 0
+        },
+        {
+          "resource_index": 4,
+          "ranks": 4,
+          "logical_processes": 16,
+          "numa_nodes": 2,
+          "gpu_devices": 0
+        }
+      ],
+      "samples": [
+        {
+          "resource_index": 1,
+          "workload_events": 1000000,
+          "throughput_events_per_second": 280000,
+          "parallel_efficiency": 1,
+          "wall_time_seconds": 3.571429,
+          "speedup": 1,
+          "memory_gib": 0.625,
+          "io_write_gib_per_second": 0.18,
+          "rollback_rate": 0,
+          "gvt_lag_seconds": 0,
+          "gpu_batch_throughput": 0,
+          "fmi_step_latency_ms": 0,
+          "restart_parity": "placeholder-pass",
+          "final_state_parity": true
+        },
+        {
+          "resource_index": 2,
+          "workload_events": 2000000,
+          "throughput_events_per_second": 537600,
+          "parallel_efficiency": 0.96,
+          "wall_time_seconds": 3.720238,
+          "speedup": 0.96,
+          "memory_gib": 0.75,
+          "io_write_gib_per_second": 0.36,
+          "rollback_rate": 0,
+          "gvt_lag_seconds": 0,
+          "gpu_batch_throughput": 0,
+          "fmi_step_latency_ms": 0,
+          "restart_parity": "placeholder-pass",
+          "final_state_parity": true
+        },
+        {
+          "resource_index": 4,
+          "workload_events": 4000000,
+          "throughput_events_per_second": 1030400,
+          "parallel_efficiency": 0.92,
+          "wall_time_seconds": 3.881988,
+          "speedup": 0.92,
+          "memory_gib": 1,
+          "io_write_gib_per_second": 0.72,
+          "rollback_rate": 0,
+          "gvt_lag_seconds": 0,
+          "gpu_batch_throughput": 0,
+          "fmi_step_latency_ms": 0,
+          "restart_parity": "placeholder-pass",
+          "final_state_parity": true
+        }
+      ],
+      "live_hpc_required": true,
+      "live_hpc_error": {
+        "schema_version": "kairoecs.hpc.scaling.live-error.v1",
+        "track_id": "55",
+        "code": "LIVE_HPC_REQUIRED",
+        "message": "Track 55 weak/strong scaling certification requires live HPC raw results; the deterministic local runner only emits non-certifying placeholders.",
+        "required_evidence": [
+          "weak scaling raw results with hardware metadata",
+          "strong scaling raw results with hardware metadata",
+          "scheduler or cloud job metadata",
+          "restart/parity raw evidence for PDES, MPI/gRPC, NUMA, I/O, GPU, and FMI components"
+        ]
+      }
+    },
+    {
+      "schema_version": "kairoecs.hpc.scaling.profile.v1",
+      "track_id": "55",
+      "mode": "strong",
+      "scenario_id": "numa_parallel_io_restart",
+      "category": "numa-io",
+      "upstream_track": "50",
+      "required_runtime": "numa,parallel-io",
+      "measurement_kind": "deterministic-local-placeholder",
+      "resource_plan": [
+        {
+          "resource_index": 1,
+          "ranks": 1,
+          "logical_processes": 4,
+          "numa_nodes": 1,
+          "gpu_devices": 0
+        },
+        {
+          "resource_index": 2,
+          "ranks": 2,
+          "logical_processes": 8,
+          "numa_nodes": 1,
+          "gpu_devices": 0
+        },
+        {
+          "resource_index": 4,
+          "ranks": 4,
+          "logical_processes": 16,
+          "numa_nodes": 2,
+          "gpu_devices": 0
+        }
+      ],
+      "samples": [
+        {
+          "resource_index": 1,
+          "workload_events": 1000000,
+          "throughput_events_per_second": 280000,
+          "parallel_efficiency": 1,
+          "wall_time_seconds": 3.571429,
+          "speedup": 1,
+          "memory_gib": 0.625,
+          "io_write_gib_per_second": 0.18,
+          "rollback_rate": 0,
+          "gvt_lag_seconds": 0,
+          "gpu_batch_throughput": 0,
+          "fmi_step_latency_ms": 0,
+          "restart_parity": "placeholder-pass",
+          "final_state_parity": true
+        },
+        {
+          "resource_index": 2,
+          "workload_events": 1000000,
+          "throughput_events_per_second": 515200,
+          "parallel_efficiency": 0.92,
+          "wall_time_seconds": 1.940994,
+          "speedup": 1.84,
+          "memory_gib": 0.75,
+          "io_write_gib_per_second": 0.36,
+          "rollback_rate": 0,
+          "gvt_lag_seconds": 0,
+          "gpu_batch_throughput": 0,
+          "fmi_step_latency_ms": 0,
+          "restart_parity": "placeholder-pass",
+          "final_state_parity": true
+        },
+        {
+          "resource_index": 4,
+          "workload_events": 1000000,
+          "throughput_events_per_second": 940800,
+          "parallel_efficiency": 0.84,
+          "wall_time_seconds": 1.062925,
+          "speedup": 3.36,
+          "memory_gib": 1,
+          "io_write_gib_per_second": 0.72,
+          "rollback_rate": 0,
+          "gvt_lag_seconds": 0,
+          "gpu_batch_throughput": 0,
+          "fmi_step_latency_ms": 0,
+          "restart_parity": "placeholder-pass",
+          "final_state_parity": true
+        }
+      ],
+      "live_hpc_required": true,
+      "live_hpc_error": {
+        "schema_version": "kairoecs.hpc.scaling.live-error.v1",
+        "track_id": "55",
+        "code": "LIVE_HPC_REQUIRED",
+        "message": "Track 55 weak/strong scaling certification requires live HPC raw results; the deterministic local runner only emits non-certifying placeholders.",
+        "required_evidence": [
+          "weak scaling raw results with hardware metadata",
+          "strong scaling raw results with hardware metadata",
+          "scheduler or cloud job metadata",
+          "restart/parity raw evidence for PDES, MPI/gRPC, NUMA, I/O, GPU, and FMI components"
+        ]
+      }
+    },
+    {
+      "schema_version": "kairoecs.hpc.scaling.profile.v1",
+      "track_id": "55",
+      "mode": "weak",
+      "scenario_id": "fmi_cosim_checkpoint_family",
+      "category": "fmi",
+      "upstream_track": "53",
+      "required_runtime": "fmi-runtime",
+      "measurement_kind": "deterministic-local-placeholder",
+      "resource_plan": [
+        {
+          "resource_index": 1,
+          "ranks": 1,
+          "logical_processes": 4,
+          "numa_nodes": 1,
+          "gpu_devices": 0
+        },
+        {
+          "resource_index": 2,
+          "ranks": 2,
+          "logical_processes": 8,
+          "numa_nodes": 1,
+          "gpu_devices": 0
+        },
+        {
+          "resource_index": 4,
+          "ranks": 4,
+          "logical_processes": 16,
+          "numa_nodes": 2,
+          "gpu_devices": 0
+        }
+      ],
+      "samples": [
+        {
+          "resource_index": 1,
+          "workload_events": 1000000,
+          "throughput_events_per_second": 120000,
+          "parallel_efficiency": 1,
+          "wall_time_seconds": 8.333333,
+          "speedup": 1,
+          "memory_gib": 0.625,
+          "io_write_gib_per_second": 0,
+          "rollback_rate": 0,
+          "gvt_lag_seconds": 0,
+          "gpu_batch_throughput": 0,
+          "fmi_step_latency_ms": 8,
+          "restart_parity": "not-applicable",
+          "final_state_parity": true
+        },
+        {
+          "resource_index": 2,
+          "workload_events": 2000000,
+          "throughput_events_per_second": 230400,
+          "parallel_efficiency": 0.96,
+          "wall_time_seconds": 8.680556,
+          "speedup": 0.96,
+          "memory_gib": 0.75,
+          "io_write_gib_per_second": 0,
+          "rollback_rate": 0,
+          "gvt_lag_seconds": 0,
+          "gpu_batch_throughput": 0,
+          "fmi_step_latency_ms": 4,
+          "restart_parity": "not-applicable",
+          "final_state_parity": true
+        },
+        {
+          "resource_index": 4,
+          "workload_events": 4000000,
+          "throughput_events_per_second": 441600,
+          "parallel_efficiency": 0.92,
+          "wall_time_seconds": 9.057971,
+          "speedup": 0.92,
+          "memory_gib": 1,
+          "io_write_gib_per_second": 0,
+          "rollback_rate": 0,
+          "gvt_lag_seconds": 0,
+          "gpu_batch_throughput": 0,
+          "fmi_step_latency_ms": 2,
+          "restart_parity": "not-applicable",
+          "final_state_parity": true
+        }
+      ],
+      "live_hpc_required": true,
+      "live_hpc_error": {
+        "schema_version": "kairoecs.hpc.scaling.live-error.v1",
+        "track_id": "55",
+        "code": "LIVE_HPC_REQUIRED",
+        "message": "Track 55 weak/strong scaling certification requires live HPC raw results; the deterministic local runner only emits non-certifying placeholders.",
+        "required_evidence": [
+          "weak scaling raw results with hardware metadata",
+          "strong scaling raw results with hardware metadata",
+          "scheduler or cloud job metadata",
+          "restart/parity raw evidence for PDES, MPI/gRPC, NUMA, I/O, GPU, and FMI components"
+        ]
+      }
+    },
+    {
+      "schema_version": "kairoecs.hpc.scaling.profile.v1",
+      "track_id": "55",
+      "mode": "strong",
+      "scenario_id": "fmi_cosim_checkpoint_family",
+      "category": "fmi",
+      "upstream_track": "53",
+      "required_runtime": "fmi-runtime",
+      "measurement_kind": "deterministic-local-placeholder",
+      "resource_plan": [
+        {
+          "resource_index": 1,
+          "ranks": 1,
+          "logical_processes": 4,
+          "numa_nodes": 1,
+          "gpu_devices": 0
+        },
+        {
+          "resource_index": 2,
+          "ranks": 2,
+          "logical_processes": 8,
+          "numa_nodes": 1,
+          "gpu_devices": 0
+        },
+        {
+          "resource_index": 4,
+          "ranks": 4,
+          "logical_processes": 16,
+          "numa_nodes": 2,
+          "gpu_devices": 0
+        }
+      ],
+      "samples": [
+        {
+          "resource_index": 1,
+          "workload_events": 1000000,
+          "throughput_events_per_second": 120000,
+          "parallel_efficiency": 1,
+          "wall_time_seconds": 8.333333,
+          "speedup": 1,
+          "memory_gib": 0.625,
+          "io_write_gib_per_second": 0,
+          "rollback_rate": 0,
+          "gvt_lag_seconds": 0,
+          "gpu_batch_throughput": 0,
+          "fmi_step_latency_ms": 8,
+          "restart_parity": "not-applicable",
+          "final_state_parity": true
+        },
+        {
+          "resource_index": 2,
+          "workload_events": 1000000,
+          "throughput_events_per_second": 220800,
+          "parallel_efficiency": 0.92,
+          "wall_time_seconds": 4.528986,
+          "speedup": 1.84,
+          "memory_gib": 0.75,
+          "io_write_gib_per_second": 0,
+          "rollback_rate": 0,
+          "gvt_lag_seconds": 0,
+          "gpu_batch_throughput": 0,
+          "fmi_step_latency_ms": 4,
+          "restart_parity": "not-applicable",
+          "final_state_parity": true
+        },
+        {
+          "resource_index": 4,
+          "workload_events": 1000000,
+          "throughput_events_per_second": 403200,
+          "parallel_efficiency": 0.84,
+          "wall_time_seconds": 2.480159,
+          "speedup": 3.36,
+          "memory_gib": 1,
+          "io_write_gib_per_second": 0,
+          "rollback_rate": 0,
+          "gvt_lag_seconds": 0,
+          "gpu_batch_throughput": 0,
+          "fmi_step_latency_ms": 2,
+          "restart_parity": "not-applicable",
+          "final_state_parity": true
+        }
+      ],
+      "live_hpc_required": true,
+      "live_hpc_error": {
+        "schema_version": "kairoecs.hpc.scaling.live-error.v1",
+        "track_id": "55",
+        "code": "LIVE_HPC_REQUIRED",
+        "message": "Track 55 weak/strong scaling certification requires live HPC raw results; the deterministic local runner only emits non-certifying placeholders.",
+        "required_evidence": [
+          "weak scaling raw results with hardware metadata",
+          "strong scaling raw results with hardware metadata",
+          "scheduler or cloud job metadata",
+          "restart/parity raw evidence for PDES, MPI/gRPC, NUMA, I/O, GPU, and FMI components"
+        ]
+      }
+    },
+    {
+      "schema_version": "kairoecs.hpc.scaling.profile.v1",
+      "track_id": "55",
+      "mode": "weak",
+      "scenario_id": "slurm_cloud_acceptance_family",
+      "category": "scheduler",
+      "upstream_track": "54",
+      "required_runtime": "slurm/container/cloud",
+      "measurement_kind": "deterministic-local-placeholder",
+      "resource_plan": [
+        {
+          "resource_index": 1,
+          "ranks": 1,
+          "logical_processes": 4,
+          "numa_nodes": 1,
+          "gpu_devices": 0
+        },
+        {
+          "resource_index": 2,
+          "ranks": 2,
+          "logical_processes": 8,
+          "numa_nodes": 1,
+          "gpu_devices": 0
+        },
+        {
+          "resource_index": 4,
+          "ranks": 4,
+          "logical_processes": 16,
+          "numa_nodes": 2,
+          "gpu_devices": 0
+        }
+      ],
+      "samples": [
+        {
+          "resource_index": 1,
+          "workload_events": 1000000,
+          "throughput_events_per_second": 80000,
+          "parallel_efficiency": 1,
+          "wall_time_seconds": 12.5,
+          "speedup": 1,
+          "memory_gib": 0.625,
+          "io_write_gib_per_second": 0,
+          "rollback_rate": 0,
+          "gvt_lag_seconds": 0,
+          "gpu_batch_throughput": 0,
+          "fmi_step_latency_ms": 0,
+          "restart_parity": "not-applicable",
+          "final_state_parity": true
+        },
+        {
+          "resource_index": 2,
+          "workload_events": 2000000,
+          "throughput_events_per_second": 153600,
+          "parallel_efficiency": 0.96,
+          "wall_time_seconds": 13.020833,
+          "speedup": 0.96,
+          "memory_gib": 0.75,
+          "io_write_gib_per_second": 0,
+          "rollback_rate": 0,
+          "gvt_lag_seconds": 0,
+          "gpu_batch_throughput": 0,
+          "fmi_step_latency_ms": 0,
+          "restart_parity": "not-applicable",
+          "final_state_parity": true
+        },
+        {
+          "resource_index": 4,
+          "workload_events": 4000000,
+          "throughput_events_per_second": 294400,
+          "parallel_efficiency": 0.92,
+          "wall_time_seconds": 13.586957,
+          "speedup": 0.92,
+          "memory_gib": 1,
+          "io_write_gib_per_second": 0,
+          "rollback_rate": 0,
+          "gvt_lag_seconds": 0,
+          "gpu_batch_throughput": 0,
+          "fmi_step_latency_ms": 0,
+          "restart_parity": "not-applicable",
+          "final_state_parity": true
+        }
+      ],
+      "live_hpc_required": true,
+      "live_hpc_error": {
+        "schema_version": "kairoecs.hpc.scaling.live-error.v1",
+        "track_id": "55",
+        "code": "LIVE_HPC_REQUIRED",
+        "message": "Track 55 weak/strong scaling certification requires live HPC raw results; the deterministic local runner only emits non-certifying placeholders.",
+        "required_evidence": [
+          "weak scaling raw results with hardware metadata",
+          "strong scaling raw results with hardware metadata",
+          "scheduler or cloud job metadata",
+          "restart/parity raw evidence for PDES, MPI/gRPC, NUMA, I/O, GPU, and FMI components"
+        ]
+      }
+    },
+    {
+      "schema_version": "kairoecs.hpc.scaling.profile.v1",
+      "track_id": "55",
+      "mode": "strong",
+      "scenario_id": "slurm_cloud_acceptance_family",
+      "category": "scheduler",
+      "upstream_track": "54",
+      "required_runtime": "slurm/container/cloud",
+      "measurement_kind": "deterministic-local-placeholder",
+      "resource_plan": [
+        {
+          "resource_index": 1,
+          "ranks": 1,
+          "logical_processes": 4,
+          "numa_nodes": 1,
+          "gpu_devices": 0
+        },
+        {
+          "resource_index": 2,
+          "ranks": 2,
+          "logical_processes": 8,
+          "numa_nodes": 1,
+          "gpu_devices": 0
+        },
+        {
+          "resource_index": 4,
+          "ranks": 4,
+          "logical_processes": 16,
+          "numa_nodes": 2,
+          "gpu_devices": 0
+        }
+      ],
+      "samples": [
+        {
+          "resource_index": 1,
+          "workload_events": 1000000,
+          "throughput_events_per_second": 80000,
+          "parallel_efficiency": 1,
+          "wall_time_seconds": 12.5,
+          "speedup": 1,
+          "memory_gib": 0.625,
+          "io_write_gib_per_second": 0,
+          "rollback_rate": 0,
+          "gvt_lag_seconds": 0,
+          "gpu_batch_throughput": 0,
+          "fmi_step_latency_ms": 0,
+          "restart_parity": "not-applicable",
+          "final_state_parity": true
+        },
+        {
+          "resource_index": 2,
+          "workload_events": 1000000,
+          "throughput_events_per_second": 147200,
+          "parallel_efficiency": 0.92,
+          "wall_time_seconds": 6.793478,
+          "speedup": 1.84,
+          "memory_gib": 0.75,
+          "io_write_gib_per_second": 0,
+          "rollback_rate": 0,
+          "gvt_lag_seconds": 0,
+          "gpu_batch_throughput": 0,
+          "fmi_step_latency_ms": 0,
+          "restart_parity": "not-applicable",
+          "final_state_parity": true
+        },
+        {
+          "resource_index": 4,
+          "workload_events": 1000000,
+          "throughput_events_per_second": 268800,
+          "parallel_efficiency": 0.84,
+          "wall_time_seconds": 3.720238,
+          "speedup": 3.36,
+          "memory_gib": 1,
+          "io_write_gib_per_second": 0,
+          "rollback_rate": 0,
+          "gvt_lag_seconds": 0,
+          "gpu_batch_throughput": 0,
+          "fmi_step_latency_ms": 0,
+          "restart_parity": "not-applicable",
+          "final_state_parity": true
+        }
+      ],
+      "live_hpc_required": true,
+      "live_hpc_error": {
+        "schema_version": "kairoecs.hpc.scaling.live-error.v1",
+        "track_id": "55",
+        "code": "LIVE_HPC_REQUIRED",
+        "message": "Track 55 weak/strong scaling certification requires live HPC raw results; the deterministic local runner only emits non-certifying placeholders.",
+        "required_evidence": [
+          "weak scaling raw results with hardware metadata",
+          "strong scaling raw results with hardware metadata",
+          "scheduler or cloud job metadata",
+          "restart/parity raw evidence for PDES, MPI/gRPC, NUMA, I/O, GPU, and FMI components"
+        ]
+      }
+    }
+  ],
+  "live_hpc_required_errors": [
+    {
+      "schema_version": "kairoecs.hpc.scaling.live-error.v1",
+      "track_id": "55",
+      "code": "LIVE_HPC_REQUIRED",
+      "message": "Track 55 weak/strong scaling certification requires live HPC raw results; the deterministic local runner only emits non-certifying placeholders.",
+      "required_evidence": [
+        "weak scaling raw results with hardware metadata",
+        "strong scaling raw results with hardware metadata",
+        "scheduler or cloud job metadata",
+        "restart/parity raw evidence for PDES, MPI/gRPC, NUMA, I/O, GPU, and FMI components"
+      ]
+    }
+  ]
+}
