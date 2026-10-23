@@ -1,6 +1,6 @@
 {
-  "fixture": "event_log_v2_canonical_roundtrip",
-  "version": 2,
+  "fixture": "event_log_v2_conformance",
+  "version": 1,
   "schema": "kairo_ecs.event_log.v2",
   "schema_version": 2,
   "records": [
