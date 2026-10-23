@@ -9,6 +9,11 @@ use std::fmt::{Display, Formatter};
 #[cfg(feature = "arrow-native")]
 pub mod native_schema;
 
+/// Track 70 Phase 1: Polars tabular processing and interchange. Default-off,
+/// so minimal-core and Wasm builds remain free of Polars.
+#[cfg(feature = "polars-native")]
+pub mod polars_interop;
+
 pub const SCHEMA_VERSION: u16 = 1;
 pub const SCHEMA_VERSION_V2: u16 = 2;
 pub const EVENT_LOG_SCHEMA_MAJOR: u16 = 1;
@@ -223,6 +228,17 @@ impl EventLogBatch {
 
     pub fn schema(&self) -> &'static [EventLogField] {
         EVENT_LOG_FIELDS
+    }
+
+    #[cfg(feature = "polars-native")]
+    pub fn to_dataframe(&self) -> Result<polars::prelude::DataFrame, ArrowError> {
+        polars_interop::records_to_dataframe(&self.records)
+    }
+
+    #[cfg(feature = "polars-native")]
+    pub fn from_dataframe(df: &polars::prelude::DataFrame) -> Result<Self, ArrowError> {
+        let records = polars_interop::dataframe_to_records(df)?;
+        Self::new(records)
     }
 
     pub fn to_smoke_bytes(&self) -> Vec<u8> {
