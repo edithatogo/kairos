@@ -14,7 +14,7 @@ Format:
 
 ## Unreleased
 
-- `crates/kairo-ecs-arrow` adds Polars interop module definitions and failing characterization tests for Track 70 Phase 1 (Task 1.1).
+- `crates/kairo-ecs-arrow` adds Polars-native DataFrame conversion, checked 128-bit tick limb borrow arithmetic, real Parquet Zstd and Arrow IPC writers/readers, and lazy tabular transforms for Track 70 Phase 1.
 - `conformance/fixtures/event_log_v2_conformance.json` and `conformance/fixtures/manifest.json` add the canonical Schema v2 event log conformance fixture and ADR for Track 70 Task 0.4.
 - `schemas/arrow/event_log_v2.schema.json` and `crates/kairo-ecs-arrow` add the Schema v2 specification and verification contract for Track 70 Phase 0, supporting generational entity IDs (`UInt64`/`UInt32`) and full-range 128-bit simulation tick limbs (`time_ticks_hi`, `time_ticks_lo`).
 

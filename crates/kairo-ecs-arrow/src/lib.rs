@@ -230,6 +230,17 @@ impl EventLogBatch {
         EVENT_LOG_FIELDS
     }
 
+    #[cfg(feature = "polars-native")]
+    pub fn to_dataframe(&self) -> Result<polars::prelude::DataFrame, ArrowError> {
+        polars_interop::records_to_dataframe(&self.records)
+    }
+
+    #[cfg(feature = "polars-native")]
+    pub fn from_dataframe(df: &polars::prelude::DataFrame) -> Result<Self, ArrowError> {
+        let records = polars_interop::dataframe_to_records(df)?;
+        Self::new(records)
+    }
+
     pub fn to_smoke_bytes(&self) -> Vec<u8> {
         let mut lines = vec![
             format!("stream={EVENT_LOG_STREAM};schema_version={SCHEMA_VERSION}"),

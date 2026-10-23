@@ -1,6 +1,6 @@
 # Plan: Polars-native data processing and standard interchange
 
-All implementation work is pending. Write failing behavioural tests before replacement.
+Phase 0 and Phase 1 are complete. Phase 2 implementation work is pending. Write failing behavioural tests before replacement.
 
 ## Phase 0 — Baseline and dependency qualification
 
@@ -13,9 +13,9 @@ All implementation work is pending. Write failing behavioural tests before repla
 ## Phase 1 — Native tables and real formats
 
 - [x] Task 1.1: Add failing table/schema/extreme-tick/invalid-input and independent file-reader tests.
-- [ ] Task 1.2: Replace custom schemas/buffers/codecs with upstream tables and Parquet/Zstd/IPC writers; implement exact ID/tick mapping and manifest provenance.
-- [ ] Task 1.3: Replace applicable Rust tabular transforms with Polars expressions; remove obsolete encoders/readers and descriptor smoke paths; retain explicit reasons for exclusions.
-- [ ] Task 1.4: Conductor — review and verify phase (workflow.md); apply accepted fixes, record rejected/cross-owner work, receipts, clean-tree check and explicit next-phase decision.
+- [x] Task 1.2: Replace custom schemas/buffers/codecs with upstream tables and Parquet/Zstd/IPC writers; implement exact ID/tick mapping and manifest provenance.
+- [x] Task 1.3: Replace applicable Rust tabular transforms with Polars expressions; remove obsolete encoders/readers and descriptor smoke paths; retain explicit reasons for exclusions.
+- [x] Task 1.4: Conductor — review and verify phase (workflow.md); apply accepted fixes, record rejected/cross-owner work, receipts, clean-tree check and explicit next-phase decision.
 
 ## Phase 2 — FFI and polyglot consumers
 
