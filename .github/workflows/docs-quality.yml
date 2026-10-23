@@ -15,6 +15,8 @@ on:
       - 'tests/test_dependency_advisory_pins.py'
       - 'tests/fixtures/http-cache-semantics-4.3.0.tgz'
       - 'tests/http-cache-security-regression.mjs'
+      - 'scripts/prepare_mermaid_runtime.mjs'
+      - 'tests/mermaid-runtime.test.mjs'
       - 'tools/docs-quality-node-tools/package.json'
       - 'tools/docs-quality-node-tools/package-lock.json'
       - '*.md'

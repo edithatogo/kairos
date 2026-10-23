@@ -86,6 +86,10 @@ class DependencyAdvisoryPinTests(unittest.TestCase):
         for name in ['docs-quality.yml', 'docs.yml']:
             with self.subTest(workflow=name):
                 workflow = (ROOT / '.github/workflows' / name).read_text()
+                if name == 'docs-quality.yml':
+                    paths = workflow.split('  pull_request:', 1)[1].split('  push:', 1)[0]
+                    for source in ['scripts/prepare_mermaid_runtime.mjs', 'tests/mermaid-runtime.test.mjs']:
+                        self.assertIn("      - '" + source + "'", paths)
                 if name == 'docs.yml':
                     self.assertIn('  pull_request:', workflow)
                     self.assertIn("if: github.ref == 'refs/heads/main'", workflow)
