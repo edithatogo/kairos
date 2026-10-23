@@ -14,6 +14,7 @@ Format:
 
 ## Unreleased
 
+- `conformance/fixtures/event_log_v2_conformance.json` and `conformance/fixtures/manifest.json` add the canonical Schema v2 event log conformance fixture and ADR for Track 70 Task 0.4.
 - `schemas/arrow/event_log_v2.schema.json` and `crates/kairo-ecs-arrow` add the Schema v2 specification and verification contract for Track 70 Phase 0, supporting generational entity IDs (`UInt64`/`UInt32`) and full-range 128-bit simulation tick limbs (`time_ticks_hi`, `time_ticks_lo`).
 
 - Wave 9 (`Tracks 62–66`) implementation:

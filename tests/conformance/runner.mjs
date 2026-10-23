@@ -12,6 +12,7 @@ export const REQUIRED_READY_FIXTURE_IDS = Object.freeze([
 export const OPTIONAL_READY_FIXTURE_IDS = Object.freeze([
   'zero_delay_guard_v1',
   'pdes_conservative_parity_v1',
+  'event_log_v2_conformance',
 ]);
 
 const KNOWN_READY_FIXTURE_IDS = Object.freeze([

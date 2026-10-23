@@ -7,7 +7,7 @@ All implementation work is pending. Write failing behavioural tests before repla
 - [x] Task 0.1: Inventory every applicable Rust/binding/script data path and caller; record replace/retain/remove decisions, raw baselines and ownership handoffs from Tracks 04/62/63/66.
 - [x] Task 0.2: Add failing independent interoperability, full-range tick, join/cardinality and ABI ownership tests before replacement; establish real baseline behaviours rather than trusting Done labels.
 - [x] Task 0.3: Qualify and pin compatible Polars/Arrow versions, feature set, licence/advisory/MSRV and packaging constraints on the canonical toolchain; prove minimal-core/Wasm feature isolation and no duplicate full table representation.
-- [ ] Task 0.4: Review ADR, versioned schema/ABI compatibility assessment, fixture changes and red-team objections; capture approved contract and source/dependency hashes.
+- [x] Task 0.4: Review ADR, versioned schema/ABI compatibility assessment, fixture changes and red-team objections; capture approved contract and source/dependency hashes.
 - [ ] Task 0.5: Conductor — review and verify phase (workflow.md); apply accepted fixes, record rejected/cross-owner work, receipts, clean-tree check and explicit next-phase decision.
 
 ## Phase 1 — Native tables and real formats
