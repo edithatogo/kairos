@@ -8,25 +8,34 @@ use std::time::Instant;
 
 #[test]
 fn test_metal_device_hardware_provenance_and_availability() {
-    let backend = MetalBackend::new();
-    let caps = backend.capabilities();
+    #[cfg(not(target_os = "macos"))]
+    {
+        // On non-macOS CI runners, Metal is not supported and falls back gracefully
+        return;
+    }
 
-    assert_eq!(caps.backend_name, METAL_BACKEND_NAME);
-    // When run on macOS with Apple Silicon GPU, backend must be Available and not CpuFallback
-    assert_eq!(
-        caps.availability,
-        GpuBackendAvailability::Available,
-        "Native Apple Silicon Metal device must report Available"
-    );
-    assert!(caps.supports_unified_memory);
-    assert!(caps.supports_zero_copy_borrow);
+    #[cfg(target_os = "macos")]
+    {
+        let backend = MetalBackend::new();
+        let caps = backend.capabilities();
 
-    let info = backend.adapter_info();
-    assert!(
-        info.adapter_name.contains("Apple"),
-        "Hardware adapter provenance must identify Apple Silicon device: got {}",
-        info.adapter_name
-    );
+        assert_eq!(caps.backend_name, METAL_BACKEND_NAME);
+        // When run on macOS with Apple Silicon GPU, backend must be Available and not CpuFallback
+        assert_eq!(
+            caps.availability,
+            GpuBackendAvailability::Available,
+            "Native Apple Silicon Metal device must report Available"
+        );
+        assert!(caps.supports_unified_memory);
+        assert!(caps.supports_zero_copy_borrow);
+
+        let info = backend.adapter_info();
+        assert!(
+            info.adapter_name.contains("Apple"),
+            "Hardware adapter provenance must identify Apple Silicon device: got {}",
+            info.adapter_name
+        );
+    }
 }
 
 #[test]
