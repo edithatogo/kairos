@@ -12,12 +12,13 @@ import subprocess
 
 ROOT = Path(__file__).resolve().parents[2]
 
-# These hashes bind the reviewed bootstrap candidate files; its source base is ad3379dade50ece748eec3f47e85aa56605beec7.
+# These hashes bind the reviewed bootstrap files. The preparer adds explicit level-9
+# compression for Python 3.15; its generated artifact still matches the existing lock.
 # The receipt records the actual execution commit separately.
 EXPECTED_SOURCE_SHA256 = {
     "scripts/bootstrap-node-tools/package.json": "f8517b245bd1abb7882faa4368c929d8f2cd8344dadf217b564ac1065bb0480f",
     "scripts/bootstrap-node-tools/package-lock.json": "758ec4b68464cafe2e9835ceaee219375fd956b33d59367027ffaec447f8e913",
-    "scripts/bootstrap-node-tools/prepare_npm_cli.py": "0cee106407770720eccc23a589eeb71b9f30e27ce698935f0acce30218488f50",
+    "scripts/bootstrap-node-tools/prepare_npm_cli.py": "4a1c15a7e36d7f1a1dfebb9adad6c7487fc1c54d862b2bd23e4a5196d54b7043",
     "scripts/bootstrap-node-tools/validate_npm_cli.mjs": "1a036da08b4172810610c5cc68f484452acd812c6c43ee4c75eaee0a012d7472",
 }
 EXPECTED_NPM_CLI_SHA256 = "8e5f6f3429f8cdbe693cdc29904e9d5a7b127a494bd15c804bd54c7403bfcbe7"
