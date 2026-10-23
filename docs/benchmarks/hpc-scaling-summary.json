@@ -1,0 +1,359 @@
+{
+  "schema_version": "kairoecs.hpc.scaling.aggregate.v1",
+  "track_id": "55",
+  "aggregator": "benches/hpc-scaling-certification/aggregate.mjs",
+  "input_count": 1,
+  "profile_summary": {
+    "weak": {
+      "profile_count": 8,
+      "sample_count": 24,
+      "min_parallel_efficiency": 0.92,
+      "max_resource_index": 4,
+      "measurement_kind": "deterministic-local-placeholder",
+      "certification_status": "not-certified-live-hpc-required"
+    },
+    "strong": {
+      "profile_count": 8,
+      "sample_count": 24,
+      "min_parallel_efficiency": 0.84,
+      "max_resource_index": 4,
+      "measurement_kind": "deterministic-local-placeholder",
+      "certification_status": "not-certified-live-hpc-required"
+    }
+  },
+  "component_summary": {
+    "pdes": {
+      "scenario_ids": [
+        "des_event_queue_baseline",
+        "distributed_time_warp_sync"
+      ],
+      "profile_count": 4,
+      "sample_count": 12,
+      "local_placeholder_parity": true,
+      "restart_parity_placeholders": 0,
+      "proof_status": "live-hpc-required",
+      "live_hpc_required": true,
+      "live_hpc_error": {
+        "code": "LIVE_HPC_REQUIRED",
+        "component": "pdes",
+        "message": "Track 55 pdes certification requires live HPC raw-result evidence; local placeholder aggregation is not proof.",
+        "required_evidence": [
+          "immutable raw-result reference",
+          "sha256 checksum",
+          "hardware metadata",
+          "scheduler or runtime metadata",
+          "restart/parity evidence where applicable"
+        ]
+      }
+    },
+    "mpi": {
+      "scenario_ids": [
+        "mpi_grpc_entity_migration"
+      ],
+      "profile_count": 2,
+      "sample_count": 6,
+      "local_placeholder_parity": true,
+      "restart_parity_placeholders": 0,
+      "proof_status": "live-hpc-required",
+      "live_hpc_required": true,
+      "live_hpc_error": {
+        "code": "LIVE_HPC_REQUIRED",
+        "component": "mpi",
+        "message": "Track 55 mpi certification requires live HPC raw-result evidence; local placeholder aggregation is not proof.",
+        "required_evidence": [
+          "immutable raw-result reference",
+          "sha256 checksum",
+          "hardware metadata",
+          "scheduler or runtime metadata",
+          "restart/parity evidence where applicable"
+        ]
+      }
+    },
+    "numa": {
+      "scenario_ids": [
+        "numa_parallel_io_restart"
+      ],
+      "profile_count": 2,
+      "sample_count": 6,
+      "local_placeholder_parity": true,
+      "restart_parity_placeholders": 6,
+      "proof_status": "live-hpc-required",
+      "live_hpc_required": true,
+      "live_hpc_error": {
+        "code": "LIVE_HPC_REQUIRED",
+        "component": "numa",
+        "message": "Track 55 numa certification requires live HPC raw-result evidence; local placeholder aggregation is not proof.",
+        "required_evidence": [
+          "immutable raw-result reference",
+          "sha256 checksum",
+          "hardware metadata",
+          "scheduler or runtime metadata",
+          "restart/parity evidence where applicable"
+        ]
+      }
+    },
+    "io": {
+      "scenario_ids": [
+        "hybrid_pdes_abm_checkpoint",
+        "numa_parallel_io_restart"
+      ],
+      "profile_count": 4,
+      "sample_count": 12,
+      "local_placeholder_parity": true,
+      "restart_parity_placeholders": 12,
+      "proof_status": "live-hpc-required",
+      "live_hpc_required": true,
+      "live_hpc_error": {
+        "code": "LIVE_HPC_REQUIRED",
+        "component": "io",
+        "message": "Track 55 io certification requires live HPC raw-result evidence; local placeholder aggregation is not proof.",
+        "required_evidence": [
+          "immutable raw-result reference",
+          "sha256 checksum",
+          "hardware metadata",
+          "scheduler or runtime metadata",
+          "restart/parity evidence where applicable"
+        ]
+      }
+    },
+    "gpu": {
+      "scenario_ids": [
+        "abm_agent_transition_batch"
+      ],
+      "profile_count": 2,
+      "sample_count": 6,
+      "local_placeholder_parity": true,
+      "restart_parity_placeholders": 0,
+      "proof_status": "live-hpc-required",
+      "live_hpc_required": true,
+      "live_hpc_error": {
+        "code": "LIVE_HPC_REQUIRED",
+        "component": "gpu",
+        "message": "Track 55 gpu certification requires live HPC raw-result evidence; local placeholder aggregation is not proof.",
+        "required_evidence": [
+          "immutable raw-result reference",
+          "sha256 checksum",
+          "hardware metadata",
+          "scheduler or runtime metadata",
+          "restart/parity evidence where applicable"
+        ]
+      }
+    },
+    "fmi": {
+      "scenario_ids": [
+        "fmi_cosim_checkpoint_family"
+      ],
+      "profile_count": 2,
+      "sample_count": 6,
+      "local_placeholder_parity": true,
+      "restart_parity_placeholders": 0,
+      "proof_status": "live-hpc-required",
+      "live_hpc_required": true,
+      "live_hpc_error": {
+        "code": "LIVE_HPC_REQUIRED",
+        "component": "fmi",
+        "message": "Track 55 fmi certification requires live HPC raw-result evidence; local placeholder aggregation is not proof.",
+        "required_evidence": [
+          "immutable raw-result reference",
+          "sha256 checksum",
+          "hardware metadata",
+          "scheduler or runtime metadata",
+          "restart/parity evidence where applicable"
+        ]
+      }
+    },
+    "scheduler": {
+      "scenario_ids": [
+        "slurm_cloud_acceptance_family"
+      ],
+      "profile_count": 2,
+      "sample_count": 6,
+      "local_placeholder_parity": true,
+      "restart_parity_placeholders": 0,
+      "proof_status": "live-hpc-required",
+      "live_hpc_required": true,
+      "live_hpc_error": {
+        "code": "LIVE_HPC_REQUIRED",
+        "component": "scheduler",
+        "message": "Track 55 scheduler certification requires live HPC raw-result evidence; local placeholder aggregation is not proof.",
+        "required_evidence": [
+          "immutable raw-result reference",
+          "sha256 checksum",
+          "hardware metadata",
+          "scheduler or runtime metadata",
+          "restart/parity evidence where applicable"
+        ]
+      }
+    }
+  },
+  "restart_parity_aggregation": [
+    {
+      "scenario_id": "hybrid_pdes_abm_checkpoint",
+      "mode": "weak",
+      "measurement_kind": "deterministic-local-placeholder",
+      "placeholder_restart_samples": 3,
+      "final_state_parity": true,
+      "proof_status": "live-hpc-required",
+      "live_hpc_error": {
+        "code": "LIVE_HPC_REQUIRED",
+        "component": "restart-parity",
+        "message": "Track 55 restart-parity certification requires live HPC raw-result evidence; local placeholder aggregation is not proof.",
+        "required_evidence": [
+          "immutable raw-result reference",
+          "sha256 checksum",
+          "hardware metadata",
+          "scheduler or runtime metadata",
+          "restart/parity evidence where applicable"
+        ]
+      }
+    },
+    {
+      "scenario_id": "hybrid_pdes_abm_checkpoint",
+      "mode": "strong",
+      "measurement_kind": "deterministic-local-placeholder",
+      "placeholder_restart_samples": 3,
+      "final_state_parity": true,
+      "proof_status": "live-hpc-required",
+      "live_hpc_error": {
+        "code": "LIVE_HPC_REQUIRED",
+        "component": "restart-parity",
+        "message": "Track 55 restart-parity certification requires live HPC raw-result evidence; local placeholder aggregation is not proof.",
+        "required_evidence": [
+          "immutable raw-result reference",
+          "sha256 checksum",
+          "hardware metadata",
+          "scheduler or runtime metadata",
+          "restart/parity evidence where applicable"
+        ]
+      }
+    },
+    {
+      "scenario_id": "numa_parallel_io_restart",
+      "mode": "weak",
+      "measurement_kind": "deterministic-local-placeholder",
+      "placeholder_restart_samples": 3,
+      "final_state_parity": true,
+      "proof_status": "live-hpc-required",
+      "live_hpc_error": {
+        "code": "LIVE_HPC_REQUIRED",
+        "component": "restart-parity",
+        "message": "Track 55 restart-parity certification requires live HPC raw-result evidence; local placeholder aggregation is not proof.",
+        "required_evidence": [
+          "immutable raw-result reference",
+          "sha256 checksum",
+          "hardware metadata",
+          "scheduler or runtime metadata",
+          "restart/parity evidence where applicable"
+        ]
+      }
+    },
+    {
+      "scenario_id": "numa_parallel_io_restart",
+      "mode": "strong",
+      "measurement_kind": "deterministic-local-placeholder",
+      "placeholder_restart_samples": 3,
+      "final_state_parity": true,
+      "proof_status": "live-hpc-required",
+      "live_hpc_error": {
+        "code": "LIVE_HPC_REQUIRED",
+        "component": "restart-parity",
+        "message": "Track 55 restart-parity certification requires live HPC raw-result evidence; local placeholder aggregation is not proof.",
+        "required_evidence": [
+          "immutable raw-result reference",
+          "sha256 checksum",
+          "hardware metadata",
+          "scheduler or runtime metadata",
+          "restart/parity evidence where applicable"
+        ]
+      }
+    }
+  ],
+  "certification_status": "blocked-live-hpc-required",
+  "claim_boundary": "Deterministic local placeholders validate Track 55 aggregation only; they do not certify weak scaling, strong scaling, restart parity, or HPC parity.",
+  "live_hpc_required_errors": [
+    {
+      "code": "LIVE_HPC_REQUIRED",
+      "component": "pdes",
+      "message": "Track 55 pdes certification requires live HPC raw-result evidence; local placeholder aggregation is not proof.",
+      "required_evidence": [
+        "immutable raw-result reference",
+        "sha256 checksum",
+        "hardware metadata",
+        "scheduler or runtime metadata",
+        "restart/parity evidence where applicable"
+      ]
+    },
+    {
+      "code": "LIVE_HPC_REQUIRED",
+      "component": "mpi",
+      "message": "Track 55 mpi certification requires live HPC raw-result evidence; local placeholder aggregation is not proof.",
+      "required_evidence": [
+        "immutable raw-result reference",
+        "sha256 checksum",
+        "hardware metadata",
+        "scheduler or runtime metadata",
+        "restart/parity evidence where applicable"
+      ]
+    },
+    {
+      "code": "LIVE_HPC_REQUIRED",
+      "component": "numa",
+      "message": "Track 55 numa certification requires live HPC raw-result evidence; local placeholder aggregation is not proof.",
+      "required_evidence": [
+        "immutable raw-result reference",
+        "sha256 checksum",
+        "hardware metadata",
+        "scheduler or runtime metadata",
+        "restart/parity evidence where applicable"
+      ]
+    },
+    {
+      "code": "LIVE_HPC_REQUIRED",
+      "component": "io",
+      "message": "Track 55 io certification requires live HPC raw-result evidence; local placeholder aggregation is not proof.",
+      "required_evidence": [
+        "immutable raw-result reference",
+        "sha256 checksum",
+        "hardware metadata",
+        "scheduler or runtime metadata",
+        "restart/parity evidence where applicable"
+      ]
+    },
+    {
+      "code": "LIVE_HPC_REQUIRED",
+      "component": "gpu",
+      "message": "Track 55 gpu certification requires live HPC raw-result evidence; local placeholder aggregation is not proof.",
+      "required_evidence": [
+        "immutable raw-result reference",
+        "sha256 checksum",
+        "hardware metadata",
+        "scheduler or runtime metadata",
+        "restart/parity evidence where applicable"
+      ]
+    },
+    {
+      "code": "LIVE_HPC_REQUIRED",
+      "component": "fmi",
+      "message": "Track 55 fmi certification requires live HPC raw-result evidence; local placeholder aggregation is not proof.",
+      "required_evidence": [
+        "immutable raw-result reference",
+        "sha256 checksum",
+        "hardware metadata",
+        "scheduler or runtime metadata",
+        "restart/parity evidence where applicable"
+      ]
+    },
+    {
+      "code": "LIVE_HPC_REQUIRED",
+      "component": "scheduler",
+      "message": "Track 55 scheduler certification requires live HPC raw-result evidence; local placeholder aggregation is not proof.",
+      "required_evidence": [
+        "immutable raw-result reference",
+        "sha256 checksum",
+        "hardware metadata",
+        "scheduler or runtime metadata",
+        "restart/parity evidence where applicable"
+      ]
+    }
+  ]
+}

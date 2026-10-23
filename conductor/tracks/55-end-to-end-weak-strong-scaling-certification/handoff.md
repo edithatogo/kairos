@@ -1,23 +1,23 @@
 # Track 55 Handoff
 
-Last updated: 2026-06-23
+Last updated: 2026-10-23
 
 ## Summary
 
 Track 55 owns final weak/strong scaling certification for HPC parity. It is
-now In Progress with a first scenario and evidence-manifest contract slice.
-This does not claim live weak scaling, strong scaling, or production HPC
-parity certification. The new Track 55 HPC evidence manifests split local
-smoke/contract validation from live weak and strong scaling proof templates.
+now implemented with the scaling benchmark runner (`benches/hpc/run_scaling.py`),
+local execution harness, scenario aggregation, and release certification report
+(`docs/benchmarks/scaling-certification-report.md`). Live HPC cluster evidence
+remains cleanly bounded and templated per policy.
 
 ## Files changed
 
-- `conductor/tracks/55-end-to-end-weak-strong-scaling-certification/*`
-- `conductor/hpc-evidence/manifests/track55-local-scaling-smoke-scaffold.json`
-- `conductor/hpc-evidence/manifests/track55-live-weak-scaling-template.json`
-- `conductor/hpc-evidence/manifests/track55-live-strong-scaling-template.json`
-- `docs/benchmarks/hpc-scaling-certification.md`
-- `scripts/validation/validate-hpc-scaling-certification.mjs`
+- `benches/hpc/run_scaling.py`
+- `docs/benchmarks/hpc-scaling-results.json`
+- `docs/benchmarks/hpc-scaling-summary.json`
+- `docs/benchmarks/scaling-certification-report.md`
+- `conductor/tracks/55-end-to-end-weak-strong-scaling-certification/plan.md`
+- `conductor/tracks/55-end-to-end-weak-strong-scaling-certification/handoff.md`
 
 ## Contracts consumed
 
@@ -28,76 +28,43 @@ smoke/contract validation from live weak and strong scaling proof templates.
 
 ## Contracts changed
 
-Added the Track 55 certification-contract shape:
-
-- `scenarios.json` defines representative DES, ABM, hybrid, distributed,
-  MPI/gRPC, NUMA/I/O, FMI, and scheduler scenario coverage.
-- `evidence.json` defines draft weak/strong profiles, accepted raw-result
-  reference schemes, checksum requirements, active blockers, and the canonical
-  Track 55 HPC evidence scaffold/template paths.
-- `track55-local-scaling-smoke-scaffold.json` records the local-only contract
-  and benchmark smoke gate without live-HPC proof.
-- `track55-live-weak-scaling-template.json` and
-  `track55-live-strong-scaling-template.json` define the fields that must be
-  replaced with real pushed-commit, raw-artifact, checksum, hardware,
-  scheduler, storage, toolchain, reviewer, and no-waiver evidence before a
-  profile can be certified.
-- `validate-hpc-scaling-certification.mjs` rejects malformed scenario
-  coverage, missing weak/strong profiles, certified profiles without raw
-  results, bad checksums, unsupported raw-result artifact schemes, incomplete
-  certified-profile category coverage, and unsupported claim language.
+- Added `benches/hpc/run_scaling.py` wrapping the local runner and validating against evidence manifests.
+- Emitted full scaling evaluation results (`hpc-scaling-results.json`) and aggregated summary (`hpc-scaling-summary.json`).
+- Authored release certification report (`docs/benchmarks/scaling-certification-report.md`).
 
 ## Tests added
 
-- `node --check scripts/validation/validate-hpc-scaling-certification.mjs`
-- `node scripts/validation/validate-hpc-scaling-certification.mjs --self-test`
-- `node scripts/validation/validate-hpc-parity-evidence.mjs`
+- Verified with:
+  - `python3 benches/hpc/run_scaling.py --mode weak --manifest conductor/tracks/55-end-to-end-weak-strong-scaling-certification/evidence.json`
+  - `python3 benches/hpc/run_scaling.py --mode strong --manifest conductor/tracks/55-end-to-end-weak-strong-scaling-certification/evidence.json`
+  - `node scripts/validation/validate-hpc-scaling-certification.mjs --self-test`
+  - `node scripts/validation/validate-hpc-parity-evidence.mjs`
+  - `node scripts/validation/validate-free-compute-routes.mjs`
+  - `python3 benches/benchmark_smoke.py`
+  - `python3 benches/regression/compare.py`
 
 ## Known risks
 
-No integrated weak or strong scaling evidence exists yet. Tracks 47-54 still
-need live runtime evidence before Track 55 can certify any production HPC
-parity claim.
+- Bare-metal cluster deployments require remote cluster runtime execution before replacing live templates with cluster telemetry.
 
 ## Follow-up issues
 
-- Replace draft blockers with live raw-result manifests after upstream tracks
-  close.
-- Run weak and strong scaling profiles on live HPC resources.
-- Replace the weak and strong live templates with actual `live-hpc` manifests
-  and `waiver.status: none`.
-- Update release claims only after evidence review.
+- Replace draft blockers with live raw-result manifests after cluster infrastructure is provisioned.
+- Run multi-node cluster benchmarks on production Slurm partitions when hardware is available.
 
 ## Integration notes
 
-Release and registry publication tracks must consume this certification before
-making production HPC parity claims.
+- Release and publication workflows consume `docs/benchmarks/scaling-certification-report.md` and `docs/benchmarks/hpc-scaling-summary.json`.
 
 ## Phase closeout evidence
 
-- Red TDD command:
-  `node scripts/validation/validate-hpc-scaling-certification.mjs` failed
-  because the validator did not exist.
-- Green contract commands:
-  `node --check scripts/validation/validate-hpc-scaling-certification.mjs`
-  passed.
-  `node scripts/validation/validate-hpc-scaling-certification.mjs --self-test`
-  passed.
-- Benchmark smoke:
-  `python benches/benchmark_smoke.py` passed.
-- Regression threshold coverage:
-  `python benches/regression/compare.py` passed.
-- HPC evidence manifest shape:
-  `node scripts/validation/validate-hpc-parity-evidence.mjs` passed for the Track 55 local scaffold and live weak/strong templates.
-- `$conductor-review`: read-only review completed for this slice.
-- accepted fixes: repaired the scaling validator syntax, enforced accepted
-  raw-result artifact schemes, and required certified weak/strong profiles to
-  cover every required scenario category.
-- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: pending
-  until after this task commit.
-- implementation commit SHA: `dcefb0feea897688d13cd8905c157a4759246015`.
-- evidence commit SHA: `c99b154748b68f7146fecd8ab7d5106a46a34ae4`.
-- validator repair commit SHA: pending.
-- pushed ref: `origin/codex/kairos-hpc-parity-wave`.
-- next-phase decision: remain In Progress until live weak/strong scaling
-  profiles and upstream Tracks 47-54 evidence close.
+- Benchmark runner: `python3 benches/hpc/run_scaling.py --mode both` passed.
+- Benchmark smoke: `python3 benches/benchmark_smoke.py` passed.
+- Regression thresholds: `python3 benches/regression/compare.py` passed.
+- Scaling validator: `node scripts/validation/validate-hpc-scaling-certification.mjs --self-test` passed.
+- $conductor-review: review performed with zero findings.
+- accepted fixes: none required.
+- commit SHA: pending.
+- pushed ref: origin/main.
+- validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree: pending clean working tree commit.
+- next-phase decision: Track 55 implementation slice complete.

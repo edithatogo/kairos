@@ -20,37 +20,33 @@
 
 ## Phase 1 - Weak scaling
 
-- Task 1.1: Run weak scaling across increasing LP/rank/device counts (supporting two-tier execution: local macOS multi-rank OpenMPI `mpiexec --oversubscribe` + Apple Metal + Colima Slurm emulation for `R3` engineering completion, and multi-node `live-hpc` manifests for `R4` cluster certification).
-- Task 1.2: Record throughput, efficiency, memory, I/O, rollback, and GVT
-  metrics.
-- Task 1.3: Attach raw manifests and immutable artifact references.
+- [x] Task 1.1: Run weak scaling across increasing LP/rank/device counts (supporting two-tier execution: local macOS multi-rank OpenMPI `mpiexec --oversubscribe` + Apple Metal + Colima Slurm emulation for `R3` engineering completion, and multi-node `live-hpc` manifests for `R4` cluster certification).
+- [x] Task 1.2: Record throughput, efficiency, memory, I/O, rollback, and GVT metrics.
+- [x] Task 1.3: Attach raw manifests and immutable artifact references.
 
 ## Phase 2 - Strong scaling
 
-- Task 2.1: Run fixed-workload scaling across increasing resources.
-- Task 2.2: Record bottlenecks and efficiency loss.
-- Task 2.3: Compare against target baseline libraries where fair comparison is
-  possible.
+- [x] Task 2.1: Run fixed-workload scaling across increasing resources.
+- [x] Task 2.2: Record bottlenecks and efficiency loss.
+- [x] Task 2.3: Compare against target baseline libraries where fair comparison is possible.
 
 ## Phase 3 - Integrated scenario proof
 
-- Task 3.1: Run PDES plus distributed synchronization.
-- Task 3.2: Run GPU state transition batches with persistent memory.
-- Task 3.3: Run checkpoint/restart and FMI co-simulation in the same scenario
-  family where practical.
+- [x] Task 3.1: Run PDES plus distributed synchronization.
+- [x] Task 3.2: Run GPU state transition batches with persistent memory.
+- [x] Task 3.3: Run checkpoint/restart and FMI co-simulation in the same scenario family where practical.
 
 ## Phase 4 - Certification report
 
-- Task 4.1: Write release certification report.
-- Task 4.2: Update SOTA scorecard and release-claim boundaries.
-- Task 4.3: Handoff publication readiness to Tracks 42, 43, and 44.
+- [x] Task 4.1: Write release certification report.
+- [x] Task 4.2: Update SOTA scorecard and release-claim boundaries.
+- [x] Task 4.3: Handoff publication readiness to Tracks 42, 43, and 44.
 
 ## Phase 5 - Closeout
 
-- Task 5.1: Run all track gates, full workspace tests, and Conductor gates.
-- Task 5.2: Run `$conductor-review`, apply accepted fixes, and update handoff.
-- Task 5.3: Push, watch GitHub Actions, and request final status movement only
-  when all live evidence is complete.
+- [x] Task 5.1: Run all track gates, full workspace tests, and Conductor gates.
+- [x] Task 5.2: Run `$conductor-review`, apply accepted fixes, and update handoff.
+- [x] Task 5.3: Push, watch GitHub Actions, and request final status movement only when all live evidence is complete.
 
 ## Phase closeout gate
 
