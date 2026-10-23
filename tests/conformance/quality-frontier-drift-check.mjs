@@ -99,7 +99,7 @@ const hosted = {
   availability: {
     ruleset: true, protection: true, actions: true, workflowPermissions: true,
     selectedActions: true, privateReporting: true, mainRenovate: true, mainContextFiles: true,
-    renovateActivity: true,
+    renovateDashboard: true, renovateActivity: true,
     mainChecks: true, mainStatuses: true, mainCiSkipGuard: true,
   },
 };
@@ -107,6 +107,15 @@ const hosted = {
 const complete = evaluateDrift({ source, hosted });
 assert.equal(complete.status, 'pass');
 assert.ok(complete.checks.every((check) => check.status === 'pass'));
+
+const editUnavailable = evaluateDrift({ source, hosted: { ...hosted,
+  availability: { ...hosted.availability, renovateActivity: false } } });
+assert.equal(editUnavailable.checks.find(c => c.name === 'renovate_dashboard_present').status, 'pass');
+assert.equal(editUnavailable.checks.find(c => c.name === 'renovate_refresh_after_integration').status, 'unavailable');
+const presenceUnavailable = evaluateDrift({ source, hosted: { ...hosted,
+  availability: { ...hosted.availability, renovateDashboard: false } } });
+assert.equal(presenceUnavailable.checks.find(c => c.name === 'renovate_dashboard_present').status, 'unavailable');
+assert.equal(presenceUnavailable.checks.find(c => c.name === 'renovate_refresh_after_integration').status, 'pass');
 
 const pending = evaluateDrift({
   source,

@@ -204,7 +204,7 @@ function evaluateDrift({ source, hosted }) {
 
   const dashboardPresent = hosted.renovateDashboard?.state === 'open' && hosted.renovateDashboard?.author === 'renovate[bot]';
   addCheck(checks, 'renovate_dashboard_present', true, dashboardPresent,
-    checkStatus(hosted, 'renovateActivity'));
+    checkStatus(hosted, 'renovateDashboard'));
   const renovateRefreshStatus = checkStatus(hosted, 'renovateActivity') ?? (hosted.integrationPending
     ? 'pending'
     : (hosted.renovateRefreshedAfterIntegration ? 'pass' : 'pending'));
@@ -460,6 +460,7 @@ function collectHosted(repository, source) {
       mainRenovate: mainRenovateResult.ok,
       mainContextFiles: true,
       mainCiSkipGuard: true,
+      renovateDashboard: renovateDashboardResult.ok,
       renovateActivity: dashboardEditAvailable || renovateRefreshEvidence.length > 0,
       mainChecks: Array.isArray(mainChecks),
       mainStatuses: Array.isArray(mainStatuses),
