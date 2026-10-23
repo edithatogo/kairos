@@ -1,0 +1,93 @@
+{
+  "tested_commit": "be955a5fbe493f6371151cb17d71cc36bd087988",
+  "tested_tree": "81694f28fa60efc80416fb666a23af4d9be9053c",
+  "cwd": "/Volumes/PortableSSD/codex-worktrees/kairos-conductor-catalogue",
+  "seed": null,
+  "seed_reason": "Documentation catalogue checks; no simulation input",
+  "source_hashes": {
+    "conductor/quality-gates.md": "2f9dd9fa3060c5c42b40dabccc6ff2d7f827d9a06c8573ed477bd13945b07b4c",
+    "conductor/tracks.yaml": "7df3ae63188af895be974a774127db183f1a9dd7af93edd6e5898697be8868f9",
+    "scripts/validate_track_no_skip_claims.ps1": "8ffd4244d0797fe733762d6cc56fb9c9bd1501150750ef167f1af6e11b1f09b2"
+  },
+  "tools": {
+    "python": "Python 3.15.1",
+    "pwsh": "7.6.8",
+    "node": "v26.12.1"
+  },
+  "results": [
+    {
+      "id": "no-skip",
+      "argv": [
+        "pwsh",
+        "-NoProfile",
+        "-File",
+        "scripts/validate_track_no_skip_claims.ps1"
+      ],
+      "started_at": "2026-10-23T12:21:06.558738+00:00",
+      "exit_status": 0,
+      "output": "conductor/evidence/gate-catalogue-20261023/no-skip.log",
+      "sha256": "0d8e63643660e5cfe336e943c6b09053bfe864c4b8ad70576d99cee7220a50a4"
+    },
+    {
+      "id": "registry-scan",
+      "argv": [
+        ".venv/bin/python",
+        "-c",
+        "from pathlib import Path\nimport re\nrequired=set(); active=False\nfor line in Path('conductor/tracks.yaml').read_text().splitlines():\n    if re.match(r'^    required_gates:\\s*$', line): active=True\n    elif active and (m:=re.match(r'^      - ([a-z][a-z0-9-]*)\\s*$', line)): required.add(m[1])\n    elif re.match(r'^    [a-z_]+:', line): active=False\ndefined=re.findall(r'\\*\\*([a-z][a-z0-9-]*)\\*\\*', Path('conductor/quality-gates.md').read_text())\nassert not required-set(defined), sorted(required-set(defined))\nrepaired=['boundary-channel-capacity-backpressure','asynchronous-handover-two-phase-commit','transfer-provenance-event-continuity',*[f'dependency-{i}-behaviour' for i in range(93,105)]]\nassert all(defined.count(g)==1 for g in repaired)\nprint(f'{len(required)} registry gate IDs present; {len(repaired)} repaired IDs each defined once.')\n"
+      ],
+      "started_at": "2026-10-23T12:21:11.691985+00:00",
+      "exit_status": 0,
+      "output": "conductor/evidence/gate-catalogue-20261023/registry-scan.log",
+      "sha256": "17ea8cd2d4e5d9cef197dca15314acbe5983f61595e6a01a7732b42a1c0d17dd"
+    },
+    {
+      "id": "phase-gates",
+      "argv": [
+        "pwsh",
+        "-NoProfile",
+        "-File",
+        "scripts/validate_conductor_phase_gates.ps1"
+      ],
+      "started_at": "2026-10-23T12:21:11.732758+00:00",
+      "exit_status": 0,
+      "output": "conductor/evidence/gate-catalogue-20261023/phase-gates.log",
+      "sha256": "adfb3a1b1335bcc0c11862ff3968bad10d42656554bdd2007bd29739e4d883c2"
+    },
+    {
+      "id": "dag",
+      "argv": [
+        "pwsh",
+        "-NoProfile",
+        "-File",
+        "scripts/validate_conductor_dag.ps1"
+      ],
+      "started_at": "2026-10-23T12:21:17.502382+00:00",
+      "exit_status": 0,
+      "output": "conductor/evidence/gate-catalogue-20261023/dag.log",
+      "sha256": "3de5436fe7c60bcc39340c42d2e0daea2afeb6e5cc16a836cc8f0d81d1f61046"
+    },
+    {
+      "id": "free-compute",
+      "argv": [
+        "node",
+        "scripts/validation/validate-free-compute-routes.mjs"
+      ],
+      "started_at": "2026-10-23T12:21:21.386353+00:00",
+      "exit_status": 0,
+      "output": "conductor/evidence/gate-catalogue-20261023/free-compute.log",
+      "sha256": "3a7dcf2d1a12b30d5ae410558559f3461f6138630409a8f41983a303685a421c"
+    },
+    {
+      "id": "whitespace",
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "started_at": "2026-10-23T12:21:21.740247+00:00",
+      "exit_status": 0,
+      "output": "conductor/evidence/gate-catalogue-20261023/whitespace.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

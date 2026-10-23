@@ -55,3 +55,7 @@ missing locally or not contained in origin/main, including Tracks 68–70.
 `Completed`. These records and validators are unchanged and remain with their
 implementation owners. No runtime acceptance, ledger waiver or all-Conductor-
 checks-green claim is made by this repair.
+
+## Exact-revision validation receipt
+
+Focused checks were rerun on committed source `be955a5fbe493f6371151cb17d71cc36bd087988`, tree `81694f28fa60efc80416fb666a23af4d9be9053c`. The [machine-readable receipt](evidence/gate-catalogue-20261023/receipt.json) records each exact argument vector (including the complete independent scan), working directory, actual tool versions, source hashes, exit status and retained output path/hash. All six rerun commands exit 0. This follow-up changes only this review and its evidence files; the tested catalogue and validators are unchanged. The earlier failing runs are diagnostic context, not acceptance evidence; unresolved broad checks remain as described above.
