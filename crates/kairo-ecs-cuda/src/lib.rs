@@ -139,7 +139,7 @@ impl CudaDeviceSession {
         let count = particles.len();
         self.particle_buffer = Some(d_buf);
         self.particle_count = count;
-        Ok(count * std::mem::size_of::<CudaParticle>())
+        Ok(std::mem::size_of_val(particles))
     }
 
     pub fn step_abm(&mut self, dt: f32, seed: u64) -> Result<u32, String> {
@@ -160,7 +160,7 @@ impl CudaDeviceSession {
         launcher.arg(&seed);
 
         let workgroup_size = 256u32;
-        let blocks = (count + workgroup_size - 1) / workgroup_size;
+        let blocks = count.div_ceil(workgroup_size);
         let cfg = cudarc::driver::safe::LaunchConfig {
             grid_dim: (blocks, 1, 1),
             block_dim: (workgroup_size, 1, 1),

@@ -1,4 +1,4 @@
-#![cfg(feature = "metal-backend")]
+#![cfg(all(target_os = "macos", feature = "metal-backend"))]
 
 use kairo_ecs_gpu::{
     compute::{AgentParticle, GpuBackendAvailability, GpuCompute, GpuState},

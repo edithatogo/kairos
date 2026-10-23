@@ -109,6 +109,10 @@
           "path": "crates/kairo-ecs-gpu/Cargo.toml"
         },
         {
+          "package": "kairo-ecs-cuda",
+          "path": "crates/kairo-ecs-cuda/Cargo.toml"
+        },
+        {
           "package": "kairo-ecs-game-ontology",
           "path": "crates/kairo-ecs-game-ontology/Cargo.toml"
         },
