@@ -72,7 +72,7 @@ function main() {
   ]) {
     assert(devcontainer.features?.[feature], `.devcontainer/devcontainer.json features are missing ${feature}`);
   }
-  assertIncludes(devcontainer.postCreateCommand || "", "(3, 15, 1)", ".devcontainer/devcontainer.json Python selection");
+  assertIncludes(devcontainer.postCreateCommand || "", "python3.15 scripts/python_runtime.py", ".devcontainer/devcontainer.json Python selection");
 
   const justfile = readText("justfile");
   for (const recipe of ["dev-setup:", "dev-validate:", "toolchain-docs:"]) {
