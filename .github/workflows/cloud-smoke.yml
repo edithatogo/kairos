@@ -55,6 +55,8 @@ jobs:
         with:
           python-version: "3.15.1"
 
+      - name: Verify repository-local Python 3.15.1
+        run: python scripts/python_runtime.py --github
       - name: Validate cloud and HPC manifests
         run: python cloud/validate_cloud_hpc.py
 

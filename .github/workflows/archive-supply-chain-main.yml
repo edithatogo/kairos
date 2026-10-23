@@ -57,6 +57,27 @@ jobs:
           [[ "$GITHUB_EVENT_NAME" == workflow_dispatch ]]
           [[ "$GITHUB_REPOSITORY" == edithatogo/kairos ]]
           [[ "$GITHUB_REF" == refs/heads/main ]]
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15.1"
+          architecture: x64
+      - name: Bootstrap isolated Python for dispatch pin validation
+        shell: bash
+        run: |
+          python -I - <<'PYBOOT'
+          import json, os, pathlib, subprocess, sys, venv
+          assert sys.version_info == (3, 15, 1, 'final', 0), sys.version
+          root = pathlib.Path(os.environ['GITHUB_WORKSPACE']) / '.venv'
+          assert not root.exists() and not root.is_symlink(), 'Preserve existing environment for handover'
+          venv.EnvBuilder(with_pip=False).create(root)
+          executable = root / 'bin/python'
+          result = subprocess.check_output([str(executable), '-I', '-c', 'import json,sys; print(json.dumps([sys.version_info[:3],sys.prefix]))'], text=True)
+          version, prefix = json.loads(result)
+          assert version == [3, 15, 1] and pathlib.Path(prefix).resolve() == root.resolve()
+          with open(os.environ['GITHUB_PATH'], 'a') as output:
+              output.write(str(executable.parent) + '\n')
+          print(result.strip())
+          PYBOOT
       - name: Validate all six dispatch pins before API access
         id: dispatch-pins
         shell: bash
@@ -107,10 +128,8 @@ jobs:
           ref: ${{ github.workflow_sha }}
           fetch-depth: 1
           persist-credentials: false
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: "3.15.1"
-          architecture: x64
+      - name: Verify repository-local Python 3.15.1
+        run: python scripts/python_runtime.py --github
       - name: Retain exact run acquisition and original artifact ZIP
         shell: bash
         env:
@@ -246,6 +265,8 @@ jobs:
         with:
           python-version: "3.15.1"
           architecture: x64
+      - name: Verify repository-local Python 3.15.1
+        run: python scripts/python_runtime.py --github
       - name: Install hash-locked archive evidence dependencies
         run: python -m pip install --require-hashes -r scripts/archive-python-tools.lock
       - name: Require fresh acquisition handoff directory

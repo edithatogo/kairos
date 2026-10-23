@@ -25,13 +25,15 @@ jobs:
     name: Enforce changelog policy
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: "3.15.1"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
           fetch-depth: 0
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15.1"
+      - name: Verify repository-local Python 3.15.1
+        run: python scripts/python_runtime.py --github
       - name: Check that public release surface edits update CHANGELOG.md
         shell: bash
         env:

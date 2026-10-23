@@ -1,0 +1,12 @@
+test_job_no_longer_runs_exception_or_old_patch_gate (test_strict_npm_audit_workflow.StrictNpmAuditWorkflowTests.test_job_no_longer_runs_exception_or_old_patch_gate) ... ok
+test_node_binary_is_resolved_before_both_suites_and_reused (test_strict_npm_audit_workflow.StrictNpmAuditWorkflowTests.test_node_binary_is_resolved_before_both_suites_and_reused) ... ok
+test_parser_security_regression_is_required_before_strict_audit (test_strict_npm_audit_workflow.StrictNpmAuditWorkflowTests.test_parser_security_regression_is_required_before_strict_audit) ... ok
+test_private_suite_is_exact_qualified_copy_and_legacy_fixture_is_unchanged (test_strict_npm_audit_workflow.StrictNpmAuditWorkflowTests.test_private_suite_is_exact_qualified_copy_and_legacy_fixture_is_unchanged) ... ok
+test_pull_request_filters_cover_policy_vendor_and_regressions (test_strict_npm_audit_workflow.StrictNpmAuditWorkflowTests.test_pull_request_filters_cover_policy_vendor_and_regressions) ... ok
+test_stale_exception_artifact_cannot_allow_a_real_finding (test_strict_npm_audit_workflow.StrictNpmAuditWorkflowTests.test_stale_exception_artifact_cannot_allow_a_real_finding) ... ok
+test_strict_success_copy_is_ordered_and_failure_stays_closed (test_strict_npm_audit_workflow.StrictNpmAuditWorkflowTests.test_strict_success_copy_is_ordered_and_failure_stays_closed) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.304s
+
+OK

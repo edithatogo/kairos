@@ -10,7 +10,7 @@ dev-validate:
     cargo nextest --version
     cargo llvm-cov --version
     cargo vet --version
-    python --version
+    python scripts/python_runtime.py
     node --version
     go version
     julia --version
