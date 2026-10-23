@@ -773,9 +773,9 @@ Reconciled all completed work from `codex/track49-distributed-synchronization` (
 - **Track 51 (`In Progress`, `R2`):** Integrated Phase 5 closeout ledger, `review-report.md`, and `handoff.md` updates.
 - **Track 61 (`In Review`, `R3`):** Integrated Phase 3 stochastic chance-weighted solver closeout receipts and `docs/game-theory/` documentation (`codegen.md`, `extensive-form-runtime.md`, `graph-relations.md`, `ontology-ingestion.md`).
 
-## Track 70 planned — 22 October 2026
+## Track 70 in progress — 23 October 2026
 
-[Track 70](tracks/70-polars-native-data-processing/index.md) is Planned; no implementation started. Dependencies 04/62/63 are routing context, not runtime proof. Requalify source and interoperability. Complete upstream Phase 4 before CareOps `polars_data_processing_20261022` adopts the pin.
+[Track 70](tracks/70-polars-native-data-processing/index.md) is In Progress under Phase 0 qualification and Schema v2 contracts. Dependencies 04/62/63 are routing context, not runtime proof. Complete upstream Phase 4 before CareOps `polars_data_processing_20261022` adopts the pin.
 
 ## Library adoption planning — 22 October 2026
 

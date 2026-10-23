@@ -14,6 +14,8 @@ Format:
 
 ## Unreleased
 
+- `schemas/arrow/event_log_v2.schema.json` and `crates/kairo-ecs-arrow` add the Schema v2 specification and verification contract for Track 70 Phase 0, supporting generational entity IDs (`UInt64`/`UInt32`) and full-range 128-bit simulation tick limbs (`time_ticks_hi`, `time_ticks_lo`).
+
 - Wave 9 (`Tracks 62–66`) implementation:
   - `crates/kairo-ecs-arrow`, `crates/kairo-ecs-ffi`, and `include/kairo_ecs.h` add native Arrow schema/IPC stream/Parquet Zstd checkpointing and the zero-copy Arrow C Data Interface (`KairoArrowSchema`, `KairoArrowArray`, `kairo_ecs_export_event_log_arrow_schema`, `kairo_ecs_export_event_log_arrow_array`) (Track 62).
   - `crates/kairo-ecs-wasm`, `bindings/python/kairo_ecs`, `bindings/typescript`, `bindings/r`, and `bindings/julia` add Wasm time-travel snapshot inspection, Python Arrow PyCapsule (`__arrow_c_schema__`, `__arrow_c_array__`) + DuckDB/Polars zero-copy helpers, `NativeSchedulerBridge`, and `ParallelVecEnv` / `PettingZooParallelAdapter` (Track 63).

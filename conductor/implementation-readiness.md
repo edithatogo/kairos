@@ -123,7 +123,7 @@ The human sole maintainer explicitly approved Track49 production scheduling afte
 
 ## Track 70 readiness
 
-[Track 70](tracks/70-polars-native-data-processing/index.md) is Planned; no implementation started. Dependencies 04/62/63 are routing context, not runtime proof. Requalify source and interoperability. Complete upstream Phase 4 before CareOps `polars_data_processing_20261022` adopts the pin.
+[Track 70](tracks/70-polars-native-data-processing/index.md) is In Progress under Phase 0 qualification and Schema v2 contracts. Dependencies 04/62/63 are routing context, not runtime proof. Complete upstream Phase 4 before CareOps `polars_data_processing_20261022` adopts the pin.
 
 ## Library adoption planning — 22 October 2026
 
