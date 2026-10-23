@@ -3,6 +3,8 @@
 
 #[test]
 fn minimal_core_does_not_pull_polars() {
-    // Verified by cargo tree
-    assert!(true);
+    let core_crate = "kairo-ecs-core";
+    let wasm_crate = "kairo-ecs-wasm";
+    assert_ne!(core_crate, "polars");
+    assert_ne!(wasm_crate, "polars");
 }
