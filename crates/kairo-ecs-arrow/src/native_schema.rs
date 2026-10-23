@@ -48,6 +48,9 @@ pub fn parse_declared_type(declared: &str) -> Result<DataType, ArrowError> {
         let width: i32 = inner
             .parse()
             .map_err(|_| ArrowError::UnsupportedDataType(declared.to_string()))?;
+        if width < 0 {
+            return Err(ArrowError::UnsupportedDataType(declared.to_string()));
+        }
         return Ok(DataType::FixedSizeBinary(width));
     }
 
@@ -177,6 +180,7 @@ mod tests {
         for declared in [
             "Utf16",
             "FixedSizeBinary(",
+            "FixedSizeBinary(-1)",
             "FixedSizeBinary(abc)",
             "FixedSizeBinary(12",
             "Decimal128(10,2)",
