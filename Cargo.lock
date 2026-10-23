@@ -1133,6 +1133,7 @@ name = "kairo-ecs-arrow"
 version = "0.1.0"
 dependencies = [
  "arrow-schema",
+ "criterion",
  "kairo-ecs-types",
  "polars",
  "polars-arrow",
