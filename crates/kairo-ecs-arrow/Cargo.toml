@@ -50,6 +50,17 @@ parallel-io = []
 hdf5 = ["parallel-io"]
 adios2 = ["parallel-io"]
 
+[dev-dependencies]
+# Track 70 Phase 3 Task 3.3: run-output publication benchmarks. Criterion is
+# already a workspace dependency via kairo-ecs-bench (no new transitive tree);
+# the bench target is polars-native-only so default builds never compile it.
+criterion = "0.5"
+
 [[example]]
 name = "telemetry_event_log_roundtrip"
 path = "../../examples/telemetry/event_log_roundtrip.rs"
+
+[[bench]]
+name = "run_output"
+harness = false
+required-features = ["polars-native"]

@@ -124,6 +124,22 @@ Track 70 remains `[~] In Progress` advancing to Phase 2 (FFI and polyglot consum
   - Dependency receipt: `serde 1` (derive) + `serde_json 1`, optional, behind `serde-runtime` ⊂ `polars-native`; no new transitive trees (both already resolved in `Cargo.lock` via `kairo-ecs-core`).
 - **Next**: Task 3.3 benchmarks (Criterion; in-crate `benches/` on the arrow-agent surface; small/large traces, high-cardinality, bounded-part concurrency; preserve regression gates; record memory/build/binary tradeoffs).
 
+## Phase 3 progress — Task 3.3 (24 October 2026) — publication benchmarks and tradeoffs
+
+- **Benchmarks** (Criterion, `crates/kairo-ecs-arrow/benches/run_output.rs`, `[[bench]] run_output` with `required-features = ["polars-native"]` so default/wasm/minimal builds never compile it; `criterion 0.5` dev-dep reuses the already-locked tree — no new transitive dependencies; `sample_size(10)`, 2 s measurement, cleanup of the previous iteration's run directory in unmeasured setup):
+  - `run_output_publication/small_trace_100_rows_1_part` — median ≈ **33–34 ms** (≈2.9–3.0 Kelem/s)
+  - `run_output_publication/large_trace_20000_rows_20_parts` — median ≈ **408–432 ms** (≈46–49 Kelem/s end-to-end, incl. Parquet Zstd encode, fsync, rename)
+  - `run_output_publication/high_cardinality_5000_distinct_kinds` — median ≈ **115–126 ms** (≈40–43 Kelem/s; ≈8–11% cardinality cost vs the non-cardinality trace at the same scale)
+  - `run_output_publication/concurrent_4_replications_5000_rows` — median ≈ **146–175 ms** aggregate (≈28–35 Kelem/s; sublinear scaling — per-run fixed costs plus pool contention)
+  - `run_output_reading/validate_large_trace_20000_rows` — median ≈ **76 ms** (≈264 Kelem/s; hash + full decode + sequence re-attestation reads ≈5× faster than publication)
+  - `run_output_reading/read_completed_manifest` — median ≈ **224 µs** (negligible)
+  - Both runs recorded; criterion's saved baseline shows **no significant change** between runs (all p > 0.05) — the local regression-gate behavior working.
+- **Memory/build/binary tradeoffs (recorded)**: memory is bounded by construction — one part (≤ `max_rows_per_part` rows) is buffered at a time; per-run fixed cost dominates small traces (DataFrame conversion + writer setup + three fsyncs), so batching capture windows amortizes it (100 rows ≈ 33 ms vs 20 000 rows ≈ 415 ms — ~13× cost for 200× data). Build/binary: default-build `kairo_ecs_arrow` debug rlib ≈ **2.19 MB** vs ≈ **11.08 MB** with `polars-native` — the default-off isolation keeps minimal-core/wasm/browser graphs at the small footprint (re-verified via `cargo check -p kairo-ecs-wasm`); benchmarks live behind `required-features` so they add zero cost to default builds.
+- **Regression gates preserved**: the hosted `bench-regression.yml` workflow (core/state/root-benches thresholds) is untouched; arrow benches are additive and do not feed it. Wiring them into hosted thresholds is recorded as a **Track 31 / ci-agent cross-owner follow-up** (also for the Task 3.4 closeout). Benches exercise the same public surface the durability tests pin, so benchmark-vs-contract drift would surface in Task 3.4 review.
+- **Bench finding (fixed in-task)**: first bench run failed — the workload's records started at sequence 0, which the capture-side watermark contract rejects by design (0 = "nothing published"; sequences are 1-based). Workloads regenerated 1-based; this incidentally documents the sequence sentinel for Task 3.4's review.
+- **Validation receipts (24 October 2026, token `298dd3b4e4a746c78db24c18cda4d7ee`)**: `cargo bench -p kairo-ecs-arrow --features polars-native --bench run_output` → all 6 benchmarks collected, two full runs; `cargo clippy -p kairo-ecs-arrow --all-targets --all-features -- -D warnings` → clean; `cargo fmt -p kairo-ecs-arrow -- --check` → clean.
+- **Next**: Task 3.4 — conductor review-and-verify phase closeout (targeted lanes + full `just ci` per user decision), registry lockstep, explicit next-phase decision.
+
 ## Follow-up issues
 Task 2.3: add the C-ABI stream-export symbol and update `include/kairo_ecs.h`, public data API users, all affected native bindings and browser/minimal-build paths; document actual copies and unsupported targets explicitly (delivered 23 October 2026 — see Phase 2 progress above; remaining bindings CSharp/Go have no event-log surface to update).
 Task 2.4: Conductor phase review/verify; accepted/rejected fixes and receipts in this file; explicit next-phase decision.
