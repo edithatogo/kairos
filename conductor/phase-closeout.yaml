@@ -1205,55 +1205,10 @@ entries:
     pushed_ref: "origin/main"
     next_phase_decision: "Track 69 is closed and ready for archival."
   - track_id: "70"
-    phase: "1"
-    state: closed
-    review_command: "$conductor-review"
-    review_result: "Phase 1 native tables and real formats completed: polars_interop with records_to_dataframe/dataframe_to_records, real Parquet Zstd and Arrow IPC writers/readers, checked 128-bit tick limb borrow subtraction, and lazy tabular transform expressions (filter_by_event_kind, filter_by_entity, aggregate_counts_by_status). All 4 Codex review items addressed."
-    fixes_applied: true
-    validation_commands:
-      - "cargo test -p kairo-ecs-arrow --features polars-native"
-      - "cargo test -p kairo-ecs-arrow --all-targets"
-      - "cargo clippy -p kairo-ecs-arrow --all-targets --all-features -- -D warnings"
-      - "cargo fmt --all --check"
-      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
-      - "pwsh -NoProfile -File scripts/validate_conductor_dag.ps1"
-    git_status: "clean"
-    commit_sha: "f75d917fd6428d647e65560563fec2ab75587773"
-    pushed_ref: "origin/main"
-    next_phase_decision: "Phase 1 complete. Approved to advance to Phase 2: FFI and polyglot consumers."
-
-  - track_id: "70"
-    phase: "2"
-    state: closed
-    review_command: "$conductor-review"
-    review_result: "Phase 2 FFI and polyglot consumers completed (Tasks 2.1-2.3): populated owned Arrow C Data arrays/streams under native-data with dual-mode explicit capability-absent ABI, C headers KairoArrowArrayStream + kairo_ecs_export_event_log_arrow_stream, Schema v2 consumers across Python (native pyarrow), TypeScript, R and Julia with per-binding actual-copy and unsupported-target documentation (bindings/README.md). Iterative principal-engineer review found two R facade precision gaps (silent >2^53 rounding of entity IDs; limb ordering without decimal-string tie-break); both fixed with explicit-rejection tests in this closeout. Loader capability-flag mismatch (arrow_c_data_interface_supported=TRUE next to not-configured FFI status) recorded as a Track 63/07/08 cross-owner follow-up; spec clause 'native data CLIs enable native-data by default' deferred to Track 66 reconciliation (no native-data CLI consumer exists; kairo-ecs-cli carries no Arrow usage)."
-    fixes_applied: true
-    validation_commands:
-      - "cargo test -p kairo-ecs-arrow --features polars-native --lib (16 passed)"
-      - "cargo test -p kairo-ecs-arrow --lib (9 passed)"
-      - "cargo test -p kairo-ecs-ffi --features native-data (5 lib + 9 track70 + 14 wave9 passed)"
-      - "cargo test -p kairo-ecs-ffi (5 lib + 8 track70 + 14 wave9 passed, default mode)"
-      - "cargo clippy -p kairo-ecs-ffi --all-targets --all-features -- -D warnings (clean)"
-      - "cargo clippy -p kairo-ecs-ffi --all-targets -- -D warnings (clean)"
-      - "cargo fmt --all (clean)"
-      - "bindings/python: uv venv pytest tests (26 passed, 0 xfailed; Python 3.14, pyarrow 26.0.0)"
-      - "bindings/typescript: npm run typecheck (clean) + npm test (10 passed)"
-      - "bindings/julia: julia --project=. test/runtests.jl (all 7 testsets pass)"
-      - "bindings/r: Rscript tests/smoke-base.R (passed) + testthat test_dir (6 conformance + 27 smoke passed, 1 optional-arrow skip)"
-      - "cargo check -p kairo-ecs-wasm (clean; browser/minimal graphs stay Polars-free)"
-      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1 (0 errors, 0 warnings)"
-      - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1 (0 errors, 0 warnings)"
-      - "pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree (2026-10-23 closeout)"
-    git_status: "clean; stacked Phase 2 PRs #290-#292 pending maintainer merge, closeout branch feat/track-70-phase2-task-2.4 stacked above them"
-    commit_sha: "432cdb5e476e772e3b1ddadee29ae43d6a4eb8ea"
-    pushed_ref: "origin/feat/track-70-phase2-task-2.4"
-    next_phase_decision: "Phase 2 closed. Approved to advance to Phase 3 (durable output and execution budgets) pending maintainer merge of the stacked Phase 2 PRs #290 (Task 2.1, against main), #291 (Task 2.2, against the Task 2.1 branch) and #292 (Task 2.3, against the Task 2.2 branch); merge-queue order preserves the stack."
-
-  - track_id: "70"
     phase: "3"
     state: closed
     review_command: "$conductor-review"
-    review_result: "Phase 3 durable output and execution budgets completed (Tasks 3.1-3.3): contract-first run_output module (Task 3.1 stubs + 15 failing tests) implemented in Task 3.2 — unique identity-derived run dirs, bounded split parts staged/fsynced/renamed, manifest-last kairo_ecs.run_manifest.v1 (serde/serde_json behind serde-runtime within polars-native), readers requiring completed manifests with per-part hash/row/sequence re-attestation, resume watermarks with no loss/duplication, sink-injected disk-exhaustion failure with clean retry, configure-once thread budget — and Task 3.3 Criterion benchmarks (small/large/high-cardinality/concurrent/validate/manifest-read) with recorded memory/build/binary tradeoffs. Maintainer override of the Tracks 93/94/96 gate recorded with rationale (qualification tracks explicitly leave durable publication to Track 70; no sha2/tempfile/proptest adoption; content hashes are labeled non-cryptographic FNV-1a 64 pending Track 93). Contract corrections from the red-to-green transition receipted (v1 container corrected to v2 records; order-fragile budget tests merged; latent test bug fixed). Closeout fixed a 2-line pre-existing rustfmt drift in the Track 70 ffi test file (cross-owner, recorded)."
+    review_result: "Phases 0-3 closed under this per-track ledger row (single-entry structure per validate_conductor_phase_gates.ps1; phase-level history lives in the track handoff and review-report). Phase 3 durable output and execution budgets completed (Tasks 3.1-3.3): contract-first run_output module (Task 3.1 stubs + 15 failing tests) implemented in Task 3.2 — unique identity-derived run dirs, bounded split parts staged/fsynced/renamed, manifest-last kairo_ecs.run_manifest.v1 (serde/serde_json behind serde-runtime within polars-native), readers requiring completed manifests with per-part hash/row/sequence re-attestation, resume watermarks with no loss/duplication, sink-injected disk-exhaustion failure with clean retry, configure-once thread budget — and Task 3.3 Criterion benchmarks (small/large/high-cardinality/concurrent/validate/manifest-read) with recorded memory/build/binary tradeoffs. Maintainer override of the Tracks 93/94/96 gate recorded with rationale (qualification tracks explicitly leave durable publication to Track 70; no sha2/tempfile/proptest adoption; content hashes are labeled non-cryptographic FNV-1a 64 pending Track 93). Contract corrections from the red-to-green transition receipted (v1 container corrected to v2 records; order-fragile budget tests merged; latent test bug fixed). Closeout fixed pre-existing lane debt: 2-line rustfmt drift in the Track 70 ffi test file and five doc-lint errors (intra-doc links, bare URL) surfaced by the first full just ci runs (cross-owner notes recorded). Earlier phases: Phase 0 closeout commit f75d917fd6428d647e65560563fec2ab75587773 (PR #288); Phase 1 native tables (PR #289); Phase 2 FFI and polyglot consumers with fixes commit 432cdb5e476e772e3b1ddadee29ae43d6a4eb8ea and closeout commit 07fb2d4 (PRs #290-#293)."
     fixes_applied: true
     validation_commands:
       - "cargo test -p kairo-ecs-arrow --features polars-native --test track70_phase3_durability (14 passed; red 15-failed receipt at Task 3.1)"
@@ -1263,7 +1218,7 @@ entries:
       - "cargo fmt -p kairo-ecs-arrow -- --check (clean; closeout also fixed the pre-existing ffi test fmt drift blocking cargo fmt --all)"
       - "cargo bench -p kairo-ecs-arrow --features polars-native --bench run_output (6 benches, two runs, no significant change)"
       - "cargo check -p kairo-ecs-wasm (clean; browser/minimal graphs stay Polars-free)"
-      - "just ci (full workspace lane, user-selected closeout depth)"
+      - "just ci (full workspace lane green: 693/693 tests, core coverage 992/1063 = 93.32% >= 90% gate, workspace docs -D warnings, deny advisories+sources, cargo audit)"
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
       - "pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree"
