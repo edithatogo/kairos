@@ -465,3 +465,143 @@ impl RelationshipTelemetryBatch {
         Self::from_ndjson(text)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_model_entity_id_and_display() {
+        let id = ModelEntityId::new(42);
+        assert_eq!(id.as_u64(), 42);
+        assert_eq!(format!("{}", id), "ModelId(42)");
+        assert_eq!(ModelEntityId::default().as_u64(), 0);
+    }
+
+    #[test]
+    fn test_relationship_kind_codes() {
+        assert_eq!(RelationshipKind::ParentChild.code(), 1);
+        assert_eq!(RelationshipKind::SpawnedFrom.code(), 2);
+        assert_eq!(RelationshipKind::SubtaskOf.code(), 3);
+        assert_eq!(RelationshipKind::CargoOf.code(), 4);
+        assert_eq!(RelationshipKind::Custom(99).code(), 99);
+
+        assert_eq!(RelationshipKind::from_code(1), RelationshipKind::ParentChild);
+        assert_eq!(RelationshipKind::from_code(2), RelationshipKind::SpawnedFrom);
+        assert_eq!(RelationshipKind::from_code(3), RelationshipKind::SubtaskOf);
+        assert_eq!(RelationshipKind::from_code(4), RelationshipKind::CargoOf);
+        assert_eq!(RelationshipKind::from_code(99), RelationshipKind::Custom(99));
+    }
+
+    #[test]
+    fn test_lifecycle_policy_codes() {
+        assert_eq!(LifecyclePolicy::Survive.code(), 0);
+        assert_eq!(LifecyclePolicy::CascadeDelete.code(), 1);
+        assert_eq!(LifecyclePolicy::Detach.code(), 2);
+
+        assert_eq!(LifecyclePolicy::from_code(0), Some(LifecyclePolicy::Survive));
+        assert_eq!(LifecyclePolicy::from_code(1), Some(LifecyclePolicy::CascadeDelete));
+        assert_eq!(LifecyclePolicy::from_code(2), Some(LifecyclePolicy::Detach));
+        assert_eq!(LifecyclePolicy::from_code(3), None);
+    }
+
+    #[test]
+    fn test_parent_child_binding_and_spawn_relationship() {
+        let p = EntityId::new(1, 0);
+        let c = EntityId::new(2, 0);
+        let binding = ParentChildBinding::new(p, c, RelationshipKind::ParentChild, LifecyclePolicy::CascadeDelete);
+        assert_eq!(binding.parent, p);
+        assert_eq!(binding.child, c);
+        assert_eq!(binding.kind, RelationshipKind::ParentChild);
+        assert_eq!(binding.policy, LifecyclePolicy::CascadeDelete);
+
+        let spawn_rel = SpawnRelationship {
+            parent: p,
+            child: c,
+            parent_model_id: Some(ModelEntityId::new(10)),
+            child_model_id: Some(ModelEntityId::new(20)),
+            kind: RelationshipKind::SpawnedFrom,
+            policy: LifecyclePolicy::Survive,
+            spawned_at: SimTime::from_ticks(100),
+        };
+        assert_eq!(spawn_rel.spawned_at.ticks(), 100);
+    }
+
+    #[test]
+    fn test_relationship_lifecycle_event_variants() {
+        let p = EntityId::new(1, 0);
+        let c = EntityId::new(2, 0);
+        let p2 = EntityId::new(3, 0);
+        let now = SimTime::from_ticks(50);
+
+        let ev1 = RelationshipLifecycleEvent::Attached {
+            parent: p,
+            child: c,
+            kind: RelationshipKind::CargoOf,
+            policy: LifecyclePolicy::Detach,
+            at: now,
+        };
+        let ev2 = RelationshipLifecycleEvent::Detached { parent: p, child: c, at: now };
+        let ev3 = RelationshipLifecycleEvent::Reparented {
+            child: c,
+            old_parent: p,
+            new_parent: p2,
+            at: now,
+        };
+        let ev4 = RelationshipLifecycleEvent::CascadedDespawn {
+            entity: c,
+            cascade_count: 1,
+            at: now,
+        };
+
+        assert_eq!(ev1, ev1);
+        assert_ne!(ev1, ev2);
+        assert_ne!(ev2, ev3);
+        assert_ne!(ev3, ev4);
+    }
+
+    #[test]
+    fn test_linked_entity_error_display() {
+        let e1 = EntityId::new(1, 0);
+        let e2 = EntityId::new(2, 0);
+
+        let errs: Vec<LinkedEntityError> = vec![
+            LinkedEntityError::StaleEntityHandle(e1),
+            LinkedEntityError::CycleDetected { parent: e1, child: e2 },
+            LinkedEntityError::DuplicateRelationship { parent: e1, child: e2 },
+            LinkedEntityError::CapacityExceeded { max_capacity: 10, requested: 11 },
+            LinkedEntityError::InvalidReparenting { child: e1, new_parent: e2 },
+            LinkedEntityError::EntityNotFound(e1),
+            LinkedEntityError::StableIdCollision(ModelEntityId::new(99)),
+            LinkedEntityError::ParentNotFound(e1),
+            LinkedEntityError::ChildNotFound(e2),
+            LinkedEntityError::UnsupportedSchemaVersion(2),
+            LinkedEntityError::MalformedTelemetry("bad format".into()),
+            LinkedEntityError::MissingTelemetryField("missing key"),
+        ];
+
+        for err in errs {
+            let msg = format!("{}", err);
+            assert!(!msg.is_empty());
+        }
+    }
+
+    #[test]
+    fn test_telemetry_batch_empty_and_methods() {
+        let empty_batch = RelationshipTelemetryBatch::default();
+        assert!(empty_batch.is_empty());
+        assert_eq!(empty_batch.len(), 0);
+        assert_eq!(empty_batch.records().len(), 0);
+
+        let invalid_utf8 = vec![0xFF, 0xFE, 0xFD];
+        assert!(RelationshipTelemetryBatch::from_bytes(&invalid_utf8).is_err());
+    }
+
+    #[test]
+    fn test_parse_ndjson_line_errors() {
+        assert!(RelationshipTelemetryRecord::parse_ndjson_line("not json").is_err());
+        assert!(RelationshipTelemetryRecord::parse_ndjson_line("{}").is_err());
+        assert!(RelationshipTelemetryRecord::parse_ndjson_line("{\"schema_version\":1}").is_err());
+        assert!(RelationshipTelemetryRecord::parse_ndjson_line("{\"schema_version\":\"abc\"}").is_err());
+    }
+}
