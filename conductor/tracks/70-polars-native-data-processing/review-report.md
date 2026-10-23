@@ -1,5 +1,30 @@
 # Review Report: Track 70 Polars-native data processing and standard interchange
 
+## Phase 2 Closeout Review (23 October 2026)
+
+### Summary
+Phase 2 (FFI and polyglot consumers) is complete across Tasks 2.1–2.3 after an iterative per-file review of the full phase diff (`d02a010..00f523c`, 23 code/doc files, +2,032/−326) as Principal Software Engineer. Quality, safety, and contract-compliance hold: the Arrow crate stays `unsafe`-free with explicit schema-negotiation rejection; every `unsafe` in the FFI bridge carries a documented SAFETY rationale; the C header and its generated mirror stay byte-identical; empty/null/multi-batch/release-once semantics are tested dual-mode; and the v2 Schema is projected consistently across Python, TypeScript, R, and Julia with per-binding actual-copy and unsupported-target documentation.
+
+### Verification Checks
+- [x] **Plan Compliance**: Tasks 2.1 (failing fixtures), 2.2 (populated export + native Python handoff, gate override recorded), and 2.3 (C stream ABI + reachable binding v2 migration) executed without false completions. Task 2.3's scope expansion to R was user-approved after execution discovered the R event-log surface the initial scope check missed.
+- [x] **Correctness & Safety**: `arrow_c_data.rs` contains no `unsafe` (crate-level `unsafe_code` forbid); transmutes in `crates/kairo-ecs-ffi` are between layout-identical `#[repr(C)]` mirrors with compile-checked 320-bit sizes and documented release-once semantics; null-pointer and `max_batch_rows` validation leave out-params untouched on failure.
+- [x] **Style Compliance**: Pass — rust/ts/r/julia style guides honored (no `unsafe` outside bridge crates, documented Wasm↔JS copies, decimal-string precision-safe projections).
+- [x] **Contract**: v2 identifiers (`kairo_ecs.event_log.v2`), 14 typed columns, null-together generational pairs, full u128 tick limbs, explicit rejection of malformed negotiation — verified in FFI, arrow, and per-binding tests.
+- [x] **Test Results**: Passed — arrow 16+9, FFI 5+14+9 (native-data) / 5+14+8 (default), Python 26, TS 10 (typecheck clean), Julia 7/7 testsets, R 6 conformance + 27 smoke (+1 documented optional-arrow skip), WASM crate check clean and Polars-free.
+- [x] **Conductor validators**: `validate_conductor_phase_gates.ps1` and `validate_conductor_dag.ps1` → 0 errors, 0 warnings.
+
+### Findings
+- **Medium (fixed in closeout)**: R facade silently rounded entity IDs above the 2^53 double limit instead of rejecting explicitly. Fix: exact-integer guard (`kairoecs_exact_integer`) on entity IDs and ticks with contract-accurate errors; tests added for the 2^53 boundary (exact) and out-of-range rejection (ticks and entity).
+- **Finding introduced and caught during the fix**: the first guard rewrite dropped the nullable-entity early return; re-running the targeted lanes caught it (conformance fixtures failed) before closeout — receipts only count the final green runs.
+- **Low (fixed in closeout)**: R `order_event_log` compared limbs only numerically, externally supplied rows above 2^53 could collapse in `as.numeric`. Fix: lexicographic decimal-string tie-breaks after the numeric comparison.
+- **Recorded, not applied (cross-owner)**: `arrow_c_data_interface_supported = TRUE` in the R/Julia native-library loader stubs sits next to `not configured` FFI status — ambiguous capability flag; recorded as Track 63/07/08 follow-up in handoff.md (Wave 9 surface, outside the Phase 2 diff).
+- **Recorded, not applied (cross-owner)**: "native data CLIs enable native-data by default" spec clause deferred to Track 66 reconciliation; `kairo-ecs-cli` has no Arrow usage and no native-data CLI consumer exists.
+
+### Phase Disposition
+Phase 2 is **CLOSED**. Next-phase decision: advance to Phase 3 (durable output and execution budgets: Tasks 3.1–3.x) pending maintainer merge of the stacked PRs #290 → #291 → #292, plus the closeout branch PR.
+
+---
+
 ## Phase 1 Closeout Review (23 October 2026)
 
 ### Summary

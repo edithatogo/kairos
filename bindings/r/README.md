@@ -30,10 +30,15 @@ The current slice is intentionally small and deterministic:
 - Facade-local single-generation handles project **generation `0`**
   explicitly; entity projections are **null-together** (both columns set or
   both `NA`).
-- Scheduler inputs stay within the 2^53 double precision limit; full u128
-  range interchange and populated Arrow C Data/Stream export are
-  **unsupported targets** here until the native FFI artifact path is
-  configured (`kairoecs_ffi_status()` stays `configured = FALSE`).
+- Facade-local single-generation handles project **generation `0`**
+  explicitly; entity projections are **null-together** (both columns set or
+  both `NA`).
+- Scheduler and entity inputs are exact-integer guarded: values beyond the
+  2^53 double precision limit **reject explicitly** (facade limit; full
+  u64/u128 interchange belongs to the native FFI surface). Populated Arrow
+  C Data/Stream export is an **unsupported target** here until the native
+  FFI artifact path is configured (`kairoecs_ffi_status()` stays
+  `configured = FALSE`).
 
 Current package files:
 

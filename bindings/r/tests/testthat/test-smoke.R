@@ -72,6 +72,31 @@ test_that("event log roundtrip preserves the v2 schema facade", {
   expect_identical(log$time_ticks_lo, "1")
 })
 
+test_that("out-of-range ticks and entity ids reject explicitly", {
+  scheduler <- kairoecs_new_scheduler(run_id = "bounds")
+
+  # Exactly 2^53 is representable and stays exact through the limb projection.
+  bounded <- kairoecs_schedule_at(scheduler, 2^53, "boundary")
+  expect_identical(bounded$events$time_ticks_hi, "0")
+  expect_identical(bounded$events$time_ticks_lo, "9007199254740992")
+
+  expect_error(
+    kairoecs_schedule_at(scheduler, 2^60 + 1, "too-large"),
+    "exceeds the pure-R facade's exact precision limit",
+    fixed = TRUE
+  )
+  expect_error(
+    kairoecs_schedule_at(scheduler, 1, "entity-too-large", entity_id = 2^60 + 1),
+    "exceeds the pure-R facade's exact precision limit",
+    fixed = TRUE
+  )
+  expect_error(
+    kairoecs_schedule_at(scheduler, 1, "entity-negative", entity_id = -3),
+    "must be a single non-negative integer value",
+    fixed = TRUE
+  )
+})
+
 test_that("optional Arrow roundtrip preserves the v2 schema facade", {
   testthat::skip_if_not_installed("arrow")
 
