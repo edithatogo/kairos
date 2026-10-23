@@ -1,0 +1,19 @@
+{
+  "cwd": "/Volumes/PortableSSD/codex-worktrees/kairos-python315-conductor",
+  "base_commit": "b8e7c9fa9a5db328ba52a4cfdc779ab4780f000e",
+  "runtime": "Python 3.15.1",
+  "checks": {
+    "guard": 8,
+    "separate_archive_manifest": 2,
+    "actual_workspace_members": 27,
+    "phase_and_dag": "pass"
+  },
+  "logs": {
+    "conductor/tracks/105-python315-runtime-qualification/active-default-evidence/workspace-members.json": "39b2e9c841454a39e91297b8189a261d8c5f614f62faf4404ad72dcb7daab9cf",
+    "conductor/tracks/105-python315-runtime-qualification/active-default-evidence/phase.log": "adfb3a1b1335bcc0c11862ff3968bad10d42656554bdd2007bd29739e4d883c2",
+    "conductor/tracks/105-python315-runtime-qualification/active-default-evidence/dag.log": "0d80658eb0a2d24265bc2b6c7609837b2d9de362419a3eacb619b998ecd0fbf9",
+    "conductor/tracks/105-python315-runtime-qualification/active-default-evidence/archive-manifest-tests.log": "f683450a25ad43e5be389b975cd0090f083cdca9e0cc96c90a66ea149070644a",
+    "conductor/tracks/105-python315-runtime-qualification/active-default-evidence/runtime-tests.log": "d88e2e68bca7854554405c6b8386d48f0443cd28e008b7bdcde521077a2f131a"
+  },
+  "scope": "Remove active old defaults and compatibility fallback; preserve immutable historical receipts. Guard symlinks on POSIX align existing provenance paths; Windows retains supported copies. Current-main/hosted acceptance pending."
+}

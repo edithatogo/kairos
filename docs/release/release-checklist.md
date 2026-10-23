@@ -18,7 +18,7 @@
 ## Quality
 
 - [ ] Rust core CI green.
-- [ ] Python 3.10-3.14 green.
+- [ ] Python 3.15.1 green.
 - [ ] R green.
 - [ ] Julia green.
 - [ ] TypeScript/Wasm green.

@@ -24,7 +24,7 @@ def prepare(root: Path) -> dict[str, str]:
     if target.is_symlink():
         raise RuntimeError('Refusing a symlink environment; preserve and hand over explicitly.')
     if not target.exists():
-        venv.EnvBuilder(with_pip=True).create(target)
+        venv.EnvBuilder(with_pip=True, symlinks=os.name != 'nt').create(target)
     # An existing environment is only inspected. Never repair/recreate it beneath
     # a consumer, even when it is incomplete or uses another interpreter.
     executable = target / ('Scripts/python.exe' if os.name == 'nt' else 'bin/python')

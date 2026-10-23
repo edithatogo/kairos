@@ -1,0 +1,7 @@
+test_actual_archive_subjects_and_wrong_source_fail_closed (test_archive_release_manifest.ArchiveManifestTests.test_actual_archive_subjects_and_wrong_source_fail_closed) ... ok
+test_keyboard_interrupt_removes_only_fresh_output (test_archive_release_manifest.ArchiveManifestTests.test_keyboard_interrupt_removes_only_fresh_output) ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.336s
+
+OK

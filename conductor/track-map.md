@@ -524,4 +524,4 @@ See [current sequencing](dependency-sequencing.md): Polars inventory first, with
 
 ## Python runtime qualification — 23 October 2026
 
-[Python 3.15 migration and qualification](tracks/105-python315-runtime-qualification/index.md) is Planned for accepted migration. Existing local candidate changes and test evidence are preserved; no main/runtime handover acceptance or unrelated phase change. Track 30 retains version policy; bounded shared-path handoffs precede implementation.
+[Python 3.15 migration and qualification](tracks/105-python315-runtime-qualification/index.md) is In Progress. The preserved candidate is reconciled and local CI runtime guards are implemented; hosted/main/runtime handover acceptance remains pending. Track 30 retains version policy; bounded shared-path handoffs precede implementation.

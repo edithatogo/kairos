@@ -1515,7 +1515,7 @@ tracks:
 
   - id: 105
     name: Python 3.15 Runtime Migration and Qualification
-    status: Planned
+    status: In Progress
     owner: python-agent + ci-agent + dx-agent
     depends_on: []
     owned_paths:

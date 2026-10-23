@@ -7,10 +7,7 @@ import json
 import re
 from pathlib import Path
 
-try:
-    import tomllib
-except ModuleNotFoundError:  # Python 3.10 local developer fallback.
-    tomllib = None
+import tomllib
 
 
 EXPECTED_ECOSYSTEMS = ("rust", "python", "r", "julia", "typescript", "csharp", "go")
@@ -157,14 +154,8 @@ def load_inventory(path: Path) -> dict:
 def workspace_members(root: Path) -> set[str]:
     """Return Cargo workspace member manifest paths."""
     cargo_toml = (root / "Cargo.toml").read_text(encoding="utf-8")
-    if tomllib is not None:
-        workspace = tomllib.loads(cargo_toml)
-        return {f"{member}/Cargo.toml" for member in workspace.get("workspace", {}).get("members", [])}
-
-    match = re.search(r"(?ms)^\[workspace\]\s+.*?^members\s*=\s*\[(.*?)\]", cargo_toml)
-    if not match:
-        raise SystemExit("could not read Cargo workspace members")
-    return {f"{member}/Cargo.toml" for member in re.findall(r'"([^"]+)"', match.group(1))}
+    workspace = tomllib.loads(cargo_toml)
+    return {f"{member}/Cargo.toml" for member in workspace.get("workspace", {}).get("members", [])}
 
 
 def build(root: Path, inventory_path: Path, version: str, dry_run: str, check_only: bool) -> dict:

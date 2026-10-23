@@ -25,6 +25,8 @@ class LocalPythonTests(unittest.TestCase):
             self.assertEqual(receipt['version'], '3.15.1')
             self.assertEqual(Path(receipt['prefix']), root / '.venv')
             executable = receipt['executable']
+            if os.name != 'nt':
+                self.assertTrue(Path(executable).is_symlink())
             child = subprocess.check_output([executable, '-c', 'import sys; print(sys.version_info[:3]); print(sys.prefix)'], text=True)
             self.assertIn('(3, 15, 1)', child)
             self.assertIn(str(root / '.venv'), child)

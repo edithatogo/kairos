@@ -1,0 +1,13 @@
+test_base_interpreter_alias_cannot_pass_as_a_local_environment (test_local_python_runtime.LocalPythonTests.test_base_interpreter_alias_cannot_pass_as_a_local_environment) ... ok
+test_dispatch_preflight_uses_real_local_runtime_without_source_or_api (test_local_python_runtime.LocalPythonTests.test_dispatch_preflight_uses_real_local_runtime_without_source_or_api) ... ok
+test_existing_unmanaged_environment_is_not_replaced (test_local_python_runtime.LocalPythonTests.test_existing_unmanaged_environment_is_not_replaced) ... ok
+test_failed_verification_does_not_export_github_path (test_local_python_runtime.LocalPythonTests.test_failed_verification_does_not_export_github_path) ... ok
+test_python_jobs_bootstrap_after_source_and_use_verified_runtime (test_local_python_runtime.LocalPythonTests.test_python_jobs_bootstrap_after_source_and_use_verified_runtime) ... ok
+test_real_environment_child_and_reuse_preserve_existing_files (test_local_python_runtime.LocalPythonTests.test_real_environment_child_and_reuse_preserve_existing_files) ... ok
+test_symlink_environment_rejected_without_mutating_destination (test_local_python_runtime.LocalPythonTests.test_symlink_environment_rejected_without_mutating_destination) ... ok
+test_wrong_bootstrap_rejects_before_environment_creation (test_local_python_runtime.LocalPythonTests.test_wrong_bootstrap_rejects_before_environment_creation) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 14.507s
+
+OK
