@@ -45,7 +45,7 @@ const EVIDENCE_SOURCES = {
   actions_settings: 'GitHub REST: repos/{owner}/{repo}/actions/permissions*',
   private_vulnerability_reporting_enabled: 'GitHub REST: repos/{owner}/{repo}/private-vulnerability-reporting',
   main_renovate_preset_and_dashboard: 'GitHub REST: repos/{owner}/{repo}/contents/renovate.json?ref={resolved_default_branch_sha}',
-  renovate_refresh_after_integration: 'GitHub REST: latest merged pull request, issues/136, and open pull requests by renovate[bot]',
+  renovate_refresh_after_integration: 'GitHub REST: latest merged pull request, issues/136, comments and open bot PRs; GraphQL: dashboard lastEditedAt and typed editor/author',
   current_required_check_runs: 'GitHub REST: commits/{default_branch_sha}/check-runs',
   main_ci_skip_guard_workflow_current: 'GitHub REST: repos/{owner}/{repo}/contents/.github/workflows/ci-skip-guard.yml?ref={resolved_default_branch_sha}',
   trusted_main_codecov_upload_and_status: 'GitHub REST: commits/{default_branch_sha}/check-runs and /statuses',
@@ -65,6 +65,15 @@ function same(left, right) {
 
 function isAfterIntegration(activityAt, integrationAt) {
   return Boolean(integrationAt && activityAt && activityAt > integrationAt);
+}
+
+function dashboardEditEvidence(dashboard, edit, integrationAt) {
+  const isRenovateBot = (actor) => actor?.__typename === 'Bot' && actor.login === 'renovate';
+  if (dashboard?.state !== 'open' || dashboard.user?.login !== 'renovate[bot]'
+      || edit?.url !== dashboard.html_url || !isRenovateBot(edit?.author) || !isRenovateBot(edit?.editor)
+      || !Number.isFinite(Date.parse(edit?.lastEditedAt)) || !Number.isFinite(Date.parse(integrationAt))
+      || !isAfterIntegration(edit.lastEditedAt, integrationAt)) return [];
+  return [{ kind: 'dashboard_edit', editedAt: edit.lastEditedAt, editor: edit.editor, url: edit.url }];
 }
 
 function addCheck(checks, name, expected, observed, status = undefined, note = undefined) {
@@ -388,6 +397,19 @@ function collectHosted(repository, source) {
     '.[] | {number, headRef: .head.ref, headSha: .head.sha, author: .user.login, createdAt: .created_at, updatedAt: .updated_at, url: .html_url}');
   const renovateDashboardResult = ghJsonOptional(`repos/${repository}/issues/136`);
   const renovateDashboard = renovateDashboardResult.value;
+  // REST updated_at also changes for human checkbox/label activity. Require the actual body editor.
+  let dashboardEdit = null;
+  let dashboardEditAvailable = false;
+  try {
+    const [owner, name] = repository.split('/');
+    const query = 'query($owner:String!,$name:String!){repository(owner:$owner,name:$name){issue(number:136){url lastEditedAt author{__typename login} editor{__typename login}}}}';
+    const result = JSON.parse(run('gh', ['api', 'graphql', '-f', `query=${query}`, '-F', `owner=${owner}`, '-F', `name=${name}`]));
+    if (result.errors?.length) throw new Error('Dashboard edit readback unavailable');
+    dashboardEdit = result.data?.repository?.issue ?? null;
+    dashboardEditAvailable = true;
+  } catch {
+    // A denied/unavailable read is not evidence that the bot did or did not refresh.
+  }
   const mainContextFiles = Object.fromEntries([...REQUIRED_CONTEXT_FILES, 'justfile'].map((path) => [
     path,
     getMainFileHash(repository, defaultBranchCommit, path),
@@ -404,6 +426,7 @@ function collectHosted(repository, source) {
   const latestMergedPull = mergedPulls.reduce((latest, pull) => !latest || pull.mergedAt > latest.mergedAt ? pull : latest, null);
   const integrationAt = latestMergedPull?.mergedAt ?? null;
   const renovateRefreshEvidence = integrationAt ? [
+    ...dashboardEditEvidence(renovateDashboard, dashboardEdit, integrationAt),
     ...openPulls.filter((pull) => pull.author === 'renovate[bot]' && isAfterIntegration(pull.createdAt, integrationAt))
       .map((pull) => ({ kind: 'pull_request', number: pull.number, createdAt: pull.createdAt, url: pull.url })),
     ...renovateComments.filter((comment) => comment.author === 'renovate[bot]' && isAfterIntegration(comment.createdAt, integrationAt))
@@ -437,7 +460,7 @@ function collectHosted(repository, source) {
       mainRenovate: mainRenovateResult.ok,
       mainContextFiles: true,
       mainCiSkipGuard: true,
-      renovateActivity: true,
+      renovateActivity: dashboardEditAvailable || renovateRefreshEvidence.length > 0,
       mainChecks: Array.isArray(mainChecks),
       mainStatuses: Array.isArray(mainStatuses),
     },
@@ -485,4 +508,4 @@ function main() {
 const isMain = process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href;
 if (isMain) main();
 
-export { ciSkipGuardContract, evaluateDrift, isAfterIntegration };
+export { ciSkipGuardContract, evaluateDrift, isAfterIntegration, dashboardEditEvidence };

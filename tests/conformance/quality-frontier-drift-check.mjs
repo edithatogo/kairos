@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { ciSkipGuardContract, evaluateDrift, isAfterIntegration } from '../../scripts/validation/quality-frontier-drift.mjs';
+import { ciSkipGuardContract, evaluateDrift, isAfterIntegration, dashboardEditEvidence } from '../../scripts/validation/quality-frontier-drift.mjs';
 
 assert.deepEqual(ciSkipGuardContract(readFileSync('.github/workflows/ci-skip-guard.yml', 'utf8')),
   { pullRequestTrigger: true, jobName: true });
@@ -9,6 +9,22 @@ assert.equal(isAfterIntegration('2026-09-29T00:00:01Z', '2026-09-29T00:00:00Z'),
 assert.equal(isAfterIntegration('2026-09-29T00:00:00Z', '2026-09-29T00:00:00Z'), false);
 assert.equal(isAfterIntegration('2026-09-28T23:59:59Z', '2026-09-29T00:00:00Z'), false);
 assert.equal(isAfterIntegration('2026-09-29T00:00:01Z', null), false);
+
+const editBase = '2026-10-23T16:45:25Z';
+const dashboard = { state: 'open', user: { login: 'renovate[bot]' }, html_url: 'https://github.com/edithatogo/kairos/issues/136' };
+const bodyEdit = { url: dashboard.html_url, lastEditedAt: '2026-10-23T16:51:49Z',
+  editor: { __typename: 'Bot', login: 'renovate' }, author: { __typename: 'Bot', login: 'renovate' } };
+assert.equal(dashboardEditEvidence(dashboard, bodyEdit, editBase).length, 1);
+for (const edit of [null, { ...bodyEdit, lastEditedAt: editBase }, { ...bodyEdit, lastEditedAt: 'invalid' },
+  { ...bodyEdit, editor: { __typename: 'User', login: 'renovate' } },
+  { ...bodyEdit, editor: { __typename: 'Bot', login: 'other' } },
+  { ...bodyEdit, author: { __typename: 'User', login: 'renovate' } },
+  { ...bodyEdit, url: dashboard.html_url + '0' }]) {
+  assert.deepEqual(dashboardEditEvidence(dashboard, edit, editBase), []);
+}
+assert.deepEqual(dashboardEditEvidence({ ...dashboard, state: 'closed' }, bodyEdit, editBase), []);
+assert.deepEqual(dashboardEditEvidence({ ...dashboard, user: { login: 'human' } }, bodyEdit, editBase), []);
+assert.deepEqual(dashboardEditEvidence(dashboard, bodyEdit, null), []);
 
 const source = {
   generatedAt: '2026-09-29T00:00:00.000Z',
