@@ -27,6 +27,7 @@ Format:
 
 ### Changed
 
+- `crates/kairo-ecs-core` expands linked entity unit test coverage for `linked_entity` domain structures, lifecycle events, and telemetry serialization.
 - Website CSS tooling uses reviewed PostCSS nesting and parser fixes, and website/TypeScript source-map-js locks resolve the fixed 1.2.2 release with preserved evidence checks.
 
 - Bootstrap npm resolves an exact unbundled postcss-selector-parser 7.1.6 security fix, verifies its installed identity, and retains the strict zero-vulnerability package gate.
