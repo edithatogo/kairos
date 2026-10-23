@@ -15,10 +15,15 @@ kairo-ecs-types = { path = "../kairo-ecs-types", version = "0.0.0" }
 # why arrow-array/arrow-ipc/parquet are deliberately NOT admitted yet.
 arrow-schema = { version = "60.0.0", optional = true }
 
+# Track 70 Phase 0: Polars tabular processing engine, admitted default-off
+# behind `polars-native`.
+polars = { version = "0.45", default-features = false, features = ["lazy", "parquet", "ipc", "fmt"], optional = true }
+
 [features]
 default = []
 # Real from Phase 0: official arrow_schema::Schema parity for EVENT_LOG_FIELDS.
 arrow-native = ["dep:arrow-schema"]
+polars-native = ["dep:polars"]
 # Still a stub, as registered in #261. Admitting parquet pulls arrow-array,
 # which transitively pulls tiny-keccak (CC0-1.0); that licence decision belongs
 # to Track 29/20 and is deliberately not taken here.
