@@ -87,6 +87,8 @@ class DependencyAdvisoryPinTests(unittest.TestCase):
             with self.subTest(workflow=name):
                 workflow = (ROOT / '.github/workflows' / name).read_text()
                 if name == 'docs-quality.yml':
+                    self.assertIn("--exclude-path '(^|/)node_modules/'", workflow)
+                    self.assertIn("'./*.md' './docs/**/*.md' './website/**/*.md'", workflow)
                     paths = workflow.split('  pull_request:', 1)[1].split('  push:', 1)[0]
                     for source in ['scripts/prepare_mermaid_runtime.mjs', 'tests/mermaid-runtime.test.mjs']:
                         self.assertIn("      - '" + source + "'", paths)

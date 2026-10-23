@@ -111,7 +111,8 @@ jobs:
       - name: Markdown link check
         uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
         with:
-          args: --verbose --no-progress --cache --max-cache-age 1d './*.md' './docs/**/*.md' './website/**/*.md'
+          # Website installation now precedes this step; npm dependency docs are not repository docs.
+          args: --verbose --no-progress --cache --max-cache-age 1d --exclude-path '(^|/)node_modules/' './*.md' './docs/**/*.md' './website/**/*.md'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Save Lychee cache
