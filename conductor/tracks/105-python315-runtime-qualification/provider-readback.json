@@ -1,0 +1,65 @@
+{
+  "date": "2026-10-24",
+  "baseCommit": "f108f32680b970a449b4c59ecf7d49cc8ac36ce1",
+  "scope": "Read-only provider diagnosis; no coverage upload, settings/permission change, engine source/pin or bot-branch mutations.",
+  "renovate": {
+    "dashboardEditedAt": "2026-10-23T16:51:49Z",
+    "integrationAt": "2026-10-23T16:45:25Z",
+    "editor": {
+      "__typename": "Bot",
+      "login": "renovate"
+    },
+    "closedObsoletePullRequest": 267,
+    "defect": "Collector promised dashboard refresh but ignored body edits. Candidate accepts only typed Renovate bot author/editor and strictly newer valid body timestamp at the same dashboard URL.",
+    "candidateNativeCheck": "pass"
+  },
+  "codecov": {
+    "sourceYamlSha256": "7ac260ef17b0444ba36783633677f9e9d128c04512a30beb7092cfa98fe85b27",
+    "nativeValidationStatus": 200,
+    "validationResult": "Valid!; project.default target auto, threshold0.0, flagsrust-core",
+    "reportCommit": "f108f32680b970a449b4c59ecf7d49cc8ac36ce1",
+    "reportState": "complete",
+    "reportCoverage": 84.51,
+    "upload": "success",
+    "githubStatus": "codecov/patch success; project absent",
+    "effectiveConfigEndpointStatus": 401,
+    "conclusion": "Not intentional patch-only source configuration or pending coverage processing. No evidenced source YAML defect; actual provider configuration/notification root cause remains unproven behind authenticated readback. No speculative config/threshold changes or duplicate uploads."
+  },
+  "qualification": {
+    "localNode": "26.12.1; hosted qualified toolchain validation still required",
+    "checks": [
+      "Real baseline regression rejects missing dashboard-edit implementation",
+      "Focused drift cases pass including stale/equal/invalid/human/wrongbot/foreignURL/missing evidence",
+      "Full offline7-fixture conformance pass",
+      "JavaScript syntax and whitespace pass",
+      "Actual candidate native readback accepts actor-verified edit while retaining Codecov drift"
+    ]
+  },
+  "limits": "Candidate live checkout dirty/source main checks retained; not a hosted candidate check or merged-main acceptance. Managed Python graph limitation remains separate from qualified51package inventory.",
+  "certifiSecurityCorrection": {
+    "advisory": "GHSA-6q48-6c7w-9gw2",
+    "alerts": [
+      98,
+      99
+    ],
+    "oldVersion": "2026.7.22",
+    "patchedVersion": "2026.10.19",
+    "oldBundleCompromisedRootPresent": true,
+    "newBundleCompromisedRootPresent": false,
+    "commands": 10,
+    "allCommandExitsZero": true,
+    "qualificationReceiptSha256": "27a91eea519242f1c0357315170e9fb7a9b9bb9663c267daf2fe1fcb53efd8f5",
+    "locks": [
+      {
+        "path": "scripts/bootstrap-python-tools.lock",
+        "sha256": "5ab64221b0d3ee7369752a0e4a691703c4b75ff033d1f641f508bd3d9e7611ab"
+      },
+      {
+        "path": "scripts/package-python-tools.lock",
+        "sha256": "a2d1060bf951a545a1a58e05dfcd7c0a0c0b957c607c651092a4747345e3a122"
+      }
+    ],
+    "nativeClosure": "Pending normal protected integration and updated package-inventory/native alert readback.",
+    "isolation": "Fresh repo-local3.15.1 environments; existing consumers preserved. Hash/wheel-only installs, public TLS Requests, SSL trust store load, Build/Twine smoke passed. Only certifi record and portable generator command changed in each lock."
+  }
+}
