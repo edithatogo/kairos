@@ -14,7 +14,7 @@ KairoECS is a Rust-native discrete-event (DES), agent-based (ABM), and game-theo
 | TIER 5: ZERO-COPY FFI & POLYGLOT LANGUAGE BINDINGS                                                |
 |  +-----------------+ +-----------------+ +-----------------+ +-----------------+ +--------------+ |
 |  | Python 3.10-3.14| | TypeScript/Wasm | | R (extendr)     | | Julia (ccall)   | | C# / Go      | |
-|  | PyO3 + kairo_gym| | wasm-bindgen    | | Arrow DataFrame | | Native C ABI    | | P/Invoke/cgo | |
+|  | ctypes probe     | | wasm-bindgen    | | Arrow DataFrame | | Native C ABI    | | P/Invoke/cgo | |
 |  +--------+--------+ +--------+--------+ +--------+--------+ +--------+--------+ +------+-------+ |
 |           +-------------------+-------------------+-------------------+-----------------+         |
 |                                                   |                                               |
@@ -27,8 +27,8 @@ KairoECS is a Rust-native discrete-event (DES), agent-based (ABM), and game-theo
 | TIER 4: DATA SPINE, ML/RL SURROGATES, CO-SIMULATION & OBSERVABILITY                               |
 |  +--------------------------+ +--------------------------+ +------------------------------------+ |
 |  | kairo-ecs-arrow          | | kairo-ecs-ml             | | kairo-ecs-fmi & kairo-ecs-streaming| |
-|  | Arrow 53 RecordBatch     | | ParallelVecEnv (OS-thread| | FMI 2.0/3.0 Co-Sim Master (.fmu)   | |
-|  | Parquet Zstd + C Data FFI| | batch step) + OrtSession | | AAS Digital Twin + Kafka/Flight    | |
+|  | Arrow-style RecordBatch    | | ParallelVecEnv (OS-thread| | FMI 2.0/3.0 Co-Sim Master (.fmu)   | |
+|  | custom checkpoint format     | | batch step) + OrtSession | | AAS Digital Twin + Kafka/Flight    | |
 |  +--------------------------+ +--------------------------+ +------------------------------------+ |
 |  +--------------------------+ +--------------------------+ +------------------------------------+ |
 |  | kairo-ecs-cli            | | kairo-ecs-debug          | | kairo-ecs-viz & kairo-ecs-bench    | |
@@ -70,7 +70,7 @@ KairoECS is a Rust-native discrete-event (DES), agent-based (ABM), and game-theo
 ```mermaid
 flowchart TD
     subgraph T5["Tier 5: Polyglot Bindings & Zero-Copy FFI"]
-        PY["Python (PyO3 / kairo_gym)"]
+        PY["Python (pure-Python facade; native wheels planned)"]
         TS["TypeScript / Wasm (wasm-bindgen)"]
         RL["R (extendr) & Julia (ccall)"]
         CS["C# (.NET P/Invoke) & Go (cgo)"]
@@ -79,7 +79,7 @@ flowchart TD
     end
 
     subgraph T4["Tier 4: Data Spine, ML/RL, FMI & Tooling"]
-        ARR["kairo-ecs-arrow (Arrow 53, Parquet Zstd, C Data FFI, HDF5/ADIOS2)"]
+        ARR["kairo-ecs-arrow (in-repo Arrow-style batches + checkpoint writers, HDF5/ADIOS2)"]
         ML["kairo-ecs-ml (Multi-Core ParallelVecEnv, OrtSession)"]
         FMI["kairo-ecs-fmi (FMI 2/3 Co-Sim, AAS) & kairo-ecs-streaming"]
         CLI["kairo-ecs-cli (Sobol, LHS, CRN, ABC-SMC) & kairo-ecs-debug (CoW Time-Travel)"]
@@ -128,7 +128,7 @@ flowchart TD
 | `kairo-ecs-grpc` | Tier 3: Scale | `GrpcSocketTransport`, `KairoOptimisticEnvelopeV1` length-delimited TCP framing | `grpc` | Track 35 / 49 |
 | `kairo-ecs-gpu` | Tier 3: Scale | `PersistentGpuSession`, `MetalBackend` (Apple Silicon unified memory + multi-core workgroups), `WgpuBackend`, `CudaBackend` | `gpu`, `metal-backend`, `wgpu-backend`, `cuda-backend` | Track 32 / 52 |
 | `kairo-ecs-webgpu` | Tier 3: Scale | Browser WGSL compute shader pipeline, staging ring buffers, CPU parity checks | `webgpu` | Track 33 / 52 |
-| `kairo-ecs-arrow` | Tier 4: Data & I/O | Official Apache Arrow 53 `RecordBatch`, Parquet Zstd writer, `FFI_ArrowArray` C Data Interface, HDF5/ADIOS2 checkpoints | `parallel-io`, `hdf5`, `adios2` | Track 04 / 51 / 62 |
+| `kairo-ecs-arrow` | Tier 4: Data & I/O | Arrow-compatible in-repo `ArrowRecordBatch` and checkpoint writers (custom byte format, not yet the official `arrow`/`parquet` crates), HDF5/ADIOS2 checkpoints | `parallel-io`, `hdf5`, `adios2` | Track 04 / 51 / 62 |
 | `kairo-ecs-ml` | Tier 4: AI / RL | `ParallelVecEnv` (multi-threaded OS thread pool via `std::thread::scope`), `OrtSession`, `InferenceTickHook` | `onnx`, `tensorrt`, `burn`, `gymnasium` | Track 37 / 65 |
 | `kairo-ecs-fmi` | Tier 4: Digital Twin | `FmuArchive`, `Fmi2CoSimInstance`, `Fmi3CoSimInstance`, `DynamicFmuLoader`, AAS submodel validation | `fmi-runtime`, `fmi2`, `fmi3` | Track 38 / 53 |
 | `kairo-ecs-streaming` | Tier 4: Streaming | Real-time wallclock pacer, Kafka event sink/source contract, Arrow Flight batch stream | `kafka`, `arrow-flight` | Track 36 |
@@ -148,7 +148,7 @@ flowchart TD
 | Language | Package / Directory | Bridge Mechanism | Zero-Copy / Data Exchange | Key Capabilities |
 | :--- | :--- | :--- | :--- | :--- |
 | **Rust** | `crates/*` | Native workspace crates | Direct `ArchetypeTable` slices & `arrow_array::RecordBatch` | Full access to all 23 crates, compile-time type safety, `#![forbid(unsafe_code)]` in domain crates |
-| **Python (3.10–3.14)** | `bindings/python/` | `ctypes` / PyO3 C ABI (`libkairo_ecs_ffi`) | Arrow C Data Interface (`__arrow_c_array__` / `pyarrow` / Polars / DuckDB) | `Scheduler`, `PettingZooParallelEnv`, `GymnasiumVecEnv` (`kairo_gym`), deterministic replay |
+| **Python (3.10–3.14)** | `bindings/python/` | pure-Python facade (ctypes probe; PyO3 planned) | Arrow-style export (C Data Interface not yet wired) | `Scheduler`, `PettingZooParallelEnv`, `GymnasiumVecEnv` (`kairo_gym`), deterministic replay |
 | **TypeScript / Wasm** | `bindings/typescript/` + `crates/kairo-ecs-wasm` | `wasm-bindgen` & WebAssembly linear memory | TypedArray (`Float64Array`, `Int64Array`) views + Arrow IPC bytes | Browser & Node.js `WasmSimulation`, `WasmTimeTravelInspector`, interactive studio |
 | **R** | `bindings/r/` | `extendr` / `.Call` C ABI | Arrow table / R `data.frame` batch conversion | Deterministic event scheduling, parameter sweeps, statistical output analysis |
 | **Julia** | `bindings/julia/` | Native `ccall` into `libkairo_ecs_ffi` | `Arrow.Table` zero-copy buffer handoff | High-frequency stepping, scientific computing & DifferentialEquations.jl co-simulation |
@@ -179,6 +179,18 @@ flowchart TD
 | **Benchmarks, VVUQ, Governance & Toolchains** | Tracks `18–31` | **Done (14/14)** | Reproducibility checks, OpenSSF supply-chain gates, API compatibility pack |
 | **Advanced Compute Scaffolds (GPU, PDES, ML, FMI, Debug)** | Tracks `32–45` | **Done (14/14)** | Unit/integration suites, Starlight docs SOTA gate, code health >= 9.5/10 |
 | **Game Theory Ontology & Multi-Game Solvers** | Tracks `56–61` | **Done (6/6)** | Turtle/JSON-LD ingestion, deterministic codegen, Graph-ECS, normal/extensive solvers |
-| **Production Spine, Native Wheels, SoA/DES/ABM, MARL & SBI** | Tracks `62–66` | **Done (5/5)** | Arrow 53 + Parquet Zstd, C Data FFI, SimPy-parity resources, Lemke-Howson/CFR+, Sobol/ABC-SMC |
+| **Production Spine, Native Wheels, SoA/DES/ABM, MARL & SBI** | Tracks `62–66` | **Done (5/5)** | in-repo Arrow-style columnar format (official `arrow`/`parquet` crate adoption planned), C Data FFI, SimPy-parity resources, Lemke-Howson/CFR+, Sobol/ABC-SMC |
 | **HPC Parity Charter, Conservative PDES & Cloud Gate** | Tracks `46, 47, 54` | **Done (3/3)** | Conservative lookahead PDES runtime, HPC evidence schema & container/scheduler gates |
 | **Multi-Node Cluster / Lustre / Native CUDA Hardware Certification** | Tracks `48–53, 55` | **In Progress (7/7)** | Local Rust/macOS Metal/multi-rank MPI/socket/checkpoint code is merged & tested; final `live-hpc` promotion awaits external multi-node cluster hardware |
+
+## Known gaps and substitution candidates
+
+| Area | Current state | Maintained alternative |
+| --- | --- | --- |
+| `kairo-ecs-arrow` | Custom Arrow-style and checkpoint byte formats; checksum is not SHA-256 | `arrow`, `parquet`, `sha2` |
+| `kairo-ecs-ml` | `OrtSession::run` echoes input; no ONNX Runtime | `ort`, `burn` |
+| `kairo-ecs-streaming` | Kafka/NATS/WebSocket/Flight features alias an in-memory stream | `rdkafka`, `async-nats`, `arrow-flight` |
+| `kairo-ecs-game-ontology` | Line/byte matching parser for Turtle and JSON-LD | `oxttl`, `oxrdf`, `json-ld` |
+| `kairo-ecs-mpi` / `kairo-ecs-grpc` | Empty marker features; hand-rolled sockets | `mpi` (rsmpi), `tonic`, `prost` |
+| Python / Wasm bindings | Python never loads the native library; Wasm snapshot values are placeholders | PyO3 + maturin, `wasm-bindgen` |
+| `kairo-ecs-viz` | `wgpu`/`bevy` renderers not wired | `wgpu`, `bevy` |
