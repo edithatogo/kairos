@@ -1,0 +1,121 @@
+[
+  {
+    "file": "scripts/archive-python-tools.in",
+    "name": "jsonschema",
+    "pinned": "4.26.0",
+    "latest": "4.26.0",
+    "requires_python": ">=3.10"
+  },
+  {
+    "file": "scripts/bootstrap-python-tools.in",
+    "name": "pip",
+    "pinned": "25.0.1",
+    "latest": "26.2.2",
+    "requires_python": ">=3.10"
+  },
+  {
+    "file": "scripts/bootstrap-python-tools.in",
+    "name": "build",
+    "pinned": "1.6.1",
+    "latest": "1.6.1",
+    "requires_python": ">=3.10"
+  },
+  {
+    "file": "scripts/bootstrap-python-tools.in",
+    "name": "backports.tarfile",
+    "pinned": "1.2.0",
+    "latest": "1.2.0",
+    "requires_python": ">=3.8"
+  },
+  {
+    "file": "scripts/bootstrap-python-tools.in",
+    "name": "twine",
+    "pinned": "7.0.0",
+    "latest": "7.0.0",
+    "requires_python": ">=3.10"
+  },
+  {
+    "file": "scripts/bootstrap-python-tools.in",
+    "name": "maturin",
+    "pinned": "1.9.6",
+    "latest": "1.15.0",
+    "requires_python": ">=3.7"
+  },
+  {
+    "file": "scripts/bootstrap-python-tools.in",
+    "name": "pytest",
+    "pinned": "8.3.5",
+    "latest": "9.1.1",
+    "requires_python": ">=3.10"
+  },
+  {
+    "file": "scripts/bootstrap-python-tools.in",
+    "name": "hypothesis",
+    "pinned": "6.131.0",
+    "latest": "6.170.8",
+    "requires_python": ">=3.11"
+  },
+  {
+    "file": "scripts/bootstrap-python-tools.in",
+    "name": "ruff",
+    "pinned": "0.16.9",
+    "latest": "0.17.2",
+    "requires_python": ">=3.7"
+  },
+  {
+    "file": "scripts/bootstrap-python-tools.in",
+    "name": "pyarrow",
+    "pinned": "24.0.0",
+    "latest": "26.0.0",
+    "requires_python": ">=3.11"
+  },
+  {
+    "file": "scripts/bootstrap-python-tools.in",
+    "name": "setuptools",
+    "pinned": "80.9.0",
+    "latest": "84.2.1",
+    "requires_python": ">=3.10"
+  },
+  {
+    "file": "scripts/bootstrap-python-tools.in",
+    "name": "wheel",
+    "pinned": "0.45.1",
+    "latest": "0.48.0",
+    "requires_python": ">=3.9"
+  },
+  {
+    "file": "scripts/package-python-tools.in",
+    "name": "build",
+    "pinned": "1.6.1",
+    "latest": "1.6.1",
+    "requires_python": ">=3.10"
+  },
+  {
+    "file": "scripts/package-python-tools.in",
+    "name": "backports.tarfile",
+    "pinned": "1.2.0",
+    "latest": "1.2.0",
+    "requires_python": ">=3.8"
+  },
+  {
+    "file": "scripts/package-python-tools.in",
+    "name": "twine",
+    "pinned": "7.0.0",
+    "latest": "7.0.0",
+    "requires_python": ">=3.10"
+  },
+  {
+    "file": "scripts/package-python-tools.in",
+    "name": "setuptools",
+    "pinned": "80.9.0",
+    "latest": "84.2.1",
+    "requires_python": ">=3.10"
+  },
+  {
+    "file": "scripts/package-python-tools.in",
+    "name": "wheel",
+    "pinned": "0.45.1",
+    "latest": "0.48.0",
+    "requires_python": ">=3.9"
+  }
+]

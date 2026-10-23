@@ -1,0 +1,55 @@
+✔ classifies missing Docker as a runtime blocker (169.1735ms)
+✔ classifies sandbox-blocked Docker probe separately from missing CLI (22.158542ms)
+✔ classifies unavailable Docker daemon separately from missing CLI (0.1065ms)
+✔ classifies available Docker CLI and daemon as ready but not proof (0.070791ms)
+✔ script self-test passes (1237.040166ms)
+✔ classifies missing external runtime CLI (1.46425ms)
+✔ classifies sandbox-blocked external runtime probe (0.11075ms)
+✔ classifies failed external runtime CLI probe (0.071792ms)
+✔ classifies passed CLI probe as available but not proof (0.066ms)
+✔ script self-test passes (1545.232791ms)
+✔ free compute route matrix validates current repo (1050.990834ms)
+✔ free compute routes must preserve not-proof boundaries (1151.666ms)
+✔ capture utility records a scaffold manifest and checksummed raw artifact (4110.014708ms)
+✔ live-hpc capture uses no waiver and passes parity evidence validation when installed as a manifest (3593.990208ms)
+✖ current repo keeps live-template tracks below Done (1309.252458ms)
+✔ validator blocks Done track while live evidence remains template (1383.787125ms)
+✔ validator allows Done track after live template is replaced (831.431292ms)
+✔ Track 55 local runner emits deterministic weak and strong placeholder profiles (2279.951666ms)
+✔ Track 55 aggregator records restart/parity placeholders and live-HPC-required component errors (1774.481625ms)
+✔ Track 55 runner fails explicitly when live HPC evidence is required (785.992042ms)
+✔ classifies Git link.exe shadowing as a linker blocker (0.460167ms)
+✔ classifies Visual Studio linker as acceptable (0.06725ms)
+✔ script self-test passes (1043.626583ms)
+ℹ tests 23
+ℹ suites 0
+ℹ pass 22
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 8636.426583
+
+✖ failing tests:
+
+test at tests/hpc-live-template-blockers.test.mjs:28:1
+✖ current repo keeps live-template tracks below Done (1309.252458ms)
+  AssertionError [ERR_ASSERTION]: HPC live template blocker validation failed:
+  - Track 51 parallel filesystem evidence cannot be Done while live evidence manifests remain templates: track51-live-parallel-filesystem-template.json
+  - Track 55 weak/strong scaling evidence cannot be Done while live evidence manifests remain templates: track55-live-weak-scaling-template.json, track55-live-strong-scaling-template.json
+  
+  
+  1 !== 0
+  
+      at TestContext.<anonymous> (file:///Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/tests/hpc-live-template-blockers.test.mjs:30:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

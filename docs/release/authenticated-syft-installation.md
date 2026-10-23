@@ -109,7 +109,7 @@ native receipt must validate the updated source after merge.
 
 ## Use and retained evidence
 
-Run with Python **3.14.8** on a supported native host and choose a new output
+Run with Python **3.15.1** on a supported native host and choose a new output
 directory whose parent already exists:
 
 ```sh
@@ -133,3 +133,7 @@ perform network access, dependency installation, real Sigstore verification,
 or a Syft probe. The native runs above provide installer-path evidence for the
 previous source revision only. No actual Syft scan, release, or publication is
 represented here.
+
+## Python 3.15.1 update — 23 October 2026
+
+Current execution requires Python 3.15.1 and Sigstore 4.5.1, with freshly qualified platform wheel hashes. The earlier Linux receipt above remains historical evidence for its original toolchain; it is not Python 3.15 qualification. Current macOS qualification and outstanding Linux/container gates are recorded in `conductor/toolchain-qualification-20261023/README.md`.

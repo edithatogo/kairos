@@ -25,7 +25,7 @@ jobs:
         run: |
           {
             echo '## Scheduler fuzzing: UNVERIFIED'
-            echo 'No fuzz run was performed. cargo-fuzz requires Rust nightly, which is disallowed by the sole Rust 1.99.0 policy.'
+            echo 'No fuzz run was performed. cargo-fuzz requires Rust nightly, which is disallowed by the sole Rust 1.99.1 policy.'
             echo 'Outstanding obligation: reassess fuzz execution only under a future reviewed toolchain policy; this workflow reports no fuzz pass.'
           } | tee fuzzing-unverified.txt >> "$GITHUB_STEP_SUMMARY"
       - name: Preserve unverified fuzzing status

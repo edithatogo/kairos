@@ -36,13 +36,13 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Install Rust 1.99.0
-        run: rustup toolchain install 1.99.0 --profile minimal
+      - name: Install Rust 1.99.1
+        run: rustup toolchain install 1.99.1 --profile minimal
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
       - name: Install cargo-mutants
-        run: cargo +1.99.0 install cargo-mutants --version 27.1.0 --locked
+        run: cargo +1.99.1 install cargo-mutants --version 27.1.0 --locked
       - name: Mutate the Rust scheduler core
-        run: cargo +1.99.0 mutants --package kairo-ecs-core --jobs 2 --timeout-multiplier 3
+        run: cargo +1.99.1 mutants --package kairo-ecs-core --jobs 2 --timeout-multiplier 3
       - name: Preserve mutation results
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -53,7 +53,7 @@ jobs:
           retention-days: 30
 
   heavy-rust-checks:
-    name: Rust 1.99.0 benchmarks (Miri UNVERIFIED)
+    name: Rust 1.99.1 benchmarks (Miri UNVERIFIED)
     if: >-
       github.event.schedule == '17 3 * * *' ||
       (github.event_name == 'workflow_dispatch' &&
@@ -63,18 +63,18 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Install Rust 1.99.0
-        run: rustup toolchain install 1.99.0 --profile minimal
+      - name: Install Rust 1.99.1
+        run: rustup toolchain install 1.99.1 --profile minimal
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
-      - name: Run ordinary Rust 1.99.0 benchmarks
+      - name: Run ordinary Rust 1.99.1 benchmarks
         run: |
           test -f Cargo.toml
-          cargo +1.99.0 bench --workspace
+          cargo +1.99.1 bench --workspace
       - name: Report Miri analysis as unverified
         if: always()
         run: |
           {
             echo '## Miri analysis: UNVERIFIED'
-            echo 'Miri was not run: the Rust nightly toolchain is disallowed by the sole Rust 1.99.0 policy.'
+            echo 'Miri was not run: the Rust nightly toolchain is disallowed by the sole Rust 1.99.1 policy.'
             echo 'Outstanding obligation: reassess Miri only under a future reviewed toolchain policy; no Miri result is claimed here.'
           } >> "$GITHUB_STEP_SUMMARY"

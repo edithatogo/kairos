@@ -37,3 +37,9 @@ as unresolved rather than accepting it silently.
 ## Registration review
 
 Planning-only registration passes phase, DAG, no-skip and whitespace checks. See [exact-command receipt](registration-evidence/receipt.json). Previous qualification remains retained evidence, not current-main runtime acceptance.
+
+## Candidate reconciliation
+
+The original toolchain worktree remains byte-for-byte preserved. Its saved patch applied cleanly to the current-main-based branch; 63 changed source files match the qualified candidate exactly. Only `conductor/quality-gates.md` also contains the already merged catalogue repair. Three Python policy cases, unchanged no-skip catalogue validation and whitespace pass. See [reconciliation receipt](candidate-reconciliation/receipt.json). Earlier native/binding/security qualification remains retained with its original scope; repo-local workflow binding and current-main hosted/platform/handover proof remain open. No Polars/FMI/GPU/MPI implementation files or CareOps pin changed.
+
+Raw prior logs retain original tool-emitted whitespace and their hashes; the source whitespace check explicitly excludes only `conductor/toolchain-qualification-20261023/*.log`. The first all-file whitespace check reported those raw-output lines; the logs were preserved rather than rewritten.

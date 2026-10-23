@@ -53,6 +53,9 @@ jobs:
       gym: ${{ steps.classify.outputs.gym }}
       archive_python: ${{ steps.classify.outputs.archive_python }}
     steps:
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15.1"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
@@ -75,7 +78,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.10', '3.11', '3.12', '3.13', '3.14']
+        python-version: ["3.15.1"]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -142,7 +145,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: '24.22.0'
+          node-version: '24.22.1'
       - name: TypeScript smoke
         run: |
           test -f bindings/typescript/package.json
@@ -207,7 +210,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.9', '3.14']
+        python-version: ["3.15.1"]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -216,7 +219,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install and check optional Gymnasium integration
-        if: matrix.python-version == '3.14'
+        if: matrix.python-version == '3.15.1'
         run: |
           python -m pip install --require-hashes -r python/kairo_gym/ci-requirements.lock
           PYTHONPATH=python/kairo_gym/src python - <<'PY'
@@ -245,7 +248,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: '3.14.8'
+          python-version: "3.15.1"
       - name: Install hash-locked archive validation tools
         run: python -m pip install --require-hashes -r scripts/archive-python-tools.lock
       - name: Run archive validation suite
@@ -273,6 +276,9 @@ jobs:
     needs: [changes, python, r, julia, typescript, csharp, go, python-gym, archive-python]
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15.1"
       - name: Require selected binding checks and classifier
         env:
           CHANGES_RESULT: ${{ needs.changes.result }}

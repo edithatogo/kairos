@@ -1,0 +1,234 @@
+    Checking kairo-ecs-types v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-types)
+   Compiling unicode-ident v1.0.24
+    Checking cfg-if v1.0.4
+    Checking itoa v1.0.18
+    Checking serde_core v1.0.229
+    Checking libc v0.2.186
+    Checking libm v0.2.16
+    Checking memchr v2.8.0
+    Checking once_cell v1.21.4
+    Checking bitflags v2.13.2
+    Checking crossbeam-utils v0.8.21
+   Compiling proc-macro2 v1.0.106
+    Checking kairo-ecs-core v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-core)
+    Checking either v1.15.0
+    Checking equivalent v1.0.3
+    Checking foldhash v0.2.0
+    Checking hashbrown v0.17.1
+    Checking zmij v1.0.21
+    Checking kairo-ecs-state v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-state)
+    Checking static_assertions v1.1.0
+    Checking crossbeam-epoch v0.9.20
+    Checking regex-syntax v0.8.10
+    Checking smallvec v1.16.3
+   Compiling quote v1.0.45
+    Checking crossbeam-deque v0.8.6
+    Checking scopeguard v1.2.0
+    Checking lock_api v0.4.14
+    Checking parking_lot_core v0.9.12
+    Checking kairo-ecs-rng v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-rng)
+   Compiling jobserver v0.1.35
+   Compiling syn v3.0.6
+   Compiling syn v2.0.117
+    Checking rayon-core v1.13.0
+    Checking unicode-width v0.2.2
+    Checking parking_lot v0.12.5
+   Compiling cc v1.9.0
+    Checking aho-corasick v1.1.4
+    Checking getrandom v0.2.17
+    Checking array-init-cursor v0.2.1
+    Checking planus v0.3.1
+    Checking num-traits v0.2.19
+    Checking rand_core v0.6.4
+    Checking getrandom v0.3.4
+    Checking rayon v1.12.0
+    Checking kairo-ecs-pdes v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-pdes)
+    Checking allocator-api2 v0.2.21
+    Checking castaway v0.2.4
+    Checking foldhash v0.1.5
+    Checking ryu v1.0.23
+    Checking siphasher v1.0.4
+    Checking simdutf8 v0.1.5
+   Compiling syn v1.0.109
+    Checking phf_shared v0.12.1
+   Compiling target-features v0.1.6
+    Checking memmap2 v0.9.12
+    Checking raw-cpuid v11.6.0
+    Checking bytes v1.12.1
+    Checking regex-automata v0.4.14
+    Checking indexmap v2.14.2
+    Checking serde_json v1.0.154
+   Compiling psm v0.1.32
+   Compiling zstd-sys v2.1.2+zstd.1.5.7
+   Compiling stacker v0.1.25
+   Compiling lz4-sys v1.11.1+lz4-1.10.0
+    Checking phf v0.12.1
+    Checking chrono v0.4.45
+    Checking streaming-iterator v0.1.9
+    Checking dyn-clone v1.0.20
+    Checking strength_reduce v0.2.4
+    Checking debug_unsafe v0.1.4
+    Checking ethnum v1.5.3
+    Checking objc2-encode v4.1.0
+    Checking objc2 v0.6.5
+    Checking atoi_simd v0.16.1
+    Checking errno v0.3.14
+    Checking utf8parse v0.2.2
+    Checking chrono-tz v0.10.4
+    Checking fast-float2 v0.2.4
+    Checking itoap v1.0.1
+    Checking anstyle-parse v1.0.0
+    Checking rustix v1.1.5
+    Checking libloading v0.9.0
+    Checking regex v1.12.3
+    Checking alloc-no-stdlib v2.0.4
+    Checking colorchoice v1.0.5
+    Checking is_terminal_polyfill v1.70.2
+    Checking anstyle v1.0.14
+    Checking anstyle-query v1.1.5
+    Checking anstream v1.0.0
+    Checking alloc-stdlib v0.2.4
+    Checking adler2 v2.0.1
+    Checking unicode-segmentation v1.13.3
+    Checking clap_lex v1.0.0
+    Checking crossterm v0.29.0
+    Checking simd-adler32 v0.3.10
+    Checking strsim v0.11.1
+    Checking clap_builder v4.5.61
+    Checking miniz_oxide v0.9.1
+    Checking comfy-table v7.2.2
+    Checking objc2-core-foundation v0.3.2
+   Compiling zerocopy-derive v0.8.48
+   Compiling strum_macros v0.26.4
+   Compiling clap_derive v4.5.61
+    Checking crc32fast v1.5.3
+   Compiling serde_derive v1.0.229
+    Checking zerocopy v0.8.48
+   Compiling thiserror-impl v2.0.21
+   Compiling bytemuck_derive v1.12.1
+    Checking brotli-decompressor v4.0.3
+   Compiling multiversion-macros v0.7.4
+    Checking rustc-hash v1.1.0
+    Checking fallible-streaming-iterator v0.1.9
+    Checking xxhash-rust v0.8.19
+    Checking streaming-decompression v0.1.2
+    Checking thiserror v2.0.21
+    Checking clap v4.5.61
+    Checking naga-types v30.0.1
+    Checking bytemuck v1.25.2
+    Checking flate2 v1.1.10
+    Checking snap v1.1.2
+    Checking brotli v7.0.0
+    Checking objc2-foundation v0.3.2
+    Checking block2 v0.6.2
+    Checking multiversion v0.7.4
+    Checking plotters-backend v0.3.7
+    Checking ciborium-io v0.2.2
+    Checking polars-parquet-format v0.1.0
+    Checking base64 v0.22.1
+    Checking bit-vec v0.9.1
+    Checking log v0.4.34
+    Checking bit-set v0.10.0
+    Checking plotters-svg v0.3.7
+    Checking objc2-core-graphics v0.3.2
+   Compiling recursive-proc-macro-impl v0.1.1
+    Checking argminmax v0.6.3
+    Checking codespan-reporting v0.13.1
+    Checking itertools v0.10.5
+    Checking glob v0.3.4
+    Checking percent-encoding v2.3.2
+    Checking arrayvec v0.7.8
+    Checking same-file v1.0.6
+    Checking raw-window-handle v0.6.2
+    Checking serde v1.0.229
+    Checking home v0.5.12
+    Checking cast v0.3.0
+    Checking wgpu-types v30.0.1
+    Checking walkdir v2.5.0
+    Checking recursive v0.1.1
+    Checking plotters v0.3.7
+    Checking polars-arrow-format v0.1.0
+    Checking compact_str v0.8.2
+    Checking hashbrown v0.15.5
+    Checking lz4 v1.28.1
+    Checking objc2-metal v0.3.2
+    Checking criterion-plot v0.5.0
+    Checking tinytemplate v1.2.1
+    Checking is-terminal v0.4.17
+    Checking anes v0.1.6
+    Checking oorandom v11.1.5
+    Checking libloading v0.8.9
+    Checking profiling v1.0.18
+    Checking kairo-ecs-game-theory v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-game-theory)
+    Checking cudarc v0.19.10
+    Checking rand_core v0.10.1
+    Checking kairo-ecs-ffi v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-ffi)
+    Checking arrow-schema v60.0.0
+    Checking pollster v1.0.1
+    Checking getrandom v0.4.3
+    Checking kairo-ecs-des v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-des)
+    Checking rand v0.10.3
+    Checking chacha20 v0.10.2
+    Checking rand_xorshift v0.5.0
+    Checking unarray v0.1.4
+    Checking core_detect v1.0.0
+   Compiling wasm-bindgen-shared v0.2.129
+    Checking kairo-ecs-fmi v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-fmi)
+    Checking kairo-ecs-game-ontology v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-game-ontology)
+    Checking half v2.7.1
+    Checking ppv-lite86 v0.2.21
+    Checking ahash v0.8.12
+    Checking proptest v1.12.0
+   Compiling wasm-bindgen-macro-support v0.2.129
+    Checking rand_chacha v0.3.1
+    Checking hashbrown v0.14.5
+    Checking ciborium-ll v0.2.2
+    Checking polars-error v0.45.1
+    Checking rand v0.8.8
+    Checking naga v30.0.1
+    Checking ciborium v0.2.2
+    Checking kairo-ecs-debug v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-debug)
+    Checking kairo-ecs-abm v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-abm)
+    Checking kairo-ecs-bench v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-bench)
+    Checking kairo-ecs-grpc v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-grpc)
+    Checking criterion v0.5.1
+    Checking kairo-ecs-cuda v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-cuda)
+    Checking polars-utils v0.45.1
+    Checking rand_distr v0.4.3
+    Checking kairo-ecs-mpi v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-mpi)
+    Checking kairo-ecs-viz v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-viz)
+    Checking kairo-ecs-webgpu v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-webgpu)
+    Checking polars-schema v0.45.1
+    Checking kairo-ecs-streaming v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-streaming)
+    Checking kairo-ecs-ml v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-ml)
+   Compiling zstd-safe v7.3.0
+    Checking zstd v0.13.3
+    Checking polars-arrow v0.45.1
+    Checking kairo-ecs-diplomat v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-diplomat)
+    Checking kairo-ecs-cs-bridge v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-cs-bridge)
+    Checking kairo-ecs-uniffi v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-uniffi)
+    Checking objc2-quartz-core v0.3.2
+    Checking raw-window-metal v1.1.0
+    Checking kairo-ecs-cli v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-cli)
+   Compiling wasm-bindgen-macro v0.2.129
+    Checking wasm-bindgen v0.2.129
+    Checking kairo-ecs-wasm v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-wasm)
+    Checking wgpu-naga-bridge v30.0.1
+    Checking wgpu-hal v30.0.1
+    Checking polars-compute v0.45.1
+    Checking wgpu-core-deps-apple v30.0.1
+    Checking wgpu-core v30.0.1
+    Checking polars-row v0.45.1
+    Checking polars-parquet v0.45.1
+    Checking polars-core v0.45.1
+    Checking wgpu v30.0.1
+    Checking polars-ops v0.45.1
+    Checking polars-io v0.45.1
+    Checking kairo-ecs-gpu v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-gpu)
+    Checking polars-plan v0.45.1
+    Checking polars-expr v0.45.1
+    Checking polars-mem-engine v0.45.1
+    Checking polars-lazy v0.45.1
+    Checking polars v0.45.1
+    Checking kairo-ecs-arrow v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-arrow)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 3m 34s

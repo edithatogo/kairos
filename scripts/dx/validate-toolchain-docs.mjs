@@ -33,7 +33,7 @@ function main() {
   const devboxPackages = new Set(devbox.packages || []);
   for (const pkg of [
     "rustup",
-    "python314",
+    "uv",
     "nodejs",
     "go",
     "julia",
@@ -72,9 +72,7 @@ function main() {
   ]) {
     assert(devcontainer.features?.[feature], `.devcontainer/devcontainer.json features are missing ${feature}`);
   }
-  assertIncludes(devcontainer.postCreateCommand || "", "cargo install just --locked", ".devcontainer/devcontainer.json postCreateCommand");
-  assertIncludes(devcontainer.postCreateCommand || "", "cargo-nextest", ".devcontainer/devcontainer.json postCreateCommand");
-  assertIncludes(devcontainer.postCreateCommand || "", "cargo-vet", ".devcontainer/devcontainer.json postCreateCommand");
+  assertIncludes(devcontainer.postCreateCommand || "", "(3, 15, 1)", ".devcontainer/devcontainer.json Python selection");
 
   const justfile = readText("justfile");
   for (const recipe of ["dev-setup:", "dev-validate:", "toolchain-docs:"]) {

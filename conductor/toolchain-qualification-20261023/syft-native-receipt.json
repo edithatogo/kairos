@@ -1,0 +1,232 @@
+{
+  "archive": {
+    "archive_sha256": "7e0bdad94c569fc6d5785c9a657bbae3d4c4e140ccb5eace3d0b5b6bc2b6dbcf",
+    "binary_sha256": "835607cdfbdbfc59335b0beadeefc47aa6aab7d3b403c11cfa65627d92a27f61",
+    "decompressed_stream_limit": 135352320,
+    "expanded_bytes": 84576497,
+    "member_count": 4,
+    "members": {
+      "CHANGELOG.md": "05b6e7c69779f127a3509ece2602bf6d3676b41b57f4b5b6faa9ab04cc0ba17e",
+      "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+      "README.md": "525cd863114cfad6353ec672c8026404654d564c5c0a0761c3611fea6a17fba3",
+      "syft": "835607cdfbdbfc59335b0beadeefc47aa6aab7d3b403c11cfa65627d92a27f61"
+    },
+    "metadata_header_limit": 65536
+  },
+  "archive_sha256": "7e0bdad94c569fc6d5785c9a657bbae3d4c4e140ccb5eace3d0b5b6bc2b6dbcf",
+  "authenticated_asset": "syft_1.54.0_darwin_arm64.tar.gz",
+  "binary_path": "bin/syft",
+  "binary_sha256": "835607cdfbdbfc59335b0beadeefc47aa6aab7d3b403c11cfa65627d92a27f61",
+  "certificate_identity": "https://github.com/anchore/syft/.github/workflows/release.yaml@refs/heads/main",
+  "commands": [
+    {
+      "argv": [
+        "/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/.venv/bin/python",
+        "/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/scripts/supply_chain/install_verified_syft.py",
+        "--fetch-internal",
+        "https://github.com/anchore/syft/releases/download/v1.54.0/syft_1.54.0_checksums.txt",
+        "/private/tmp/kairos-qualification-20261023/syft-native-315/downloads/syft-checksums.txt",
+        "65536"
+      ],
+      "elapsed_seconds": 2.428,
+      "exit_status": 0,
+      "label": "download-checksums",
+      "log_bytes": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/.venv/bin/python",
+        "/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/scripts/supply_chain/install_verified_syft.py",
+        "--fetch-internal",
+        "https://github.com/anchore/syft/releases/download/v1.54.0/syft_1.54.0_checksums.txt.sigstore.json",
+        "/private/tmp/kairos-qualification-20261023/syft-native-315/downloads/syft-checksums.sigstore.json",
+        "2097152"
+      ],
+      "elapsed_seconds": 1.757,
+      "exit_status": 0,
+      "label": "download-signature-bundle",
+      "log_bytes": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/.venv/bin/python",
+        "-m",
+        "venv",
+        "/private/tmp/kairos-qualification-20261023/syft-native-315/verifier"
+      ],
+      "elapsed_seconds": 21.9,
+      "exit_status": 0,
+      "label": "create-verifier-venv",
+      "log_bytes": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "/private/tmp/kairos-qualification-20261023/syft-native-315/verifier/bin/python",
+        "/private/tmp/kairos-qualification-20261023/syft-native-315/pip-config-audit.py",
+        "/private/tmp/kairos-qualification-20261023/syft-native-315/pip-canary.ini"
+      ],
+      "elapsed_seconds": 1.345,
+      "exit_status": 0,
+      "label": "audit-pip-configuration",
+      "log_bytes": 40,
+      "log_sha256": "fec941f5521cf6f1769211253ba72e28d4153252678bf67cf5f927967b5e7d22",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "fec941f5521cf6f1769211253ba72e28d4153252678bf67cf5f927967b5e7d22"
+    },
+    {
+      "argv": [
+        "/private/tmp/kairos-qualification-20261023/syft-native-315/verifier/bin/python",
+        "-m",
+        "pip",
+        "--isolated",
+        "--disable-pip-version-check",
+        "--no-input",
+        "install",
+        "--require-hashes",
+        "-r",
+        "/private/tmp/kairos-qualification-20261023/syft-native-315/verifier.lock"
+      ],
+      "elapsed_seconds": 31.059,
+      "exit_status": 0,
+      "label": "install-hash-locked-verifier",
+      "log_bytes": 7834,
+      "log_sha256": "adfb4494e3efb8f9fb69dd4134b94343899d947574115a2fa86d3e8be4604247",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "adfb4494e3efb8f9fb69dd4134b94343899d947574115a2fa86d3e8be4604247"
+    },
+    {
+      "argv": [
+        "/private/tmp/kairos-qualification-20261023/syft-native-315/verifier/bin/python",
+        "-m",
+        "sigstore",
+        "verify",
+        "github",
+        "--bundle",
+        "/private/tmp/kairos-qualification-20261023/syft-native-315/downloads/syft-checksums.sigstore.json",
+        "--cert-identity",
+        "https://github.com/anchore/syft/.github/workflows/release.yaml@refs/heads/main",
+        "--sha",
+        "cc326e45a6213360266dda4b30cc68095946d676",
+        "--repository",
+        "anchore/syft",
+        "--ref",
+        "refs/heads/main",
+        "/private/tmp/kairos-qualification-20261023/syft-native-315/downloads/syft-checksums.txt"
+      ],
+      "elapsed_seconds": 4.427,
+      "exit_status": 0,
+      "label": "verify-signed-checksum-document",
+      "log_bytes": 92,
+      "log_sha256": "67ac431771b779309cb901397cacddbd04f01f22e198ff2e58b6c3456fd1eaff",
+      "stderr_sha256": "67ac431771b779309cb901397cacddbd04f01f22e198ff2e58b6c3456fd1eaff",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/.venv/bin/python",
+        "/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/scripts/supply_chain/install_verified_syft.py",
+        "--fetch-internal",
+        "https://github.com/anchore/syft/releases/download/v1.54.0/syft_1.54.0_darwin_arm64.tar.gz",
+        "/private/tmp/kairos-qualification-20261023/syft-native-315/downloads/syft_1.54.0_darwin_arm64.tar.gz",
+        "67108864"
+      ],
+      "elapsed_seconds": 3.039,
+      "exit_status": 0,
+      "label": "download-syft-archive",
+      "log_bytes": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/.venv/bin/python",
+        "/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/scripts/supply_chain/install_verified_syft.py",
+        "--extract-internal",
+        "/private/tmp/kairos-qualification-20261023/syft-native-315/downloads/syft_1.54.0_darwin_arm64.tar.gz",
+        "/private/tmp/kairos-qualification-20261023/syft-native-315/extract",
+        "7e0bdad94c569fc6d5785c9a657bbae3d4c4e140ccb5eace3d0b5b6bc2b6dbcf"
+      ],
+      "elapsed_seconds": 2.008,
+      "exit_status": 0,
+      "label": "extract-syft-archive",
+      "log_bytes": 655,
+      "log_sha256": "50daf805c5f7ec77144fa31f0615934fef8829c43adf8505c6e336389637eca9",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "50daf805c5f7ec77144fa31f0615934fef8829c43adf8505c6e336389637eca9"
+    },
+    {
+      "argv": [
+        "/private/tmp/kairos-qualification-20261023/syft-native-315/bin/syft",
+        "version",
+        "-o",
+        "json"
+      ],
+      "elapsed_seconds": 1.749,
+      "exit_status": 0,
+      "label": "syft-version",
+      "log_bytes": 278,
+      "log_sha256": "fbc65a922399a4d861556db7c8a0d15f6904711e07a1ba354f5db8ed42f87b13",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "fbc65a922399a4d861556db7c8a0d15f6904711e07a1ba354f5db8ed42f87b13"
+    }
+  ],
+  "events": [
+    "created-fresh-private-output",
+    "installed-hash-locked-sigstore-4.5.1",
+    "sigstore-github-identity-repository-ref-sha-and-hardcoded-issuer-verified"
+  ],
+  "installer_source_sha256": "23b7f20b6b5780a685d5b7539ec842ca4d7d9d3f8e4422f70d2c8c18bdff5371",
+  "issuer_enforcement": "Sigstore 4.5.1 verify github applies OIDCIssuer unconditionally; subcommand has no issuer flag",
+  "issuer_policy": "https://token.actions.githubusercontent.com",
+  "platform": "darwin/arm64",
+  "python_toolchain": {
+    "executable": "/Volumes/PortableSSD/appdata/local-dotdir/share/uv/python/cpython-3.15.1-macos-aarch64-none/bin/python3.15",
+    "executable_sha256": "3717db37edbc1b46d46a979f0cdacb9d328c009e603ffa73a3261f2fe153e229",
+    "implementation": "CPython",
+    "tls_default_verify_paths": {
+      "cafile": "/private/etc/ssl/cert.pem",
+      "capath": "/private/etc/ssl/certs",
+      "openssl_cafile": "/private/etc/ssl/cert.pem",
+      "openssl_capath": "/private/etc/ssl/certs"
+    },
+    "version": "3.15.1 (main, Oct 21 2026, 17:39:16) [Clang 23.1.3 ]"
+  },
+  "qualification_limit": "Native authenticated installation and version probe only; no package scan, release, or publication is represented.",
+  "ref": "refs/heads/main",
+  "release_bundle_sha256": "6a0dbf94cb89e2fb157f022bed752b3ceb5827cb557a4a4cfb6af67f98b99811",
+  "release_checksum_sha256": "e423344e663d7d14db62e51ddd31e4a5012818ed69e78358391dc487483f839c",
+  "release_commit": "cc326e45a6213360266dda4b30cc68095946d676",
+  "release_tag": "v1.54.0",
+  "repository": "anchore/syft",
+  "result": "pass",
+  "schema": "kairos.verified-syft-installer.v1",
+  "signed_asset_sha256": "7e0bdad94c569fc6d5785c9a657bbae3d4c4e140ccb5eace3d0b5b6bc2b6dbcf",
+  "target": "darwin-arm64",
+  "verifier": {
+    "lock_path": "syft-darwin-verifier.lock",
+    "lock_sha256": "97dfe508ed80ca0ce8af3da9af4627d9702a10f28aec4b99385b5cf7a6620693",
+    "sigstore": "4.5.1"
+  },
+  "version": "1.54.0",
+  "version_probe": {
+    "application": "syft",
+    "buildDate": "2026-10-01T20:48:12Z",
+    "compiler": "gc",
+    "gitCommit": "cc326e45a6213360266dda4b30cc68095946d676",
+    "gitDescription": "v1.54.0",
+    "goVersion": "go1.26.8",
+    "platform": "darwin/arm64",
+    "schemaVersion": "16.1.11",
+    "version": "1.54.0"
+  }
+}

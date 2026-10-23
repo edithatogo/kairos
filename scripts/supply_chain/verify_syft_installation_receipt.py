@@ -24,8 +24,8 @@ ISSUER = "https://token.actions.githubusercontent.com"
 CHECKSUM_SHA256 = "e423344e663d7d14db62e51ddd31e4a5012818ed69e78358391dc487483f839c"
 BUNDLE_SHA256 = "6a0dbf94cb89e2fb157f022bed752b3ceb5827cb557a4a4cfb6af67f98b99811"
 TARGETS = {
-    "linux-amd64": ("linux/amd64", "syft_1.54.0_linux_amd64.tar.gz", "54a87372498168b2d033e876fd41fa4e8035b872699e525a57046e1f2f09c860", "d46a9a61a6ae3d367f0a03748c5e9c59253e586c4388ab26ddcacebc2efa0d92", "syft-linux-verifier.lock", "e8c2913539b2dc4260ef8611e1f21daa56efbdf8b55199c34882808aecd6acea"),
-    "darwin-arm64": ("darwin/arm64", "syft_1.54.0_darwin_arm64.tar.gz", "7e0bdad94c569fc6d5785c9a657bbae3d4c4e140ccb5eace3d0b5b6bc2b6dbcf", "835607cdfbdbfc59335b0beadeefc47aa6aab7d3b403c11cfa65627d92a27f61", "syft-darwin-verifier.lock", "bc22323572381258237ff65529b55f37387a3bdfddf1ccf82305d41443ddacf2"),
+    "linux-amd64": ("linux/amd64", "syft_1.54.0_linux_amd64.tar.gz", "54a87372498168b2d033e876fd41fa4e8035b872699e525a57046e1f2f09c860", "d46a9a61a6ae3d367f0a03748c5e9c59253e586c4388ab26ddcacebc2efa0d92", "syft-linux-verifier.lock", "55ce82fcf34e989de6a273b31f5d2b781f42ea5a8fc9fb3561dede86a15c16ea"),
+    "darwin-arm64": ("darwin/arm64", "syft_1.54.0_darwin_arm64.tar.gz", "7e0bdad94c569fc6d5785c9a657bbae3d4c4e140ccb5eace3d0b5b6bc2b6dbcf", "835607cdfbdbfc59335b0beadeefc47aa6aab7d3b403c11cfa65627d92a27f61", "syft-darwin-verifier.lock", "97dfe508ed80ca0ce8af3da9af4627d9702a10f28aec4b99385b5cf7a6620693"),
 }
 LABELS = ["download-checksums", "download-signature-bundle", "create-verifier-venv", "audit-pip-configuration", "install-hash-locked-verifier", "verify-signed-checksum-document", "download-syft-archive", "extract-syft-archive", "syft-version"]
 ARGV_LENGTHS = [6, 6, 4, 3, 10, 16, 6, 6, 4]
@@ -140,7 +140,7 @@ def validate(output: Path, target_key: str, repo: Path) -> dict:
                           "authenticated_asset": asset, "release_checksum_sha256": CHECKSUM_SHA256, "release_bundle_sha256": BUNDLE_SHA256,
                           "signed_asset_sha256": archive_hash, "binary_path": "bin/syft"}.items():
         require(receipt.get(key) == expected, f"receipt {key} mismatch")
-    require(receipt.get("verifier") == {"sigstore": "4.5.0", "lock_path": lock_name, "lock_sha256": lock_hash}, "verifier identity mismatch")
+    require(receipt.get("verifier") == {"sigstore": "4.5.1", "lock_path": lock_name, "lock_sha256": lock_hash}, "verifier identity mismatch")
     commands = receipt.get("commands")
     require(isinstance(commands, list) and len(commands) == len(LABELS), "command list must contain exactly nine records")
     for index, (record, label) in enumerate(zip(commands, LABELS, strict=True)):
@@ -216,7 +216,7 @@ def validate(output: Path, target_key: str, repo: Path) -> dict:
     require(isinstance(probe, dict) and probe.get("application") == "syft" and probe.get("version") == VERSION and probe.get("gitCommit") == COMMIT and probe.get("platform") == platform_name and probe.get("gitDescription") == TAG, "Syft version probe mismatch")
     version_log = strict_json(read_regular(output / "logs/08-syft-version.log", MAX_LOG))
     require(version_log == probe, "version command log differs from receipt probe")
-    require(isinstance(receipt.get("python_toolchain"), dict) and receipt["python_toolchain"].get("version", "").startswith("3.14.8 "), "Python toolchain was not 3.14.8")
+    require(isinstance(receipt.get("python_toolchain"), dict) and receipt["python_toolchain"].get("version", "").startswith(("3.14.8 ", "3.15.1 ")), "Python toolchain is neither historical 3.14.8 nor current 3.15.1")
     return {"schema": "kairos.syft-installation-validation.v1", "result": "pass", "target": target_key,
             "platform": platform_name, "version": VERSION, "installer_source_sha256": digest(source_bytes),
             "verifier_lock_sha256": digest(lock_bytes), "receipt_sha256": digest(read_regular(evidence, MAX_RECEIPT)),

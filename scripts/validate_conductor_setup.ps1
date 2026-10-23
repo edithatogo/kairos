@@ -25,7 +25,7 @@ function Test-WindowsHost {
 
 function Invoke-CargoWorkspaceTests {
     if (Test-WindowsHost) {
-        $toolchain = "1.99.0-x86_64-pc-windows-gnu"
+        $toolchain = "1.99.1-x86_64-pc-windows-gnu"
     } else {
         $hostOutput = & rustup show 2>$null
         if ($LASTEXITCODE -ne 0) {
@@ -38,7 +38,7 @@ function Invoke-CargoWorkspaceTests {
             throw "rustup show must return exactly one valid Default host triple"
         }
         $hostTriple = (([string]$hostLines[0]) -replace '^Default host:\s+', '').Trim()
-        $toolchain = "1.99.0-$hostTriple"
+        $toolchain = "1.99.1-$hostTriple"
     }
 
     if (-not (Test-RustupToolchainInstalled -Toolchain $toolchain)) {
@@ -61,8 +61,8 @@ function Invoke-CargoWorkspaceTests {
             throw "Unable to read the pinned $binary version from '$binaryPath'"
         }
         $versionText = (@($versionOutput) -join "`n").Trim()
-        if ($versionText -notmatch "^$([regex]::Escape($binary)) 1\.99\.0(?:\s|$)") {
-            throw "Pinned $binary must report exact version 1.99.0; got: $versionText"
+        if ($versionText -notmatch "^$([regex]::Escape($binary)) 1\.99\.1(?:\s|$)") {
+            throw "Pinned $binary must report exact version 1.99.1; got: $versionText"
         }
         $toolPaths[$binary] = $binaryPath
     }

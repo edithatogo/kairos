@@ -269,11 +269,11 @@ requireTerms('.github/workflows/ci-core.yml', [
   'cargo llvm-cov nextest --workspace --all-features --lcov --output-path lcov.info',
   'node scripts/validation/check-core-coverage.mjs lcov.info',
   'cargo test --doc --workspace --all-features',
-  'Rust 1.99.0 workspace checks',
-  'cargo +1.99.0 check --workspace --exclude kairo-ecs-wasm --exclude kairo-ecs-arrow --lib --bins --all-features --locked',
-  'cargo +1.99.0 check -p kairo-ecs-arrow --lib --locked',
-  'Rust 1.99.0 WebAssembly check',
-  'cargo +1.99.0 check --locked --manifest-path crates/kairo-ecs-wasm/Cargo.toml --features wasm-export --target wasm32-unknown-unknown',
+  'Rust 1.99.1 workspace checks',
+  'cargo +1.99.1 check --workspace --exclude kairo-ecs-wasm --exclude kairo-ecs-arrow --lib --bins --all-features --locked',
+  'cargo +1.99.1 check -p kairo-ecs-arrow --lib --locked',
+  'Rust 1.99.1 WebAssembly check',
+  'cargo +1.99.1 check --locked --manifest-path crates/kairo-ecs-wasm/Cargo.toml --features wasm-export --target wasm32-unknown-unknown',
   'node tests/conformance/classify-rust-ci-changes-check.mjs',
   'name: Classify Rust changes',
   'scripts/validation/classify-rust-ci-changes.mjs',
@@ -309,7 +309,7 @@ forbidTerms('.github/workflows/fuzzing.yml', [
   'rustup toolchain install nightly', 'cargo install cargo-fuzz', 'cargo +nightly fuzz',
 ]);
 requireTerms('.github/workflows/nightly.yml', [
-  'Rust 1.99.0 benchmarks (Miri UNVERIFIED)', 'cargo +1.99.0 bench --workspace',
+  'Rust 1.99.1 benchmarks (Miri UNVERIFIED)', 'cargo +1.99.1 bench --workspace',
   'Miri analysis: UNVERIFIED',
 ]);
 requireTerms('.github/workflows/fuzzing.yml', [
@@ -344,7 +344,7 @@ requireTerms('.github/workflows/ci-bindings.yml', [
   'ruff check .',
   'python -m unittest discover -s tests -p test_syft_installation_receipt.py -v',
 ]);
-requireTerms('bindings/python/pyproject.toml', ['ruff==0.16.10']);
+requireTerms('bindings/python/pyproject.toml', ['ruff==0.17.2']);
 requireTerms('scripts/validation/check-core-coverage.mjs', ['kairo-ecs-core/src/', '90']);
 
 requirePattern('.github/workflows/dependency-review.yml', /fail-on-severity:\s*high/, 'high-severity dependency review gate');

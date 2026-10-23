@@ -1,14 +1,15 @@
 # syntax=docker/dockerfile:1.27
 
-FROM rust:1.76-alpine@sha256:e594a9705c4514c0e0b5ed2409f7ec34f20af09a33d242524281247b74196c43 AS builder
+FROM rust:1.99.1-alpine@sha256:b1d5dd5a22a09404d3e798c0cf051b689077360374eb505fa5bb93c479693d87 AS builder
 WORKDIR /src
 RUN apk add --no-cache musl-dev
-COPY Cargo.toml ./
+COPY Cargo.toml Cargo.lock ./
 COPY crates ./crates
-RUN cargo build --release -p kairo-ecs-cli --ignore-rust-version
+RUN cargo build --locked --release -p kairo-ecs-cli
 
-FROM alpine:3.24@sha256:294b683cb724975bec92580e1e685676bd4b50bda910ddb8c51d4cabeaec77e6
-RUN apk add --no-cache ca-certificates tzdata bash coreutils python3
+FROM python:3.15.1-alpine3.24@sha256:54448f67d7c31c39e5cdd3ea2d6382395ce142806c284425f8e897d78a0465b3
+RUN apk add --no-cache ca-certificates tzdata bash coreutils
+RUN python3 -c 'import sys; assert sys.version_info[:3] == (3, 15, 1)'
 COPY --from=builder /src/target/release/kairo-ecs-cli /usr/local/bin/kairo-ecs-cli
 COPY docker/entrypoint.sh /usr/local/bin/kairo-ecs-entrypoint
 COPY docker/telemetry-plugin/cloud-output.py /usr/local/bin/kairo-ecs-cloud-output

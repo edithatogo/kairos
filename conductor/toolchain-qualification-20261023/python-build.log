@@ -1,0 +1,106 @@
+* Getting build dependencies for sdist...
+running egg_info
+creating kairo_ecs.egg-info
+writing kairo_ecs.egg-info/PKG-INFO
+writing dependency_links to kairo_ecs.egg-info/dependency_links.txt
+writing requirements to kairo_ecs.egg-info/requires.txt
+writing top-level names to kairo_ecs.egg-info/top_level.txt
+writing manifest file 'kairo_ecs.egg-info/SOURCES.txt'
+reading manifest file 'kairo_ecs.egg-info/SOURCES.txt'
+writing manifest file 'kairo_ecs.egg-info/SOURCES.txt'
+* Building sdist...
+running sdist
+running egg_info
+writing kairo_ecs.egg-info/PKG-INFO
+writing dependency_links to kairo_ecs.egg-info/dependency_links.txt
+writing requirements to kairo_ecs.egg-info/requires.txt
+writing top-level names to kairo_ecs.egg-info/top_level.txt
+reading manifest file 'kairo_ecs.egg-info/SOURCES.txt'
+writing manifest file 'kairo_ecs.egg-info/SOURCES.txt'
+running check
+creating kairo_ecs-0.1.0
+creating kairo_ecs-0.1.0/kairo_ecs
+creating kairo_ecs-0.1.0/kairo_ecs.egg-info
+creating kairo_ecs-0.1.0/tests
+copying files to kairo_ecs-0.1.0...
+copying README.md -> kairo_ecs-0.1.0
+copying pyproject.toml -> kairo_ecs-0.1.0
+copying kairo_ecs/__init__.py -> kairo_ecs-0.1.0/kairo_ecs
+copying kairo_ecs/_arrow.py -> kairo_ecs-0.1.0/kairo_ecs
+copying kairo_ecs/_ffi.py -> kairo_ecs-0.1.0/kairo_ecs
+copying kairo_ecs/_native.py -> kairo_ecs-0.1.0/kairo_ecs
+copying kairo_ecs/_scheduler.py -> kairo_ecs-0.1.0/kairo_ecs
+copying kairo_ecs/_types.py -> kairo_ecs-0.1.0/kairo_ecs
+copying kairo_ecs/vecenv.py -> kairo_ecs-0.1.0/kairo_ecs
+copying kairo_ecs.egg-info/PKG-INFO -> kairo_ecs-0.1.0/kairo_ecs.egg-info
+copying kairo_ecs.egg-info/SOURCES.txt -> kairo_ecs-0.1.0/kairo_ecs.egg-info
+copying kairo_ecs.egg-info/dependency_links.txt -> kairo_ecs-0.1.0/kairo_ecs.egg-info
+copying kairo_ecs.egg-info/requires.txt -> kairo_ecs-0.1.0/kairo_ecs.egg-info
+copying kairo_ecs.egg-info/top_level.txt -> kairo_ecs-0.1.0/kairo_ecs.egg-info
+copying tests/test_arrow.py -> kairo_ecs-0.1.0/tests
+copying tests/test_conformance.py -> kairo_ecs-0.1.0/tests
+copying tests/test_ffi.py -> kairo_ecs-0.1.0/tests
+copying tests/test_import.py -> kairo_ecs-0.1.0/tests
+copying tests/test_scheduler.py -> kairo_ecs-0.1.0/tests
+copying tests/test_wave9_native_arrow_vecenv.py -> kairo_ecs-0.1.0/tests
+Writing kairo_ecs-0.1.0/setup.cfg
+Creating tar archive
+removing 'kairo_ecs-0.1.0' (and everything under it)
+* Building wheel from sdist
+* Getting build dependencies for wheel...
+running egg_info
+writing kairo_ecs.egg-info/PKG-INFO
+writing dependency_links to kairo_ecs.egg-info/dependency_links.txt
+writing requirements to kairo_ecs.egg-info/requires.txt
+writing top-level names to kairo_ecs.egg-info/top_level.txt
+reading manifest file 'kairo_ecs.egg-info/SOURCES.txt'
+writing manifest file 'kairo_ecs.egg-info/SOURCES.txt'
+* Building wheel...
+running bdist_wheel
+running build
+running build_py
+creating build/lib/kairo_ecs
+copying kairo_ecs/_arrow.py -> build/lib/kairo_ecs
+copying kairo_ecs/_types.py -> build/lib/kairo_ecs
+copying kairo_ecs/_ffi.py -> build/lib/kairo_ecs
+copying kairo_ecs/__init__.py -> build/lib/kairo_ecs
+copying kairo_ecs/_native.py -> build/lib/kairo_ecs
+copying kairo_ecs/_scheduler.py -> build/lib/kairo_ecs
+copying kairo_ecs/vecenv.py -> build/lib/kairo_ecs
+running egg_info
+writing kairo_ecs.egg-info/PKG-INFO
+writing dependency_links to kairo_ecs.egg-info/dependency_links.txt
+writing requirements to kairo_ecs.egg-info/requires.txt
+writing top-level names to kairo_ecs.egg-info/top_level.txt
+reading manifest file 'kairo_ecs.egg-info/SOURCES.txt'
+writing manifest file 'kairo_ecs.egg-info/SOURCES.txt'
+installing to build/bdist.macosx-11.0-arm64/wheel
+running install
+running install_lib
+creating build/bdist.macosx-11.0-arm64/wheel
+creating build/bdist.macosx-11.0-arm64/wheel/kairo_ecs
+copying build/lib/kairo_ecs/_arrow.py -> build/bdist.macosx-11.0-arm64/wheel/./kairo_ecs
+copying build/lib/kairo_ecs/_types.py -> build/bdist.macosx-11.0-arm64/wheel/./kairo_ecs
+copying build/lib/kairo_ecs/_ffi.py -> build/bdist.macosx-11.0-arm64/wheel/./kairo_ecs
+copying build/lib/kairo_ecs/__init__.py -> build/bdist.macosx-11.0-arm64/wheel/./kairo_ecs
+copying build/lib/kairo_ecs/_native.py -> build/bdist.macosx-11.0-arm64/wheel/./kairo_ecs
+copying build/lib/kairo_ecs/_scheduler.py -> build/bdist.macosx-11.0-arm64/wheel/./kairo_ecs
+copying build/lib/kairo_ecs/vecenv.py -> build/bdist.macosx-11.0-arm64/wheel/./kairo_ecs
+running install_egg_info
+Copying kairo_ecs.egg-info to build/bdist.macosx-11.0-arm64/wheel/./kairo_ecs-0.1.0-py3.15.egg-info
+running install_scripts
+creating build/bdist.macosx-11.0-arm64/wheel/kairo_ecs-0.1.0.dist-info/WHEEL
+creating '/tmp/kairos-qualification-20261023/dist/.tmp-d0nmng8e/kairo_ecs-0.1.0-py3-none-any.whl' and adding 'build/bdist.macosx-11.0-arm64/wheel' to it
+adding 'kairo_ecs/__init__.py'
+adding 'kairo_ecs/_arrow.py'
+adding 'kairo_ecs/_ffi.py'
+adding 'kairo_ecs/_native.py'
+adding 'kairo_ecs/_scheduler.py'
+adding 'kairo_ecs/_types.py'
+adding 'kairo_ecs/vecenv.py'
+adding 'kairo_ecs-0.1.0.dist-info/METADATA'
+adding 'kairo_ecs-0.1.0.dist-info/WHEEL'
+adding 'kairo_ecs-0.1.0.dist-info/top_level.txt'
+adding 'kairo_ecs-0.1.0.dist-info/RECORD'
+removing build/bdist.macosx-11.0-arm64/wheel
+Successfully built kairo_ecs-0.1.0.tar.gz and kairo_ecs-0.1.0-py3-none-any.whl

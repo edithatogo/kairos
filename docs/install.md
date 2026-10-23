@@ -21,7 +21,7 @@ cargo test --workspace
 ## Python binding
 
 ### Prerequisites
-- Python 3.10 - 3.14
+- Python 3.15.1
 - pip / venv
 
 ### Install
@@ -144,3 +144,7 @@ docker build -t kairo-ecs-cli -f docker/Dockerfile .
 - **Python import fails**: Ensure `KAIRO_ECS_FFI_LIBRARY` environment variable points to the native library.
 - **C# build fails**: Ensure .NET SDK matches `bindings/csharp/global.json`.
 - **Go build fails**: Ensure Go >= 1.23 and CGO_ENABLED is set.
+
+## Required Python runtime
+
+All active Python environments use CPython 3.15.1. Run `uv venv --python 3.15.1 .venv`, then use `.venv/bin/python` (Windows: `.venv\Scripts\python.exe`) and verify `--version` before executing helpers. Install the relevant hash-locked tool file with `uv pip sync --python .venv/bin/python scripts/bootstrap-python-tools.lock`. Do not replace an environment while it is in use. Older compatibility runners are retired; historical receipts remain unchanged.

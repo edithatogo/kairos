@@ -46,15 +46,15 @@ function Test-ExactRustVersion {
 }
 
 function Assert-RustVersionParserContract {
-    $accepted = ConvertFrom-RustcVersionText 'rustc 1.99.0 (abc123 2026-10-05)'
-    if (-not (Test-ExactRustVersion -Actual $accepted -Expected '1.99.0')) { throw "Rust parser accepted the wrong stable version: $accepted" }
-    foreach ($text in @('rustc 1.99.0-beta.1 (abc123 2026-10-05)', 'rustc 1.99.0-nightly (abc123 2026-10-05)', 'rustc 1.99 (abc123 2026-10-05)', 'rustc 1.99.0.1 (abc123 2026-10-05)')) {
+    $accepted = ConvertFrom-RustcVersionText 'rustc 1.99.1 (abc123 2026-10-05)'
+    if (-not (Test-ExactRustVersion -Actual $accepted -Expected '1.99.1')) { throw "Rust parser accepted the wrong stable version: $accepted" }
+    foreach ($text in @('rustc 1.99.1-beta.1 (abc123 2026-10-05)', 'rustc 1.99.1-nightly (abc123 2026-10-05)', 'rustc 1.99 (abc123 2026-10-05)', 'rustc 1.99.1.1 (abc123 2026-10-05)')) {
         $rejected = $false
         try { [void](ConvertFrom-RustcVersionText $text) } catch { $rejected = $true }
         if (-not $rejected) { throw "Rust parser incorrectly accepted: $text" }
     }
     foreach ($version in @('1.98.9', '1.100.0')) {
-        if (Test-ExactRustVersion -Actual $version -Expected '1.99.0') { throw "Exact Rust comparison incorrectly accepted $version" }
+        if (Test-ExactRustVersion -Actual $version -Expected '1.99.1') { throw "Exact Rust comparison incorrectly accepted $version" }
     }
 }
 
@@ -152,9 +152,9 @@ foreach ($token in @("conductor/toolchain-matrix.md", "bindings/python/pyproject
 }
 
 $laneExpectations = @(
-    @{ Matrix = 'Rust `1.99.0` only'; Workflow = 'expected-version: "1.99.0"' }
-    @{ Matrix = 'CPython `3.10`'; Workflow = 'python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]' }
-    @{ Matrix = 'CPython `3.14.x`'; Workflow = 'python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]' }
+    @{ Matrix = 'Rust `1.99.1` only'; Workflow = 'expected-version: "1.99.1"' }
+    @{ Matrix = 'CPython `3.15.1`'; Workflow = 'python-version: ["3.15.1"]' }
+    @{ Matrix = 'CPython `3.15.1`'; Workflow = 'python-version: ["3.15.1"]' }
     @{ Matrix = 'R `4.6.x`'; Workflow = 'expected-prefix: "4.6"' }
     @{ Matrix = 'Julia `1.10`'; Workflow = 'julia-version: ["1.10", "1.12"]' }
     @{ Matrix = 'Julia `1.12.x`'; Workflow = 'julia-version: ["1.10", "1.12"]' }
@@ -185,10 +185,10 @@ function Assert-NoSupersededRustMatrixClaims {
 }
 Assert-NoSupersededRustWorkflowSelectors -Text $workflow
 Assert-NoSupersededRustMatrixClaims -Text $matrix
-foreach ($token in @('function ConvertFrom-RustcVersionText', 'function Test-ExactRustVersion', 'Assert-RustVersionParserContract', 'rustc 1.99.0-beta.1', 'rustc 1.99.0-nightly')) {
-    Assert-Contains -Text $validatorText -Needle $token -Label "exact Rust 1.99.0 parser contract"
+foreach ($token in @('function ConvertFrom-RustcVersionText', 'function Test-ExactRustVersion', 'Assert-RustVersionParserContract', 'rustc 1.99.1-beta.1', 'rustc 1.99.1-nightly')) {
+    Assert-Contains -Text $validatorText -Needle $token -Label "exact Rust 1.99.1 parser contract"
 }
-Assert-Contains -Text $workflow -Needle '-ExpectedVersion $env:EXPECTED_VERSION' -Label "exact Rust 1.99.0 workflow wiring"
+Assert-Contains -Text $workflow -Needle '-ExpectedVersion $env:EXPECTED_VERSION' -Label "exact Rust 1.99.1 workflow wiring"
 foreach ($superseded in @('channel: stable', 'channel: beta', 'expected-prefix: "1.98"', 'expected-prefix: "1."')) {
     $rejected = $false
     try { Assert-NoSupersededRustWorkflowSelectors -Text ($workflow + "`n" + $superseded) } catch { $rejected = $true }

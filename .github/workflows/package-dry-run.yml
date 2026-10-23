@@ -57,23 +57,26 @@ jobs:
     name: rust-package
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15.1"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Install Rust 1.99.0
+      - name: Install Rust 1.99.1
         run: |
-          rustup toolchain install 1.99.0 --profile minimal
-      - name: Bind Rust 1.99.0 tools
+          rustup toolchain install 1.99.1 --profile minimal
+      - name: Bind Rust 1.99.1 tools
         shell: bash
         run: |
-          task_rustc="$(rustup which --toolchain 1.99.0 rustc)"
+          task_rustc="$(rustup which --toolchain 1.99.1 rustc)"
           task_bin="$(dirname "$task_rustc")"
-          task_cargo="$(rustup which --toolchain 1.99.0 cargo)"
-          task_rustdoc="$(rustup which --toolchain 1.99.0 rustdoc)"
-          "$task_cargo" -V | grep -E '^cargo 1\.99\.0 '
-          "$task_rustc" -V | grep -E '^rustc 1\.99\.0 '
-          "$task_rustdoc" -V | grep -E '^rustdoc 1\.99\.0 '
-          printf '%s\n' "PATH=$task_bin:$PATH" 'RUSTUP_TOOLCHAIN=1.99.0' "RUSTC=$task_rustc" "RUSTDOC=$task_rustdoc" >> "$GITHUB_ENV"
+          task_cargo="$(rustup which --toolchain 1.99.1 cargo)"
+          task_rustdoc="$(rustup which --toolchain 1.99.1 rustdoc)"
+          "$task_cargo" -V | grep -E '^cargo 1\.99\.1 '
+          "$task_rustc" -V | grep -E '^rustc 1\.99\.1 '
+          "$task_rustdoc" -V | grep -E '^rustdoc 1\.99\.1 '
+          printf '%s\n' "PATH=$task_bin:$PATH" 'RUSTUP_TOOLCHAIN=1.99.1' "RUSTC=$task_rustc" "RUSTDOC=$task_rustdoc" >> "$GITHUB_ENV"
       - name: Cargo package dry run
         run: |
           test -f Cargo.toml
@@ -97,7 +100,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.14']
+        python-version: ["3.15.1"]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -125,6 +128,9 @@ jobs:
     name: r-package
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15.1"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -163,7 +169,7 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with: { node-version: '22.23.3' }
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with: { python-version: '3.14.8' }
+        with: { python-version: "3.15.1" }
       - name: Create fail-closed npm audit marker
         run: |
           mkdir -p artifacts/npm-audit-gate
@@ -239,6 +245,9 @@ jobs:
     name: nuget-package
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15.1"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -263,6 +272,9 @@ jobs:
     name: julia-source-archive
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15.1"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -283,6 +295,9 @@ jobs:
     name: go-source-archive
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15.1"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -306,6 +321,9 @@ jobs:
       actions: read # Read this run's artifact metadata and download its artifacts.
       contents: read # Read the checked-out source for archive validation.
     steps:
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15.1"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -338,6 +356,9 @@ jobs:
       contents: read # Check out and run the pinned archive verifier.
       id-token: write # Request the short-lived Sigstore signing identity.
     steps:
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15.1"
       - name: Recheck opt-in trusted main invocation
         shell: bash
         env:

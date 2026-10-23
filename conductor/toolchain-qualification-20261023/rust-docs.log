@@ -1,0 +1,59 @@
+    Blocking waiting for file lock on build directory
+    Checking kairo-ecs-types v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-types)
+   Compiling serde v1.0.229
+    Checking either v1.15.0
+    Checking kairo-ecs-cuda v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-cuda)
+ Documenting kairo-ecs-cuda v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-cuda)
+ Documenting kairo-ecs-fmi v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-fmi)
+ Documenting kairo-ecs-ml v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-ml)
+ Documenting kairo-ecs-game-ontology v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-game-ontology)
+ Documenting kairo-ecs-webgpu v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-webgpu)
+ Documenting kairo-ecs-types v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-types)
+ Documenting kairo-ecs-gpu v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-gpu)
+    Checking kairo-ecs-core v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-core)
+    Checking kairo-ecs-rng v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-rng)
+    Checking rayon v1.12.0
+    Checking kairo-ecs-pdes v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-pdes)
+ Documenting kairo-ecs-rng v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-rng)
+ Documenting kairo-ecs-core v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-core)
+ Documenting kairo-ecs-pdes v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-pdes)
+ Documenting kairo-ecs-streaming v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-streaming)
+    Checking kairo-ecs-state v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-state)
+ Documenting kairo-ecs-state v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-state)
+ Documenting kairo-ecs-cli v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-cli)
+ Documenting kairo-ecs-debug v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-debug)
+    Checking polars-arrow-format v0.1.0
+    Checking compact_str v0.8.2
+    Checking kairo-ecs-ffi v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-ffi)
+ Documenting kairo-ecs-bench v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-bench)
+ Documenting kairo-ecs-viz v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-viz)
+ Documenting kairo-ecs-ffi v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-ffi)
+ Documenting kairo-ecs-game-theory v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-game-theory)
+ Documenting kairo-ecs-cs-bridge v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-cs-bridge)
+ Documenting kairo-ecs-uniffi v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-uniffi)
+ Documenting kairo-ecs-diplomat v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-diplomat)
+ Documenting kairo-ecs-wasm v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-wasm)
+ Documenting kairo-ecs-abm v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-abm)
+ Documenting kairo-ecs-des v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-des)
+ Documenting kairo-ecs-grpc v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-grpc)
+ Documenting kairo-ecs-mpi v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-mpi)
+    Checking hashbrown v0.15.5
+    Checking hashbrown v0.14.5
+    Checking polars-error v0.45.1
+    Checking polars-utils v0.45.1
+    Checking polars-schema v0.45.1
+    Checking polars-arrow v0.45.1
+    Checking polars-compute v0.45.1
+    Checking polars-row v0.45.1
+    Checking polars-parquet v0.45.1
+    Checking polars-core v0.45.1
+    Checking polars-ops v0.45.1
+    Checking polars-io v0.45.1
+    Checking polars-plan v0.45.1
+    Checking polars-expr v0.45.1
+    Checking polars-mem-engine v0.45.1
+    Checking polars-lazy v0.45.1
+    Checking polars v0.45.1
+ Documenting kairo-ecs-arrow v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/crates/kairo-ecs-arrow)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 6m 20s
+   Generated /Volumes/PortableSSD/codex-worktrees/kairos-toolchain-qualification/target/doc/kairo_ecs_abm/index.html and 26 other files

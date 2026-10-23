@@ -1,0 +1,20 @@
+{
+  "archive_sha256": "7e0bdad94c569fc6d5785c9a657bbae3d4c4e140ccb5eace3d0b5b6bc2b6dbcf",
+  "binary_sha256": "835607cdfbdbfc59335b0beadeefc47aa6aab7d3b403c11cfa65627d92a27f61",
+  "installer_source_sha256": "23b7f20b6b5780a685d5b7539ec842ca4d7d9d3f8e4422f70d2c8c18bdff5371",
+  "platform": "darwin/arm64",
+  "receipt_sha256": "b0053a2f0070bf5253bc3f71abc75eba250c6a1c2953f0ebcea9805a9a11fa11",
+  "result": "pass",
+  "schema": "kairos.syft-installation-validation.v1",
+  "target": "darwin-arm64",
+  "validated_commands": 9,
+  "validated_logs": 9,
+  "validated_members": [
+    "CHANGELOG.md",
+    "LICENSE",
+    "README.md",
+    "syft"
+  ],
+  "verifier_lock_sha256": "97dfe508ed80ca0ce8af3da9af4627d9702a10f28aec4b99385b5cf7a6620693",
+  "version": "1.54.0"
+}

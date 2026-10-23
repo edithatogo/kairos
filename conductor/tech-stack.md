@@ -88,7 +88,7 @@ Pin exact versions during implementation. Keep high-risk dependencies isolated b
 
 ## Language package plan
 
-### Python binding: Python 3.10-3.14
+### Python binding: Python 3.15.1
 
 Preferred package names, subject to availability:
 
@@ -97,7 +97,7 @@ Python distribution: kairo-ecs
 Python import: kairo_ecs
 ```
 
-Use `maturin` with PyO3 only where Python-native objects are needed. Prefer an `abi3-py310` strategy if the API can remain within the stable ABI so one wheel family can cover Python 3.10-3.14 per platform.
+Use `maturin` with PyO3 only where Python-native objects are needed. Prefer an `abi3-py315` strategy if the API can remain within the stable ABI so one wheel family can cover Python 3.15.1 per platform.
 
 Runtime packages:
 
@@ -106,7 +106,7 @@ pyarrow
 numpy optional
 pandas optional
 polars optional
-typing-extensions for Python 3.10 ergonomics
+typing-extensions only where a current consumer needs it
 ```
 
 Dev packages:

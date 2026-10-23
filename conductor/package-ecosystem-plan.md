@@ -142,7 +142,7 @@ This file expands the package/tooling plan beyond the earlier registry matrix. T
 | `lychee` | Link checks | Docs release gate. |
 | `markdownlint-cli2` | Markdown quality | Docs release gate. |
 
-### Python 3.10-3.14 additions
+### Python 3.15.1 additions
 
 | Tool/package | Purpose |
 |---|---|

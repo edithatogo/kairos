@@ -80,10 +80,10 @@ function New-MockState {
     param(
         [bool]$Windows = $false,
         [string]$HostTriple = "aarch64-apple-darwin",
-        [string[]]$Installed = @("1.99.0-aarch64-apple-darwin"),
-        [string]$CargoVersion = "1.99.0",
-        [string]$RustcVersion = "1.99.0",
-        [string]$RustdocVersion = "1.99.0",
+        [string[]]$Installed = @("1.99.1-aarch64-apple-darwin"),
+        [string]$CargoVersion = "1.99.1",
+        [string]$RustcVersion = "1.99.1",
+        [string]$RustdocVersion = "1.99.1",
         [int]$CargoTestExit = 0
     )
     return [pscustomobject]@{
@@ -145,9 +145,9 @@ Set-TestEnvironment
 Invoke-CargoWorkspaceTests
 Assert-Equal $script:MockState.CargoTestCalls 1 "Native toolchain did not run Cargo exactly once"
 Assert-True ($script:MockState.RustupCalls -contains "show") "Native branch did not query rustup show"
-Assert-True ($script:MockState.RustupCalls -contains "which --toolchain 1.99.0-aarch64-apple-darwin cargo") "Native branch did not select the host's canonical 1.99.0 toolchain"
+Assert-True ($script:MockState.RustupCalls -contains "which --toolchain 1.99.1-aarch64-apple-darwin cargo") "Native branch did not select the host's canonical 1.99.1 toolchain"
 Assert-Equal (@($script:MockState.CargoTestArgs) -join " ") "test --workspace --locked" "Cargo did not receive the locked workspace command"
-Assert-Equal $script:MockState.CargoEnvironment.RUSTUP_TOOLCHAIN "1.99.0-aarch64-apple-darwin" "Cargo did not receive the exact native toolchain"
+Assert-Equal $script:MockState.CargoEnvironment.RUSTUP_TOOLCHAIN "1.99.1-aarch64-apple-darwin" "Cargo did not receive the exact native toolchain"
 Assert-Equal $script:MockState.CargoEnvironment.RUSTC "rustc" "Cargo did not receive the rustup-resolved rustc"
 Assert-Equal $script:MockState.CargoEnvironment.RUSTDOC "rustdoc" "Cargo did not receive the rustup-resolved rustdoc"
 Assert-Equal $script:MockState.CargoEnvironment.RUSTC_WRAPPER "" "RUSTC_WRAPPER was not cleared during Cargo"
@@ -170,13 +170,13 @@ Assert-Equal $script:MockState.CargoTestCalls 0 "Cargo ran with ambiguous rustup
 Assert-TestEnvironmentRestored
 
 # Windows must use GNU when present and fail closed instead of using an ambient/native alias.
-$script:MockState = New-MockState -Windows $true -Installed @("1.99.0-aarch64-apple-darwin", "1.99.0-x86_64-pc-windows-gnu")
+$script:MockState = New-MockState -Windows $true -Installed @("1.99.1-aarch64-apple-darwin", "1.99.1-x86_64-pc-windows-gnu")
 Set-TestEnvironment
 Invoke-CargoWorkspaceTests
-Assert-True ($script:MockState.RustupCalls -contains "which --toolchain 1.99.0-x86_64-pc-windows-gnu cargo") "Windows did not prefer the canonical GNU toolchain"
+Assert-True ($script:MockState.RustupCalls -contains "which --toolchain 1.99.1-x86_64-pc-windows-gnu cargo") "Windows did not prefer the canonical GNU toolchain"
 Assert-TestEnvironmentRestored
 
-$script:MockState = New-MockState -Windows $true -Installed @("1.99.0-aarch64-apple-darwin")
+$script:MockState = New-MockState -Windows $true -Installed @("1.99.1-aarch64-apple-darwin")
 Set-TestEnvironment
 Assert-Throws { Invoke-CargoWorkspaceTests } "Missing Windows GNU toolchain did not fail closed"
 Assert-Equal $script:MockState.CargoTestCalls 0 "Cargo ran after the canonical Windows toolchain was missing"
@@ -186,7 +186,7 @@ Assert-TestEnvironmentRestored
 $script:MockState = New-MockState -RustcVersion "1.98.9"
 Set-TestEnvironment
 Assert-Throws { Invoke-CargoWorkspaceTests } "Wrong rustc version did not fail closed"
-Assert-Equal $script:MockState.CargoTestCalls 0 "Cargo ran with a non-1.99.0 compiler"
+Assert-Equal $script:MockState.CargoTestCalls 0 "Cargo ran with a non-1.99.1 compiler"
 Assert-TestEnvironmentRestored
 
 # Environment restoration is required even when the pinned cargo test command fails.
@@ -236,9 +236,9 @@ function ConvertFrom-MiseSubset {
 $mise = ConvertFrom-MiseSubset (Join-Path $repoRoot "mise.toml")
 $expectedMise = @{
     tools = @{
-        rust = "1.99.0"
-        python = "3.14.7"
-        node = "lts"
+        rust = "1.99.1"
+        python = "3.15.1"
+        node = "24.22.1"
         go = "latest"
         julia = "latest"
         R = "latest"
@@ -261,12 +261,12 @@ foreach ($tableName in $expectedMise.Keys) {
 $workflowPath = Join-Path $repoRoot ".github\workflows\validate-conductor.yml"
 $workflow = Get-Content -LiteralPath $workflowPath -Raw
 $setupIndex = $workflow.IndexOf("run: pwsh -NoProfile -File scripts/validate_conductor_setup.ps1", [StringComparison]::Ordinal)
-$linuxInstall = "rustup toolchain install 1.99.0 --profile minimal --component rustfmt --component clippy"
-$windowsInstall = "rustup toolchain install 1.99.0-x86_64-pc-windows-gnu --profile minimal --component rustfmt --component clippy"
+$linuxInstall = "rustup toolchain install 1.99.1 --profile minimal --component rustfmt --component clippy"
+$windowsInstall = "rustup toolchain install 1.99.1-x86_64-pc-windows-gnu --profile minimal --component rustfmt --component clippy"
 $linuxIndex = $workflow.IndexOf($linuxInstall, [StringComparison]::Ordinal)
 $windowsIndex = $workflow.IndexOf($windowsInstall, [StringComparison]::Ordinal)
-Assert-True ($setupIndex -gt 0 -and $linuxIndex -ge 0 -and $linuxIndex -lt $setupIndex) "Workflow did not install exact host Rust 1.99.0 before setup validation"
-Assert-True ($setupIndex -gt 0 -and $windowsIndex -ge 0 -and $windowsIndex -lt $setupIndex) "Workflow did not install exact Windows GNU Rust 1.99.0 before setup validation"
+Assert-True ($setupIndex -gt 0 -and $linuxIndex -ge 0 -and $linuxIndex -lt $setupIndex) "Workflow did not install exact host Rust 1.99.1 before setup validation"
+Assert-True ($setupIndex -gt 0 -and $windowsIndex -ge 0 -and $windowsIndex -lt $setupIndex) "Workflow did not install exact Windows GNU Rust 1.99.1 before setup validation"
 
 $childDirectory = Join-Path ([IO.Path]::GetTempPath()) ([Guid]::NewGuid().ToString("N"))
 New-Item -ItemType Directory -Path $childDirectory | Out-Null

@@ -28,7 +28,7 @@ function Invoke-Optional {
 
 Write-Host "KairoECS Windows bootstrap"
 
-$required = @("rustup", "cargo", "python", "npm", "node", "pwsh", "git")
+$required = @("rustup", "cargo", "uv", "npm", "node", "pwsh", "git")
 $missing = @($required | Where-Object { -not (Test-Command $_) })
 if ($missing.Count -gt 0) {
     throw "Missing required bootstrap command(s): $($missing -join ', ')"
@@ -78,12 +78,15 @@ if (-not $SkipCargoInstalls) {
 }
 
 if (-not $SkipPython) {
-    Invoke-Optional "Upgrade pip" {
-        python -m pip install -U pip==25.0.1
+    if (-not (Test-Path .venv)) {
+        uv venv --python 3.15.1 .venv
+        if ($LASTEXITCODE -ne 0) { throw "Python environment creation failed" }
     }
-    Invoke-Optional "Install Python development packages" {
-        python -m pip install -U maturin==1.9.6 pytest==8.3.5 hypothesis==6.131.0 ruff==0.16.9 pyarrow==24.0.0
-    }
+    $pythonPath = Join-Path $PWD ".venv/Scripts/python.exe"
+    & $pythonPath -c 'import sys; assert sys.version_info[:3] == (3, 15, 1)'
+    if ($LASTEXITCODE -ne 0) { throw "Expected Python 3.15.1" }
+    uv pip sync --python $pythonPath scripts/bootstrap-python-tools.lock
+    if ($LASTEXITCODE -ne 0) { throw "Python dependency installation failed" }
 }
 
 if (-not $SkipNpm) {

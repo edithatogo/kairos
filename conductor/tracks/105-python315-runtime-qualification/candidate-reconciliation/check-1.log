@@ -1,0 +1,8 @@
+test_active_ci_does_not_restore_older_python_runners (test_python_runtime_policy.PythonRuntimePolicyTests.test_active_ci_does_not_restore_older_python_runners) ... ok
+test_actual_interpreter_and_repo_selection_are_qualified_patch (test_python_runtime_policy.PythonRuntimePolicyTests.test_actual_interpreter_and_repo_selection_are_qualified_patch) ... ok
+test_syft_execution_rejects_old_runtime (test_python_runtime_policy.PythonRuntimePolicyTests.test_syft_execution_rejects_old_runtime) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.085s
+
+OK

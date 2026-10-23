@@ -44,7 +44,7 @@ TARGETS = {
         "binary_sha256": "835607cdfbdbfc59335b0beadeefc47aa6aab7d3b403c11cfa65627d92a27f61",
         "platform": "darwin/arm64",
         "verifier_lock": "syft-darwin-verifier.lock",
-        "verifier_lock_sha256": "bc22323572381258237ff65529b55f37387a3bdfddf1ccf82305d41443ddacf2",
+        "verifier_lock_sha256": "97dfe508ed80ca0ce8af3da9af4627d9702a10f28aec4b99385b5cf7a6620693",
     },
     ("Linux", "x86_64"): {
         "key": "linux-amd64",
@@ -53,7 +53,7 @@ TARGETS = {
         "binary_sha256": "d46a9a61a6ae3d367f0a03748c5e9c59253e586c4388ab26ddcacebc2efa0d92",  # Native Linux run 37327710820.
         "platform": "linux/amd64",
         "verifier_lock": "syft-linux-verifier.lock",
-        "verifier_lock_sha256": "e8c2913539b2dc4260ef8611e1f21daa56efbdf8b55199c34882808aecd6acea",
+        "verifier_lock_sha256": "55ce82fcf34e989de6a273b31f5d2b781f42ea5a8fc9fb3561dede86a15c16ea",
     },
 }
 LOCK_DIR = Path(__file__).absolute().parent
@@ -304,8 +304,8 @@ def _scan_tar_gzip_bounds(archive_data: bytes, deadline_check: Callable[[], floa
 
 def require_supported_python(version_info: Any = sys.version_info) -> None:
     actual = tuple(version_info[:3])
-    if actual != (3, 14, 8):
-        raise RuntimeError(f"Python 3.14.8 is required; found {'.'.join(map(str, actual))}")
+    if actual != (3, 15, 1):
+        raise RuntimeError(f"Python 3.15.1 is required; found {'.'.join(map(str, actual))}")
 
 
 def strict_json(data: bytes, *, label: str, byte_limit: int = MAX_JSON_BYTES, depth_limit: int = 32) -> Any:
@@ -385,8 +385,8 @@ def validate_lock(target: dict[str, Any], lock_dir: Path = LOCK_DIR) -> tuple[Pa
         if canonical in rows:
             raise RuntimeError(f"duplicate verifier lock package: {name}")
         rows[canonical] = (version, digest)
-    if rows.get("sigstore", (None, None))[0] != "4.5.0":
-        raise RuntimeError("verifier lock must pin Sigstore 4.5.0")
+    if rows.get("sigstore", (None, None))[0] != "4.5.1":
+        raise RuntimeError("verifier lock must pin Sigstore 4.5.1")
     if rows.get("pypi-attestations", (None, None))[0] != "0.0.30":
         raise RuntimeError("verifier lock must retain the qualified verifier dependency closure")
     return path, data
@@ -734,7 +734,7 @@ class Installer:
         safe_write(probe, source.encode("utf-8"))
         self._run("audit-pip-configuration", [str(verifier_python), str(probe), str(self.output / "pip-canary.ini")], 30)
         self._run("install-hash-locked-verifier", [str(verifier_python), "-m", "pip", "--isolated", "--disable-pip-version-check", "--no-input", "install", "--require-hashes", "-r", str(lock_path)], 900)
-        self.events.append("installed-hash-locked-sigstore-4.5.0")
+        self.events.append("installed-hash-locked-sigstore-4.5.1")
         return verifier_python
 
     @staticmethod
@@ -755,7 +755,7 @@ class Installer:
         return rows[0]
 
     def _verify_checksums(self, verifier: Path, checksums: Path, bundle: Path) -> None:
-        # Sigstore 4.5.0's `verify github` implementation unconditionally applies
+        # Sigstore 4.5.1's `verify github` implementation unconditionally applies
         # OIDCIssuer(https://token.actions.githubusercontent.com); there is no
         # --cert-oidc-issuer option on that subcommand. Keep that exact CLI policy.
         args = [str(verifier), "-m", "sigstore", "verify", "github", "--bundle", str(bundle),
@@ -947,11 +947,11 @@ class Installer:
                 "archive_sha256": archive_digest, "binary_path": "bin/syft",
                 "binary_sha256": _hash_bounded_regular_nofollow(final_binary, MAX_MEMBER_BYTES)[0], "archive": archive_receipt,
                 "version_probe": value, "issuer_policy": OIDC_ISSUER,
-                "issuer_enforcement": "Sigstore 4.5.0 verify github applies OIDCIssuer unconditionally; subcommand has no issuer flag",
+                "issuer_enforcement": "Sigstore 4.5.1 verify github applies OIDCIssuer unconditionally; subcommand has no issuer flag",
                 "certificate_identity": CERT_IDENTITY, "repository": REPOSITORY, "ref": WORKFLOW_REF,
                 "installer_source_sha256": sha256_file(Path(__file__).resolve(), self.deadline),
                 "python_toolchain": python_info,
-                "verifier": {"sigstore": "4.5.0", "lock_path": self.target["verifier_lock"],
+                "verifier": {"sigstore": "4.5.1", "lock_path": self.target["verifier_lock"],
                              "lock_sha256": sha256_bytes(lock_bytes)},
                 "commands": self.commands, "events": self.events,
                 "qualification_limit": "Native authenticated installation and version probe only; no package scan, release, or publication is represented.",
