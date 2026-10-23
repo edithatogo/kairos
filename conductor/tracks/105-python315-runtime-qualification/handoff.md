@@ -57,3 +57,7 @@ Track 105 now reports In Progress consistently. Active website/template/release 
 ## Container and platform wiring
 
 Docker creates `/work/.venv`, verifies exact Python/prefix and selects it for the telemetry plugin. Devcontainer, devbox and bootstraps use the common version/prefix guard. Hosted session jobs run the focused refusal suite on Linux/macOS; Conductor jobs now probe the real environment on Windows/Linux; the existing Docker build lane additionally probes actual container version/prefix. No local container/Windows execution is claimed. Eight guard cases, actionlint and shell syntax pass. The cloud static validator exposes a stale bare-Alpine-image assertion; it must be updated/tested before PR. See [platform wiring receipt](platform-wiring-evidence/receipt.json).
+
+## Container contract correction and active inventory
+
+The static cloud validator now requires the exact digest-pinned Python 3.15.1 runtime image and local `/work/.venv` contract, instead of the obsolete bare-Alpine assertion. Negative fixtures reject an old image, missing venv creation and wrong runtime PATH. The actual cloud validator and nine focused runtime/container cases pass. Root `.venv` is ignored explicitly, and a fresh Git fixture proves guard creation leaves tracked source clean. See [cloud correction receipt](cloud-validator-evidence/receipt.json) and [active-use inventory](inventory.md). Hosted/main/platform/handover proof remains open.

@@ -19,8 +19,13 @@ class LocalPythonTests(unittest.TestCase):
     def test_real_environment_child_and_reuse_preserve_existing_files(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory).resolve()
+            (root / '.gitignore').write_bytes((ROOT / '.gitignore').read_bytes())
+            subprocess.run(['git', 'init', '-q', str(root)], check=True)
+            subprocess.run(['git', '-C', str(root), 'add', '.gitignore'], check=True)
+            subprocess.run(['git', '-C', str(root), '-c', 'user.name=Runtime Test', '-c', 'user.email=runtime@example.invalid', 'commit', '-qm', 'fixture'], check=True)
             result = self.invoke(root)
             self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(subprocess.check_output(['git', '-C', str(root), 'status', '--porcelain'], text=True), '')
             receipt = json.loads(result.stdout)
             self.assertEqual(receipt['version'], '3.15.1')
             self.assertEqual(Path(receipt['prefix']), root / '.venv')
@@ -137,6 +142,23 @@ class LocalPythonTests(unittest.TestCase):
             self.assertEqual(version, [3, 15, 1])
             self.assertEqual(Path(prefix), root / '.venv')
             self.assertEqual(output.read_text().strip(), str(root / '.venv/bin'))
+
+    def test_container_contract_rejects_old_or_nonlocal_python(self):
+        import importlib.util
+        from unittest.mock import patch
+        spec = importlib.util.spec_from_file_location('cloud_validation', ROOT / 'cloud/validate_cloud_hpc.py')
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        module.validate_docker_surface()
+        read = module.read
+        original = read('docker/Dockerfile')
+        for candidate in [original.replace('python:3.15.1-', 'python:3.14.8-'),
+                          original.replace('RUN python3 -m venv .venv', 'RUN true'),
+                          original.replace('/work/.venv/bin:${PATH}', '/usr/local/bin:${PATH}')]:
+            with self.subTest(candidate=candidate.splitlines()[-3:]):
+                with patch.object(module, 'read', side_effect=lambda name: candidate if name == 'docker/Dockerfile' else read(name)):
+                    with self.assertRaises(AssertionError):
+                        module.validate_docker_surface()
 
 
 if __name__ == '__main__':

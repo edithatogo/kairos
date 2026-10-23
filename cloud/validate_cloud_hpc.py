@@ -173,7 +173,10 @@ def validate_docker_surface() -> None:
     bake = read("docker/docker-bake.hcl")
 
     assert "FROM rust:" in dockerfile
-    assert "FROM alpine:" in dockerfile
+    assert re.search(r"(?m)^FROM python:3\.15\.1-alpine3\.24@sha256:[0-9a-f]{64}$", dockerfile)
+    assert "RUN python3 -m venv .venv" in dockerfile
+    assert 'sys.prefix == "/work/.venv"' in dockerfile
+    assert 'ENV PATH="/work/.venv/bin:${PATH}"' in dockerfile
     assert "COPY --from=builder" in dockerfile
     assert "ENTRYPOINT" in dockerfile
     assert "USER kairo" in dockerfile
