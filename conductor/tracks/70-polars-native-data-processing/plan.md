@@ -4,7 +4,7 @@ All implementation work is pending. Write failing behavioural tests before repla
 
 ## Phase 0 — Baseline and dependency qualification
 
-- [ ] Task 0.1: Inventory every applicable Rust/binding/script data path and caller; record replace/retain/remove decisions, raw baselines and ownership handoffs from Tracks 04/62/63/66.
+- [ ] Task 0.1: Inventory every applicable Rust/binding/script data path and caller; record replace/retain/remove decisions, raw baselines and ownership handoffs from Tracks 04/62/63/66. Classify 93/94/96 (or paired parent) targets as removed/required/independent; record exact blocked migration task, owner, prerequisite receipt and oracle before affected dispatch. Record no-target decisions explicitly; do not mark adoption complete.
 - [ ] Task 0.2: Add failing independent interoperability, full-range tick, join/cardinality and ABI ownership tests before replacement; establish real baseline behaviours rather than trusting Done labels.
 - [ ] Task 0.3: Qualify and pin compatible Polars/Arrow versions, feature set, licence/advisory/MSRV and packaging constraints on the canonical toolchain; prove minimal-core/Wasm feature isolation and no duplicate full table representation.
 - [ ] Task 0.4: Review ADR, versioned schema/ABI compatibility assessment, fixture changes and red-team objections; capture approved contract and source/dependency hashes.
@@ -64,4 +64,4 @@ does not close an implementation phase or authorise publication.
 
 ## Dependency sequencing refinement — 22 October 2026
 
-Tracks 93 sha2, 94 tempfile and 96 proptest are prerequisites before runtime migration. Read-only shared inventory may start first. These tracks qualify existing retained consumers/primitives; Polars still owns real format migration and full process-interruption/durability/replay acceptance. Do not repair the obsolete pseudo-Parquet format or introduce a permanent legacy backend.
+Track 70 starts with Phase 0 inventory and migration-boundary decisions; Tracks 93/94/96 are not blanket entry or runtime-migration prerequisites. For each digest, staging or property-test target, record its path, owner and disposition: removed by Polars, retained and required for a named migration task, or independent. Before dispatching an affected task, record the exact prerequisite task/receipt and acceptance oracle in the owning plan and dispatch packet (and the CareOps task graph where representable). Unresolved required work blocks that task only; unrelated migration work may proceed under existing ownership and contract gates. Do not retrofit code scheduled for deletion. If no targets remain, record a reviewed scope-elimination decision without claiming adoption. Required integrity, durability, interoperability, replay and independent test evidence remain mandatory in Polars. Separate dependency tracks and current owner handoffs remain in force.

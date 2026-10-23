@@ -207,3 +207,7 @@ The human sole maintainer explicitly approved Track49 production scheduling afte
 
 ---
 - [ ] **Track 104: tokio-tungstenite conditional** — [record](tracks/104-tokio-tungstenite-adapter/index.md).
+
+## Inventory-first Polars sequencing — 23 October 2026
+
+Polars inventory leads; sha2/tempfile/proptest are separate tracks with gates only on demonstrated dependent migration tasks. See [sequencing](dependency-sequencing.md). All implementation and acceptance statuses remain unchanged.

@@ -4,7 +4,7 @@ Future tests; none implemented or run by registration.
 
 | Gate | Oracle |
 | --- | --- |
-| dependency-94-behaviour | Concurrent directory creation/isolation; cleanup on normal/error paths; intentional retained diagnostics; same-filesystem publication, failure before/after persist, no-clobber and old-output preservation. End-to-end process-kill/disk-full/manifest recovery remains mandatory in Polars and is not certified by this prerequisite. |
+| dependency-94-behaviour | Concurrent directory creation/isolation; cleanup on normal/error paths; intentional retained diagnostics; same-filesystem publication, failure before/after persist, no-clobber and old-output preservation. End-to-end process-kill/disk-full/manifest recovery remains mandatory in Polars and is not certified by this supporting track. |
 | dependency-value-proof | Named production target/accepted consumer; independent regression/negative tests; exact pins/features/licence/security/MSRV; wrapper-inclusive code reduction or necessary avoided implementation; build/binary/memory/latency budgets fixed before replacement |
 | phase-closeout-check | Conductor review/fixes, exact receipts, clean claimed paths and no missing runtime oracle |
 
