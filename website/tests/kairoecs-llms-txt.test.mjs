@@ -112,8 +112,8 @@ test("lock graph removes the vulnerable chain and retains the exact renderer gra
     "node_modules/starlight-llms-txt",
     "node_modules/to-regex-range",
   ];
-  const expectedLockSha256 = "18de86623839b1a581d46ced2895d0c7aca6fc056086a1c3a061da4407633d59";
-  const expectedRetainedGraphSha256 = "4a2e21a4897afcb0f0b218f74b0233b25b5aae2c6f1f6329280660abe1bb4652";
+  const expectedLockSha256 = "024dad1f1de5c9b06c92011ba1fa86679572d6839c0733ad06f591fe269c3568";
+  const expectedRetainedGraphSha256 = "948b2d6119210809ca903befbb5137f0f35579f24228baa0d42f2622c483ba3f";
   assert.deepEqual(pkg.dependencies, expectedDependencies, "package.json direct dependency map changed");
   assert.deepEqual(candidate.packages[""].dependencies, expectedDependencies, "lock root direct dependency map changed");
   assert.equal(createHash("sha256").update(readFileSync(path.join(root, "website/package-lock.json"))).digest("hex"), expectedLockSha256, "package lock content changed");
@@ -125,6 +125,7 @@ test("lock graph removes the vulnerable chain and retains the exact renderer gra
     return parts[0].startsWith("@") ? `${parts[0]}/${parts[1]}` : parts[0];
   };
   const candidatePackages = candidate.packages ?? {};
+  assert.equal(candidatePackages["node_modules/vite"].version, "8.3.5", "reviewed security patch");
   for (const [lockPath, entry] of Object.entries(candidatePackages)) {
     if (forbidden.has(nameOf(lockPath))) assert.fail(`forbidden lock node: ${lockPath}`);
     for (const field of ["dependencies", "optionalDependencies", "peerDependencies", "devDependencies"]) {
