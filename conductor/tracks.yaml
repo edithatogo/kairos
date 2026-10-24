@@ -1214,7 +1214,7 @@ tracks:
 
   - id: 79
     name: zip FMU archive replacement
-    status: Planned
+    status: Done
     owner: fmi-agent
     depends_on: ["78"]
     owned_paths:

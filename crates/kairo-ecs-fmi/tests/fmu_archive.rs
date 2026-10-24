@@ -1,6 +1,7 @@
 #![cfg(feature = "fmi-runtime")]
 
 use std::fs;
+use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -27,24 +28,18 @@ fn shared_library_extension() -> &'static str {
 }
 
 fn stored_zip(entries: &[(&str, &[u8])]) -> Vec<u8> {
-    let mut bytes = Vec::new();
-    for (name, body) in entries {
-        let name = name.as_bytes();
-        bytes.extend_from_slice(&0x0403_4b50u32.to_le_bytes());
-        bytes.extend_from_slice(&20u16.to_le_bytes());
-        bytes.extend_from_slice(&0u16.to_le_bytes());
-        bytes.extend_from_slice(&0u16.to_le_bytes());
-        bytes.extend_from_slice(&0u16.to_le_bytes());
-        bytes.extend_from_slice(&0u16.to_le_bytes());
-        bytes.extend_from_slice(&0u32.to_le_bytes());
-        bytes.extend_from_slice(&(body.len() as u32).to_le_bytes());
-        bytes.extend_from_slice(&(body.len() as u32).to_le_bytes());
-        bytes.extend_from_slice(&(name.len() as u16).to_le_bytes());
-        bytes.extend_from_slice(&0u16.to_le_bytes());
-        bytes.extend_from_slice(name);
-        bytes.extend_from_slice(body);
+    let mut cursor = std::io::Cursor::new(Vec::new());
+    {
+        let mut writer = zip::ZipWriter::new(&mut cursor);
+        let options = zip::write::SimpleFileOptions::default()
+            .compression_method(zip::CompressionMethod::Stored);
+        for (name, body) in entries {
+            writer.start_file(*name, options).expect("start file");
+            writer.write_all(body).expect("write body");
+        }
+        writer.finish().expect("finish");
     }
-    bytes
+    cursor.into_inner()
 }
 
 #[test]
