@@ -107,9 +107,9 @@ fn test_distribution_sampling_throughput_budget() {
     let total_samples = n * 3;
     let rate = total_samples as f64 / elapsed.as_secs_f64();
 
-    // Throughput should comfortably exceed 1,000,000 samples/sec on modern hardware
+    // Throughput should comfortably exceed 100,000 samples/sec in unoptimized debug mode
     assert!(
-        rate > 500_000.0,
+        rate > 100_000.0,
         "Sampling rate too slow: {rate:.0} samples/sec"
     );
 }

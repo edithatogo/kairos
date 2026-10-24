@@ -17,6 +17,12 @@ use thiserror::Error;
 
 pub const RNG_GENERATOR_CHACHA8: &str = "chacha8";
 pub const RNG_CHECKPOINT_VERSION_V1: u32 = 1;
+pub const RNG_DISTRIBUTION_PROVENANCE_V1: &str = "rand_distr_0.6";
+pub const RNG_DISTRIBUTION_PROVENANCE_LEGACY: &str = "legacy_inverse_transform";
+
+fn default_distribution_provenance() -> String {
+    RNG_DISTRIBUTION_PROVENANCE_V1.to_string()
+}
 
 /// Domain separator for run-seed mixing.
 const RUN_SEED_DOMAIN: u64 = 0xA8E5_1B2C_4D6F_9013;
@@ -51,12 +57,17 @@ pub enum RngError {
     },
     #[error("unsupported RNG checkpoint version: expected `{expected}`, found `{found}`")]
     UnsupportedVersion { expected: u32, found: u32 },
+    #[error("unsupported distribution provenance: expected `{expected}`, found `{found}`")]
+    UnsupportedDistributionProvenance {
+        expected: &'static str,
+        found: String,
+    },
     #[error("invalid RNG stream state: {0}")]
     InvalidState(String),
 }
 
 /// Versioned, serializable checkpoint capturing generator metadata, seed, stream ID,
-/// and mid-buffer word position for exact replay reconstruction.
+/// mid-buffer word position, and distribution provenance for exact replay reconstruction.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct RngCheckpoint {
     pub generator: String,
@@ -64,6 +75,8 @@ pub struct RngCheckpoint {
     pub seed: [u8; 32],
     pub stream_id: u64,
     pub word_pos: u128,
+    #[serde(default = "default_distribution_provenance")]
+    pub distribution_provenance: String,
 }
 
 /// Derive a 32-byte ChaCha8 seed from a 64-bit integer seed via SplitMix64 cascade.
@@ -144,6 +157,7 @@ pub struct DeterministicStream {
     rng: ChaCha8Rng,
     seed: [u8; 32],
     stream_id: u64,
+    distribution_provenance: String,
 }
 
 impl DeterministicStream {
@@ -171,6 +185,7 @@ impl DeterministicStream {
             rng,
             seed: seed_bytes,
             stream_id,
+            distribution_provenance: RNG_DISTRIBUTION_PROVENANCE_V1.to_string(),
         }
     }
 
@@ -189,6 +204,7 @@ impl DeterministicStream {
             rng,
             seed,
             stream_id,
+            distribution_provenance: RNG_DISTRIBUTION_PROVENANCE_V1.to_string(),
         }
     }
 
@@ -227,6 +243,16 @@ impl DeterministicStream {
         self.stream_id
     }
 
+    /// Distribution provenance profile used by this stream.
+    pub fn distribution_provenance(&self) -> &str {
+        &self.distribution_provenance
+    }
+
+    /// Set the distribution provenance profile for replay compatibility.
+    pub fn set_distribution_provenance(&mut self, provenance: impl Into<String>) {
+        self.distribution_provenance = provenance.into();
+    }
+
     /// Create a versioned checkpoint of the stream state.
     pub fn checkpoint(&self) -> RngCheckpoint {
         RngCheckpoint {
@@ -235,6 +261,7 @@ impl DeterministicStream {
             seed: self.seed,
             stream_id: self.stream_id,
             word_pos: self.rng.get_word_pos(),
+            distribution_provenance: self.distribution_provenance.clone(),
         }
     }
 
@@ -257,6 +284,14 @@ impl DeterministicStream {
                 found: checkpoint.version,
             });
         }
+        if checkpoint.distribution_provenance != RNG_DISTRIBUTION_PROVENANCE_V1
+            && checkpoint.distribution_provenance != RNG_DISTRIBUTION_PROVENANCE_LEGACY
+        {
+            return Err(RngError::UnsupportedDistributionProvenance {
+                expected: RNG_DISTRIBUTION_PROVENANCE_V1,
+                found: checkpoint.distribution_provenance.clone(),
+            });
+        }
 
         let mut rng = ChaCha8Rng::from_seed(checkpoint.seed);
         rng.set_stream(checkpoint.stream_id);
@@ -266,6 +301,7 @@ impl DeterministicStream {
             rng,
             seed: checkpoint.seed,
             stream_id: checkpoint.stream_id,
+            distribution_provenance: checkpoint.distribution_provenance.clone(),
         })
     }
 }
@@ -423,6 +459,7 @@ mod tests {
             seed: [0u8; 32],
             stream_id: 0,
             word_pos: 0,
+            distribution_provenance: RNG_DISTRIBUTION_PROVENANCE_V1.to_string(),
         };
         assert!(matches!(
             DeterministicStream::restore(&cp_invalid_gen),
@@ -435,6 +472,7 @@ mod tests {
             seed: [0u8; 32],
             stream_id: 0,
             word_pos: 0,
+            distribution_provenance: RNG_DISTRIBUTION_PROVENANCE_V1.to_string(),
         };
         assert!(matches!(
             DeterministicStream::restore(&cp_invalid_ver),
