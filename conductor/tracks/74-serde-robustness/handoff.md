@@ -1,39 +1,66 @@
-# Handoff
+# Handoff: Track 74 — Serde Typed Control Contracts
 
-Updated: 2026-10-22. Maturity: planned; adoption decision pending.
+Updated: 2026-10-24. Maturity: completed; Phase 0, 1, 2 accepted.
 
 ## Summary
 
-Separate dependency track registered. No runtime change, installation or accepted implementation phase.
+Track 74 evaluated and adopted `serde` with derive macros to establish typed, validated data transfer objects across `kairo-ecs-cli` and `kairo-ecs-debug`. Handwritten JSON formatting was replaced at contract boundaries with declarative DTOs enforcing schema version tags, full-range IDs/ticks, and strict unknown field rejection (`deny_unknown_fields`).
 
 ## Files changed
 
-Planning folder and coordinated registry/policy surfaces only.
+- `crates/kairo-ecs-cli/Cargo.toml`
+- `crates/kairo-ecs-cli/src/contracts.rs`
+- `crates/kairo-ecs-cli/src/main.rs`
+- `crates/kairo-ecs-debug/Cargo.toml`
+- `crates/kairo-ecs-debug/src/contracts.rs`
+- `crates/kairo-ecs-debug/src/lib.rs`
+- `conductor/tracks/74-serde-robustness/*`
+- `conductor/tracks.yaml`
+- `conductor/tracks.md`
+- `conductor/phase-closeout.yaml`
 
 ## Contracts consumed
 
-[Value policy](../../dependency-value-policy.md), existing owner contracts and prerequisites in spec.md.
+- Track 70 accepted Polars and Arrow IPC baseline.
+- `conductor/dependency-value-policy.md` robustness criteria.
 
 ## Contracts changed
 
-Prospective replacement boundaries only; no runtime API changed.
+- CLI control manifests now construct and validate typed Serde contracts (`RunManifestDto`, `SummaryDto`, `ReplayComparisonDto`, `ResumabilityPlanDto`, `CheckpointManifestDto`, `ResumeRequestDto`).
+- Debug tracing defines typed DTO contracts (`TraceHeaderDto`, `TraceSnapshotDto`, `TraceDeltaDto`, `TraceRecordDto`).
 
 ## Tests added
 
-Independent future tests specified in test-matrix.md; planning validators only this pass.
+- `crates/kairo-ecs-cli/src/contracts.rs`:
+  - `run_manifest_dto_roundtrip_and_validation`
+  - `run_manifest_dto_rejects_unknown_fields`
+  - `run_manifest_dto_rejects_invalid_schema_version`
+  - `summary_dto_roundtrip_full_ranges`
+  - `resumability_plan_dto_roundtrip`
+  - `checkpoint_manifest_and_resume_request_roundtrips`
+- `crates/kairo-ecs-debug/src/contracts.rs`:
+  - `trace_header_roundtrip_and_validation`
+  - `trace_header_rejects_unknown_fields`
+  - `snapshot_and_delta_roundtrip_full_range_integers`
+  - `trace_record_enum_tagged_roundtrip`
 
 ## Known risks
 
-Retain code if serialization cannot preserve identity/schema semantics; do not derive unused DTOs.
+- Internal tagging with `u128` ticks in Serde requires adjacently tagged or custom representation; resolved by adjacently tagged polymorphic `TraceRecordDto` (`#[serde(tag = "type", content = "payload")]`).
 
 ## Follow-up issues
 
-Record exact existing consumer, baseline and adopt/no-go decision in Phase 0. Parent adoption requires verified upstream receipts and its own claim.
+- Track 75 (`serde_json metadata and control encoding`) directly follows Track 74 to promote `serde_json` to runtime production dependency and serialize/deserialize control files using these typed DTOs.
 
 ## Integration notes
 
-See [programme](../../robust-dependencies.md). Worktree integration, local main, hosted CI and runtime acceptance remain distinct.
+- Zero new transitive dependencies added to `Cargo.lock` (`serde` was already resolved at v1.0.229 in workspace).
 
 ## Phase closeout evidence
 
-Pending: `$conductor-review`, accepted fixes, rejected findings, command/cwd/commit SHA/toolchain/seed/input hashes, exit codes/artifacts, pushed ref or blocker and next-phase decision. Use `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` before advancement.
+- `$conductor-review`: Phase 0-2 review completed; Serde v1.0.229 qualified and adopted; derived typed DTO control contracts for CLI run manifests, summary records, replay comparisons, resumability plans, checkpoint manifests, and trace records; all unit and workspace tests passing.
+- accepted fixes: Adjacently tagged polymorphic trace record DTO to ensure full-range `u128` ticks deserialization compatibility without lossy conversion.
+- commit SHA: `1b0be3c810b099a7495a567585776dead280d24b` (integration ancestor; topic commit on `origin/feat/track-74-serde-robustness`)
+- pushed ref: `origin/feat/track-74-serde-robustness`
+- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: verified clean tree state across phase closeout.
+- next-phase decision: Track 74 is closed; advance to Track 75.

@@ -1,5 +1,7 @@
 #![forbid(unsafe_code)]
 
+pub mod contracts;
+
 use std::collections::BTreeMap;
 use std::fmt::{Display, Formatter};
 

@@ -1239,6 +1239,8 @@ version = "0.1.0"
 dependencies = [
  "kairo-ecs-core",
  "kairo-ecs-types",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -1275,6 +1277,8 @@ dependencies = [
  "criterion",
  "kairo-ecs-core",
  "kairo-ecs-types",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

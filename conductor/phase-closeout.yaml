@@ -1260,16 +1260,21 @@ entries:
     next_phase_decision: "Verify entry receipts and qualify dependency before implementation"
 
   - track_id: "74"
-    phase: "0"
-    state: pending
+    phase: "2"
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Planning only; value and consumer gates unresolved"
-    fixes_applied: false
-    validation_commands: []
-    git_status: "planning worktree"
-    commit_sha: ""
-    pushed_ref: ""
-    next_phase_decision: "Verify prerequisites and value; conditional adoption is not automatically authorized"
+    review_result: "Serde v1.0.229 qualified and adopted: derived typed DTO control contracts for CLI run manifests, summary records, replay comparisons, resumability plans, checkpoint manifests, and trace records; all unit and workspace tests passing."
+    fixes_applied: true
+    validation_commands:
+      - "cargo test -p kairo-ecs-cli -p kairo-ecs-debug"
+      - "cargo test --workspace"
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_dag.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
+    git_status: "clean"
+    commit_sha: "1b0be3c810b099a7495a567585776dead280d24b"
+    pushed_ref: "origin/feat/track-74-serde-robustness"
+    next_phase_decision: "Track 74 is Done; advance to Track 75."
 
   - track_id: "75"
     phase: "0"
@@ -1625,8 +1630,12 @@ entries:
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
       - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
     git_status: "clean"
-    commit_sha: "d60fb41f96d6d6c346ea6c64b1aedf9e53d9398a"
-    pushed_ref: "origin/feat/track-101-criterion-consolidation"
+    commit_sha: "1b0be3c810b099a7495a567585776dead280d24b"
+    pushed_ref: "origin/main"
+    historical_closeout_sha: "d60fb41f96d6d6c346ea6c64b1aedf9e53d9398a"
+    tested_head_sha: "d60fb41f96d6d6c346ea6c64b1aedf9e53d9398a"
+    publication_pr: "https://github.com/edithatogo/kairos/pull/308"
+    publication_evidence: "Published owner Track 101 closeout retained. Final PR head and squash merge have identical full trees (git diff --exit-code); deleted topic ref replaced with accepted main ancestry, preserving original closeout and final reviewed-head provenance."
     next_phase_decision: "Track 101 is Done; track archived."
 
   - track_id: "102"

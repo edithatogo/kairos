@@ -153,7 +153,7 @@ The human sole maintainer explicitly approved Track49 production scheduling afte
 - [ ] **Track: petgraph spatial topology and routing adoption** — Planned; implementation not started. [Track](tracks/73-petgraph-spatial-routing/index.md).
 
 ---
-- [ ] **Track 74: Serde typed control contracts** — Planned; foundation; value gate pending. [Track](tracks/74-serde-robustness/index.md).
+- [x] **Track 74: Serde typed control contracts** — Completed; typed Serde DTO contracts implemented for CLI control manifests and debug traces; Phase 0–2 accepted. [Track](tracks/74-serde-robustness/index.md).
 
 ---
 - [ ] **Track 75: serde_json metadata and control encoding** — Planned; foundation; value gate pending. [Track](tracks/75-serde-json-robustness/index.md).
