@@ -1,6 +1,8 @@
 #![forbid(unsafe_code)]
 
+pub mod routing;
 pub mod spawning;
+pub use routing::*;
 pub use spawning::*;
 
 use kairo_ecs_core::Scheduler;
@@ -636,6 +638,10 @@ impl GraphSpace {
             col_indices,
             entity_to_index,
         }
+    }
+
+    pub fn from_spatial_topology(topology: &SpatialTopology) -> Self {
+        Self::new(topology.to_csr_edges())
     }
 
     pub fn neighbors(&self, agent: EntityId) -> &[EntityId] {
