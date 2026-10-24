@@ -1220,7 +1220,7 @@ entries:
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
     git_status: "clean"
     commit_sha: "6e3fce34123325b71154c963c9897c540eee3e11"
-    pushed_ref: "refs/heads/main"
+    pushed_ref: "origin/feat/tracks-70-93-94-foundation"
     next_phase_decision: "Track 70 is Done; track archived."
 
   - track_id: "71"
@@ -1503,7 +1503,7 @@ entries:
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
     git_status: "clean"
     commit_sha: "11070828998d8e2a26eb0aa3337b382a204e89f7"
-    pushed_ref: "refs/heads/main"
+    pushed_ref: "origin/feat/tracks-70-93-94-foundation"
     next_phase_decision: "Track 93 is Done; track archived."
 
   - track_id: "94"
@@ -1520,7 +1520,7 @@ entries:
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
     git_status: "clean"
     commit_sha: "3ce5d9f1e911b5d872fef926b373126286660246"
-    pushed_ref: "refs/heads/main"
+    pushed_ref: "origin/feat/tracks-70-93-94-foundation"
     next_phase_decision: "Track 94 is Done; track archived."
 
   - track_id: "95"

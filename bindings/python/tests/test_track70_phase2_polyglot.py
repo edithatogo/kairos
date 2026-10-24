@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import pytest
-
 import kairo_ecs
 
 
@@ -33,6 +31,6 @@ def test_arrow_c_capsule_schema_and_array() -> None:
     batch = kairo_ecs.EventLogBatch([record])
 
     schema_cap = batch.__arrow_c_schema__()
-    array_cap, schema_cap2 = batch.__arrow_c_array__()
+    array_cap, _schema_cap2 = batch.__arrow_c_array__()
     assert schema_cap is not None
     assert array_cap is not None

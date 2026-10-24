@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import hashlib
-import pytest
 
 import kairo_ecs
 
@@ -48,5 +47,5 @@ def test_event_log_batch_bytes_sha256_polyglot_parity() -> None:
     corrupted_digest = hashlib.sha256(corrupted).digest()
     assert digest != corrupted_digest
     # Avalanche effect: at least 30% of bits differ
-    diff_bits = sum(bin(b1 ^ b2).count("1") for b1, b2 in zip(digest, corrupted_digest))
+    diff_bits = sum((b1 ^ b2).bit_count() for b1, b2 in zip(digest, corrupted_digest))
     assert diff_bits >= 80, f"Expected avalanche effect, got {diff_bits} different bits"
