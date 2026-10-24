@@ -10,7 +10,6 @@ pub enum DebugContractError {
     UnsupportedSchema(String),
     TicksOutOfOrder { previous: u128, current: u128 },
     EmptyKind,
-    MalformedRecord(String),
 }
 
 impl Display for DebugContractError {
@@ -22,7 +21,6 @@ impl Display for DebugContractError {
                 write!(f, "trace ticks out of order: {current} after {previous}")
             }
             Self::EmptyKind => write!(f, "event kind cannot be empty"),
-            Self::MalformedRecord(msg) => write!(f, "malformed trace record: {msg}"),
         }
     }
 }
@@ -115,6 +113,13 @@ impl TraceDeltaDto {
             changes,
         })
     }
+
+    pub fn validate(&self) -> Result<(), DebugContractError> {
+        if self.kind.is_empty() {
+            return Err(DebugContractError::EmptyKind);
+        }
+        Ok(())
+    }
 }
 
 /// Polymorphic trace record DTO supporting both snapshots and deltas.
@@ -133,6 +138,13 @@ impl TraceRecordDto {
         match self {
             Self::Snapshot(s) => s.tick,
             Self::Delta(d) => d.tick,
+        }
+    }
+
+    pub fn validate(&self) -> Result<(), DebugContractError> {
+        match self {
+            Self::Snapshot(_) => Ok(()),
+            Self::Delta(d) => d.validate(),
         }
     }
 
@@ -293,6 +305,9 @@ impl<'de> Deserialize<'de> for TraceRecordDto {
                         let kind = payload
                             .kind
                             .ok_or_else(|| serde::de::Error::missing_field("kind"))?;
+                        if kind.is_empty() {
+                            return Err(serde::de::Error::custom("event kind cannot be empty"));
+                        }
                         let changes = payload.changes.unwrap_or_default();
 
                         Ok(TraceRecordDto::Delta(TraceDeltaDto {
@@ -316,7 +331,7 @@ impl<'de> Deserialize<'de> for TraceRecordDto {
 }
 
 /// Validates a sequence of JSON Lines containing an optional header followed by trace records,
-/// enforcing monotonically non-decreasing ticks and schema compliance.
+/// enforcing monotonically non-decreasing ticks, non-empty event kinds, and schema compliance.
 pub fn validate_jsonl_trace_records(input: &str) -> Result<(), DebugContractError> {
     let mut lines = input.lines().filter(|l| !l.trim().is_empty());
     let first = match lines.next() {
@@ -332,15 +347,27 @@ pub fn validate_jsonl_trace_records(input: &str) -> Result<(), DebugContractErro
         header.validate()?;
     } else {
         // Not a header; treat as first record
-        let record: TraceRecordDto = serde_json::from_str(first)
-            .map_err(|e| DebugContractError::MalformedRecord(e.to_string()))?;
+        let record: TraceRecordDto = serde_json::from_str(first).map_err(|e| {
+            if e.to_string().contains("event kind cannot be empty") {
+                DebugContractError::EmptyKind
+            } else {
+                DebugContractError::MissingSchema
+            }
+        })?;
+        record.validate()?;
         previous_tick = record.tick();
         first_is_record = true;
     }
 
     for line in lines {
-        let record: TraceRecordDto = serde_json::from_str(line)
-            .map_err(|e| DebugContractError::MalformedRecord(e.to_string()))?;
+        let record: TraceRecordDto = serde_json::from_str(line).map_err(|e| {
+            if e.to_string().contains("event kind cannot be empty") {
+                DebugContractError::EmptyKind
+            } else {
+                DebugContractError::MissingSchema
+            }
+        })?;
+        record.validate()?;
         let tick = record.tick();
         if (first_is_record || previous_tick > 0) && tick < previous_tick {
             return Err(DebugContractError::TicksOutOfOrder {
@@ -533,5 +560,22 @@ mod tests {
         let invalid_stream = format!("{header}\n{rec1}\n{rec2}\n{rec3_bad}\n");
         let err = validate_jsonl_trace_records(&invalid_stream).unwrap_err();
         assert!(matches!(err, DebugContractError::TicksOutOfOrder { .. }));
+    }
+
+    #[test]
+    fn rejects_empty_kind_in_delta_at_first_and_subsequent_positions() {
+        // Empty kind delta at first position (headerless stream)
+        let empty_kind_delta_first = r#"{"type":"delta","payload":{"tick":10,"event_id_index":1,"event_id_generation":0,"sequence":1,"kind":"","changes":{}}}"#;
+        let err1 = validate_jsonl_trace_records(empty_kind_delta_first).unwrap_err();
+        assert_eq!(err1, DebugContractError::EmptyKind);
+
+        // Empty kind delta at subsequent position (after valid header and record)
+        let header = TraceHeaderDto::default().to_json_string().unwrap();
+        let valid_rec = TraceRecordDto::Snapshot(TraceSnapshotDto::new(10, BTreeMap::new()))
+            .to_json_line()
+            .unwrap();
+        let stream = format!("{header}\n{valid_rec}\n{empty_kind_delta_first}\n");
+        let err2 = validate_jsonl_trace_records(&stream).unwrap_err();
+        assert_eq!(err2, DebugContractError::EmptyKind);
     }
 }
