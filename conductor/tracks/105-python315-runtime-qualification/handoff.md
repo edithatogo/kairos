@@ -24,6 +24,20 @@ is authorised by this receipt; genuine project status remains an open gate.
 Provider quality follow-through and this policy update remain separately scoped;
 no Polars/FMI source, engine pin or other-owner environment is transferred.
 
+## Documentation dependency gate repair — 24 October 2026
+
+PR #303 exposed new upstream advisories at the hosted audit gate. Zod
+GHSA-mrhx-c7xc-m3w5 affects both documentation locks; the website audit also
+reports Undici GHSA-4qv8-2p9j-2685, GHSA-f72v-6w45-q472 and
+GHSA-xjj6-f33q-929c. The candidate updates Zod to 4.6.7 and Undici to 8.12.3.
+Mermaid CLI remains 11.17.0; its supported Puppeteer 25.16.0 peer chain supplies
+Chromium BiDi with Zod 4 support, avoiding a forced major-version override on the
+old Zod 3 consumer. Other dependency pins remain unchanged except that supported
+browser chain. Both candidate npm audits report zero vulnerabilities; five
+pin/integrity regression tests pass. Installed renderer/build and hosted
+qualification remain required before acceptance. This repair does not alter
+Polars, engine pins or simulation behaviour.
+
 ## Historical execution entries
 
 ## Current state
