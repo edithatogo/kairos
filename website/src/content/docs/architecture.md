@@ -187,7 +187,7 @@ flowchart TD
 
 | Area | Current state | Maintained alternative |
 | --- | --- | --- |
-| `kairo-ecs-arrow` | Custom Arrow-style and checkpoint byte formats; checksum is not SHA-256 | `arrow`, `parquet`, `sha2` |
+| `kairo-ecs-arrow` | Arrow/Parquet tables with SHA-256 integrity and atomic tempfile publication (Tracks 70, 93 & 94) | Qualified in-tree (`arrow-schema`, `polars`, `sha2`, `tempfile`) |
 | `kairo-ecs-ml` | `OrtSession::run` echoes input; no ONNX Runtime | `ort`, `burn` |
 | `kairo-ecs-streaming` | Kafka/NATS/WebSocket/Flight features alias an in-memory stream | `rdkafka`, `async-nats`, `arrow-flight` |
 | `kairo-ecs-game-ontology` | Line/byte matching parser for Turtle and JSON-LD | `oxttl`, `oxrdf`, `json-ld` |

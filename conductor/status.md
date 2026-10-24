@@ -773,9 +773,21 @@ Reconciled all completed work from `codex/track49-distributed-synchronization` (
 - **Track 51 (`In Progress`, `R2`):** Integrated Phase 5 closeout ledger, `review-report.md`, and `handoff.md` updates.
 - **Track 61 (`In Review`, `R3`):** Integrated Phase 3 stochastic chance-weighted solver closeout receipts and `docs/game-theory/` documentation (`codegen.md`, `extensive-form-runtime.md`, `graph-relations.md`, `ontology-ingestion.md`).
 
-## Track 70 in progress — 23 October 2026
+## Track 94 in progress — 24 October 2026
 
-[Track 70](tracks/70-polars-native-data-processing/index.md) has completed Phase 0 qualification and Phase 1 native tables, advancing to Phase 2 (FFI and polyglot consumers). Dependencies 04/62/63 are routing context, not runtime proof. Complete upstream Phase 4 before CareOps `polars_data_processing_20261022` adopts the pin.
+[Track 94](tracks/94-tempfile-publication/index.md) (`In Progress`): Commencing Phase 0 qualification, inventory, and value gate for tempfile robustness, atomic staging beside destination, and test temporary directory isolation in `kairo-ecs-arrow`.
+
+## Track 94 completed — 24 October 2026
+
+[Track 94](tracks/94-tempfile-publication/index.md) (`Done`): Completed qualification and bounded adoption of `tempfile` (v3.27.0). Implemented `atomic_write_file` with same-filesystem staging and persist/no-clobber controls. Upgraded `DurableRunPublicationWriter` and `ParquetZstdCheckpointWriter` to crash-safe atomic staging. Eliminated static temporary paths in tests, establishing hermetic RAII directory isolation.
+
+## Track 93 completed — 24 October 2026
+
+[Track 93](tracks/93-sha2-integrity/index.md) (`Done`): Completed qualification and bounded adoption of RustCrypto `sha2` (v0.10.8). Custom `sha256_simple` deleted; standard FIPS 180-4 `compute_sha256` and `compute_sha256_hex` implemented and verified against NIST CAVP vectors and Python `hashlib`. Checkpoint integrity reader/writer upgraded to standard SHA-256 trailers.
+
+## Track 70 completed — 24 October 2026
+
+[Track 70](tracks/70-polars-native-data-processing/index.md) has completed all phases (Phases 0–4), verified native tables, Arrow C Data Interface Schema v2 export, Python Polars zero-copy handoff, and manifest-last durable publication. Upstream delivery accepted; CareOps `polars_data_processing_20261022` may adopt the pin.
 
 ## Library adoption planning — 22 October 2026
 

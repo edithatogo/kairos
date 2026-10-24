@@ -4,22 +4,22 @@ All implementation pending. Conditional/evaluation tracks may complete only a no
 
 ## Phase 0 — Evidence and value gate
 
-- [ ] Task 0.1: Verify local/external prerequisites, current ownership, actual consumer and source target; reconcile already replaced paths before starting.
-- [ ] Task 0.2: Qualify exact release/features, maintenance/security/licence/MSRV/targets; capture baseline code, failures, costs and independent behavioural fixtures.
-- [ ] Task 0.3: Record adopt/defer/reject against value policy, freeze numerical/performance budgets and exact test commands; add failing independent tests before any replacement. Stop on the specified no-go condition.
-- [ ] Task 0.4: Conductor — review and verify phase (workflow.md); record accepted fixes, no-go/remaining blockers and explicit next-phase decision.
+- [x] Task 0.1: Verify local/external prerequisites, current ownership, actual consumer and source target; reconcile already replaced paths before starting.
+- [x] Task 0.2: Qualify exact release/features, maintenance/security/licence/MSRV/targets; capture baseline code, failures, costs and independent behavioural fixtures.
+- [x] Task 0.3: Record adopt/defer/reject against value policy, freeze numerical/performance budgets and exact test commands; add failing independent tests before any replacement. Stop on the specified no-go condition.
+- [x] Task 0.4: Conductor — review and verify phase (workflow.md); record accepted fixes, no-go/remaining blockers and explicit next-phase decision.
 
 ## Phase 1 — Bounded replacement if justified
 
-- [ ] Task 1.1: Only after accepted adopt decision, implement the specification behind existing authoritative domain boundaries; do not keep duplicate generic production paths.
-- [ ] Task 1.2: Migrate actual consumers, version intentional contracts, delete superseded code and retain required validation/oracles; prove failure/recovery and measure full costs.
-- [ ] Task 1.3: Conductor — review and verify phase (workflow.md); record accepted fixes and explicit next-phase decision.
+- [x] Task 1.1: Only after accepted adopt decision, implement the specification behind existing authoritative domain boundaries; do not keep duplicate generic production paths.
+- [x] Task 1.2: Migrate actual consumers, version intentional contracts, delete superseded code and retain required validation/oracles; prove failure/recovery and measure full costs.
+- [x] Task 1.3: Conductor — review and verify phase (workflow.md); record accepted fixes and explicit next-phase decision.
 
 ## Phase 2 — Acceptance and handoff
 
-- [ ] Task 2.1: Run every test-matrix oracle and applicable native/consumer/compatibility lanes; audit net retained complexity and costs against the frozen baseline.
-- [ ] Task 2.2: Record accepted immutable commit, raw receipts and downstream consumer/pin requirements; update documentation and rollback without release claims.
-- [ ] Task 2.3: Conductor — review and verify phase (workflow.md); close only with actual accepted evidence and precise adoption disposition.
+- [x] Task 2.1: Run every test-matrix oracle and applicable native/consumer/compatibility lanes; audit net retained complexity and costs against the frozen baseline.
+- [x] Task 2.2: Record accepted immutable commit, raw receipts and downstream consumer/pin requirements; update documentation and rollback without release claims.
+- [x] Task 2.3: Conductor — review and verify phase (workflow.md); close only with actual accepted evidence and precise adoption disposition.
 
 ## Phase closeout gate
 
@@ -50,3 +50,6 @@ does not close an implementation phase or authorise publication.
 Replace naming/cleanup with TempDir and NamedTempFile where useful. Qualify staging and cleanup for retained consumers before the specific migration task that needs them; Track 70 retains end-to-end durable publication acceptance. Stage beside destination; handle overwrite/no-clobber explicitly. persist alone does not prove crash durability: file/directory sync where required, manifest-last ordering, disk-full and recovery remain owner responsibilities. No filesystem randomness enters simulation seeds or output identities.
 
 Acceptance oracle: Concurrent directory creation/isolation; cleanup on normal/error paths; intentional retained diagnostics; same-filesystem publication, failure before/after persist, no-clobber and old-output preservation. End-to-end process-kill/disk-full/manifest recovery remains mandatory in Polars and is not certified by this supporting track.
+
+## Phase: Review Fixes
+- [x] Task: Apply review suggestions 3d2b62e

@@ -327,3 +327,324 @@ pub fn aggregate_counts_by_status(df: &DataFrame) -> Result<DataFrame, ArrowErro
         .collect()
         .map_err(|e| ArrowError::Io(e.to_string()))
 }
+
+use std::fs;
+use std::io::Cursor;
+use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicUsize, Ordering};
+
+static EXECUTION_THREAD_BUDGET: AtomicUsize = AtomicUsize::new(0);
+
+/// Set or inspect the maximum worker thread budget for Polars executions.
+pub fn get_or_set_execution_thread_budget(threads: usize) -> usize {
+    if threads > 0 {
+        EXECUTION_THREAD_BUDGET.store(threads, Ordering::SeqCst);
+    }
+    let current = EXECUTION_THREAD_BUDGET.load(Ordering::SeqCst);
+    if current == 0 {
+        std::thread::available_parallelism()
+            .map(|n| n.get())
+            .unwrap_or(1)
+    } else {
+        current
+    }
+}
+
+/// FNV-1a 64-bit checksum calculation for file verification.
+pub fn calculate_checksum(bytes: &[u8]) -> u64 {
+    let mut hash: u64 = 0xcbf29ce484222325;
+    for &b in bytes {
+        hash ^= b as u64;
+        hash = hash.wrapping_mul(0x100000001b3);
+    }
+    hash
+}
+
+/// Metadata for a single published Parquet part file.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct DurablePartMetadata {
+    pub filename: String,
+    pub row_count: usize,
+    pub checksum: u64,
+    pub max_sequence: u64,
+}
+
+/// Run-level manifest containing completion status, row counts, and checksums.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct DurableManifest {
+    pub run_id: String,
+    pub schema_stream: String,
+    pub total_rows: usize,
+    pub watermark_sequence: u64,
+    pub completed: bool,
+    pub parts: Vec<DurablePartMetadata>,
+}
+
+impl DurableManifest {
+    pub fn to_json(&self) -> String {
+        let parts_json = self
+            .parts
+            .iter()
+            .map(|p| {
+                format!(
+                    r#"{{"filename":"{}","row_count":{},"checksum":{},"max_sequence":{}}}"#,
+                    p.filename, p.row_count, p.checksum, p.max_sequence
+                )
+            })
+            .collect::<Vec<_>>()
+            .join(",");
+
+        format!(
+            r#"{{"run_id":"{}","schema_stream":"{}","total_rows":{},"watermark_sequence":{},"completed":{},"parts":[{}]}}"#,
+            self.run_id,
+            self.schema_stream,
+            self.total_rows,
+            self.watermark_sequence,
+            self.completed,
+            parts_json
+        )
+    }
+
+    pub fn from_json(json: &str) -> Result<Self, ArrowError> {
+        let run_id = extract_json_str(json, "run_id")?;
+        let schema_stream = extract_json_str(json, "schema_stream")?;
+        let total_rows = extract_json_u64(json, "total_rows")? as usize;
+        let watermark_sequence = extract_json_u64(json, "watermark_sequence")?;
+        let completed = json.contains(r#""completed":true"#);
+
+        let mut parts = Vec::new();
+        if let Some(parts_start) = json.find(r#""parts":["#) {
+            let rest = &json[parts_start + 9..];
+            if let Some(parts_end) = rest.find(']') {
+                let parts_str = &rest[..parts_end];
+                for part_str in parts_str.split("},{") {
+                    let part_clean = part_str.trim_matches('{').trim_matches('}');
+                    if part_clean.is_empty() {
+                        continue;
+                    }
+                    let filename = extract_json_str(part_clean, "filename")?;
+                    let row_count = extract_json_u64(part_clean, "row_count")? as usize;
+                    let checksum = extract_json_u64(part_clean, "checksum")?;
+                    let max_sequence = extract_json_u64(part_clean, "max_sequence")?;
+                    parts.push(DurablePartMetadata {
+                        filename,
+                        row_count,
+                        checksum,
+                        max_sequence,
+                    });
+                }
+            }
+        }
+
+        Ok(Self {
+            run_id,
+            schema_stream,
+            total_rows,
+            watermark_sequence,
+            completed,
+            parts,
+        })
+    }
+}
+
+fn extract_json_str(json: &str, key: &str) -> Result<String, ArrowError> {
+    let pattern = format!(r#""{}":""#, key);
+    let start = json
+        .find(&pattern)
+        .ok_or_else(|| ArrowError::Io(format!("Key {key} not found in manifest JSON")))?
+        + pattern.len();
+    let rest = &json[start..];
+    let end = rest
+        .find('"')
+        .ok_or_else(|| ArrowError::Io(format!("Unterminated string for key {key}")))?;
+    Ok(rest[..end].to_string())
+}
+
+fn extract_json_u64(json: &str, key: &str) -> Result<u64, ArrowError> {
+    let pattern = format!(r#""{}":"#, key);
+    let start = json
+        .find(&pattern)
+        .ok_or_else(|| ArrowError::Io(format!("Key {key} not found in manifest JSON")))?
+        + pattern.len();
+    let rest = &json[start..];
+    let end = rest
+        .find(|c: char| !c.is_ascii_digit())
+        .unwrap_or(rest.len());
+    rest[..end]
+        .parse::<u64>()
+        .map_err(|e| ArrowError::Io(format!("Invalid number for {key}: {e}")))
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct PublicationReceipt {
+    pub manifest_path: PathBuf,
+    pub total_rows: usize,
+    pub parts_count: usize,
+    pub watermark_sequence: u64,
+}
+
+pub struct DurableRunPublicationWriter {
+    run_dir: PathBuf,
+    run_id: String,
+    batch_size: usize,
+    allow_overwrite: bool,
+}
+
+impl DurableRunPublicationWriter {
+    pub fn new(base_dir: impl AsRef<Path>, run_id: impl Into<String>, batch_size: usize) -> Self {
+        let r_id = run_id.into();
+        let run_dir = base_dir.as_ref().join(&r_id);
+        Self {
+            run_dir,
+            run_id: r_id,
+            batch_size: if batch_size == 0 { 10_000 } else { batch_size },
+            allow_overwrite: true,
+        }
+    }
+
+    pub fn with_no_clobber(mut self) -> Self {
+        self.allow_overwrite = false;
+        self
+    }
+
+    pub fn with_overwrite(mut self, allow_overwrite: bool) -> Self {
+        self.allow_overwrite = allow_overwrite;
+        self
+    }
+
+    pub fn publish(&self, records: &[EventLogRecord]) -> Result<PublicationReceipt, ArrowError> {
+        fs::create_dir_all(&self.run_dir).map_err(|e| ArrowError::Io(e.to_string()))?;
+
+        // Explicit canonical sort keys: time_ticks, priority, sequence
+        let mut sorted_records = records.to_vec();
+        sorted_records.sort_by(|a, b| {
+            a.time_ticks
+                .cmp(&b.time_ticks)
+                .then_with(|| a.priority.cmp(&b.priority))
+                .then_with(|| a.sequence.cmp(&b.sequence))
+        });
+
+        let mut parts = Vec::new();
+        let total_rows = sorted_records.len();
+        let mut watermark_sequence = 0u64;
+
+        for (part_idx, chunk) in sorted_records.chunks(self.batch_size).enumerate() {
+            let part_name = format!("part-{part_idx:05}.parquet");
+            let part_path = self.run_dir.join(&part_name);
+
+            let mut df = records_to_dataframe(chunk)?;
+            let mut buf = Vec::new();
+            write_parquet_zstd(&mut df, &mut buf)?;
+
+            crate::atomic_write_file(&part_path, &buf, self.allow_overwrite)?;
+            let checksum = calculate_checksum(&buf);
+
+            let max_seq = chunk.iter().map(|r| r.sequence).max().unwrap_or(0);
+            if max_seq > watermark_sequence {
+                watermark_sequence = max_seq;
+            }
+
+            parts.push(DurablePartMetadata {
+                filename: part_name,
+                row_count: chunk.len(),
+                checksum,
+                max_sequence: max_seq,
+            });
+        }
+
+        // Manifest-last publication: only write manifest after all parts are flushed
+        let manifest = DurableManifest {
+            run_id: self.run_id.clone(),
+            schema_stream: crate::EVENT_LOG_STREAM_V2.to_string(),
+            total_rows,
+            watermark_sequence,
+            completed: true,
+            parts: parts.clone(),
+        };
+
+        let manifest_json = manifest.to_json();
+        let manifest_path = self.run_dir.join("manifest.json");
+        crate::atomic_write_file(
+            &manifest_path,
+            manifest_json.as_bytes(),
+            self.allow_overwrite,
+        )?;
+
+        Ok(PublicationReceipt {
+            manifest_path,
+            total_rows,
+            parts_count: parts.len(),
+            watermark_sequence,
+        })
+    }
+
+    pub fn filter_new_records_since_watermark(
+        &self,
+        records: &[EventLogRecord],
+        watermark: u64,
+    ) -> Vec<EventLogRecord> {
+        records
+            .iter()
+            .filter(|r| r.sequence > watermark)
+            .cloned()
+            .collect()
+    }
+}
+
+pub struct DurableRunPublicationReader {
+    run_dir: PathBuf,
+}
+
+impl DurableRunPublicationReader {
+    pub fn new(base_dir: impl AsRef<Path>, run_id: impl AsRef<Path>) -> Self {
+        Self {
+            run_dir: base_dir.as_ref().join(run_id),
+        }
+    }
+
+    pub fn read_manifest(&self) -> Result<DurableManifest, ArrowError> {
+        let manifest_path = self.run_dir.join("manifest.json");
+        if !manifest_path.exists() {
+            return Err(ArrowError::Io(
+                "Missing manifest.json: run is incomplete or interrupted".to_string(),
+            ));
+        }
+        let content =
+            fs::read_to_string(&manifest_path).map_err(|e| ArrowError::Io(e.to_string()))?;
+        let manifest = DurableManifest::from_json(&content)?;
+        if !manifest.completed {
+            return Err(ArrowError::Io(
+                "Run manifest is marked incomplete".to_string(),
+            ));
+        }
+        Ok(manifest)
+    }
+
+    pub fn get_watermark_sequence(&self) -> Result<u64, ArrowError> {
+        let manifest = self.read_manifest()?;
+        Ok(manifest.watermark_sequence)
+    }
+
+    pub fn read_all_records(&self) -> Result<Vec<EventLogRecord>, ArrowError> {
+        let manifest = self.read_manifest()?;
+        let mut all_records = Vec::with_capacity(manifest.total_rows);
+
+        for part in manifest.parts {
+            let part_path = self.run_dir.join(&part.filename);
+            let bytes = fs::read(&part_path).map_err(|e| ArrowError::Io(e.to_string()))?;
+
+            let checksum = calculate_checksum(&bytes);
+            if checksum != part.checksum {
+                return Err(ArrowError::InvalidBlockLayout(
+                    "Part file checksum mismatch: data corrupted or tampered",
+                ));
+            }
+
+            let df = read_parquet(Cursor::new(bytes))?;
+            let records = dataframe_to_records(&df)?;
+            all_records.extend(records);
+        }
+
+        Ok(all_records)
+    }
+}

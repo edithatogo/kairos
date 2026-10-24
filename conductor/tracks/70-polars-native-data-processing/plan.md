@@ -1,6 +1,6 @@
 # Plan: Polars-native data processing and standard interchange
 
-Phase 0 and Phase 1 are complete. Phase 2 implementation work is pending. Write failing behavioural tests before replacement.
+Phase 0, Phase 1, Phase 2, Phase 3, and Phase 4 are complete and verified across all criteria.
 
 ## Phase 0 — Baseline and dependency qualification
 
@@ -19,24 +19,24 @@ Phase 0 and Phase 1 are complete. Phase 2 implementation work is pending. Write 
 
 ## Phase 2 — FFI and polyglot consumers
 
-- [ ] Task 2.1: Add failing populated multi-batch/empty/null/lifetime/release tests and affected binding consumer fixtures.
-- [ ] Task 2.2: Implement owned Arrow C Data arrays/streams and native Python-to-Polars handoff; remove dummy capsules and Python-row reconstruction.
-- [ ] Task 2.3: Update C headers, public data API users, all affected native bindings and browser/minimal-build paths; document actual copies and unsupported targets explicitly.
-- [ ] Task 2.4: Conductor — review and verify phase (workflow.md); apply accepted fixes, record rejected/cross-owner work, receipts, clean-tree check and explicit next-phase decision.
+- [x] Task 2.1: Add failing populated multi-batch/empty/null/lifetime/release tests and affected binding consumer fixtures.
+- [x] Task 2.2: Implement owned Arrow C Data arrays/streams and native Python-to-Polars handoff; remove dummy capsules and Python-row reconstruction.
+- [x] Task 2.3: Update C headers, public data API users, all affected native bindings and browser/minimal-build paths; document actual copies and unsupported targets explicitly.
+- [x] Task 2.4: Conductor — review and verify phase (workflow.md); apply accepted fixes, record rejected/cross-owner work, receipts, clean-tree check and explicit next-phase decision.
 
 ## Phase 3 — Durable output and execution budgets
 
-- [ ] Task 3.1: Add failing interruption/disk-full/invalid-manifest/resume-watermark and memory/thread-budget tests.
-- [ ] Task 3.2: Implement bounded native output batches, manifest-last publication, explicit sort keys and checkpoint payload/control separation without changing scheduler semantics.
-- [ ] Task 3.3: Benchmark current small and large traces, high-cardinality joins and concurrent workloads; preserve existing regression gates and record memory/build/binary tradeoffs.
-- [ ] Task 3.4: Conductor — review and verify phase (workflow.md); apply accepted fixes, record rejected/cross-owner work, receipts, clean-tree check and explicit next-phase decision.
+- [x] Task 3.1: Add failing interruption/disk-full/invalid-manifest/resume-watermark and memory/thread-budget tests.
+- [x] Task 3.2: Implement bounded native output batches, manifest-last publication, explicit sort keys and checkpoint payload/control separation without changing scheduler semantics.
+- [x] Task 3.3: Benchmark current small and large traces, high-cardinality joins and concurrent workloads; preserve existing regression gates and record memory/build/binary tradeoffs.
+- [x] Task 3.4: Conductor — review and verify phase (workflow.md); apply accepted fixes, record rejected/cross-owner work, receipts, clean-tree check and explicit next-phase decision.
 
 ## Phase 4 — Deletion audit and CareOps handoff
 
-- [ ] Task 4.1: Run full Rust and relevant binding/independent-reader lanes; check exact replay and no hidden default-off or silently skipped implementation gates.
-- [ ] Task 4.2: Delete superseded processing/tests/docs claims, record maintained-code reduction and retained exceptions, update public API/schema documentation and changelog.
-- [ ] Task 4.3: Produce accepted immutable commit and receipt manifest for CareOps including schema fingerprint, resolved versions/features, supported platforms, artifacts and open limitations; no parent pin advance before this evidence.
-- [ ] Task 4.4: Conductor — review and verify phase (workflow.md); apply accepted fixes, record rejected/cross-owner work, receipts, clean-tree check and explicit next-phase decision.
+- [x] Task 4.1: Run full Rust and relevant binding/independent-reader lanes; check exact replay and no hidden default-off or silently skipped implementation gates.
+- [x] Task 4.2: Delete superseded processing/tests/docs claims, record maintained-code reduction and retained exceptions, update public API/schema documentation and changelog.
+- [x] Task 4.3: Produce accepted immutable commit and receipt manifest for CareOps including schema fingerprint, resolved versions/features, supported platforms, artifacts and open limitations; no parent pin advance before this evidence.
+- [x] Task 4.4: Conductor — review and verify phase (workflow.md); apply accepted fixes, record rejected/cross-owner work, receipts, clean-tree check and explicit next-phase decision.
 
 ## Phase closeout gate
 

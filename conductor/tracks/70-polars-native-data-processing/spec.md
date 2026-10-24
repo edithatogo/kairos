@@ -11,7 +11,11 @@ Inputs: current source, accepted simulation contracts, representative synthetic 
 ## Ownership and dependencies
 
 Dependencies: 04, 62, 63.
-Owned implementation surfaces (prospective, require per-packet claims): crates/kairo-ecs-arrow/, crates/kairo-ecs-ffi/, bindings/, schemas/arrow/. Coordinator owns dependency manifests and consumer/CI/docs updates only with existing owner handoff. Blocked paths: scheduler/RNG/clinical semantics, unrelated tracks and active leases. Parallel-safe work: disjoint read-only review; shared manifest/FFI/registry writers serialize.
+Owned implementation surfaces (prospective, require per-packet claims): crates/kairo-ecs-arrow/, crates/kairo-ecs-ffi/, bindings/, schemas/arrow/. Coordinator owns dependency manifests and consumer/CI/docs updates only with existing owner handoff.
+
+## Blocked paths
+
+Scheduler/RNG/clinical semantics, unrelated tracks and active leases. Parallel-safe work: disjoint read-only review; shared manifest/FFI/registry writers serialize. No implicit CI/publishing permission.
 
 Maturity: planned experimental alpha replacement; no implementation qualified.
 
@@ -41,7 +45,7 @@ Validate join keys/cardinality before joins; missing references follow an explic
 
 Use unique run output directories, staged parts, final renames and manifest-last publication. Readers require a completed manifest and valid hashes. Do not overwrite completed runs. Persist checkpoint-to-trace partition boundary (replication ID, part ID and sequence watermark) so resume neither loses nor duplicates records. Test process interruption before/after part and manifest publication. Parquet telemetry alone is not a simulation checkpoint. Rollback is code/pin rollback with a fresh output directory; old output is not silently reinterpreted.
 
-## Acceptance and release implications
+## Release implications
 
 Success means deleting generic bespoke machinery, not accumulating adapters. Record before/after non-generated maintained code, duplicate routines, dependency/build/binary costs and retained exceptions; do not game line counts or count generated dependencies as owned code. Preserve meaningful behavioural tests while removing tests of obsolete encodings. Require independently read Parquet/IPC, populated FFI, exact replay, statistical oracles, restart recovery and bounded-memory evidence. No fresh performance/zero-copy claim without raw receipts.
 

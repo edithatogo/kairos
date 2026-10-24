@@ -1205,22 +1205,23 @@ entries:
     pushed_ref: "origin/main"
     next_phase_decision: "Track 69 is closed and ready for archival."
   - track_id: "70"
-    phase: "0"
+    phase: "polars-native-data-processing"
     state: closed
     review_command: "$conductor-review"
-    review_result: "Phase 0 baseline and dependency qualification completed: data path inventory, failing baseline tests, polars 0.45 pinned behind polars-native feature, minimal-core/Wasm isolation proof, v2 JSON schema & contract tests, v2 conformance fixture, and red-team ADR merged."
+    review_result: "Track 70 completed: Polars-native data processing, Arrow C Data Interface Schema v2 export in kairo-ecs-ffi, Python zero-copy Polars handoff, manifest-last durable publication with FNV-1a checksums and watermark resumption, passing all Rust, Python, and Polyglot conformance tests."
     fixes_applied: true
     validation_commands:
-      - "cargo test -p kairo-ecs-arrow --all-targets"
       - "cargo test -p kairo-ecs-arrow --features polars-native"
-      - "cargo clippy -p kairo-ecs-arrow --all-targets --all-features -- -D warnings"
-      - "node tests/conformance/conformance-check.mjs"
+      - "cargo test -p kairo-ecs-ffi"
+      - "cargo clippy -p kairo-ecs-arrow -p kairo-ecs-ffi --all-targets --all-features -- -D warnings"
+      - "PYTHONPATH=bindings/python .venv/bin/pytest bindings/python/tests/"
+      - "node tests/conformance/runner.mjs"
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
-      - "pwsh -NoProfile -File scripts/validate_conductor_dag.ps1"
+      - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
     git_status: "clean"
-    commit_sha: "f75d917fd6428d647e65560563fec2ab75587773"
-    pushed_ref: "origin/main"
-    next_phase_decision: "Phase 0 complete. Approved to advance to Phase 1: Native tables and real formats."
+    commit_sha: "6e3fce34123325b71154c963c9897c540eee3e11"
+    pushed_ref: "origin/feat/tracks-70-93-94-foundation"
+    next_phase_decision: "Track 70 is Done; track archived."
 
   - track_id: "71"
     phase: "0"
@@ -1487,28 +1488,40 @@ entries:
     next_phase_decision: "Verify prerequisites and value; conditional adoption is not automatically authorized"
 
   - track_id: "93"
-    phase: "0"
-    state: pending
+    phase: "sha2-integrity"
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Planning only; adoption unqualified"
-    fixes_applied: false
-    validation_commands: []
-    git_status: "planning worktree"
-    commit_sha: ""
-    pushed_ref: ""
-    next_phase_decision: "Verify value, prerequisites and owner handoffs"
+    review_result: "Track 93 completed: qualified RustCrypto sha2 v0.10.8, eliminated sha256_simple in kairo-ecs-arrow, implemented standard compute_sha256/compute_sha256_hex, upgraded checkpoint trailer to standard SHA-256 with single-bit corruption detection, and passed all NIST CAVP and Python polyglot tests."
+    fixes_applied: true
+    validation_commands:
+      - "cargo test -p kairo-ecs-arrow --all-targets"
+      - "cargo test -p kairo-ecs-arrow --features polars-native"
+      - "cargo clippy -p kairo-ecs-arrow -p kairo-ecs-ffi --all-targets --all-features -- -D warnings"
+      - "PYTHONPATH=bindings/python .venv/bin/pytest bindings/python/tests/ -q"
+      - "node tests/conformance/runner.mjs"
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
+    git_status: "clean"
+    commit_sha: "11070828998d8e2a26eb0aa3337b382a204e89f7"
+    pushed_ref: "origin/feat/tracks-70-93-94-foundation"
+    next_phase_decision: "Track 93 is Done; track archived."
 
   - track_id: "94"
-    phase: "0"
-    state: pending
+    phase: "tempfile-publication"
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Planning only; adoption unqualified"
-    fixes_applied: false
-    validation_commands: []
-    git_status: "planning worktree"
-    commit_sha: ""
-    pushed_ref: ""
-    next_phase_decision: "Verify value, prerequisites and owner handoffs"
+    review_result: "Track 94 completed: qualified tempfile v3.27.0, implemented atomic_write_file with same-filesystem staging and persist/no-clobber controls, upgraded DurableRunPublicationWriter and ParquetZstdCheckpointWriter to crash-safe atomic staging, eliminated static temp paths in tests, and passed concurrent thread isolation, determinism, and Python polyglot tests."
+    fixes_applied: true
+    validation_commands:
+      - "cargo test -p kairo-ecs-arrow --all-targets --features \"polars-native parallel-io\""
+      - "cargo clippy -p kairo-ecs-arrow --features \"polars-native parallel-io\" -- -D warnings"
+      - "PYTHONPATH=bindings/python .venv/bin/pytest bindings/python/tests/test_track94_tempfile_polyglot.py -q"
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
+    git_status: "clean"
+    commit_sha: "3ce5d9f1e911b5d872fef926b373126286660246"
+    pushed_ref: "origin/feat/tracks-70-93-94-foundation"
+    next_phase_decision: "Track 94 is Done; track archived."
 
   - track_id: "95"
     phase: "0"

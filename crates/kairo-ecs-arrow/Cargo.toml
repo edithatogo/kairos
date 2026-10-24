@@ -9,6 +9,8 @@ description = "Arrow telemetry and event log serialization for KairoECS"
 
 [dependencies]
 kairo-ecs-types = { path = "../kairo-ecs-types", version = "0.0.0" }
+sha2 = { version = "0.10.8", default-features = false }
+tempfile = "3.17.1"
 
 # Track 62 Phase 0: the official Arrow logical-type crate, admitted default-off
 # behind `arrow-native`. Phase 0 only needs schema types; see the handoff for
