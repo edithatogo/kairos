@@ -825,3 +825,12 @@ See [current sequencing](dependency-sequencing.md): Polars inventory first, with
 ## Python runtime qualification — 23 October 2026
 
 [Python 3.15 migration and qualification](tracks/105-python315-runtime-qualification/index.md) is In Progress. The preserved candidate is reconciled and local CI runtime guards are implemented; hosted/main/runtime handover acceptance remains pending. Track 30 retains version policy; bounded shared-path handoffs precede implementation.
+
+## Track 76 Phase 0–2 implementation review (2026-10-24)
+
+Track 76 (`toml scenario configuration parsing`) completed Phase 0, 1, and 2:
+- Adopted `toml = "0.8.23"` in `crates/kairo-ecs-cli` for robust scenario and seed manifest parsing.
+- Replaced brittle ad-hoc line-by-line parser (`read_fields`, `required_string`, `required_u64`, `required_list`, `unquote`) with standard `toml::from_str`.
+- Supported comments, escapes, native TOML arrays `[1, 2, 3]` and legacy comma strings `"1, 2, 3"`, preserved `[streams]` table in `SeedManifest`, and enforced unknown field rejection (`#[serde(deny_unknown_fields)]`) and duplicate key rejection.
+- All 37 CLI tests passed; all workspace tests passed; clippy and rustfmt clean; cargo deny clean. Track 76 is complete.
+

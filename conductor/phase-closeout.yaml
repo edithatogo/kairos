@@ -1289,21 +1289,27 @@ entries:
       - "pwsh -NoProfile -File scripts/validate_conductor_dag.ps1"
       - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
     git_status: "clean"
-    commit_sha: "dd091617bd04e6d882107130c616f9186cd4d78e"
-    pushed_ref: "origin/feat/track-75-serde-json-robustness"
+    commit_sha: "06ff13292594ef779891579c56da8a86ceb886df"
+    pushed_ref: "origin/main"
     next_phase_decision: "Track 75 is Done; advance to Track 76."
 
   - track_id: "76"
-    phase: "0"
-    state: pending
+    phase: "2"
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Planning only; value and consumer gates unresolved"
-    fixes_applied: false
-    validation_commands: []
-    git_status: "planning worktree"
-    commit_sha: ""
-    pushed_ref: ""
-    next_phase_decision: "Verify prerequisites and value; conditional adoption is not automatically authorized"
+    review_result: "toml 0.8.23 qualified and adopted: replaced brittle handwritten line-by-line parser in kairo-ecs-cli with standard TOML deserialization; preserved [streams] table in SeedManifest; full backwards compatibility with comma-delimited strings; deny_unknown_fields and duplicate key rejection enforced; all 37 CLI tests and 100% workspace tests passing."
+    fixes_applied: true
+    validation_commands:
+      - "cargo test -p kairo-ecs-cli"
+      - "cargo test --workspace"
+      - "cargo deny check advisories sources licenses bans"
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_dag.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
+    git_status: "clean"
+    commit_sha: "b0d8619f4cac4956aff9f26c3b54b2cc70911545"
+    pushed_ref: "origin/feat/track-76-toml-robustness"
+    next_phase_decision: "Track 76 is Done; advance to Track 77."
 
   - track_id: "77"
     phase: "0"

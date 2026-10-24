@@ -1167,11 +1167,13 @@ tracks:
 
   - id: 76
     name: toml scenario configuration parsing
-    status: Planned
+    status: Done
     owner: contracts-agent
     depends_on: ["75"]
     owned_paths:
       - conductor/tracks/76-toml-robustness/
+      - crates/kairo-ecs-cli/src/scenario.rs
+      - crates/kairo-ecs-cli/Cargo.toml
     required_gates:
       - phase-closeout-check
       - dependency-value-proof
