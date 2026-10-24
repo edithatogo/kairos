@@ -6,6 +6,8 @@ pub use competing_risks::*;
 pub use rand::Rng;
 pub use rand::SeedableRng;
 pub use rand_chacha::ChaCha8Rng;
+pub use rand_distr;
+pub use rand_distr::Distribution;
 
 use core::convert::Infallible;
 use kairo_ecs_types::EntityId;
@@ -236,6 +238,11 @@ impl DeterministicStream {
         }
     }
 
+    /// Sample a value from any `rand_distr::Distribution`.
+    pub fn sample<T, D: Distribution<T>>(&mut self, distr: D) -> T {
+        distr.sample(self)
+    }
+
     /// Restore stream from a versioned checkpoint.
     pub fn restore(checkpoint: &RngCheckpoint) -> Result<Self, RngError> {
         if checkpoint.generator != RNG_GENERATOR_CHACHA8 {
@@ -291,6 +298,7 @@ fn splitmix64(mut x: u64) -> u64 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rand_distr::{Exp, Exp1, Open01};
 
     #[test]
     fn test_chacha_methods() {
@@ -300,6 +308,18 @@ mod tests {
         rng.set_stream(1);
         let stream = rng.get_stream();
         assert_eq!(stream, 1);
+    }
+
+    #[test]
+    fn test_rand_distr_sampling() {
+        let mut stream = DeterministicStream::from_run_seed(42);
+        let u: f64 = stream.sample(Open01);
+        assert!(u > 0.0 && u < 1.0);
+        let exp1_val: f64 = stream.sample(Exp1);
+        assert!(exp1_val > 0.0);
+        let exp = Exp::new(2.5).unwrap();
+        let exp_val: f64 = stream.sample(exp);
+        assert!(exp_val > 0.0);
     }
 
     #[test]

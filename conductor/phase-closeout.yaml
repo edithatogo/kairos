@@ -1243,21 +1243,32 @@ entries:
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
       - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
     git_status: "clean"
-    commit_sha: "30006052b4341a694cbcd105f940163d468a2975"
-    pushed_ref: "origin/feat/track-71-rand-deterministic-rng"
+    commit_sha: "372ce5484b14729312d7d6ebe97a8072ee960d77"
+    pushed_ref: "origin/main"
     next_phase_decision: "Track 71 is Done; advance to Track 72."
 
   - track_id: "72"
-    phase: "0"
-    state: pending
+    phase: "2"
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Planning registered; implementation not started; external receipt gate unresolved"
-    fixes_applied: false
-    validation_commands: []
-    git_status: "planning worktree"
-    commit_sha: ""
-    pushed_ref: ""
-    next_phase_decision: "Verify entry receipts and qualify dependency before implementation"
+    review_result: "rand_distr 0.6 qualified and adopted with alloc feature: replaced hand-rolled uniform/exponential samplers with Open01 and Exp1, exposed Distribution and sample() method on DeterministicStream, preserved non-Markovian survival integration/inversion and tie-breaking; full independent oracles, resume determinism, clippy, fmt, and workspace tests pass."
+    fixes_applied: true
+    validation_commands:
+      - "cargo test -p kairo-ecs-rng"
+      - "cargo test --workspace"
+      - "cargo clippy --workspace --all-targets --all-features -- -D warnings"
+      - "cargo fmt --all --check"
+      - "cargo deny check advisories sources licenses bans"
+      - "cargo audit"
+      - "node tests/conformance/conformance-check.mjs"
+      - "pwsh -NoProfile -File scripts/validate_cross_binding_conformance.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
+    git_status: "clean"
+    commit_sha: "pending-commit"
+    pushed_ref: "origin/feat/track-72-rand-distr-sampling"
+    next_phase_decision: "Track 72 is Done; advance to Track 78."
 
   - track_id: "73"
     phase: "0"

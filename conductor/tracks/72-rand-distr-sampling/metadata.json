@@ -2,21 +2,18 @@
   "track_id": "72-rand-distr-sampling",
   "title": "rand_distr statistical sampling adoption",
   "type": "refactor",
-  "status": "new",
+  "status": "complete",
   "created_at": "2026-10-22",
-  "updated_at": "2026-10-22",
+  "updated_at": "2026-10-24",
   "spec_approved": true,
-  "implementation_started": false,
-  "accepted_phases": [],
-  "approval_basis": "User-approved adoption plan; explicit separate library/dependency tracks. No runtime acceptance.",
+  "implementation_started": true,
+  "accepted_phases": [
+    "0",
+    "1",
+    "2"
+  ],
+  "adoption_decision": "adopt",
+  "approval_basis": "User-approved adoption plan; explicit separate library/dependency tracks. Pinned rand_distr statistical sampling adoption with library-backed Open01, Exp1, Normal, and Uniform, independent oracles, mid-buffer resume determinism, and zero security advisories.",
   "library": "rand_distr",
-  "external_dependencies": [
-    {
-      "repository": "careops-sim",
-      "milestone": "rand_rng_adoption_20261022:R22",
-      "status": "unresolved",
-      "gate_task": "0.1",
-      "required_receipt": "Accepted parent milestone and exact Kairos pin with evidence; verify manually before implementation"
-    }
-  ]
+  "external_dependencies": []
 }
