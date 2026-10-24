@@ -15,3 +15,4 @@ kairo-ecs-rng = { path = "../kairo-ecs-rng", version = "0.0.0" }
 petgraph = { version = "0.7.1", default-features = false, features = ["graphmap", "stable_graph"] }
 thiserror = "2.0"
 geo = { version = "0.33.1", default-features = false }
+rstar = { version = "0.12.2", default-features = false }

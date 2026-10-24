@@ -14,6 +14,8 @@ Format:
 
 ## Unreleased
 
+- `crates/kairo-ecs-abm` adopts `rstar 0.12.2` continuous spatial indexing (Track 86), introducing `ContinuousSpatialIndex2D` backed by an R-tree with $O(\log N)$ updates, deterministic `locate_within_distance`, `nearest_neighbor`, and `k_nearest_neighbors` queries with multi-level tie-breaking (distance -> EntityId), equidistant candidate buffering, ghost duplicate elimination on agent movement, axis-aligned bounding box queries, and `ContinuousSpace2D` integration.
+
 - `crates/kairo-ecs-abm` adopts `geo 0.33.1` spatial geometry and route-position primitives (Track 87), providing validated WGS84 `GeoCoordinate` (with finite degree bounds checking and GIS Point `x=lon, y=lat` conversion), Karney ellipsoidal geodesic and spherical Haversine distances and bearings, `LocalTangentPlaneProjection` sub-millimeter forward and inverse unprojection roundtrips, and `GeoRoute` / `ProjectedRoute` continuous distance and normalized progress interpolation with zero-length segment resilience, endpoint clamping, and negative distance validation.
 
 - `crates/kairo-ecs-abm` adopts `petgraph 0.7.1` spatial topology and routing (Track 73), providing deterministic Dijkstra shortest pathfinding with 3-level tie-breaking (cost -> hops -> edge ID), random insertion order invariance, multi-floor access filtering (clearance levels, step-free vertical transit), door state toggling, topology version cache invalidation, and DES event boundary preservation.
