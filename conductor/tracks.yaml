@@ -1444,7 +1444,7 @@ tracks:
 
   - id: 99
     name: proptest-state-machine qualification
-    status: Planned
+    status: Done
     owner: conformance-agent
     depends_on: ["96"]
     owned_paths:

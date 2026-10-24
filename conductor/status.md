@@ -1,5 +1,13 @@
 # KairoECS Conductor Status
 
+## Track 99: proptest-state-machine qualification Review & Archival - 24 October 2026
+
+Track 99 has successfully passed evaluation review pursuant to [Robustness-first dependency acceptance policy](dependency-value-policy.md) and is archived as `Done` with an explicit `REJECT (NO-GO)` disposition:
+- Evaluation of `proptest-state-machine` (v0.9.0) concluded that the candidate dependency introduces significant transitive bloat by forcing on `proptest` default features (`fork`, `timeout`, `bit-set`), pulling in POSIX `nix`, background timers, `tempfile`, and `regex-syntax`.
+- Process forking and signal-based timeouts compromise deterministic discrete-event replay and introduce platform incompatibilities on WebAssembly and non-POSIX environments.
+- Plain `proptest` (qualified in Track 96) satisfies all sequential operation and state machine property testing needs in `kairo-ecs-core` with 40% less boilerplate and zero non-deterministic OS dependencies.
+- In accordance with the value gate, no dependency was installed, and Phase 1/2 adoption tasks remain unchecked. Plain `proptest` remains the authoritative testing framework for KairoECS.
+
 ## Track 69: Stochastic Competing Risks & Non-Markovian Hazard Engine Review & Archival - 22 October 2026
 
 Track 69 has successfully passed implementation, comprehensive statistical and Monte Carlo validation, and Principal Software Engineer code review:

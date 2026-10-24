@@ -1583,15 +1583,23 @@ entries:
 
   - track_id: "99"
     phase: "0"
-    state: pending
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Planning only; adoption unqualified"
-    fixes_applied: false
-    validation_commands: []
-    git_status: "planning worktree"
-    commit_sha: ""
-    pushed_ref: ""
-    next_phase_decision: "Verify value, prerequisites and owner handoffs"
+    review_result: "Evaluation complete: proptest-state-machine v0.9.0 rejected under dependency-value-policy.md due to transitive bloat (fork, timeout, nix), determinism/WASM risks, and negative maintainability over plain proptest."
+    fixes_applied: true
+    validation_commands:
+      - "cargo test -p kairo-ecs-core"
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
+    git_status: "clean"
+    commit_sha: "b96632e0f337476637e3ce1915cc35f38d9413a7"
+    pushed_ref: "origin/main"
+    historical_closeout_sha: "dfdae60744d82e1e01762270479bfa4d09c7b7f5"
+    tested_head_sha: "ec53ab6ed735c81f3cbc8f1f7bc6317b4ed164fc"
+    publication_pr: "https://github.com/edithatogo/kairos/pull/307"
+    publication_evidence: "Published owner Track 99 closeout retained. Final PR head and squash merge have identical full trees (git diff --exit-code); deleted topic ref replaced with accepted main ancestry, preserving original closeout and final reviewed-head provenance."
+    next_phase_decision: "Track 99 evaluation complete with explicit REJECT (NO-GO) outcome; track archived."
 
   - track_id: "100"
     phase: "0"
