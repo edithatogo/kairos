@@ -3,6 +3,8 @@ use std::collections::BTreeMap;
 use std::fmt::{Display, Formatter};
 
 pub const TRACE_SCHEMA_V1: &str = "kairoecs.debug-trace.v1";
+pub const MAX_JSONL_TOTAL_BYTES: usize = 16 * 1024 * 1024;
+pub const MAX_JSONL_RECORD_BYTES: usize = 1024 * 1024;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum DebugContractError {
@@ -10,6 +12,7 @@ pub enum DebugContractError {
     UnsupportedSchema(String),
     TicksOutOfOrder { previous: u128, current: u128 },
     EmptyKind,
+    ExceededByteLimit { limit: usize, actual: usize },
 }
 
 impl Display for DebugContractError {
@@ -21,6 +24,12 @@ impl Display for DebugContractError {
                 write!(f, "trace ticks out of order: {current} after {previous}")
             }
             Self::EmptyKind => write!(f, "event kind cannot be empty"),
+            Self::ExceededByteLimit { limit, actual } => {
+                write!(
+                    f,
+                    "byte limit exceeded: actual {actual} bytes, limit {limit} bytes"
+                )
+            }
         }
     }
 }
@@ -65,11 +74,58 @@ impl TraceHeaderDto {
     }
 }
 
+fn deserialize_unique_map<'de, D>(deserializer: D) -> Result<BTreeMap<String, String>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    struct UniqueMapVisitor;
+
+    impl<'de> serde::de::Visitor<'de> for UniqueMapVisitor {
+        type Value = BTreeMap<String, String>;
+
+        fn expecting(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
+            formatter.write_str("a JSON map without duplicate keys")
+        }
+
+        fn visit_map<M>(self, mut access: M) -> Result<Self::Value, M::Error>
+        where
+            M: serde::de::MapAccess<'de>,
+        {
+            let mut map = BTreeMap::new();
+            while let Some((key, value)) = access.next_entry::<String, String>()? {
+                if map.contains_key(&key) {
+                    return Err(serde::de::Error::custom(format!(
+                        "duplicate map key: `{key}`"
+                    )));
+                }
+                map.insert(key, value);
+            }
+            Ok(map)
+        }
+    }
+
+    deserializer.deserialize_map(UniqueMapVisitor)
+}
+
+struct UniqueMapSeed;
+
+impl<'de> serde::de::DeserializeSeed<'de> for UniqueMapSeed {
+    type Value = BTreeMap<String, String>;
+
+    fn deserialize<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        deserialize_unique_map(deserializer)
+    }
+}
+
 /// Typed DTO for a point-in-time state snapshot in execution trace.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 #[serde(deny_unknown_fields)]
 pub struct TraceSnapshotDto {
     pub tick: u128,
+    #[serde(deserialize_with = "deserialize_unique_map")]
     pub state: BTreeMap<String, String>,
 }
 
@@ -88,6 +144,7 @@ pub struct TraceDeltaDto {
     pub event_id_generation: u32,
     pub sequence: u64,
     pub kind: String,
+    #[serde(deserialize_with = "deserialize_unique_map")]
     pub changes: BTreeMap<String, String>,
 }
 
@@ -195,22 +252,159 @@ impl Serialize for TraceRecordDto {
     }
 }
 
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
 struct IntermediatePayload {
-    tick: u128,
-    #[serde(default)]
+    tick: Option<u128>,
     state: Option<BTreeMap<String, String>>,
-    #[serde(default)]
     event_id_index: Option<u64>,
-    #[serde(default)]
     event_id_generation: Option<u32>,
-    #[serde(default)]
     sequence: Option<u64>,
-    #[serde(default)]
     kind: Option<String>,
-    #[serde(default)]
     changes: Option<BTreeMap<String, String>>,
+}
+
+impl<'de> Deserialize<'de> for IntermediatePayload {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        enum PayloadField {
+            Tick,
+            State,
+            EventIdIndex,
+            EventIdGeneration,
+            Sequence,
+            Kind,
+            Changes,
+        }
+
+        impl<'de> Deserialize<'de> for PayloadField {
+            fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+            where
+                D: serde::Deserializer<'de>,
+            {
+                struct FieldVisitor;
+                impl<'de> serde::de::Visitor<'de> for FieldVisitor {
+                    type Value = PayloadField;
+                    fn expecting(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+                        f.write_str("trace payload field")
+                    }
+                    fn visit_str<E>(self, value: &str) -> Result<PayloadField, E>
+                    where
+                        E: serde::de::Error,
+                    {
+                        match value {
+                            "tick" => Ok(PayloadField::Tick),
+                            "state" => Ok(PayloadField::State),
+                            "event_id_index" => Ok(PayloadField::EventIdIndex),
+                            "event_id_generation" => Ok(PayloadField::EventIdGeneration),
+                            "sequence" => Ok(PayloadField::Sequence),
+                            "kind" => Ok(PayloadField::Kind),
+                            "changes" => Ok(PayloadField::Changes),
+                            _ => Err(serde::de::Error::unknown_field(
+                                value,
+                                &[
+                                    "tick",
+                                    "state",
+                                    "event_id_index",
+                                    "event_id_generation",
+                                    "sequence",
+                                    "kind",
+                                    "changes",
+                                ],
+                            )),
+                        }
+                    }
+                }
+                deserializer.deserialize_identifier(FieldVisitor)
+            }
+        }
+
+        struct IntermediatePayloadVisitor;
+        impl<'de> serde::de::Visitor<'de> for IntermediatePayloadVisitor {
+            type Value = IntermediatePayload;
+            fn expecting(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+                f.write_str("map of trace payload")
+            }
+
+            fn visit_map<V>(self, mut map: V) -> Result<IntermediatePayload, V::Error>
+            where
+                V: serde::de::MapAccess<'de>,
+            {
+                let mut tick = None;
+                let mut state = None;
+                let mut event_id_index = None;
+                let mut event_id_generation = None;
+                let mut sequence = None;
+                let mut kind = None;
+                let mut changes = None;
+
+                while let Some(key) = map.next_key::<PayloadField>()? {
+                    match key {
+                        PayloadField::Tick => {
+                            if tick.is_some() {
+                                return Err(serde::de::Error::duplicate_field("tick"));
+                            }
+                            tick = Some(map.next_value()?);
+                        }
+                        PayloadField::State => {
+                            if state.is_some() {
+                                return Err(serde::de::Error::duplicate_field("state"));
+                            }
+                            state = Some(map.next_value_seed(UniqueMapSeed)?);
+                        }
+                        PayloadField::EventIdIndex => {
+                            if event_id_index.is_some() {
+                                return Err(serde::de::Error::duplicate_field("event_id_index"));
+                            }
+                            event_id_index = Some(map.next_value()?);
+                        }
+                        PayloadField::EventIdGeneration => {
+                            if event_id_generation.is_some() {
+                                return Err(serde::de::Error::duplicate_field(
+                                    "event_id_generation",
+                                ));
+                            }
+                            event_id_generation = Some(map.next_value()?);
+                        }
+                        PayloadField::Sequence => {
+                            if sequence.is_some() {
+                                return Err(serde::de::Error::duplicate_field("sequence"));
+                            }
+                            sequence = Some(map.next_value()?);
+                        }
+                        PayloadField::Kind => {
+                            if kind.is_some() {
+                                return Err(serde::de::Error::duplicate_field("kind"));
+                            }
+                            let k: String = map.next_value()?;
+                            if k.is_empty() {
+                                return Err(serde::de::Error::custom("event kind cannot be empty"));
+                            }
+                            kind = Some(k);
+                        }
+                        PayloadField::Changes => {
+                            if changes.is_some() {
+                                return Err(serde::de::Error::duplicate_field("changes"));
+                            }
+                            changes = Some(map.next_value_seed(UniqueMapSeed)?);
+                        }
+                    }
+                }
+
+                Ok(IntermediatePayload {
+                    tick,
+                    state,
+                    event_id_index,
+                    event_id_generation,
+                    sequence,
+                    kind,
+                    changes,
+                })
+            }
+        }
+
+        deserializer.deserialize_map(IntermediatePayloadVisitor)
+    }
 }
 
 impl<'de> Deserialize<'de> for TraceRecordDto {
@@ -283,16 +477,33 @@ impl<'de> Deserialize<'de> for TraceRecordDto {
                 let record_type =
                     record_type.ok_or_else(|| serde::de::Error::missing_field("type"))?;
                 let payload = payload.ok_or_else(|| serde::de::Error::missing_field("payload"))?;
+                let tick = payload
+                    .tick
+                    .ok_or_else(|| serde::de::Error::missing_field("tick"))?;
 
                 match record_type.as_str() {
                     "snapshot" => {
-                        let state = payload.state.unwrap_or_default();
-                        Ok(TraceRecordDto::Snapshot(TraceSnapshotDto {
-                            tick: payload.tick,
-                            state,
-                        }))
+                        if payload.event_id_index.is_some()
+                            || payload.event_id_generation.is_some()
+                            || payload.sequence.is_some()
+                            || payload.kind.is_some()
+                            || payload.changes.is_some()
+                        {
+                            return Err(serde::de::Error::custom(
+                                "unexpected delta fields in snapshot record",
+                            ));
+                        }
+                        let state = payload
+                            .state
+                            .ok_or_else(|| serde::de::Error::missing_field("state"))?;
+                        Ok(TraceRecordDto::Snapshot(TraceSnapshotDto { tick, state }))
                     }
                     "delta" => {
+                        if payload.state.is_some() {
+                            return Err(serde::de::Error::custom(
+                                "unexpected snapshot state field in delta record",
+                            ));
+                        }
                         let event_id_index = payload
                             .event_id_index
                             .ok_or_else(|| serde::de::Error::missing_field("event_id_index"))?;
@@ -308,10 +519,12 @@ impl<'de> Deserialize<'de> for TraceRecordDto {
                         if kind.is_empty() {
                             return Err(serde::de::Error::custom("event kind cannot be empty"));
                         }
-                        let changes = payload.changes.unwrap_or_default();
+                        let changes = payload
+                            .changes
+                            .ok_or_else(|| serde::de::Error::missing_field("changes"))?;
 
                         Ok(TraceRecordDto::Delta(TraceDeltaDto {
-                            tick: payload.tick,
+                            tick,
                             event_id_index,
                             event_id_generation,
                             sequence,
@@ -333,9 +546,24 @@ impl<'de> Deserialize<'de> for TraceRecordDto {
 /// Validates a sequence of JSON Lines containing an optional header followed by trace records,
 /// enforcing monotonically non-decreasing ticks, non-empty event kinds, and schema compliance.
 pub fn validate_jsonl_trace_records(input: &str) -> Result<(), DebugContractError> {
+    if input.len() > MAX_JSONL_TOTAL_BYTES {
+        return Err(DebugContractError::ExceededByteLimit {
+            limit: MAX_JSONL_TOTAL_BYTES,
+            actual: input.len(),
+        });
+    }
+
     let mut lines = input.lines().filter(|l| !l.trim().is_empty());
     let first = match lines.next() {
-        Some(line) => line,
+        Some(line) => {
+            if line.len() > MAX_JSONL_RECORD_BYTES {
+                return Err(DebugContractError::ExceededByteLimit {
+                    limit: MAX_JSONL_RECORD_BYTES,
+                    actual: line.len(),
+                });
+            }
+            line
+        }
         None => return Ok(()),
     };
 
@@ -360,6 +588,12 @@ pub fn validate_jsonl_trace_records(input: &str) -> Result<(), DebugContractErro
     }
 
     for line in lines {
+        if line.len() > MAX_JSONL_RECORD_BYTES {
+            return Err(DebugContractError::ExceededByteLimit {
+                limit: MAX_JSONL_RECORD_BYTES,
+                actual: line.len(),
+            });
+        }
         let record: TraceRecordDto = serde_json::from_str(line).map_err(|e| {
             if e.to_string().contains("event kind cannot be empty") {
                 DebugContractError::EmptyKind
@@ -530,14 +764,78 @@ mod tests {
     }
 
     #[test]
-    fn rejects_nonfinite_values_and_malformed_inputs() {
-        // Serde_json rejects NaN and Infinity when serializing floats
+    fn rejects_non_integer_floats_and_malformed_inputs() {
+        // Floats in integer fields must be rejected
+        let float_tick = r#"{"type":"snapshot","payload":{"tick":12.345,"state":{}}}"#;
+        assert!(TraceRecordDto::from_json_str(float_tick).is_err());
+
         let malformed_record = r#"{"type":"snapshot","payload":{"tick":123,"state":"not-a-map"}}"#;
         assert!(TraceRecordDto::from_json_str(malformed_record).is_err());
 
         let malformed_header = r#"{"schema":"wrong.schema"}"#;
         let header = TraceHeaderDto::from_json_str(malformed_header).expect("parses as json");
         assert!(header.validate().is_err());
+    }
+
+    #[test]
+    fn rejects_duplicate_map_keys_in_state_and_changes() {
+        // Repeated key in snapshot state
+        let duplicate_state_json =
+            r#"{"type":"snapshot","payload":{"tick":10,"state":{"k1":"v1","k1":"v2"}}}"#;
+        let res = TraceRecordDto::from_json_str(duplicate_state_json);
+        assert!(res.is_err());
+        assert!(res.unwrap_err().to_string().contains("duplicate map key"));
+
+        // Repeated key in delta changes
+        let duplicate_changes_json = r#"{"type":"delta","payload":{"tick":10,"event_id_index":1,"event_id_generation":0,"sequence":1,"kind":"k","changes":{"k1":"v1","k1":"v2"}}}"#;
+        let res = TraceRecordDto::from_json_str(duplicate_changes_json);
+        assert!(res.is_err());
+        assert!(res.unwrap_err().to_string().contains("duplicate map key"));
+    }
+
+    #[test]
+    fn rejects_missing_variant_required_fields_and_cross_variant_fields() {
+        // Snapshot missing state
+        let missing_state = r#"{"type":"snapshot","payload":{"tick":10}}"#;
+        assert!(TraceRecordDto::from_json_str(missing_state).is_err());
+
+        // Snapshot containing delta field (event_id_index)
+        let snapshot_with_delta =
+            r#"{"type":"snapshot","payload":{"tick":10,"state":{},"event_id_index":1}}"#;
+        assert!(TraceRecordDto::from_json_str(snapshot_with_delta).is_err());
+
+        // Delta missing changes
+        let missing_changes = r#"{"type":"delta","payload":{"tick":10,"event_id_index":1,"event_id_generation":0,"sequence":1,"kind":"k"}}"#;
+        assert!(TraceRecordDto::from_json_str(missing_changes).is_err());
+
+        // Delta containing snapshot field (state)
+        let delta_with_snapshot = r#"{"type":"delta","payload":{"tick":10,"event_id_index":1,"event_id_generation":0,"sequence":1,"kind":"k","changes":{},"state":{}}}"#;
+        assert!(TraceRecordDto::from_json_str(delta_with_snapshot).is_err());
+    }
+
+    #[test]
+    fn enforces_jsonl_byte_limits() {
+        // Record exceeding MAX_JSONL_RECORD_BYTES
+        let long_line = "x".repeat(MAX_JSONL_RECORD_BYTES + 1);
+        let err = validate_jsonl_trace_records(&long_line).unwrap_err();
+        assert!(matches!(
+            err,
+            DebugContractError::ExceededByteLimit {
+                limit: MAX_JSONL_RECORD_BYTES,
+                ..
+            }
+        ));
+
+        // Stream exceeding MAX_JSONL_TOTAL_BYTES
+        let huge_stream = "x".repeat(MAX_JSONL_TOTAL_BYTES + 1);
+        let err = validate_jsonl_trace_records(&huge_stream).unwrap_err();
+        assert!(matches!(
+            err,
+            DebugContractError::ExceededByteLimit {
+                limit: MAX_JSONL_TOTAL_BYTES,
+                ..
+            }
+        ));
     }
 
     #[test]

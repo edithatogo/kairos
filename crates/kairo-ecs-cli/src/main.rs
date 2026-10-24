@@ -51,9 +51,14 @@ fn handle_validate_scenario(args: &[String]) -> Result<(), String> {
     let scenario = load_scenario(&scenario_path).map_err(|error| error.to_string())?;
     let seed = load_seed_manifest(&seed_path).map_err(|error| error.to_string())?;
     validate_scenario_and_seed(&scenario, &seed).map_err(|error| error.to_string())?;
+    let status = contracts::ValidateScenarioStatusDto {
+        status: "ok",
+        scenario_id: &scenario.scenario_id,
+        fixture_id: &scenario.fixture_id,
+    };
     println!(
-        "{{\"status\":\"ok\",\"scenario_id\":\"{}\",\"fixture_id\":\"{}\"}}",
-        scenario.scenario_id, scenario.fixture_id
+        "{}",
+        serde_json::to_string(&status).map_err(|e| e.to_string())?
     );
     Ok(())
 }
@@ -67,11 +72,15 @@ fn handle_replay(args: &[String]) -> Result<(), String> {
     validate_scenario_and_seed(&scenario, &seed).map_err(|error| error.to_string())?;
     let replay = replay_scheduler_ordering(&scenario)?;
     write_replay_outputs(&scenario, &replay, &output)?;
+    let status = contracts::ReplayStatusDto {
+        status: "ok",
+        scenario_id: &scenario.scenario_id,
+        output: output.display().to_string(),
+        summary_hash: &replay.summary_hash,
+    };
     println!(
-        "{{\"status\":\"ok\",\"scenario_id\":\"{}\",\"output\":\"{}\",\"summary_hash\":\"{}\"}}",
-        scenario.scenario_id,
-        output.display(),
-        replay.summary_hash
+        "{}",
+        serde_json::to_string(&status).map_err(|e| e.to_string())?
     );
     Ok(())
 }
@@ -81,9 +90,14 @@ fn handle_resume_plan(args: &[String]) -> Result<(), String> {
     let output = flag_path(args, "--output")?;
     let scenario = load_scenario(&scenario_path).map_err(|error| error.to_string())?;
     write_resume_plan(&scenario, &output)?;
+    let status = contracts::ResumePlanStatusDto {
+        status: "ok",
+        scenario_id: &scenario.scenario_id,
+        checkpoint_every_events: scenario.resume_checkpoint_every_events,
+    };
     println!(
-        "{{\"status\":\"ok\",\"scenario_id\":\"{}\",\"checkpoint_every_events\":{}}}",
-        scenario.scenario_id, scenario.resume_checkpoint_every_events
+        "{}",
+        serde_json::to_string(&status).map_err(|e| e.to_string())?
     );
     Ok(())
 }
@@ -101,11 +115,16 @@ fn handle_run(args: &[String]) -> Result<(), String> {
         validate_scenario_and_seed(&scenario, &seed).map_err(|error| error.to_string())?;
         let replay = replay_scheduler_ordering(&scenario)?;
         write_replay_outputs(&scenario, &replay, &output)?;
+        let status = contracts::RunStatusDto {
+            status: "ok",
+            command: "run",
+            scenario_id: &scenario.scenario_id,
+            output: output.display().to_string(),
+            summary_hash: &replay.summary_hash,
+        };
         println!(
-            "{{\"status\":\"ok\",\"command\":\"run\",\"scenario_id\":\"{}\",\"output\":\"{}\",\"summary_hash\":\"{}\"}}",
-            scenario.scenario_id,
-            output.display(),
-            replay.summary_hash
+            "{}",
+            serde_json::to_string(&status).map_err(|e| e.to_string())?
         );
     } else {
         fs::create_dir_all(&output).map_err(|error| error.to_string())?;
@@ -118,10 +137,16 @@ fn handle_run(args: &[String]) -> Result<(), String> {
         let json =
             serde_json::to_string_pretty(&request_dto).map_err(|error| error.to_string())? + "\n";
         fs::write(output.join("run-request.json"), json).map_err(|error| error.to_string())?;
+        let status = contracts::RunCapturedStatusDto {
+            status: "ok",
+            command: "run",
+            scenario: scenario_path.display().to_string(),
+            output: output.display().to_string(),
+            mode: "request-captured",
+        };
         println!(
-            "{{\"status\":\"ok\",\"command\":\"run\",\"scenario\":\"{}\",\"output\":\"{}\",\"mode\":\"request-captured\"}}",
-            scenario_path.display(),
-            output.display()
+            "{}",
+            serde_json::to_string(&status).map_err(|e| e.to_string())?
         );
     }
     Ok(())
@@ -130,9 +155,14 @@ fn handle_run(args: &[String]) -> Result<(), String> {
 fn handle_checkpoint(args: &[String]) -> Result<(), String> {
     let output = flag_path(args, "--output")?;
     write_checkpoint_manifest(&output)?;
+    let status = contracts::CheckpointStatusDto {
+        status: "ok",
+        command: "checkpoint",
+        output: output.display().to_string(),
+    };
     println!(
-        "{{\"status\":\"ok\",\"command\":\"checkpoint\",\"output\":\"{}\"}}",
-        output.display()
+        "{}",
+        serde_json::to_string(&status).map_err(|e| e.to_string())?
     );
     Ok(())
 }
@@ -141,10 +171,15 @@ fn handle_resume(args: &[String]) -> Result<(), String> {
     let checkpoint = flag_path(args, "--checkpoint")?;
     let output = flag_path(args, "--output")?;
     write_resume_request(&checkpoint, &output)?;
+    let status = contracts::ResumeStatusDto {
+        status: "ok",
+        command: "resume",
+        checkpoint: checkpoint.display().to_string(),
+        output: output.display().to_string(),
+    };
     println!(
-        "{{\"status\":\"ok\",\"command\":\"resume\",\"checkpoint\":\"{}\",\"output\":\"{}\"}}",
-        checkpoint.display(),
-        output.display()
+        "{}",
+        serde_json::to_string(&status).map_err(|e| e.to_string())?
     );
     Ok(())
 }

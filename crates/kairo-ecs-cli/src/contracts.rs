@@ -315,6 +315,75 @@ impl RunRequestDto {
     }
 }
 
+/// Typed status response DTO for validate-scenario command.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct ValidateScenarioStatusDto<'a> {
+    pub status: &'static str,
+    pub scenario_id: &'a str,
+    pub fixture_id: &'a str,
+}
+
+/// Typed status response DTO for replay command.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct ReplayStatusDto<'a> {
+    pub status: &'static str,
+    pub scenario_id: &'a str,
+    pub output: String,
+    pub summary_hash: &'a str,
+}
+
+/// Typed status response DTO for resume-plan command.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct ResumePlanStatusDto<'a> {
+    pub status: &'static str,
+    pub scenario_id: &'a str,
+    pub checkpoint_every_events: u64,
+}
+
+/// Typed status response DTO for run command with seed manifest.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct RunStatusDto<'a> {
+    pub status: &'static str,
+    pub command: &'static str,
+    pub scenario_id: &'a str,
+    pub output: String,
+    pub summary_hash: &'a str,
+}
+
+/// Typed status response DTO for run command without seed manifest.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct RunCapturedStatusDto {
+    pub status: &'static str,
+    pub command: &'static str,
+    pub scenario: String,
+    pub output: String,
+    pub mode: &'static str,
+}
+
+/// Typed status response DTO for checkpoint command.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct CheckpointStatusDto {
+    pub status: &'static str,
+    pub command: &'static str,
+    pub output: String,
+}
+
+/// Typed status response DTO for resume command.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct ResumeStatusDto {
+    pub status: &'static str,
+    pub command: &'static str,
+    pub checkpoint: String,
+    pub output: String,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
