@@ -504,7 +504,7 @@ writers. Track67 similarly coordinates existing core/state/ABM owners.
 
 ## Track 70 migration ordering
 
-[Track 70](tracks/70-polars-native-data-processing/index.md) has completed Phase 0 qualification and Phase 1 native tables, advancing to Phase 2 (FFI and polyglot consumers). Dependencies 04/62/63 are routing context, not runtime proof. Complete upstream Phase 4 before CareOps `polars_data_processing_20261022` adopts the pin.
+[Track 70](tracks/70-polars-native-data-processing/index.md) has completed all phases (Phases 0–4), verified native tables, Arrow C Data Interface Schema v2 export, Python Polars zero-copy handoff, and manifest-last durable publication. Upstream delivery accepted; CareOps `polars_data_processing_20261022` may adopt the pin.
 
 ## Library adoption planning — 22 October 2026
 

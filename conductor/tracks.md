@@ -141,7 +141,7 @@ Machine-readable track metadata is maintained in `conductor/tracks.yaml`.
 The human sole maintainer explicitly approved Track49 production scheduling after scope clarification. See conductor/tracks/29-wave-manager-execution-gatekeeper/adr-track49-phase-entry-20261004.md. Dispatch remains conditional on normal PR199 merge, exact-head gates/security evidence, accepted local/interface proof and a separately reviewed reserved transport packet. Track48 remains In Progress; dependencies, full distributed acceptance and release gates are unchanged. The raw Track49 gate result is preserved, not rewritten as a pass.
 
 ---
-- [~] **Track 70: Polars-native data processing and standard interchange** — In Progress. [Track](tracks/70-polars-native-data-processing/index.md). CareOps follows accepted upstream delivery.
+- [x] **Track 70: Polars-native data processing and standard interchange** — Completed. [Track](tracks/70-polars-native-data-processing/index.md). CareOps follows accepted upstream delivery.
 
 ---
 - [ ] **Track: rand deterministic RNG adoption** — Planned; implementation not started. [Track](tracks/71-rand-deterministic-rng/index.md).

@@ -10,8 +10,27 @@ from typing import Any
 from ._types import DispatchedEvent, EntityId, EventId
 
 SCHEMA_VERSION = 1
+SCHEMA_VERSION_V2 = 2
 EVENT_LOG_STREAM = "kairo_ecs.event_log.v1"
+EVENT_LOG_STREAM_V2 = "kairo_ecs.event_log.v2"
 TIME_SCALE_TICKS = "ticks"
+
+EVENT_LOG_FIELDS_V2 = (
+    ("schema_version", "UInt16", False),
+    ("run_id", "Utf8", False),
+    ("event_id_index", "UInt64", False),
+    ("event_id_gen", "UInt32", False),
+    ("entity_id_index", "UInt64", True),
+    ("entity_id_gen", "UInt32", True),
+    ("time_ticks_hi", "UInt64", False),
+    ("time_ticks_lo", "UInt64", False),
+    ("time_scale", "Utf8", False),
+    ("priority", "Int32", False),
+    ("sequence", "UInt64", False),
+    ("event_kind", "Utf8", False),
+    ("status", "Utf8", False),
+    ("payload_ref", "Utf8", True),
+)
 
 EVENT_LOG_FIELDS = (
     ("schema_version", "UInt16", False),
@@ -122,15 +141,65 @@ class EventLogBatch:
             )
         return ("\n".join(lines) + "\n").encode("utf-8")
 
-    def to_pyarrow_table(self) -> Any:
-        """Return a pyarrow Table using the Track 04 event-log schema."""
+    def to_polars(self) -> Any:
+        """Return a native Polars DataFrame via PyArrow zero-copy interchange."""
+        import polars as pl
 
+        table = self.to_pyarrow_table()
+        return pl.from_arrow(table)
+
+    def to_pyarrow_table(self, version: int | None = None) -> Any:
+        """Return a pyarrow Table using the Schema v2 or v1 event-log contract."""
         try:
             import pyarrow as pa
         except ModuleNotFoundError as exc:
             raise RuntimeError(
                 "pyarrow is required for Arrow table roundtrips"
             ) from exc
+
+        target_version = version
+        if target_version is None:
+            target_version = 2 if self.records and self.records[0].schema_version == 2 else 1
+
+        if target_version == 2:
+            schema = pa.schema(
+                [
+                    pa.field("schema_version", pa.uint16(), nullable=False),
+                    pa.field("run_id", pa.utf8(), nullable=False),
+                    pa.field("event_id_index", pa.uint64(), nullable=False),
+                    pa.field("event_id_gen", pa.uint32(), nullable=False),
+                    pa.field("entity_id_index", pa.uint64(), nullable=True),
+                    pa.field("entity_id_gen", pa.uint32(), nullable=True),
+                    pa.field("time_ticks_hi", pa.uint64(), nullable=False),
+                    pa.field("time_ticks_lo", pa.uint64(), nullable=False),
+                    pa.field("time_scale", pa.utf8(), nullable=False),
+                    pa.field("priority", pa.int32(), nullable=False),
+                    pa.field("sequence", pa.uint64(), nullable=False),
+                    pa.field("event_kind", pa.utf8(), nullable=False),
+                    pa.field("status", pa.utf8(), nullable=False),
+                    pa.field("payload_ref", pa.utf8(), nullable=True),
+                ]
+            )
+            rows = [
+                {
+                    "schema_version": 2,
+                    "run_id": record.run_id,
+                    "event_id_index": record.event_id.index,
+                    "event_id_gen": record.event_id.generation,
+                    "entity_id_index": record.entity_id.index if record.entity_id else None,
+                    "entity_id_gen": record.entity_id.generation if record.entity_id else None,
+                    "time_ticks_hi": (record.time_ticks >> 64) & 0xFFFFFFFFFFFFFFFF,
+                    "time_ticks_lo": record.time_ticks & 0xFFFFFFFFFFFFFFFF,
+                    "time_scale": record.time_scale,
+                    "priority": record.priority,
+                    "sequence": record.sequence,
+                    "event_kind": record.event_kind,
+                    "status": record.status.value,
+                    "payload_ref": record.payload_ref,
+                }
+                for record in self.records
+            ]
+            return pa.Table.from_pylist(rows, schema=schema)
 
         rows = [
             {

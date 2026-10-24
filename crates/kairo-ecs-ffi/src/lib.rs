@@ -129,6 +129,24 @@ pub enum KairoEcsStatusCode {
     KAIRO_ECS_ERR_PANIC = 100,
 }
 
+#[derive(Clone, Debug)]
+struct FfiEventLogRecord {
+    schema_version: u16,
+    run_id: String,
+    event_id_index: u64,
+    event_id_gen: u32,
+    entity_id_index: Option<u64>,
+    entity_id_gen: Option<u32>,
+    time_ticks_hi: u64,
+    time_ticks_lo: u64,
+    time_scale: String,
+    priority: i32,
+    sequence: u64,
+    event_kind: String,
+    status: String,
+    payload_ref: Option<String>,
+}
+
 #[derive(Debug, Default)]
 struct EngineState {
     scheduler: Scheduler,
@@ -138,6 +156,7 @@ struct EngineState {
     next_event_handle: u64,
     event_handles: HashMap<u64, ScheduledEventHandle>,
     event_handles_by_id: HashMap<EventId, u64>,
+    event_log: Vec<FfiEventLogRecord>,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -204,6 +223,33 @@ impl EngineState {
                 self.stats.now_ticks = self.scheduler.now().ticks() as u64;
                 self.stats.pending_events = self.scheduler.pending_events() as u64;
                 self.forget_event(event.id);
+
+                let ticks = event.at.ticks();
+                let hi = (ticks >> 64) as u64;
+                let lo = (ticks & 0xffff_ffff_ffff_ffff) as u64;
+                let (ent_idx, ent_gen) = match event.entity {
+                    Some(ent) => (Some(ent.index), Some(ent.generation)),
+                    None => (None, None),
+                };
+                let kind_str = match event.kind {
+                    EventKind::Custom(k) => format!("custom:{k}"),
+                };
+                self.event_log.push(FfiEventLogRecord {
+                    schema_version: 2,
+                    run_id: "default_run".to_string(),
+                    event_id_index: event.id.index,
+                    event_id_gen: event.id.generation,
+                    entity_id_index: ent_idx,
+                    entity_id_gen: ent_gen,
+                    time_ticks_hi: hi,
+                    time_ticks_lo: lo,
+                    time_scale: "ticks".to_string(),
+                    priority: event.priority,
+                    sequence: event.sequence,
+                    event_kind: kind_str,
+                    status: "dispatched".to_string(),
+                    payload_ref: None,
+                });
             }
             StepOutcome::Empty | StepOutcome::LimitReached => {
                 self.stats.now_ticks = self.scheduler.now().ticks() as u64;
@@ -596,7 +642,86 @@ pub extern "C" fn kairo_ecs_buffer_free(buffer: KairoEcsBuffer) {
 }
 
 const ARROW_SCHEMA_FORMAT_STRUCT: &[u8] = b"+s\0";
-const ARROW_SCHEMA_NAME_EVENT_LOG: &[u8] = b"kairo_ecs.event_log.v1\0";
+const ARROW_SCHEMA_NAME_EVENT_LOG_V2: &[u8] = b"kairo_ecs.event_log.v2\0";
+
+struct ColumnSchemaDef {
+    name: &'static [u8],
+    format: &'static [u8],
+    flags: i64,
+}
+
+const EVENT_LOG_COLUMNS_V2: [ColumnSchemaDef; 14] = [
+    ColumnSchemaDef {
+        name: b"schema_version\0",
+        format: b"S\0",
+        flags: 0,
+    },
+    ColumnSchemaDef {
+        name: b"run_id\0",
+        format: b"u\0",
+        flags: 0,
+    },
+    ColumnSchemaDef {
+        name: b"event_id_index\0",
+        format: b"L\0",
+        flags: 0,
+    },
+    ColumnSchemaDef {
+        name: b"event_id_gen\0",
+        format: b"I\0",
+        flags: 0,
+    },
+    ColumnSchemaDef {
+        name: b"entity_id_index\0",
+        format: b"L\0",
+        flags: 2,
+    },
+    ColumnSchemaDef {
+        name: b"entity_id_gen\0",
+        format: b"I\0",
+        flags: 2,
+    },
+    ColumnSchemaDef {
+        name: b"time_ticks_hi\0",
+        format: b"L\0",
+        flags: 0,
+    },
+    ColumnSchemaDef {
+        name: b"time_ticks_lo\0",
+        format: b"L\0",
+        flags: 0,
+    },
+    ColumnSchemaDef {
+        name: b"time_scale\0",
+        format: b"u\0",
+        flags: 0,
+    },
+    ColumnSchemaDef {
+        name: b"priority\0",
+        format: b"i\0",
+        flags: 0,
+    },
+    ColumnSchemaDef {
+        name: b"sequence\0",
+        format: b"L\0",
+        flags: 0,
+    },
+    ColumnSchemaDef {
+        name: b"event_kind\0",
+        format: b"u\0",
+        flags: 0,
+    },
+    ColumnSchemaDef {
+        name: b"status\0",
+        format: b"u\0",
+        flags: 0,
+    },
+    ColumnSchemaDef {
+        name: b"payload_ref\0",
+        format: b"u\0",
+        flags: 2,
+    },
+];
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
@@ -660,20 +785,57 @@ impl Default for KairoArrowArray {
     }
 }
 
+#[allow(clippy::vec_box)]
+struct SchemaPrivateData {
+    _child_schemas: Vec<Box<KairoArrowSchema>>,
+    children_ptrs: Vec<*mut KairoArrowSchema>,
+}
+
+unsafe extern "C" fn release_arrow_child_schema(schema: *mut KairoArrowSchema) {
+    if schema.is_null() {
+        return;
+    }
+    (*schema).release = None;
+}
+
 unsafe extern "C" fn release_arrow_schema(schema: *mut KairoArrowSchema) {
     if schema.is_null() {
         return;
     }
+    if !(*schema).private_data.is_null() {
+        let _ = Box::from_raw((*schema).private_data as *mut SchemaPrivateData);
+        (*schema).private_data = core::ptr::null_mut();
+    }
     (*schema).format = core::ptr::null();
     (*schema).name = core::ptr::null();
     (*schema).metadata = core::ptr::null();
+    (*schema).n_children = 0;
+    (*schema).children = core::ptr::null_mut();
     (*schema).release = None;
-    (*schema).private_data = core::ptr::null_mut();
+}
+
+#[allow(clippy::vec_box)]
+struct ArrayPrivateData {
+    _child_arrays: Vec<Box<KairoArrowArray>>,
+    children_ptrs: Vec<*mut KairoArrowArray>,
+    _buffers_storage: Vec<Box<[*const core::ffi::c_void]>>,
+    _allocated_data: Vec<Box<dyn core::any::Any>>,
+}
+
+unsafe extern "C" fn release_arrow_child_array(array: *mut KairoArrowArray) {
+    if array.is_null() {
+        return;
+    }
+    (*array).release = None;
 }
 
 unsafe extern "C" fn release_arrow_array(array: *mut KairoArrowArray) {
     if array.is_null() {
         return;
+    }
+    if !(*array).private_data.is_null() {
+        let _ = Box::from_raw((*array).private_data as *mut ArrayPrivateData);
+        (*array).private_data = core::ptr::null_mut();
     }
     (*array).length = 0;
     (*array).null_count = 0;
@@ -682,12 +844,50 @@ unsafe extern "C" fn release_arrow_array(array: *mut KairoArrowArray) {
     (*array).n_children = 0;
     (*array).buffers = core::ptr::null_mut();
     (*array).children = core::ptr::null_mut();
-    (*array).dictionary = core::ptr::null_mut();
     (*array).release = None;
-    (*array).private_data = core::ptr::null_mut();
 }
 
-/// Export the canonical `kairo_ecs.event_log.v1` Arrow C Data Interface schema.
+fn build_validity_bitmap(validity: &[bool]) -> Vec<u8> {
+    let num_bytes = validity.len().div_ceil(8);
+    let mut bytes = vec![0u8; num_bytes];
+    for (i, &valid) in validity.iter().enumerate() {
+        if valid {
+            bytes[i / 8] |= 1 << (i % 8);
+        }
+    }
+    bytes
+}
+
+fn build_utf8_buffers(strings: &[Option<&str>]) -> (Vec<u8>, Vec<i32>, Vec<u8>, usize) {
+    let mut null_count = 0;
+    let mut validity = Vec::with_capacity(strings.len());
+    let mut offsets = Vec::with_capacity(strings.len() + 1);
+    let mut data = Vec::new();
+    let mut current_offset: i32 = 0;
+    offsets.push(current_offset);
+
+    for s in strings {
+        match s {
+            Some(text) => {
+                validity.push(true);
+                data.extend_from_slice(text.as_bytes());
+                current_offset = current_offset
+                    .checked_add(text.len() as i32)
+                    .unwrap_or(current_offset);
+                offsets.push(current_offset);
+            }
+            None => {
+                null_count += 1;
+                validity.push(false);
+                offsets.push(current_offset);
+            }
+        }
+    }
+    let bitmap = build_validity_bitmap(&validity);
+    (bitmap, offsets, data, null_count)
+}
+
+/// Export the canonical `kairo_ecs.event_log.v2` Arrow C Data Interface schema.
 ///
 /// # Safety
 /// `out_schema` must be either null (which returns `KAIRO_ECS_ERR_INVALID_ARGUMENT`)
@@ -701,17 +901,44 @@ pub unsafe extern "C" fn kairo_ecs_export_event_log_arrow_schema(
             set_last_error("out_schema pointer must not be null");
             return KairoEcsStatusCode::KAIRO_ECS_ERR_INVALID_ARGUMENT;
         }
+
+        let mut child_schemas: Vec<Box<KairoArrowSchema>> = Vec::with_capacity(14);
+        for col in &EVENT_LOG_COLUMNS_V2 {
+            child_schemas.push(Box::new(KairoArrowSchema {
+                format: col.format.as_ptr().cast::<c_char>(),
+                name: col.name.as_ptr().cast::<c_char>(),
+                metadata: core::ptr::null(),
+                flags: col.flags,
+                n_children: 0,
+                children: core::ptr::null_mut(),
+                dictionary: core::ptr::null_mut(),
+                release: Some(release_arrow_child_schema),
+                private_data: core::ptr::null_mut(),
+            }));
+        }
+
+        let children_ptrs: Vec<*mut KairoArrowSchema> = child_schemas
+            .iter_mut()
+            .map(|b| &mut **b as *mut KairoArrowSchema)
+            .collect();
+
+        let private_data = Box::into_raw(Box::new(SchemaPrivateData {
+            _child_schemas: child_schemas,
+            children_ptrs: children_ptrs.clone(),
+        }));
+
         *out_schema = KairoArrowSchema {
             format: ARROW_SCHEMA_FORMAT_STRUCT.as_ptr().cast::<c_char>(),
-            name: ARROW_SCHEMA_NAME_EVENT_LOG.as_ptr().cast::<c_char>(),
+            name: ARROW_SCHEMA_NAME_EVENT_LOG_V2.as_ptr().cast::<c_char>(),
             metadata: core::ptr::null(),
             flags: 0,
-            n_children: 0,
-            children: core::ptr::null_mut(),
+            n_children: 14,
+            children: (*private_data).children_ptrs.as_mut_ptr(),
             dictionary: core::ptr::null_mut(),
             release: Some(release_arrow_schema),
-            private_data: core::ptr::null_mut(),
+            private_data: private_data as *mut core::ffi::c_void,
         };
+
         KairoEcsStatusCode::KAIRO_ECS_OK
     })
 }
@@ -731,27 +958,405 @@ pub unsafe extern "C" fn kairo_ecs_export_event_log_arrow_array(
             set_last_error("engine and out_array pointers must not be null");
             return KairoEcsStatusCode::KAIRO_ECS_ERR_INVALID_ARGUMENT;
         }
+
         let handle = *engine;
-        match with_engine_mut(handle, |eng| {
-            eng.stats.dispatched_events + eng.stats.cancelled_events
-        }) {
-            Ok(row_count) => {
-                *out_array = KairoArrowArray {
-                    length: row_count as i64,
-                    null_count: 0,
-                    offset: 0,
-                    n_buffers: 1,
-                    n_children: 0,
-                    buffers: core::ptr::null_mut(),
-                    children: core::ptr::null_mut(),
-                    dictionary: core::ptr::null_mut(),
-                    release: Some(release_arrow_array),
-                    private_data: core::ptr::null_mut(),
-                };
-                KairoEcsStatusCode::KAIRO_ECS_OK
-            }
-            Err(code) => code,
-        }
+        let records = match with_engine_mut(handle, |eng| eng.event_log.clone()) {
+            Ok(r) => r,
+            Err(code) => return code,
+        };
+
+        let row_count = records.len() as i64;
+
+        let mut child_arrays: Vec<Box<KairoArrowArray>> = Vec::with_capacity(14);
+        let mut buffers_storage: Vec<Box<[*const core::ffi::c_void]>> = Vec::with_capacity(14);
+        let mut allocated_data: Vec<Box<dyn core::any::Any>> = Vec::with_capacity(30);
+
+        // 1. schema_version (UInt16)
+        let schema_ver: Vec<u16> = records.iter().map(|r| r.schema_version).collect();
+        let schema_ver_ptr = schema_ver.as_ptr().cast::<core::ffi::c_void>();
+        allocated_data.push(Box::new(schema_ver));
+        let mut b1 = Box::new([core::ptr::null(), schema_ver_ptr]);
+        let b1_ptr = b1.as_mut_ptr();
+        buffers_storage.push(b1);
+        child_arrays.push(Box::new(KairoArrowArray {
+            length: row_count,
+            null_count: 0,
+            offset: 0,
+            n_buffers: 2,
+            n_children: 0,
+            buffers: b1_ptr,
+            children: core::ptr::null_mut(),
+            dictionary: core::ptr::null_mut(),
+            release: Some(release_arrow_child_array),
+            private_data: core::ptr::null_mut(),
+        }));
+
+        // 2. run_id (Utf8)
+        let run_id_strs: Vec<Option<&str>> =
+            records.iter().map(|r| Some(r.run_id.as_str())).collect();
+        let (r_bmp, r_off, r_dat, r_nulls) = build_utf8_buffers(&run_id_strs);
+        let r_bmp_ptr = if r_nulls > 0 {
+            r_bmp.as_ptr().cast()
+        } else {
+            core::ptr::null()
+        };
+        let r_off_ptr = r_off.as_ptr().cast::<core::ffi::c_void>();
+        let r_dat_ptr = r_dat.as_ptr().cast::<core::ffi::c_void>();
+        allocated_data.push(Box::new(r_bmp));
+        allocated_data.push(Box::new(r_off));
+        allocated_data.push(Box::new(r_dat));
+        let mut b2 = Box::new([r_bmp_ptr, r_off_ptr, r_dat_ptr]);
+        let b2_ptr = b2.as_mut_ptr();
+        buffers_storage.push(b2);
+        child_arrays.push(Box::new(KairoArrowArray {
+            length: row_count,
+            null_count: r_nulls as i64,
+            offset: 0,
+            n_buffers: 3,
+            n_children: 0,
+            buffers: b2_ptr,
+            children: core::ptr::null_mut(),
+            dictionary: core::ptr::null_mut(),
+            release: Some(release_arrow_child_array),
+            private_data: core::ptr::null_mut(),
+        }));
+
+        // 3. event_id_index (UInt64)
+        let ev_idx: Vec<u64> = records.iter().map(|r| r.event_id_index).collect();
+        let ev_idx_ptr = ev_idx.as_ptr().cast::<core::ffi::c_void>();
+        allocated_data.push(Box::new(ev_idx));
+        let mut b3 = Box::new([core::ptr::null(), ev_idx_ptr]);
+        let b3_ptr = b3.as_mut_ptr();
+        buffers_storage.push(b3);
+        child_arrays.push(Box::new(KairoArrowArray {
+            length: row_count,
+            null_count: 0,
+            offset: 0,
+            n_buffers: 2,
+            n_children: 0,
+            buffers: b3_ptr,
+            children: core::ptr::null_mut(),
+            dictionary: core::ptr::null_mut(),
+            release: Some(release_arrow_child_array),
+            private_data: core::ptr::null_mut(),
+        }));
+
+        // 4. event_id_gen (UInt32)
+        let ev_gen: Vec<u32> = records.iter().map(|r| r.event_id_gen).collect();
+        let ev_gen_ptr = ev_gen.as_ptr().cast::<core::ffi::c_void>();
+        allocated_data.push(Box::new(ev_gen));
+        let mut b4 = Box::new([core::ptr::null(), ev_gen_ptr]);
+        let b4_ptr = b4.as_mut_ptr();
+        buffers_storage.push(b4);
+        child_arrays.push(Box::new(KairoArrowArray {
+            length: row_count,
+            null_count: 0,
+            offset: 0,
+            n_buffers: 2,
+            n_children: 0,
+            buffers: b4_ptr,
+            children: core::ptr::null_mut(),
+            dictionary: core::ptr::null_mut(),
+            release: Some(release_arrow_child_array),
+            private_data: core::ptr::null_mut(),
+        }));
+
+        // 5. entity_id_index (UInt64, nullable)
+        let ent_idx_validity: Vec<bool> = records
+            .iter()
+            .map(|r| r.entity_id_index.is_some())
+            .collect();
+        let ent_idx_nulls = ent_idx_validity.iter().filter(|&&v| !v).count();
+        let ent_idx_bmp = build_validity_bitmap(&ent_idx_validity);
+        let ent_idx_bmp_ptr = if ent_idx_nulls > 0 {
+            ent_idx_bmp.as_ptr().cast()
+        } else {
+            core::ptr::null()
+        };
+        let ent_idx: Vec<u64> = records
+            .iter()
+            .map(|r| r.entity_id_index.unwrap_or(0))
+            .collect();
+        let ent_idx_ptr = ent_idx.as_ptr().cast::<core::ffi::c_void>();
+        allocated_data.push(Box::new(ent_idx_bmp));
+        allocated_data.push(Box::new(ent_idx));
+        let mut b5 = Box::new([ent_idx_bmp_ptr, ent_idx_ptr]);
+        let b5_ptr = b5.as_mut_ptr();
+        buffers_storage.push(b5);
+        child_arrays.push(Box::new(KairoArrowArray {
+            length: row_count,
+            null_count: ent_idx_nulls as i64,
+            offset: 0,
+            n_buffers: 2,
+            n_children: 0,
+            buffers: b5_ptr,
+            children: core::ptr::null_mut(),
+            dictionary: core::ptr::null_mut(),
+            release: Some(release_arrow_child_array),
+            private_data: core::ptr::null_mut(),
+        }));
+
+        // 6. entity_id_gen (UInt32, nullable)
+        let ent_gen_validity: Vec<bool> =
+            records.iter().map(|r| r.entity_id_gen.is_some()).collect();
+        let ent_gen_nulls = ent_gen_validity.iter().filter(|&&v| !v).count();
+        let ent_gen_bmp = build_validity_bitmap(&ent_gen_validity);
+        let ent_gen_bmp_ptr = if ent_gen_nulls > 0 {
+            ent_gen_bmp.as_ptr().cast()
+        } else {
+            core::ptr::null()
+        };
+        let ent_gen: Vec<u32> = records
+            .iter()
+            .map(|r| r.entity_id_gen.unwrap_or(0))
+            .collect();
+        let ent_gen_ptr = ent_gen.as_ptr().cast::<core::ffi::c_void>();
+        allocated_data.push(Box::new(ent_gen_bmp));
+        allocated_data.push(Box::new(ent_gen));
+        let mut b6 = Box::new([ent_gen_bmp_ptr, ent_gen_ptr]);
+        let b6_ptr = b6.as_mut_ptr();
+        buffers_storage.push(b6);
+        child_arrays.push(Box::new(KairoArrowArray {
+            length: row_count,
+            null_count: ent_gen_nulls as i64,
+            offset: 0,
+            n_buffers: 2,
+            n_children: 0,
+            buffers: b6_ptr,
+            children: core::ptr::null_mut(),
+            dictionary: core::ptr::null_mut(),
+            release: Some(release_arrow_child_array),
+            private_data: core::ptr::null_mut(),
+        }));
+
+        // 7. time_ticks_hi (UInt64)
+        let ticks_hi: Vec<u64> = records.iter().map(|r| r.time_ticks_hi).collect();
+        let ticks_hi_ptr = ticks_hi.as_ptr().cast::<core::ffi::c_void>();
+        allocated_data.push(Box::new(ticks_hi));
+        let mut b7 = Box::new([core::ptr::null(), ticks_hi_ptr]);
+        let b7_ptr = b7.as_mut_ptr();
+        buffers_storage.push(b7);
+        child_arrays.push(Box::new(KairoArrowArray {
+            length: row_count,
+            null_count: 0,
+            offset: 0,
+            n_buffers: 2,
+            n_children: 0,
+            buffers: b7_ptr,
+            children: core::ptr::null_mut(),
+            dictionary: core::ptr::null_mut(),
+            release: Some(release_arrow_child_array),
+            private_data: core::ptr::null_mut(),
+        }));
+
+        // 8. time_ticks_lo (UInt64)
+        let ticks_lo: Vec<u64> = records.iter().map(|r| r.time_ticks_lo).collect();
+        let ticks_lo_ptr = ticks_lo.as_ptr().cast::<core::ffi::c_void>();
+        allocated_data.push(Box::new(ticks_lo));
+        let mut b8 = Box::new([core::ptr::null(), ticks_lo_ptr]);
+        let b8_ptr = b8.as_mut_ptr();
+        buffers_storage.push(b8);
+        child_arrays.push(Box::new(KairoArrowArray {
+            length: row_count,
+            null_count: 0,
+            offset: 0,
+            n_buffers: 2,
+            n_children: 0,
+            buffers: b8_ptr,
+            children: core::ptr::null_mut(),
+            dictionary: core::ptr::null_mut(),
+            release: Some(release_arrow_child_array),
+            private_data: core::ptr::null_mut(),
+        }));
+
+        // 9. time_scale (Utf8)
+        let ts_strs: Vec<Option<&str>> = records
+            .iter()
+            .map(|r| Some(r.time_scale.as_str()))
+            .collect();
+        let (ts_bmp, ts_off, ts_dat, ts_nulls) = build_utf8_buffers(&ts_strs);
+        let ts_bmp_ptr = if ts_nulls > 0 {
+            ts_bmp.as_ptr().cast()
+        } else {
+            core::ptr::null()
+        };
+        let ts_off_ptr = ts_off.as_ptr().cast::<core::ffi::c_void>();
+        let ts_dat_ptr = ts_dat.as_ptr().cast::<core::ffi::c_void>();
+        allocated_data.push(Box::new(ts_bmp));
+        allocated_data.push(Box::new(ts_off));
+        allocated_data.push(Box::new(ts_dat));
+        let mut b9 = Box::new([ts_bmp_ptr, ts_off_ptr, ts_dat_ptr]);
+        let b9_ptr = b9.as_mut_ptr();
+        buffers_storage.push(b9);
+        child_arrays.push(Box::new(KairoArrowArray {
+            length: row_count,
+            null_count: ts_nulls as i64,
+            offset: 0,
+            n_buffers: 3,
+            n_children: 0,
+            buffers: b9_ptr,
+            children: core::ptr::null_mut(),
+            dictionary: core::ptr::null_mut(),
+            release: Some(release_arrow_child_array),
+            private_data: core::ptr::null_mut(),
+        }));
+
+        // 10. priority (Int32)
+        let priority: Vec<i32> = records.iter().map(|r| r.priority).collect();
+        let priority_ptr = priority.as_ptr().cast::<core::ffi::c_void>();
+        allocated_data.push(Box::new(priority));
+        let mut b10 = Box::new([core::ptr::null(), priority_ptr]);
+        let b10_ptr = b10.as_mut_ptr();
+        buffers_storage.push(b10);
+        child_arrays.push(Box::new(KairoArrowArray {
+            length: row_count,
+            null_count: 0,
+            offset: 0,
+            n_buffers: 2,
+            n_children: 0,
+            buffers: b10_ptr,
+            children: core::ptr::null_mut(),
+            dictionary: core::ptr::null_mut(),
+            release: Some(release_arrow_child_array),
+            private_data: core::ptr::null_mut(),
+        }));
+
+        // 11. sequence (UInt64)
+        let seq: Vec<u64> = records.iter().map(|r| r.sequence).collect();
+        let seq_ptr = seq.as_ptr().cast::<core::ffi::c_void>();
+        allocated_data.push(Box::new(seq));
+        let mut b11 = Box::new([core::ptr::null(), seq_ptr]);
+        let b11_ptr = b11.as_mut_ptr();
+        buffers_storage.push(b11);
+        child_arrays.push(Box::new(KairoArrowArray {
+            length: row_count,
+            null_count: 0,
+            offset: 0,
+            n_buffers: 2,
+            n_children: 0,
+            buffers: b11_ptr,
+            children: core::ptr::null_mut(),
+            dictionary: core::ptr::null_mut(),
+            release: Some(release_arrow_child_array),
+            private_data: core::ptr::null_mut(),
+        }));
+
+        // 12. event_kind (Utf8)
+        let ek_strs: Vec<Option<&str>> = records
+            .iter()
+            .map(|r| Some(r.event_kind.as_str()))
+            .collect();
+        let (ek_bmp, ek_off, ek_dat, ek_nulls) = build_utf8_buffers(&ek_strs);
+        let ek_bmp_ptr = if ek_nulls > 0 {
+            ek_bmp.as_ptr().cast()
+        } else {
+            core::ptr::null()
+        };
+        let ek_off_ptr = ek_off.as_ptr().cast::<core::ffi::c_void>();
+        let ek_dat_ptr = ek_dat.as_ptr().cast::<core::ffi::c_void>();
+        allocated_data.push(Box::new(ek_bmp));
+        allocated_data.push(Box::new(ek_off));
+        allocated_data.push(Box::new(ek_dat));
+        let mut b12 = Box::new([ek_bmp_ptr, ek_off_ptr, ek_dat_ptr]);
+        let b12_ptr = b12.as_mut_ptr();
+        buffers_storage.push(b12);
+        child_arrays.push(Box::new(KairoArrowArray {
+            length: row_count,
+            null_count: ek_nulls as i64,
+            offset: 0,
+            n_buffers: 3,
+            n_children: 0,
+            buffers: b12_ptr,
+            children: core::ptr::null_mut(),
+            dictionary: core::ptr::null_mut(),
+            release: Some(release_arrow_child_array),
+            private_data: core::ptr::null_mut(),
+        }));
+
+        // 13. status (Utf8)
+        let st_strs: Vec<Option<&str>> = records.iter().map(|r| Some(r.status.as_str())).collect();
+        let (st_bmp, st_off, st_dat, st_nulls) = build_utf8_buffers(&st_strs);
+        let st_bmp_ptr = if st_nulls > 0 {
+            st_bmp.as_ptr().cast()
+        } else {
+            core::ptr::null()
+        };
+        let st_off_ptr = st_off.as_ptr().cast::<core::ffi::c_void>();
+        let st_dat_ptr = st_dat.as_ptr().cast::<core::ffi::c_void>();
+        allocated_data.push(Box::new(st_bmp));
+        allocated_data.push(Box::new(st_off));
+        allocated_data.push(Box::new(st_dat));
+        let mut b13 = Box::new([st_bmp_ptr, st_off_ptr, st_dat_ptr]);
+        let b13_ptr = b13.as_mut_ptr();
+        buffers_storage.push(b13);
+        child_arrays.push(Box::new(KairoArrowArray {
+            length: row_count,
+            null_count: st_nulls as i64,
+            offset: 0,
+            n_buffers: 3,
+            n_children: 0,
+            buffers: b13_ptr,
+            children: core::ptr::null_mut(),
+            dictionary: core::ptr::null_mut(),
+            release: Some(release_arrow_child_array),
+            private_data: core::ptr::null_mut(),
+        }));
+
+        // 14. payload_ref (Utf8, nullable)
+        let pr_strs: Vec<Option<&str>> = records.iter().map(|r| r.payload_ref.as_deref()).collect();
+        let (pr_bmp, pr_off, pr_dat, pr_nulls) = build_utf8_buffers(&pr_strs);
+        let pr_bmp_ptr = if pr_nulls > 0 {
+            pr_bmp.as_ptr().cast()
+        } else {
+            core::ptr::null()
+        };
+        let pr_off_ptr = pr_off.as_ptr().cast::<core::ffi::c_void>();
+        let pr_dat_ptr = pr_dat.as_ptr().cast::<core::ffi::c_void>();
+        allocated_data.push(Box::new(pr_bmp));
+        allocated_data.push(Box::new(pr_off));
+        allocated_data.push(Box::new(pr_dat));
+        let mut b14 = Box::new([pr_bmp_ptr, pr_off_ptr, pr_dat_ptr]);
+        let b14_ptr = b14.as_mut_ptr();
+        buffers_storage.push(b14);
+        child_arrays.push(Box::new(KairoArrowArray {
+            length: row_count,
+            null_count: pr_nulls as i64,
+            offset: 0,
+            n_buffers: 3,
+            n_children: 0,
+            buffers: b14_ptr,
+            children: core::ptr::null_mut(),
+            dictionary: core::ptr::null_mut(),
+            release: Some(release_arrow_child_array),
+            private_data: core::ptr::null_mut(),
+        }));
+
+        let children_ptrs: Vec<*mut KairoArrowArray> = child_arrays
+            .iter_mut()
+            .map(|b| &mut **b as *mut KairoArrowArray)
+            .collect();
+
+        let private_data = Box::into_raw(Box::new(ArrayPrivateData {
+            _child_arrays: child_arrays,
+            children_ptrs: children_ptrs.clone(),
+            _buffers_storage: buffers_storage,
+            _allocated_data: allocated_data,
+        }));
+
+        *out_array = KairoArrowArray {
+            length: row_count,
+            null_count: 0,
+            offset: 0,
+            n_buffers: 0,
+            n_children: 14,
+            buffers: core::ptr::null_mut(),
+            children: (*private_data).children_ptrs.as_mut_ptr(),
+            dictionary: core::ptr::null_mut(),
+            release: Some(release_arrow_array),
+            private_data: private_data as *mut core::ffi::c_void,
+        };
+
+        KairoEcsStatusCode::KAIRO_ECS_OK
     })
 }
 
