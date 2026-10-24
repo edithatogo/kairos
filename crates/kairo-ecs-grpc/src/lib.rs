@@ -2,8 +2,12 @@
 
 pub mod envelope;
 pub use envelope::*;
+pub mod service;
+pub use service::*;
 pub mod socket;
 pub use socket::*;
+pub mod tonic_transport;
+pub use tonic_transport::*;
 
 use std::collections::{BTreeMap, VecDeque};
 use std::time::Duration;

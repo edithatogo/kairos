@@ -542,7 +542,7 @@ impl PdesTransport for GrpcSocketTransport {
     }
 }
 
-fn parse_endpoint_addr(endpoint: &str) -> Result<SocketAddr, String> {
+pub(crate) fn parse_endpoint_addr(endpoint: &str) -> Result<SocketAddr, String> {
     if endpoint.starts_with("https://") {
         return Err(format!(
             "HTTPS endpoint {endpoint} is not supported by plaintext GrpcSocketTransport; configure TLS or use http://"

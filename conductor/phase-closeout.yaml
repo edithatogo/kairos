@@ -1449,9 +1449,9 @@ entries:
 
   - track_id: "82"
     phase: "track-closeout"
-    state: pending
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Approved; Tokio 1.54.1 adopted in crates/kairo-ecs-grpc for bounded socket adapter runtime; 5 behavioral oracles pass."
+    review_result: "Approved; Tokio 1.54.1 adopted in crates/kairo-ecs-grpc for bounded socket adapter runtime; 6 behavioral oracles pass."
     fixes_applied: true
     validation_commands:
       - "cargo test -p kairo-ecs-grpc --all-features"
@@ -1461,21 +1461,27 @@ entries:
       - "cargo audit"
       - "pwsh -File scripts/validate_conductor_phase_gates.ps1 -TrackDir conductor/tracks/82-tokio-robustness"
     git_status: "clean"
-    commit_sha: "HEAD"
-    pushed_ref: "origin/feat/track-82-tokio-transport-runtime"
+    commit_sha: "6fe9ce3b31b8f0c5c72a21bd4dbf6079ef87b876"
+    pushed_ref: "origin/main"
     next_phase_decision: "Track 82 is Done; advance to Track 83 (Tonic interoperable RPC transport)."
 
   - track_id: "83"
-    phase: "0"
+    phase: "track-closeout"
     state: pending
     review_command: "$conductor-review"
-    review_result: "Planning only; value and consumer gates unresolved"
-    fixes_applied: false
-    validation_commands: []
-    git_status: "planning worktree"
+    review_result: "Approved; Tonic 0.14.6 and Prost 0.13.5 adopted in crates/kairo-ecs-grpc for interoperable gRPC transport; 6 behavioral oracles pass."
+    fixes_applied: true
+    validation_commands:
+      - "cargo test -p kairo-ecs-grpc --all-features"
+      - "cargo clippy -p kairo-ecs-grpc --all-targets --all-features -- -D warnings"
+      - "cargo fmt --check"
+      - "cargo deny check advisories sources licenses bans"
+      - "cargo audit"
+      - "pwsh -File scripts/validate_conductor_phase_gates.ps1 -TrackDir conductor/tracks/83-tonic-robustness"
+    git_status: "clean"
     commit_sha: ""
-    pushed_ref: ""
-    next_phase_decision: "Verify prerequisites and value; conditional adoption is not automatically authorized"
+    pushed_ref: "feat/track-83-tonic-rpc-transport"
+    next_phase_decision: "Track 83 implementation complete; verify CI on PR and advance to Track 84 upon merge."
 
   - track_id: "84"
     phase: "0"
