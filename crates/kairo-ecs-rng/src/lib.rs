@@ -456,11 +456,9 @@ mod tests {
             generation: 0,
         };
         let mut stream = DeterministicStream::from_entity(7, entity);
-        let d1 = stream.next_u32();
-        let d2 = stream.next_u32();
-        let d3 = stream.next_u32();
-        let d4 = stream.next_u32();
-        println!("DRAWS: [{}, {}, {}, {}]", d1, d2, d3, d4);
-        println!("SEED: {:?}", stream.seed);
+        let expected = [4087599687, 2415409399, 675359370, 3234763134];
+        for &exp in &expected {
+            assert_eq!(stream.next_u32(), exp);
+        }
     }
 }
