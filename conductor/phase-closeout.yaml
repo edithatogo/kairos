@@ -1501,7 +1501,7 @@ entries:
 
   - track_id: "85"
     phase: "2"
-    state: pending
+    state: closed
     review_command: "$conductor-review"
     review_result: "Clarabel 0.11.1 qualified and adopted in crates/kairo-ecs-game-theory: implemented ClarabelConvexSolver supporting arbitrary M x N two-player zero-sum matrix games (extracting optimal mixed strategies and game value via LP duality) and two-player correlated equilibria maximizing social welfare; 6 independent behavioral and negative oracles pass."
     fixes_applied: true
@@ -1513,9 +1513,9 @@ entries:
       - "cargo audit"
       - "pwsh -File scripts/validate_conductor_phase_gates.ps1 -TrackDir conductor/tracks/85-clarabel-robustness"
     git_status: "clean"
-    commit_sha: ""
-    pushed_ref: "feat/track-85-clarabel-convex-solver"
-    next_phase_decision: "Track 85 implementation complete; verify CI on PR and advance upon merge."
+    commit_sha: "7d201159f85c180ca2ace1c6181f6f850168d495"
+    pushed_ref: "origin/main"
+    next_phase_decision: "Track 85 successfully squash-merged into main at 7d20115 via PR #328 with all 39 CI checks passing and independent equilibrium validators hardened."
 
   - track_id: "86"
     phase: "2"
@@ -1563,13 +1563,17 @@ entries:
     phase: "0"
     state: pending
     review_command: "$conductor-review"
-    review_result: "Planning only; value and consumer gates unresolved"
-    fixes_applied: false
-    validation_commands: []
-    git_status: "planning worktree"
+    review_result: "Phase 0 evaluation completed with an explicit REJECT (NO-GO) decision pursuant to dependency-value-policy.md and track stop criterion: no active HPC supercomputer consumer, heavy C toolchain friction, unsafe memory surface, and mature pure-Rust Tonic gRPC (Track 83) alternative retained."
+    fixes_applied: true
+    validation_commands:
+      - "cargo test -p kairo-ecs-mpi -p kairo-ecs-grpc -p kairo-ecs-pdes"
+      - "cargo deny check advisories sources licenses bans"
+      - "cargo audit"
+      - "pwsh -File scripts/validate_conductor_phase_gates.ps1 -TrackDir conductor/tracks/88-mpi-robustness"
+    git_status: "clean"
     commit_sha: ""
-    pushed_ref: ""
-    next_phase_decision: "Verify prerequisites and value; conditional adoption is not automatically authorized"
+    pushed_ref: "feat/track-88-rsmpi-native-mpi"
+    next_phase_decision: "Track 88 Phase 0 evaluation concluded with REJECT (NO-GO); phases 1 and 2 unexecuted per value policy."
 
   - track_id: "89"
     phase: "0"

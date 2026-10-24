@@ -1334,7 +1334,7 @@ tracks:
 
   - id: 88
     name: rsmpi native MPI qualification
-    status: Planned
+    status: Done
     owner: distributed-agent
     depends_on: ["78"]
     owned_paths:
