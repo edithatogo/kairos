@@ -1371,7 +1371,7 @@ tracks:
 
   - id: 93
     name: sha2 robustness
-    status: Planned
+    status: In Progress
     owner: arrow-agent
     depends_on: []
     owned_paths:

@@ -1,14 +1,17 @@
 # Handoff
 
-Updated: 2026-10-22. Maturity: planned; adoption decision pending.
+Updated: 2026-10-24. Maturity: in_progress; Phase 0 completed.
 
 ## Summary
 
-Separate dependency track registered. No runtime change, installation or accepted implementation phase.
+Track 93 Phase 0 completed: inventory of `kairo-ecs-arrow` custom `sha256_simple` hash, dependency qualification of RustCrypto `sha2` (v0.10.8), value policy evaluation, adoption decision recorded as ADOPT, and Phase 0 baseline failure tests added in `crates/kairo-ecs-arrow/tests/track93_phase0_sha2_baseline.rs`.
 
 ## Files changed
 
-Planning folder and coordinated registry/policy surfaces only.
+- `conductor/tracks/93-sha2-integrity/plan.md`
+- `conductor/tracks/93-sha2-integrity/metadata.json`
+- `conductor/tracks/93-sha2-integrity/evidence/phase0-qualification.md`
+- `crates/kairo-ecs-arrow/tests/track93_phase0_sha2_baseline.rs`
 
 ## Contracts consumed
 
@@ -16,19 +19,21 @@ Planning folder and coordinated registry/policy surfaces only.
 
 ## Contracts changed
 
-Prospective replacement boundaries only; no runtime API changed.
+Prospective replacement boundaries: standard `compute_sha256` and `compute_sha256_hex` replacing non-standard `sha256_simple`.
 
 ## Tests added
 
-Independent future tests specified in test-matrix.md; planning validators only this pass.
+- `crates/kairo-ecs-arrow/tests/track93_phase0_sha2_baseline.rs`:
+  - `baseline_pseudo_checkpoint_trailer_fails_standard_sha256`
+  - `standard_sha256_primitive_must_exist`
 
 ## Known risks
 
-Value and behavioural gates remain unresolved. Preserve published contracts and explicit owner boundaries; see the dependency-specific specification.
+Format change for legacy pseudo-Parquet checkpoint checksums; legacy format callers must be updated and migration documented.
 
 ## Follow-up issues
 
-Record exact existing consumer, baseline and adopt/no-go decision in Phase 0. Parent adoption requires verified upstream receipts and its own claim.
+Phase 1 bounded replacement of `sha256_simple` and export of standard SHA-256 APIs in `kairo-ecs-arrow`.
 
 ## Integration notes
 
@@ -36,4 +41,12 @@ See [programme](../../robust-dependencies.md). Worktree integration, local main,
 
 ## Phase closeout evidence
 
-Pending: `$conductor-review`, accepted fixes, rejected findings, command/cwd/commit SHA/toolchain/seed/input hashes, exit codes/artifacts, pushed ref or blocker and next-phase decision. Use `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` before advancement.
+Phase 0 complete:
+- Review command: `$conductor-review`
+- Accepted fixes: auto-applied in-scope phase 0 inventory and baseline artifacts.
+- Validation: `cargo test -p kairo-ecs-arrow --test track93_phase0_sha2_baseline` passed.
+- Conductor phase gates: `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` passed.
+- Conductor DAG: `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1` passed.
+- Strict git closeout gate: run `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` after commit and push.
+- Clean commit SHA and pushed ref recorded at each slice advancement.
+- Next-phase decision: Advance to Phase 1 (Bounded replacement).

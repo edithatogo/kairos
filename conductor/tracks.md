@@ -98,7 +98,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 90 | Argmin calibration optimiser qualification | Planned | `vv-uq-agent` | See `conductor/tracks/90-*/spec.md` |
 | 91 | rust-fmi adapter qualification | Planned | `fmi-agent` | See `conductor/tracks/91-*/spec.md` |
 | 92 | Sobol sequence qualification | Planned | `experiment-agent` | See `conductor/tracks/92-*/spec.md` |
-| 93 | sha2 robustness | Planned | `arrow-agent` | See `conductor/tracks/93-*/spec.md` |
+| 93 | sha2 robustness | In Progress | `arrow-agent` | See `conductor/tracks/93-*/spec.md` |
 | 94 | tempfile robustness | Planned | `arrow-agent` | See `conductor/tracks/94-*/spec.md` |
 | 95 | thiserror robustness | Planned | `contracts-agent` | See `conductor/tracks/95-*/spec.md` |
 | 96 | proptest robustness | Planned | `conformance-agent` | See `conductor/tracks/96-*/spec.md` |
@@ -210,7 +210,7 @@ The human sole maintainer explicitly approved Track49 production scheduling afte
 - [ ] **Track 92: Sobol sequence qualification** — Planned; evaluation; value gate pending. [Track](tracks/92-sobol-burley-robustness/index.md).
 
 ---
-- [ ] **Track 93: sha2 robustness** — foundation; [plan](tracks/93-sha2-integrity/index.md).
+- [~] **Track 93: sha2 robustness** — In Progress (foundation); [plan](tracks/93-sha2-integrity/index.md).
 
 ---
 - [ ] **Track 94: tempfile robustness** — foundation; [plan](tracks/94-tempfile-publication/index.md).
