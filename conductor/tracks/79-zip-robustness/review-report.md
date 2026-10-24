@@ -54,6 +54,10 @@ All modified paths remain within the track's declared ownership boundaries.
   - *Resolution:* Integrated `archive.has_duplicate_names()` check into `extract_zip_entries`.
 - **Finding 3:** Unsupported compression methods returned generic `ZipError::UnsupportedArchive`.
   - *Resolution:* Added `map_zip_error` to parse method code and map directly to `FmiError::UnsupportedArchiveCompression`.
+- **Finding 4 (Codex P2):** Destination archive located inside unpacked root was included in directory traversal before truncation, causing self-embedding.
+  - *Resolution:* Added destination archive exclusion in `collect_directory_entries` and prohibited output paths aliasing `modelDescription.xml`.
+- **Finding 5 (Codex P2):** Directory symlinks following ancestors could cause packaging recursion cycles.
+  - *Resolution:* Used `fs::symlink_metadata` to reject any symlinks during archive packaging, preventing cycles and symlink inclusion.
 
 ---
 
