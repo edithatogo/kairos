@@ -243,9 +243,17 @@ fn oracle_tonic_transport_wire_protocol_and_version_rejection() {
 
     rt.block_on(async {
         let endpoint_str = format!("http://127.0.0.1:{port}");
-        let mut client = SimulationTransportClient::connect(endpoint_str)
-            .await
-            .expect("connect client");
+        let mut client = None;
+        for _ in 0..20 {
+            match SimulationTransportClient::connect(endpoint_str.clone()).await {
+                Ok(c) => {
+                    client = Some(c);
+                    break;
+                }
+                Err(_) => tokio::time::sleep(std::time::Duration::from_millis(25)).await,
+            }
+        }
+        let mut client = client.expect("connect client after retries");
 
         // 1. Rejected: mismatched protocol_id
         let bad_proto = WireOptimisticEnvelope {

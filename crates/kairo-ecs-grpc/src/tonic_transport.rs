@@ -264,8 +264,8 @@ impl TonicTransport {
     ) -> Result<Self, std::io::Error> {
         // Pre-bind a standard TCP listener to confirm port availability and obtain assigned ephemeral port
         let std_listener = std::net::TcpListener::bind(bind_addr)?;
+        std_listener.set_nonblocking(true)?;
         let bound_addr = std_listener.local_addr()?;
-        drop(std_listener);
 
         let mut peer_map = HashMap::new();
         let mut inboxes_init = BTreeMap::new();
@@ -323,9 +323,17 @@ impl TonicTransport {
                 );
 
             rt.block_on(async move {
+                let listener = match tokio::net::TcpListener::from_std(std_listener) {
+                    Ok(l) => l,
+                    Err(e) => {
+                        let _ = init_tx.send(Err(e));
+                        return;
+                    }
+                };
+                let incoming = tokio_stream::wrappers::TcpListenerStream::new(listener);
                 let _ = init_tx.send(Ok(()));
                 let _ = server
-                    .serve_with_shutdown(bound_addr, async move {
+                    .serve_with_incoming_shutdown(incoming, async move {
                         let _ = shutdown_rx.changed().await;
                     })
                     .await;

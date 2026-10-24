@@ -1500,16 +1500,22 @@ entries:
     next_phase_decision: "Track 84 evaluation complete with explicit REJECT (NO-GO) outcome; native kairo-ecs-state retained; advance to Track 85."
 
   - track_id: "85"
-    phase: "0"
+    phase: "2"
     state: pending
     review_command: "$conductor-review"
-    review_result: "Planning only; value and consumer gates unresolved"
-    fixes_applied: false
-    validation_commands: []
-    git_status: "planning worktree"
+    review_result: "Clarabel 0.11.1 qualified and adopted in crates/kairo-ecs-game-theory: implemented ClarabelConvexSolver supporting arbitrary M x N two-player zero-sum matrix games (extracting optimal mixed strategies and game value via LP duality) and two-player correlated equilibria maximizing social welfare; 6 independent behavioral and negative oracles pass."
+    fixes_applied: true
+    validation_commands:
+      - "cargo test -p kairo-ecs-game-theory"
+      - "cargo clippy -p kairo-ecs-game-theory --all-targets -- -D warnings"
+      - "cargo fmt --check"
+      - "cargo deny check advisories sources licenses bans"
+      - "cargo audit"
+      - "pwsh -File scripts/validate_conductor_phase_gates.ps1 -TrackDir conductor/tracks/85-clarabel-robustness"
+    git_status: "clean"
     commit_sha: ""
-    pushed_ref: ""
-    next_phase_decision: "Verify prerequisites and value; conditional adoption is not automatically authorized"
+    pushed_ref: "feat/track-85-clarabel-convex-solver"
+    next_phase_decision: "Track 85 implementation complete; verify CI on PR and advance upon merge."
 
   - track_id: "86"
     phase: "2"

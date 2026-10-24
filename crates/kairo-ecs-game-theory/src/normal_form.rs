@@ -459,6 +459,9 @@ pub enum NormalFormError {
         strategy: usize,
         strategy_count: usize,
     },
+    EmptyPayoffMatrix,
+    DegeneratePayoffs(String),
+    ConvexSolverError(String),
 }
 
 impl Display for NormalFormError {
@@ -510,6 +513,9 @@ impl Display for NormalFormError {
                 formatter,
                 "opponent player {opponent_player} strategy {strategy} is outside {strategy_count} strategies"
             ),
+            Self::EmptyPayoffMatrix => formatter.write_str("payoff matrix must not be empty"),
+            Self::DegeneratePayoffs(msg) => write!(formatter, "degenerate payoffs: {msg}"),
+            Self::ConvexSolverError(msg) => write!(formatter, "convex conic solver error: {msg}"),
         }
     }
 }
@@ -660,6 +666,509 @@ impl ReplicatorDynamics {
             curr = Self::step_continuous_rk4(&curr, &fitness, dt);
         }
         traj
+    }
+}
+
+use clarabel::solver::IPSolver;
+pub use clarabel::solver::SolverStatus;
+
+/// Result of a two-player zero-sum matrix game solved via Clarabel conic interior-point optimization.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ZeroSumMinimaxResult {
+    /// The value of the game to Player 1 (Player 2's value is -value).
+    pub value: f64,
+    /// Player 1's optimal mixed strategy profile over their m actions (sum = 1.0).
+    pub p1_strategy: Vec<f64>,
+    /// Player 2's optimal mixed strategy profile over their n actions (from LP dual variables; sum = 1.0).
+    pub p2_strategy: Vec<f64>,
+    /// Primal residual norm reported by Clarabel solver.
+    pub primal_residual: f64,
+    /// Dual residual norm reported by Clarabel solver.
+    pub dual_residual: f64,
+    /// Detailed solver status.
+    pub status: SolverStatus,
+}
+
+/// Result of a two-player normal-form correlated equilibrium computed via Clarabel linear programming.
+#[derive(Debug, Clone, PartialEq)]
+pub struct CorrelatedEquilibriumResult {
+    /// Joint probability distribution `p[i][j]` over pure strategy profiles (sum = 1.0).
+    pub joint_probabilities: Vec<Vec<f64>>,
+    /// Expected payoff to Player 1.
+    pub expected_p1_payoff: f64,
+    /// Expected payoff to Player 2.
+    pub expected_p2_payoff: f64,
+    /// Expected total social welfare (expected_p1_payoff + expected_p2_payoff).
+    pub social_welfare: f64,
+    /// Maximum incentive constraint violation across both players (should be <= tol).
+    pub max_incentive_violation: f64,
+    /// Detailed solver status.
+    pub status: SolverStatus,
+}
+
+/// General-purpose convex conic / LP interior-point game-theoretic solver backed by Clarabel.
+pub struct ClarabelConvexSolver;
+
+impl ClarabelConvexSolver {
+    /// Solves an arbitrary M x N zero-sum matrix game via linear programming minimax duality.
+    ///
+    /// Player 1 chooses strategy i in 0..M to maximize their expected payoff.
+    /// Player 2 chooses strategy j in 0..N, with payoff `-payoff[i][j]`.
+    /// Returns Player 1's strategy, Player 2's strategy (from dual variables), and the game value.
+    pub fn solve_zero_sum_minimax(
+        payoffs: &[Vec<f64>],
+    ) -> Result<ZeroSumMinimaxResult, NormalFormError> {
+        let m = payoffs.len();
+        if m == 0 {
+            return Err(NormalFormError::EmptyPayoffMatrix);
+        }
+        let n = payoffs[0].len();
+        if n == 0 {
+            return Err(NormalFormError::EmptyPayoffMatrix);
+        }
+        for row in payoffs {
+            if row.len() != n {
+                return Err(NormalFormError::DegeneratePayoffs(
+                    "inconsistent row dimensions in payoff matrix".into(),
+                ));
+            }
+            for &val in row {
+                if !val.is_finite() {
+                    return Err(NormalFormError::NonFiniteUtility);
+                }
+            }
+        }
+
+        // Trivial 1x1 case
+        if m == 1 && n == 1 {
+            return Ok(ZeroSumMinimaxResult {
+                value: payoffs[0][0],
+                p1_strategy: vec![1.0],
+                p2_strategy: vec![1.0],
+                primal_residual: 0.0,
+                dual_residual: 0.0,
+                status: SolverStatus::Solved,
+            });
+        }
+
+        // Standard Conic Form for Minimax:
+        // Variables z = [x_0, ..., x_{m-1}, v]^T in R^{m+1}
+        // Objective: minimize -v (maximize v)
+        let num_vars = m + 1;
+        let p = clarabel::algebra::CscMatrix::spalloc((num_vars, num_vars), 0);
+        let mut q = vec![0.0; num_vars];
+        q[m] = -1.0;
+
+        // Constraints:
+        // Row 0: sum_i x_i = 1 (ZeroConeT(1))
+        // Rows 1..1+n: for j in 0..n: v - sum_i x_i A_ij <= 0 (NonnegativeConeT(n))
+        // Rows 1+n..1+n+m: for i in 0..m: -x_i <= 0 (NonnegativeConeT(m))
+        // Total rows = 1 + n + m
+        let total_rows = 1 + n + m;
+        let mut colptr = vec![0];
+        let mut rowval = Vec::new();
+        let mut nzval = Vec::new();
+
+        // Columns for x_0 .. x_{m-1}
+        for (i, row) in payoffs.iter().enumerate().take(m) {
+            // Row 0
+            rowval.push(0);
+            nzval.push(1.0);
+            // Rows 1 + j
+            for (j, &val) in row.iter().enumerate().take(n) {
+                rowval.push(1 + j);
+                nzval.push(-val);
+            }
+            // Row 1 + n + i
+            rowval.push(1 + n + i);
+            nzval.push(-1.0);
+            colptr.push(rowval.len());
+        }
+
+        // Column for v (index m)
+        for j in 0..n {
+            rowval.push(1 + j);
+            nzval.push(1.0);
+        }
+        colptr.push(rowval.len());
+
+        let a = clarabel::algebra::CscMatrix::new(total_rows, num_vars, colptr, rowval, nzval);
+        let mut b = vec![0.0; total_rows];
+        b[0] = 1.0;
+
+        let cones = [
+            clarabel::solver::SupportedConeT::ZeroConeT(1),
+            clarabel::solver::SupportedConeT::NonnegativeConeT(n + m),
+        ];
+
+        let settings = clarabel::solver::DefaultSettings::<f64> {
+            verbose: false,
+            ..Default::default()
+        };
+
+        let mut solver =
+            clarabel::solver::DefaultSolver::<f64>::new(&p, &q, &a, &b, &cones, settings)
+                .map_err(|e| NormalFormError::ConvexSolverError(format!("{e:?}")))?;
+        solver.solve();
+
+        if solver.solution.status != SolverStatus::Solved {
+            return Err(NormalFormError::ConvexSolverError(format!(
+                "Clarabel solver status: {:?}",
+                solver.solution.status
+            )));
+        }
+
+        let z = &solver.solution.x;
+        let mut p1_strategy = vec![0.0; m];
+        for i in 0..m {
+            p1_strategy[i] = z[i].max(0.0);
+        }
+        let p1_sum: f64 = p1_strategy.iter().sum();
+        if p1_sum > 1e-12 {
+            for x in &mut p1_strategy {
+                *x /= p1_sum;
+            }
+        }
+
+        let value = z[m];
+
+        // Dual variables corresponding to payoff inequality rows 1..1+n give Player 2's optimal strategy
+        let mut p2_strategy = vec![0.0; n];
+        for (j, item) in p2_strategy.iter_mut().enumerate().take(n) {
+            *item = solver.solution.z[1 + j].max(0.0);
+        }
+        let p2_sum: f64 = p2_strategy.iter().sum();
+        if p2_sum > 1e-12 {
+            for y in &mut p2_strategy {
+                *y /= p2_sum;
+            }
+        }
+
+        Ok(ZeroSumMinimaxResult {
+            value,
+            p1_strategy,
+            p2_strategy,
+            primal_residual: solver.solution.r_prim,
+            dual_residual: solver.solution.r_dual,
+            status: solver.solution.status,
+        })
+    }
+
+    /// Solves for a Correlated Equilibrium maximizing social welfare in a 2-player normal-form game.
+    pub fn solve_correlated_equilibrium_social_welfare(
+        u1: &[Vec<f64>],
+        u2: &[Vec<f64>],
+    ) -> Result<CorrelatedEquilibriumResult, NormalFormError> {
+        let m = u1.len();
+        if m == 0 || u2.is_empty() {
+            return Err(NormalFormError::EmptyPayoffMatrix);
+        }
+        if u2.len() != m {
+            return Err(NormalFormError::DegeneratePayoffs(
+                "player 1 and player 2 row count mismatch".into(),
+            ));
+        }
+        let n = u1[0].len();
+        if n == 0 || u2[0].is_empty() {
+            return Err(NormalFormError::EmptyPayoffMatrix);
+        }
+        for i in 0..m {
+            if u1[i].len() != n || u2[i].len() != n {
+                return Err(NormalFormError::DegeneratePayoffs(
+                    "payoff matrix dimensions mismatch".into(),
+                ));
+            }
+            for j in 0..n {
+                if !u1[i][j].is_finite() || !u2[i][j].is_finite() {
+                    return Err(NormalFormError::NonFiniteUtility);
+                }
+            }
+        }
+
+        // Trivial 1x1 case
+        if m == 1 && n == 1 {
+            return Ok(CorrelatedEquilibriumResult {
+                joint_probabilities: vec![vec![1.0]],
+                expected_p1_payoff: u1[0][0],
+                expected_p2_payoff: u2[0][0],
+                social_welfare: u1[0][0] + u2[0][0],
+                max_incentive_violation: 0.0,
+                status: SolverStatus::Solved,
+            });
+        }
+
+        let num_vars = m * n;
+        let mut q = vec![0.0; num_vars];
+        for i in 0..m {
+            for j in 0..n {
+                let k = i * n + j;
+                q[k] = -(u1[i][j] + u2[i][j]);
+            }
+        }
+        let p = clarabel::algebra::CscMatrix::spalloc((num_vars, num_vars), 0);
+
+        let p1_ineq_count = m * (m - 1);
+        let p2_ineq_count = n * (n - 1);
+        let ineq_rows = p1_ineq_count + p2_ineq_count + num_vars;
+        let total_rows = 1 + ineq_rows;
+
+        let mut colptr = vec![0];
+        let mut rowval = Vec::new();
+        let mut nzval = Vec::new();
+
+        for col in 0..num_vars {
+            let i = col / n;
+            let j = col % n;
+
+            // Row 0 (equality: sum p_k = 1.0)
+            rowval.push(0);
+            nzval.push(1.0);
+
+            // P1 incentive rows: row indices 1 .. 1 + p1_ineq_count
+            let mut r_p1 = 1;
+            for i_curr in 0..m {
+                for i_alt in 0..m {
+                    if i_curr == i_alt {
+                        continue;
+                    }
+                    if i == i_curr {
+                        rowval.push(r_p1);
+                        nzval.push(u1[i_alt][j] - u1[i_curr][j]);
+                    }
+                    r_p1 += 1;
+                }
+            }
+
+            // P2 incentive rows: row indices 1 + p1_ineq_count .. 1 + p1_ineq_count + p2_ineq_count
+            let mut r_p2 = 1 + p1_ineq_count;
+            for j_curr in 0..n {
+                for j_alt in 0..n {
+                    if j_curr == j_alt {
+                        continue;
+                    }
+                    if j == j_curr {
+                        rowval.push(r_p2);
+                        nzval.push(u2[i][j_alt] - u2[i][j_curr]);
+                    }
+                    r_p2 += 1;
+                }
+            }
+
+            // Non-negativity row: 1 + p1_ineq_count + p2_ineq_count + col
+            rowval.push(1 + p1_ineq_count + p2_ineq_count + col);
+            nzval.push(-1.0);
+
+            colptr.push(rowval.len());
+        }
+
+        let a = clarabel::algebra::CscMatrix::new(total_rows, num_vars, colptr, rowval, nzval);
+        let mut b = vec![0.0; total_rows];
+        b[0] = 1.0;
+
+        let cones = [
+            clarabel::solver::SupportedConeT::ZeroConeT(1),
+            clarabel::solver::SupportedConeT::NonnegativeConeT(ineq_rows),
+        ];
+
+        let settings = clarabel::solver::DefaultSettings::<f64> {
+            verbose: false,
+            ..Default::default()
+        };
+
+        let mut solver =
+            clarabel::solver::DefaultSolver::<f64>::new(&p, &q, &a, &b, &cones, settings)
+                .map_err(|e| NormalFormError::ConvexSolverError(format!("{e:?}")))?;
+        solver.solve();
+
+        if solver.solution.status != SolverStatus::Solved {
+            return Err(NormalFormError::ConvexSolverError(format!(
+                "Clarabel solver status: {:?}",
+                solver.solution.status
+            )));
+        }
+
+        let sol = &solver.solution.x;
+        let mut joint_probabilities = vec![vec![0.0; n]; m];
+        let mut expected_p1_payoff = 0.0;
+        let mut expected_p2_payoff = 0.0;
+        let mut total_prob = 0.0;
+
+        for i in 0..m {
+            for j in 0..n {
+                let prob = sol[i * n + j].max(0.0);
+                joint_probabilities[i][j] = prob;
+                total_prob += prob;
+            }
+        }
+        if total_prob > 1e-12 {
+            for i in 0..m {
+                for j in 0..n {
+                    joint_probabilities[i][j] /= total_prob;
+                    expected_p1_payoff += joint_probabilities[i][j] * u1[i][j];
+                    expected_p2_payoff += joint_probabilities[i][j] * u2[i][j];
+                }
+            }
+        }
+
+        let max_incentive_violation =
+            Self::verify_correlated_equilibrium_incentives(u1, u2, &joint_probabilities);
+
+        Ok(CorrelatedEquilibriumResult {
+            joint_probabilities,
+            expected_p1_payoff,
+            expected_p2_payoff,
+            social_welfare: expected_p1_payoff + expected_p2_payoff,
+            max_incentive_violation,
+            status: solver.solution.status,
+        })
+    }
+
+    /// Computes the maximum obedience incentive constraint violation across both players for a joint distribution.
+    /// Returns 0.0 if all incentive constraints are satisfied.
+    /// If inputs are malformed, non-finite, negative, or dimensions mismatch, returns `f64::INFINITY`.
+    pub fn verify_correlated_equilibrium_incentives(
+        u1: &[Vec<f64>],
+        u2: &[Vec<f64>],
+        joint_prob: &[Vec<f64>],
+    ) -> f64 {
+        if u1.is_empty() || u1[0].is_empty() {
+            return f64::INFINITY;
+        }
+        let m = u1.len();
+        let n = u1[0].len();
+        if u2.len() != m || joint_prob.len() != m {
+            return f64::INFINITY;
+        }
+        for i in 0..m {
+            if u1[i].len() != n || u2[i].len() != n || joint_prob[i].len() != n {
+                return f64::INFINITY;
+            }
+            for j in 0..n {
+                if !u1[i][j].is_finite()
+                    || !u2[i][j].is_finite()
+                    || !joint_prob[i][j].is_finite()
+                    || joint_prob[i][j] < 0.0
+                {
+                    return f64::INFINITY;
+                }
+            }
+        }
+
+        let mut max_violation = 0.0f64;
+
+        // Player 1 incentive check
+        for i_curr in 0..m {
+            for i_alt in 0..m {
+                if i_curr == i_alt {
+                    continue;
+                }
+                let mut deviation_gain = 0.0;
+                for j in 0..n {
+                    deviation_gain += joint_prob[i_curr][j] * (u1[i_alt][j] - u1[i_curr][j]);
+                }
+                if !deviation_gain.is_finite() {
+                    return f64::INFINITY;
+                }
+                if deviation_gain > max_violation {
+                    max_violation = deviation_gain;
+                }
+            }
+        }
+
+        // Player 2 incentive check
+        for j_curr in 0..n {
+            for j_alt in 0..n {
+                if j_curr == j_alt {
+                    continue;
+                }
+                let mut deviation_gain = 0.0;
+                for i in 0..m {
+                    deviation_gain += joint_prob[i][j_curr] * (u2[i][j_alt] - u2[i][j_curr]);
+                }
+                if !deviation_gain.is_finite() {
+                    return f64::INFINITY;
+                }
+                if deviation_gain > max_violation {
+                    max_violation = deviation_gain;
+                }
+            }
+        }
+
+        max_violation
+    }
+
+    /// Verifies zero-sum minimax primal and dual residuals and equilibrium inequalities.
+    pub fn verify_minimax_residuals(
+        payoffs: &[Vec<f64>],
+        result: &ZeroSumMinimaxResult,
+        tol: f64,
+    ) -> bool {
+        if !tol.is_finite() || tol < 0.0 || !result.value.is_finite() {
+            return false;
+        }
+        if payoffs.is_empty() || payoffs[0].is_empty() {
+            return false;
+        }
+        let m = payoffs.len();
+        let n = payoffs[0].len();
+        if payoffs.iter().any(|row| row.len() != n) {
+            return false;
+        }
+
+        if result.p1_strategy.len() != m || result.p2_strategy.len() != n {
+            return false;
+        }
+
+        for &x in &result.p1_strategy {
+            if !x.is_finite() || x < -tol {
+                return false;
+            }
+        }
+        for &y in &result.p2_strategy {
+            if !y.is_finite() || y < -tol {
+                return false;
+            }
+        }
+        for row in payoffs {
+            for &val in row {
+                if !val.is_finite() {
+                    return false;
+                }
+            }
+        }
+
+        let p1_sum: f64 = result.p1_strategy.iter().sum();
+        let p2_sum: f64 = result.p2_strategy.iter().sum();
+        if !p1_sum.is_finite() || !p2_sum.is_finite() {
+            return false;
+        }
+        if (p1_sum - 1.0).abs() > tol || (p2_sum - 1.0).abs() > tol {
+            return false;
+        }
+
+        // Against any pure action j of Player 2, Player 1's expected payoff >= value - tol
+        for j in 0..n {
+            let mut expected = 0.0;
+            for (i, row) in payoffs.iter().enumerate().take(m) {
+                expected += result.p1_strategy[i] * row[j];
+            }
+            if !expected.is_finite() || expected < result.value - tol {
+                return false;
+            }
+        }
+
+        // Against any pure action i of Player 1, Player 2 holds Player 1's payoff <= value + tol
+        for row in payoffs.iter().take(m) {
+            let mut expected = 0.0;
+            for (j, &val) in row.iter().enumerate().take(n) {
+                expected += val * result.p2_strategy[j];
+            }
+            if !expected.is_finite() || expected > result.value + tol {
+                return false;
+            }
+        }
+
+        true
     }
 }
 
