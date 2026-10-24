@@ -1388,16 +1388,24 @@ entries:
     next_phase_decision: "Track 78 is Done; advance to Track 73."
 
   - track_id: "79"
-    phase: "0"
-    state: pending
+    phase: "2"
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Planning only; value and consumer gates unresolved"
-    fixes_applied: false
-    validation_commands: []
-    git_status: "planning worktree"
-    commit_sha: ""
-    pushed_ref: ""
-    next_phase_decision: "Verify prerequisites and value; conditional adoption is not automatically authorized"
+    review_result: "Phase 2 acceptance complete: adopted zip 9.1.0 (deflate-flate2) and flate2 1.1.10 (rust_backend pure-Rust miniz_oxide); replaced custom stored ZIP extraction with robust ZipArchive with traversal protection, symlink rejection, budget caps (10,000 files, 500 MB), duplicate rejection, and atomic cleanup; implemented deterministic package_fmu_archive with Deflate; 11 oracle tests and 2 unit tests passing (42 total in crate); 0 cargo audit vulnerabilities and 0 cargo deny errors."
+    fixes_applied: true
+    validation_commands:
+      - "cargo test -p kairo-ecs-fmi --all-features"
+      - "cargo clippy -p kairo-ecs-fmi --all-targets --all-features -- -D warnings"
+      - "cargo fmt --all --check"
+      - "cargo deny check advisories sources licenses bans"
+      - "cargo audit"
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
+    git_status: "clean"
+    commit_sha: "d8bdbe49c421d06025bf0905878c4525ced898aa"
+    pushed_ref: "origin/feat/track-79-zip-fmu-archive"
+    next_phase_decision: "Track 79 is Done; advance to Track 80."
 
   - track_id: "80"
     phase: "0"
@@ -1563,8 +1571,8 @@ entries:
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
       - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
     git_status: "clean"
-    commit_sha: "25f07a6a76726b58f30d921bb5a6edd06709987c"
-    pushed_ref: "origin/feat/track-91-rust-fmi-qualification"
+    commit_sha: "a3f40724ee6be3b2e186fbba15222893538476fd"
+    pushed_ref: "origin/main"
     next_phase_decision: "Track 91 is Done (Rejected); advance to Track 79."
 
   - track_id: "92"

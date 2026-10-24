@@ -1,10 +1,15 @@
+use std::collections::HashSet;
 use std::fs;
+use std::io::Read;
 use std::path::{Component, Path, PathBuf};
 
 use crate::{
     error::{io_error, validation_error},
     FmiError, FmiResult,
 };
+
+pub const MAX_ARCHIVE_FILES: usize = 10_000;
+pub const MAX_EXPANDED_BYTES: u64 = 500 * 1024 * 1024; // 500 MB
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct FmuLayout {
@@ -226,9 +231,37 @@ fn shared_library_extension() -> &'static str {
     }
 }
 
-fn extract_stored_zip_entries(path: &Path, destination: &Path) -> FmiResult<()> {
-    let bytes =
-        fs::read(path).map_err(|error| io_error("read FMU archive", path.to_path_buf(), error))?;
+fn map_zip_error(path: &Path, err: zip::result::ZipError) -> FmiError {
+    match err {
+        zip::result::ZipError::CompressionMethodNotSupported(method) => {
+            FmiError::UnsupportedArchiveCompression {
+                path: path.to_path_buf(),
+                method,
+            }
+        }
+        zip::result::ZipError::UnsupportedArchive(msg) => {
+            if let Some(rest) = msg.strip_prefix("compression method not supported: ") {
+                if let Ok(method) = rest.trim().parse::<u16>() {
+                    return FmiError::UnsupportedArchiveCompression {
+                        path: path.to_path_buf(),
+                        method,
+                    };
+                }
+            }
+            validation_error("FMU archive", err.to_string())
+        }
+        other => validation_error("FMU archive", other.to_string()),
+    }
+}
+
+pub fn extract_zip_entries(path: &Path, destination: &Path) -> FmiResult<()> {
+    if !path.is_file() {
+        return Err(validation_error(
+            "FMU archive",
+            format!("archive path is not a file: {}", path.display()),
+        ));
+    }
+
     let mut directory = fs::DirBuilder::new();
     #[cfg(unix)]
     {
@@ -239,129 +272,166 @@ fn extract_stored_zip_entries(path: &Path, destination: &Path) -> FmiResult<()> 
         .create(destination)
         .map_err(|error| io_error("create FMU extraction directory", destination.into(), error))?;
 
-    let mut offset = 0usize;
-    let mut extracted_entries = 0usize;
-    while offset < bytes.len() {
-        let signature = read_u32(&bytes, offset).ok_or_else(|| {
-            validation_error(
-                "FMU archive",
-                format!("truncated header in {}", path.display()),
-            )
-        })?;
-        if signature == 0x0201_4b50 || signature == 0x0605_4b50 {
-            break;
-        }
-        if signature != 0x0403_4b50 {
+    let extraction_result = (|| -> FmiResult<()> {
+        let file = fs::File::open(path)
+            .map_err(|error| io_error("open FMU archive", path.to_path_buf(), error))?;
+        let mut archive = zip::ZipArchive::new(file).map_err(|error| map_zip_error(path, error))?;
+
+        if archive.is_empty() {
             return Err(validation_error(
                 "FMU archive",
-                format!("unexpected ZIP signature 0x{signature:08x} at byte {offset}"),
+                "archive contains no entries",
             ));
         }
 
-        let flags = read_u16(&bytes, offset + 6).ok_or_else(|| {
-            validation_error(
-                "FMU archive",
-                format!("truncated flags in {}", path.display()),
-            )
-        })?;
-        if flags & 0x0008 != 0 {
-            return Err(FmiError::UnsupportedArchiveExtraction {
-                path: path.to_path_buf(),
-            });
-        }
-
-        let method = read_u16(&bytes, offset + 8).ok_or_else(|| {
-            validation_error(
-                "FMU archive",
-                format!("truncated method in {}", path.display()),
-            )
-        })?;
-        if method != 0 {
-            return Err(FmiError::UnsupportedArchiveCompression {
-                path: path.to_path_buf(),
-                method,
-            });
-        }
-
-        let compressed_len = read_u32(&bytes, offset + 18).ok_or_else(|| {
-            validation_error(
-                "FMU archive",
-                format!("truncated size in {}", path.display()),
-            )
-        })? as usize;
-        let uncompressed_len = read_u32(&bytes, offset + 22).ok_or_else(|| {
-            validation_error(
-                "FMU archive",
-                format!("truncated size in {}", path.display()),
-            )
-        })? as usize;
-        if compressed_len != uncompressed_len {
+        if archive.has_duplicate_names() {
             return Err(validation_error(
                 "FMU archive",
-                "stored entry has mismatched compressed and uncompressed sizes",
+                "archive contains duplicate file names in central directory",
             ));
         }
 
-        let name_len = read_u16(&bytes, offset + 26).ok_or_else(|| {
-            validation_error(
-                "FMU archive",
-                format!("truncated name length in {}", path.display()),
-            )
-        })? as usize;
-        let extra_len = read_u16(&bytes, offset + 28).ok_or_else(|| {
-            validation_error(
-                "FMU archive",
-                format!("truncated extra length in {}", path.display()),
-            )
-        })? as usize;
-        let name_start = offset + 30;
-        let name_end = name_start
-            .checked_add(name_len)
-            .ok_or_else(|| validation_error("FMU archive", "archive entry name length overflow"))?;
-        let data_start = name_end
-            .checked_add(extra_len)
-            .ok_or_else(|| validation_error("FMU archive", "archive extra length overflow"))?;
-        let data_end = data_start
-            .checked_add(compressed_len)
-            .ok_or_else(|| validation_error("FMU archive", "archive entry size overflow"))?;
-        if data_end > bytes.len() {
+        if archive.len() > MAX_ARCHIVE_FILES {
             return Err(validation_error(
                 "FMU archive",
-                format!("truncated entry data in {}", path.display()),
+                format!(
+                    "archive entry count {} exceeds maximum allowed {}",
+                    archive.len(),
+                    MAX_ARCHIVE_FILES
+                ),
             ));
         }
 
-        let entry = std::str::from_utf8(&bytes[name_start..name_end])
-            .map_err(|error| validation_error("FMU archive", error.to_string()))?;
-        let relative_path = safe_archive_entry(path, entry)?;
-        let target = destination.join(relative_path);
-        if entry.ends_with('/') {
-            fs::create_dir_all(&target)
-                .map_err(|error| io_error("create FMU archive directory", target, error))?;
-        } else {
-            if let Some(parent) = target.parent() {
-                fs::create_dir_all(parent).map_err(|error| {
-                    io_error(
-                        "create FMU archive parent directory",
-                        parent.to_path_buf(),
-                        error,
-                    )
-                })?;
+        let mut seen_entries = HashSet::new();
+        let mut total_uncompressed_bytes: u64 = 0;
+        let mut extracted_file_count: usize = 0;
+
+        for i in 0..archive.len() {
+            let mut entry = archive
+                .by_index(i)
+                .map_err(|error| map_zip_error(path, error))?;
+
+            let method_code = match entry.compression() {
+                zip::CompressionMethod::Stored | zip::CompressionMethod::Deflated => None,
+                #[allow(deprecated)]
+                zip::CompressionMethod::Unsupported(code) => Some(code),
+                #[allow(deprecated)]
+                other => Some(other.to_u16()),
+            };
+            if let Some(method) = method_code {
+                return Err(FmiError::UnsupportedArchiveCompression {
+                    path: path.to_path_buf(),
+                    method,
+                });
             }
-            fs::write(&target, &bytes[data_start..data_end])
-                .map_err(|error| io_error("write FMU archive entry", target, error))?;
+
+            let raw_name = entry
+                .name()
+                .map_err(|error| validation_error("FMU archive", error.to_string()))?
+                .to_string();
+
+            if entry.is_symlink() {
+                return Err(FmiError::UnsafeArchiveEntry {
+                    path: path.to_path_buf(),
+                    entry: raw_name,
+                });
+            }
+            let safe_relative = match entry.enclosed_name() {
+                Some(name) => {
+                    let verified = safe_archive_entry(path, &raw_name)?;
+                    if verified != name {
+                        return Err(FmiError::UnsafeArchiveEntry {
+                            path: path.to_path_buf(),
+                            entry: raw_name,
+                        });
+                    }
+                    verified
+                }
+                None => {
+                    return Err(FmiError::UnsafeArchiveEntry {
+                        path: path.to_path_buf(),
+                        entry: raw_name,
+                    });
+                }
+            };
+
+            if !seen_entries.insert(safe_relative.clone()) {
+                return Err(validation_error(
+                    "FMU archive",
+                    format!("duplicate archive entry: {}", safe_relative.display()),
+                ));
+            }
+
+            let target = destination.join(&safe_relative);
+
+            if entry.is_dir() || raw_name.ends_with('/') {
+                fs::create_dir_all(&target)
+                    .map_err(|error| io_error("create FMU archive directory", target, error))?;
+            } else {
+                if total_uncompressed_bytes.saturating_add(entry.size()) > MAX_EXPANDED_BYTES {
+                    return Err(validation_error(
+                        "FMU archive",
+                        format!(
+                            "archive uncompressed size exceeds limit of {MAX_EXPANDED_BYTES} bytes"
+                        ),
+                    ));
+                }
+
+                if let Some(parent) = target.parent() {
+                    fs::create_dir_all(parent).map_err(|error| {
+                        io_error(
+                            "create FMU archive parent directory",
+                            parent.to_path_buf(),
+                            error,
+                        )
+                    })?;
+                }
+
+                let mut out_file = fs::File::create(&target).map_err(|error| {
+                    io_error("create FMU archive entry file", target.clone(), error)
+                })?;
+
+                let remaining_budget = MAX_EXPANDED_BYTES - total_uncompressed_bytes;
+                let mut limited_reader = (&mut entry).take(remaining_budget.saturating_add(1));
+                let copied =
+                    std::io::copy(&mut limited_reader, &mut out_file).map_err(|error| {
+                        io_error("extract FMU archive entry", target.clone(), error)
+                    })?;
+
+                if copied > remaining_budget {
+                    return Err(validation_error(
+                        "FMU archive",
+                        format!(
+                            "archive uncompressed stream exceeded limit of {MAX_EXPANDED_BYTES} bytes"
+                        ),
+                    ));
+                }
+
+                total_uncompressed_bytes += copied;
+                extracted_file_count += 1;
+            }
         }
-        extracted_entries += 1;
-        offset = data_end;
+
+        if extracted_file_count == 0 {
+            return Err(validation_error(
+                "FMU archive",
+                "archive contains no file entries",
+            ));
+        }
+
+        Ok(())
+    })();
+
+    if extraction_result.is_err() {
+        let _ = fs::remove_dir_all(destination);
     }
 
-    if extracted_entries == 0 {
-        return Err(validation_error(
-            "FMU archive",
-            "archive contains no local entries",
-        ));
-    }
-    Ok(())
+    extraction_result
+}
+
+#[doc(hidden)]
+pub fn extract_stored_zip_entries(path: &Path, destination: &Path) -> FmiResult<()> {
+    extract_zip_entries(path, destination)
 }
 
 fn safe_archive_entry(archive: &Path, entry: &str) -> FmiResult<PathBuf> {
@@ -394,16 +464,6 @@ fn safe_archive_entry(archive: &Path, entry: &str) -> FmiResult<PathBuf> {
         });
     }
     Ok(safe)
-}
-
-fn read_u16(bytes: &[u8], offset: usize) -> Option<u16> {
-    let slice = bytes.get(offset..offset.checked_add(2)?)?;
-    Some(u16::from_le_bytes([slice[0], slice[1]]))
-}
-
-fn read_u32(bytes: &[u8], offset: usize) -> Option<u32> {
-    let slice = bytes.get(offset..offset.checked_add(4)?)?;
-    Some(u32::from_le_bytes([slice[0], slice[1], slice[2], slice[3]]))
 }
 
 #[cfg(test)]
