@@ -4,22 +4,22 @@ All implementation tasks are pending. Write failing behavioural tests before pro
 
 ## Phase 0 — Entry and qualification
 
-- [ ] Task 0.1: Verify the entry receipts and ownership handoffs; reject missing/stale upstream or downstream evidence before any pin/dependency/runtime change.
-- [ ] Task 0.2: Inventory actual replace/retain candidates and freeze baseline contracts, fixtures, costs and supported targets; qualify exact pins/features, licences/advisories and compatibility.
-- [ ] Task 0.3: Inventory production samplers; specify replace/retain decisions, units/support and deliberate corrections; add independent statistical and hazard tests before replacement.
-- [ ] Task 0.4: Conductor — review and verify phase (workflow.md); apply accepted fixes, record blockers/receipts and explicit next-phase decision.
+- [x] Task 0.1: Verify the entry receipts and ownership handoffs; reject missing/stale upstream or downstream evidence before any pin/dependency/runtime change.
+- [x] Task 0.2: Inventory actual replace/retain candidates and freeze baseline contracts, fixtures, costs and supported targets; qualify exact pins/features, licences/advisories and compatibility.
+- [x] Task 0.3: Inventory production samplers; specify replace/retain decisions, units/support and deliberate corrections; add independent statistical and hazard tests before replacement.
+- [x] Task 0.4: Conductor — review and verify phase (workflow.md); apply accepted fixes, record blockers/receipts and explicit next-phase decision.
 
 ## Phase 1 — Replacement and consumers
 
-- [ ] Task 1.1: Adopt pinned rand_distr and applicable rand distributions; remove duplicated production samplers, retain domain hazard/calibration logic.
-- [ ] Task 1.2: Migrate checkpoint/provenance and consumers; establish new sampling baselines and document target-specific reproducibility limits.
-- [ ] Task 1.3: Conductor — review and verify phase (workflow.md); apply accepted fixes, record blockers/receipts and explicit next-phase decision.
+- [x] Task 1.1: Adopt pinned rand_distr and applicable rand distributions; remove duplicated production samplers, retain domain hazard/calibration logic.
+- [x] Task 1.2: Migrate checkpoint/provenance and consumers; establish new sampling baselines and document target-specific reproducibility limits.
+- [x] Task 1.3: Conductor — review and verify phase (workflow.md); apply accepted fixes, record blockers/receipts and explicit next-phase decision.
 
 ## Phase 2 — Acceptance and handoff
 
-- [ ] Task 2.1: Run every test-matrix oracle and applicable full native/browser lanes; resolve regressions and record raw evidence.
-- [ ] Task 2.2: Audit deleted/retained production code, update compatibility/user documentation and record rollback plus exact accepted commit/pin receipts.
-- [ ] Task 2.3: Conductor — review and verify phase (workflow.md); apply accepted fixes, record blockers/receipts and explicit next-phase decision.
+- [x] Task 2.1: Run every test-matrix oracle and applicable full native/browser lanes; resolve regressions and record raw evidence.
+- [x] Task 2.2: Audit deleted/retained production code, update compatibility/user documentation and record rollback plus exact accepted commit/pin receipts.
+- [x] Task 2.3: Conductor — review and verify phase (workflow.md); apply accepted fixes, record blockers/receipts and explicit next-phase decision.
 
 ## Phase closeout gate
 

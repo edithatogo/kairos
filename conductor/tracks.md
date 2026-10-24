@@ -77,7 +77,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 
 | 70 | Polars-Native Data Processing and Standard Interchange | In Progress | `arrow-agent + ffi-agent + conformance-agent` | See `conductor/tracks/70-*/spec.md` |
 | 71 | rand deterministic RNG adoption | Done | `rng-agent + conformance-agent` | See `conductor/tracks/71-*/spec.md` |
-| 72 | rand_distr statistical sampling adoption | Planned | `rng-agent + vv-uq-agent + des-api-agent` | See `conductor/tracks/72-*/spec.md` |
+| 72 | rand_distr statistical sampling adoption | Done | `rng-agent + vv-uq-agent + des-api-agent` | See `conductor/tracks/72-*/spec.md` |
 | 73 | petgraph spatial topology and routing adoption | Planned | `abm-api-agent + contracts-agent` | See `conductor/tracks/73-*/spec.md` |
 | 74 | Serde typed control contracts | Planned | `contracts-agent` | See `conductor/tracks/74-*/spec.md` |
 | 75 | serde_json metadata and control encoding | Planned | `contracts-agent` | See `conductor/tracks/75-*/spec.md` |
@@ -147,7 +147,7 @@ The human sole maintainer explicitly approved Track49 production scheduling afte
 - [x] **Track: rand deterministic RNG adoption** — Complete; Phase 0, 1, and 2 accepted. [Track](tracks/71-rand-deterministic-rng/index.md).
 
 ---
-- [ ] **Track: rand_distr statistical sampling adoption** — Planned; implementation not started. [Track](tracks/72-rand-distr-sampling/index.md).
+- [x] **Track: rand_distr statistical sampling adoption** — Complete; Phase 0, 1, and 2 accepted. [Track](tracks/72-rand-distr-sampling/index.md).
 
 ---
 - [ ] **Track: petgraph spatial topology and routing adoption** — Planned; implementation not started. [Track](tracks/73-petgraph-spatial-routing/index.md).

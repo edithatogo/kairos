@@ -1117,7 +1117,7 @@ tracks:
 
   - id: 72
     name: rand_distr statistical sampling adoption
-    status: Planned
+    status: Done
     owner: rng-agent + vv-uq-agent + des-api-agent
     depends_on: ["71", "69"]
     owned_paths:

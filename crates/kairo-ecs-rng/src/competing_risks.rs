@@ -230,18 +230,27 @@ pub struct RealizedEvent {
     pub is_censored: bool,
 }
 
-/// Draw a uniform (0, 1) float from a deterministic stream.
+/// Draw a uniform (0, 1) float from a deterministic stream using `rand_distr::Open01`.
 pub fn draw_uniform_open01(stream: &mut DeterministicStream) -> f64 {
-    // Generate a 53-bit fraction in (0, 1)
+    stream.sample(rand_distr::Open01)
+}
+
+/// Draw exponential standard threshold W = -ln(U) where U ~ Uniform(0, 1) using `rand_distr::Exp1`.
+pub fn draw_standard_threshold(stream: &mut DeterministicStream) -> f64 {
+    stream.sample(rand_distr::Exp1)
+}
+
+/// Legacy 53-bit mantissa shift draw for legacy trajectory reproduction (`legacy_inverse_transform`).
+pub fn draw_uniform_open01_legacy(stream: &mut DeterministicStream) -> f64 {
     let val = stream.next_u64();
     let mantissa = (val >> 11) + 1; // 1 to 2^53
     let u = (mantissa as f64) / ((1u64 << 53) as f64 + 1.0);
     u.clamp(1e-15, 1.0 - 1e-15)
 }
 
-/// Draw exponential standard threshold W = -ln(U) where U ~ Uniform(0, 1).
-pub fn draw_standard_threshold(stream: &mut DeterministicStream) -> f64 {
-    let u = draw_uniform_open01(stream);
+/// Legacy inverse-transform threshold draw for legacy trajectory reproduction (`legacy_inverse_transform`).
+pub fn draw_standard_threshold_legacy(stream: &mut DeterministicStream) -> f64 {
+    let u = draw_uniform_open01_legacy(stream);
     -u.ln()
 }
 
@@ -285,8 +294,13 @@ impl CompetingHazards {
         let mut candidate_events: Vec<(CauseId, u32, f64)> = Vec::new();
 
         for cause in &sorted_causes {
-            // Draw threshold W ~ Exp(1)
-            let w = draw_standard_threshold(stream);
+            // Draw threshold W ~ Exp(1) respecting stream distribution provenance
+            let w = if stream.distribution_provenance() == crate::RNG_DISTRIBUTION_PROVENANCE_LEGACY
+            {
+                draw_standard_threshold_legacy(stream)
+            } else {
+                draw_standard_threshold(stream)
+            };
             if let Some(dt) = cause.hazard.invert_cumulative_hazard(current_age, w) {
                 if dt >= 0.0 && !dt.is_infinite() {
                     candidate_events.push((cause.cause_id, cause.priority, dt));

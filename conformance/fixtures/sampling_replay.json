@@ -1,0 +1,10 @@
+{
+  "fixture": "sampling_replay",
+  "version": 1,
+  "distribution_provenance": "rand_distr_0.6",
+  "run_seed": 42,
+  "open01_draws": [0.3889650032409667, 0.34523491281257745, 0.19570550764272399, 0.32447265101132816],
+  "exp1_draws": [0.2655346383540581, 0.48560328390498547, 0.39302523428372804, 0.49885535536326203],
+  "uniform_u32_draws": [5, 19, 20, 26],
+  "requirement": "verified statistical distribution draws replay identically under rand_distr_0.6 provenance"
+}

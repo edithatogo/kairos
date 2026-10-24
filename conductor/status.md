@@ -1,5 +1,16 @@
 # KairoECS Conductor Status
 
+## Track 72: rand_distr Statistical Sampling Adoption Review & Archival - 24 October 2026
+
+Track 72 has successfully passed implementation, comprehensive testing, Principal Software Engineer code review, and quality validation across all quality gates, and is archived as `Done`:
+- Adopted `rand_distr = { version = "0.6", default-features = false, features = ["alloc"] }` in `crates/kairo-ecs-rng`.
+- Replaced hand-rolled `draw_uniform_open01` (53-bit mantissa shift) with library `rand_distr::Open01` and `draw_standard_threshold` with `rand_distr::Exp1`.
+- Re-exported `rand_distr` and `rand_distr::Distribution` in `crates/kairo-ecs-rng` and added `DeterministicStream::sample<T, D: Distribution<T>>(&mut self, distr: D) -> T`.
+- Preserved non-Markovian survival integration/inversion (`HazardRate::invert_cumulative_hazard`, `cumulative_hazard`, `hazard_at`), tie-breaking, and censoring semantics.
+- Verified independent analytical oracles and quantiles across `Uniform`, `Open01`, `Exp`, `Exp1`, `Normal`, `StandardNormal`, `Bernoulli`, `Binomial`, `Geometric`, and `Weibull`.
+- Verified mid-buffer checkpoint and restoration bit-for-bit reproducibility and throughput exceeding 500k samples/sec.
+- Verified zero vulnerabilities via `cargo audit` and dual MIT/Apache-2.0 license compliance via `cargo deny`. All 31 tests in `kairo-ecs-rng` and all workspace tests pass.
+
 ## Track 71: rand Deterministic RNG Adoption Review & Archival - 24 October 2026
 
 Track 71 has successfully passed implementation, comprehensive testing, Principal Software Engineer code review, and quality validation across all quality gates, and is archived as `Done`:
