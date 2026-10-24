@@ -68,7 +68,7 @@ All 52 tests in `kairo-ecs-fmi` passed. Pure-Rust compilation verified with zero
   - Command: `cargo test -p kairo-ecs-fmi --all-features`
   - CWD: `/Volumes/PortableSSD/github/kairos`
   - Toolchain: `rustc 1.99.1`
-  - Commit SHA: pending-commit
+  - Commit SHA: 4c2db7d927f1cb6416f3d8fdffc3553c805406d6
   - Exit code: `0`
 - pushed ref: origin/feat/track-80-quick-xml-fmu-metadata
 - next-phase decision: Track 80 is Done; advance to next track.

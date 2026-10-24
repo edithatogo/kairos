@@ -1423,7 +1423,7 @@ entries:
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
       - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
     git_status: "clean"
-    commit_sha: "pending"
+    commit_sha: "4c2db7d927f1cb6416f3d8fdffc3553c805406d6"
     pushed_ref: "origin/feat/track-80-quick-xml-fmu-metadata"
     next_phase_decision: "Track 80 is Done; advance to Track 81 (Prost distributed envelope encoding)."
 
