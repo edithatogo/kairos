@@ -1,5 +1,4 @@
 use kairo_ecs_arrow::*;
-use kairo_ecs_types::{EntityId, EventId};
 use std::fs;
 use std::thread;
 
@@ -145,6 +144,7 @@ fn test_checkpoint_writer_atomic_write_file_with_sha256() {
 mod polars_publication_tests {
     use super::*;
     use kairo_ecs_arrow::polars_interop::*;
+    use kairo_ecs_types::{EntityId, EventId};
 
     fn sample_record(seq: u64, ticks: u128) -> EventLogRecord {
         EventLogRecord {
