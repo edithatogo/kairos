@@ -72,7 +72,7 @@ All 38 tests in `kairo-ecs-grpc` passed (24 unit tests, 12 oracle tests, 2 multi
   - Command: `cargo test -p kairo-ecs-grpc --all-features`
   - CWD: `/Volumes/PortableSSD/github/kairos`
   - Toolchain: `rustc 1.99.1`
-  - Commit SHA: pending-branch-commit
+  - Commit SHA: cda797746bceb38f176d4e68d181f9035db7c7e6
   - Exit code: `0`
 - pushed ref: origin/feat/track-81-prost-envelope-encoding
 - next-phase decision: Track 81 is Done; advance to Track 82 (Tokio bounded transport runtime).
