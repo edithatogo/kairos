@@ -1310,11 +1310,13 @@ tracks:
 
   - id: 87
     name: geo geometry and route-position primitives
-    status: Planned
+    status: Completed
     owner: abm-api-agent
     depends_on: ["73"]
     owned_paths:
       - conductor/tracks/87-geo-robustness/
+      - crates/kairo-ecs-abm/src/geometry.rs
+      - crates/kairo-ecs-abm/tests/geo_geometry_oracles.rs
     required_gates:
       - phase-closeout-check
       - dependency-value-proof

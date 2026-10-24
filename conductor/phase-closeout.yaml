@@ -1289,8 +1289,8 @@ entries:
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
       - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
     git_status: "clean"
-    commit_sha: "91bf640af24a8abbaa0f3f4a37b06148b159a410"
-    pushed_ref: "origin/feat/track-73-petgraph-spatial-routing"
+    commit_sha: "c37c1c2f124a72e7645d311259899c77095dc3c4"
+    pushed_ref: "origin/main"
     next_phase_decision: "Track 73 is Done; advance to Track 87."
 
   - track_id: "74"
@@ -1484,16 +1484,25 @@ entries:
     next_phase_decision: "Verify prerequisites and value; conditional adoption is not automatically authorized"
 
   - track_id: "87"
-    phase: "0"
-    state: pending
+    phase: "2"
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Planning only; value and consumer gates unresolved"
-    fixes_applied: false
-    validation_commands: []
-    git_status: "planning worktree"
-    commit_sha: ""
-    pushed_ref: ""
-    next_phase_decision: "Verify prerequisites and value; conditional adoption is not automatically authorized"
+    review_result: "geo 0.33.1 qualified and adopted in kairo-ecs-abm: implemented WGS84 GeoCoordinate with explicit degree bounds checking, GIS Point (x=lon, y=lat) ordering, geodesic and haversine distances and bearings, LocalTangentPlaneProjection sub-millimeter forward and inverse unprojection roundtrips with antimeridian longitude wrapping, GeoRoute and ProjectedRoute continuous distance and normalized progress interpolation with zero-length segment resilience, endpoint clamping, and negative distance validation, integrated with SpatialTopology waypoints."
+    fixes_applied: true
+    validation_commands:
+      - "cargo test -p kairo-ecs-abm"
+      - "cargo test --workspace"
+      - "cargo clippy --workspace --all-targets --all-features -- -D warnings"
+      - "cargo fmt --all --check"
+      - "cargo deny check advisories sources licenses bans"
+      - "cargo audit"
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
+    git_status: "clean"
+    commit_sha: "2ba66af34986be85caa8636cf470b066ec823d1f"
+    pushed_ref: "origin/feat/track-87-geo-primitives"
+    next_phase_decision: "Track 87 is Done; advance to Track 86."
 
   - track_id: "88"
     phase: "0"

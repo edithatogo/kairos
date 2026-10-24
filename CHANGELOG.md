@@ -14,6 +14,8 @@ Format:
 
 ## Unreleased
 
+- `crates/kairo-ecs-abm` adopts `geo 0.33.1` spatial geometry and route-position primitives (Track 87), providing validated WGS84 `GeoCoordinate` (with finite degree bounds checking and GIS Point `x=lon, y=lat` conversion), Karney ellipsoidal geodesic and spherical Haversine distances and bearings, `LocalTangentPlaneProjection` sub-millimeter forward and inverse unprojection roundtrips, and `GeoRoute` / `ProjectedRoute` continuous distance and normalized progress interpolation with zero-length segment resilience, endpoint clamping, and negative distance validation.
+
 - `crates/kairo-ecs-abm` adopts `petgraph 0.7.1` spatial topology and routing (Track 73), providing deterministic Dijkstra shortest pathfinding with 3-level tie-breaking (cost -> hops -> edge ID), random insertion order invariance, multi-floor access filtering (clearance levels, step-free vertical transit), door state toggling, topology version cache invalidation, and DES event boundary preservation.
 
 - `crates/kairo-ecs-cli` adopts `rayon 1.12` bounded work-stealing thread pools (Track 78), replacing repeated `std::thread::scope` partition and join machinery in parameter sweeps, Sobol global sensitivity analysis, and ABC-SMC calibration while guaranteeing bit-for-bit replay determinism across worker thread counts.
