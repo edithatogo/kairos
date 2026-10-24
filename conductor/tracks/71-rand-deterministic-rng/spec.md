@@ -52,3 +52,7 @@ Apply [robustness-first policy](../../dependency-value-policy.md): identify actu
 ## Dependency sequencing refinement — 22 October 2026
 
 Track 95 thiserror acceptance additionally precedes this track; existing both-repository Polars and foundation gates remain. Track 96 property foundations already precede Polars; add RNG-specific invariants here without waiting for optional Track 99.
+
+## CareOps-Sim impact and opportunity review
+
+Closeout includes the [lightweight downstream review](../../dependency-value-policy.md#careops-sim-impact-and-opportunity-review). Kairos supplies its accepted immutable receipt; the CareOps-Sim coordinator and consumer owner record implications, worthwhile opportunities and one of the four outcomes in `conductor/dependency-handoffs.json`, keyed by `owner_track: 71-rand-deterministic-rng`. Reuse existing consumer tracks; no automatic direct dependency or duplicate implementation track. For already accepted phases this is downstream follow-through, not reopening or changing historical acceptance. Review remains pending until evidenced separately from implementation.

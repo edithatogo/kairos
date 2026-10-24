@@ -53,3 +53,7 @@ No publication or release authority. Public API/ABI/schema/checkpoint changes re
 https://github.com/zip-rs/zip2
 
 Before Phase 1, record the outcome of Track 91 scope assessment; an accepted whole FMI adapter replacement cancels redundant direct-adoption work. This is a choice gate, not a requirement to adopt rust-fmi.
+
+## CareOps-Sim impact and opportunity review
+
+Closeout includes the [lightweight downstream review](../../dependency-value-policy.md#careops-sim-impact-and-opportunity-review). Kairos supplies its accepted immutable receipt; the CareOps-Sim coordinator and consumer owner record implications, worthwhile opportunities and one of the four outcomes in `conductor/dependency-handoffs.json`, keyed by `owner_track: 79-zip-robustness`. Reuse existing consumer tracks; no automatic direct dependency or duplicate implementation track. For already accepted phases this is downstream follow-through, not reopening or changing historical acceptance. Review remains pending until evidenced separately from implementation.
