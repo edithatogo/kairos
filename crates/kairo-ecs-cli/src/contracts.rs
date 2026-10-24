@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
-use std::fmt::{Display, Formatter};
 use std::path::PathBuf;
+use thiserror::Error;
 
 pub const RUN_MANIFEST_SCHEMA_V1: &str = "kairoecs.run-manifest.v1";
 pub const RESUMABILITY_PLAN_SCHEMA_V1: &str = "kairoecs.resumability-plan.v1";
@@ -8,34 +8,20 @@ pub const CHECKPOINT_MANIFEST_SCHEMA_V1: &str = "kairoecs.checkpoint-manifest.v1
 pub const RESUME_REQUEST_SCHEMA_V1: &str = "kairoecs.resume-request.v1";
 pub const RUN_REQUEST_SCHEMA_V1: &str = "kairoecs.run-request.v1";
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Error)]
 pub enum ContractValidationError {
+    #[error("missing required contract field `{0}`")]
     MissingField(&'static str),
+    #[error("invalid schema version: expected `{expected}`, found `{found}`")]
     InvalidSchemaVersion {
         expected: &'static str,
         found: String,
     },
+    #[error("field `{0}` must be non-zero")]
     ZeroValue(&'static str),
+    #[error("field `{0}` cannot be empty")]
     EmptyField(&'static str),
 }
-
-impl Display for ContractValidationError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::MissingField(field) => write!(f, "missing required contract field `{field}`"),
-            Self::InvalidSchemaVersion { expected, found } => {
-                write!(
-                    f,
-                    "invalid schema version: expected `{expected}`, found `{found}`"
-                )
-            }
-            Self::ZeroValue(field) => write!(f, "field `{field}` must be non-zero"),
-            Self::EmptyField(field) => write!(f, "field `{field}` cannot be empty"),
-        }
-    }
-}
-
-impl std::error::Error for ContractValidationError {}
 
 /// Typed DTO for the execution run manifest.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -528,5 +514,32 @@ mod tests {
         let malformed = r#"{"schema_version": "kairoecs.run-manifest.v1", broken"#;
         let res: Result<RunManifestDto, _> = serde_json::from_str(malformed);
         assert!(res.is_err());
+    }
+
+    #[test]
+    fn thiserror_contract_validation_error_messages_and_traits() {
+        use std::error::Error;
+
+        let err1 = ContractValidationError::MissingField("base_seed");
+        assert_eq!(
+            err1.to_string(),
+            "missing required contract field `base_seed`"
+        );
+        assert!(err1.source().is_none());
+
+        let err2 = ContractValidationError::InvalidSchemaVersion {
+            expected: "v1",
+            found: "v2".to_string(),
+        };
+        assert_eq!(
+            err2.to_string(),
+            "invalid schema version: expected `v1`, found `v2`"
+        );
+
+        let err3 = ContractValidationError::ZeroValue("replications");
+        assert_eq!(err3.to_string(), "field `replications` must be non-zero");
+
+        let err4 = ContractValidationError::EmptyField("scenario_id");
+        assert_eq!(err4.to_string(), "field `scenario_id` cannot be empty");
     }
 }

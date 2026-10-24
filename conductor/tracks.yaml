@@ -1400,11 +1400,15 @@ tracks:
 
   - id: 95
     name: thiserror robustness
-    status: Planned
+    status: Done
     owner: contracts-agent
     depends_on: ["77"]
     owned_paths:
       - conductor/tracks/95-thiserror-contracts/
+      - crates/kairo-ecs-cli/src/contracts.rs
+      - crates/kairo-ecs-cli/src/scenario.rs
+      - crates/kairo-ecs-debug/src/contracts.rs
+      - crates/kairo-ecs-debug/src/lib.rs
     required_gates:
       - phase-closeout-check
       - dependency-value-proof
