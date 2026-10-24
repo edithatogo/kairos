@@ -88,7 +88,12 @@ Pin exact versions during implementation. Keep high-risk dependencies isolated b
 
 ## Language package plan
 
-### Python binding: Python 3.15.1
+### Python binding: qualified default Python 3.15.1
+
+Latest suitable qualified versions are preferred. Necessary compatibility profiles
+are permitted under [dependency policy](dependency-value-policy.md), with explicit
+consumer/ABI scope and actual qualification. This does not change the currently
+qualified manifests, guards, locks or binding support claims.
 
 Preferred package names, subject to availability:
 

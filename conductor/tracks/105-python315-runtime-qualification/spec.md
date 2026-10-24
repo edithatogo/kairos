@@ -1,17 +1,20 @@
 # Python 3.15 runtime migration and qualification
 
-Maturity: candidate; main-branch migration and operational handover are unaccepted.
+Maturity: Python 3.15.1 baseline integrated and handed over through PRs #297/#301/#302; provider quality follow-through remains open. This policy amendment does not advance the phase-closeout ledger.
 
 ## Objective
 
-Require every active repository Python use to execute Python 3.15 at the newest
-qualified patch, currently exactly 3.15.1. Verify the actual explicitly selected
-repo-local interpreter; a manifest, installed binary or successful unrelated
-job is insufficient. Preserve simulation contracts and private work.
+Prefer the newest suitable qualified dependencies and runtimes. Python 3.15.1
+remains the accepted default; the human clarification of 24 October 2026 permits
+necessary alternate versions for actual consumer/provider compatibility without
+additional permission. Record the concrete reason and scope, qualify the actual
+repo-local interpreter/dependencies, and preserve simulation contracts, working
+latest-version environments and private work. A declaration alone is not proof.
 
 ## Inputs
 
-The direct user runtime mandate, current remote main, authoritative owner claims,
+The direct user dependency-policy clarification (24 October 2026), accepted
+3.15.1 baseline, current remote main, authoritative owner claims,
 active process/environment inventory and the [retained qualification evidence](prior-qualification.md).
 The active conversation goal covers this repository migration and its paired
 repository; a track is not a substitute for that goal.
@@ -21,11 +24,13 @@ repository; a track is not a substitute for that goal.
 - Inventory development, build, tests, automation, CI matrices, containers,
   bootstrap, package/build backends, native binding tools and helper scripts.
   Classify historical evidence and synthetic version-negative fixtures separately.
-- Use exact repo-local Python 3.15.1 for active execution, including subprocesses.
-  Align requires-python constraints, lock resolver targets, dependency pins, CI,
-  environment files, generated templates and current setup/run instructions.
-  Remove older active default and compatibility runners. Bound development
-  discovery to the authorized 3.15 line; reject 3.16 before environment creation.
+- Use the explicitly selected repo-local profile, including subprocesses. The
+  current profile is 3.15.1 and its guards/locks/CI stay intact. A necessary
+  alternate needs a concrete consumer, reason, newest suitable target and
+  equivalent runtime/prefix, constraint/lock, package/native and hosted evidence.
+  Remove unexplained stale defaults; do not remove a justified qualified
+  compatibility lane simply because it differs from 3.15.1. Preview and
+  out-of-profile candidates still require deliberate qualification.
 - Qualify current supported dependency candidates in isolated environments;
   preserve trusted hashes/signature/identity checks and native binding contracts.
   Record genuine incompatibilities rather than silently retaining an unexplained
@@ -72,8 +77,9 @@ Environment replacement waits for terminal process evidence, never lease age.
 ## Acceptance criteria
 
 The [test matrix](test-matrix.md) must prove a complete active-use inventory,
-actual 3.15.1 execution, coherent constraints/locks, meaningful binding/package
-and helper tests, supported CI/container evidence, no older active runners,
+actual selected-profile execution (default 3.15.1), coherent constraints/locks,
+meaningful binding/package/helper tests, supported CI/container evidence and
+no unexplained stale runners,
 required PR checks, current-main readback and safe environment handover. Any
 unavailable required target remains a blocker. Domain results and provenance
 must be preserved. No completion from fixtures alone.
@@ -86,7 +92,7 @@ oracles below remain mandatory beyond static document checks.
 ## Release implications
 
 Changing the supported Python line may break older consumers; document the
-explicit user-selected compatibility change without maintaining an old runner.
+qualified compatibility change and any necessary retained compatibility lane.
 No library release or native/clinical approval is implied.
 
 Track 30 retains cross-language version-policy ownership; Tracks 06/13/15 and their current owners retain binding, CI and packaging contracts. Track 105 coordinates the complete Python migration beyond Track 30’s policy-only scope.

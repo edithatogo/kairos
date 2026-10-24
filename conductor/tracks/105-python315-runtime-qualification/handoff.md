@@ -1,5 +1,23 @@
 # Handoff
 
+## Current policy and successor evidence — 24 October 2026
+
+The human's revised dependency policy prefers latest suitable versions and permits
+necessary alternates with concrete reason/scope and actual qualification, without
+further permission. It supersedes earlier no-alternate instructions in the dated
+entries below; those entries remain historical evidence. The accepted default
+3.15.1 guards, locks, containers and environments remain intact. No alternate
+profile is adopted merely to apply this policy.
+
+PRs #297/#301/#302 integrated the accepted runtime and tooling repairs. Native
+inventory accepted/read back all 51 expected packages; this proves package presence,
+not graph edges/extras. Both certifi alerts #98/#99 are now natively fixed at
+2026-10-23T18:20:14Z (24 October in Brisbane), without dismissal or rerun.
+Provider quality follow-through and this policy update remain separately scoped;
+no Polars/FMI source, engine pin or other-owner environment is transferred.
+
+## Historical execution entries
+
 ## Current state
 
 Track registered to reconcile and finish existing candidate work; no phase accepted. The [dated qualification snapshot](prior-qualification.md) and [hash manifest](prior-evidence.json) preserve prior work. Kairos catalogue PR #295 is already merged independently. The active conversation goal is armed and covers full migration, not just this registration.

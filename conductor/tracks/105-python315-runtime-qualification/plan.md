@@ -1,5 +1,10 @@
 # Plan: Python 3.15.1 migration and qualification
 
+Policy amendment, 24 October 2026: prefer latest suitable qualified versions;
+necessary alternate profiles are permitted with reason/scope and actual evidence.
+Keep the accepted 3.15.1 profile intact. The older 3.15-only mandate in historical
+evidence is superseded; phase status still requires the existing closeout gates.
+
 Prior candidate work is preserved in [the evidence snapshot](prior-qualification.md). Unchecked tasks require reconciliation/acceptance; they are not instructions to repeat proven work blindly.
 
 ## Phase 0 — Baseline and retained evidence
@@ -11,8 +16,8 @@ Prior candidate work is preserved in [the evidence snapshot](prior-qualification
 
 ## Phase 1 — Complete and qualify the candidate
 
-- [ ] Task 1.1: Add or reuse meaningful failure tests for runtime mismatch, out-of-line discovery, environment preservation and native/package execution before changing affected paths.
-- [ ] Task 1.2: Complete supported Python 3.15.1 runtime, constraints, lock, CI, container, helper and current-instruction alignment in isolated environments; remove older active runners.
+- [ ] Task 1.1: Add or reuse meaningful failure tests for selected-profile mismatch, unqualified discovery, environment preservation and native/package execution before changing affected paths.
+- [ ] Task 1.2: Complete the selected runtime (accepted default 3.15.1), constraints, lock, CI, container, helper and current-instruction alignment in isolated environments; document/qualify necessary compatibility profiles and remove unexplained stale runners.
 - [ ] Task 1.3: Run the affected helper/package/binding/security and representative consumer checks with the explicit repo-local interpreter; retain raw outputs, hashes and concrete blockers.
 - [ ] Task 1.4: Conductor — review and verify phase (workflow.md); require actual runtime evidence and resolve in-scope findings.
 
@@ -25,7 +30,7 @@ Prior candidate work is preserved in [the evidence snapshot](prior-qualification
 ## Phase 3 — Safe environment handover and closeout
 
 - [ ] Task 3.1: Confirm old consumers have reached terminal states, hand over the qualified repo-local interpreter safely and verify its actual version in consuming commands.
-- [ ] Task 3.2: Re-audit all active entry points and older defaults, reconcile remaining external/platform blockers, retain rollback/history and update evidence at the accepted main revision.
+- [ ] Task 3.2: Re-audit all active entry points and unexplained stale defaults, reconcile remaining external/platform blockers, retain rollback/history and update evidence at the accepted main revision.
 - [ ] Task 3.3: Conductor — review and verify phase (workflow.md); complete only when every requirement and handover has evidence.
 
 ## Phase closeout gate

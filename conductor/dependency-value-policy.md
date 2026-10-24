@@ -2,6 +2,27 @@
 
 Approved planning direction: 22 October 2026. Primary goal is robustness and reduced maintained code in existing systems. A dependency is not a feature or a success criterion by itself. Registration does not install anything, accept runtime behaviour or authorise conditional adoption.
 
+## Version selection — user clarification, 24 October 2026
+
+Prefer the latest suitable qualified releases, including Python 3.15.1 as the
+current repository default. A necessary alternate runtime or dependency version
+is permitted for application, tooling, CI/helper or provider compatibility;
+it does not require additional user permission. This supersedes the earlier
+mandatory Python 3.15-only/no-alternate rule in current instructions and plans.
+
+Record the exact consumer/profile, compatibility limitation, newest suitable
+version selected, constraints/hash locks, actual version/prefix and meaningful
+execution/security evidence. An installed binary, provider declaration or metadata
+edit is not qualification. Keep profile-specific contracts explicit; do not lower
+application metadata merely to satisfy a provider parser. Change only the affected
+profile, preserve native bindings and in-flight environments, and retain the
+working latest-version profile. An exception is not permission to weaken security,
+functionality, ownership, reproducibility or required checks.
+
+No alternate is adopted by this policy revision. Historical receipts retain the
+requirements and results that applied when captured. Optional tooling still needs
+a demonstrated benefit; compatibility permission alone does not justify adoption.
+
 ## Mandatory value gate
 
 Before any adoption, record the exact existing production code to replace (or a required feature and avoided implementation), real consumers, observed failures/limitations and an independent behavioural baseline. Compare retain-current versus dependency-backed implementations. Count retained wrappers, migrations and operational burden in the result, not just deleted lines. Keep domain validation and independent tests; do not delete tests to inflate savings.

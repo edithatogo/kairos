@@ -6,12 +6,22 @@ security boundaries explicit in every change.
 
 ## Python and focused validation
 
-Use an explicit repository-local Python 3.15.1 interpreter. Create an isolated
-`.venv` with `uv venv --python 3.15.1`, then verify actual version and prefix with
-`.venv/bin/python scripts/python_runtime.py`. Activate it before documented
-`python`/`python3` commands, or invoke its absolute path. CI verifies the local
-environment after checkout and exports its bin directory for all later helpers.
-Preserve existing environments until their consumers stop.
+Prefer the latest suitable qualified dependency and runtime versions. The user's
+24 October 2026 clarification permits another version when needed for actual
+application, tooling, CI/helper or provider compatibility, without additional
+permission. Record the concrete reason, consumer/scope and selected version;
+qualify the real interpreter/dependency behaviour and retain security/functionality
+gates. Do not downgrade or rebuild working latest-version environments merely
+because an alternate is permitted.
+
+The current qualified default remains repo-local Python 3.15.1. Create an isolated
+`.venv` with `uv venv --python 3.15.1` only when absent, then verify actual version
+and prefix with `.venv/bin/python scripts/python_runtime.py`. Activate it before
+`python`/`python3` commands, or invoke its absolute path. Existing locks, guards
+and CI enforce this selected profile. A necessary alternate profile needs its own
+equivalent version/prefix, dependency/lock, subprocess and consumer qualification;
+the old 3.15-only policy is not a reason to reject it. Preserve existing
+environments until their consumers stop. See [dependency policy](conductor/dependency-value-policy.md).
 
 During edits, select the affected unittest file/class/method, pytest node/file
 or `-k`, Cargo package/filter, or PowerShell validator. Keep pytest cacheprovider
@@ -24,9 +34,10 @@ coverage, security and release gates at coherent milestones.
 
 Default to zero retries. Conditional skips need a real missing capability/reason;
 xfail needs a known issue/reason and strict=True. Neither is for speed. Optional
-plugins require isolated Python 3.15.1 qualification before locked adoption.
-pytest-difftest 0.3.0 is currently blocked by its PyO3 Python support limit; do
-not bypass the limit or downgrade Python. Bound retries, if qualified, to proven
+plugins require isolated qualification on their selected runtime before locked adoption.
+pytest-difftest 0.3.0 failed its Python 3.15.1 build at the PyO3 support limit.
+Do not bypass that limit; a supported alternate may be qualified only for a
+demonstrated useful consumer, preserving working 3.15.1 environments. Bound retries, if qualified, to proven
 transient fictional/read-only cases and preserve first failure; never retry
 native mutations or email sends through a runner.
 
