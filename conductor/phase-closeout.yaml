@@ -1472,16 +1472,25 @@ entries:
     next_phase_decision: "Verify prerequisites and value; conditional adoption is not automatically authorized"
 
   - track_id: "86"
-    phase: "0"
-    state: pending
+    phase: "2"
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Planning only; value and consumer gates unresolved"
-    fixes_applied: false
-    validation_commands: []
-    git_status: "planning worktree"
-    commit_sha: ""
-    pushed_ref: ""
-    next_phase_decision: "Verify prerequisites and value; conditional adoption is not automatically authorized"
+    review_result: "rstar 0.12.2 qualified and adopted in kairo-ecs-abm: implemented ContinuousSpatialIndex2D backed by R-tree with O(log N) updates, deterministic locate_within_distance and k_nearest_neighbors queries with multi-level tie-breaking (distance -> EntityId), equidistant boundary candidate buffering, movement lifecycle ghost duplicate elimination, non-finite/boundary validation, and ContinuousSpace2D integration."
+    fixes_applied: true
+    validation_commands:
+      - "cargo test -p kairo-ecs-abm"
+      - "cargo test --workspace"
+      - "cargo clippy --workspace --all-targets --all-features -- -D warnings"
+      - "cargo fmt --all --check"
+      - "cargo deny check advisories sources licenses bans"
+      - "cargo audit"
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
+    git_status: "clean"
+    commit_sha: "24df73817c8b0211325736770b42158047198541"
+    pushed_ref: "origin/feat/track-86-rstar-spatial-index"
+    next_phase_decision: "Track 86 is Done; advance to Track 79."
 
   - track_id: "87"
     phase: "2"
@@ -1500,8 +1509,8 @@ entries:
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
       - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
     git_status: "clean"
-    commit_sha: "2ba66af34986be85caa8636cf470b066ec823d1f"
-    pushed_ref: "origin/feat/track-87-geo-primitives"
+    commit_sha: "24df73817c8b0211325736770b42158047198541"
+    pushed_ref: "origin/main"
     next_phase_decision: "Track 87 is Done; advance to Track 86."
 
   - track_id: "88"

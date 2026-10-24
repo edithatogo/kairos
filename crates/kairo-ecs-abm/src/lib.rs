@@ -2,9 +2,11 @@
 
 pub mod geometry;
 pub mod routing;
+pub mod spatial_index;
 pub mod spawning;
 pub use geometry::*;
 pub use routing::*;
+pub use spatial_index::*;
 pub use spawning::*;
 
 use kairo_ecs_core::Scheduler;
@@ -553,9 +555,34 @@ impl ContinuousSpace2D {
     }
 
     pub fn place_agent(&mut self, agent: EntityId, pos: (f64, f64)) {
-        self.agents.insert(agent, pos);
+        if let Some(old_pos) = self.agents.insert(agent, pos) {
+            let old_key = self.cell_key(old_pos.0, old_pos.1);
+            if let Some(cell) = self.grid.get_mut(&old_key) {
+                cell.retain(|&e| e != agent);
+            }
+        }
         let key = self.cell_key(pos.0, pos.1);
         self.grid.entry(key).or_default().push(agent);
+    }
+
+    pub fn remove_agent(&mut self, agent: EntityId) -> Option<(f64, f64)> {
+        if let Some(old_pos) = self.agents.remove(&agent) {
+            let old_key = self.cell_key(old_pos.0, old_pos.1);
+            if let Some(cell) = self.grid.get_mut(&old_key) {
+                cell.retain(|&e| e != agent);
+            }
+            Some(old_pos)
+        } else {
+            None
+        }
+    }
+
+    pub fn to_spatial_index(&self) -> Result<ContinuousSpatialIndex2D, SpatialIndexError> {
+        let mut index = ContinuousSpatialIndex2D::new();
+        for (&agent, &pos) in &self.agents {
+            index.insert(agent, pos.0, pos.1)?;
+        }
+        Ok(index)
     }
 
     pub fn neighbors_within(&self, pos: (f64, f64), radius: f64) -> Vec<EntityId> {
@@ -579,6 +606,7 @@ impl ContinuousSpace2D {
                 }
             }
         }
+        results.sort();
         results
     }
 }

@@ -1298,11 +1298,13 @@ tracks:
 
   - id: 86
     name: rstar continuous spatial index qualification
-    status: Planned
+    status: Done
     owner: abm-api-agent
     depends_on: ["87"]
     owned_paths:
       - conductor/tracks/86-rstar-robustness/
+      - crates/kairo-ecs-abm/src/spatial_index.rs
+      - crates/kairo-ecs-abm/tests/rstar_spatial_index_oracles.rs
     required_gates:
       - phase-closeout-check
       - dependency-value-proof
@@ -1310,7 +1312,7 @@ tracks:
 
   - id: 87
     name: geo geometry and route-position primitives
-    status: Completed
+    status: Done
     owner: abm-api-agent
     depends_on: ["73"]
     owned_paths:
