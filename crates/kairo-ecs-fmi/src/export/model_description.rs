@@ -226,7 +226,9 @@ impl ModelDescription {
         )> = None;
         let mut current_variable_depth: Option<usize> = None;
         let mut in_model_variables = false;
+        let mut in_model_variables_depth: Option<usize> = None;
         let mut in_model_structure = false;
+        let mut in_model_structure_depth: Option<usize> = None;
         let mut in_outputs = false;
         let mut in_outputs_depth: Option<usize> = None;
         let mut output_unknowns = Vec::new();
@@ -291,8 +293,14 @@ impl ModelDescription {
                     }
 
                     match e.local_name().as_ref() {
-                        "ModelVariables" => in_model_variables = true,
-                        "ScalarVariable" if in_model_variables => {
+                        "ModelVariables" => {
+                            in_model_variables = true;
+                            in_model_variables_depth = Some(depth);
+                        }
+                        "ScalarVariable"
+                            if in_model_variables
+                                && in_model_variables_depth == Some(depth - 1) =>
+                        {
                             let mut name = None;
                             let mut vr = None;
                             let mut causality = Causality::Local;
@@ -365,8 +373,14 @@ impl ModelDescription {
                                 var.4 = Some(VariableType::from_fmi2(e.local_name().as_ref())?);
                             }
                         }
-                        "ModelStructure" => in_model_structure = true,
-                        "Outputs" if in_model_structure => {
+                        "ModelStructure" => {
+                            in_model_structure = true;
+                            in_model_structure_depth = Some(depth);
+                        }
+                        "Outputs"
+                            if in_model_structure
+                                && in_model_structure_depth == Some(depth - 1) =>
+                        {
                             in_outputs = true;
                             in_outputs_depth = Some(depth);
                         }
@@ -451,7 +465,9 @@ impl ModelDescription {
                     }
 
                     match local_name.as_ref() {
-                        "ScalarVariable" if in_model_variables => {
+                        "ScalarVariable"
+                            if in_model_variables && in_model_variables_depth == Some(depth) =>
+                        {
                             return Err(validation_error(
                                 "modelDescription.xml",
                                 "ScalarVariable cannot be self-closing without a type element",
@@ -510,7 +526,9 @@ impl ModelDescription {
                         root_closed = true;
                     }
                     match e.local_name().as_ref() {
-                        "ScalarVariable" if in_model_variables => {
+                        "ScalarVariable"
+                            if in_model_variables && in_model_variables_depth == Some(depth) =>
+                        {
                             current_variable_depth = None;
                             if let Some((name, vr, causality, variability, var_type)) =
                                 current_variable.take()
@@ -533,12 +551,18 @@ impl ModelDescription {
                                 });
                             }
                         }
-                        "ModelVariables" => in_model_variables = false,
+                        "ModelVariables" => {
+                            in_model_variables = false;
+                            in_model_variables_depth = None;
+                        }
                         "Outputs" => {
                             in_outputs = false;
                             in_outputs_depth = None;
                         }
-                        "ModelStructure" => in_model_structure = false,
+                        "ModelStructure" => {
+                            in_model_structure = false;
+                            in_model_structure_depth = None;
+                        }
                         _ => {}
                     }
                 }

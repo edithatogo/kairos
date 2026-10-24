@@ -453,3 +453,31 @@ fn oracle_from_xml_str_ignores_annotation_type_names_and_rejects_duplicate_types
         "Expected multiple type elements error"
     );
 }
+
+#[test]
+fn oracle_from_xml_str_ignores_nested_scalar_variable_elements_in_annotations() {
+    let xml = r#"<?xml version="1.0" encoding="UTF-8"?>
+<fmiModelDescription fmiVersion="2.0" modelName="nested_scalar_var" guid="{nsv-guid}">
+  <ModelVariables>
+    <ScalarVariable name="outer_var" valueReference="10" causality="input" variability="continuous">
+      <Real start="3.14" />
+      <Annotations>
+        <Tool name="VendorTool">
+          <ScalarVariable name="vendor_inner" valueReference="999" causality="output">
+            <Integer start="42" />
+          </ScalarVariable>
+        </Tool>
+      </Annotations>
+    </ScalarVariable>
+  </ModelVariables>
+  <ModelStructure />
+</fmiModelDescription>
+"#;
+    let model = ModelDescription::from_xml_str(xml).expect(
+        "must successfully parse outer ScalarVariable despite nested annotation ScalarVariable",
+    );
+    assert_eq!(model.variables.len(), 1);
+    assert_eq!(model.variables[0].name, "outer_var");
+    assert_eq!(model.variables[0].value_reference, 10);
+    assert_eq!(model.variables[0].variable_type, VariableType::Real);
+}
