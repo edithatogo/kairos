@@ -41,7 +41,11 @@ alert closure remain required before acceptance. The first fresh CI run caught
 the exact website-lock binding and a separate bootstrap Undici copy; both are
 now repaired with [targeted follow-through evidence](docs-advisory-ci-followthrough.json).
 The real private npm tree passes its strict zero-vulnerability gate, with exact
-source/CLI/Node hashes retained and no legacy exception expansion. This repair does not alter
+source/CLI/Node hashes retained and no legacy exception expansion. The dependency
+identity control also rebinds to the exact new lock hash; the private HCS archive,
+payload hashes, identity match and two-advisory correction remain unchanged. All
+five identity tests pass, including wrong package/path/version/severity/advisory,
+source drift and later-page high findings. No generic advisory exemption is added. This repair does not alter
 Polars, engine pins or simulation behaviour.
 
 ## Historical execution entries
