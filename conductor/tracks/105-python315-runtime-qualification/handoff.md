@@ -45,7 +45,12 @@ source/CLI/Node hashes retained and no legacy exception expansion. The dependenc
 identity control also rebinds to the exact new lock hash; the private HCS archive,
 payload hashes, identity match and two-advisory correction remain unchanged. All
 five identity tests pass, including wrong package/path/version/severity/advisory,
-source drift and later-page high findings. No generic advisory exemption is added. This repair does not alter
+source drift and later-page high findings. No generic advisory exemption is added. The LLMS renderer
+lock/graph oracle is also requalified: an independent before/after comparison
+proves only Zod/Undici version, registry URL and integrity records changed, and
+reproduces the old normalized graph hash before updating its expected hashes.
+All four renderer contract tests pass; forbidden-package and renderer semantics
+checks remain intact. This repair does not alter
 Polars, engine pins or simulation behaviour.
 
 ## Historical execution entries
