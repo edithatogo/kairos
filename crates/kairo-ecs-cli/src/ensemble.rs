@@ -166,8 +166,9 @@ impl ParallelEnsembleRunner {
             return Vec::new();
         }
 
+        let threads = self.num_threads.max(1).min(num_points);
         let pool = rayon::ThreadPoolBuilder::new()
-            .num_threads(self.num_threads.max(1))
+            .num_threads(threads)
             .build()
             .expect("failed to build rayon thread pool for ensemble sweep");
 
@@ -221,8 +222,9 @@ impl SobolSensitivityAnalyzer {
     where
         F: Fn(&[f64]) -> f64 + Sync,
     {
+        let threads = num_threads.max(1).min(sample_size);
         let pool = rayon::ThreadPoolBuilder::new()
-            .num_threads(num_threads.max(1))
+            .num_threads(threads)
             .build()
             .expect("failed to build rayon thread pool for sobol sensitivity analyzer");
 
@@ -375,8 +377,14 @@ impl AbcSmcCalibrator {
     where
         F: Fn(&[f64]) -> Vec<f64> + Sync,
     {
+        let num_particles = particles.len();
+        if num_particles == 0 {
+            return (Vec::new(), Vec::new());
+        }
+
+        let threads = num_threads.max(1).min(num_particles);
         let pool = rayon::ThreadPoolBuilder::new()
-            .num_threads(num_threads.max(1))
+            .num_threads(threads)
             .build()
             .expect("failed to build rayon thread pool for abc-smc calibrator");
 

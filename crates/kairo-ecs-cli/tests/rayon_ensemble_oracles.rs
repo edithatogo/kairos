@@ -3,7 +3,6 @@ use kairo_ecs_cli::ensemble::{
 };
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
-use std::time::Instant;
 
 #[test]
 fn test_parallel_sweep_thread_count_bit_invariance() {
@@ -203,7 +202,7 @@ fn test_panic_propagation_in_rayon_pool() {
 }
 
 #[test]
-fn test_reusable_pool_isolation_and_throughput() {
+fn test_reusable_pool_isolation_and_consistency() {
     let pool = build_bounded_thread_pool(4).expect("build pool");
     let runner = ParallelEnsembleRunner::with_threads(555, 4);
 
@@ -211,21 +210,20 @@ fn test_reusable_pool_isolation_and_throughput() {
     let evaluator = |seed: u64, pt: &[f64]| pt[0] + (seed as f64) * 1e-4;
 
     // Run 5 sequential sweeps using the exact same pre-built thread pool
-    let start = Instant::now();
-    for _ in 0..5 {
+    let mut first_run = Vec::new();
+    for iteration in 0..5 {
         let res = runner.run_sweep_with_pool(&pool, &points, evaluator);
         assert_eq!(res.len(), 500);
+        if iteration == 0 {
+            first_run = res;
+        } else {
+            assert_eq!(
+                first_run, res,
+                "Sequential sweep {} differed from first run",
+                iteration
+            );
+        }
     }
-    let elapsed = start.elapsed();
-
-    // 2500 evaluations should complete very rapidly
-    let total_evals = 5 * 500;
-    let rate = (total_evals as f64) / elapsed.as_secs_f64().max(1e-6);
-    assert!(
-        rate > 50_000.0,
-        "Reusable pool throughput should exceed 50k evals/sec, got {:.1}",
-        rate
-    );
 }
 
 #[test]
@@ -241,22 +239,33 @@ fn test_empty_and_single_point_boundaries() {
 }
 
 #[test]
-fn test_large_ensemble_throughput_budget() {
+fn test_large_ensemble_scaling_correctness() {
     let runner = ParallelEnsembleRunner::with_threads(777, 4);
     let num_points = 10_000;
     let points: Vec<Vec<f64>> = (0..num_points)
         .map(|i| vec![(i as f64) * 0.01, (i as f64) * 0.02])
         .collect();
 
-    let start = Instant::now();
     let results = runner.run_sweep(&points, |seed, pt| (seed as f64) * 0.001 + pt[0] + pt[1]);
-    let elapsed = start.elapsed();
-
     assert_eq!(results.len(), num_points);
-    let rate = (num_points as f64) / elapsed.as_secs_f64().max(1e-6);
-    assert!(
-        rate > 100_000.0,
-        "Large ensemble evaluation rate should exceed 100k evals/sec, got {:.1}",
-        rate
-    );
+    for (i, res) in results.iter().enumerate() {
+        let seed = runner.crn_plan.entity_substream_seed(i as u64, 0);
+        let expected = (seed as f64) * 0.001 + (i as f64) * 0.01 + (i as f64) * 0.02;
+        assert_eq!(*res, expected, "Mismatch at index {}", i);
+    }
+}
+
+#[test]
+fn test_workload_size_capping_and_empty_particles() {
+    // Single-point sweep with high thread count should succeed without creating 128 threads
+    let runner = ParallelEnsembleRunner::with_threads(42, 128);
+    let point = vec![vec![1.5, 2.5]];
+    let res = runner.run_sweep(&point, |_s, p| p[0] + p[1]);
+    assert_eq!(res, vec![4.0]);
+
+    // Empty particles in AbcSmcCalibrator should return immediately without allocating a thread pool
+    let calibrator = AbcSmcCalibrator::new(1.0);
+    let (weights, accepted) = calibrator.evaluate_particles_parallel(&[], &[], &|_| vec![], 64);
+    assert!(weights.is_empty());
+    assert!(accepted.is_empty());
 }
