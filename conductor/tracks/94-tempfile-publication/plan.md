@@ -50,3 +50,6 @@ does not close an implementation phase or authorise publication.
 Replace naming/cleanup with TempDir and NamedTempFile where useful. Qualify staging and cleanup for retained consumers before the specific migration task that needs them; Track 70 retains end-to-end durable publication acceptance. Stage beside destination; handle overwrite/no-clobber explicitly. persist alone does not prove crash durability: file/directory sync where required, manifest-last ordering, disk-full and recovery remain owner responsibilities. No filesystem randomness enters simulation seeds or output identities.
 
 Acceptance oracle: Concurrent directory creation/isolation; cleanup on normal/error paths; intentional retained diagnostics; same-filesystem publication, failure before/after persist, no-clobber and old-output preservation. End-to-end process-kill/disk-full/manifest recovery remains mandatory in Polars and is not certified by this supporting track.
+
+## Phase: Review Fixes
+- [x] Task: Apply review suggestions 3d2b62e
