@@ -6,7 +6,7 @@ from the retained candidate and current source before execution.
 | Gate | Required oracle |
 |---|---|
 | Inventory | Every active dev/build/test/automation/CI/container/helper path classified; historical and intentional negative fixtures separated |
-| Actual runtime | Repo-local interpreter and invoked subprocess report exactly 3.15.1; wrong interpreter and out-of-line candidate reject |
+| Actual runtime | Repo-local interpreter/subprocess match the explicitly selected qualified profile (default 3.15.1); wrong/unqualified profiles reject; necessary alternate has reason/scope and real runtime/dependency/consumer proof |
 | Locks and packages | Constraints/resolver targets/pins agree; fresh locked install, package build/import and actual native consumers pass |
 | Existing behavior | Meaningful helper/security/binding tests and unchanged simulation/domain contracts; no weakened checks |
 | Platforms | Required hosted OS lanes and actual container/native execution or explicit unresolved blocker; manifest alone insufficient |

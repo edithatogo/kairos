@@ -6,6 +6,8 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 PINS = {
+    'undici': ('8.12.3', 'sha512-+fdndUTwBP86cVjihTp21hZHo7d6oj1c/47XPA3lL8mM0XHs+C4EkcjmgRsFnFk2f/UONGDy9ItBItmXsLOQHw=='),
+    'zod': ('4.6.7', 'sha512-g8W2D2kU6a8untc053fX1uVBKzM7yqAxW/3zwk83+6RyF2+SKOuV+c0wBDhUwzV1PaGapmZH+rmcUzPf+3CGwg=='),
     "source-map-js": ("1.2.2", "sha512-KGj/8Y43x35aZVDtt+J4mK1hoLGHULMYfSkODJNQjNDC3oW1PqPoxMwo0pLUsWM/UEGzON/NxeHywEfNXNP3Vw=="),
     "postcss-selector-parser": ("7.1.6", "sha512-7qASPzhKF2l2KLboRZux8CCTRMdGiV08vWmyKzPz22qZ7ZjQBOeY7rNzNoCLSUiftJ7HUq0GERHmxw/t0dCdMw=="),
     'vite': ('8.3.5', 'sha512-z1YpjieJ9g0ebTmQpLBv/oq9E3F9EIlOe+7LahW8SrE3LTiG3udBRUXQOlYXP9b+IC2q2phHeVxj9xGlw34OEQ=='),
@@ -45,6 +47,15 @@ class DependencyAdvisoryPinTests(unittest.TestCase):
         docs = json.loads((ROOT / 'tools/docs-quality-node-tools/package-lock.json').read_text())
         verify_records(docs, 'dompurify')
         verify_records(docs, 'katex')
+        verify_records(docs, 'zod')
+        website = json.loads((ROOT / 'website/package-lock.json').read_text())
+        verify_records(website, 'zod')
+        verify_records(website, 'undici')
+        bootstrap = json.loads((ROOT / 'scripts/bootstrap-node-tools/package-lock.json').read_text())
+        verify_records(bootstrap, 'undici')
+        # Upgrade through the consumer-supported chain, never a forced Zod 4 override.
+        self.assertEqual(docs['packages']['node_modules/puppeteer']['version'], '25.16.0')
+        self.assertEqual(docs['packages']['node_modules/chromium-bidi']['dependencies']['zod'], '^4.6.5')
 
     def test_fixed_website_parser_and_reviewed_consumer_override(self):
         lock = json.loads((ROOT / "website/package-lock.json").read_text())

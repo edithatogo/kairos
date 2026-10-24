@@ -41,13 +41,11 @@ This file maps the “everything needed for a professional release” concerns t
 Required CI coverage:
 
 ```text
-CPython 3.10
-CPython 3.11
-CPython 3.12
-CPython 3.13
-CPython 3.14
-CPython 3.14 free-threaded smoke lane where toolchain/runner support exists
+CPython 3.15.1: current qualified default
+Necessary alternate profiles: explicit consumer/reason and equivalent qualification before adoption
 ```
+
+See the [support matrix](toolchain-matrix.md) and [dependency policy](dependency-value-policy.md); this map does not introduce compatibility lanes.
 
 The Python binding must not rely on the GIL for Rust-side memory safety. The GIL may be used only for Python callback execution or Python object ownership.
 

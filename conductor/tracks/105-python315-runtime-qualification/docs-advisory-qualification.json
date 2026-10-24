@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "captured_at": "2026-10-24T00:29:48.552568+00:00",
+  "maturity": "local qualification; hosted and native alert closure pending",
+  "cwd": "/Volumes/PortableSSD/codex-worktrees/kairos-python315-conductor",
+  "base_commit": "d6d76ca412d9f60dc68389eb9d77e2444b9ba401",
+  "input_sha256": {
+    "website/package-lock.json": "64e1a663a7df0f56a1ea0a5acfc7ff4cd99cc5e44c32a5516bc31c07981b10ed",
+    "tools/docs-quality-node-tools/package-lock.json": "9acbc19195f7b2d206a907b7849827dd422d4cfff2b3df1e371421af6f5d4c2c",
+    "tests/test_dependency_advisory_pins.py": "c827f381c35b1ba4ecae8afb88a487f320214550ae43317c4a9fe81ef6feef9a",
+    "tests/mermaid-runtime.test.mjs": "1e0a08a2874c4c1cdad4b55762a3c5284522287728536f1a9cd1cbd84d15ea61"
+  },
+  "toolchain": {
+    "python": "{\"executable\": \"/Volumes/PortableSSD/codex-worktrees/kairos-python315-conductor/.venv/bin/python\", \"prefix\": \"/Volumes/PortableSSD/codex-worktrees/kairos-python315-conductor/.venv\", \"version\": \"3.15.1\"}",
+    "node": "v26.12.1",
+    "npm": "11.20.0",
+    "browser": "Chrome headless shell 156.0.8078.47 mac_arm; explicit isolated executable"
+  },
+  "commands": [
+    {
+      "command": ".venv/bin/python -m unittest discover -s tests -p test_dependency_advisory_pins.py -v",
+      "exit_status": 0,
+      "result": "5 passed; locks/integrity and negative controls"
+    },
+    {
+      "command": "npm ci --prefix tools/docs-quality-node-tools (PUPPETEER_SKIP_DOWNLOAD=true); npm ci --prefix website",
+      "exit_status": 0,
+      "result": "190 and 420 installed packages; no live environment replacement"
+    },
+    {
+      "command": "npm audit --prefix CONSUMER --audit-level=moderate --json",
+      "exit_status": 0,
+      "result": "zero vulnerabilities for each documentation consumer"
+    },
+    {
+      "command": "MERMAID_PUPPETEER_CONFIG=/tmp/kairos-mermaid-puppeteer.json node --test tests/mermaid-runtime.test.mjs",
+      "exit_status": 0,
+      "result": "5 passed, 0 skipped; actual renderer and both installed Zod consumers"
+    },
+    {
+      "command": "npm --prefix website run build; npm --prefix website run check:quality",
+      "exit_status": 0,
+      "result": "16 pages plus 101 compatibility routes; internal links and Starlight quality passed"
+    }
+  ],
+  "negative_control": {
+    "version": "4.6.5",
+    "success": false,
+    "parsed": 3,
+    "expectedPatchedParsed": 0,
+    "negativeControlDetected": true
+  },
+  "local_artifacts": {
+    "/tmp/kairos-docs-tools-install.log": "d88fc775570f6c31f6c7c621122798294b3bc09f3f272dd7f26f1a7f94a80afa",
+    "/tmp/kairos-website-install.log": "de4edf5cfb251f9762b8d52dd873161e1e75da131f7fee1ef0133ea67ec9baaa",
+    "/tmp/kairos-docs-tools-audit.json": "05e516c975353b1daf03c2f1bdb215d1a7ce71553dd5849171bfbe824da7961e",
+    "/tmp/kairos-website-audit.json": "0b1111d53af69eaefb4f67f1920e1f9c35d8ebb004b77306392a19d866c8394b",
+    "/tmp/kairos-mermaid-qualified-tests.log": "235dc82516f39a1da44e063929c5a5f6ff5dd1badab9cb510d1076f7714523c7",
+    "/tmp/kairos-website-qualified-build.log": "d5611538ef7bae32a41fe4159003a90120ff26f5b7ae2fc0c52356ae6b68397a",
+    "/tmp/kairos-website-qualified-quality.log": "f82cf094f3e8fe3e8f016fa0a2d42e25d9b9bac2e9e36d2b81b647d11bc752f1",
+    "/tmp/kairos-zod-negative-control/result.json": "99d90e956f208f8549101a79c8d4fe0d886f8d8149eae29ac20d9d3bec5b194e"
+  },
+  "limits": [
+    "Local Node 26.12.1 is within consumer engine ranges; selected hosted Node 24 profile still requires fresh CI qualification.",
+    "Lock and npm audit proof does not by itself prove GitHub alert closure.",
+    "Conductor setup Cargo suite was stopped and is not counted as a Rust pass.",
+    "Local Astro output was website/build, rather than the declared website/dist; isolated output is retained, and this receipt makes no full ignored-output claim-conformance assertion."
+  ],
+  "preserved": [
+    "Polars worktree and engine pins untouched",
+    "existing sanitizer/http-cache mitigations retained",
+    "no Codecov threshold or access changes"
+  ]
+}

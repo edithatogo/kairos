@@ -1,7 +1,8 @@
 # Python Style Guide
 
-- Target CPython 3.10, 3.11, 3.12, 3.13, and 3.14.
-- Include a Python 3.14 free-threaded smoke lane where runner support exists.
+- Use the qualified CPython 3.15.1 default and verify the actual repo-local interpreter.
+- Prefer latest suitable qualified versions; necessary alternate profiles are permitted by the [dependency policy](../dependency-value-policy.md), with concrete scope/reason and equivalent qualification.
+- Do not imply older or free-threaded support from a planning entry; qualify native bindings and CI before promising that lane.
 - Use `ruff` for lint/format and `pytest` + `hypothesis` for tests.
 - Keep per-event host callbacks out of hot loops unless explicitly labelled as slow/prototyping mode.
 - Prefer Arrow/pyarrow batch outputs over Python object lists for telemetry.

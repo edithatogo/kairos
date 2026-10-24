@@ -89,7 +89,7 @@ These tracks do not introduce package surfaces, but they do affect release readi
 
 ## Python package plan
 
-Target: CPython 3.10, 3.11, 3.12, 3.13, 3.14.
+Qualified default: CPython 3.15.1. Necessary alternate profiles may be qualified under the [dependency policy](dependency-value-policy.md); the [support matrix](toolchain-matrix.md) remains authoritative for actual support.
 
 | Area | Tools/packages | Notes |
 |---|---|---|
@@ -100,7 +100,7 @@ Target: CPython 3.10, 3.11, 3.12, 3.13, 3.14.
 | Lint/format | `ruff` | One tool for lint and format. |
 | Data | `pyarrow`, `numpy`, `pandas`, `polars` optional | `pyarrow` required for telemetry examples. |
 | Docs | `pdoc` or `Sphinx`, notebooks | Link from main docs site. |
-| Free-threaded checks | Python 3.14 free-threaded lane where runner support exists | Do not assume GIL-based safety. |
+| Free-threaded checks | Only after native/runner qualification of an explicitly selected profile | Do not assume GIL-based safety. |
 
 ## R package plan
 

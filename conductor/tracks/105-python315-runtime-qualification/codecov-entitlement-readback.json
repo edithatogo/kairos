@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "captured_at": "2026-10-24T00:17:51.953327+00:00",
+  "maturity": "diagnostic; provider restriction unresolved",
+  "source_commit": "bdb0bfe721af336f0100aef9deaaf427f0c5f596",
+  "policy_commit": "21f9b9705fc189e82604b032c7922fe2a047d1b4",
+  "repository": {
+    "name": "edithatogo/kairos",
+    "github_visibility": "PUBLIC"
+  },
+  "authenticated_configuration": {
+    "url": "https://app.codecov.io/gh/edithatogo/kairos/config",
+    "capture_method": "native browser accessibility readback using existing GitHub sign-in; no new access grant",
+    "coverage_reports": "Configured",
+    "yaml": "Configured",
+    "project_coverage": "Available with Pro Plan",
+    "flags": "Available with Pro Plan",
+    "components": "Available with Pro Plan"
+  },
+  "effective_yaml": {
+    "capture_method": "public commit view YAML modal",
+    "project_default": {
+      "target": "auto",
+      "threshold": 0.0,
+      "flags": [
+        "rust-core"
+      ]
+    },
+    "require_ci_to_pass": true,
+    "notify_wait_for_ci": true
+  },
+  "processed_report": {
+    "url": "https://api.codecov.io/api/v2/github/edithatogo/repos/kairos/commits/bdb0bfe721af336f0100aef9deaaf427f0c5f596/",
+    "state": "complete",
+    "ci_passed": true,
+    "totals": {
+      "files": 70,
+      "lines": 27095,
+      "hits": 22900,
+      "misses": 4195,
+      "partials": 0,
+      "coverage": 84.51,
+      "branches": 0,
+      "methods": 0,
+      "sessions": 1,
+      "complexity": 0.0,
+      "complexity_total": 0.0,
+      "complexity_ratio": 0,
+      "diff": 0
+    },
+    "raw_sha256": "18adbccb4f8549d2bff91dc943523b5aaf112e44e27b54a94bd3ec486e6971a4"
+  },
+  "flag_readback": {
+    "count": 1,
+    "next": null,
+    "previous": null,
+    "results": [
+      {
+        "flag_name": "rust-core",
+        "coverage": 84.51744
+      }
+    ],
+    "total_pages": 1
+  },
+  "github_statuses": [
+    {
+      "context": "codecov/patch",
+      "state": "success"
+    }
+  ],
+  "project_status": "absent",
+  "assessment": "Native settings expose a project-reporting entitlement restriction despite the public repository. Successful processing, present rust-core flag and loaded project YAML rule out missing upload/flag/config as the observed failure. Provider remediation remains required; this does not establish the internal entitlement cause.",
+  "controls_preserved": [
+    "codecov.yml unchanged",
+    "OIDC upload unchanged",
+    "required Rust quality and coverage floor unchanged",
+    "quality-drift still rejects absent project success",
+    "no duplicate upload, account/permission change, purchase or support message"
+  ],
+  "next_action": "Have Codecov restore/clarify public-repository project reporting entitlement; verify a genuine codecov/project result on a fresh integrated SHA before closing this gate.",
+  "references": [
+    "https://docs.codecov.com/docs/common-recipe-list",
+    "https://github.com/codecov/feedback/issues/960"
+  ]
+}

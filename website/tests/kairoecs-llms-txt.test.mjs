@@ -112,8 +112,8 @@ test("lock graph removes the vulnerable chain and retains the exact renderer gra
     "node_modules/starlight-llms-txt",
     "node_modules/to-regex-range",
   ];
-  const expectedLockSha256 = "024dad1f1de5c9b06c92011ba1fa86679572d6839c0733ad06f591fe269c3568";
-  const expectedRetainedGraphSha256 = "948b2d6119210809ca903befbb5137f0f35579f24228baa0d42f2622c483ba3f";
+  const expectedLockSha256 = "64e1a663a7df0f56a1ea0a5acfc7ff4cd99cc5e44c32a5516bc31c07981b10ed";
+  const expectedRetainedGraphSha256 = "b7a6e7cda5c90c30b5a819ed51ad1dc36d2cfbc58629782a57e7296e3fa67c9a";
   assert.deepEqual(pkg.dependencies, expectedDependencies, "package.json direct dependency map changed");
   assert.deepEqual(candidate.packages[""].dependencies, expectedDependencies, "lock root direct dependency map changed");
   assert.equal(createHash("sha256").update(readFileSync(path.join(root, "website/package-lock.json"))).digest("hex"), expectedLockSha256, "package lock content changed");

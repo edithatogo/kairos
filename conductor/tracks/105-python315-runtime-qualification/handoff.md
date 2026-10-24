@@ -1,5 +1,60 @@
 # Handoff
 
+## Current policy and successor evidence — 24 October 2026
+
+The human's revised dependency policy prefers latest suitable versions and permits
+necessary alternates with concrete reason/scope and actual qualification, without
+further permission. It supersedes earlier no-alternate instructions in the dated
+entries below; those entries remain historical evidence. The accepted default
+3.15.1 guards, locks, containers and environments remain intact. No alternate
+profile is adopted merely to apply this policy.
+
+PRs #297/#301/#302 integrated the accepted runtime and tooling repairs. Native
+inventory accepted/read back all 51 expected packages; this proves package presence,
+not graph edges/extras. Both certifi alerts #98/#99 are now natively fixed at
+2026-10-23T18:20:14Z (24 October in Brisbane), without dismissal or rerun.
+Authenticated Codecov configuration now identifies project coverage, flags and
+components as "Available with Pro Plan" despite GitHub PUBLIC visibility. The
+processed report and rust-core flag exist, and the effective YAML requests project
+status. See [native readback](codecov-entitlement-readback.json). This is a provider
+entitlement/reporting restriction, not evidence for changing coverage thresholds
+or repeating uploads. No purchase, permission change or external support message
+is authorised by this receipt; genuine project status remains an open gate.
+
+Provider quality follow-through and this policy update remain separately scoped;
+no Polars/FMI source, engine pin or other-owner environment is transferred.
+
+## Documentation dependency gate repair — 24 October 2026
+
+PR #303 exposed new upstream advisories at the hosted audit gate. Zod
+GHSA-mrhx-c7xc-m3w5 affects both documentation locks; the website audit also
+reports Undici GHSA-4qv8-2p9j-2685, GHSA-f72v-6w45-q472 and
+GHSA-xjj6-f33q-929c. The candidate updates Zod to 4.6.7 and Undici to 8.12.3.
+Mermaid CLI remains 11.17.0; its supported Puppeteer 25.16.0 peer chain supplies
+Chromium BiDi with Zod 4 support, avoiding a forced major-version override on the
+old Zod 3 consumer. Other dependency pins remain unchanged except that supported
+browser chain. Both candidate npm audits report zero vulnerabilities; five
+pin/integrity regression tests pass. Installed renderer/build qualification now passes: five Mermaid/runtime tests,
+old Zod negative control, site build and quality checks. See
+[local receipt](docs-advisory-qualification.json). Hosted qualification and native
+alert closure remain required before acceptance. The first fresh CI run caught
+the exact website-lock binding and a separate bootstrap Undici copy; both are
+now repaired with [targeted follow-through evidence](docs-advisory-ci-followthrough.json).
+The real private npm tree passes its strict zero-vulnerability gate, with exact
+source/CLI/Node hashes retained and no legacy exception expansion. The dependency
+identity control also rebinds to the exact new lock hash; the private HCS archive,
+payload hashes, identity match and two-advisory correction remain unchanged. All
+five identity tests pass, including wrong package/path/version/severity/advisory,
+source drift and later-page high findings. No generic advisory exemption is added. The LLMS renderer
+lock/graph oracle is also requalified: an independent before/after comparison
+proves only Zod/Undici version, registry URL and integrity records changed, and
+reproduces the old normalized graph hash before updating its expected hashes.
+All four renderer contract tests pass; forbidden-package and renderer semantics
+checks remain intact. This repair does not alter
+Polars, engine pins or simulation behaviour.
+
+## Historical execution entries
+
 ## Current state
 
 Track registered to reconcile and finish existing candidate work; no phase accepted. The [dated qualification snapshot](prior-qualification.md) and [hash manifest](prior-evidence.json) preserve prior work. Kairos catalogue PR #295 is already merged independently. The active conversation goal is armed and covers full migration, not just this registration.

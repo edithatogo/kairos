@@ -14,12 +14,14 @@ ROOT = Path(__file__).resolve().parents[2]
 
 # These hashes bind the reviewed bootstrap files. The preparer adds explicit level-9
 # compression for Python 3.15; its generated artifact still matches the existing lock.
+# The 24 October dependency amendment qualifies Undici 8.12.3 with new exact
+# source digests; SOURCE_COMMIT retains the initial reviewed baseline reference.
 # The receipt records the actual execution commit separately.
 EXPECTED_SOURCE_SHA256 = {
     "scripts/bootstrap-node-tools/package.json": "6fa5e6f92a147021e0953523e5f73ed8f4a12779a39593c55709e356861f23fe",
-    "scripts/bootstrap-node-tools/package-lock.json": "7c6c126c1b19b5af551baa742e47f4568d815822462f5ef9e9ecfb32011698d5",
-    "scripts/bootstrap-node-tools/prepare_npm_cli.py": "2963675f1d3c8071a889408c16d4afae950d5db06867088b144e61b782b1dc51",
-    "scripts/bootstrap-node-tools/validate_npm_cli.mjs": "44ff376d57e80047cbe1320b706aaf282220b9f7bf0e3c1a23f042422c829f46",
+    "scripts/bootstrap-node-tools/package-lock.json": "cfe2002915f419eea7cca91c24d8dd58a81926701cc2810896fdcc6f89c64835",
+    "scripts/bootstrap-node-tools/prepare_npm_cli.py": "6b76f67627b06e1fa80f2f8d5d7118603b428d8a4f77392b47ee0a616c224827",
+    "scripts/bootstrap-node-tools/validate_npm_cli.mjs": "91555a19ba04d6ddcb951f82ea8e6b89dde7b015a39db3bf8eccb1aa1e6c8839",
 }
 EXPECTED_NPM_CLI_SHA256 = "8e5f6f3429f8cdbe693cdc29904e9d5a7b127a494bd15c804bd54c7403bfcbe7"
 SOURCE_COMMIT = "ad3379dade50ece748eec3f47e85aa56605beec7"
@@ -118,6 +120,7 @@ def run_gate(root, output, *, node_path, node_sha256, _execute=subprocess.run,
         "classification": "failed",
         "cwd": str(root),
         "reviewed_source_reference_commit": SOURCE_COMMIT,
+        "source_binding_amendment": "2026-10-24: Undici 8.12.3; exact source hashes below supersede the baseline digests",
         "started_at": datetime.now(timezone.utc).isoformat(),
         "checks": [],
         "raw_audit": {"status": "not_executed"},

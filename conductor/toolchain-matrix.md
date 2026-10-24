@@ -1,8 +1,10 @@
 # Toolchain & Version Support Matrix
 
-Last full multi-language refresh: 2026-05-07. Rust policy reconciled: 2026-10-05.
+Last full multi-language refresh: 2026-05-07. Rust policy reconciled: 2026-10-05. Dependency selection policy reconciled: 2026-10-24.
 
 This document is the single source of truth for KairoECS language and runner version support. Binding tracks may support a narrower feature surface while they are still scaffolding, but they must not raise a minimum version or drop a supported version without following the version-drop policy below.
+
+Prefer latest suitable qualified versions. The human clarification of 24 October 2026 permits necessary alternatives with a concrete reason, consumer/scope and actual qualification under the [dependency policy](dependency-value-policy.md). This supersedes blanket latest-only/no-alternate rules across ecosystems. The rows below describe selected qualified profiles, not a ban on qualifying alternatives; existing exact guards/pins and promised support remain unchanged.
 
 ## Current Source Evidence
 
@@ -30,8 +32,8 @@ Support labels:
 
 | Ecosystem | Binding track | Minimum supported version | Latest/current supported version | Experimental or preview lane | CI selector | Deprecation horizon | Linux x86_64 | Linux aarch64 | macOS x86_64 | macOS aarch64 | Windows x86_64 |
 |---|---:|---|---|---|---|---|---|---|---|---|---|
-| Rust core | 00/01/13 | Rust `1.99.1` only | Rust `1.99.1` only | None; beta/nightly are disallowed | `1.99.1` exact | Owner-directed Rust-only policy update on 2026-10-05 supersedes the prior Rust compatibility notice; this does not alter other ecosystems' drop rules. | Rust 1.99.1 checks and test suite; exact version parser rejects aliases and prerelease suffixes | best-effort | best-effort | best-effort | best-effort |
-| Python binding | 06 | CPython `3.15.1` | CPython `3.15.1` | None; no older or free-threaded compatibility lane | `3.15.1` | Human-required Python 3.15-only policy supersedes older compatibility lanes. | CI-covered | best-effort | best-effort | best-effort | best-effort |
+| Rust core | 00/01/13 | Rust `1.99.1` only in current profile | Rust `1.99.1` only in current profile | None currently qualified | `1.99.1` exact | Current exact profile retained; necessary alternatives require consumer-specific qualification under the dependency policy. | Rust 1.99.1 checks and test suite; exact version parser rejects aliases and prerelease suffixes | best-effort | best-effort | best-effort | best-effort |
+| Python binding | 06 | CPython `3.15.1` | CPython `3.15.1` | None currently qualified | `3.15.1` | 3.15.1 remains the accepted default; necessary alternatives may be qualified under the revised dependency policy. | CI-covered | best-effort | best-effort | best-effort | best-effort |
 | R binding | 07 | R `4.2` package floor; CI floor is previous CRAN release | R `4.6.x` current release | R-devel advisory lane only | `oldrel-1`, `release` | Drop a package floor only after CRAN support pressure or dependency incompatibility is documented for 2 cycles/6 months. | CI-covered | best-effort | best-effort | best-effort | best-effort |
 | Julia binding | 08 | Julia `1.10` LTS-compatible floor | Julia `1.12.x` current stable | Julia `1.13` beta advisory lane only | `1.10`, `1.12` | Drop an LTS-compatible floor only after Julia LTS guidance changes and 2 cycles/6 months notice is complete. | CI-covered | best-effort | best-effort | best-effort | best-effort |
 | TypeScript/Wasm binding | 09 | Node `22` LTS | Node `24` Active LTS/current production lane | Node `25` current advisory lane; Wasm browser smoke best-effort | `22`, `24` | Drop an LTS major only after Node EOL and 2 cycles/6 months notice is complete. | CI-covered | best-effort | best-effort | best-effort | best-effort |

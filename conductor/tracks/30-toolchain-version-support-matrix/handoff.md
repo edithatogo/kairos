@@ -1,3 +1,7 @@
+# Current dependency policy — 24 October 2026
+
+Latest suitable qualified versions are preferred. Necessary alternatives are permitted without further user permission, with a concrete reason/consumer/scope and actual qualification under the [dependency policy](../../dependency-value-policy.md). The matrix now distinguishes selected qualified profiles from a blanket version ban. Exact Rust 1.99.1 and Python 3.15.1 pins, CI and runtime guards remain intact; no alternate is adopted or promised by this documentation change. Historical handoffs below retain the instructions and results applicable when captured.
+
 # Handoff: Track 30 Toolchain & Version Support Matrix
 
 ## Summary
