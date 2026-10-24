@@ -773,6 +773,10 @@ Reconciled all completed work from `codex/track49-distributed-synchronization` (
 - **Track 51 (`In Progress`, `R2`):** Integrated Phase 5 closeout ledger, `review-report.md`, and `handoff.md` updates.
 - **Track 61 (`In Review`, `R3`):** Integrated Phase 3 stochastic chance-weighted solver closeout receipts and `docs/game-theory/` documentation (`codegen.md`, `extensive-form-runtime.md`, `graph-relations.md`, `ontology-ingestion.md`).
 
+## Track 94 in progress — 24 October 2026
+
+[Track 94](tracks/94-tempfile-publication/index.md) (`In Progress`): Commencing Phase 0 qualification, inventory, and value gate for tempfile robustness, atomic staging beside destination, and test temporary directory isolation in `kairo-ecs-arrow`.
+
 ## Track 93 completed — 24 October 2026
 
 [Track 93](tracks/93-sha2-integrity/index.md) (`Done`): Completed qualification and bounded adoption of RustCrypto `sha2` (v0.10.8). Custom `sha256_simple` deleted; standard FIPS 180-4 `compute_sha256` and `compute_sha256_hex` implemented and verified against NIST CAVP vectors and Python `hashlib`. Checkpoint integrity reader/writer upgraded to standard SHA-256 trailers.
