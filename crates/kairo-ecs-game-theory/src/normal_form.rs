@@ -692,7 +692,7 @@ pub struct ZeroSumMinimaxResult {
 /// Result of a two-player normal-form correlated equilibrium computed via Clarabel linear programming.
 #[derive(Debug, Clone, PartialEq)]
 pub struct CorrelatedEquilibriumResult {
-    /// Joint probability distribution p[i][j] over pure strategy profiles (sum = 1.0).
+    /// Joint probability distribution `p[i][j]` over pure strategy profiles (sum = 1.0).
     pub joint_probabilities: Vec<Vec<f64>>,
     /// Expected payoff to Player 1.
     pub expected_p1_payoff: f64,
@@ -713,7 +713,7 @@ impl ClarabelConvexSolver {
     /// Solves an arbitrary M x N zero-sum matrix game via linear programming minimax duality.
     ///
     /// Player 1 chooses strategy i in 0..M to maximize their expected payoff.
-    /// Player 2 chooses strategy j in 0..N, with payoff -payoff[i][j].
+    /// Player 2 chooses strategy j in 0..N, with payoff `-payoff[i][j]`.
     /// Returns Player 1's strategy, Player 2's strategy (from dual variables), and the game value.
     pub fn solve_zero_sum_minimax(
         payoffs: &[Vec<f64>],
