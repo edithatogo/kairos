@@ -24,8 +24,8 @@
 - **Dependency Pinned:** `prost = { version = "0.13.5", default-features = false, features = ["std", "prost-derive"] }`.
 - **Transitive Footprint:** Pure Rust proc macros via `prost-derive 0.13.5`. Zero C/`libprotoc` dependencies.
 - **Supply Chain Security:**
-  - `cargo deny check advisories sources licenses bans`: PASSED (0 advisories, 0 bans, clean Apache-2.0 license).
-  - `cargo audit`: PASSED (0 vulnerabilities across 402 dependencies).
+  - `cargo deny check advisories sources licenses bans`: PASSED (0 advisories, 0 bans, clean Apache-2.0 license; receipt: [`evidence/cargo-deny.txt`](evidence/cargo-deny.txt)).
+  - `cargo audit`: PASSED (0 vulnerabilities across 402 dependencies; receipt: [`evidence/cargo-audit.txt`](evidence/cargo-audit.txt)).
 - **MSRV:** Compatible with workspace MSRV (1.86/1.99).
 
 ---
@@ -47,16 +47,32 @@ All 12 independent behavioral and negative oracles passed:
 12. `oracle_prost_optimistic_message_full_roundtrip`: Verifies end-to-end roundtrip between native `OptimisticMessage` and protobuf wire envelope.
 
 All existing crate tests passed:
-- `crates/kairo-ecs-grpc`: 24 unit tests + 12 oracle tests + 2 multi-process socket tests = 38 tests passed.
-- Entire workspace tests: All passed.
+- `crates/kairo-ecs-grpc`: 24 unit tests + 12 oracle tests + 2 multi-process socket tests = 38 tests passed (receipt: [`evidence/cargo-test-grpc.txt`](evidence/cargo-test-grpc.txt)).
+- Entire workspace tests: All passed (receipt: [`evidence/cargo-test-workspace.txt`](evidence/cargo-test-workspace.txt)).
 
 ---
 
 ## 4. Code Quality & Hygiene
 
-- `cargo fmt --all --check`: PASSED cleanly.
-- `cargo clippy -p kairo-ecs-grpc --all-targets --all-features -- -D warnings`: PASSED cleanly (0 warnings).
+- `cargo fmt --all --check`: PASSED cleanly (receipt: [`evidence/cargo-fmt.txt`](evidence/cargo-fmt.txt)).
+- `cargo clippy -p kairo-ecs-grpc --all-targets --all-features -- -D warnings`: PASSED cleanly (0 warnings; receipt: [`evidence/cargo-clippy.txt`](evidence/cargo-clippy.txt)).
 - Replaced 264 lines of manual big-endian byte-packing with declarative derive-generated Protocol Buffers.
+
+---
+
+## 5. Source-Bound Validation Receipts
+
+| Validation Gate | Command | CWD | Commit | Toolchain | Exit Status | Artifact Receipt |
+|---|---|---|---|---|---|---|
+| Crate Tests | `cargo test -p kairo-ecs-grpc --all-features` | `/Volumes/PortableSSD/github/kairos` | `46a62a92f5` | `rustc 1.99.1` | `0` | [`evidence/cargo-test-grpc.txt`](evidence/cargo-test-grpc.txt) |
+| Workspace Tests | `cargo test --workspace` | `/Volumes/PortableSSD/github/kairos` | `46a62a92f5` | `rustc 1.99.1` | `0` | [`evidence/cargo-test-workspace.txt`](evidence/cargo-test-workspace.txt) |
+| Clippy | `cargo clippy -p kairo-ecs-grpc --all-targets --all-features -- -D warnings` | `/Volumes/PortableSSD/github/kairos` | `46a62a92f5` | `rustc 1.99.1` | `0` | [`evidence/cargo-clippy.txt`](evidence/cargo-clippy.txt) |
+| Formatting | `cargo fmt --all --check` | `/Volumes/PortableSSD/github/kairos` | `46a62a92f5` | `rustc 1.99.1` | `0` | [`evidence/cargo-fmt.txt`](evidence/cargo-fmt.txt) |
+| Supply Chain | `cargo deny check advisories sources licenses bans` | `/Volumes/PortableSSD/github/kairos` | `46a62a92f5` | `cargo-deny 0.18` | `0` | [`evidence/cargo-deny.txt`](evidence/cargo-deny.txt) |
+| Security Audit | `cargo audit` | `/Volumes/PortableSSD/github/kairos` | `46a62a92f5` | `cargo-audit 0.21` | `0` | [`evidence/cargo-audit.txt`](evidence/cargo-audit.txt) |
+| Phase Gates | `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` | `/Volumes/PortableSSD/github/kairos` | `46a62a92f5` | `pwsh 7.5` | `0` | [`evidence/conductor-phase-gates.txt`](evidence/conductor-phase-gates.txt) |
+| DAG Validation | `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1` | `/Volumes/PortableSSD/github/kairos` | `46a62a92f5` | `pwsh 7.5` | `0` | [`evidence/conductor-dag.txt`](evidence/conductor-dag.txt) |
+| Artifact Validation | `pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1` | `/Volumes/PortableSSD/github/kairos` | `46a62a92f5` | `pwsh 7.5` | `0` | [`evidence/conductor-artifacts.txt`](evidence/conductor-artifacts.txt) |
 
 ---
 

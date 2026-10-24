@@ -1,0 +1,2 @@
+    Checking kairo-ecs-grpc v0.0.0 (/Volumes/PortableSSD/GitHub/kairos/crates/kairo-ecs-grpc)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.81s

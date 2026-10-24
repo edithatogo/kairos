@@ -1,0 +1,158 @@
+warning[license-not-encountered]: license was not encountered
+  ┌─ /Volumes/PortableSSD/GitHub/kairos/deny.toml:2:48
+  │
+2 │ allow = ["MIT", "Apache-2.0", "BSD-2-Clause", "BSD-3-Clause", "ISC", "Unicode-DFS-2016", "Unicode-3.0"]
+  │                                                ━━━━━━━━━━━━ unmatched license allowance
+
+warning[license-not-encountered]: license was not encountered
+  ┌─ /Volumes/PortableSSD/GitHub/kairos/deny.toml:2:64
+  │
+2 │ allow = ["MIT", "Apache-2.0", "BSD-2-Clause", "BSD-3-Clause", "ISC", "Unicode-DFS-2016", "Unicode-3.0"]
+  │                                                                ━━━ unmatched license allowance
+
+warning[license-not-encountered]: license was not encountered
+  ┌─ /Volumes/PortableSSD/GitHub/kairos/deny.toml:2:71
+  │
+2 │ allow = ["MIT", "Apache-2.0", "BSD-2-Clause", "BSD-3-Clause", "ISC", "Unicode-DFS-2016", "Unicode-3.0"]
+  │                                                                       ━━━━━━━━━━━━━━━━ unmatched license allowance
+
+warning[duplicate]: found 2 duplicate entries for crate 'syn'
+    ┌─ /Volumes/PortableSSD/GitHub/kairos/Cargo.lock:153:1
+    │  
+153 │ ╭ syn 2.0.117 registry+https://github.com/rust-lang/crates.io-index
+154 │ │ syn 3.0.6 registry+https://github.com/rust-lang/crates.io-index
+    │ ╰───────────────────────────────────────────────────────────────┘ lock entries
+    │  
+    ├ syn v2.0.117
+      ├── clap_derive v4.5.61
+      │   └── clap v4.5.61
+      │       ├── criterion v0.5.1
+      │       │   ├── (dev) kairo-ecs-bench v0.1.0
+      │       │   ├── (dev) kairo-ecs-debug v0.0.0
+      │       │   └── (dev) kairo-ecs-fmi v0.1.0
+      │       ├── kairo-ecs-cli v0.1.0
+      │       └── kairo-ecs-debug v0.0.0 (*)
+      ├── prost-derive v0.13.5
+      │   └── prost v0.13.5
+      │       └── kairo-ecs-grpc v0.0.0
+      └── zerocopy-derive v0.8.48
+          └── zerocopy v0.8.48
+              ├── half v2.7.1
+              │   └── ciborium-ll v0.2.2
+              │       └── ciborium v0.2.2
+              │           └── criterion v0.5.1 (*)
+              └── ppv-lite86 v0.2.21
+                  └── rand_chacha v0.10.0
+                      └── kairo-ecs-rng v0.0.0
+                          ├── kairo-ecs-abm v0.1.0
+                          ├── kairo-ecs-bench v0.1.0 (*)
+                          ├── (dev) kairo-ecs-core v0.0.0
+                          │   ├── kairo-ecs-abm v0.1.0 (*)
+                          │   ├── kairo-ecs-bench v0.1.0 (*)
+                          │   ├── kairo-ecs-cli v0.1.0 (*)
+                          │   ├── kairo-ecs-debug v0.0.0 (*)
+                          │   ├── kairo-ecs-des v0.1.0
+                          │   ├── kairo-ecs-ffi v0.1.0
+                          │   │   ├── kairo-ecs-cs-bridge v0.1.0
+                          │   │   ├── kairo-ecs-diplomat v0.1.0
+                          │   │   ├── kairo-ecs-uniffi v0.1.0
+                          │   │   └── kairo-ecs-wasm v0.1.0
+                          │   ├── (dev) kairo-ecs-pdes v0.0.0
+                          │   │   ├── kairo-ecs-grpc v0.0.0 (*)
+                          │   │   └── kairo-ecs-mpi v0.0.0
+                          │   └── kairo-ecs-state v0.0.0
+                          │       ├── kairo-ecs-abm v0.1.0 (*)
+                          │       ├── kairo-ecs-bench v0.1.0 (*)
+                          │       ├── kairo-ecs-des v0.1.0 (*)
+                          │       ├── kairo-ecs-ffi v0.1.0 (*)
+                          │       └── kairo-ecs-viz v0.1.0
+                          ├── kairo-ecs-des v0.1.0 (*)
+                          └── kairo-ecs-ffi v0.1.0 (*)
+    ├ syn v3.0.6
+      ├── bytemuck_derive v1.12.1
+      │   └── bytemuck v1.25.2
+      │       ├── kairo-ecs-cuda v0.1.0
+      │       └── kairo-ecs-gpu v0.1.0
+      ├── serde_derive v1.0.229
+      │   ├── criterion v0.5.1
+      │   │   ├── (dev) kairo-ecs-bench v0.1.0
+      │   │   ├── (dev) kairo-ecs-debug v0.0.0
+      │   │   └── (dev) kairo-ecs-fmi v0.1.0
+      │   └── serde v1.0.229
+      │       ├── ciborium v0.2.2
+      │       │   └── criterion v0.5.1 (*)
+      │       ├── criterion v0.5.1 (*)
+      │       ├── (dev) kairo-ecs-bench v0.1.0 (*)
+      │       ├── kairo-ecs-cli v0.1.0
+      │       ├── (dev) kairo-ecs-core v0.0.0
+      │       │   ├── kairo-ecs-abm v0.1.0
+      │       │   ├── kairo-ecs-bench v0.1.0 (*)
+      │       │   ├── kairo-ecs-cli v0.1.0 (*)
+      │       │   ├── kairo-ecs-debug v0.0.0 (*)
+      │       │   ├── kairo-ecs-des v0.1.0
+      │       │   ├── kairo-ecs-ffi v0.1.0
+      │       │   │   ├── kairo-ecs-cs-bridge v0.1.0
+      │       │   │   ├── kairo-ecs-diplomat v0.1.0
+      │       │   │   ├── kairo-ecs-uniffi v0.1.0
+      │       │   │   └── kairo-ecs-wasm v0.1.0
+      │       │   ├── (dev) kairo-ecs-pdes v0.0.0
+      │       │   │   ├── kairo-ecs-grpc v0.0.0
+      │       │   │   └── kairo-ecs-mpi v0.0.0
+      │       │   └── kairo-ecs-state v0.0.0
+      │       │       ├── kairo-ecs-abm v0.1.0 (*)
+      │       │       ├── kairo-ecs-bench v0.1.0 (*)
+      │       │       ├── kairo-ecs-des v0.1.0 (*)
+      │       │       ├── kairo-ecs-ffi v0.1.0 (*)
+      │       │       └── kairo-ecs-viz v0.1.0
+      │       ├── kairo-ecs-debug v0.0.0 (*)
+      │       ├── kairo-ecs-rng v0.0.0
+      │       │   ├── kairo-ecs-abm v0.1.0 (*)
+      │       │   ├── kairo-ecs-bench v0.1.0 (*)
+      │       │   ├── (dev) kairo-ecs-core v0.0.0 (*)
+      │       │   ├── kairo-ecs-des v0.1.0 (*)
+      │       │   └── kairo-ecs-ffi v0.1.0 (*)
+      │       ├── serde_spanned v0.6.9
+      │       │   ├── toml v0.8.23
+      │       │   │   └── kairo-ecs-cli v0.1.0 (*)
+      │       │   └── toml_edit v0.22.27
+      │       │       └── toml v0.8.23 (*)
+      │       ├── tinytemplate v1.2.1
+      │       │   └── criterion v0.5.1 (*)
+      │       ├── toml v0.8.23 (*)
+      │       ├── toml_datetime v0.6.11
+      │       │   ├── toml v0.8.23 (*)
+      │       │   └── toml_edit v0.22.27 (*)
+      │       └── toml_edit v0.22.27 (*)
+      ├── thiserror-impl v2.0.21
+      │   └── thiserror v2.0.21
+      │       ├── geo-types v0.7.20
+      │       │   └── geo v0.33.1
+      │       │       └── kairo-ecs-abm v0.1.0 (*)
+      │       ├── kairo-ecs-abm v0.1.0 (*)
+      │       ├── kairo-ecs-cli v0.1.0 (*)
+      │       ├── kairo-ecs-debug v0.0.0 (*)
+      │       └── kairo-ecs-rng v0.0.0 (*)
+      └── wasm-bindgen-macro-support v0.2.129
+          └── wasm-bindgen-macro v0.2.129
+              └── wasm-bindgen v0.2.129
+                  ├── getrandom v0.4.3
+                  │   ├── rand v0.10.3
+                  │   │   ├── geo v0.33.1 (*)
+                  │   │   ├── kairo-ecs-rng v0.0.0 (*)
+                  │   │   ├── proptest v1.12.0
+                  │   │   │   └── (dev) kairo-ecs-core v0.0.0 (*)
+                  │   │   └── rand_distr v0.6.0
+                  │   │       └── kairo-ecs-rng v0.0.0 (*)
+                  │   ├── tempfile v3.27.0
+                  │   │   └── kairo-ecs-arrow v0.1.0
+                  │   └── zip v9.1.0
+                  │       └── kairo-ecs-fmi v0.1.0 (*)
+                  ├── js-sys v0.3.106
+                  │   ├── getrandom v0.4.3 (*)
+                  │   └── web-sys v0.3.106
+                  │       └── plotters v0.3.7
+                  │           └── criterion v0.5.1 (*)
+                  ├── plotters v0.3.7 (*)
+                  └── web-sys v0.3.106 (*)
+
+advisories ok, bans ok, licenses ok, sources ok

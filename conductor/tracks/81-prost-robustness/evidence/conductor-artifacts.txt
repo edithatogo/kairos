@@ -1,0 +1,220 @@
+=== Validate Conductor Artifacts ===
+  Found 106 track directories
+  Checking required artifacts...
+  Validating handoff.md freshness...
+  Validating risk-register.md format...
+  Validating handoff.md structure...
+  Validating spec.md mandatory sections...
+
+0 error(s), 0 warning(s), 52 info
+[
+  {
+    "Severity": "INFO",
+    "Message": "100-tracing-subscriber/risk-register.md: Consider adding severity scoring scale (Low/Medium/High/Critical)"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "101-criterion-consolidation/risk-register.md: Consider adding severity scoring scale (Low/Medium/High/Critical)"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "102-ode-solvers-qualification/risk-register.md: Consider adding severity scoring scale (Low/Medium/High/Critical)"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "103-tungstenite-transport/risk-register.md: Consider adding severity scoring scale (Low/Medium/High/Critical)"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "104-tokio-tungstenite-adapter/risk-register.md: Consider adding severity scoring scale (Low/Medium/High/Critical)"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "105-python315-runtime-qualification/risk-register.md: Consider adding Likelihood/Impact/Severity columns"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "105-python315-runtime-qualification/risk-register.md: Consider adding severity scoring scale (Low/Medium/High/Critical)"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "67-linked-entity-hierarchies-dynamic-spawning/risk-register.md: Consider adding severity scoring scale (Low/Medium/High/Critical)"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "68-inter-unit-boundary-channels-handover-sinks/risk-register.md: Consider adding severity scoring scale (Low/Medium/High/Critical)"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "69-stochastic-competing-risks-hazard-engine/risk-register.md: Consider adding severity scoring scale (Low/Medium/High/Critical)"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "70-polars-native-data-processing/risk-register.md: Consider adding Likelihood/Impact/Severity columns"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "70-polars-native-data-processing/risk-register.md: Consider adding severity scoring scale (Low/Medium/High/Critical)"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "71-rand-deterministic-rng/risk-register.md: Consider adding severity scoring scale (Low/Medium/High/Critical)"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "72-rand-distr-sampling/risk-register.md: Consider adding severity scoring scale (Low/Medium/High/Critical)"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "73-petgraph-spatial-routing/risk-register.md: Consider adding severity scoring scale (Low/Medium/High/Critical)"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "74-serde-robustness/risk-register.md: Consider adding severity scoring scale (Low/Medium/High/Critical)"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "75-serde-json-robustness/risk-register.md: Consider adding severity scoring scale (Low/Medium/High/Critical)"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "76-toml-robustness/risk-register.md: Consider adding severity scoring scale (Low/Medium/High/Critical)"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "77-clap-robustness/risk-register.md: Consider adding severity scoring scale (Low/Medium/High/Critical)"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "78-rayon-robustness/risk-register.md: Consider adding severity scoring scale (Low/Medium/High/Critical)"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "79-zip-robustness/risk-register.md: Consider adding severity scoring scale (Low/Medium/High/Critical)"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "80-quick-xml-robustness/risk-register.md: Consider adding severity scoring scale (Low/Medium/High/Critical)"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "81-prost-robustness/risk-register.md: Consider adding severity scoring scale (Low/Medium/High/Critical)"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "82-tokio-robustness/risk-register.md: Consider adding severity scoring scale (Low/Medium/High/Critical)"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "83-tonic-robustness/risk-register.md: Consider adding severity scoring scale (Low/Medium/High/Critical)"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "84-hecs-robustness/risk-register.md: Consider adding severity scoring scale (Low/Medium/High/Critical)"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "85-clarabel-robustness/risk-register.md: Consider adding severity scoring scale (Low/Medium/High/Critical)"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "86-rstar-robustness/risk-register.md: Consider adding severity scoring scale (Low/Medium/High/Critical)"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "87-geo-robustness/risk-register.md: Consider adding severity scoring scale (Low/Medium/High/Critical)"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "88-mpi-robustness/risk-register.md: Consider adding severity scoring scale (Low/Medium/High/Critical)"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "89-tract-robustness/risk-register.md: Consider adding severity scoring scale (Low/Medium/High/Critical)"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "90-argmin-robustness/risk-register.md: Consider adding severity scoring scale (Low/Medium/High/Critical)"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "91-fmi-robustness/risk-register.md: Consider adding severity scoring scale (Low/Medium/High/Critical)"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "92-sobol-burley-robustness/risk-register.md: Consider adding severity scoring scale (Low/Medium/High/Critical)"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "93-sha2-integrity/risk-register.md: Consider adding severity scoring scale (Low/Medium/High/Critical)"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "94-tempfile-publication/risk-register.md: Consider adding severity scoring scale (Low/Medium/High/Critical)"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "95-thiserror-contracts/risk-register.md: Consider adding severity scoring scale (Low/Medium/High/Critical)"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "96-proptest-invariants/risk-register.md: Consider adding severity scoring scale (Low/Medium/High/Critical)"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "97-tracing-diagnostics/risk-register.md: Consider adding severity scoring scale (Low/Medium/High/Critical)"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "98-loom-concurrency/risk-register.md: Consider adding severity scoring scale (Low/Medium/High/Critical)"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "99-proptest-state-machine/risk-register.md: Consider adding severity scoring scale (Low/Medium/High/Critical)"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "105-python315-runtime-qualification/handoff.md missing section: ## Summary"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "105-python315-runtime-qualification/handoff.md missing section: ## Files changed"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "105-python315-runtime-qualification/handoff.md missing section: ## Contracts consumed"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "105-python315-runtime-qualification/handoff.md missing section: ## Contracts changed"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "105-python315-runtime-qualification/handoff.md missing section: ## Tests added"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "105-python315-runtime-qualification/handoff.md missing section: ## Known risks"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "70-polars-native-data-processing/handoff.md missing section: ## Files changed"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "70-polars-native-data-processing/handoff.md missing section: ## Contracts consumed"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "70-polars-native-data-processing/handoff.md missing section: ## Contracts changed"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "70-polars-native-data-processing/handoff.md missing section: ## Tests added"
+  },
+  {
+    "Severity": "INFO",
+    "Message": "70-polars-native-data-processing/handoff.md missing section: ## Known risks"
+  }
+]
+Artifact validation passed.

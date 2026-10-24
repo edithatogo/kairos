@@ -66,14 +66,18 @@ All 38 tests in `kairo-ecs-grpc` passed (24 unit tests, 12 oracle tests, 2 multi
 ## Phase closeout evidence
 
 - `$conductor-review`: Phase 0, Phase 1, and Phase 2 review executed and passed; see [review-report.md](review-report.md).
-- accepted fixes: Adopted `prost 0.13.5` with minimal features; replaced manual big-endian packing with typed protobuf codecs; verified 128-bit timestamp and namespace preservation; clippy and fmt hygiene fixes.
+- accepted fixes: Adopted `prost 0.13.5` with minimal features; replaced manual big-endian packing with typed protobuf codecs; verified 128-bit timestamp and namespace preservation; clippy and fmt hygiene fixes; attached source-bound validation receipts.
 - rejected findings: None.
-- command/cwd/commit SHA/toolchain/seed/input hashes:
-  - Command: `cargo test -p kairo-ecs-grpc --all-features`
-  - CWD: `/Volumes/PortableSSD/github/kairos`
-  - Toolchain: `rustc 1.99.1`
-  - Commit SHA: cda797746bceb38f176d4e68d181f9035db7c7e6
-  - Exit code: `0`
+- Source-bound validation receipts:
+  - **Crate Tests:** `cargo test -p kairo-ecs-grpc --all-features` | CWD: `/Volumes/PortableSSD/github/kairos` | Toolchain: `rustc 1.99.1` | Commit: `46a62a92f5e7d3ba1eafa6538f6610a8a761eb0b` | Exit: `0` | Artifact: [`evidence/cargo-test-grpc.txt`](evidence/cargo-test-grpc.txt)
+  - **Workspace Tests:** `cargo test --workspace` | CWD: `/Volumes/PortableSSD/github/kairos` | Toolchain: `rustc 1.99.1` | Commit: `46a62a92f5e7d3ba1eafa6538f6610a8a761eb0b` | Exit: `0` | Artifact: [`evidence/cargo-test-workspace.txt`](evidence/cargo-test-workspace.txt)
+  - **Clippy Lint:** `cargo clippy -p kairo-ecs-grpc --all-targets --all-features -- -D warnings` | CWD: `/Volumes/PortableSSD/github/kairos` | Toolchain: `rustc 1.99.1` | Commit: `46a62a92f5e7d3ba1eafa6538f6610a8a761eb0b` | Exit: `0` | Artifact: [`evidence/cargo-clippy.txt`](evidence/cargo-clippy.txt)
+  - **Format Check:** `cargo fmt --all --check` | CWD: `/Volumes/PortableSSD/github/kairos` | Toolchain: `rustc 1.99.1` | Commit: `46a62a92f5e7d3ba1eafa6538f6610a8a761eb0b` | Exit: `0` | Artifact: [`evidence/cargo-fmt.txt`](evidence/cargo-fmt.txt)
+  - **Supply-Chain Deny:** `cargo deny check advisories sources licenses bans` | CWD: `/Volumes/PortableSSD/github/kairos` | Toolchain: `rustc 1.99.1` | Commit: `46a62a92f5e7d3ba1eafa6538f6610a8a761eb0b` | Exit: `0` | Artifact: [`evidence/cargo-deny.txt`](evidence/cargo-deny.txt)
+  - **Security Audit:** `cargo audit` | CWD: `/Volumes/PortableSSD/github/kairos` | Toolchain: `rustc 1.99.1` | Commit: `46a62a92f5e7d3ba1eafa6538f6610a8a761eb0b` | Exit: `0` | Artifact: [`evidence/cargo-audit.txt`](evidence/cargo-audit.txt)
+  - **Conductor Phase Gates:** `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` | CWD: `/Volumes/PortableSSD/github/kairos` | Toolchain: `pwsh 7.5` | Commit: `46a62a92f5e7d3ba1eafa6538f6610a8a761eb0b` | Exit: `0` | Artifact: [`evidence/conductor-phase-gates.txt`](evidence/conductor-phase-gates.txt)
+  - **Conductor DAG:** `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1` | CWD: `/Volumes/PortableSSD/github/kairos` | Toolchain: `pwsh 7.5` | Commit: `46a62a92f5e7d3ba1eafa6538f6610a8a761eb0b` | Exit: `0` | Artifact: [`evidence/conductor-dag.txt`](evidence/conductor-dag.txt)
+  - **Conductor Artifacts:** `pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1` | CWD: `/Volumes/PortableSSD/github/kairos` | Toolchain: `pwsh 7.5` | Commit: `46a62a92f5e7d3ba1eafa6538f6610a8a761eb0b` | Exit: `0` | Artifact: [`evidence/conductor-artifacts.txt`](evidence/conductor-artifacts.txt)
 - pushed ref: origin/feat/track-81-prost-envelope-encoding
 - next-phase decision: Track 81 is Done; advance to Track 82 (Tokio bounded transport runtime).
 - Use `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` before advancement.
