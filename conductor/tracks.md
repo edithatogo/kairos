@@ -92,11 +92,11 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 84 | hecs ECS storage qualification | Planned | `ecs-agent` | See `conductor/tracks/84-*/spec.md` |
 | 85 | Clarabel convex solver qualification | Planned | `vv-uq-agent` | See `conductor/tracks/85-*/spec.md` |
 | 86 | rstar continuous spatial index qualification | Done | `abm-api-agent` | See `conductor/tracks/86-*/spec.md` |
-| 87 | geo geometry and route-position primitives | Completed | `abm-api-agent` | See `conductor/tracks/87-*/spec.md` |
+| 87 | geo geometry and route-position primitives | Done | `abm-api-agent` | See `conductor/tracks/87-*/spec.md` |
 | 88 | rsmpi native MPI qualification | Planned | `distributed-agent` | See `conductor/tracks/88-*/spec.md` |
 | 89 | Tract inference qualification | Planned | `ml-integration-agent` | See `conductor/tracks/89-*/spec.md` |
 | 90 | Argmin calibration optimiser qualification | Planned | `vv-uq-agent` | See `conductor/tracks/90-*/spec.md` |
-| 91 | rust-fmi adapter qualification | Planned | `fmi-agent` | See `conductor/tracks/91-*/spec.md` |
+| 91 | rust-fmi adapter qualification | Done | `fmi-agent` | See `conductor/tracks/91-*/spec.md` |
 | 92 | Sobol sequence qualification | Planned | `experiment-agent` | See `conductor/tracks/92-*/spec.md` |
 | 93 | sha2 robustness | Done | `arrow-agent` | See `conductor/tracks/93-*/spec.md` |
 | 94 | tempfile robustness | Done | `arrow-agent` | See `conductor/tracks/94-*/spec.md` |
@@ -204,7 +204,7 @@ The human sole maintainer explicitly approved Track49 production scheduling afte
 - [ ] **Track 90: Argmin calibration optimiser qualification** — Planned; conditional; value gate pending. [Track](tracks/90-argmin-robustness/index.md).
 
 ---
-- [ ] **Track 91: rust-fmi adapter qualification** — Planned; evaluation; value gate pending. [Track](tracks/91-fmi-robustness/index.md).
+- [x] **Track 91: rust-fmi adapter qualification** — Done; evaluation completed (rejected); value gate closed. [Track](tracks/91-fmi-robustness/index.md).
 
 ---
 - [ ] **Track 92: Sobol sequence qualification** — Planned; evaluation; value gate pending. [Track](tracks/92-sobol-burley-robustness/index.md).

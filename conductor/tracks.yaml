@@ -1362,7 +1362,7 @@ tracks:
 
   - id: 91
     name: rust-fmi adapter qualification
-    status: Planned
+    status: Done
     owner: fmi-agent
     depends_on: ["78"]
     owned_paths:
