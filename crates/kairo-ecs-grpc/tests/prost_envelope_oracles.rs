@@ -518,3 +518,192 @@ fn oracle_socket_receiver_records_envelope_decode_failures() {
     assert_eq!(transport.envelope_decode_failures().len(), 0);
     assert_eq!(transport.envelope_decode_failure_count(), total_count);
 }
+
+#[derive(serde::Deserialize)]
+struct ConformanceFixture {
+    cases: Vec<ConformanceCase>,
+}
+
+#[derive(serde::Deserialize)]
+struct ConformanceCase {
+    case_id: String,
+    envelope_schema_version: u32,
+    protocol_id: String,
+    protocol_version: u32,
+    authority_mode: u32,
+    simulation_namespace: u128,
+    ownership_epoch: u64,
+    emission_epoch: u64,
+    source_lp: u32,
+    dest_lp: u32,
+    tick: u128,
+    ancestry_frames: Vec<ConformanceAncestryFrame>,
+    incarnation: u64,
+    kind: u32,
+    event_payload_hex: String,
+    independent_protobuf_wire_hex: String,
+}
+
+#[derive(serde::Deserialize)]
+struct ConformanceAncestryFrame {
+    #[serde(rename = "type")]
+    frame_type: String,
+    #[serde(default)]
+    root_source_lp: u32,
+    #[serde(default)]
+    root_sequence: u64,
+    #[serde(default)]
+    parent_tick: u128,
+    #[serde(default)]
+    parent_source_lp: u32,
+    #[serde(default)]
+    ordinal: u32,
+}
+
+fn decode_hex_bytes(s: &str) -> Vec<u8> {
+    (0..s.len())
+        .step_by(2)
+        .map(|i| u8::from_str_radix(&s[i..i + 2], 16).expect("valid hex byte"))
+        .collect()
+}
+
+#[test]
+fn oracle_independent_protobuf_peer_conformance() {
+    let fixture_path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../conformance/fixtures/optimistic_envelope_v2_conformance.json");
+    let fixture_content =
+        std::fs::read_to_string(&fixture_path).expect("must read conformance fixture");
+    let fixture: ConformanceFixture =
+        serde_json::from_str(&fixture_content).expect("parse conformance fixture JSON");
+
+    assert!(
+        !fixture.cases.is_empty(),
+        "fixture must contain conformance cases"
+    );
+
+    for case in fixture.cases {
+        let peer_wire_bytes = decode_hex_bytes(&case.independent_protobuf_wire_hex);
+        let expected_payload = decode_hex_bytes(&case.event_payload_hex);
+
+        // 1. Decode peer-generated protobuf wire bytes through production decoder
+        let decoded = KairoOptimisticEnvelopeV1::decode(&peer_wire_bytes)
+            .unwrap_or_else(|e| panic!("failed to decode case {}: {e:?}", case.case_id));
+
+        // 2. Validate semantic field agreement between published schema and Rust domain
+        assert_eq!(
+            decoded.envelope_schema_version, case.envelope_schema_version,
+            "schema version in case {}",
+            case.case_id
+        );
+        assert_eq!(
+            decoded.protocol_id, case.protocol_id,
+            "protocol_id in case {}",
+            case.case_id
+        );
+        assert_eq!(
+            decoded.protocol_version, case.protocol_version as u16,
+            "protocol_version in case {}",
+            case.case_id
+        );
+        match case.authority_mode {
+            0 => assert_eq!(
+                decoded.authority_mode,
+                OptimisticAuthorityMode::LocalPreview
+            ),
+            1 => assert_eq!(decoded.authority_mode, OptimisticAuthorityMode::Scoped),
+            _ => panic!("unexpected authority_mode"),
+        }
+        assert_eq!(
+            decoded.simulation_namespace, case.simulation_namespace,
+            "namespace in case {}",
+            case.case_id
+        );
+        assert_eq!(
+            decoded.ownership_epoch, case.ownership_epoch,
+            "ownership_epoch in case {}",
+            case.case_id
+        );
+        assert_eq!(
+            decoded.emission_epoch, case.emission_epoch,
+            "emission_epoch in case {}",
+            case.case_id
+        );
+        assert_eq!(
+            decoded.source_lp, case.source_lp,
+            "source_lp in case {}",
+            case.case_id
+        );
+        assert_eq!(
+            decoded.dest_lp, case.dest_lp,
+            "dest_lp in case {}",
+            case.case_id
+        );
+        assert_eq!(decoded.tick, case.tick, "tick in case {}", case.case_id);
+        assert_eq!(
+            decoded.incarnation, case.incarnation,
+            "incarnation in case {}",
+            case.case_id
+        );
+        assert_eq!(
+            decoded.event_payload, expected_payload,
+            "event_payload in case {}",
+            case.case_id
+        );
+
+        match case.kind {
+            0 => assert_eq!(decoded.kind, kairo_ecs_grpc::WireMessageKind::Positive),
+            1 => assert_eq!(decoded.kind, kairo_ecs_grpc::WireMessageKind::Anti),
+            _ => panic!("unexpected kind in fixture"),
+        }
+
+        assert_eq!(
+            decoded.ancestry_frames.len(),
+            case.ancestry_frames.len(),
+            "ancestry length in case {}",
+            case.case_id
+        );
+
+        for (actual_frame, expected_frame) in decoded
+            .ancestry_frames
+            .iter()
+            .zip(case.ancestry_frames.iter())
+        {
+            match (actual_frame, expected_frame.frame_type.as_str()) {
+                (
+                    AncestryFrame::Root {
+                        root_source_lp,
+                        root_sequence,
+                    },
+                    "root",
+                ) => {
+                    assert_eq!(*root_source_lp, expected_frame.root_source_lp);
+                    assert_eq!(*root_sequence, expected_frame.root_sequence);
+                }
+                (
+                    AncestryFrame::Output {
+                        parent_tick,
+                        parent_source_lp,
+                        ordinal,
+                    },
+                    "output",
+                ) => {
+                    assert_eq!(*parent_tick, expected_frame.parent_tick);
+                    assert_eq!(*parent_source_lp, expected_frame.parent_source_lp);
+                    assert_eq!(*ordinal, expected_frame.ordinal);
+                }
+                _ => panic!("ancestry frame variant mismatch in case {}", case.case_id),
+            }
+        }
+
+        // 3. Bidirectional roundtrip: re-encode via production encoder and verify byte-for-byte canonical equality
+        let encoded_bytes = decoded
+            .encode()
+            .unwrap_or_else(|e| panic!("failed to encode case {}: {e:?}", case.case_id));
+
+        assert_eq!(
+            encoded_bytes, peer_wire_bytes,
+            "production protobuf wire encoding must match independent peer wire bytes byte-for-byte in case {}",
+            case.case_id
+        );
+    }
+}

@@ -11,8 +11,13 @@ Phase 0, Phase 1, and Phase 2 completed. Adopted `prost = "0.13.5"` (minimal fea
 - `Cargo.lock`
 - `crates/kairo-ecs-grpc/Cargo.toml`
 - `crates/kairo-ecs-grpc/src/envelope.rs`
+- `crates/kairo-ecs-grpc/src/socket.rs`
 - `crates/kairo-ecs-grpc/proto/simulation.proto`
 - `crates/kairo-ecs-grpc/tests/prost_envelope_oracles.rs`
+- `crates/kairo-ecs-grpc/tests/two_process_smoke.rs`
+- `conformance/fixtures/optimistic_envelope_v2_conformance.json`
+- `conformance/fixtures/manifest.json`
+- `scripts/generate_protobuf_envelope_conformance.py`
 - `conductor/tracks/81-prost-robustness/evidence/phase0-qualification.md`
 - `conductor/tracks/81-prost-robustness/adr-api-compatibility-and-redteam.md`
 - `conductor/tracks/81-prost-robustness/review-report.md`
@@ -55,6 +60,7 @@ Extended `crates/kairo-ecs-grpc` with typed Protobuf wire codecs:
   - `oracle_prost_optimistic_message_full_roundtrip`
   - `oracle_legacy_v1_and_protobuf_v2_dual_compatibility`
   - `oracle_socket_receiver_records_envelope_decode_failures`
+  - `oracle_independent_protobuf_peer_conformance`
 
 ## Known risks
 
@@ -66,7 +72,7 @@ Advance to next sequenced track: Track 82 (`Tokio bounded transport runtime`).
 
 ## Integration notes
 
-All 41 tests in `kairo-ecs-grpc` passed (25 unit tests, 14 oracle tests, 2 multi-process socket tests). Pure-Rust compilation verified with zero C or `libprotoc` dependencies. Passes `cargo deny check advisories sources licenses bans` (0 advisories, 0 bans, clean Apache-2.0 license) and `cargo audit` (402 dependencies scanned, 0 vulnerabilities).
+All 42 tests in `kairo-ecs-grpc` passed (25 unit tests, 15 oracle tests, 2 multi-process socket tests). Pure-Rust compilation verified with zero C or `libprotoc` dependencies. Passes `cargo deny check advisories sources licenses bans` (0 advisories, 0 bans, clean Apache-2.0 license) and `cargo audit` (402 dependencies scanned, 0 vulnerabilities). Independent protobuf conformance fixture generated and validated bidirectionally.
 
 ## Phase closeout evidence
 

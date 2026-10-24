@@ -48,6 +48,18 @@
       ]
     },
     {
+      "id": "optimistic_envelope_v2_conformance",
+      "status": "ready",
+      "kind": "wire_envelope",
+      "source": "optimistic_envelope_v2_conformance.json",
+      "consumers": ["81", "82", "83"],
+      "assertions": [
+        "independent protobuf peer wire bytes decode to matching semantic fields",
+        "production protobuf wire encoding reproduces independent reference protobuf wire bytes identically",
+        "128-bit timestamps, namespaces, epochs and ancestry chains roundtrip with zero drift"
+      ]
+    },
+    {
       "id": "event_log_v2_conformance",
       "status": "ready",
       "kind": "event_log",

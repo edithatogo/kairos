@@ -1495,6 +1495,8 @@ dependencies = [
  "kairo-ecs-pdes",
  "kairo-ecs-types",
  "prost",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

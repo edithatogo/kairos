@@ -10,6 +10,10 @@ kairo-ecs-pdes = { path = "../kairo-ecs-pdes", version = "0.0.0", features = ["t
 kairo-ecs-types = { path = "../kairo-ecs-types", version = "0.0.0" }
 prost = { version = "0.13.5", default-features = false, features = ["std", "prost-derive"] }
 
+[dev-dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
 [features]
 default = []
 grpc = []
