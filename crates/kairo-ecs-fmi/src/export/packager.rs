@@ -118,6 +118,18 @@ pub fn package_fmu_archive(
         ));
     }
 
+    let canonical_model_desc = model_description.canonicalize().ok();
+    let canonical_output = output_fmu_path.canonicalize().ok();
+
+    if let (Some(out), Some(desc)) = (&canonical_output, &canonical_model_desc) {
+        if out == desc {
+            return Err(validation_error(
+                "FMU packager",
+                "output archive path aliases modelDescription.xml",
+            ));
+        }
+    }
+
     if let Some(parent) = output_fmu_path.parent() {
         if !parent.as_os_str().is_empty() {
             fs::create_dir_all(parent).map_err(|error| {
@@ -131,7 +143,12 @@ pub fn package_fmu_archive(
     }
 
     let mut entries = Vec::new();
-    collect_directory_entries(unpacked_root, unpacked_root, &mut entries)?;
+    collect_directory_entries(
+        unpacked_root,
+        unpacked_root,
+        canonical_output.as_deref().or(Some(output_fmu_path)),
+        &mut entries,
+    )?;
     entries.sort_by(|a, b| a.0.cmp(&b.0));
 
     let packaging_result = (|| -> FmiResult<()> {
@@ -187,6 +204,7 @@ pub fn package_fmu_archive(
 fn collect_directory_entries(
     root: &Path,
     current: &Path,
+    excluded_output: Option<&Path>,
     out: &mut Vec<(String, PathBuf, bool)>,
 ) -> FmiResult<()> {
     let mut entries = Vec::new();
@@ -205,19 +223,40 @@ fn collect_directory_entries(
     entries.sort();
 
     for path in entries {
+        if let Some(excluded) = excluded_output {
+            if path == excluded || path.canonicalize().ok().as_deref() == Some(excluded) {
+                continue;
+            }
+        }
+
+        let metadata = fs::symlink_metadata(&path)
+            .map_err(|error| io_error("read entry metadata for packaging", path.clone(), error))?;
+        let file_type = metadata.file_type();
+
         let rel_path = path
             .strip_prefix(root)
             .map_err(|error| validation_error("FMU packager", error.to_string()))?;
+
+        if file_type.is_symlink() {
+            return Err(validation_error(
+                "FMU packager",
+                format!(
+                    "symlink entry rejected during packaging: {}",
+                    rel_path.display()
+                ),
+            ));
+        }
+
         let rel_components: Vec<_> = rel_path
             .components()
             .map(|c| c.as_os_str().to_string_lossy())
             .collect();
         let rel_str = rel_components.join("/");
 
-        if path.is_dir() {
+        if file_type.is_dir() {
             out.push((format!("{rel_str}/"), path.clone(), true));
-            collect_directory_entries(root, &path, out)?;
-        } else if path.is_file() {
+            collect_directory_entries(root, &path, excluded_output, out)?;
+        } else if file_type.is_file() {
             out.push((rel_str, path, false));
         }
     }

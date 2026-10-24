@@ -454,3 +454,100 @@ fn oracle_fmu_packager_roundtrip() {
     let _ = fs::remove_file(package_path);
     let _ = fs::remove_dir_all(destination);
 }
+
+#[test]
+fn oracle_packager_excludes_output_file_inside_root() {
+    let unpacked_root = temp_path("packager-nested-out");
+    let model_description = ModelDescription::new("nested_model", "{fmu-guid-5678}");
+    let layout =
+        write_unpacked_fmu(&unpacked_root, &model_description).expect("write unpacked fmu");
+
+    let platform = current_fmi_platform();
+    let binary_dir = layout.root.join("binaries").join(&platform);
+    fs::create_dir_all(&binary_dir).expect("create binary dir");
+    fs::write(
+        binary_dir.join(format!("model.{}", shared_library_extension())),
+        b"binary",
+    )
+    .expect("write binary");
+
+    // Place output archive directly inside the unpacked root
+    let internal_fmu = unpacked_root.join("nested.fmu");
+    package_fmu_archive(&unpacked_root, &internal_fmu).expect("first packaging pass");
+
+    // Package again with the same destination: must not include itself
+    package_fmu_archive(&unpacked_root, &internal_fmu).expect("second packaging pass");
+
+    // Extract to destination and verify internal_fmu was NOT packaged as an entry
+    let destination = temp_path("packager-nested-dest");
+    let extracted = FmuArchive::new(&internal_fmu)
+        .extract_to(&destination)
+        .expect("extract internal fmu");
+
+    assert!(extracted.model_description().is_file());
+    assert!(
+        !destination.join("nested.fmu").exists(),
+        "output archive must not be embedded in package"
+    );
+
+    let _ = fs::remove_dir_all(unpacked_root);
+    let _ = fs::remove_dir_all(destination);
+}
+
+#[cfg(unix)]
+#[test]
+fn oracle_packager_rejects_symlink_cycles_and_symlinks() {
+    use std::os::unix::fs::symlink;
+
+    let unpacked_root = temp_path("packager-symlink-cycle");
+    let model_description = ModelDescription::new("cycle_model", "{fmu-guid-9999}");
+    let layout =
+        write_unpacked_fmu(&unpacked_root, &model_description).expect("write unpacked fmu");
+
+    // Create a directory symlink back to ancestor (cycle)
+    let cycle_link = layout.resources_dir.join("back_to_root");
+    symlink(&unpacked_root, &cycle_link).expect("create cyclic symlink");
+
+    let output_fmu = temp_path("cycle.fmu");
+    let result = package_fmu_archive(&unpacked_root, &output_fmu);
+
+    match result {
+        Err(FmiError::Validation { artifact, message }) => {
+            assert_eq!(artifact, "FMU packager");
+            assert!(
+                message.contains("symlink entry rejected"),
+                "expected symlink rejection message, got: {message}"
+            );
+        }
+        other => panic!("expected Validation error for symlink during packaging, got {other:?}"),
+    }
+
+    assert!(
+        !output_fmu.exists(),
+        "output file must be cleaned up on failure"
+    );
+    let _ = fs::remove_dir_all(unpacked_root);
+}
+
+#[test]
+fn oracle_packager_rejects_output_aliasing_source_file() {
+    let unpacked_root = temp_path("packager-alias");
+    let model_description = ModelDescription::new("alias_model", "{fmu-guid-alias}");
+    let layout =
+        write_unpacked_fmu(&unpacked_root, &model_description).expect("write unpacked fmu");
+
+    // Try to overwrite modelDescription.xml as output archive
+    let result = package_fmu_archive(&unpacked_root, &layout.model_description);
+    match result {
+        Err(FmiError::Validation { artifact, message }) => {
+            assert_eq!(artifact, "FMU packager");
+            assert!(
+                message.contains("aliases modelDescription.xml"),
+                "expected alias rejection message, got: {message}"
+            );
+        }
+        other => panic!("expected Validation error for source alias, got {other:?}"),
+    }
+
+    let _ = fs::remove_dir_all(unpacked_root);
+}
