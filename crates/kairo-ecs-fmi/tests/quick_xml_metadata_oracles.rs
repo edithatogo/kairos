@@ -4,7 +4,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use kairo_ecs_fmi::export::model_description::{ModelDescription, ScalarVariable};
+use kairo_ecs_fmi::export::model_description::{ModelDescription, ScalarVariable, VariableType};
 use kairo_ecs_fmi::import::fmu_loader::{
     current_fmi_platform, validate_unpacked_fmu_layout, MAX_XML_BYTES, MAX_XML_DEPTH,
 };
@@ -246,4 +246,51 @@ fn oracle_validate_generated_fmi2_xml_oracle() {
     model
         .validate_generated_fmi2_xml()
         .expect("must validate successfully");
+}
+
+#[test]
+fn oracle_from_xml_str_rejects_nested_model_description() {
+    let xml = r#"<?xml version="1.0" encoding="UTF-8"?>
+<wrapper>
+  <fmiModelDescription fmiVersion="2.0" modelName="nested" guid="{g1}">
+  </fmiModelDescription>
+</wrapper>
+"#;
+    let result = ModelDescription::from_xml_str(xml);
+    assert!(result.is_err(), "Must reject nested fmiModelDescription");
+    let err_msg = result.unwrap_err().to_string();
+    assert!(
+        err_msg.contains("expected <fmiModelDescription> at document root"),
+        "Error message must specify expected root, got: {err_msg}"
+    );
+}
+
+#[test]
+fn oracle_from_xml_str_parses_variable_types_in_start_and_end_tags() {
+    let xml = r#"<?xml version="1.0" encoding="UTF-8"?>
+<fmiModelDescription fmiVersion="2.0" modelName="types_test" guid="{types-guid}">
+  <ModelVariables>
+    <ScalarVariable name="int_var" valueReference="1" causality="input" variability="continuous">
+      <Integer start="10"></Integer>
+    </ScalarVariable>
+    <ScalarVariable name="bool_var" valueReference="2" causality="output" variability="continuous">
+      <Boolean></Boolean>
+    </ScalarVariable>
+    <ScalarVariable name="str_var" valueReference="3" causality="local" variability="continuous">
+      <String start="abc" />
+    </ScalarVariable>
+  </ModelVariables>
+  <ModelStructure>
+    <Outputs>
+      <Unknown index="2" />
+    </Outputs>
+  </ModelStructure>
+</fmiModelDescription>
+"#;
+    let model =
+        ModelDescription::from_xml_str(xml).expect("parse XML with explicit start/end type tags");
+    assert_eq!(model.variables.len(), 3);
+    assert_eq!(model.variables[0].variable_type, VariableType::Integer);
+    assert_eq!(model.variables[1].variable_type, VariableType::Boolean);
+    assert_eq!(model.variables[2].variable_type, VariableType::String);
 }

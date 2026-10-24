@@ -240,40 +240,45 @@ impl ModelDescription {
                             format!("XML exceeds maximum nesting depth of {MAX_XML_DEPTH}"),
                         ));
                     }
-                    match e.local_name().as_ref() {
-                        "fmiModelDescription" => {
-                            if found_root {
-                                return Err(validation_error(
+                    if !found_root {
+                        if depth != 1 || e.local_name().as_ref() != "fmiModelDescription" {
+                            return Err(validation_error(
+                                "modelDescription.xml",
+                                format!(
+                                    "root element is <{}>, expected <fmiModelDescription> at document root",
+                                    e.local_name().as_ref()
+                                ),
+                            ));
+                        }
+                        found_root = true;
+                        for attr in e.attributes() {
+                            let attr = attr.map_err(|err| {
+                                validation_error(
                                     "modelDescription.xml",
-                                    "duplicate fmiModelDescription root element",
-                                ));
-                            }
-                            found_root = true;
-                            for attr in e.attributes() {
-                                let attr = attr.map_err(|err| {
-                                    validation_error(
-                                        "modelDescription.xml",
-                                        format!("malformed XML attribute: {err}"),
-                                    )
-                                })?;
-                                let key = attr.key.as_ref();
-                                let val = attr.normalized_value(XmlVersion::Explicit1_0).map_err(
-                                    |err| {
+                                    format!("malformed XML attribute: {err}"),
+                                )
+                            })?;
+                            let key = attr.key.as_ref();
+                            let val =
+                                attr.normalized_value(XmlVersion::Explicit1_0)
+                                    .map_err(|err| {
                                         validation_error(
                                             "modelDescription.xml",
                                             format!("malformed XML attribute value: {err}"),
                                         )
-                                    },
-                                )?;
-                                match key {
-                                    "modelName" => model_name = Some(val.into_owned()),
-                                    "guid" => guid = Some(val.into_owned()),
-                                    "generationTool" => generation_tool = Some(val.into_owned()),
-                                    "fmiVersion" => fmi_version = Some(val.into_owned()),
-                                    _ => {}
-                                }
+                                    })?;
+                            match key {
+                                "modelName" => model_name = Some(val.into_owned()),
+                                "guid" => guid = Some(val.into_owned()),
+                                "generationTool" => generation_tool = Some(val.into_owned()),
+                                "fmiVersion" => fmi_version = Some(val.into_owned()),
+                                _ => {}
                             }
                         }
+                        continue;
+                    }
+
+                    match e.local_name().as_ref() {
                         "ModelVariables" => in_model_variables = true,
                         "ScalarVariable" if in_model_variables => {
                             let mut name = None;
@@ -330,6 +335,11 @@ impl ModelDescription {
 
                             current_variable = Some((name, vr, causality, variability, None));
                         }
+                        "Real" | "Integer" | "Boolean" | "String" if current_variable.is_some() => {
+                            if let Some(ref mut var) = current_variable {
+                                var.4 = Some(VariableType::from_fmi2(e.local_name().as_ref())?);
+                            }
+                        }
                         "ModelStructure" => in_model_structure = true,
                         "Outputs" if in_model_structure => in_outputs = true,
                         _ => {}
@@ -337,8 +347,46 @@ impl ModelDescription {
                 }
                 Ok(Event::Empty(ref e)) => {
                     let local_name = e.local_name();
+                    if !found_root {
+                        if depth != 0 || local_name.as_ref() != "fmiModelDescription" {
+                            return Err(validation_error(
+                                "modelDescription.xml",
+                                format!(
+                                    "root element is <{}>, expected <fmiModelDescription> at document root",
+                                    local_name.as_ref()
+                                ),
+                            ));
+                        }
+                        found_root = true;
+                        for attr in e.attributes() {
+                            let attr = attr.map_err(|err| {
+                                validation_error(
+                                    "modelDescription.xml",
+                                    format!("malformed XML attribute: {err}"),
+                                )
+                            })?;
+                            let key = attr.key.as_ref();
+                            let val =
+                                attr.normalized_value(XmlVersion::Explicit1_0)
+                                    .map_err(|err| {
+                                        validation_error(
+                                            "modelDescription.xml",
+                                            format!("malformed XML attribute value: {err}"),
+                                        )
+                                    })?;
+                            match key {
+                                "modelName" => model_name = Some(val.into_owned()),
+                                "guid" => guid = Some(val.into_owned()),
+                                "generationTool" => generation_tool = Some(val.into_owned()),
+                                "fmiVersion" => fmi_version = Some(val.into_owned()),
+                                _ => {}
+                            }
+                        }
+                        continue;
+                    }
+
                     match local_name.as_ref() {
-                        "Real" | "Integer" | "Boolean" | "String" => {
+                        "Real" | "Integer" | "Boolean" | "String" if current_variable.is_some() => {
                             if let Some(ref mut var) = current_variable {
                                 var.4 = Some(VariableType::from_fmi2(local_name.as_ref())?);
                             }
@@ -397,12 +445,19 @@ impl ModelDescription {
                     }
                 }
                 Ok(Event::Eof) => break,
+                Ok(Event::Text(ref t)) => {
+                    if !found_root && !t.as_ref().trim().is_empty() {
+                        return Err(validation_error(
+                            "modelDescription.xml",
+                            "unexpected text content before root element",
+                        ));
+                    }
+                }
                 Ok(Event::Comment(_))
                 | Ok(Event::Decl(_))
                 | Ok(Event::DocType(_))
                 | Ok(Event::PI(_))
                 | Ok(Event::CData(_))
-                | Ok(Event::Text(_))
                 | Ok(Event::GeneralRef(_)) => {}
                 Err(err) => {
                     return Err(validation_error(
