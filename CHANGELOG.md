@@ -14,6 +14,8 @@ Format:
 
 ## Unreleased
 
+- `crates/kairo-ecs-rng` adopts `rand 0.10` and `rand_chacha 0.10` `ChaCha8Rng` with exact stream isolation, mid-buffer word position restoration, serializable `RngCheckpoint`, and rebased `conformance/fixtures/rng_replay.json` (Track 71).
+
 - `crates/kairo-ecs-core` expands proptest property testing coverage (Track 96) verifying strict total ordering `(SimTime, priority, insertion_sequence)`, global and step-wise event conservation, idempotent cancellation, generational ID boundary ranges, reproducible seed replay, and minimal counterexample shrinking.
 
 - Bootstrap and packaging Python hash locks resolve patched certifi 2026.10.19, removing the compromised emSign ECC G3 trust root while preserving verified Python 3.15.1 and existing tool versions.
