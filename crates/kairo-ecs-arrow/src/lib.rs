@@ -2016,7 +2016,7 @@ impl ParquetZstdCheckpointWriter {
             batch.encode(&mut out);
         }
         out.extend_from_slice(b"PAR1");
-        let checksum = sha256_simple(&out);
+        let checksum = compute_sha256(&out);
         out.extend_from_slice(&checksum);
         out
     }
@@ -2033,7 +2033,7 @@ impl ParquetZstdCheckpointReader {
         let checksum_start = data.len() - 32;
         let body = &data[0..checksum_start];
         let expected_checksum = &data[checksum_start..];
-        let actual_checksum = sha256_simple(body);
+        let actual_checksum = compute_sha256(body);
         if expected_checksum != actual_checksum || &body[body.len() - 4..] != b"PAR1" {
             return Err(ArrowError::InvalidHexDigit);
         }
@@ -2060,18 +2060,23 @@ fn fnv1a_hash(data: &[u8]) -> u64 {
     hash
 }
 
-fn sha256_simple(data: &[u8]) -> [u8; 32] {
-    let mut digest = [0u8; 32];
-    let mut acc: u64 = 0x6a09e667f3bcc908;
-    for (i, &b) in data.iter().enumerate() {
-        acc = acc.wrapping_add((b as u64).wrapping_mul((i as u64) + 1));
-        acc ^= acc >> 13;
+/// Computes standard FIPS 180-4 SHA-256 digest of `data`.
+pub fn compute_sha256(data: &[u8]) -> [u8; 32] {
+    use sha2::{Digest, Sha256};
+    let mut hasher = Sha256::new();
+    hasher.update(data);
+    hasher.finalize().into()
+}
+
+/// Computes lowercase hex string representation of standard SHA-256 digest.
+pub fn compute_sha256_hex(data: &[u8]) -> String {
+    let digest = compute_sha256(data);
+    let mut hex = String::with_capacity(64);
+    for b in digest {
+        use core::fmt::Write;
+        let _ = write!(&mut hex, "{:02x}", b);
     }
-    for i in 0..4 {
-        digest[i * 8..(i + 1) * 8].copy_from_slice(&acc.to_le_bytes());
-        acc = acc.wrapping_mul(6364136223846793005);
-    }
-    digest
+    hex
 }
 
 #[cfg(test)]

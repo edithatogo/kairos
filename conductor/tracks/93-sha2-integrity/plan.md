@@ -11,15 +11,15 @@ All implementation pending. Conditional/evaluation tracks may complete only a no
 
 ## Phase 1 — Bounded replacement if justified
 
-- [ ] Task 1.1: Only after accepted adopt decision, implement the specification behind existing authoritative domain boundaries; do not keep duplicate generic production paths.
-- [ ] Task 1.2: Migrate actual consumers, version intentional contracts, delete superseded code and retain required validation/oracles; prove failure/recovery and measure full costs.
-- [ ] Task 1.3: Conductor — review and verify phase (workflow.md); record accepted fixes and explicit next-phase decision.
+- [x] Task 1.1: Only after accepted adopt decision, implement the specification behind existing authoritative domain boundaries; do not keep duplicate generic production paths.
+- [x] Task 1.2: Migrate actual consumers, version intentional contracts, delete superseded code and retain required validation/oracles; prove failure/recovery and measure full costs.
+- [x] Task 1.3: Conductor — review and verify phase (workflow.md); record accepted fixes and explicit next-phase decision.
 
 ## Phase 2 — Acceptance and handoff
 
-- [ ] Task 2.1: Run every test-matrix oracle and applicable native/consumer/compatibility lanes; audit net retained complexity and costs against the frozen baseline.
-- [ ] Task 2.2: Record accepted immutable commit, raw receipts and downstream consumer/pin requirements; update documentation and rollback without release claims.
-- [ ] Task 2.3: Conductor — review and verify phase (workflow.md); close only with actual accepted evidence and precise adoption disposition.
+- [x] Task 2.1: Run every test-matrix oracle and applicable native/consumer/compatibility lanes; audit net retained complexity and costs against the frozen baseline.
+- [x] Task 2.2: Record accepted immutable commit, raw receipts and downstream consumer/pin requirements; update documentation and rollback without release claims.
+- [x] Task 2.3: Conductor — review and verify phase (workflow.md); close only with actual accepted evidence and precise adoption disposition.
 
 ## Phase closeout gate
 
