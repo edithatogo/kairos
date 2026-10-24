@@ -1,0 +1,36 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.09s
+     Running unittests src/lib.rs (target/debug/deps/kairo_ecs_ml-9c9281d6f67b4429)
+
+running 13 tests
+test tests::tick_hook_rejects_bad_output_shape_after_predict ... ok
+test tests::tick_hook_runs_matching_phase_only ... ok
+test tests::try_register_rejects_duplicate_model_name_and_version ... ok
+test tests::backend_status_reports_dependency_free_scaffold ... ok
+test tests::metadata_rejects_blank_name_and_empty_shapes ... ok
+test tests::tensor_rejects_non_finite_values ... ok
+test tests::ort_session_runs_shape_checked_inference ... ok
+test tests::tensor_rejects_shape_mismatch ... ok
+test tests::tensor_rejects_zero_dimension ... ok
+test tests::tick_hook_rejects_input_shape_before_predict ... ok
+test tests::try_register_validates_model_metadata_contract ... ok
+test rayon_vecenv_1024_worlds_throughput ... ok
+test multicore_vecenv_thread_parity ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/feature_matrix.rs (target/debug/deps/feature_matrix-a2eca422a70db622)
+
+running 4 tests
+test featureless_session_rejects_input_shape_mismatch_before_inference ... ok
+test featureless_session_reports_backend_not_configured ... ok
+test featureless_tick_hook_runs_registered_model ... ok
+test featureless_tick_hook_rejects_duplicate_model_registration ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_ml
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
