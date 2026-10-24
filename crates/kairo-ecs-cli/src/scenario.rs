@@ -1,9 +1,11 @@
+use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::fmt::{Display, Formatter};
 use std::fs;
 use std::path::{Path, PathBuf};
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct ScenarioManifest {
     pub schema_version: String,
     pub scenario_id: String,
@@ -15,15 +17,58 @@ pub struct ScenarioManifest {
     pub max_events: u64,
     pub artifact_root: PathBuf,
     pub resume_checkpoint_every_events: u64,
+    #[serde(deserialize_with = "deserialize_kind_order")]
     pub expected_kind_order: Vec<u32>,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Deserialize)]
+#[serde(untagged)]
+enum KindOrderRepr {
+    List(Vec<u32>),
+    String(String),
+}
+
+fn deserialize_kind_order<'de, D>(deserializer: D) -> Result<Vec<u32>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let repr = KindOrderRepr::deserialize(deserializer)?;
+    match repr {
+        KindOrderRepr::List(list) => {
+            if list.is_empty() {
+                return Err(serde::de::Error::custom(
+                    "expected_kind_order cannot be empty",
+                ));
+            }
+            Ok(list)
+        }
+        KindOrderRepr::String(s) => {
+            let trimmed = s.trim();
+            if trimmed.is_empty() {
+                return Err(serde::de::Error::custom(
+                    "expected_kind_order cannot be empty",
+                ));
+            }
+            trimmed
+                .split(',')
+                .map(|item| {
+                    item.trim().parse::<u32>().map_err(|e| {
+                        serde::de::Error::custom(format!("invalid u32 in expected_kind_order: {e}"))
+                    })
+                })
+                .collect()
+        }
+    }
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub struct SeedManifest {
     pub schema_version: String,
     pub scenario_id: String,
     pub base_seed: u64,
     pub fixture_id: String,
+    #[serde(default)]
+    pub streams: BTreeMap<String, u64>,
 }
 
 #[derive(Debug)]
@@ -56,37 +101,102 @@ impl Display for ScenarioError {
 impl std::error::Error for ScenarioError {}
 
 pub fn load_scenario(path: &Path) -> Result<ScenarioManifest, ScenarioError> {
-    let fields = read_fields(path)?;
-
-    Ok(ScenarioManifest {
-        schema_version: required_string(&fields, "schema_version")?,
-        scenario_id: required_string(&fields, "scenario_id")?,
-        model_id: required_string(&fields, "model_id")?,
-        fixture_id: required_string(&fields, "fixture_id")?,
-        fixture_path: PathBuf::from(required_string(&fields, "fixture_path")?),
-        base_seed: required_u64(&fields, "base_seed")?,
-        replications: required_u64(&fields, "replications")?
-            .try_into()
-            .map_err(|_| ScenarioError::InvalidField {
-                field: "replications",
-                value: required_string(&fields, "replications").unwrap_or_default(),
-            })?,
-        max_events: required_u64(&fields, "max_events")?,
-        artifact_root: PathBuf::from(required_string(&fields, "artifact_root")?),
-        resume_checkpoint_every_events: required_u64(&fields, "resume_checkpoint_every_events")?,
-        expected_kind_order: required_list(&fields, "expected_kind_order")?,
-    })
+    let text = fs::read_to_string(path).map_err(|source| ScenarioError::Io {
+        path: path.to_path_buf(),
+        source,
+    })?;
+    toml::from_str(&text).map_err(|e| map_toml_error(e, &text))
 }
 
 pub fn load_seed_manifest(path: &Path) -> Result<SeedManifest, ScenarioError> {
-    let fields = read_fields(path)?;
+    let text = fs::read_to_string(path).map_err(|source| ScenarioError::Io {
+        path: path.to_path_buf(),
+        source,
+    })?;
+    toml::from_str(&text).map_err(|e| map_toml_error(e, &text))
+}
 
-    Ok(SeedManifest {
-        schema_version: required_string(&fields, "schema_version")?,
-        scenario_id: required_string(&fields, "scenario_id")?,
-        base_seed: required_u64(&fields, "base_seed")?,
-        fixture_id: required_string(&fields, "fixture_id")?,
-    })
+fn map_toml_error(err: toml::de::Error, text: &str) -> ScenarioError {
+    let msg = err.message();
+    if let Some(rest) = msg.strip_prefix("missing field `") {
+        if let Some(field) = rest.strip_suffix('`') {
+            let static_field = match field {
+                "schema_version" => "schema_version",
+                "scenario_id" => "scenario_id",
+                "model_id" => "model_id",
+                "fixture_id" => "fixture_id",
+                "fixture_path" => "fixture_path",
+                "base_seed" => "base_seed",
+                "replications" => "replications",
+                "max_events" => "max_events",
+                "artifact_root" => "artifact_root",
+                "resume_checkpoint_every_events" => "resume_checkpoint_every_events",
+                "expected_kind_order" => "expected_kind_order",
+                other => Box::leak(other.to_string().into_boxed_str()),
+            };
+            return ScenarioError::MissingField(static_field);
+        }
+    }
+    if msg.contains("expected_kind_order") {
+        return ScenarioError::InvalidField {
+            field: "expected_kind_order",
+            value: msg.to_string(),
+        };
+    }
+    if let Some(span) = err.span() {
+        let prefix = &text[..span.start.min(text.len())];
+        let line_start = prefix.rfind('\n').map(|i| i + 1).unwrap_or(0);
+        let line = &text[line_start..];
+        let line = line.lines().next().unwrap_or("");
+        if let Some((lhs, _)) = line.split_once('=') {
+            let key = lhs.trim();
+            let static_field = match key {
+                "schema_version" => Some("schema_version"),
+                "scenario_id" => Some("scenario_id"),
+                "model_id" => Some("model_id"),
+                "fixture_id" => Some("fixture_id"),
+                "fixture_path" => Some("fixture_path"),
+                "base_seed" => Some("base_seed"),
+                "replications" => Some("replications"),
+                "max_events" => Some("max_events"),
+                "artifact_root" => Some("artifact_root"),
+                "resume_checkpoint_every_events" => Some("resume_checkpoint_every_events"),
+                "expected_kind_order" => Some("expected_kind_order"),
+                _ => None,
+            };
+            if let Some(field) = static_field {
+                return ScenarioError::InvalidField {
+                    field,
+                    value: msg.to_string(),
+                };
+            }
+        }
+    }
+    let err_str = err.to_string();
+    for field in [
+        "schema_version",
+        "scenario_id",
+        "model_id",
+        "fixture_id",
+        "fixture_path",
+        "base_seed",
+        "replications",
+        "max_events",
+        "artifact_root",
+        "resume_checkpoint_every_events",
+        "expected_kind_order",
+    ] {
+        if err_str.contains(&format!("{} =", field)) || err_str.contains(&format!("{}=", field)) {
+            return ScenarioError::InvalidField {
+                field,
+                value: msg.to_string(),
+            };
+        }
+    }
+    ScenarioError::InvalidField {
+        field: "toml",
+        value: err.to_string(),
+    }
 }
 
 pub fn validate_scenario_and_seed(
@@ -156,74 +266,6 @@ pub fn validate_scenario_and_seed(
     Ok(())
 }
 
-fn read_fields(path: &Path) -> Result<BTreeMap<String, String>, ScenarioError> {
-    let text = fs::read_to_string(path).map_err(|source| ScenarioError::Io {
-        path: path.to_path_buf(),
-        source,
-    })?;
-    let mut fields = BTreeMap::new();
-
-    for line in text.lines() {
-        let trimmed = line.trim();
-        if trimmed.is_empty() || trimmed.starts_with('#') || trimmed.starts_with('[') {
-            continue;
-        }
-
-        if let Some((key, value)) = trimmed.split_once('=') {
-            fields.insert(key.trim().to_string(), unquote(value.trim()));
-        }
-    }
-
-    Ok(fields)
-}
-
-fn required_string(
-    fields: &BTreeMap<String, String>,
-    field: &'static str,
-) -> Result<String, ScenarioError> {
-    fields
-        .get(field)
-        .cloned()
-        .filter(|value| !value.is_empty())
-        .ok_or(ScenarioError::MissingField(field))
-}
-
-fn required_u64(
-    fields: &BTreeMap<String, String>,
-    field: &'static str,
-) -> Result<u64, ScenarioError> {
-    let value = required_string(fields, field)?;
-    value
-        .parse()
-        .map_err(|_| ScenarioError::InvalidField { field, value })
-}
-
-fn required_list(
-    fields: &BTreeMap<String, String>,
-    field: &'static str,
-) -> Result<Vec<u32>, ScenarioError> {
-    let value = required_string(fields, field)?;
-    value
-        .split(',')
-        .map(|item| {
-            item.trim()
-                .parse()
-                .map_err(|_| ScenarioError::InvalidField {
-                    field,
-                    value: value.clone(),
-                })
-        })
-        .collect()
-}
-
-fn unquote(value: &str) -> String {
-    value
-        .trim_matches('"')
-        .trim_matches('\'')
-        .trim()
-        .to_string()
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -259,16 +301,16 @@ mod tests {
     fn load_scenario_parses_manifest_fields() {
         let file = TestManifestFile::new(
             "schema_version = 'kairoecs.scenario.v1'\n\
-             scenario_id = test_scenario\n\
-             model_id = test_model\n\
-             fixture_id = test_fixture\n\
-             fixture_path = /tmp/fixture\n\
+             scenario_id = 'test_scenario'\n\
+             model_id = 'test_model'\n\
+             fixture_id = 'test_fixture'\n\
+             fixture_path = '/tmp/fixture'\n\
              base_seed = 42\n\
              replications = 3\n\
              max_events = 1000\n\
-             artifact_root = /tmp/artifacts\n\
+             artifact_root = '/tmp/artifacts'\n\
              resume_checkpoint_every_events = 500\n\
-             expected_kind_order = 1, 2, 3\n",
+             expected_kind_order = [1, 2, 3]\n",
         );
 
         let scenario = load_scenario(file.path()).unwrap();
@@ -289,7 +331,7 @@ mod tests {
     #[test]
     fn load_scenario_reports_missing_field() {
         let file = TestManifestFile::new(
-            "schema_version = kairoecs.scenario.v1\nscenario_id = test_scenario\n",
+            "schema_version = 'kairoecs.scenario.v1'\nscenario_id = 'test_scenario'\n",
         );
 
         assert!(matches!(
@@ -301,12 +343,17 @@ mod tests {
     #[test]
     fn load_scenario_reports_invalid_numeric_value() {
         let file = TestManifestFile::new(
-            "schema_version = kairoecs.scenario.v1\n\
-             scenario_id = test_scenario\n\
-             model_id = test_model\n\
-             fixture_id = test_fixture\n\
-             fixture_path = /tmp/fixture\n\
-             base_seed = not_a_number\n",
+            "schema_version = 'kairoecs.scenario.v1'\n\
+             scenario_id = 'test_scenario'\n\
+             model_id = 'test_model'\n\
+             fixture_id = 'test_fixture'\n\
+             fixture_path = '/tmp/fixture'\n\
+             base_seed = 'not_a_number'\n\
+             replications = 3\n\
+             max_events = 1000\n\
+             artifact_root = '/tmp/artifacts'\n\
+             resume_checkpoint_every_events = 500\n\
+             expected_kind_order = [1, 2, 3]\n",
         );
 
         assert!(matches!(
@@ -321,17 +368,17 @@ mod tests {
     #[test]
     fn load_scenario_reports_invalid_kind_order() {
         let file = TestManifestFile::new(
-            "schema_version = kairoecs.scenario.v1\n\
-             scenario_id = test_scenario\n\
-             model_id = test_model\n\
-             fixture_id = test_fixture\n\
-             fixture_path = /tmp/fixture\n\
+            "schema_version = 'kairoecs.scenario.v1'\n\
+             scenario_id = 'test_scenario'\n\
+             model_id = 'test_model'\n\
+             fixture_id = 'test_fixture'\n\
+             fixture_path = '/tmp/fixture'\n\
              base_seed = 42\n\
              replications = 3\n\
              max_events = 1000\n\
-             artifact_root = /tmp/artifacts\n\
+             artifact_root = '/tmp/artifacts'\n\
              resume_checkpoint_every_events = 500\n\
-             expected_kind_order = 1, invalid, 3\n",
+             expected_kind_order = '1, invalid, 3'\n",
         );
 
         assert!(matches!(
@@ -346,10 +393,14 @@ mod tests {
     #[test]
     fn load_seed_manifest_parses_manifest_fields() {
         let file = TestManifestFile::new(
-            "schema_version = kairoecs.seed.v1\n\
-             scenario_id = test_scenario\n\
+            "schema_version = 'kairoecs.seed.v1'\n\
+             scenario_id = 'test_scenario'\n\
              base_seed = 42\n\
-             fixture_id = test_fixture\n",
+             fixture_id = 'test_fixture'\n\
+             \n\
+             [streams]\n\
+             stream_a = 100\n\
+             stream_b = 200\n",
         );
 
         let seed = load_seed_manifest(file.path()).unwrap();
@@ -358,14 +409,16 @@ mod tests {
         assert_eq!(seed.scenario_id, "test_scenario");
         assert_eq!(seed.base_seed, 42);
         assert_eq!(seed.fixture_id, "test_fixture");
+        assert_eq!(seed.streams.get("stream_a"), Some(&100));
+        assert_eq!(seed.streams.get("stream_b"), Some(&200));
     }
 
     #[test]
     fn load_seed_manifest_reports_missing_field() {
         let file = TestManifestFile::new(
-            "schema_version = kairoecs.seed.v1\n\
-             scenario_id = test_scenario\n\
-             fixture_id = test_fixture\n",
+            "schema_version = 'kairoecs.seed.v1'\n\
+             scenario_id = 'test_scenario'\n\
+             fixture_id = 'test_fixture'\n",
         );
 
         assert!(matches!(
@@ -377,10 +430,10 @@ mod tests {
     #[test]
     fn load_seed_manifest_reports_invalid_numeric_value() {
         let file = TestManifestFile::new(
-            "schema_version = kairoecs.seed.v1\n\
-             scenario_id = test_scenario\n\
-             base_seed = not_a_number\n\
-             fixture_id = test_fixture\n",
+            "schema_version = 'kairoecs.seed.v1'\n\
+             scenario_id = 'test_scenario'\n\
+             base_seed = 'not_a_number'\n\
+             fixture_id = 'test_fixture'\n",
         );
 
         assert!(matches!(
@@ -389,6 +442,91 @@ mod tests {
                 field: "base_seed",
                 ..
             })
+        ));
+    }
+
+    #[test]
+    fn toml_sections_comments_and_escapes() {
+        let file = TestManifestFile::new(
+            "# Leading scenario comment\n\
+             schema_version = \"kairoecs.scenario.v1\" # inline comment\n\
+             scenario_id = \"scenario-\\\"escaped\\\"\\n\"\n\
+             model_id = \"model_id_val\"\n\
+             fixture_id = \"fixture_val\"\n\
+             fixture_path = \"/path/with/spaces and \\\"quotes\\\"\"\n\
+             base_seed = 100\n\
+             replications = 5\n\
+             max_events = 50\n\
+             artifact_root = \"/tmp/artifacts\"\n\
+             resume_checkpoint_every_events = 25\n\
+             # Array with comments\n\
+             expected_kind_order = [\n\
+                 1, # first\n\
+                 2, # second\n\
+                 3  # third\n\
+             ]\n",
+        );
+
+        let scenario =
+            load_scenario(file.path()).expect("parse valid toml with comments and escapes");
+        assert_eq!(scenario.scenario_id, "scenario-\"escaped\"\n");
+        assert_eq!(scenario.expected_kind_order, vec![1, 2, 3]);
+    }
+
+    #[test]
+    fn toml_legacy_comma_delimited_string_compatibility() {
+        let file = TestManifestFile::new(
+            "schema_version = \"kairoecs.scenario.v1\"\n\
+             scenario_id = \"scen_compat\"\n\
+             model_id = \"m1\"\n\
+             fixture_id = \"f1\"\n\
+             fixture_path = \"/tmp/f\"\n\
+             base_seed = 1\n\
+             replications = 1\n\
+             max_events = 1\n\
+             artifact_root = \"/tmp\"\n\
+             resume_checkpoint_every_events = 1\n\
+             expected_kind_order = \"1, 2, 4, 3\"\n",
+        );
+
+        let scenario = load_scenario(file.path()).expect("parse comma-delimited string");
+        assert_eq!(scenario.expected_kind_order, vec![1, 2, 4, 3]);
+    }
+
+    #[test]
+    fn toml_rejects_unknown_fields_in_scenario() {
+        let file = TestManifestFile::new(
+            "schema_version = \"kairoecs.scenario.v1\"\n\
+             scenario_id = \"scen1\"\n\
+             model_id = \"m1\"\n\
+             fixture_id = \"f1\"\n\
+             fixture_path = \"/tmp\"\n\
+             base_seed = 1\n\
+             replications = 1\n\
+             max_events = 1\n\
+             artifact_root = \"/tmp\"\n\
+             resume_checkpoint_every_events = 1\n\
+             expected_kind_order = [1]\n\
+             unexpected_field = true\n",
+        );
+
+        assert!(matches!(
+            load_scenario(file.path()),
+            Err(ScenarioError::InvalidField { .. })
+        ));
+    }
+
+    #[test]
+    fn toml_rejects_duplicate_keys() {
+        let file = TestManifestFile::new(
+            "schema_version = \"kairoecs.scenario.v1\"\n\
+             scenario_id = \"first\"\n\
+             scenario_id = \"duplicate\"\n",
+        );
+
+        assert!(matches!(
+            load_scenario(file.path()),
+            Err(ScenarioError::InvalidField { .. })
         ));
     }
 
@@ -414,6 +552,7 @@ mod tests {
             scenario_id: "test_scenario".to_string(),
             base_seed: 42,
             fixture_id: "test_fixture".to_string(),
+            streams: BTreeMap::new(),
         }
     }
 

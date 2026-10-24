@@ -81,7 +81,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 73 | petgraph spatial topology and routing adoption | Planned | `abm-api-agent + contracts-agent` | See `conductor/tracks/73-*/spec.md` |
 | 74 | Serde typed control contracts | Planned | `contracts-agent` | See `conductor/tracks/74-*/spec.md` |
 | 75 | serde_json metadata and control encoding | Planned | `contracts-agent` | See `conductor/tracks/75-*/spec.md` |
-| 76 | toml scenario configuration parsing | Planned | `contracts-agent` | See `conductor/tracks/76-*/spec.md` |
+| 76 | toml scenario configuration parsing | Done | `contracts-agent` | See `conductor/tracks/76-*/spec.md` |
 | 77 | Clap CLI consolidation | Planned | `contracts-agent` | See `conductor/tracks/77-*/spec.md` |
 | 78 | Rayon bounded independent-work execution | Planned | `experiment-agent` | See `conductor/tracks/78-*/spec.md` |
 | 79 | zip FMU archive replacement | Planned | `fmi-agent` | See `conductor/tracks/79-*/spec.md` |
@@ -159,7 +159,7 @@ The human sole maintainer explicitly approved Track49 production scheduling afte
 - [x] **Track 75: serde_json metadata and control encoding** — Completed; adopted serde_json 1.0.154 for typed control contracts and JSON lines debug trace streams; Phase 0–2 accepted. [Track](tracks/75-serde-json-robustness/index.md).
 
 ---
-- [ ] **Track 76: toml scenario configuration parsing** — Planned; foundation; value gate pending. [Track](tracks/76-toml-robustness/index.md).
+- [x] **Track 76: toml scenario configuration parsing** — Completed; adopted toml 0.8.23 for robust scenario and seed manifest parsing in kairo-ecs-cli; Phase 0–2 accepted. [Track](tracks/76-toml-robustness/index.md).
 
 ---
 - [ ] **Track 77: Clap CLI consolidation** — Planned; foundation; value gate pending. [Track](tracks/77-clap-robustness/index.md).
