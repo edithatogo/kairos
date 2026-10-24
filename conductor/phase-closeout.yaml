@@ -1536,16 +1536,22 @@ entries:
     next_phase_decision: "Verify value, prerequisites and owner handoffs"
 
   - track_id: "96"
-    phase: "0"
-    state: pending
+    phase: "proptest-invariants"
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Planning only; adoption unqualified"
-    fixes_applied: false
-    validation_commands: []
-    git_status: "planning worktree"
-    commit_sha: ""
-    pushed_ref: ""
-    next_phase_decision: "Verify value, prerequisites and owner handoffs"
+    review_result: "Track 96 completed: qualified proptest v1.12.0 in kairo-ecs-core, verified reproducible seed replay, minimal counterexample shrinking, negative controls for broken conservation and priority inversion, step-wise and global event conservation, idempotent cancellation, and full generational ID range coverage."
+    fixes_applied: true
+    validation_commands:
+      - "cargo test -p kairo-ecs-core"
+      - "cargo clippy -p kairo-ecs-core --all-targets -- -D warnings"
+      - "cargo fmt --check -p kairo-ecs-core"
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
+    git_status: "clean"
+    commit_sha: "187e9f6d108eff9ab1eb844cf61b8d40e37f7528"
+    pushed_ref: "origin/feat/track-96-proptest-invariants"
+    next_phase_decision: "Track 96 is Done; track archived."
 
   - track_id: "97"
     phase: "0"
