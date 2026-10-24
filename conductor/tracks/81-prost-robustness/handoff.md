@@ -91,6 +91,7 @@ All 42 tests in `kairo-ecs-grpc` passed (25 unit tests, 15 oracle tests, 2 multi
   - **Conductor Phase Gates:** `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` | CWD: `/Volumes/PortableSSD/github/kairos` | Toolchain: `pwsh 7.5` | Commit: `46a62a92f5e7d3ba1eafa6538f6610a8a761eb0b` | Exit: `0` | Artifact: [`evidence/conductor-phase-gates.txt`](evidence/conductor-phase-gates.txt)
   - **Conductor DAG:** `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1` | CWD: `/Volumes/PortableSSD/github/kairos` | Toolchain: `pwsh 7.5` | Commit: `46a62a92f5e7d3ba1eafa6538f6610a8a761eb0b` | Exit: `0` | Artifact: [`evidence/conductor-dag.txt`](evidence/conductor-dag.txt)
   - **Conductor Artifacts:** `pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1` | CWD: `/Volumes/PortableSSD/github/kairos` | Toolchain: `pwsh 7.5` | Commit: `46a62a92f5e7d3ba1eafa6538f6610a8a761eb0b` | Exit: `0` | Artifact: [`evidence/conductor-artifacts.txt`](evidence/conductor-artifacts.txt)
-- pushed ref: origin/feat/track-81-prost-envelope-encoding
+- commit SHA: 0296e676d08612159b5ea70a716f09ae97215bd0
+- pushed ref: origin/main
 - next-phase decision: Track 81 is Done; advance to Track 82 (Tokio bounded transport runtime).
 - Use `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` before advancement.

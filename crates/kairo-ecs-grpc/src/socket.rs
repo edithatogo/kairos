@@ -1,9 +1,9 @@
 #![forbid(unsafe_code)]
 
 use std::collections::{BTreeMap, HashMap, VecDeque};
-use std::io::{self, Read, Write};
+use std::io::{self, Write};
 use std::net::{SocketAddr, TcpListener, TcpStream};
-use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread::{self, JoinHandle};
 use std::time::{Duration, Instant};
@@ -33,14 +33,13 @@ const MSG_TYPE_BARRIER: u8 = 9;
 pub const MAX_RETAINED_DECODE_FAILURES: usize = 64;
 
 /// Maximum framed message size accepted before buffering (128 KiB).
-const MAX_FRAME_BYTES: usize = 128 * 1024;
+pub const MAX_FRAME_BYTES: usize = 128 * 1024;
 
-struct InboundConnection {
-    stream: TcpStream,
-    buf: Vec<u8>,
-}
+/// Maximum concurrent inbound connections permitted before backpressure/dropping.
+pub const MAX_CONCURRENT_INBOUND_CONNECTIONS: usize = 64;
 
-/// Real socket transport that communicates across distinct OS processes or network endpoints over TCP.
+/// Real socket transport that communicates across distinct OS processes or network endpoints over TCP,
+/// backed by an internal bounded Tokio adapter runtime.
 pub struct GrpcSocketTransport {
     local_lp: LpId,
     bound_addr: SocketAddr,
@@ -57,21 +56,23 @@ pub struct GrpcSocketTransport {
     barrier_count: u64,
     decode_failure_count: Arc<AtomicUsize>,
     decode_failures: Arc<Mutex<VecDeque<String>>>,
-    shutdown: Arc<AtomicBool>,
+    active_connections: Arc<AtomicUsize>,
+    shutdown_tx: tokio::sync::watch::Sender<bool>,
     listener_handle: Option<JoinHandle<()>>,
 }
 
 impl GrpcSocketTransport {
-    /// Binds a real TCP socket listener and launches the inbound message processing worker.
+    /// Binds a real TCP socket listener and launches the inbound message processing worker
+    /// on a bounded single-threaded Tokio adapter runtime.
     pub fn bind(
         local_lp: LpId,
         bind_addr: SocketAddr,
         peers: Vec<GrpcPeer>,
         config: GrpcTransportConfig,
     ) -> Result<Self, io::Error> {
-        let listener = TcpListener::bind(bind_addr)?;
-        listener.set_nonblocking(true)?;
-        let bound_addr = listener.local_addr()?;
+        let std_listener = TcpListener::bind(bind_addr)?;
+        std_listener.set_nonblocking(true)?;
+        let bound_addr = std_listener.local_addr()?;
 
         let mut peer_map = HashMap::new();
         let mut inboxes_init = BTreeMap::new();
@@ -96,7 +97,8 @@ impl GrpcSocketTransport {
         let barrier_signals = Arc::new(Mutex::new(HashMap::new()));
         let decode_failure_count = Arc::new(AtomicUsize::new(0));
         let decode_failures = Arc::new(Mutex::new(VecDeque::new()));
-        let shutdown = Arc::new(AtomicBool::new(false));
+        let active_connections = Arc::new(AtomicUsize::new(0));
+        let (shutdown_tx, mut shutdown_rx) = tokio::sync::watch::channel(false);
 
         let inboxes_bg = Arc::clone(&inboxes);
         let opt_inboxes_bg = Arc::clone(&optimistic_inboxes);
@@ -107,102 +109,107 @@ impl GrpcSocketTransport {
         let barrier_bg = Arc::clone(&barrier_signals);
         let decode_failure_count_bg = Arc::clone(&decode_failure_count);
         let decode_failures_bg = Arc::clone(&decode_failures);
-        let shutdown_bg = Arc::clone(&shutdown);
+        let active_connections_bg = Arc::clone(&active_connections);
+        let read_timeout = config.request_timeout;
+        let (init_tx, init_rx) = std::sync::mpsc::sync_channel(0);
 
         let listener_handle = thread::spawn(move || {
-            let mut conns: Vec<InboundConnection> = Vec::new();
-            let mut chunk = [0u8; 4096];
-
-            while !shutdown_bg.load(Ordering::Relaxed) {
-                match listener.accept() {
-                    Ok((stream, _)) => {
-                        let _ = stream.set_nonblocking(true);
-                        conns.push(InboundConnection {
-                            stream,
-                            buf: Vec::new(),
-                        });
-                    }
-                    Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {}
-                    Err(_) => break,
+            let rt = match tokio::runtime::Builder::new_current_thread()
+                .enable_io()
+                .enable_time()
+                .build()
+            {
+                Ok(rt) => rt,
+                Err(e) => {
+                    let _ = init_tx.send(Err(e));
+                    return;
                 }
+            };
 
-                let mut i = 0;
-                while i < conns.len() {
-                    let mut eof = false;
-                    let mut malformed = false;
+            rt.block_on(async move {
+                let listener = match tokio::net::TcpListener::from_std(std_listener) {
+                    Ok(l) => {
+                        let _ = init_tx.send(Ok(()));
+                        l
+                    }
+                    Err(e) => {
+                        let _ = init_tx.send(Err(e));
+                        return;
+                    }
+                };
 
-                    loop {
-                        if conns[i].buf.len() > MAX_FRAME_BYTES + 4 {
-                            malformed = true;
+                let semaphore = Arc::new(tokio::sync::Semaphore::new(
+                    MAX_CONCURRENT_INBOUND_CONNECTIONS,
+                ));
+
+                loop {
+                    tokio::select! {
+                        _ = shutdown_rx.changed() => {
                             break;
                         }
-                        match conns[i].stream.read(&mut chunk) {
-                            Ok(0) => {
-                                eof = true;
-                                break;
-                            }
-                            Ok(n) => {
-                                conns[i].buf.extend_from_slice(&chunk[..n]);
-                                if conns[i].buf.len() >= 4 {
-                                    let announced =
-                                        u32::from_be_bytes(conns[i].buf[0..4].try_into().unwrap())
-                                            as usize;
-                                    if announced == 0 || announced > MAX_FRAME_BYTES {
-                                        malformed = true;
-                                        break;
-                                    }
+                        accept_res = listener.accept() => {
+                            let (stream, _) = match accept_res {
+                                Ok(conn) => conn,
+                                Err(_) => break,
+                            };
+
+                            let permit = match semaphore.clone().try_acquire_owned() {
+                                Ok(p) => p,
+                                Err(_) => {
+                                    // Bounded connection saturation: reject excess inbound connections
+                                    drop(stream);
+                                    continue;
                                 }
-                            }
-                            Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
-                                break;
-                            }
-                            Err(_) => {
-                                eof = true;
-                                break;
-                            }
+                            };
+
+                            active_connections_bg.fetch_add(1, Ordering::Relaxed);
+                            let active_conns = Arc::clone(&active_connections_bg);
+                            let inboxes = Arc::clone(&inboxes_bg);
+                            let opt_inboxes = Arc::clone(&opt_inboxes_bg);
+                            let migrations = Arc::clone(&migrations_bg);
+                            let telemetry = Arc::clone(&telemetry_bg);
+                            let heartbeats = Arc::clone(&heartbeats_bg);
+                            let gvt = Arc::clone(&gvt_bg);
+                            let barrier = Arc::clone(&barrier_bg);
+                            let decode_failure_count = Arc::clone(&decode_failure_count_bg);
+                            let decode_failures = Arc::clone(&decode_failures_bg);
+                            let mut conn_shutdown_rx = shutdown_rx.clone();
+
+                            tokio::spawn(async move {
+                                let _permit = permit;
+                                handle_inbound_stream(
+                                    stream,
+                                    read_timeout,
+                                    &inboxes,
+                                    &opt_inboxes,
+                                    &migrations,
+                                    &telemetry,
+                                    &heartbeats,
+                                    &gvt,
+                                    &barrier,
+                                    &decode_failure_count,
+                                    &decode_failures,
+                                    &mut conn_shutdown_rx,
+                                )
+                                .await;
+                                active_conns.fetch_sub(1, Ordering::Relaxed);
+                            });
                         }
-                    }
-
-                    while !malformed && conns[i].buf.len() >= 4 {
-                        let total_len =
-                            u32::from_be_bytes(conns[i].buf[0..4].try_into().unwrap()) as usize;
-                        if total_len == 0 || total_len > MAX_FRAME_BYTES {
-                            malformed = true;
-                            break;
-                        }
-                        if conns[i].buf.len() < 4 + total_len {
-                            break;
-                        }
-
-                        let msg_type = conns[i].buf[4];
-                        let payload = conns[i].buf[5..4 + total_len].to_vec();
-                        conns[i].buf.drain(..4 + total_len);
-
-                        handle_inbound_frame(
-                            msg_type,
-                            &payload,
-                            &inboxes_bg,
-                            &opt_inboxes_bg,
-                            &migrations_bg,
-                            &telemetry_bg,
-                            &heartbeats_bg,
-                            &gvt_bg,
-                            &barrier_bg,
-                            &decode_failure_count_bg,
-                            &decode_failures_bg,
-                        );
-                    }
-
-                    if eof || malformed {
-                        conns.swap_remove(i);
-                    } else {
-                        i += 1;
                     }
                 }
-
-                thread::sleep(Duration::from_millis(1));
-            }
+            });
         });
+
+        match init_rx.recv() {
+            Ok(Ok(())) => {}
+            Ok(Err(e)) => return Err(e),
+            Err(_) => {
+                return Err(io::Error::new(
+                    io::ErrorKind::BrokenPipe,
+                    "tokio transport worker thread panicked or aborted before initialization",
+                ));
+            }
+        }
 
         Ok(Self {
             local_lp,
@@ -220,7 +227,8 @@ impl GrpcSocketTransport {
             barrier_count: 0,
             decode_failure_count,
             decode_failures,
-            shutdown,
+            active_connections,
+            shutdown_tx,
             listener_handle: Some(listener_handle),
         })
     }
@@ -245,6 +253,14 @@ impl GrpcSocketTransport {
 
     pub fn bound_addr(&self) -> SocketAddr {
         self.bound_addr
+    }
+
+    pub fn active_connections(&self) -> usize {
+        self.active_connections.load(Ordering::Relaxed)
+    }
+
+    pub fn max_concurrent_connections(&self) -> usize {
+        MAX_CONCURRENT_INBOUND_CONNECTIONS
     }
 
     pub fn real_grpc_runtime_claimed(&self) -> bool {
@@ -387,8 +403,7 @@ impl GrpcSocketTransport {
 
 impl Drop for GrpcSocketTransport {
     fn drop(&mut self) {
-        self.shutdown.store(true, Ordering::Relaxed);
-        let _ = TcpStream::connect_timeout(&self.bound_addr, Duration::from_millis(50));
+        let _ = self.shutdown_tx.send(true);
         if let Some(handle) = self.listener_handle.take() {
             let _ = handle.join();
         }
@@ -561,6 +576,77 @@ fn record_decode_failure(
         failures.pop_front();
     }
     failures.push_back(error_msg);
+}
+
+#[allow(clippy::too_many_arguments)]
+async fn handle_inbound_stream(
+    mut stream: tokio::net::TcpStream,
+    read_timeout: Duration,
+    inboxes: &Arc<Mutex<BTreeMap<LpId, VecDeque<PdesMessage>>>>,
+    optimistic_inboxes: &Arc<Mutex<BTreeMap<LpId, VecDeque<OptimisticMessage>>>>,
+    migrations: &Arc<Mutex<VecDeque<GrpcMigrationRequest>>>,
+    telemetry_batches: &Arc<Mutex<VecDeque<GrpcTelemetryBatch>>>,
+    heartbeats: &Arc<Mutex<VecDeque<WorkerHeartbeat>>>,
+    gvt_proposals: &Arc<Mutex<HashMap<(u64, LpId), Tick>>>,
+    barrier_signals: &Arc<Mutex<HashMap<LpId, u64>>>,
+    decode_failure_count: &Arc<AtomicUsize>,
+    decode_failures: &Arc<Mutex<VecDeque<String>>>,
+    shutdown_rx: &mut tokio::sync::watch::Receiver<bool>,
+) {
+    use tokio::io::AsyncReadExt;
+
+    let mut len_buf = [0u8; 4];
+    loop {
+        let read_len = tokio::select! {
+            _ = shutdown_rx.changed() => return,
+            res = tokio::time::timeout(read_timeout, stream.read_exact(&mut len_buf)) => {
+                match res {
+                    Ok(read_res) => read_res,
+                    Err(_) => return, // Stalled read timed out: drop connection and release permit
+                }
+            }
+        };
+
+        if read_len.is_err() {
+            return;
+        }
+
+        let total_len = u32::from_be_bytes(len_buf) as usize;
+        if total_len == 0 || total_len > MAX_FRAME_BYTES {
+            return;
+        }
+
+        let mut frame_buf = vec![0u8; total_len];
+        let read_frame = tokio::select! {
+            _ = shutdown_rx.changed() => return,
+            res = tokio::time::timeout(read_timeout, stream.read_exact(&mut frame_buf)) => {
+                match res {
+                    Ok(read_res) => read_res,
+                    Err(_) => return, // Stalled body timed out: drop connection and release permit
+                }
+            }
+        };
+
+        if read_frame.is_err() {
+            return;
+        }
+
+        let msg_type = frame_buf[0];
+        let payload = &frame_buf[1..];
+        handle_inbound_frame(
+            msg_type,
+            payload,
+            inboxes,
+            optimistic_inboxes,
+            migrations,
+            telemetry_batches,
+            heartbeats,
+            gvt_proposals,
+            barrier_signals,
+            decode_failure_count,
+            decode_failures,
+        );
+    }
 }
 
 #[allow(clippy::too_many_arguments)]
