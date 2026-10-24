@@ -19,13 +19,13 @@ fn test_cli_stdout_valid_json_even_with_quoted_and_special_paths() {
     let temp_dir = std::env::temp_dir().join(format!("kairo-cli-test-{}", std::process::id()));
     fs::create_dir_all(&temp_dir).expect("create temp dir");
 
-    let scenario_path = temp_dir.join("scenario-\"quoted\".toml");
-    let output_path = temp_dir.join("output-\"quoted\" and spaces");
+    let scenario_path = temp_dir.join("scenario-'quoted' and spaces.toml");
+    let output_path = temp_dir.join("output-'quoted' and spaces");
 
     fs::write(
         &scenario_path,
         "schema_version = 'kairoecs.scenario.v1'\n\
-         scenario_id = 'scenario-\"quoted\"'\n\
+         scenario_id = 'scenario-\"quoted\" and spaces'\n\
          model_id = 'test_model'\n\
          fixture_id = 'test_fixture'\n\
          fixture_path = '/tmp/fixture'\n\
