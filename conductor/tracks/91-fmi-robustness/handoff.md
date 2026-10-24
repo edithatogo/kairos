@@ -66,6 +66,6 @@ Track 91 is an evaluation track closed at Phase 0 with a NO-GO decision.
   - `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` (pass)
   - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1` (pass)
   - `pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1` (pass)
-- Closeout ledger: commit SHA `2e0e7a1226a7c9a2afa79f59a4f821a21a4cfa4e` recorded upon evaluation closeout.
+- Closeout ledger: commit SHA `25f07a6a76726b58f30d921bb5a6edd06709987c` recorded upon evaluation closeout.
 - Pushed ref: pushed ref `origin/feat/track-91-rust-fmi-qualification`.
 - Next-phase decision: Track 91 is Done (Rejected); advance to Track 79 (`zip FMU archive replacement`).
