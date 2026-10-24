@@ -428,7 +428,15 @@ impl ModelDescription {
                             if let Some((name, vr, causality, variability, var_type)) =
                                 current_variable.take()
                             {
-                                let var_type = var_type.unwrap_or(VariableType::Real);
+                                let var_type = var_type.ok_or_else(|| {
+                                    validation_error(
+                                        "modelDescription.xml",
+                                        format!(
+                                            "ScalarVariable '{}' is missing a supported type (Real, Integer, Boolean, String)",
+                                            name
+                                        ),
+                                    )
+                                })?;
                                 variables.push(ScalarVariable {
                                     name,
                                     value_reference: vr,

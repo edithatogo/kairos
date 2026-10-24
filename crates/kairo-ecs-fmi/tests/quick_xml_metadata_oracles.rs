@@ -294,3 +294,27 @@ fn oracle_from_xml_str_parses_variable_types_in_start_and_end_tags() {
     assert_eq!(model.variables[1].variable_type, VariableType::Boolean);
     assert_eq!(model.variables[2].variable_type, VariableType::String);
 }
+
+#[test]
+fn oracle_from_xml_str_rejects_unsupported_variable_type() {
+    let xml = r#"<?xml version="1.0" encoding="UTF-8"?>
+<fmiModelDescription fmiVersion="2.0" modelName="enum_test" guid="{enum-guid}">
+  <ModelVariables>
+    <ScalarVariable name="mode" valueReference="1" causality="input" variability="continuous">
+      <Enumeration declaredType="Mode" />
+    </ScalarVariable>
+  </ModelVariables>
+  <ModelStructure />
+</fmiModelDescription>
+"#;
+    let result = ModelDescription::from_xml_str(xml);
+    assert!(
+        result.is_err(),
+        "Must reject unsupported variable type Enumeration"
+    );
+    let err_msg = result.unwrap_err().to_string();
+    assert!(
+        err_msg.contains("missing a supported type"),
+        "Expected unsupported type error, got: {err_msg}"
+    );
+}
