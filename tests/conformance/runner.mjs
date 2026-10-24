@@ -201,7 +201,7 @@ export function sortEvents(events) {
   });
 }
 
-export function deterministicStream(seed, entity, count = 4) {
+export function deterministicStream(seed, entity, count = 4, purpose = 'default') {
   assertNonNegativeSafeInteger(seed, 'rng seed');
   assert(entity && typeof entity === 'object', 'rng entity must be an object');
   assertNonNegativeSafeInteger(entity.index, 'rng entity.index');
@@ -220,29 +220,86 @@ export function deterministicStream(seed, entity, count = 4) {
     return (z ^ (z >> 31n)) & U64_MASK;
   }
 
-  function rotateLeft64(value, shift) {
-    const x = u64(value);
-    const width = 64n;
-    const amount = BigInt(shift);
-    return ((x << amount) | (x >> (width - amount))) & U64_MASK;
+  // Canonical ChaCha8 seed derivation
+  let h1 = (u64(seed) + RUN_SEED_DOMAIN) & U64_MASK;
+  let h2 = ((u64(entity.index) + ENTITY_INDEX_DOMAIN) * ENTITY_INDEX_MIX) & U64_MASK;
+  let h3 = ((u64(entity.generation) + ENTITY_GENERATION_DOMAIN) * ENTITY_GENERATION_MIX) & U64_MASK;
+  let h4 = 0x517cc1b727220a95n;
+  for (const ch of Buffer.from(purpose, 'utf8')) {
+    h4 = ((h4 ^ BigInt(ch)) * SPLITMIX64_GAMMA) & U64_MASK;
+  }
+  h1 = splitmix64(h1 ^ h4);
+  h2 = splitmix64(h2 ^ h1);
+  h3 = splitmix64(h3 ^ h2);
+  h4 = splitmix64(h4 ^ h3);
+
+  const seedBytes = new Uint8Array(32);
+  const dv = new DataView(seedBytes.buffer);
+  dv.setBigUint64(0, h1, true);
+  dv.setBigUint64(8, h2, true);
+  dv.setBigUint64(16, h3, true);
+  dv.setBigUint64(24, h4, true);
+
+  // Canonical ChaCha8 stream ID derivation
+  let sid = (u64(entity.index) * ENTITY_INDEX_MIX) & U64_MASK;
+  sid ^= (u64(entity.generation) * ENTITY_GENERATION_MIX) & U64_MASK;
+  for (const ch of Buffer.from(purpose, 'utf8')) {
+    sid = ((sid ^ BigInt(ch)) * SPLITMIX64_GAMMA) & U64_MASK;
+  }
+  const streamId = splitmix64(sid);
+
+  // ChaCha8 engine
+  const state = new Uint32Array(16);
+  state[0] = 0x61707865;
+  state[1] = 0x3320646e;
+  state[2] = 0x79622d32;
+  state[3] = 0x6b206574;
+  for (let i = 0; i < 8; i += 1) {
+    state[4 + i] = dv.getUint32(i * 4, true);
+  }
+  state[12] = 0;
+  state[13] = 0;
+  state[14] = Number(streamId & 0xffffffffn);
+  state[15] = Number((streamId >> 32n) & 0xffffffffn);
+
+  function rotl(v, n) {
+    return ((v << n) | (v >>> (32 - n))) >>> 0;
   }
 
-  let derivedSeed = (u64(seed) + RUN_SEED_DOMAIN) & U64_MASK;
-  derivedSeed ^= splitmix64(u64(entity.index) + ENTITY_INDEX_DOMAIN);
-  derivedSeed = rotateLeft64(derivedSeed, 17);
-  derivedSeed =
-    (derivedSeed +
-      ((splitmix64(u64(entity.generation) + ENTITY_GENERATION_DOMAIN) *
-        ENTITY_GENERATION_MIX) &
-        U64_MASK)) &
-    U64_MASK;
+  function qr(w, a, b, c, d) {
+    w[a] = (w[a] + w[b]) >>> 0;
+    w[d] = rotl(w[d] ^ w[a], 16);
+    w[c] = (w[c] + w[d]) >>> 0;
+    w[b] = rotl(w[b] ^ w[c], 12);
+    w[a] = (w[a] + w[b]) >>> 0;
+    w[d] = rotl(w[d] ^ w[a], 8);
+    w[c] = (w[c] + w[d]) >>> 0;
+    w[b] = rotl(w[b] ^ w[c], 7);
+  }
 
-  let state = splitmix64(derivedSeed ^ ENTITY_INDEX_MIX);
   const stream = [];
+  let blockCounter = 0;
+  while (stream.length < count) {
+    state[12] = blockCounter & 0xffffffff;
+    state[13] = Math.floor(blockCounter / 0x100000000) & 0xffffffff;
+    const working = new Uint32Array(16);
+    working.set(state);
 
-  for (let i = 0; i < count; i += 1) {
-    state = splitmix64(state);
-    stream.push(Number(state & 0xffff_ffffn));
+    for (let r = 0; r < 4; r += 1) {
+      qr(working, 0, 4, 8, 12);
+      qr(working, 1, 5, 9, 13);
+      qr(working, 2, 6, 10, 14);
+      qr(working, 3, 7, 11, 15);
+      qr(working, 0, 5, 10, 15);
+      qr(working, 1, 6, 11, 12);
+      qr(working, 2, 7, 8, 13);
+      qr(working, 3, 4, 9, 14);
+    }
+
+    for (let i = 0; i < 16 && stream.length < count; i += 1) {
+      stream.push((working[i] + state[i]) >>> 0);
+    }
+    blockCounter += 1;
   }
 
   return stream;

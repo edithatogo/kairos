@@ -1,5 +1,17 @@
 # KairoECS Conductor Status
 
+## Track 71: rand Deterministic RNG Adoption Review & Archival - 24 October 2026
+
+Track 71 has successfully passed implementation, comprehensive testing, Principal Software Engineer code review, and quality validation across all quality gates, and is archived as `Done`:
+- Adopted `rand = "0.10"` and `rand_chacha = "0.10"` (with `default-features = false`) in `crates/kairo-ecs-rng`.
+- Replaced bespoke SplitMix64 generator with pinned `ChaCha8Rng` deterministic generator.
+- Added exact stream isolation via `set_stream(u64)` and `get_stream() -> u64`, preserving CRN coupling and purpose namespace isolation.
+- Implemented mid-buffer word position restoration via `set_word_pos(u128)` and `get_word_pos() -> u128`.
+- Introduced serializable, versioned `RngCheckpoint` and typed `RngError`.
+- Rebased `rng_replay.json` conformance fixture and runner to verified ChaCha8 output stream.
+- Verified zero external vulnerabilities via `cargo audit` and dual MIT/Apache-2.0 license compliance via `cargo deny`. All 14 unit tests in `kairo-ecs-rng` and all workspace tests pass.
+
+
 ## Track 101: criterion existing-tooling Review & Archival - 24 October 2026
 
 Track 101 has successfully passed tooling consolidation review pursuant to [Robustness-first dependency acceptance policy](dependency-value-policy.md) and [Dependency sequencing](dependency-sequencing.md) and is archived as `Done`:

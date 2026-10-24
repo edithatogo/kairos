@@ -4,22 +4,22 @@ All implementation tasks are pending. Write failing behavioural tests before pro
 
 ## Phase 0 — Entry and qualification
 
-- [ ] Task 0.1: Verify the entry receipts and ownership handoffs; reject missing/stale upstream or downstream evidence before any pin/dependency/runtime change.
-- [ ] Task 0.2: Inventory actual replace/retain candidates and freeze baseline contracts, fixtures, costs and supported targets; qualify exact pins/features, licences/advisories and compatibility.
-- [ ] Task 0.3: Freeze canonical stream derivation, versioned checkpoint/manifest API and reviewed MSRV change; add failing known-answer, isolation and malformed-checkpoint tests.
-- [ ] Task 0.4: Conductor — review and verify phase (workflow.md); apply accepted fixes, record blockers/receipts and explicit next-phase decision.
+- [x] Task 0.1: Verify the entry receipts and ownership handoffs; reject missing/stale upstream or downstream evidence before any pin/dependency/runtime change.
+- [x] Task 0.2: Inventory actual replace/retain candidates and freeze baseline contracts, fixtures, costs and supported targets; qualify exact pins/features, licences/advisories and compatibility.
+- [x] Task 0.3: Freeze canonical stream derivation, versioned checkpoint/manifest API and reviewed MSRV change; add failing known-answer, isolation and malformed-checkpoint tests.
+- [x] Task 0.4: Conductor — review and verify phase (workflow.md); apply accepted fixes, record blockers/receipts and explicit next-phase decision.
 
 ## Phase 1 — Replacement and consumers
 
-- [ ] Task 1.1: Replace bespoke generator with pinned ChaCha8Rng and implement exact checkpoint reconstruction; migrate callers without replacing distribution algorithms.
-- [ ] Task 1.2: Update consumers and independent baseline receipts; remove legacy generator code and document intentional trajectory break.
-- [ ] Task 1.3: Conductor — review and verify phase (workflow.md); apply accepted fixes, record blockers/receipts and explicit next-phase decision.
+- [x] Task 1.1: Replace bespoke generator with pinned ChaCha8Rng and implement exact checkpoint reconstruction; migrate callers without replacing distribution algorithms.
+- [x] Task 1.2: Update consumers and independent baseline receipts; remove legacy generator code and document intentional trajectory break.
+- [x] Task 1.3: Conductor — review and verify phase (workflow.md); apply accepted fixes, record blockers/receipts and explicit next-phase decision.
 
 ## Phase 2 — Acceptance and handoff
 
-- [ ] Task 2.1: Run every test-matrix oracle and applicable full native/browser lanes; resolve regressions and record raw evidence.
-- [ ] Task 2.2: Audit deleted/retained production code, update compatibility/user documentation and record rollback plus exact accepted commit/pin receipts.
-- [ ] Task 2.3: Conductor — review and verify phase (workflow.md); apply accepted fixes, record blockers/receipts and explicit next-phase decision.
+- [x] Task 2.1: Run every test-matrix oracle and applicable full native/browser lanes; resolve regressions and record raw evidence.
+- [x] Task 2.2: Audit deleted/retained production code, update compatibility/user documentation and record rollback plus exact accepted commit/pin receipts.
+- [x] Task 2.3: Conductor — review and verify phase (workflow.md); apply accepted fixes, record blockers/receipts and explicit next-phase decision.
 
 ## Phase closeout gate
 

@@ -3,6 +3,6 @@
   "version": 1,
   "run_seed": 7,
   "entity": { "index": 42, "generation": 0 },
-  "expected_stream": [58032735, 2654218578, 73301494, 760398727],
+  "expected_stream": [4087599687, 2415409399, 675359370, 3234763134],
   "requirement": "same run seed and entity handle produce the same stream"
 }

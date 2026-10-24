@@ -1101,12 +1101,14 @@ tracks:
 
   - id: 71
     name: rand deterministic RNG adoption
-    status: Planned
+    status: Done
     owner: rng-agent + conformance-agent
     depends_on: ["70", "69", "77", "95"]
     owned_paths:
       - conductor/tracks/71-rand-deterministic-rng/
       - crates/kairo-ecs-rng/
+      - conformance/fixtures/rng_replay.json
+      - tests/conformance/runner.mjs
     required_gates:
       - phase-closeout-check
       - rng-versioned-replay
