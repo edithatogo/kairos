@@ -36,7 +36,7 @@ pub const MAX_RETAINED_DECODE_FAILURES: usize = 64;
 pub const MAX_FRAME_BYTES: usize = 128 * 1024;
 
 /// Maximum concurrent inbound connections permitted before backpressure/dropping.
-pub const MAX_CONCURRENT_INBOUND_CONNECTIONS: usize = 256;
+pub const MAX_CONCURRENT_INBOUND_CONNECTIONS: usize = 64;
 
 /// Real socket transport that communicates across distinct OS processes or network endpoints over TCP,
 /// backed by an internal bounded Tokio adapter runtime.
@@ -110,6 +110,8 @@ impl GrpcSocketTransport {
         let decode_failure_count_bg = Arc::clone(&decode_failure_count);
         let decode_failures_bg = Arc::clone(&decode_failures);
         let active_connections_bg = Arc::clone(&active_connections);
+        let read_timeout = config.request_timeout;
+        let (init_tx, init_rx) = std::sync::mpsc::sync_channel(0);
 
         let listener_handle = thread::spawn(move || {
             let rt = match tokio::runtime::Builder::new_current_thread()
@@ -118,13 +120,22 @@ impl GrpcSocketTransport {
                 .build()
             {
                 Ok(rt) => rt,
-                Err(_) => return,
+                Err(e) => {
+                    let _ = init_tx.send(Err(e));
+                    return;
+                }
             };
 
             rt.block_on(async move {
                 let listener = match tokio::net::TcpListener::from_std(std_listener) {
-                    Ok(l) => l,
-                    Err(_) => return,
+                    Ok(l) => {
+                        let _ = init_tx.send(Ok(()));
+                        l
+                    }
+                    Err(e) => {
+                        let _ = init_tx.send(Err(e));
+                        return;
+                    }
                 };
 
                 let semaphore = Arc::new(tokio::sync::Semaphore::new(
@@ -168,6 +179,7 @@ impl GrpcSocketTransport {
                                 let _permit = permit;
                                 handle_inbound_stream(
                                     stream,
+                                    read_timeout,
                                     &inboxes,
                                     &opt_inboxes,
                                     &migrations,
@@ -187,6 +199,17 @@ impl GrpcSocketTransport {
                 }
             });
         });
+
+        match init_rx.recv() {
+            Ok(Ok(())) => {}
+            Ok(Err(e)) => return Err(e),
+            Err(_) => {
+                return Err(io::Error::new(
+                    io::ErrorKind::BrokenPipe,
+                    "tokio transport worker thread panicked or aborted before initialization",
+                ));
+            }
+        }
 
         Ok(Self {
             local_lp,
@@ -558,6 +581,7 @@ fn record_decode_failure(
 #[allow(clippy::too_many_arguments)]
 async fn handle_inbound_stream(
     mut stream: tokio::net::TcpStream,
+    read_timeout: Duration,
     inboxes: &Arc<Mutex<BTreeMap<LpId, VecDeque<PdesMessage>>>>,
     optimistic_inboxes: &Arc<Mutex<BTreeMap<LpId, VecDeque<OptimisticMessage>>>>,
     migrations: &Arc<Mutex<VecDeque<GrpcMigrationRequest>>>,
@@ -575,7 +599,12 @@ async fn handle_inbound_stream(
     loop {
         let read_len = tokio::select! {
             _ = shutdown_rx.changed() => return,
-            res = stream.read_exact(&mut len_buf) => res,
+            res = tokio::time::timeout(read_timeout, stream.read_exact(&mut len_buf)) => {
+                match res {
+                    Ok(read_res) => read_res,
+                    Err(_) => return, // Stalled read timed out: drop connection and release permit
+                }
+            }
         };
 
         if read_len.is_err() {
@@ -590,7 +619,12 @@ async fn handle_inbound_stream(
         let mut frame_buf = vec![0u8; total_len];
         let read_frame = tokio::select! {
             _ = shutdown_rx.changed() => return,
-            res = stream.read_exact(&mut frame_buf) => res,
+            res = tokio::time::timeout(read_timeout, stream.read_exact(&mut frame_buf)) => {
+                match res {
+                    Ok(read_res) => read_res,
+                    Err(_) => return, // Stalled body timed out: drop connection and release permit
+                }
+            }
         };
 
         if read_frame.is_err() {

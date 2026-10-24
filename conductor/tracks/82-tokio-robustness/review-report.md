@@ -31,12 +31,13 @@
 
 ## 3. Behavioral Gates & Test Oracles
 
-All 5 independent behavioral and negative oracles in `crates/kairo-ecs-grpc/tests/tokio_transport_oracles.rs` passed:
+All 6 independent behavioral and negative oracles in `crates/kairo-ecs-grpc/tests/tokio_transport_oracles.rs` passed:
 1. `oracle_tokio_transport_clean_shutdown_and_cancellation`: Verifies immediate and complete worker shutdown without thread leak or hang (<500ms) when transport is dropped, and listener port is immediately re-bindable without `EADDRINUSE`.
-2. `oracle_tokio_transport_bounded_inbound_connection_saturation`: Floods listener with concurrent connections beyond limit, verifying rejection/bounding via `tokio::sync::Semaphore` (`MAX_CONCURRENT_INBOUND_CONNECTIONS = 256`) without process exhaustion or memory blowup.
+2. `oracle_tokio_transport_bounded_inbound_connection_saturation`: Floods listener with concurrent connections to the saturation limit (`MAX_CONCURRENT_INBOUND_CONNECTIONS = 64`), verifying strict rejection/bounding via `tokio::sync::Semaphore` with EOF/reset and permit release after disconnect.
 3. `oracle_tokio_transport_slow_consumer_and_oversized_frame_rejection`: Streams partial chunks and oversized frames (>128KiB), verifying strict rejection, frame isolation, and zero disruption to healthy peers.
 4. `oracle_tokio_transport_reconnect_and_transient_failure_recovery`: Disconnects peer socket mid-stream, reconnects, and verifies automatic recovery and clean message delivery.
 5. `oracle_tokio_transport_deterministic_handoff_ordering_despite_io_jitter`: Emits bursts of ordered events across concurrent tasks, proving deterministic FIFO/priority message ordering inside destination inboxes despite network packet arrival jitter.
+6. `oracle_tokio_transport_stalled_read_timeout_releases_permit`: Verifies that an uncooperative or stalled client connection that sends partial bytes times out within bounded deadline (`request_timeout`) and drops the connection, returning its semaphore permit.
 
 Additionally, all 25 unit tests in `kairo-ecs-grpc`, 15 Prost oracles, and 2 multi-process integration tests in `two_process_smoke.rs` passed cleanly.
 

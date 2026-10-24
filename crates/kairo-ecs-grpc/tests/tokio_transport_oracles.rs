@@ -61,40 +61,133 @@ fn oracle_tokio_transport_bounded_inbound_connection_saturation() {
 
     // Spawn concurrent connections up to the saturation limit
     let mut streams = Vec::new();
-    for _ in 0..MAX_CONCURRENT_INBOUND_CONNECTIONS {
-        if let Ok(stream) = TcpStream::connect(addr) {
-            streams.push(stream);
+    for i in 0..MAX_CONCURRENT_INBOUND_CONNECTIONS {
+        let mut last_err = None;
+        let mut connected = false;
+        for _ in 0..100 {
+            match TcpStream::connect(addr) {
+                Ok(stream) => {
+                    streams.push(stream);
+                    connected = true;
+                    break;
+                }
+                Err(e) => {
+                    last_err = Some(e);
+                    thread::sleep(Duration::from_millis(2));
+                }
+            }
         }
+        assert!(
+            connected,
+            "failed to connect client {i} to transport: {:?}",
+            last_err
+        );
     }
 
-    // Wait a brief moment for the Tokio worker to accept and record permits
-    thread::sleep(Duration::from_millis(50));
-    let active = transport.active_connections();
-    assert!(
-        active <= MAX_CONCURRENT_INBOUND_CONNECTIONS,
-        "active connections ({active}) must not exceed limit ({MAX_CONCURRENT_INBOUND_CONNECTIONS})"
+    // Wait until all connections are accepted and registered
+    let saturation_deadline = Instant::now() + Duration::from_secs(3);
+    while transport.active_connections() < MAX_CONCURRENT_INBOUND_CONNECTIONS {
+        assert!(
+            Instant::now() < saturation_deadline,
+            "timed out waiting for active connections to reach {MAX_CONCURRENT_INBOUND_CONNECTIONS}; currently at {}",
+            transport.active_connections()
+        );
+        thread::sleep(Duration::from_millis(5));
+    }
+    assert_eq!(
+        transport.active_connections(),
+        MAX_CONCURRENT_INBOUND_CONNECTIONS
     );
 
     // Any connection beyond MAX_CONCURRENT_INBOUND_CONNECTIONS should be immediately closed
-    if let Ok(mut overflow_stream) = TcpStream::connect(addr) {
-        let _ = overflow_stream.set_read_timeout(Some(Duration::from_millis(100)));
-        let mut buf = [0u8; 1];
-        // Stream should be closed by server immediately (EOF / read 0 or error)
-        let read_res = overflow_stream.read(&mut buf);
-        match read_res {
-            Ok(0) => {} // Clean EOF
-            Err(e) if e.kind() == std::io::ErrorKind::ConnectionReset => {}
-            _ => {} // Closed or dropped
-        }
+    let mut overflow_stream = TcpStream::connect(addr).expect("connect overflow stream");
+    overflow_stream
+        .set_read_timeout(Some(Duration::from_millis(500)))
+        .expect("set read timeout");
+    let mut buf = [0u8; 1];
+    // Stream should be closed by server immediately (EOF / read 0 or reset)
+    let read_res = overflow_stream.read(&mut buf);
+    match read_res {
+        Ok(0) => {} // Clean EOF
+        Err(e)
+            if e.kind() == std::io::ErrorKind::ConnectionReset
+                || e.kind() == std::io::ErrorKind::UnexpectedEof => {}
+        other => panic!(
+            "overflow connection beyond capacity must be rejected with EOF or reset, got: {:?}",
+            other
+        ),
     }
+
+    // Active count must remain capped at MAX_CONCURRENT_INBOUND_CONNECTIONS
+    assert_eq!(
+        transport.active_connections(),
+        MAX_CONCURRENT_INBOUND_CONNECTIONS
+    );
 
     // Dropping streams releases permits
     drop(streams);
-    thread::sleep(Duration::from_millis(50));
-    assert!(
-        transport.active_connections() < MAX_CONCURRENT_INBOUND_CONNECTIONS,
-        "permits should be released after clients disconnect"
-    );
+    let release_deadline = Instant::now() + Duration::from_secs(3);
+    while transport.active_connections() > 0 {
+        assert!(
+            Instant::now() < release_deadline,
+            "permits should be released after clients disconnect, active={}",
+            transport.active_connections()
+        );
+        thread::sleep(Duration::from_millis(5));
+    }
+    assert_eq!(transport.active_connections(), 0);
+}
+
+#[test]
+fn oracle_tokio_transport_stalled_read_timeout_releases_permit() {
+    let port = get_available_port();
+    let addr: SocketAddr = format!("127.0.0.1:{port}").parse().unwrap();
+    let config = GrpcTransportConfig {
+        request_timeout: Duration::from_millis(150),
+        heartbeat_interval: Duration::from_millis(300),
+        heartbeat_timeout: Duration::from_millis(1000),
+    };
+
+    let transport =
+        GrpcSocketTransport::bind(LpId(1), addr, vec![], config).expect("bind transport");
+
+    // Client connects and sends incomplete 2-byte header, then stalls
+    let mut client = TcpStream::connect(addr).expect("connect raw client");
+    client
+        .write_all(&[0x00, 0x00])
+        .expect("write partial header");
+
+    // Wait for connection to be recorded
+    let start = Instant::now();
+    while transport.active_connections() == 0 {
+        assert!(start.elapsed() < Duration::from_secs(1));
+        thread::sleep(Duration::from_millis(5));
+    }
+    assert_eq!(transport.active_connections(), 1);
+
+    // After request_timeout (150ms) expires, worker should close stream and release permit
+    client
+        .set_read_timeout(Some(Duration::from_millis(500)))
+        .expect("set timeout");
+    let mut buf = [0u8; 1];
+    let read_res = client.read(&mut buf);
+    match read_res {
+        Ok(0) => {} // Clean EOF on timeout abort
+        Err(e)
+            if e.kind() == std::io::ErrorKind::ConnectionReset
+                || e.kind() == std::io::ErrorKind::UnexpectedEof => {}
+        other => panic!(
+            "stalled client must be disconnected on read timeout, got: {:?}",
+            other
+        ),
+    }
+
+    let release_start = Instant::now();
+    while transport.active_connections() > 0 {
+        assert!(release_start.elapsed() < Duration::from_secs(1));
+        thread::sleep(Duration::from_millis(5));
+    }
+    assert_eq!(transport.active_connections(), 0);
 }
 
 #[test]
