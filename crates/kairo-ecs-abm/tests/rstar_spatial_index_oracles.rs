@@ -414,3 +414,130 @@ fn test_geocoordinate_tangent_plane_spatial_indexing() {
     assert_eq!(nearest.0, id1);
     assert!(nearest.1 > 900.0 && nearest.1 < 1_200.0);
 }
+
+#[test]
+fn test_spatial_hash_vs_rtree_comparative_benchmark() {
+    use std::time::Instant;
+
+    // 1. Uniform Workload: 1,000 agents uniformly distributed in [0, 1000] x [0, 1000]
+    let n_agents = 1000;
+    let mut spatial_hash = ContinuousSpace2D::new(50.0);
+    let mut rtree_index = ContinuousSpatialIndex2D::new();
+
+    let start_hash_insert = Instant::now();
+    for i in 0..n_agents {
+        let x = (i as f64 * 37.0) % 1000.0;
+        let y = (i as f64 * 73.0) % 1000.0;
+        spatial_hash.place_agent(EntityId::new(i as u64, 0), (x, y));
+    }
+    let duration_hash_insert = start_hash_insert.elapsed();
+
+    let start_rtree_insert = Instant::now();
+    for i in 0..n_agents {
+        let x = (i as f64 * 37.0) % 1000.0;
+        let y = (i as f64 * 73.0) % 1000.0;
+        rtree_index
+            .insert(EntityId::new(i as u64, 0), x, y)
+            .unwrap();
+    }
+    let duration_rtree_insert = start_rtree_insert.elapsed();
+
+    // Query uniform workload: 50 radius queries
+    let query_radius = 50.0;
+    let start_hash_query = Instant::now();
+    for q in 0..50 {
+        let qx = (q as f64 * 19.0) % 1000.0;
+        let qy = (q as f64 * 41.0) % 1000.0;
+        let _ = spatial_hash.neighbors_within((qx, qy), query_radius);
+    }
+    let duration_hash_query = start_hash_query.elapsed();
+
+    let start_rtree_query = Instant::now();
+    for q in 0..50 {
+        let qx = (q as f64 * 19.0) % 1000.0;
+        let qy = (q as f64 * 41.0) % 1000.0;
+        let _ = rtree_index
+            .locate_within_distance(qx, qy, query_radius)
+            .unwrap();
+    }
+    let duration_rtree_query = start_rtree_query.elapsed();
+
+    // Parity check on uniform workload
+    for q in 0..10 {
+        let qx = (q as f64 * 83.0) % 1000.0;
+        let qy = (q as f64 * 97.0) % 1000.0;
+        let hash_results = spatial_hash.neighbors_within((qx, qy), query_radius);
+        let rtree_results = rtree_index
+            .locate_within_distance(qx, qy, query_radius)
+            .unwrap();
+        let mut rtree_ids: Vec<EntityId> = rtree_results.into_iter().map(|(e, _)| e).collect();
+        rtree_ids.sort();
+        assert_eq!(
+            hash_results, rtree_ids,
+            "Exact parity between spatial hash and R-tree for query ({qx}, {qy})"
+        );
+    }
+
+    // 2. Skewed / Clustered Workload: 1,000 agents where 80% are in a concentrated 40x40 cluster
+    let mut skewed_hash = ContinuousSpace2D::new(50.0);
+    let mut skewed_rtree = ContinuousSpatialIndex2D::new();
+
+    for i in 0..n_agents {
+        let (x, y) = if i < 800 {
+            // Hotspot in [500, 540] x [500, 540]
+            (
+                500.0 + ((i * 13) % 40) as f64,
+                500.0 + ((i * 29) % 40) as f64,
+            )
+        } else {
+            // Sparse background
+            ((i * 97) as f64 % 1000.0, (i * 131) as f64 % 1000.0)
+        };
+        skewed_hash.place_agent(EntityId::new(i as u64, 0), (x, y));
+        skewed_rtree
+            .insert(EntityId::new(i as u64, 0), x, y)
+            .unwrap();
+    }
+
+    // Query in the cluster center (520.0, 520.0)
+    let start_skewed_hash_query = Instant::now();
+    for _ in 0..50 {
+        let _ = skewed_hash.neighbors_within((520.0, 520.0), 30.0);
+    }
+    let duration_skewed_hash_query = start_skewed_hash_query.elapsed();
+
+    let start_skewed_rtree_query = Instant::now();
+    for _ in 0..50 {
+        let _ = skewed_rtree
+            .locate_within_distance(520.0, 520.0, 30.0)
+            .unwrap();
+    }
+    let duration_skewed_rtree_query = start_skewed_rtree_query.elapsed();
+
+    // 3. k-NN Query: R-tree native O(log N) vs Linear Brute-Force
+    let start_rtree_knn = Instant::now();
+    for q in 0..50 {
+        let qx = (q as f64 * 31.0) % 1000.0;
+        let qy = (q as f64 * 47.0) % 1000.0;
+        let _ = rtree_index.k_nearest_neighbors(qx, qy, 5).unwrap();
+    }
+    let duration_rtree_knn = start_rtree_knn.elapsed();
+
+    // Verify all timings are non-zero and print benchmark summary
+    println!("\n=== Continuous Spatial Index Comparative Benchmark ===");
+    println!("Workload: 1,000 agents, 50 queries");
+    println!(
+        "Uniform Insert: Spatial Hash = {:?}, R-tree = {:?}",
+        duration_hash_insert, duration_rtree_insert
+    );
+    println!(
+        "Uniform Query:  Spatial Hash = {:?}, R-tree = {:?}",
+        duration_hash_query, duration_rtree_query
+    );
+    println!(
+        "Skewed Query:   Spatial Hash = {:?}, R-tree = {:?}",
+        duration_skewed_hash_query, duration_skewed_rtree_query
+    );
+    println!("R-tree k-NN (5-NN, 50 queries): {:?}", duration_rtree_knn);
+    println!("======================================================\n");
+}

@@ -1488,7 +1488,7 @@ entries:
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
       - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
     git_status: "clean"
-    commit_sha: "24df73817c8b0211325736770b42158047198541"
+    commit_sha: "46cfc00370d9d44b8086dc8f90fedb8a17d1bb66"
     pushed_ref: "origin/feat/track-86-rstar-spatial-index"
     next_phase_decision: "Track 86 is Done; advance to Track 79."
 

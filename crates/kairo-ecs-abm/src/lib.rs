@@ -585,6 +585,36 @@ impl ContinuousSpace2D {
         Ok(index)
     }
 
+    /// Finds the nearest neighbor to a given coordinate using an R-tree spatial index.
+    pub fn nearest_neighbor(
+        &self,
+        pos: (f64, f64),
+    ) -> Result<Option<(EntityId, f64)>, SpatialIndexError> {
+        let index = self.to_spatial_index()?;
+        index.nearest_neighbor(pos.0, pos.1)
+    }
+
+    /// Finds the k nearest neighbors to a given coordinate using an R-tree spatial index
+    /// with deterministic distance and EntityId tie-breaking.
+    pub fn k_nearest_neighbors(
+        &self,
+        pos: (f64, f64),
+        k: usize,
+    ) -> Result<Vec<(EntityId, f64)>, SpatialIndexError> {
+        let index = self.to_spatial_index()?;
+        index.k_nearest_neighbors(pos.0, pos.1, k)
+    }
+
+    /// Finds all agents located within an axis-aligned bounding box [min, max] using an R-tree spatial index.
+    pub fn locate_in_envelope(
+        &self,
+        min: (f64, f64),
+        max: (f64, f64),
+    ) -> Result<Vec<EntityId>, SpatialIndexError> {
+        let index = self.to_spatial_index()?;
+        index.locate_in_envelope(min.0, min.1, max.0, max.1)
+    }
+
     pub fn neighbors_within(&self, pos: (f64, f64), radius: f64) -> Vec<EntityId> {
         let mut results = Vec::new();
         let r2 = radius * radius;
@@ -700,7 +730,7 @@ mod abm_spatial_tests {
         let neighbors = grid.neighbors(e1, NeighborhoodKind::Moore);
         assert!(neighbors.contains(&e2));
 
-        // ContinuousSpace2D test
+        // ContinuousSpace2D test with ContinuousSpatialIndex2D integration
         let mut cspace = ContinuousSpace2D::new(10.0);
         cspace.place_agent(e1, (5.0, 5.0));
         cspace.place_agent(e2, (12.0, 5.0));
@@ -708,6 +738,26 @@ mod abm_spatial_tests {
         assert_eq!(within, vec![e1]);
         let within_larger = cspace.neighbors_within((5.0, 5.0), 10.0);
         assert_eq!(within_larger.len(), 2);
+
+        // Exercise ContinuousSpace2D nearest neighbor and envelope queries via ContinuousSpatialIndex2D
+        assert_eq!(
+            cspace.nearest_neighbor((5.0, 5.0)).unwrap(),
+            Some((e1, 0.0))
+        );
+        let nearest2 = cspace.nearest_neighbor((11.0, 5.0)).unwrap().unwrap();
+        assert_eq!(nearest2.0, e2);
+        assert!((nearest2.1 - 1.0).abs() < 1e-6);
+
+        let knn = cspace.k_nearest_neighbors((5.0, 5.0), 2).unwrap();
+        assert_eq!(knn.len(), 2);
+        assert_eq!(knn[0].0, e1);
+        assert_eq!(knn[1].0, e2);
+
+        let in_env1 = cspace.locate_in_envelope((0.0, 0.0), (6.0, 6.0)).unwrap();
+        assert_eq!(in_env1, vec![e1]);
+
+        let in_env2 = cspace.locate_in_envelope((0.0, 0.0), (15.0, 15.0)).unwrap();
+        assert_eq!(in_env2, vec![e1, e2]);
 
         // GraphSpace CSR test
         let gspace = GraphSpace::new(vec![(e1, vec![e2]), (e2, vec![e1])]);

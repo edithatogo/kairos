@@ -17,9 +17,9 @@ Continuous spatial indexing is contained within `crates/kairo-ecs-abm::spatial_i
 ## Phase closeout evidence
 
 - Conductor review: Passed (`$conductor-review` in `review-report.md`).
-- Accepted fixes: No outstanding findings; 3 findings documented and resolved in review report (`accepted fixes` verified).
+- Accepted fixes: No outstanding findings; 5 findings documented and resolved in review report (`accepted fixes` verified).
 - Validation commands:
-  - `cargo test -p kairo-ecs-abm` (10/10 new independent oracles pass, 48/48 total tests pass)
+  - `cargo test -p kairo-ecs-abm` (11/11 new independent oracles pass, 49/49 total tests pass)
   - `cargo test --workspace` (all workspace tests pass)
   - `cargo clippy --workspace --all-targets --all-features -- -D warnings` (clean)
   - `cargo fmt --all --check` (clean)
@@ -28,7 +28,7 @@ Continuous spatial indexing is contained within `crates/kairo-ecs-abm::spatial_i
   - `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` (pass)
   - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1` (pass)
   - `pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1` (pass)
-- Closeout ledger: commit SHA `24df73817c8b0211325736770b42158047198541` recorded upon slice creation.
+- Closeout ledger: commit SHA `46cfc00370d9d44b8086dc8f90fedb8a17d1bb66` (implementation commit containing `spatial_index.rs`; integration commit pending PR #320 squash-merge into main) recorded upon slice creation.
 - Pushed ref: pushed ref `origin/feat/track-86-rstar-spatial-index`.
 - Git closeout verification: `pwsh scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`.
 - Next-phase decision: Track 86 is Done; next-phase decision advances to Track 79 (`zip FMU archive replacement`) / Track 91 (`rust-fmi adapter qualification`).
