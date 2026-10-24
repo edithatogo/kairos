@@ -1372,7 +1372,7 @@ entries:
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
       - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
     git_status: "clean"
-    commit_sha: "PENDING_COMMIT_SHA"
+    commit_sha: "773933ea3d98e2e019e0884d95aa49509ea56e34"
     pushed_ref: "origin/feat/track-78-rayon-robustness"
     next_phase_decision: "Track 78 is Done; advance to Track 79."
 
