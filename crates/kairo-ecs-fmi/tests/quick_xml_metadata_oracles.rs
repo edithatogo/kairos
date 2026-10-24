@@ -400,3 +400,56 @@ fn oracle_from_xml_str_rejects_missing_or_invalid_fmi_version() {
         "Expected unsupported FMI version error"
     );
 }
+
+#[test]
+fn oracle_from_xml_str_ignores_annotation_type_names_and_rejects_duplicate_types() {
+    let xml_with_annotations = r#"<?xml version="1.0" encoding="UTF-8"?>
+<fmiModelDescription fmiVersion="2.0" modelName="nested_types" guid="{nt-guid}">
+  <ModelVariables>
+    <ScalarVariable name="annotated_var" valueReference="1" causality="local" variability="continuous">
+      <Real start="1.0" />
+      <Annotations>
+        <Tool name="SomeTool">
+          <Integer start="42" />
+          <Boolean value="true" />
+          <String value="hello" />
+        </Tool>
+      </Annotations>
+    </ScalarVariable>
+  </ModelVariables>
+  <ModelStructure />
+</fmiModelDescription>
+"#;
+    let model = ModelDescription::from_xml_str(xml_with_annotations)
+        .expect("should successfully parse model description with tool annotations");
+    assert_eq!(model.variables.len(), 1);
+    assert_eq!(
+        model.variables[0].variable_type,
+        VariableType::Real,
+        "Variable type must remain Real and not be overwritten by nested annotation elements"
+    );
+
+    let xml_duplicate_types = r#"<?xml version="1.0" encoding="UTF-8"?>
+<fmiModelDescription fmiVersion="2.0" modelName="dup_types" guid="{dt-guid}">
+  <ModelVariables>
+    <ScalarVariable name="invalid_var" valueReference="1">
+      <Real />
+      <Integer />
+    </ScalarVariable>
+  </ModelVariables>
+  <ModelStructure />
+</fmiModelDescription>
+"#;
+    let result_dup = ModelDescription::from_xml_str(xml_duplicate_types);
+    assert!(
+        result_dup.is_err(),
+        "Must reject ScalarVariable declaring multiple types"
+    );
+    assert!(
+        result_dup
+            .unwrap_err()
+            .to_string()
+            .contains("declares multiple type elements"),
+        "Expected multiple type elements error"
+    );
+}

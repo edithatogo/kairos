@@ -224,9 +224,11 @@ impl ModelDescription {
             Variability,
             Option<VariableType>,
         )> = None;
+        let mut current_variable_depth: Option<usize> = None;
         let mut in_model_variables = false;
         let mut in_model_structure = false;
         let mut in_outputs = false;
+        let mut in_outputs_depth: Option<usize> = None;
         let mut output_unknowns = Vec::new();
         let mut found_root = false;
         let mut root_closed = false;
@@ -344,15 +346,31 @@ impl ModelDescription {
                             })?;
 
                             current_variable = Some((name, vr, causality, variability, None));
+                            current_variable_depth = Some(depth);
                         }
-                        "Real" | "Integer" | "Boolean" | "String" if current_variable.is_some() => {
+                        "Real" | "Integer" | "Boolean" | "String"
+                            if current_variable.is_some()
+                                && current_variable_depth == Some(depth - 1) =>
+                        {
                             if let Some(ref mut var) = current_variable {
+                                if var.4.is_some() {
+                                    return Err(validation_error(
+                                        "modelDescription.xml",
+                                        format!(
+                                            "ScalarVariable '{}' declares multiple type elements",
+                                            var.0
+                                        ),
+                                    ));
+                                }
                                 var.4 = Some(VariableType::from_fmi2(e.local_name().as_ref())?);
                             }
                         }
                         "ModelStructure" => in_model_structure = true,
-                        "Outputs" if in_model_structure => in_outputs = true,
-                        "Unknown" if in_outputs => {
+                        "Outputs" if in_model_structure => {
+                            in_outputs = true;
+                            in_outputs_depth = Some(depth);
+                        }
+                        "Unknown" if in_outputs && in_outputs_depth == Some(depth - 1) => {
                             for attr in e.attributes() {
                                 let attr = attr.map_err(|err| {
                                     validation_error(
@@ -433,12 +451,30 @@ impl ModelDescription {
                     }
 
                     match local_name.as_ref() {
-                        "Real" | "Integer" | "Boolean" | "String" if current_variable.is_some() => {
+                        "ScalarVariable" if in_model_variables => {
+                            return Err(validation_error(
+                                "modelDescription.xml",
+                                "ScalarVariable cannot be self-closing without a type element",
+                            ));
+                        }
+                        "Real" | "Integer" | "Boolean" | "String"
+                            if current_variable.is_some()
+                                && current_variable_depth == Some(depth) =>
+                        {
                             if let Some(ref mut var) = current_variable {
+                                if var.4.is_some() {
+                                    return Err(validation_error(
+                                        "modelDescription.xml",
+                                        format!(
+                                            "ScalarVariable '{}' declares multiple type elements",
+                                            var.0
+                                        ),
+                                    ));
+                                }
                                 var.4 = Some(VariableType::from_fmi2(local_name.as_ref())?);
                             }
                         }
-                        "Unknown" if in_outputs => {
+                        "Unknown" if in_outputs && in_outputs_depth == Some(depth) => {
                             for attr in e.attributes() {
                                 let attr = attr.map_err(|err| {
                                     validation_error(
@@ -475,6 +511,7 @@ impl ModelDescription {
                     }
                     match e.local_name().as_ref() {
                         "ScalarVariable" if in_model_variables => {
+                            current_variable_depth = None;
                             if let Some((name, vr, causality, variability, var_type)) =
                                 current_variable.take()
                             {
@@ -497,7 +534,10 @@ impl ModelDescription {
                             }
                         }
                         "ModelVariables" => in_model_variables = false,
-                        "Outputs" => in_outputs = false,
+                        "Outputs" => {
+                            in_outputs = false;
+                            in_outputs_depth = None;
+                        }
                         "ModelStructure" => in_model_structure = false,
                         _ => {}
                     }
