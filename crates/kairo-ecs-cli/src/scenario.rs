@@ -12,13 +12,75 @@ pub struct ScenarioManifest {
     pub model_id: String,
     pub fixture_id: String,
     pub fixture_path: PathBuf,
+    #[serde(deserialize_with = "deserialize_u64_or_string")]
     pub base_seed: u64,
+    #[serde(deserialize_with = "deserialize_u32_or_string")]
     pub replications: u32,
+    #[serde(deserialize_with = "deserialize_u64_or_string")]
     pub max_events: u64,
     pub artifact_root: PathBuf,
+    #[serde(deserialize_with = "deserialize_u64_or_string")]
     pub resume_checkpoint_every_events: u64,
     #[serde(deserialize_with = "deserialize_kind_order")]
     pub expected_kind_order: Vec<u32>,
+}
+
+fn deserialize_u64_or_string<'de, D>(deserializer: D) -> Result<u64, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    #[derive(Deserialize)]
+    #[serde(untagged)]
+    enum U64OrString {
+        Integer(u64),
+        Signed(i64),
+        String(String),
+    }
+
+    match U64OrString::deserialize(deserializer)? {
+        U64OrString::Integer(v) => Ok(v),
+        U64OrString::Signed(v) => {
+            if v >= 0 {
+                Ok(v as u64)
+            } else {
+                Err(serde::de::Error::custom(format!(
+                    "expected unsigned 64-bit integer, got negative {v}"
+                )))
+            }
+        }
+        U64OrString::String(s) => s.trim().parse::<u64>().map_err(|e| {
+            serde::de::Error::custom(format!("invalid u64 numeric string `{s}`: {e}"))
+        }),
+    }
+}
+
+fn deserialize_u32_or_string<'de, D>(deserializer: D) -> Result<u32, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    #[derive(Deserialize)]
+    #[serde(untagged)]
+    enum U32OrString {
+        Integer(u32),
+        Signed(i64),
+        String(String),
+    }
+
+    match U32OrString::deserialize(deserializer)? {
+        U32OrString::Integer(v) => Ok(v),
+        U32OrString::Signed(v) => {
+            if (0..=u32::MAX as i64).contains(&v) {
+                Ok(v as u32)
+            } else {
+                Err(serde::de::Error::custom(format!(
+                    "integer {v} out of range for u32"
+                )))
+            }
+        }
+        U32OrString::String(s) => s.trim().parse::<u32>().map_err(|e| {
+            serde::de::Error::custom(format!("invalid u32 numeric string `{s}`: {e}"))
+        }),
+    }
 }
 
 #[derive(Deserialize)]
@@ -62,9 +124,11 @@ where
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct SeedManifest {
     pub schema_version: String,
     pub scenario_id: String,
+    #[serde(deserialize_with = "deserialize_u64_or_string")]
     pub base_seed: u64,
     pub fixture_id: String,
     #[serde(default)]
@@ -105,7 +169,17 @@ pub fn load_scenario(path: &Path) -> Result<ScenarioManifest, ScenarioError> {
         path: path.to_path_buf(),
         source,
     })?;
-    toml::from_str(&text).map_err(|e| map_toml_error(e, &text))
+    let manifest: ScenarioManifest = toml::from_str(&text).map_err(|e| map_toml_error(e, &text))?;
+    if manifest.scenario_id.trim().is_empty() {
+        return Err(ScenarioError::MissingField("scenario_id"));
+    }
+    if manifest.model_id.trim().is_empty() {
+        return Err(ScenarioError::MissingField("model_id"));
+    }
+    if manifest.fixture_id.trim().is_empty() {
+        return Err(ScenarioError::MissingField("fixture_id"));
+    }
+    Ok(manifest)
 }
 
 pub fn load_seed_manifest(path: &Path) -> Result<SeedManifest, ScenarioError> {
@@ -113,7 +187,14 @@ pub fn load_seed_manifest(path: &Path) -> Result<SeedManifest, ScenarioError> {
         path: path.to_path_buf(),
         source,
     })?;
-    toml::from_str(&text).map_err(|e| map_toml_error(e, &text))
+    let manifest: SeedManifest = toml::from_str(&text).map_err(|e| map_toml_error(e, &text))?;
+    if manifest.scenario_id.trim().is_empty() {
+        return Err(ScenarioError::MissingField("scenario_id"));
+    }
+    if manifest.fixture_id.trim().is_empty() {
+        return Err(ScenarioError::MissingField("fixture_id"));
+    }
+    Ok(manifest)
 }
 
 fn map_toml_error(err: toml::de::Error, text: &str) -> ScenarioError {
@@ -203,6 +284,16 @@ pub fn validate_scenario_and_seed(
     scenario: &ScenarioManifest,
     seed: &SeedManifest,
 ) -> Result<(), ScenarioError> {
+    if scenario.scenario_id.trim().is_empty() || seed.scenario_id.trim().is_empty() {
+        return Err(ScenarioError::MissingField("scenario_id"));
+    }
+    if scenario.model_id.trim().is_empty() {
+        return Err(ScenarioError::MissingField("model_id"));
+    }
+    if scenario.fixture_id.trim().is_empty() || seed.fixture_id.trim().is_empty() {
+        return Err(ScenarioError::MissingField("fixture_id"));
+    }
+
     if scenario.schema_version != "kairoecs.scenario.v1" {
         return Err(ScenarioError::InvalidField {
             field: "schema_version",
@@ -675,5 +766,62 @@ mod tests {
         assert!(
             matches!(err, ScenarioError::Mismatch(msg) if msg.contains("fixture_path does not exist"))
         );
+    }
+
+    #[test]
+    fn test_u64_max_base_seed_support() {
+        let max_seed_str = u64::MAX.to_string();
+        let toml_scenario = format!(
+            "schema_version = 'kairoecs.scenario.v1'\n\
+             scenario_id = 'test_scenario'\n\
+             model_id = 'test_model'\n\
+             fixture_id = 'test_fixture'\n\
+             fixture_path = '/tmp/fixture'\n\
+             base_seed = '{max_seed_str}'\n\
+             replications = 3\n\
+             max_events = 1000\n\
+             artifact_root = '/tmp/artifacts'\n\
+             resume_checkpoint_every_events = 500\n\
+             expected_kind_order = [1, 2, 3]\n"
+        );
+        let scenario_file = TestManifestFile::new(&toml_scenario);
+        let scenario =
+            load_scenario(scenario_file.path()).expect("load scenario with u64::MAX seed");
+        assert_eq!(scenario.base_seed, u64::MAX);
+
+        let toml_seed = format!(
+            "schema_version = 'kairoecs.seed.v1'\n\
+             scenario_id = 'test_scenario'\n\
+             fixture_id = 'test_fixture'\n\
+             base_seed = '{max_seed_str}'\n"
+        );
+        let seed_file = TestManifestFile::new(&toml_seed);
+        let seed = load_seed_manifest(seed_file.path()).expect("load seed with u64::MAX seed");
+        assert_eq!(seed.base_seed, u64::MAX);
+    }
+
+    #[test]
+    fn test_empty_required_string_fields_rejected() {
+        let toml_scenario = "schema_version = 'kairoecs.scenario.v1'\n\
+             scenario_id = ''\n\
+             model_id = 'test_model'\n\
+             fixture_id = 'test_fixture'\n\
+             fixture_path = '/tmp/fixture'\n\
+             base_seed = 42\n\
+             replications = 3\n\
+             max_events = 1000\n\
+             artifact_root = '/tmp/artifacts'\n\
+             resume_checkpoint_every_events = 500\n\
+             expected_kind_order = [1, 2, 3]\n";
+        let file = TestManifestFile::new(toml_scenario);
+        let err = load_scenario(file.path()).unwrap_err();
+        assert!(matches!(err, ScenarioError::MissingField("scenario_id")));
+
+        let mut scenario = valid_scenario();
+        let mut seed = valid_seed();
+        scenario.scenario_id = "".to_string();
+        seed.scenario_id = "".to_string();
+        let err = validate_scenario_and_seed(&scenario, &seed).unwrap_err();
+        assert!(matches!(err, ScenarioError::MissingField("scenario_id")));
     }
 }
