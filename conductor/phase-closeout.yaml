@@ -1625,7 +1625,7 @@ entries:
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
       - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
     git_status: "clean"
-    commit_sha: "f9a19d0a30180fa4698c852e482244ea3808dcec"
+    commit_sha: "d60fb41f96d6d6c346ea6c64b1aedf9e53d9398a"
     pushed_ref: "origin/feat/track-101-criterion-consolidation"
     next_phase_decision: "Track 101 is Done; track archived."
 
