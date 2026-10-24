@@ -19,14 +19,13 @@ fn event(index: u64, ticks: u128, sequence: u64) -> DispatchedEvent {
 }
 
 fn temp_path(label: &str) -> PathBuf {
-    let nanos = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .expect("system clock")
-        .as_nanos();
-    std::env::temp_dir().join(format!(
-        "kairo-ecs-arrow-{label}-{}-{nanos}.contract",
-        std::process::id()
-    ))
+    tempfile::Builder::new()
+        .prefix(&format!("kairo-ecs-arrow-{label}-"))
+        .suffix(".contract")
+        .tempfile()
+        .expect("tempfile creation")
+        .into_temp_path()
+        .to_path_buf()
 }
 
 #[test]

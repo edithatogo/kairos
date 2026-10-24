@@ -487,6 +487,7 @@ pub struct DurableRunPublicationWriter {
     run_dir: PathBuf,
     run_id: String,
     batch_size: usize,
+    allow_overwrite: bool,
 }
 
 impl DurableRunPublicationWriter {
@@ -497,7 +498,18 @@ impl DurableRunPublicationWriter {
             run_dir,
             run_id: r_id,
             batch_size: if batch_size == 0 { 10_000 } else { batch_size },
+            allow_overwrite: true,
         }
+    }
+
+    pub fn with_no_clobber(mut self) -> Self {
+        self.allow_overwrite = false;
+        self
+    }
+
+    pub fn with_overwrite(mut self, allow_overwrite: bool) -> Self {
+        self.allow_overwrite = allow_overwrite;
+        self
     }
 
     pub fn publish(&self, records: &[EventLogRecord]) -> Result<PublicationReceipt, ArrowError> {
@@ -524,7 +536,7 @@ impl DurableRunPublicationWriter {
             let mut buf = Vec::new();
             write_parquet_zstd(&mut df, &mut buf)?;
 
-            fs::write(&part_path, &buf).map_err(|e| ArrowError::Io(e.to_string()))?;
+            crate::atomic_write_file(&part_path, &buf, self.allow_overwrite)?;
             let checksum = calculate_checksum(&buf);
 
             let max_seq = chunk.iter().map(|r| r.sequence).max().unwrap_or(0);
@@ -552,7 +564,11 @@ impl DurableRunPublicationWriter {
 
         let manifest_json = manifest.to_json();
         let manifest_path = self.run_dir.join("manifest.json");
-        fs::write(&manifest_path, manifest_json).map_err(|e| ArrowError::Io(e.to_string()))?;
+        crate::atomic_write_file(
+            &manifest_path,
+            manifest_json.as_bytes(),
+            self.allow_overwrite,
+        )?;
 
         Ok(PublicationReceipt {
             manifest_path,

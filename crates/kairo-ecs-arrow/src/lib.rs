@@ -2020,6 +2020,16 @@ impl ParquetZstdCheckpointWriter {
         out.extend_from_slice(&checksum);
         out
     }
+
+    pub fn write_checkpoint_file(
+        path: impl AsRef<std::path::Path>,
+        schema: &ArrowNativeSchema,
+        batches: &[ArrowRecordBatch],
+        allow_overwrite: bool,
+    ) -> Result<(), ArrowError> {
+        let bytes = Self::write_checkpoint(schema, batches);
+        atomic_write_file(path, &bytes, allow_overwrite)
+    }
 }
 
 pub struct ParquetZstdCheckpointReader;
@@ -2077,6 +2087,53 @@ pub fn compute_sha256_hex(data: &[u8]) -> String {
         let _ = write!(&mut hex, "{:02x}", b);
     }
     hex
+}
+
+/// Atomically writes data to `destination` by staging in a temporary file beside the destination
+/// on the exact same filesystem, syncing to storage, and atomically renaming into place.
+///
+/// If `allow_overwrite` is false, this returns an error if `destination` already exists,
+/// preventing accidental data clobbering.
+pub fn atomic_write_file(
+    destination: impl AsRef<std::path::Path>,
+    data: &[u8],
+    allow_overwrite: bool,
+) -> Result<(), ArrowError> {
+    use std::io::Write;
+    let dest = destination.as_ref();
+    let parent = dest.parent().unwrap_or_else(|| std::path::Path::new("."));
+    std::fs::create_dir_all(parent).map_err(|e| ArrowError::Io(e.to_string()))?;
+
+    let mut staged = tempfile::NamedTempFile::new_in(parent)
+        .map_err(|e| ArrowError::Io(format!("Failed to create temporary staging file: {e}")))?;
+    staged
+        .write_all(data)
+        .map_err(|e| ArrowError::Io(format!("Failed to write to staging file: {e}")))?;
+    staged
+        .as_file()
+        .sync_all()
+        .map_err(|e| ArrowError::Io(format!("Failed to sync staging file: {e}")))?;
+
+    if allow_overwrite {
+        staged.persist(dest).map_err(|e| {
+            ArrowError::Io(format!(
+                "Failed to atomically persist to {}: {e}",
+                dest.display()
+            ))
+        })?;
+    } else {
+        staged.persist_noclobber(dest).map_err(|e| {
+            ArrowError::Io(format!(
+                "Failed to atomically persist without clobber to {}: {e}",
+                dest.display()
+            ))
+        })?;
+    }
+
+    if let Ok(dir) = std::fs::File::open(parent) {
+        let _ = dir.sync_all();
+    }
+    Ok(())
 }
 
 #[cfg(test)]

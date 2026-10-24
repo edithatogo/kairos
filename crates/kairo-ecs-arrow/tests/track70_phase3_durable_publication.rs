@@ -23,9 +23,8 @@ fn sample_v2_record(seq: u64, time_ticks: u128, entity_id: Option<EntityId>) -> 
 
 #[test]
 fn test_failing_manifest_last_publication_and_interruption_rejection() {
-    let temp_dir = std::env::temp_dir().join("kairo_test_durable_manifest");
-    let _ = fs::remove_dir_all(&temp_dir);
-    fs::create_dir_all(&temp_dir).unwrap();
+    let temp = tempfile::tempdir().expect("isolated tempdir");
+    let temp_dir = temp.path();
 
     let records: Vec<EventLogRecord> = (1..=50)
         .map(|i| sample_v2_record(i, (i * 10) as u128, Some(EntityId::new(i, 1))))
@@ -48,15 +47,12 @@ fn test_failing_manifest_last_publication_and_interruption_rejection() {
     fs::remove_file(&receipt.manifest_path).unwrap();
     let err = reader.read_all_records();
     assert!(err.is_err(), "Must reject unmanifested/interrupted run");
-
-    let _ = fs::remove_dir_all(&temp_dir);
 }
 
 #[test]
 fn test_failing_resume_watermark_no_data_duplication() {
-    let temp_dir = std::env::temp_dir().join("kairo_test_durable_resume");
-    let _ = fs::remove_dir_all(&temp_dir);
-    fs::create_dir_all(&temp_dir).unwrap();
+    let temp = tempfile::tempdir().expect("isolated tempdir");
+    let temp_dir = temp.path();
 
     let batch1: Vec<EventLogRecord> = (1..=20)
         .map(|i| sample_v2_record(i, (i * 10) as u128, None))
@@ -80,15 +76,12 @@ fn test_failing_resume_watermark_no_data_duplication() {
     assert_eq!(deduplicated.len(), 10); // only sequences 21..=30
     assert_eq!(deduplicated[0].sequence, 21);
     assert_eq!(deduplicated[9].sequence, 30);
-
-    let _ = fs::remove_dir_all(&temp_dir);
 }
 
 #[test]
 fn test_failing_tampered_part_file_checksum_rejection() {
-    let temp_dir = std::env::temp_dir().join("kairo_test_durable_tamper");
-    let _ = fs::remove_dir_all(&temp_dir);
-    fs::create_dir_all(&temp_dir).unwrap();
+    let temp = tempfile::tempdir().expect("isolated tempdir");
+    let temp_dir = temp.path();
 
     let records: Vec<EventLogRecord> = (1..=10)
         .map(|i| sample_v2_record(i, (i * 100) as u128, None))
@@ -109,8 +102,6 @@ fn test_failing_tampered_part_file_checksum_rejection() {
         res.is_err(),
         "Must reject tampered part file with checksum mismatch"
     );
-
-    let _ = fs::remove_dir_all(&temp_dir);
 }
 
 #[test]
