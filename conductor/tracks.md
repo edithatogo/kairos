@@ -86,9 +86,9 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 78 | Rayon bounded independent-work execution | Done | `experiment-agent` | See `conductor/tracks/78-*/spec.md` |
 | 79 | zip FMU archive replacement | Done | `fmi-agent` | See `conductor/tracks/79-*/spec.md` |
 | 80 | quick-xml FMU metadata replacement | Done | `fmi-agent` | See `conductor/tracks/80-*/spec.md` |
-| 81 | Prost distributed envelope encoding | Planned | `distributed-agent` | See `conductor/tracks/81-*/spec.md` |
-| 82 | Tokio bounded transport runtime | Planned | `distributed-agent` | See `conductor/tracks/82-*/spec.md` |
-| 83 | Tonic interoperable RPC transport | Planned | `distributed-agent` | See `conductor/tracks/83-*/spec.md` |
+| 81 | Prost distributed envelope encoding | Done | `distributed-agent` | See `conductor/tracks/81-*/spec.md` |
+| 82 | Tokio bounded transport runtime | Done | `distributed-agent` | See `conductor/tracks/82-*/spec.md` |
+| 83 | Tonic interoperable RPC transport | Done | `distributed-agent` | See `conductor/tracks/83-*/spec.md` |
 | 84 | hecs ECS storage qualification | Planned | `ecs-agent` | See `conductor/tracks/84-*/spec.md` |
 | 85 | Clarabel convex solver qualification | Planned | `vv-uq-agent` | See `conductor/tracks/85-*/spec.md` |
 | 86 | rstar continuous spatial index qualification | Done | `abm-api-agent` | See `conductor/tracks/86-*/spec.md` |
@@ -180,7 +180,7 @@ The human sole maintainer explicitly approved Track49 production scheduling afte
 - [x] **Track 82: Tokio bounded transport runtime** — Done; conditional; value gate closed (adopted). [Track](tracks/82-tokio-robustness/index.md).
 
 ---
-- [ ] **Track 83: Tonic interoperable RPC transport** — Planned; conditional; value gate pending. [Track](tracks/83-tonic-robustness/index.md).
+- [x] **Track 83: Tonic interoperable RPC transport** — Done; conditional; value gate closed (adopted). [Track](tracks/83-tonic-robustness/index.md).
 
 ---
 - [ ] **Track 84: hecs ECS storage qualification** — Planned; evaluation; value gate pending. [Track](tracks/84-hecs-robustness/index.md).

@@ -1024,6 +1024,130 @@ pub struct WireOptimisticEnvelope {
     pub event_payload: Vec<u8>,
 }
 
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct WireRemoteEvent {
+    #[prost(uint32, tag = "1")]
+    pub source_lp: u32,
+    #[prost(uint32, tag = "2")]
+    pub dest_lp: u32,
+    #[prost(uint64, tag = "3")]
+    pub tick: u64,
+    #[prost(bytes = "vec", tag = "4")]
+    pub event_payload: Vec<u8>,
+}
+
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct WireComponentBlob {
+    #[prost(string, tag = "1")]
+    pub component_type_id: String,
+    #[prost(uint64, tag = "2")]
+    pub generation: u64,
+    #[prost(bytes = "vec", tag = "3")]
+    pub payload: Vec<u8>,
+}
+
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct WirePendingEvent {
+    #[prost(uint32, tag = "1")]
+    pub source_lp: u32,
+    #[prost(uint32, tag = "2")]
+    pub dest_lp: u32,
+    #[prost(uint64, tag = "3")]
+    pub tick: u64,
+    #[prost(uint64, tag = "4")]
+    pub sequence: u64,
+    #[prost(uint64, tag = "5")]
+    pub payload_bytes: u64,
+    #[prost(bool, tag = "6")]
+    pub anti_message: bool,
+}
+
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct WireMigrationRequest {
+    #[prost(uint64, tag = "1")]
+    pub entity_index: u64,
+    #[prost(uint32, tag = "2")]
+    pub entity_generation: u32,
+    #[prost(uint32, tag = "3")]
+    pub source_lp: u32,
+    #[prost(uint32, tag = "4")]
+    pub dest_lp: u32,
+    #[prost(string, tag = "5")]
+    pub migration_id: String,
+    #[prost(message, repeated, tag = "6")]
+    pub components: Vec<WireComponentBlob>,
+    #[prost(message, repeated, tag = "7")]
+    pub pending_events: Vec<WirePendingEvent>,
+}
+
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct WireMigrationAck {
+    #[prost(string, tag = "1")]
+    pub migration_id: String,
+    #[prost(bool, tag = "2")]
+    pub applied: bool,
+    #[prost(string, tag = "3")]
+    pub message: String,
+}
+
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct WireTelemetryBatch {
+    #[prost(uint32, tag = "1")]
+    pub source_lp: u32,
+    #[prost(bytes = "vec", tag = "2")]
+    pub arrow_ipc_payload: Vec<u8>,
+    #[prost(uint64, tag = "3")]
+    pub tick_start: u64,
+    #[prost(uint64, tag = "4")]
+    pub tick_end: u64,
+}
+
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct WireGvtProposal {
+    #[prost(uint32, tag = "1")]
+    pub source_lp: u32,
+    #[prost(uint64, tag = "2")]
+    pub local_min_tick: u64,
+}
+
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct WireGvtDecision {
+    #[prost(uint64, tag = "1")]
+    pub gvt_tick: u64,
+}
+
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct WireHeartbeat {
+    #[prost(uint32, tag = "1")]
+    pub source_lp: u32,
+    #[prost(uint64, tag = "2")]
+    pub observed_tick: u64,
+    #[prost(uint64, tag = "3")]
+    pub elapsed_since_last_seen_ms: u64,
+}
+
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct WireHeartbeatAck {
+    #[prost(uint32, tag = "1")]
+    pub source_lp: u32,
+    #[prost(bool, tag = "2")]
+    pub accepted: bool,
+    #[prost(string, tag = "3")]
+    pub message: String,
+}
+
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct WireOptimisticAck {
+    #[prost(uint32, tag = "1")]
+    pub source_lp: u32,
+    #[prost(uint32, tag = "2")]
+    pub dest_lp: u32,
+    #[prost(bool, tag = "3")]
+    pub accepted: bool,
+    #[prost(string, tag = "4")]
+    pub message: String,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

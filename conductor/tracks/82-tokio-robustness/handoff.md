@@ -62,8 +62,8 @@ All 47 tests in `kairo-ecs-grpc` (25 unit, 15 prost oracles, 5 tokio oracles, 2 
 - `$conductor-review`: Phase 0, Phase 1, and Phase 2 review executed and passed; see [review-report.md](review-report.md).
 - accepted fixes: Adopted `tokio 1.54.1` with minimal features; replaced manual busy-sleep listener thread with single-threaded Tokio adapter runtime; added bounded connection semaphore (256); verified cooperative watch channel cancellation; clippy and fmt hygiene fixes; attached source-bound validation receipts.
 - rejected findings: None.
-- commit SHA: HEAD
-- pushed ref: origin/feat/track-82-tokio-transport-runtime
+- commit SHA: 6fe9ce3b31b8f0c5c72a21bd4dbf6079ef87b876
+- pushed ref: origin/main
 - next-phase decision: Track 82 is Done; advance to Track 83 (Tonic interoperable RPC transport).
 - Clean working tree verification: `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`.
 
