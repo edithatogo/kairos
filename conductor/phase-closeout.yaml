@@ -1549,8 +1549,8 @@ entries:
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
       - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
     git_status: "clean"
-    commit_sha: "187e9f6d108eff9ab1eb844cf61b8d40e37f7528"
-    pushed_ref: "origin/feat/track-96-proptest-invariants"
+    commit_sha: "418b6bc593f0e4108ece5d11a669ad21dfb87a14"
+    pushed_ref: "origin/main"
     next_phase_decision: "Track 96 is Done; track archived."
 
   - track_id: "97"
@@ -1579,15 +1579,19 @@ entries:
 
   - track_id: "99"
     phase: "0"
-    state: pending
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Planning only; adoption unqualified"
-    fixes_applied: false
-    validation_commands: []
-    git_status: "planning worktree"
-    commit_sha: ""
-    pushed_ref: ""
-    next_phase_decision: "Verify value, prerequisites and owner handoffs"
+    review_result: "Evaluation complete: proptest-state-machine v0.9.0 rejected under dependency-value-policy.md due to transitive bloat (fork, timeout, nix), determinism/WASM risks, and negative maintainability over plain proptest."
+    fixes_applied: true
+    validation_commands:
+      - "cargo test -p kairo-ecs-core"
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
+    git_status: "clean"
+    commit_sha: "dfdae60744d82e1e01762270479bfa4d09c7b7f5"
+    pushed_ref: "origin/feat/track-99-proptest-state-machine"
+    next_phase_decision: "Track 99 evaluation complete with explicit REJECT (NO-GO) outcome; track archived."
 
   - track_id: "100"
     phase: "0"
