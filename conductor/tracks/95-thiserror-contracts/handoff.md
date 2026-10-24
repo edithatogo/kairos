@@ -57,7 +57,7 @@ All 71 tests in `kairo-ecs-cli` and `kairo-ecs-debug` passed. Clippy and Rustfmt
   - Command: `cargo test -p kairo-ecs-cli -p kairo-ecs-debug`
   - CWD: `/Volumes/PortableSSD/github/kairos`
   - Toolchain: `rustc 1.99.1`
-  - Commit SHA: 9f94fd334938e7ab3252749aa6a7ade5a1086238
+  - Commit SHA: 9ef83106033f7fd6d6db15f8624564fd537b078a
   - Exit code: `0`
 - pushed ref: origin/feat/track-95-thiserror-contracts
 - next-phase decision: Track 95 accepted and complete; advance to Track 71.

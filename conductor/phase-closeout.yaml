@@ -1561,7 +1561,7 @@ entries:
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
       - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
     git_status: "clean"
-    commit_sha: "9f94fd334938e7ab3252749aa6a7ade5a1086238"
+    commit_sha: "9ef83106033f7fd6d6db15f8624564fd537b078a"
     pushed_ref: "origin/feat/track-95-thiserror-contracts"
     next_phase_decision: "Track 95 is Done; advance to Track 71."
 
