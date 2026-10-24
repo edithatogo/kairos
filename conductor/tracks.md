@@ -92,7 +92,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 84 | hecs ECS storage qualification | Planned | `ecs-agent` | See `conductor/tracks/84-*/spec.md` |
 | 85 | Clarabel convex solver qualification | Planned | `vv-uq-agent` | See `conductor/tracks/85-*/spec.md` |
 | 86 | rstar continuous spatial index qualification | Planned | `abm-api-agent` | See `conductor/tracks/86-*/spec.md` |
-| 87 | geo geometry and route-position primitives | Planned | `abm-api-agent` | See `conductor/tracks/87-*/spec.md` |
+| 87 | geo geometry and route-position primitives | Completed | `abm-api-agent` | See `conductor/tracks/87-*/spec.md` |
 | 88 | rsmpi native MPI qualification | Planned | `distributed-agent` | See `conductor/tracks/88-*/spec.md` |
 | 89 | Tract inference qualification | Planned | `ml-integration-agent` | See `conductor/tracks/89-*/spec.md` |
 | 90 | Argmin calibration optimiser qualification | Planned | `vv-uq-agent` | See `conductor/tracks/90-*/spec.md` |
@@ -192,7 +192,7 @@ The human sole maintainer explicitly approved Track49 production scheduling afte
 - [ ] **Track 86: rstar continuous spatial index qualification** — Planned; evaluation; value gate pending. [Track](tracks/86-rstar-robustness/index.md).
 
 ---
-- [ ] **Track 87: geo geometry and route-position primitives** — Planned; conditional; value gate pending. [Track](tracks/87-geo-robustness/index.md).
+- [x] **Track 87: geo geometry and route-position primitives** — Completed; adopted; verified with independent oracles. [Track](tracks/87-geo-robustness/index.md).
 
 ---
 - [ ] **Track 88: rsmpi native MPI qualification** — Planned; conditional; value gate pending. [Track](tracks/88-mpi-robustness/index.md).

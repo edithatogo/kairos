@@ -1,7 +1,9 @@
 #![forbid(unsafe_code)]
 
+pub mod geometry;
 pub mod routing;
 pub mod spawning;
+pub use geometry::*;
 pub use routing::*;
 pub use spawning::*;
 
