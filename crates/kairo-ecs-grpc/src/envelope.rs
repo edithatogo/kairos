@@ -5,6 +5,7 @@ use kairo_ecs_pdes::{
     OptimisticMessage, OptimisticMessageKind, RemoteEvent,
 };
 use kairo_ecs_types::SimTime;
+use prost::Message;
 use std::fmt;
 
 use crate::GRPC_PROTOCOL_VERSION;
@@ -476,53 +477,21 @@ impl KairoOptimisticEnvelopeV1 {
         Ok(env)
     }
 
-    /// Serializes the envelope into deterministic binary bytes.
+    /// Serializes the envelope into deterministic protobuf binary bytes using `prost`.
     pub fn encode(&self) -> Result<Vec<u8>, RejectionCode> {
-        let mut buf = Vec::with_capacity(256 + self.event_payload.len());
-
-        buf.extend_from_slice(&self.envelope_schema_version.to_be_bytes());
-        let proto_bytes = self.protocol_id.as_bytes();
-        buf.extend_from_slice(&(proto_bytes.len() as u16).to_be_bytes());
-        buf.extend_from_slice(proto_bytes);
-        buf.extend_from_slice(&self.protocol_version.to_be_bytes());
-        buf.extend_from_slice(&(self.authority_mode as u32).to_be_bytes());
-        buf.extend_from_slice(&self.simulation_namespace.to_be_bytes());
-        buf.extend_from_slice(&self.ownership_epoch.to_be_bytes());
-        buf.extend_from_slice(&self.emission_epoch.to_be_bytes());
-        buf.extend_from_slice(&self.source_lp.to_be_bytes());
-        buf.extend_from_slice(&self.dest_lp.to_be_bytes());
-        buf.extend_from_slice(&self.tick.to_be_bytes());
-        buf.extend_from_slice(&self.incarnation.to_be_bytes());
-        buf.extend_from_slice(&(self.kind as u32).to_be_bytes());
-
-        // Ancestry frames count and items
-        buf.extend_from_slice(&(self.ancestry_frames.len() as u32).to_be_bytes());
-        for frame in &self.ancestry_frames {
-            match frame {
-                AncestryFrame::Root {
-                    root_source_lp,
-                    root_sequence,
-                } => {
-                    buf.push(0u8); // tag 0 = Root
-                    buf.extend_from_slice(&root_source_lp.to_be_bytes());
-                    buf.extend_from_slice(&root_sequence.to_be_bytes());
-                }
-                AncestryFrame::Output {
-                    parent_tick,
-                    parent_source_lp,
-                    ordinal,
-                } => {
-                    buf.push(1u8); // tag 1 = Output
-                    buf.extend_from_slice(&parent_tick.to_be_bytes());
-                    buf.extend_from_slice(&parent_source_lp.to_be_bytes());
-                    buf.extend_from_slice(&ordinal.to_be_bytes());
-                }
-            }
+        let wire = self.to_wire()?;
+        let encoded_len = wire.encoded_len();
+        if encoded_len > MAX_ENCODED_ENVELOPE_BYTES {
+            return Err(RejectionCode::EnvelopeTooLarge(
+                "total_envelope",
+                encoded_len,
+                MAX_ENCODED_ENVELOPE_BYTES,
+            ));
         }
 
-        // Payload
-        buf.extend_from_slice(&(self.event_payload.len() as u32).to_be_bytes());
-        buf.extend_from_slice(&self.event_payload);
+        let mut buf = Vec::with_capacity(encoded_len);
+        wire.encode(&mut buf)
+            .map_err(|e| RejectionCode::MalformedFraming(e.to_string()))?;
 
         if buf.len() > MAX_ENCODED_ENVELOPE_BYTES {
             return Err(RejectionCode::EnvelopeTooLarge(
@@ -535,7 +504,7 @@ impl KairoOptimisticEnvelopeV1 {
         Ok(buf)
     }
 
-    /// Deserializes an envelope from binary bytes with strict preflight bounds checks.
+    /// Deserializes an envelope from protobuf binary bytes with strict preflight bounds checks.
     pub fn decode(bytes: &[u8]) -> Result<Self, RejectionCode> {
         if bytes.len() > MAX_ENCODED_ENVELOPE_BYTES {
             return Err(RejectionCode::EnvelopeTooLarge(
@@ -544,202 +513,246 @@ impl KairoOptimisticEnvelopeV1 {
                 MAX_ENCODED_ENVELOPE_BYTES,
             ));
         }
-        if bytes.len() < 4 {
+        if bytes.is_empty() {
             return Err(RejectionCode::MalformedFraming(
-                "Buffer too short for schema version".to_string(),
+                "Buffer is empty".to_string(),
             ));
         }
 
-        let mut offset = 0;
-        let schema_ver = u32::from_be_bytes(bytes[offset..offset + 4].try_into().unwrap());
-        offset += 4;
-        if schema_ver != 1 {
-            return Err(RejectionCode::UnsupportedEnvelopeVersion(schema_ver));
-        }
+        let wire = WireOptimisticEnvelope::decode(bytes)
+            .map_err(|e| RejectionCode::MalformedFraming(format!("Protobuf decode error: {e}")))?;
 
-        if bytes.len() < offset + 2 {
-            return Err(RejectionCode::MalformedFraming(
-                "Buffer too short for protocol ID length".to_string(),
-            ));
-        }
-        let proto_len = u16::from_be_bytes(bytes[offset..offset + 2].try_into().unwrap()) as usize;
-        offset += 2;
+        Self::from_wire(wire)
+    }
 
-        if bytes.len() < offset + proto_len {
-            return Err(RejectionCode::MalformedFraming(
-                "Buffer too short for protocol ID".to_string(),
-            ));
-        }
-        let protocol_id =
-            String::from_utf8(bytes[offset..offset + proto_len].to_vec()).map_err(|e| {
-                RejectionCode::MalformedFraming(format!("Invalid protocol ID string: {e}"))
-            })?;
-        offset += proto_len;
-
-        // Fixed fields:
-        // protocol_version: 2
-        // authority_mode: 4
-        // simulation_namespace: 16
-        // ownership_epoch: 8
-        // emission_epoch: 8
-        // source_lp: 4
-        // dest_lp: 4
-        // tick: 16
-        // incarnation: 8
-        // kind: 4
-        // Total fixed = 74 bytes
-        const FIXED_LEN: usize = 2 + 4 + 16 + 8 + 8 + 4 + 4 + 16 + 8 + 4;
-        if bytes.len() < offset + FIXED_LEN {
-            return Err(RejectionCode::MalformedFraming(
-                "Buffer too short for fixed fields".to_string(),
-            ));
-        }
-
-        let protocol_version = u16::from_be_bytes(bytes[offset..offset + 2].try_into().unwrap());
-        offset += 2;
-        let mode_raw = u32::from_be_bytes(bytes[offset..offset + 4].try_into().unwrap());
-        offset += 4;
-        let authority_mode = OptimisticAuthorityMode::from_u32(mode_raw)
-            .ok_or(RejectionCode::AuthorityModeMismatch)?;
-
-        let simulation_namespace =
-            u128::from_be_bytes(bytes[offset..offset + 16].try_into().unwrap());
-        offset += 16;
-        let ownership_epoch = u64::from_be_bytes(bytes[offset..offset + 8].try_into().unwrap());
-        offset += 8;
-        let emission_epoch = u64::from_be_bytes(bytes[offset..offset + 8].try_into().unwrap());
-        offset += 8;
-        let source_lp = u32::from_be_bytes(bytes[offset..offset + 4].try_into().unwrap());
-        offset += 4;
-        let dest_lp = u32::from_be_bytes(bytes[offset..offset + 4].try_into().unwrap());
-        offset += 4;
-        let tick = u128::from_be_bytes(bytes[offset..offset + 16].try_into().unwrap());
-        offset += 16;
-        let incarnation = u64::from_be_bytes(bytes[offset..offset + 8].try_into().unwrap());
-        offset += 8;
-        let kind_raw = u32::from_be_bytes(bytes[offset..offset + 4].try_into().unwrap());
-        offset += 4;
-        let kind = WireMessageKind::from_u32(kind_raw).ok_or_else(|| {
-            RejectionCode::MalformedFraming(format!("Unknown message kind: {kind_raw}"))
-        })?;
-
-        // Frames
-        if bytes.len() < offset + 4 {
-            return Err(RejectionCode::MalformedFraming(
-                "Buffer too short for frame count".to_string(),
-            ));
-        }
-        let frame_count =
-            u32::from_be_bytes(bytes[offset..offset + 4].try_into().unwrap()) as usize;
-        offset += 4;
-
-        if frame_count > MAX_ANCESTRY_NODES {
+    /// Converts this domain envelope to its typed Protobuf wire model.
+    pub fn to_wire(&self) -> Result<WireOptimisticEnvelope, RejectionCode> {
+        if self.ancestry_frames.len() > MAX_ANCESTRY_NODES {
             return Err(RejectionCode::EnvelopeTooLarge(
                 "ancestry_frames",
-                frame_count,
+                self.ancestry_frames.len(),
                 MAX_ANCESTRY_NODES,
             ));
         }
-
-        let mut ancestry_frames = Vec::with_capacity(frame_count);
-        for _ in 0..frame_count {
-            if bytes.len() < offset + 1 {
-                return Err(RejectionCode::MalformedFraming(
-                    "Buffer too short for frame tag".to_string(),
-                ));
-            }
-            let tag = bytes[offset];
-            offset += 1;
-            match tag {
-                0 => {
-                    // RootFrame: 4 + 8 = 12 bytes
-                    if bytes.len() < offset + 12 {
-                        return Err(RejectionCode::MalformedFraming(
-                            "Buffer too short for root frame".to_string(),
-                        ));
-                    }
-                    let root_source_lp =
-                        u32::from_be_bytes(bytes[offset..offset + 4].try_into().unwrap());
-                    offset += 4;
-                    let root_sequence =
-                        u64::from_be_bytes(bytes[offset..offset + 8].try_into().unwrap());
-                    offset += 8;
-                    ancestry_frames.push(AncestryFrame::Root {
-                        root_source_lp,
-                        root_sequence,
-                    });
-                }
-                1 => {
-                    // OutputFrame: 16 + 4 + 4 = 24 bytes
-                    if bytes.len() < offset + 24 {
-                        return Err(RejectionCode::MalformedFraming(
-                            "Buffer too short for output frame".to_string(),
-                        ));
-                    }
-                    let parent_tick =
-                        u128::from_be_bytes(bytes[offset..offset + 16].try_into().unwrap());
-                    offset += 16;
-                    let parent_source_lp =
-                        u32::from_be_bytes(bytes[offset..offset + 4].try_into().unwrap());
-                    offset += 4;
-                    let ordinal = u32::from_be_bytes(bytes[offset..offset + 4].try_into().unwrap());
-                    offset += 4;
-                    ancestry_frames.push(AncestryFrame::Output {
-                        parent_tick,
-                        parent_source_lp,
-                        ordinal,
-                    });
-                }
-                other => {
-                    return Err(RejectionCode::MalformedFraming(format!(
-                        "Unknown ancestry frame tag: {other}"
-                    )));
-                }
-            }
-        }
-
-        // Payload
-        if bytes.len() < offset + 4 {
-            return Err(RejectionCode::MalformedFraming(
-                "Buffer too short for payload length".to_string(),
-            ));
-        }
-        let payload_len =
-            u32::from_be_bytes(bytes[offset..offset + 4].try_into().unwrap()) as usize;
-        offset += 4;
-
-        if payload_len > MAX_PAYLOAD_BYTES {
+        if self.event_payload.len() > MAX_PAYLOAD_BYTES {
             return Err(RejectionCode::EnvelopeTooLarge(
                 "event_payload",
-                payload_len,
+                self.event_payload.len(),
                 MAX_PAYLOAD_BYTES,
             ));
         }
 
-        if bytes.len() < offset + payload_len {
-            return Err(RejectionCode::MalformedFraming(
-                "Buffer too short for payload bytes".to_string(),
+        let mut wire_frames = Vec::with_capacity(self.ancestry_frames.len());
+        for frame in &self.ancestry_frames {
+            let wire_frame = match frame {
+                AncestryFrame::Root {
+                    root_source_lp,
+                    root_sequence,
+                } => WireAncestryFrame {
+                    frame: Some(WireFrameKind::Root(WireRootFrame {
+                        root_source_lp: *root_source_lp,
+                        root_sequence: *root_sequence,
+                    })),
+                },
+                AncestryFrame::Output {
+                    parent_tick,
+                    parent_source_lp,
+                    ordinal,
+                } => WireAncestryFrame {
+                    frame: Some(WireFrameKind::Output(WireOutputFrame {
+                        parent_tick: parent_tick.to_be_bytes().to_vec(),
+                        parent_source_lp: *parent_source_lp,
+                        ordinal: *ordinal,
+                    })),
+                },
+            };
+            wire_frames.push(wire_frame);
+        }
+
+        Ok(WireOptimisticEnvelope {
+            envelope_schema_version: self.envelope_schema_version,
+            protocol_id: self.protocol_id.clone(),
+            protocol_version: self.protocol_version as u32,
+            authority_mode: self.authority_mode as u32,
+            simulation_namespace: self.simulation_namespace.to_be_bytes().to_vec(),
+            ownership_epoch: self.ownership_epoch,
+            emission_epoch: self.emission_epoch,
+            source_lp: self.source_lp,
+            dest_lp: self.dest_lp,
+            tick: self.tick.to_be_bytes().to_vec(),
+            ancestry_frames: wire_frames,
+            incarnation: self.incarnation,
+            kind: self.kind as u32,
+            event_payload: self.event_payload.clone(),
+        })
+    }
+
+    /// Reconstructs the domain envelope from its typed Protobuf wire model.
+    pub fn from_wire(wire: WireOptimisticEnvelope) -> Result<Self, RejectionCode> {
+        if wire.envelope_schema_version != 1 {
+            return Err(RejectionCode::UnsupportedEnvelopeVersion(
+                wire.envelope_schema_version,
             ));
         }
-        let event_payload = bytes[offset..offset + payload_len].to_vec();
+        if wire.protocol_version > u16::MAX as u32 {
+            return Err(RejectionCode::ProtocolVersionMismatch(u16::MAX));
+        }
+        let protocol_version = wire.protocol_version as u16;
+
+        let authority_mode = OptimisticAuthorityMode::from_u32(wire.authority_mode)
+            .ok_or(RejectionCode::AuthorityModeMismatch)?;
+
+        if wire.simulation_namespace.len() != 16 {
+            return Err(RejectionCode::MalformedFraming(
+                "simulation_namespace must be exactly 16 bytes for 128-bit integer".to_string(),
+            ));
+        }
+        let simulation_namespace =
+            u128::from_be_bytes(wire.simulation_namespace[..16].try_into().unwrap());
+
+        if wire.tick.len() != 16 {
+            return Err(RejectionCode::MalformedFraming(
+                "tick must be exactly 16 bytes for 128-bit integer".to_string(),
+            ));
+        }
+        let tick = u128::from_be_bytes(wire.tick[..16].try_into().unwrap());
+
+        if wire.ancestry_frames.len() > MAX_ANCESTRY_NODES {
+            return Err(RejectionCode::EnvelopeTooLarge(
+                "ancestry_frames",
+                wire.ancestry_frames.len(),
+                MAX_ANCESTRY_NODES,
+            ));
+        }
+
+        let mut ancestry_frames = Vec::with_capacity(wire.ancestry_frames.len());
+        for wf in wire.ancestry_frames {
+            match wf.frame {
+                Some(WireFrameKind::Root(r)) => {
+                    ancestry_frames.push(AncestryFrame::Root {
+                        root_source_lp: r.root_source_lp,
+                        root_sequence: r.root_sequence,
+                    });
+                }
+                Some(WireFrameKind::Output(o)) => {
+                    if o.parent_tick.len() != 16 {
+                        return Err(RejectionCode::MalformedFraming(
+                            "parent_tick must be exactly 16 bytes for 128-bit integer".to_string(),
+                        ));
+                    }
+                    let parent_tick = u128::from_be_bytes(o.parent_tick[..16].try_into().unwrap());
+                    ancestry_frames.push(AncestryFrame::Output {
+                        parent_tick,
+                        parent_source_lp: o.parent_source_lp,
+                        ordinal: o.ordinal,
+                    });
+                }
+                None => {
+                    return Err(RejectionCode::MalformedFraming(
+                        "Missing oneof frame in AncestryFrame".to_string(),
+                    ));
+                }
+            }
+        }
+
+        let kind = WireMessageKind::from_u32(wire.kind).ok_or_else(|| {
+            RejectionCode::MalformedFraming(format!("Unknown message kind: {}", wire.kind))
+        })?;
+
+        if wire.event_payload.len() > MAX_PAYLOAD_BYTES {
+            return Err(RejectionCode::EnvelopeTooLarge(
+                "event_payload",
+                wire.event_payload.len(),
+                MAX_PAYLOAD_BYTES,
+            ));
+        }
 
         Ok(Self {
-            envelope_schema_version: schema_ver,
-            protocol_id,
+            envelope_schema_version: wire.envelope_schema_version,
+            protocol_id: wire.protocol_id,
             protocol_version,
             authority_mode,
             simulation_namespace,
-            ownership_epoch,
-            emission_epoch,
-            source_lp,
-            dest_lp,
+            ownership_epoch: wire.ownership_epoch,
+            emission_epoch: wire.emission_epoch,
+            source_lp: wire.source_lp,
+            dest_lp: wire.dest_lp,
             tick,
             ancestry_frames,
-            incarnation,
+            incarnation: wire.incarnation,
             kind,
-            event_payload,
+            event_payload: wire.event_payload,
         })
     }
+}
+
+/// Typed Protobuf wire frame for Root causal node.
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct WireRootFrame {
+    #[prost(uint32, tag = "1")]
+    pub root_source_lp: u32,
+    #[prost(uint64, tag = "2")]
+    pub root_sequence: u64,
+}
+
+/// Typed Protobuf wire frame for Output causal node.
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct WireOutputFrame {
+    #[prost(bytes = "vec", tag = "1")]
+    pub parent_tick: Vec<u8>,
+    #[prost(uint32, tag = "2")]
+    pub parent_source_lp: u32,
+    #[prost(uint32, tag = "3")]
+    pub ordinal: u32,
+}
+
+/// Oneof payload for an ancestry frame.
+#[derive(Clone, PartialEq, ::prost::Oneof)]
+pub enum WireFrameKind {
+    #[prost(message, tag = "1")]
+    Root(WireRootFrame),
+    #[prost(message, tag = "2")]
+    Output(WireOutputFrame),
+}
+
+/// Typed Protobuf wire frame wrapping either a root or an output frame.
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct WireAncestryFrame {
+    #[prost(oneof = "WireFrameKind", tags = "1, 2")]
+    pub frame: Option<WireFrameKind>,
+}
+
+/// Typed Protobuf wire envelope matching `kairo.ecs.simulation.v1.OptimisticEnvelope`.
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct WireOptimisticEnvelope {
+    #[prost(uint32, tag = "1")]
+    pub envelope_schema_version: u32,
+    #[prost(string, tag = "2")]
+    pub protocol_id: String,
+    #[prost(uint32, tag = "3")]
+    pub protocol_version: u32,
+    #[prost(uint32, tag = "4")]
+    pub authority_mode: u32,
+    #[prost(bytes = "vec", tag = "5")]
+    pub simulation_namespace: Vec<u8>,
+    #[prost(uint64, tag = "6")]
+    pub ownership_epoch: u64,
+    #[prost(uint64, tag = "7")]
+    pub emission_epoch: u64,
+    #[prost(uint32, tag = "8")]
+    pub source_lp: u32,
+    #[prost(uint32, tag = "9")]
+    pub dest_lp: u32,
+    #[prost(bytes = "vec", tag = "10")]
+    pub tick: Vec<u8>,
+    #[prost(message, repeated, tag = "11")]
+    pub ancestry_frames: Vec<WireAncestryFrame>,
+    #[prost(uint64, tag = "12")]
+    pub incarnation: u64,
+    #[prost(uint32, tag = "13")]
+    pub kind: u32,
+    #[prost(bytes = "vec", tag = "14")]
+    pub event_payload: Vec<u8>,
 }
 
 #[cfg(test)]

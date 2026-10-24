@@ -84,6 +84,52 @@ message RetryPolicy {
   bool retry_on_unavailable = 4;
 }
 
+enum OptimisticAuthorityMode {
+  LOCAL_PREVIEW = 0;
+  SCOPED = 1;
+}
+
+enum WireMessageKind {
+  POSITIVE = 0;
+  ANTI = 1;
+}
+
+message RootFrame {
+  uint32 root_source_lp = 1;
+  uint64 root_sequence = 2;
+}
+
+message OutputFrame {
+  bytes parent_tick = 1;
+  uint32 parent_source_lp = 2;
+  uint32 ordinal = 3;
+}
+
+message AncestryFrame {
+  oneof frame {
+    RootFrame root = 1;
+    OutputFrame output = 2;
+  }
+}
+
+// Language-neutral wire envelope for optimistic distributed simulation (Track 81).
+message OptimisticEnvelope {
+  uint32 envelope_schema_version = 1;
+  string protocol_id = 2;
+  uint32 protocol_version = 3;
+  OptimisticAuthorityMode authority_mode = 4;
+  bytes simulation_namespace = 5;
+  uint64 ownership_epoch = 6;
+  uint64 emission_epoch = 7;
+  uint32 source_lp = 8;
+  uint32 dest_lp = 9;
+  bytes tick = 10;
+  repeated AncestryFrame ancestry_frames = 11;
+  uint64 incarnation = 12;
+  WireMessageKind kind = 13;
+  bytes event_payload = 14;
+}
+
 // Runtime transport contract placeholder for service discovery: this is not wired to
 // transport runtime in the current track slice.
 service SimulationTransport {

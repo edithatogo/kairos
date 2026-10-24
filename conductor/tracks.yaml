@@ -1242,11 +1242,15 @@ tracks:
 
   - id: 81
     name: Prost distributed envelope encoding
-    status: Planned
+    status: Done
     owner: distributed-agent
     depends_on: ["78"]
     owned_paths:
       - conductor/tracks/81-prost-robustness/
+      - crates/kairo-ecs-grpc/Cargo.toml
+      - crates/kairo-ecs-grpc/src/envelope.rs
+      - crates/kairo-ecs-grpc/proto/simulation.proto
+      - crates/kairo-ecs-grpc/tests/prost_envelope_oracles.rs
     required_gates:
       - phase-closeout-check
       - dependency-value-proof
