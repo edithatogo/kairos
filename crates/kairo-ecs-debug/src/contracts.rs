@@ -1,40 +1,25 @@
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
-use std::fmt::{Display, Formatter};
+use std::fmt::Formatter;
+use thiserror::Error;
 
 pub const TRACE_SCHEMA_V1: &str = "kairoecs.debug-trace.v1";
 pub const MAX_JSONL_TOTAL_BYTES: usize = 16 * 1024 * 1024;
 pub const MAX_JSONL_RECORD_BYTES: usize = 1024 * 1024;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Error)]
 pub enum DebugContractError {
+    #[error("trace header missing schema")]
     MissingSchema,
+    #[error("unsupported trace schema: {0}")]
     UnsupportedSchema(String),
+    #[error("trace ticks out of order: {current} after {previous}")]
     TicksOutOfOrder { previous: u128, current: u128 },
+    #[error("event kind cannot be empty")]
     EmptyKind,
+    #[error("byte limit exceeded: actual {actual} bytes, limit {limit} bytes")]
     ExceededByteLimit { limit: usize, actual: usize },
 }
-
-impl Display for DebugContractError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::MissingSchema => write!(f, "trace header missing schema"),
-            Self::UnsupportedSchema(schema) => write!(f, "unsupported trace schema: {schema}"),
-            Self::TicksOutOfOrder { previous, current } => {
-                write!(f, "trace ticks out of order: {current} after {previous}")
-            }
-            Self::EmptyKind => write!(f, "event kind cannot be empty"),
-            Self::ExceededByteLimit { limit, actual } => {
-                write!(
-                    f,
-                    "byte limit exceeded: actual {actual} bytes, limit {limit} bytes"
-                )
-            }
-        }
-    }
-}
-
-impl std::error::Error for DebugContractError {}
 
 /// Typed DTO for trace header declaration.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -875,5 +860,35 @@ mod tests {
         let stream = format!("{header}\n{valid_rec}\n{empty_kind_delta_first}\n");
         let err2 = validate_jsonl_trace_records(&stream).unwrap_err();
         assert_eq!(err2, DebugContractError::EmptyKind);
+    }
+
+    #[test]
+    fn thiserror_debug_contract_error_messages_and_traits() {
+        use std::error::Error;
+
+        let err1 = DebugContractError::MissingSchema;
+        assert_eq!(err1.to_string(), "trace header missing schema");
+        assert!(err1.source().is_none());
+
+        let err2 = DebugContractError::UnsupportedSchema("invalid.v2".to_string());
+        assert_eq!(err2.to_string(), "unsupported trace schema: invalid.v2");
+
+        let err3 = DebugContractError::TicksOutOfOrder {
+            previous: 10,
+            current: 5,
+        };
+        assert_eq!(err3.to_string(), "trace ticks out of order: 5 after 10");
+
+        let err4 = DebugContractError::EmptyKind;
+        assert_eq!(err4.to_string(), "event kind cannot be empty");
+
+        let err5 = DebugContractError::ExceededByteLimit {
+            limit: 100,
+            actual: 200,
+        };
+        assert_eq!(
+            err5.to_string(),
+            "byte limit exceeded: actual 200 bytes, limit 100 bytes"
+        );
     }
 }

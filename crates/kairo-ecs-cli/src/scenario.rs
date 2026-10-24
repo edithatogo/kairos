@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
-use std::fmt::{Display, Formatter};
 use std::fs;
 use std::path::{Path, PathBuf};
+use thiserror::Error;
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -71,34 +71,21 @@ pub struct SeedManifest {
     pub streams: BTreeMap<String, u64>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum ScenarioError {
+    #[error("{}: {}", path.display(), source)]
     Io {
         path: PathBuf,
+        #[source]
         source: std::io::Error,
     },
+    #[error("missing required field `{0}`")]
     MissingField(&'static str),
-    InvalidField {
-        field: &'static str,
-        value: String,
-    },
+    #[error("invalid value for `{field}`: {value}")]
+    InvalidField { field: &'static str, value: String },
+    #[error("{0}")]
     Mismatch(String),
 }
-
-impl Display for ScenarioError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Io { path, source } => write!(f, "{}: {}", path.display(), source),
-            Self::MissingField(field) => write!(f, "missing required field `{field}`"),
-            Self::InvalidField { field, value } => {
-                write!(f, "invalid value for `{field}`: {value}")
-            }
-            Self::Mismatch(message) => f.write_str(message),
-        }
-    }
-}
-
-impl std::error::Error for ScenarioError {}
 
 pub fn load_scenario(path: &Path) -> Result<ScenarioManifest, ScenarioError> {
     let text = fs::read_to_string(path).map_err(|source| ScenarioError::Io {
@@ -675,5 +662,33 @@ mod tests {
         assert!(
             matches!(err, ScenarioError::Mismatch(msg) if msg.contains("fixture_path does not exist"))
         );
+    }
+
+    #[test]
+    fn thiserror_scenario_error_messages_and_source_chain() {
+        use std::error::Error;
+
+        let io_err = std::io::Error::new(std::io::ErrorKind::NotFound, "file not found");
+        let path = PathBuf::from("test/scenario.toml");
+        let err1 = ScenarioError::Io {
+            path: path.clone(),
+            source: io_err,
+        };
+        assert_eq!(err1.to_string(), "test/scenario.toml: file not found");
+        assert!(err1.source().is_some());
+        assert_eq!(err1.source().unwrap().to_string(), "file not found");
+
+        let err2 = ScenarioError::MissingField("scenario_id");
+        assert_eq!(err2.to_string(), "missing required field `scenario_id`");
+        assert!(err2.source().is_none());
+
+        let err3 = ScenarioError::InvalidField {
+            field: "base_seed",
+            value: "abc".to_string(),
+        };
+        assert_eq!(err3.to_string(), "invalid value for `base_seed`: abc");
+
+        let err4 = ScenarioError::Mismatch("ids differ".to_string());
+        assert_eq!(err4.to_string(), "ids differ");
     }
 }

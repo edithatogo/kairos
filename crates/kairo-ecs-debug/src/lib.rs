@@ -3,7 +3,7 @@
 pub mod contracts;
 
 use std::collections::BTreeMap;
-use std::fmt::{Display, Formatter};
+use thiserror::Error;
 
 use kairo_ecs_core::{RecordedEvent, RecordingScheduler, Scheduler};
 use kairo_ecs_types::{
@@ -152,45 +152,25 @@ pub enum Breakpoint {
     Entity(EntityId),
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Error)]
 pub enum DebuggerError {
+    #[error("trace contains no deltas")]
     EmptyTrace,
+    #[error("tick not found: {0}")]
     TickNotFound(u128),
 }
 
-impl Display for DebuggerError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::EmptyTrace => write!(f, "trace contains no deltas"),
-            Self::TickNotFound(tick) => write!(f, "tick not found: {tick}"),
-        }
-    }
-}
-
-impl std::error::Error for DebuggerError {}
-
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Error)]
 pub enum TraceValidationError {
+    #[error("trace is missing schema header")]
     MissingSchema,
+    #[error("unsupported trace schema: {0}")]
     UnsupportedSchema(String),
+    #[error("trace ticks out of order: {current} after {previous}")]
     TickOutOfOrder { previous: u128, current: u128 },
+    #[error("malformed trace line: {0}")]
     MalformedLine(String),
 }
-
-impl Display for TraceValidationError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::MissingSchema => write!(f, "trace is missing schema header"),
-            Self::UnsupportedSchema(schema) => write!(f, "unsupported trace schema: {schema}"),
-            Self::TickOutOfOrder { previous, current } => {
-                write!(f, "trace ticks out of order: {current} after {previous}")
-            }
-            Self::MalformedLine(line) => write!(f, "malformed trace line: {line}"),
-        }
-    }
-}
-
-impl std::error::Error for TraceValidationError {}
 
 pub fn validate_trace_lines(input: &str) -> Result<(), TraceValidationError> {
     let mut lines = input.lines();
@@ -952,5 +932,32 @@ mod cow_tests {
         assert!(descendants.contains(&e2));
         assert!(descendants.contains(&e3));
         assert!(descendants.contains(&e4));
+    }
+
+    #[test]
+    fn thiserror_debugger_and_trace_validation_errors() {
+        use std::error::Error;
+
+        let d1 = DebuggerError::EmptyTrace;
+        assert_eq!(d1.to_string(), "trace contains no deltas");
+        assert!(d1.source().is_none());
+
+        let d2 = DebuggerError::TickNotFound(42);
+        assert_eq!(d2.to_string(), "tick not found: 42");
+
+        let t1 = TraceValidationError::MissingSchema;
+        assert_eq!(t1.to_string(), "trace is missing schema header");
+
+        let t2 = TraceValidationError::UnsupportedSchema("foo".to_string());
+        assert_eq!(t2.to_string(), "unsupported trace schema: foo");
+
+        let t3 = TraceValidationError::TickOutOfOrder {
+            previous: 20,
+            current: 10,
+        };
+        assert_eq!(t3.to_string(), "trace ticks out of order: 10 after 20");
+
+        let t4 = TraceValidationError::MalformedLine("bad-line".to_string());
+        assert_eq!(t4.to_string(), "malformed trace line: bad-line");
     }
 }
