@@ -34,8 +34,10 @@ Mermaid CLI remains 11.17.0; its supported Puppeteer 25.16.0 peer chain supplies
 Chromium BiDi with Zod 4 support, avoiding a forced major-version override on the
 old Zod 3 consumer. Other dependency pins remain unchanged except that supported
 browser chain. Both candidate npm audits report zero vulnerabilities; five
-pin/integrity regression tests pass. Installed renderer/build and hosted
-qualification remain required before acceptance. This repair does not alter
+pin/integrity regression tests pass. Installed renderer/build qualification now passes: five Mermaid/runtime tests,
+old Zod negative control, site build and quality checks. See
+[local receipt](docs-advisory-qualification.json). Hosted qualification and native
+alert closure remain required before acceptance. This repair does not alter
 Polars, engine pins or simulation behaviour.
 
 ## Historical execution entries
