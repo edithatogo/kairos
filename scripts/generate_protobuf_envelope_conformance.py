@@ -164,7 +164,7 @@ def build_conformance_cases():
     c1 = {
         "case_id": "root_positive_full_u128_tick",
         "envelope_schema_version": 2,
-        "protocol_id": "kairo.pdes.grpc.v1",
+        "protocol_id": "kairo.ecs.distributed.grpc.v1",
         "protocol_version": 2,
         "authority_mode": 1, # SCOPED
         "simulation_namespace": 0xfeed_face_cafe_beef_0123_4567_89ab_cdef,
@@ -192,7 +192,7 @@ def build_conformance_cases():
     c2 = {
         "case_id": "deep_ancestry_anti_message",
         "envelope_schema_version": 2,
-        "protocol_id": "kairo.pdes.grpc.v1",
+        "protocol_id": "kairo.ecs.distributed.grpc.v1",
         "protocol_version": 2,
         "authority_mode": 1, # SCOPED
         "simulation_namespace": 0x1234_5678_9abc_def0,

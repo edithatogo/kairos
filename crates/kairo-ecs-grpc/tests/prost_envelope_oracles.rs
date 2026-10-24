@@ -705,5 +705,47 @@ fn oracle_independent_protobuf_peer_conformance() {
             "production protobuf wire encoding must match independent peer wire bytes byte-for-byte in case {}",
             case.case_id
         );
+
+        // 4. Production admission and domain conversion verification
+        decoded
+            .validate(kairo_ecs_grpc::GRPC_PROTOCOL_ID)
+            .unwrap_or_else(|e| {
+                panic!(
+                    "decoded peer envelope failed validate(GRPC_PROTOCOL_ID) in case {}: {e:?}",
+                    case.case_id
+                )
+            });
+        let optimistic_msg = decoded
+            .to_optimistic_message(kairo_ecs_grpc::GRPC_PROTOCOL_ID)
+            .unwrap_or_else(|e| {
+                panic!(
+                    "decoded peer envelope failed to_optimistic_message(GRPC_PROTOCOL_ID) in case {}: {e:?}",
+                    case.case_id
+                )
+            });
+        assert_eq!(
+            optimistic_msg.event().tick.ticks(),
+            case.tick,
+            "converted optimistic message tick mismatch in case {}",
+            case.case_id
+        );
+        assert_eq!(
+            optimistic_msg.event().source_lp.0,
+            case.source_lp,
+            "converted optimistic message source_lp mismatch in case {}",
+            case.case_id
+        );
+        assert_eq!(
+            optimistic_msg.event().dest_lp.0,
+            case.dest_lp,
+            "converted optimistic message dest_lp mismatch in case {}",
+            case.case_id
+        );
+        assert_eq!(
+            optimistic_msg.incarnation(),
+            case.incarnation,
+            "converted optimistic message incarnation mismatch in case {}",
+            case.case_id
+        );
     }
 }
