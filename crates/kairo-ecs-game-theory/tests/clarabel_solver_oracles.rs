@@ -1,4 +1,6 @@
-use kairo_ecs_game_theory::normal_form::{ClarabelConvexSolver, NormalFormError, SolverStatus};
+use kairo_ecs_game_theory::normal_form::{
+    ClarabelConvexSolver, NormalFormError, SolverStatus, ZeroSumMinimaxResult,
+};
 
 #[test]
 fn oracle_zero_sum_rock_paper_scissors() {
@@ -226,4 +228,68 @@ fn oracle_clarabel_negative_and_degenerate_inputs() {
         ClarabelConvexSolver::solve_correlated_equilibrium_social_welfare(&u1, &u2_bad),
         Err(NormalFormError::DegeneratePayoffs(_))
     ));
+
+    // 6. Independent equilibrium validators reject non-finite and invalid inputs
+    let pennies_payoffs = vec![vec![1.0, -1.0], vec![-1.0, 1.0]];
+    let nan_result = ZeroSumMinimaxResult {
+        value: 0.0,
+        p1_strategy: vec![f64::NAN, f64::NAN],
+        p2_strategy: vec![f64::NAN, f64::NAN],
+        primal_residual: 0.0,
+        dual_residual: 0.0,
+        status: SolverStatus::Solved,
+    };
+    assert!(
+        !ClarabelConvexSolver::verify_minimax_residuals(&pennies_payoffs, &nan_result, 1e-4),
+        "verify_minimax_residuals must reject NaN strategies"
+    );
+
+    let nan_value_result = ZeroSumMinimaxResult {
+        value: f64::NAN,
+        p1_strategy: vec![0.5, 0.5],
+        p2_strategy: vec![0.5, 0.5],
+        primal_residual: 0.0,
+        dual_residual: 0.0,
+        status: SolverStatus::Solved,
+    };
+    assert!(
+        !ClarabelConvexSolver::verify_minimax_residuals(&pennies_payoffs, &nan_value_result, 1e-4),
+        "verify_minimax_residuals must reject NaN value"
+    );
+
+    let valid_result = ZeroSumMinimaxResult {
+        value: 0.0,
+        p1_strategy: vec![0.5, 0.5],
+        p2_strategy: vec![0.5, 0.5],
+        primal_residual: 0.0,
+        dual_residual: 0.0,
+        status: SolverStatus::Solved,
+    };
+    assert!(
+        !ClarabelConvexSolver::verify_minimax_residuals(&pennies_payoffs, &valid_result, f64::NAN),
+        "verify_minimax_residuals must reject NaN tolerance"
+    );
+
+    let nan_joint_prob = vec![vec![f64::NAN, f64::NAN], vec![f64::NAN, f64::NAN]];
+    let u2 = vec![vec![1.0, -1.0], vec![-1.0, 1.0]];
+    let violation = ClarabelConvexSolver::verify_correlated_equilibrium_incentives(
+        &pennies_payoffs,
+        &u2,
+        &nan_joint_prob,
+    );
+    assert!(
+        violation.is_infinite() && violation.is_sign_positive(),
+        "verify_correlated_equilibrium_incentives must return infinity for NaN joint distribution"
+    );
+
+    let negative_joint_prob = vec![vec![-0.5, 0.5], vec![0.5, 0.5]];
+    let violation_neg = ClarabelConvexSolver::verify_correlated_equilibrium_incentives(
+        &pennies_payoffs,
+        &u2,
+        &negative_joint_prob,
+    );
+    assert!(
+        violation_neg.is_infinite() && violation_neg.is_sign_positive(),
+        "verify_correlated_equilibrium_incentives must return infinity for negative joint distribution"
+    );
 }

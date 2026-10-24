@@ -1025,13 +1025,35 @@ impl ClarabelConvexSolver {
 
     /// Computes the maximum obedience incentive constraint violation across both players for a joint distribution.
     /// Returns 0.0 if all incentive constraints are satisfied.
+    /// If inputs are malformed, non-finite, negative, or dimensions mismatch, returns `f64::INFINITY`.
     pub fn verify_correlated_equilibrium_incentives(
         u1: &[Vec<f64>],
         u2: &[Vec<f64>],
         joint_prob: &[Vec<f64>],
     ) -> f64 {
+        if u1.is_empty() || u1[0].is_empty() {
+            return f64::INFINITY;
+        }
         let m = u1.len();
         let n = u1[0].len();
+        if u2.len() != m || joint_prob.len() != m {
+            return f64::INFINITY;
+        }
+        for i in 0..m {
+            if u1[i].len() != n || u2[i].len() != n || joint_prob[i].len() != n {
+                return f64::INFINITY;
+            }
+            for j in 0..n {
+                if !u1[i][j].is_finite()
+                    || !u2[i][j].is_finite()
+                    || !joint_prob[i][j].is_finite()
+                    || joint_prob[i][j] < 0.0
+                {
+                    return f64::INFINITY;
+                }
+            }
+        }
+
         let mut max_violation = 0.0f64;
 
         // Player 1 incentive check
@@ -1043,6 +1065,9 @@ impl ClarabelConvexSolver {
                 let mut deviation_gain = 0.0;
                 for j in 0..n {
                     deviation_gain += joint_prob[i_curr][j] * (u1[i_alt][j] - u1[i_curr][j]);
+                }
+                if !deviation_gain.is_finite() {
+                    return f64::INFINITY;
                 }
                 if deviation_gain > max_violation {
                     max_violation = deviation_gain;
@@ -1060,6 +1085,9 @@ impl ClarabelConvexSolver {
                 for i in 0..m {
                     deviation_gain += joint_prob[i][j_curr] * (u2[i][j_alt] - u2[i][j_curr]);
                 }
+                if !deviation_gain.is_finite() {
+                    return f64::INFINITY;
+                }
                 if deviation_gain > max_violation {
                     max_violation = deviation_gain;
                 }
@@ -1075,28 +1103,47 @@ impl ClarabelConvexSolver {
         result: &ZeroSumMinimaxResult,
         tol: f64,
     ) -> bool {
+        if !tol.is_finite() || tol < 0.0 || !result.value.is_finite() {
+            return false;
+        }
+        if payoffs.is_empty() || payoffs[0].is_empty() {
+            return false;
+        }
         let m = payoffs.len();
         let n = payoffs[0].len();
+        if payoffs.iter().any(|row| row.len() != n) {
+            return false;
+        }
 
         if result.p1_strategy.len() != m || result.p2_strategy.len() != n {
             return false;
         }
 
-        let p1_sum: f64 = result.p1_strategy.iter().sum();
-        let p2_sum: f64 = result.p2_strategy.iter().sum();
-        if (p1_sum - 1.0).abs() > tol || (p2_sum - 1.0).abs() > tol {
-            return false;
-        }
-
         for &x in &result.p1_strategy {
-            if x < -tol {
+            if !x.is_finite() || x < -tol {
                 return false;
             }
         }
         for &y in &result.p2_strategy {
-            if y < -tol {
+            if !y.is_finite() || y < -tol {
                 return false;
             }
+        }
+        for row in payoffs {
+            for &val in row {
+                if !val.is_finite() {
+                    return false;
+                }
+            }
+        }
+
+        let p1_sum: f64 = result.p1_strategy.iter().sum();
+        let p2_sum: f64 = result.p2_strategy.iter().sum();
+        if !p1_sum.is_finite() || !p2_sum.is_finite() {
+            return false;
+        }
+        if (p1_sum - 1.0).abs() > tol || (p2_sum - 1.0).abs() > tol {
+            return false;
         }
 
         // Against any pure action j of Player 2, Player 1's expected payoff >= value - tol
@@ -1105,7 +1152,7 @@ impl ClarabelConvexSolver {
             for (i, row) in payoffs.iter().enumerate().take(m) {
                 expected += result.p1_strategy[i] * row[j];
             }
-            if expected < result.value - tol {
+            if !expected.is_finite() || expected < result.value - tol {
                 return false;
             }
         }
@@ -1116,7 +1163,7 @@ impl ClarabelConvexSolver {
             for (j, &val) in row.iter().enumerate().take(n) {
                 expected += val * result.p2_strategy[j];
             }
-            if expected > result.value + tol {
+            if !expected.is_finite() || expected > result.value + tol {
                 return false;
             }
         }
