@@ -230,7 +230,7 @@ def build_conformance_cases():
 
     return {
         "fixture": "optimistic_envelope_v2_conformance",
-        "version": 2,
+        "version": 1,
         "schema": "kairo.ecs.simulation.v1.OptimisticEnvelope",
         "spec_reference": "crates/kairo-ecs-grpc/proto/simulation.proto",
         "independent_generator": "scripts/generate_protobuf_envelope_conformance.py",

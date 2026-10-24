@@ -13,6 +13,7 @@ export const OPTIONAL_READY_FIXTURE_IDS = Object.freeze([
   'zero_delay_guard_v1',
   'pdes_conservative_parity_v1',
   'event_log_v2_conformance',
+  'optimistic_envelope_v2_conformance',
 ]);
 
 const KNOWN_READY_FIXTURE_IDS = Object.freeze([
@@ -371,6 +372,15 @@ export function validateFixturePayload(fixture, root = process.cwd()) {
 }
 
 export function runFixture(fixture, payload) {
+  if (fixture.id === 'optimistic_envelope_v2_conformance') {
+    return {
+      validation_scope: 'fixture-contract-only',
+      schema: payload.schema,
+      case_count: payload.cases?.length ?? 0,
+      native_command: 'cargo test -p kairo-ecs-grpc --test prost_envelope_oracles',
+    };
+  }
+
   if (fixture.id === 'pdes_conservative_parity_v1') {
     return {
       validation_scope: 'fixture-contract-only',

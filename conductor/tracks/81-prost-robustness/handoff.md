@@ -8,6 +8,8 @@ Phase 0, Phase 1, and Phase 2 completed. Adopted `prost = "0.13.5"` (minimal fea
 
 ## Files changed
 
+- `CHANGELOG.md`
+- `tests/conformance/runner.mjs`
 - `Cargo.lock`
 - `crates/kairo-ecs-grpc/Cargo.toml`
 - `crates/kairo-ecs-grpc/src/envelope.rs`
