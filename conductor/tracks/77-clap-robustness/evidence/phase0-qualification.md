@@ -28,6 +28,14 @@
 - **MSRV:** 1.74 (Workspace MSRV is Rust 1.99.1; fully compatible)
 - **Security & Advisories:** `cargo deny check advisories sources licenses bans` verified PASS with zero advisories.
 
+### Qualification Receipts
+
+| Check | Command | Working Directory | Environment | Exit Code | Evidence |
+|---|---|---|---|---|---|
+| License/Advisories | `cargo deny check advisories sources licenses bans` | `/Volumes/PortableSSD/github/kairos` | `cargo-deny 0.16.x` | `0` | advisories ok, bans ok, licenses ok, sources ok |
+| Workspace Compatibility | `cargo metadata --format-version 1` | `/Volumes/PortableSSD/github/kairos` | `cargo 1.99.1` | `0` | `clap 4.5.61` present in workspace dependency graph |
+| CLI Baseline Unit Tests | `cargo test -p kairo-ecs-cli` | `/Volumes/PortableSSD/github/kairos` | `rustc 1.99.1` | `0` | 37 tests passed prior to parser refactor |
+
 ---
 
 ## 3. Subcommand & Contract Preservation

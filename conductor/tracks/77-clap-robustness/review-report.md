@@ -47,7 +47,28 @@
 
 ---
 
-## 4. Phase Disposition
+## 4. Validation Receipts & Execution Ledger
+
+All validation runs were executed on commit `33d5fef198b1ab80ee6a70e82a420273986a8f81` in working directory `/Volumes/PortableSSD/github/kairos`.
+
+| Command | Working Directory | Toolchain / Environment | Exit Code | Artifact / Output Summary |
+|---|---|---|---|---|
+| `cargo test -p kairo-ecs-cli` | `/Volumes/PortableSSD/github/kairos` | `rustc 1.99.1 (stable-aarch64-apple-darwin)` | `0` | 37 unit tests + 5 process integration tests passed (0 failed, 0 filtered out) |
+| `cargo clippy -p kairo-ecs-cli --all-targets -- -D warnings` | `/Volumes/PortableSSD/github/kairos` | `rustc 1.99.1 / clippy 1.99.1` | `0` | Finished `dev` profile in 0.75s; 0 warnings, 0 errors |
+| `cargo fmt --check` | `/Volumes/PortableSSD/github/kairos` | `rustfmt 1.99.1` | `0` | All workspace files cleanly formatted; 0 diffs |
+| `cargo deny check advisories sources licenses bans` | `/Volumes/PortableSSD/github/kairos` | `cargo-deny 0.16.x` | `0` | Advisories ok, bans ok, licenses ok, sources ok |
+| `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` | `/Volumes/PortableSSD/github/kairos` | PowerShell 7.5.x | `0` | 0 error(s), 0 warning(s); Conductor phase gate validation passed |
+| `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1` | `/Volumes/PortableSSD/github/kairos` | PowerShell 7.5.x | `0` | 106 tracks parsed; 0 errors, 0 warnings; DAG validation passed |
+| `pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1` | `/Volumes/PortableSSD/github/kairos` | PowerShell 7.5.x | `0` | 106 track directories checked; 0 error(s), 0 warning(s); Artifact validation passed |
+| `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` | `/Volumes/PortableSSD/github/kairos` | PowerShell 7.5.x | `0` | 0 error(s); Conductor git closeout validation passed |
+| `node scripts/validation/validate-track13-metadata.mjs` | `/Volumes/PortableSSD/github/kairos` | Node.js v22.x | `0` | `{"status": "ok", "checked_tracks": 106}` |
+
+### Skipped or Unavailable Checks
+- None skipped. All required gate oracles and Conductor validators executed directly and passed with zero errors.
+
+---
+
+## 5. Phase Disposition
 
 - Phase 0: **ACCEPTED** (ADOPT decision)
 - Phase 1: **ACCEPTED** (Bounded replacement using `clap` v4 derive in `crates/kairo-ecs-cli`)
