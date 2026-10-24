@@ -318,3 +318,50 @@ fn oracle_from_xml_str_rejects_unsupported_variable_type() {
         "Expected unsupported type error, got: {err_msg}"
     );
 }
+
+#[test]
+fn oracle_from_xml_str_parses_unknown_in_start_and_end_tags() {
+    let xml = r#"<?xml version="1.0" encoding="UTF-8"?>
+<fmiModelDescription fmiVersion="2.0" modelName="unknowns_test" guid="{u-guid}">
+  <ModelVariables>
+    <ScalarVariable name="out1" valueReference="1" causality="output" variability="continuous">
+      <Real />
+    </ScalarVariable>
+    <ScalarVariable name="out2" valueReference="2" causality="output" variability="continuous">
+      <Real />
+    </ScalarVariable>
+  </ModelVariables>
+  <ModelStructure>
+    <Outputs>
+      <Unknown index="1"></Unknown>
+      <Unknown index="2"/>
+    </Outputs>
+  </ModelStructure>
+</fmiModelDescription>
+"#;
+    let model = ModelDescription::from_xml_str(xml)
+        .expect("must parse Unknown elements in both start/end and self-closing forms");
+    assert_eq!(model.variables.len(), 2);
+}
+
+#[test]
+fn oracle_from_xml_str_rejects_content_after_root_closed() {
+    let xml = r#"<?xml version="1.0" encoding="UTF-8"?>
+<fmiModelDescription fmiVersion="2.0" modelName="closed_root" guid="{cr-guid}"/>
+<ModelVariables>
+  <ScalarVariable name="x" valueReference="1">
+    <Real />
+  </ScalarVariable>
+</ModelVariables>
+"#;
+    let result = ModelDescription::from_xml_str(xml);
+    assert!(
+        result.is_err(),
+        "Must reject content after root element closed"
+    );
+    let err_msg = result.unwrap_err().to_string();
+    assert!(
+        err_msg.contains("unexpected element") || err_msg.contains("after root element closed"),
+        "Expected post-root content error, got: {err_msg}"
+    );
+}

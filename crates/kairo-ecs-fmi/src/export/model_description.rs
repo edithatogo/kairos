@@ -229,6 +229,7 @@ impl ModelDescription {
         let mut in_outputs = false;
         let mut output_unknowns = Vec::new();
         let mut found_root = false;
+        let mut root_closed = false;
 
         loop {
             match reader.read_event() {
@@ -238,6 +239,15 @@ impl ModelDescription {
                         return Err(validation_error(
                             "modelDescription.xml",
                             format!("XML exceeds maximum nesting depth of {MAX_XML_DEPTH}"),
+                        ));
+                    }
+                    if root_closed {
+                        return Err(validation_error(
+                            "modelDescription.xml",
+                            format!(
+                                "unexpected element <{}> after root element closed",
+                                e.local_name().as_ref()
+                            ),
                         ));
                     }
                     if !found_root {
@@ -342,11 +352,47 @@ impl ModelDescription {
                         }
                         "ModelStructure" => in_model_structure = true,
                         "Outputs" if in_model_structure => in_outputs = true,
+                        "Unknown" if in_outputs => {
+                            for attr in e.attributes() {
+                                let attr = attr.map_err(|err| {
+                                    validation_error(
+                                        "modelDescription.xml",
+                                        format!("malformed Unknown attribute: {err}"),
+                                    )
+                                })?;
+                                if attr.key.as_ref() == "index" {
+                                    let val = attr
+                                        .normalized_value(XmlVersion::Explicit1_0)
+                                        .map_err(|err| {
+                                            validation_error(
+                                                "modelDescription.xml",
+                                                format!("malformed Unknown index attribute: {err}"),
+                                            )
+                                        })?;
+                                    let idx = val.parse::<usize>().map_err(|err| {
+                                        validation_error(
+                                            "modelDescription.xml",
+                                            format!("invalid Unknown index value: {err}"),
+                                        )
+                                    })?;
+                                    output_unknowns.push(idx);
+                                }
+                            }
+                        }
                         _ => {}
                     }
                 }
                 Ok(Event::Empty(ref e)) => {
                     let local_name = e.local_name();
+                    if root_closed {
+                        return Err(validation_error(
+                            "modelDescription.xml",
+                            format!(
+                                "unexpected element <{}> after root element closed",
+                                local_name.as_ref()
+                            ),
+                        ));
+                    }
                     if !found_root {
                         if depth != 0 || local_name.as_ref() != "fmiModelDescription" {
                             return Err(validation_error(
@@ -358,6 +404,7 @@ impl ModelDescription {
                             ));
                         }
                         found_root = true;
+                        root_closed = true;
                         for attr in e.attributes() {
                             let attr = attr.map_err(|err| {
                                 validation_error(
@@ -423,6 +470,9 @@ impl ModelDescription {
                 }
                 Ok(Event::End(ref e)) => {
                     depth = depth.saturating_sub(1);
+                    if e.local_name().as_ref() == "fmiModelDescription" {
+                        root_closed = true;
+                    }
                     match e.local_name().as_ref() {
                         "ScalarVariable" if in_model_variables => {
                             if let Some((name, vr, causality, variability, var_type)) =
@@ -454,10 +504,10 @@ impl ModelDescription {
                 }
                 Ok(Event::Eof) => break,
                 Ok(Event::Text(ref t)) => {
-                    if !found_root && !t.as_ref().trim().is_empty() {
+                    if (!found_root || root_closed) && !t.as_ref().trim().is_empty() {
                         return Err(validation_error(
                             "modelDescription.xml",
-                            "unexpected text content before root element",
+                            "unexpected text content outside root element",
                         ));
                     }
                 }

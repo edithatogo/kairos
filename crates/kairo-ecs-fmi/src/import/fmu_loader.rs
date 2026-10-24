@@ -213,11 +213,22 @@ fn validate_model_description_marker(path: &Path) -> FmiResult<()> {
 
     let mut depth: usize = 0;
     let mut found_root = false;
+    let mut root_closed = false;
     let mut fmi_version: Option<String> = None;
 
     loop {
         match reader.read_event() {
             Ok(Event::Start(e)) => {
+                if root_closed {
+                    return Err(validation_error(
+                        "FMU layout",
+                        format!(
+                            "unexpected element <{}> after root element closed in {}",
+                            e.local_name().as_ref(),
+                            path.display()
+                        ),
+                    ));
+                }
                 if !found_root {
                     if e.local_name().as_ref() != "fmiModelDescription" {
                         return Err(validation_error(
@@ -266,6 +277,16 @@ fn validate_model_description_marker(path: &Path) -> FmiResult<()> {
                 }
             }
             Ok(Event::Empty(e)) => {
+                if root_closed {
+                    return Err(validation_error(
+                        "FMU layout",
+                        format!(
+                            "unexpected element <{}> after root element closed in {}",
+                            e.local_name().as_ref(),
+                            path.display()
+                        ),
+                    ));
+                }
                 if !found_root {
                     if e.local_name().as_ref() != "fmiModelDescription" {
                         return Err(validation_error(
@@ -277,6 +298,7 @@ fn validate_model_description_marker(path: &Path) -> FmiResult<()> {
                         ));
                     }
                     found_root = true;
+                    root_closed = true;
                     for attr in e.attributes() {
                         let attr = attr.map_err(|err| {
                             validation_error(
@@ -302,8 +324,11 @@ fn validate_model_description_marker(path: &Path) -> FmiResult<()> {
                     }
                 }
             }
-            Ok(Event::End(_)) => {
+            Ok(Event::End(e)) => {
                 depth = depth.saturating_sub(1);
+                if e.local_name().as_ref() == "fmiModelDescription" {
+                    root_closed = true;
+                }
             }
             Ok(Event::Eof) => break,
             Ok(Event::Comment(_))
@@ -314,13 +339,10 @@ fn validate_model_description_marker(path: &Path) -> FmiResult<()> {
                 // Ignore XML declaration, comments, doctype, and processing instructions
             }
             Ok(Event::Text(t)) => {
-                if !found_root && !t.as_ref().trim().is_empty() {
+                if (!found_root || root_closed) && !t.as_ref().trim().is_empty() {
                     return Err(validation_error(
                         "FMU layout",
-                        format!(
-                            "{} does not contain an fmiModelDescription root",
-                            path.display()
-                        ),
+                        format!("unexpected text outside root element in {}", path.display()),
                     ));
                 }
             }
