@@ -1307,7 +1307,7 @@ entries:
       - "pwsh -NoProfile -File scripts/validate_conductor_dag.ps1"
       - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
     git_status: "clean"
-    commit_sha: "pending"
+    commit_sha: "b0d8619f4cac4956aff9f26c3b54b2cc70911545"
     pushed_ref: "origin/feat/track-76-toml-robustness"
     next_phase_decision: "Track 76 is Done; advance to Track 77."
 
