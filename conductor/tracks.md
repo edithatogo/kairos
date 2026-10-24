@@ -104,7 +104,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 96 | proptest robustness | Done | `conformance-agent` | See `conductor/tracks/96-*/spec.md` |
 | 97 | tracing qualification | Planned | `contracts-agent` | See `conductor/tracks/97-*/spec.md` |
 | 98 | loom qualification | Planned | `conformance-agent` | See `conductor/tracks/98-*/spec.md` |
-| 99 | proptest-state-machine qualification | Planned | `conformance-agent` | See `conductor/tracks/99-*/spec.md` |
+| 99 | proptest-state-machine qualification | Done | `conformance-agent` | See `conductor/tracks/99-*/spec.md` |
 | 100 | tracing-subscriber qualification | Planned | `contracts-agent` | See `conductor/tracks/100-*/spec.md` |
 | 101 | criterion existing-tooling | Planned | `benchmark-agent` | See `conductor/tracks/101-*/spec.md` |
 | 102 | ode_solvers conditional | Planned | `vv-uq-agent` | See `conductor/tracks/102-*/spec.md` |
@@ -228,7 +228,7 @@ The human sole maintainer explicitly approved Track49 production scheduling afte
 - [ ] **Track 98: loom qualification** — evaluation; [plan](tracks/98-loom-concurrency/index.md).
 
 ---
-- [ ] **Track 99: proptest-state-machine qualification** — evaluation; [plan](tracks/99-proptest-state-machine/index.md).
+- [x] **Track 99: proptest-state-machine qualification** — evaluation; [plan](tracks/99-proptest-state-machine/index.md).
 
 ---
 - [ ] **Track 100: tracing-subscriber qualification** — conditional; [plan](tracks/100-tracing-subscriber/index.md).
