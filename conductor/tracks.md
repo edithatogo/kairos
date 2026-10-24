@@ -177,7 +177,7 @@ The human sole maintainer explicitly approved Track49 production scheduling afte
 - [x] **Track 81: Prost distributed envelope encoding** — Done; conditional; value gate closed (adopted). [Track](tracks/81-prost-robustness/index.md).
 
 ---
-- [ ] **Track 82: Tokio bounded transport runtime** — Planned; conditional; value gate pending. [Track](tracks/82-tokio-robustness/index.md).
+- [x] **Track 82: Tokio bounded transport runtime** — Done; conditional; value gate closed (adopted). [Track](tracks/82-tokio-robustness/index.md).
 
 ---
 - [ ] **Track 83: Tonic interoperable RPC transport** — Planned; conditional; value gate pending. [Track](tracks/83-tonic-robustness/index.md).

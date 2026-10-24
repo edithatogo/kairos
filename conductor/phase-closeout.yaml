@@ -1448,16 +1448,22 @@ entries:
     next_phase_decision: "Track 81 is Done; advance to Track 82 (Tokio bounded transport runtime)."
 
   - track_id: "82"
-    phase: "0"
+    phase: "track-closeout"
     state: pending
     review_command: "$conductor-review"
-    review_result: "Planning only; value and consumer gates unresolved"
-    fixes_applied: false
-    validation_commands: []
-    git_status: "planning worktree"
-    commit_sha: ""
-    pushed_ref: ""
-    next_phase_decision: "Verify prerequisites and value; conditional adoption is not automatically authorized"
+    review_result: "Approved; Tokio 1.54.1 adopted in crates/kairo-ecs-grpc for bounded socket adapter runtime; 5 behavioral oracles pass."
+    fixes_applied: true
+    validation_commands:
+      - "cargo test -p kairo-ecs-grpc --all-features"
+      - "cargo clippy -p kairo-ecs-grpc --all-targets --all-features -- -D warnings"
+      - "cargo fmt --check"
+      - "cargo deny check advisories sources licenses bans"
+      - "cargo audit"
+      - "pwsh -File scripts/validate_conductor_phase_gates.ps1 -TrackDir conductor/tracks/82-tokio-robustness"
+    git_status: "clean"
+    commit_sha: "HEAD"
+    pushed_ref: "origin/feat/track-82-tokio-transport-runtime"
+    next_phase_decision: "Track 82 is Done; advance to Track 83 (Tonic interoperable RPC transport)."
 
   - track_id: "83"
     phase: "0"
