@@ -1143,7 +1143,7 @@ tracks:
 
   - id: 74
     name: Serde typed control contracts
-    status: Completed
+    status: Done
     owner: contracts-agent
     depends_on: ["70"]
     owned_paths:
