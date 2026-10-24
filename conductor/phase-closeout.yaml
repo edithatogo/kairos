@@ -1243,7 +1243,7 @@ entries:
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
       - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
     git_status: "clean"
-    commit_sha: "caddad5e20739edb232f69d1285ad1b1abca2ad9"
+    commit_sha: "30006052b4341a694cbcd105f940163d468a2975"
     pushed_ref: "origin/feat/track-71-rand-deterministic-rng"
     next_phase_decision: "Track 71 is Done; advance to Track 72."
 
