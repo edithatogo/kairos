@@ -13,6 +13,14 @@ PRs #297/#301/#302 integrated the accepted runtime and tooling repairs. Native
 inventory accepted/read back all 51 expected packages; this proves package presence,
 not graph edges/extras. Both certifi alerts #98/#99 are now natively fixed at
 2026-10-23T18:20:14Z (24 October in Brisbane), without dismissal or rerun.
+Authenticated Codecov configuration now identifies project coverage, flags and
+components as "Available with Pro Plan" despite GitHub PUBLIC visibility. The
+processed report and rust-core flag exist, and the effective YAML requests project
+status. See [native readback](codecov-entitlement-readback.json). This is a provider
+entitlement/reporting restriction, not evidence for changing coverage thresholds
+or repeating uploads. No purchase, permission change or external support message
+is authorised by this receipt; genuine project status remains an open gate.
+
 Provider quality follow-through and this policy update remain separately scoped;
 no Polars/FMI source, engine pin or other-owner environment is transferred.
 
