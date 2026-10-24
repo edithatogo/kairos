@@ -1,9 +1,14 @@
 from __future__ import annotations
 
+import pytest
+
 import kairo_ecs
 
 
 def test_event_log_batch_v2_polars_roundtrip_zero_copy() -> None:
+    pytest.importorskip("polars", exc_type=ModuleNotFoundError)
+    pytest.importorskip("pyarrow", exc_type=ModuleNotFoundError)
+
     scheduler = kairo_ecs.Scheduler()
     scheduler.schedule_at(42, priority=-3, kind=5)
     outcome, event = scheduler.step()
