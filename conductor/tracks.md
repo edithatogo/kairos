@@ -174,7 +174,7 @@ The human sole maintainer explicitly approved Track49 production scheduling afte
 - [x] **Track 80: quick-xml FMU metadata replacement** — Done; subsystem; value gate closed (adopted). [Track](tracks/80-quick-xml-robustness/index.md).
 
 ---
-- [ ] **Track 81: Prost distributed envelope encoding** — Planned; conditional; value gate pending. [Track](tracks/81-prost-robustness/index.md).
+- [x] **Track 81: Prost distributed envelope encoding** — Done; conditional; value gate closed (adopted). [Track](tracks/81-prost-robustness/index.md).
 
 ---
 - [ ] **Track 82: Tokio bounded transport runtime** — Planned; conditional; value gate pending. [Track](tracks/82-tokio-robustness/index.md).

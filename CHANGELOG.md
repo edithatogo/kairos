@@ -14,6 +14,8 @@ Format:
 
 ## Unreleased
 
+- `crates/kairo-ecs-grpc` adopts `prost 0.13.5` (Track 81) for distributed optimistic envelope encoding, introducing Protobuf v2 schema definitions (`proto/simulation.proto`), typed wire envelopes with backward-compatible legacy v1 dual decoding, monotonic decode failure tracking with bounded retention in `GrpcSocketTransport`, and independent cross-language conformance fixture `conformance/fixtures/optimistic_envelope_v2_conformance.json`.
+
 - Evaluation of `rust-fmi` (`fmi = "0.8.0"`) (Track 91) concludes with a Phase 0 NO-GO decision pursuant to dependency value policy, rejecting adoption due to 3 active security advisories in transitive `zip 8.6.0`, license policy rejection on `zlib-rs`, `libclang` toolchain coupling, and 80-crate dependency bloat, retaining the existing minimal `libloading`-based dynamic loader in `crates/kairo-ecs-fmi`.
 
 - `crates/kairo-ecs-abm` adopts `rstar 0.12.2` continuous spatial indexing (Track 86), introducing `ContinuousSpatialIndex2D` backed by an R-tree with $O(\log N)$ updates, deterministic `locate_within_distance`, `nearest_neighbor`, and `k_nearest_neighbors` queries with multi-level tie-breaking (distance -> EntityId), equidistant candidate buffering, ghost duplicate elimination on agent movement, axis-aligned bounding box queries, and `ContinuousSpace2D` integration.

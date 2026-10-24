@@ -1423,21 +1423,29 @@ entries:
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
       - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
     git_status: "clean"
-    commit_sha: "4c2db7d927f1cb6416f3d8fdffc3553c805406d6"
-    pushed_ref: "origin/feat/track-80-quick-xml-fmu-metadata"
+    commit_sha: "642857f28c5b6ac7f0b32bacb50e3e344617f39a"
+    pushed_ref: "origin/main"
     next_phase_decision: "Track 80 is Done; advance to Track 81 (Prost distributed envelope encoding)."
 
   - track_id: "81"
-    phase: "0"
-    state: pending
+    phase: "2"
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Planning only; value and consumer gates unresolved"
-    fixes_applied: false
-    validation_commands: []
-    git_status: "planning worktree"
-    commit_sha: ""
-    pushed_ref: ""
-    next_phase_decision: "Verify prerequisites and value; conditional adoption is not automatically authorized"
+    review_result: "Phase 2 acceptance complete: adopted prost 0.13.5 (pure Rust, Apache-2.0, default-features = false, features = ['std', 'prost-derive']); replaced 264 lines of manual big-endian byte slicing with strongly typed Protocol Buffers wire encoding; updated proto/simulation.proto with canonical schemas; verified full 128-bit timestamp and simulation namespace preservation; 38 tests passing in kairo-ecs-grpc (24 unit, 12 oracle, 2 multi-process); 0 cargo audit vulnerabilities and 0 cargo deny errors."
+    fixes_applied: true
+    validation_commands:
+      - "cargo test -p kairo-ecs-grpc --all-features"
+      - "cargo clippy -p kairo-ecs-grpc --all-targets --all-features -- -D warnings"
+      - "cargo fmt --all --check"
+      - "cargo deny check advisories sources licenses bans"
+      - "cargo audit"
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
+    git_status: "clean"
+    commit_sha: "cda797746bceb38f176d4e68d181f9035db7c7e6"
+    pushed_ref: "origin/feat/track-81-prost-envelope-encoding"
+    next_phase_decision: "Track 81 is Done; advance to Track 82 (Tokio bounded transport runtime)."
 
   - track_id: "82"
     phase: "0"

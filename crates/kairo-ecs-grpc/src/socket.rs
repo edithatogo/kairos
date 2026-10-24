@@ -3,7 +3,7 @@
 use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::io::{self, Read, Write};
 use std::net::{SocketAddr, TcpListener, TcpStream};
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread::{self, JoinHandle};
 use std::time::{Duration, Instant};
@@ -29,6 +29,9 @@ const MSG_TYPE_GVT_PROPOSAL: u8 = 7;
 const MSG_TYPE_GVT_DECISION: u8 = 8;
 const MSG_TYPE_BARRIER: u8 = 9;
 
+/// Maximum number of recent decode errors retained in memory for diagnostics.
+pub const MAX_RETAINED_DECODE_FAILURES: usize = 64;
+
 /// Maximum framed message size accepted before buffering (128 KiB).
 const MAX_FRAME_BYTES: usize = 128 * 1024;
 
@@ -52,6 +55,8 @@ pub struct GrpcSocketTransport {
     gvt_round: u64,
     barrier_signals: Arc<Mutex<HashMap<LpId, u64>>>,
     barrier_count: u64,
+    decode_failure_count: Arc<AtomicUsize>,
+    decode_failures: Arc<Mutex<VecDeque<String>>>,
     shutdown: Arc<AtomicBool>,
     listener_handle: Option<JoinHandle<()>>,
 }
@@ -89,6 +94,8 @@ impl GrpcSocketTransport {
         let heartbeats = Arc::new(Mutex::new(VecDeque::new()));
         let gvt_proposals = Arc::new(Mutex::new(HashMap::new()));
         let barrier_signals = Arc::new(Mutex::new(HashMap::new()));
+        let decode_failure_count = Arc::new(AtomicUsize::new(0));
+        let decode_failures = Arc::new(Mutex::new(VecDeque::new()));
         let shutdown = Arc::new(AtomicBool::new(false));
 
         let inboxes_bg = Arc::clone(&inboxes);
@@ -98,6 +105,8 @@ impl GrpcSocketTransport {
         let heartbeats_bg = Arc::clone(&heartbeats);
         let gvt_bg = Arc::clone(&gvt_proposals);
         let barrier_bg = Arc::clone(&barrier_signals);
+        let decode_failure_count_bg = Arc::clone(&decode_failure_count);
+        let decode_failures_bg = Arc::clone(&decode_failures);
         let shutdown_bg = Arc::clone(&shutdown);
 
         let listener_handle = thread::spawn(move || {
@@ -179,6 +188,8 @@ impl GrpcSocketTransport {
                             &heartbeats_bg,
                             &gvt_bg,
                             &barrier_bg,
+                            &decode_failure_count_bg,
+                            &decode_failures_bg,
                         );
                     }
 
@@ -207,9 +218,25 @@ impl GrpcSocketTransport {
             gvt_round: 0,
             barrier_signals,
             barrier_count: 0,
+            decode_failure_count,
+            decode_failures,
             shutdown,
             listener_handle: Some(listener_handle),
         })
+    }
+
+    pub fn envelope_decode_failure_count(&self) -> usize {
+        self.decode_failure_count.load(Ordering::Relaxed)
+    }
+
+    pub fn envelope_decode_failures(&self) -> Vec<String> {
+        let failures = self.decode_failures.lock().unwrap();
+        failures.iter().cloned().collect()
+    }
+
+    pub fn drain_envelope_decode_failures(&self) -> Vec<String> {
+        let mut failures = self.decode_failures.lock().unwrap();
+        failures.drain(..).collect()
     }
 
     pub fn local_lp(&self) -> LpId {
@@ -523,6 +550,19 @@ fn write_framed_message(stream: &mut TcpStream, msg_type: u8, payload: &[u8]) ->
     Ok(())
 }
 
+fn record_decode_failure(
+    decode_failure_count: &Arc<AtomicUsize>,
+    decode_failures: &Arc<Mutex<VecDeque<String>>>,
+    error_msg: String,
+) {
+    decode_failure_count.fetch_add(1, Ordering::Relaxed);
+    let mut failures = decode_failures.lock().unwrap();
+    if failures.len() >= MAX_RETAINED_DECODE_FAILURES {
+        failures.pop_front();
+    }
+    failures.push_back(error_msg);
+}
+
 #[allow(clippy::too_many_arguments)]
 fn handle_inbound_frame(
     msg_type: u8,
@@ -534,6 +574,8 @@ fn handle_inbound_frame(
     heartbeats: &Arc<Mutex<VecDeque<WorkerHeartbeat>>>,
     gvt_proposals: &Arc<Mutex<HashMap<(u64, LpId), Tick>>>,
     barrier_signals: &Arc<Mutex<HashMap<LpId, u64>>>,
+    decode_failure_count: &Arc<AtomicUsize>,
+    decode_failures: &Arc<Mutex<VecDeque<String>>>,
 ) {
     match msg_type {
         MSG_TYPE_EVENT if payload.len() >= 24 => {
@@ -577,15 +619,29 @@ fn handle_inbound_frame(
                 .or_default()
                 .push_back(PdesMessage::Null(null));
         }
-        MSG_TYPE_OPTIMISTIC => {
-            if let Ok(env) = KairoOptimisticEnvelopeV1::decode(payload) {
-                if let Ok(opt_msg) = env.to_optimistic_message(GRPC_PROTOCOL_ID) {
+        MSG_TYPE_OPTIMISTIC => match KairoOptimisticEnvelopeV1::decode(payload) {
+            Ok(env) => match env.to_optimistic_message(GRPC_PROTOCOL_ID) {
+                Ok(opt_msg) => {
                     let dest_lp = opt_msg.event().dest_lp;
                     let mut opt_inboxes = optimistic_inboxes.lock().unwrap();
                     opt_inboxes.entry(dest_lp).or_default().push_back(opt_msg);
                 }
+                Err(e) => {
+                    record_decode_failure(
+                        decode_failure_count,
+                        decode_failures,
+                        format!("Optimistic message validation error: {e}"),
+                    );
+                }
+            },
+            Err(e) => {
+                record_decode_failure(
+                    decode_failure_count,
+                    decode_failures,
+                    format!("Optimistic envelope decode error: {e}"),
+                );
             }
-        }
+        },
         MSG_TYPE_MIGRATION => {
             if let Some(migration) = decode_migration_payload(payload) {
                 if migration.validate().is_ok() {

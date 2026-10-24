@@ -264,17 +264,14 @@ fn socket_transport_preserves_optimistic_migration_telemetry_heartbeat_and_rejec
     );
 
     // 2. Bind two local endpoints and verify optimistic, migration, telemetry, heartbeat, and round GVT
-    let probe_b = TcpListener::bind("127.0.0.1:0").unwrap();
-    let port_b = probe_b.local_addr().unwrap().port();
-    drop(probe_b);
-
     let mut node_b = GrpcSocketTransport::bind(
         LpId(2),
-        format!("127.0.0.1:{port_b}").parse().unwrap(),
+        "127.0.0.1:0".parse().unwrap(),
         vec![],
         config.clone(),
     )
     .unwrap();
+    let port_b = node_b.bound_addr().port();
 
     let node_a = GrpcSocketTransport::bind(
         LpId(1),
