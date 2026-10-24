@@ -1,5 +1,6 @@
 #![forbid(unsafe_code)]
 
+pub mod contracts;
 pub mod ensemble;
 
 mod scenario;
@@ -245,36 +246,61 @@ fn write_replay_outputs(
 ) -> Result<(), String> {
     fs::create_dir_all(output).map_err(|error| error.to_string())?;
 
+    let manifest_dto = contracts::RunManifestDto::new(
+        &scenario.scenario_id,
+        &scenario.fixture_id,
+        scenario.base_seed,
+        scenario.replications,
+        &scenario.artifact_root,
+    );
+    manifest_dto.validate().map_err(|e| e.to_string())?;
+
     fs::write(
         output.join("manifest.json"),
         format!(
-            "{{\n  \"schema_version\": \"kairoecs.run-manifest.v1\",\n  \"scenario_id\": \"{}\",\n  \"fixture_id\": \"{}\",\n  \"base_seed\": {},\n  \"replications\": {},\n  \"artifact_root\": \"{}\"\n}}\n",
-            scenario.scenario_id,
-            scenario.fixture_id,
-            scenario.base_seed,
-            scenario.replications,
-            scenario.artifact_root.display()
+            "{{\n  \"schema_version\": \"{}\",\n  \"scenario_id\": \"{}\",\n  \"fixture_id\": \"{}\",\n  \"base_seed\": {},\n  \"replications\": {},\n  \"artifact_root\": \"{}\"\n}}\n",
+            manifest_dto.schema_version,
+            manifest_dto.scenario_id,
+            manifest_dto.fixture_id,
+            manifest_dto.base_seed,
+            manifest_dto.replications,
+            manifest_dto.artifact_root.display()
         ),
     )
     .map_err(|error| error.to_string())?;
+
+    let summary_dto = contracts::SummaryDto::new(
+        &scenario.scenario_id,
+        replay.event_count as u64,
+        replay.observed_kind_order.clone(),
+        &replay.summary_hash,
+    );
+    summary_dto.validate().map_err(|e| e.to_string())?;
 
     fs::write(
         output.join("summary.json"),
         format!(
             "{{\n  \"scenario_id\": \"{}\",\n  \"event_count\": {},\n  \"observed_kind_order\": [{}],\n  \"summary_hash\": \"{}\"\n}}\n",
-            scenario.scenario_id,
-            replay.event_count,
-            csv_u32(&replay.observed_kind_order),
-            replay.summary_hash
+            summary_dto.scenario_id,
+            summary_dto.event_count,
+            csv_u32(&summary_dto.observed_kind_order),
+            summary_dto.summary_hash
         ),
     )
     .map_err(|error| error.to_string())?;
 
+    let comparison_dto =
+        contracts::ReplayComparisonDto::new_matched(&scenario.fixture_id, &replay.summary_hash);
+    comparison_dto.validate().map_err(|e| e.to_string())?;
+
     fs::write(
         output.join("replay-comparison.json"),
         format!(
-            "{{\n  \"fixture_id\": \"{}\",\n  \"status\": \"matched\",\n  \"comparison_basis\": \"expected_kind_order\",\n  \"summary_hash\": \"{}\"\n}}\n",
-            scenario.fixture_id, replay.summary_hash
+            "{{\n  \"fixture_id\": \"{}\",\n  \"status\": \"{}\",\n  \"comparison_basis\": \"{}\",\n  \"summary_hash\": \"{}\"\n}}\n",
+            comparison_dto.fixture_id,
+            comparison_dto.status,
+            comparison_dto.comparison_basis,
+            comparison_dto.summary_hash
         ),
     )
     .map_err(|error| error.to_string())?;
@@ -286,11 +312,20 @@ fn write_replay_outputs(
 
 fn write_resume_plan(scenario: &ScenarioManifest, output: &Path) -> Result<(), String> {
     fs::create_dir_all(output).map_err(|error| error.to_string())?;
+
+    let plan_dto = contracts::ResumabilityPlanDto::default_for_scenario(
+        &scenario.scenario_id,
+        scenario.resume_checkpoint_every_events,
+    );
+    plan_dto.validate().map_err(|e| e.to_string())?;
+
     fs::write(
         output.join("resumability-plan.json"),
         format!(
-            "{{\n  \"schema_version\": \"kairoecs.resumability-plan.v1\",\n  \"scenario_id\": \"{}\",\n  \"checkpoint_every_events\": {},\n  \"resume_requires\": [\"scenario manifest\", \"seed manifest\", \"last completed event index\", \"summary hash comparison\"]\n}}\n",
-            scenario.scenario_id, scenario.resume_checkpoint_every_events
+            "{{\n  \"schema_version\": \"{}\",\n  \"scenario_id\": \"{}\",\n  \"checkpoint_every_events\": {},\n  \"resume_requires\": [\"scenario manifest\", \"seed manifest\", \"last completed event index\", \"summary hash comparison\"]\n}}\n",
+            plan_dto.schema_version,
+            plan_dto.scenario_id,
+            plan_dto.checkpoint_every_events
         ),
     )
     .map_err(|error| error.to_string())
@@ -299,11 +334,17 @@ fn write_resume_plan(scenario: &ScenarioManifest, output: &Path) -> Result<(), S
 fn write_checkpoint_manifest(output: &Path) -> Result<(), String> {
     fs::create_dir_all(output).map_err(|error| error.to_string())?;
     let tick = env::var("KAIRO_LAST_COMPLETED_TICK").unwrap_or_else(|_| "unknown".to_string());
+
+    let checkpoint_dto = contracts::CheckpointManifestDto::new(tick, "interrupted");
+    checkpoint_dto.validate().map_err(|e| e.to_string())?;
+
     fs::write(
         output.join("checkpoint-manifest.json"),
         format!(
-            "{{\n  \"schema_version\": \"kairoecs.checkpoint-manifest.v1\",\n  \"last_completed_tick\": \"{}\",\n  \"state\": \"interrupted\"\n}}\n",
-            tick
+            "{{\n  \"schema_version\": \"{}\",\n  \"last_completed_tick\": \"{}\",\n  \"state\": \"{}\"\n}}\n",
+            checkpoint_dto.schema_version,
+            checkpoint_dto.last_completed_tick,
+            checkpoint_dto.state
         ),
     )
     .map_err(|error| error.to_string())
@@ -317,11 +358,17 @@ fn write_resume_request(checkpoint: &Path, output: &Path) -> Result<(), String> 
         ));
     }
     fs::create_dir_all(output).map_err(|error| error.to_string())?;
+
+    let resume_dto = contracts::ResumeRequestDto::new(checkpoint.display().to_string(), "accepted");
+    resume_dto.validate().map_err(|e| e.to_string())?;
+
     fs::write(
         output.join("resume-request.json"),
         format!(
-            "{{\n  \"schema_version\": \"kairoecs.resume-request.v1\",\n  \"checkpoint\": \"{}\",\n  \"status\": \"accepted\"\n}}\n",
-            checkpoint.display()
+            "{{\n  \"schema_version\": \"{}\",\n  \"checkpoint\": \"{}\",\n  \"status\": \"{}\"\n}}\n",
+            resume_dto.schema_version,
+            resume_dto.checkpoint,
+            resume_dto.status
         ),
     )
     .map_err(|error| error.to_string())

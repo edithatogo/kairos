@@ -506,6 +506,8 @@ writers. Track67 similarly coordinates existing core/state/ABM owners.
 
 [Track 70](tracks/70-polars-native-data-processing/index.md) has completed all phases (Phases 0–4), verified native tables, Arrow C Data Interface Schema v2 export, Python Polars zero-copy handoff, and manifest-last durable publication. Upstream delivery accepted; CareOps `polars_data_processing_20261022` may adopt the pin.
 
+[Track 74](tracks/74-serde-robustness/index.md) has completed all phases (Phases 0–2), qualifying `serde` and deriving typed, validated DTO control contracts with strict schema versioning and unknown-field denial for `kairo-ecs-cli` and `kairo-ecs-debug`.
+
 ## Library adoption planning — 22 October 2026
 
 [Programme](library-adoption.md): Tracks 71 (rand), 72 (rand_distr) and 73 (petgraph) are Planned, implementation not started. ECharts and Three.js are separate CareOps tracks. Entry requires explicit cross-repository acceptance receipts; both Polars migrations come first. No current runtime or release gate is waived.
