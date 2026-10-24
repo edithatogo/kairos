@@ -33,6 +33,9 @@ Extended `crates/kairo-ecs-grpc` with typed Protobuf wire codecs:
 - `WireOptimisticEnvelope`, `WireAncestryFrame`, `WireRootFrame`, `WireOutputFrame`, `WireFrameKind`
 - `KairoOptimisticEnvelopeV1::to_wire(&self) -> Result<WireOptimisticEnvelope, RejectionCode>`
 - `KairoOptimisticEnvelopeV1::from_wire(wire: WireOptimisticEnvelope) -> Result<Self, RejectionCode>`
+- Wire versioning constants: `ENVELOPE_SCHEMA_VERSION_LEGACY_V1 = 1`, `ENVELOPE_SCHEMA_VERSION_PROTOBUF_V2 = 2`, `ENVELOPE_PROTOCOL_VERSION_V1 = 1`, `ENVELOPE_PROTOCOL_VERSION_V2 = 2`.
+- Backward-compatible dual decoding in `KairoOptimisticEnvelopeV1::decode` (detects `[0, 0, 0, 1]` legacy v1 vs protobuf v2).
+- Non-silent decode error recording in `GrpcSocketTransport` (`envelope_decode_failure_count()`, `envelope_decode_failures()`).
 - Canonical protobuf schema definitions added in `proto/simulation.proto`
 
 ## Tests added
@@ -50,6 +53,8 @@ Extended `crates/kairo-ecs-grpc` with typed Protobuf wire codecs:
   - `oracle_prost_envelope_rejects_invalid_timestamp_byte_length`
   - `oracle_prost_envelope_rejects_missing_oneof_frame`
   - `oracle_prost_optimistic_message_full_roundtrip`
+  - `oracle_legacy_v1_and_protobuf_v2_dual_compatibility`
+  - `oracle_socket_receiver_records_envelope_decode_failures`
 
 ## Known risks
 
@@ -61,7 +66,7 @@ Advance to next sequenced track: Track 82 (`Tokio bounded transport runtime`).
 
 ## Integration notes
 
-All 38 tests in `kairo-ecs-grpc` passed (24 unit tests, 12 oracle tests, 2 multi-process socket tests). Pure-Rust compilation verified with zero C or `libprotoc` dependencies. Passes `cargo deny check advisories sources licenses bans` (0 advisories, 0 bans, clean Apache-2.0 license) and `cargo audit` (402 dependencies scanned, 0 vulnerabilities).
+All 41 tests in `kairo-ecs-grpc` passed (25 unit tests, 14 oracle tests, 2 multi-process socket tests). Pure-Rust compilation verified with zero C or `libprotoc` dependencies. Passes `cargo deny check advisories sources licenses bans` (0 advisories, 0 bans, clean Apache-2.0 license) and `cargo audit` (402 dependencies scanned, 0 vulnerabilities).
 
 ## Phase closeout evidence
 

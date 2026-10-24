@@ -8,7 +8,17 @@ use kairo_ecs_types::SimTime;
 use prost::Message;
 use std::fmt;
 
-use crate::GRPC_PROTOCOL_VERSION;
+/// Legacy big-endian wire envelope schema version (v1).
+pub const ENVELOPE_SCHEMA_VERSION_LEGACY_V1: u32 = 1;
+
+/// Standard Protobuf wire envelope schema version (v2).
+pub const ENVELOPE_SCHEMA_VERSION_PROTOBUF_V2: u32 = 2;
+
+/// Protocol version 1 (legacy big-endian framing).
+pub const ENVELOPE_PROTOCOL_VERSION_V1: u16 = 1;
+
+/// Protocol version 2 (typed Protobuf wire encoding).
+pub const ENVELOPE_PROTOCOL_VERSION_V2: u16 = 2;
 
 /// Maximum ancestry depth allowed in wire envelopes (matches MAX_CAUSAL_DEPTH = 128).
 pub const MAX_ANCESTRY_DEPTH: usize = 128;
@@ -236,7 +246,9 @@ pub struct KairoOptimisticEnvelopeV1 {
 impl KairoOptimisticEnvelopeV1 {
     /// Validates all mandatory field boundaries and rejection oracles before construction or mutation.
     pub fn validate(&self, expected_protocol_id: &str) -> Result<(), RejectionCode> {
-        if self.envelope_schema_version != 1 {
+        if self.envelope_schema_version != ENVELOPE_SCHEMA_VERSION_LEGACY_V1
+            && self.envelope_schema_version != ENVELOPE_SCHEMA_VERSION_PROTOBUF_V2
+        {
             return Err(RejectionCode::UnsupportedEnvelopeVersion(
                 self.envelope_schema_version,
             ));
@@ -244,7 +256,9 @@ impl KairoOptimisticEnvelopeV1 {
         if self.protocol_id != expected_protocol_id {
             return Err(RejectionCode::ProtocolIdMismatch(self.protocol_id.clone()));
         }
-        if self.protocol_version != GRPC_PROTOCOL_VERSION {
+        if self.protocol_version != ENVELOPE_PROTOCOL_VERSION_V1
+            && self.protocol_version != ENVELOPE_PROTOCOL_VERSION_V2
+        {
             return Err(RejectionCode::ProtocolVersionMismatch(
                 self.protocol_version,
             ));
@@ -457,9 +471,9 @@ impl KairoOptimisticEnvelopeV1 {
         frames.reverse();
 
         let env = Self {
-            envelope_schema_version: 1,
+            envelope_schema_version: ENVELOPE_SCHEMA_VERSION_PROTOBUF_V2,
             protocol_id: protocol_id.to_string(),
-            protocol_version: GRPC_PROTOCOL_VERSION,
+            protocol_version: ENVELOPE_PROTOCOL_VERSION_V2,
             authority_mode,
             simulation_namespace,
             ownership_epoch,
@@ -504,7 +518,9 @@ impl KairoOptimisticEnvelopeV1 {
         Ok(buf)
     }
 
-    /// Deserializes an envelope from protobuf binary bytes with strict preflight bounds checks.
+    /// Deserializes an envelope with backward-compatible dual decoding:
+    /// - If bytes begin with `[0, 0, 0, 1]`, decodes legacy v1 big-endian wire framing.
+    /// - Otherwise, decodes typed Protobuf v2 wire framing (`WireOptimisticEnvelope`).
     pub fn decode(bytes: &[u8]) -> Result<Self, RejectionCode> {
         if bytes.len() > MAX_ENCODED_ENVELOPE_BYTES {
             return Err(RejectionCode::EnvelopeTooLarge(
@@ -519,13 +535,264 @@ impl KairoOptimisticEnvelopeV1 {
             ));
         }
 
+        // Backward-compatibility path: legacy v1 wire begins with [0, 0, 0, 1] (big-endian u32 = 1)
+        if bytes.len() >= 4 && bytes[0..4] == [0, 0, 0, 1] {
+            return Self::decode_legacy_v1(bytes);
+        }
+
         let wire = WireOptimisticEnvelope::decode(bytes)
             .map_err(|e| RejectionCode::MalformedFraming(format!("Protobuf decode error: {e}")))?;
 
         Self::from_wire(wire)
     }
 
-    /// Converts this domain envelope to its typed Protobuf wire model.
+    /// Deserializes a legacy big-endian wire envelope (schema version 1) for backward compatibility.
+    pub fn decode_legacy_v1(bytes: &[u8]) -> Result<Self, RejectionCode> {
+        if bytes.len() > MAX_ENCODED_ENVELOPE_BYTES {
+            return Err(RejectionCode::EnvelopeTooLarge(
+                "total_envelope",
+                bytes.len(),
+                MAX_ENCODED_ENVELOPE_BYTES,
+            ));
+        }
+        if bytes.len() < 4 {
+            return Err(RejectionCode::MalformedFraming(
+                "Buffer too short for schema version".to_string(),
+            ));
+        }
+
+        let mut offset = 0;
+        let schema_ver = u32::from_be_bytes(bytes[offset..offset + 4].try_into().unwrap());
+        offset += 4;
+        if schema_ver != ENVELOPE_SCHEMA_VERSION_LEGACY_V1 {
+            return Err(RejectionCode::UnsupportedEnvelopeVersion(schema_ver));
+        }
+
+        if bytes.len() < offset + 2 {
+            return Err(RejectionCode::MalformedFraming(
+                "Buffer too short for protocol ID length".to_string(),
+            ));
+        }
+        let proto_len = u16::from_be_bytes(bytes[offset..offset + 2].try_into().unwrap()) as usize;
+        offset += 2;
+
+        if bytes.len() < offset + proto_len {
+            return Err(RejectionCode::MalformedFraming(
+                "Buffer too short for protocol ID".to_string(),
+            ));
+        }
+        let protocol_id =
+            String::from_utf8(bytes[offset..offset + proto_len].to_vec()).map_err(|e| {
+                RejectionCode::MalformedFraming(format!("Invalid protocol ID string: {e}"))
+            })?;
+        offset += proto_len;
+
+        const FIXED_LEN: usize = 2 + 4 + 16 + 8 + 8 + 4 + 4 + 16 + 8 + 4;
+        if bytes.len() < offset + FIXED_LEN {
+            return Err(RejectionCode::MalformedFraming(
+                "Buffer too short for fixed fields".to_string(),
+            ));
+        }
+
+        let protocol_version = u16::from_be_bytes(bytes[offset..offset + 2].try_into().unwrap());
+        offset += 2;
+        let mode_raw = u32::from_be_bytes(bytes[offset..offset + 4].try_into().unwrap());
+        offset += 4;
+        let authority_mode = OptimisticAuthorityMode::from_u32(mode_raw)
+            .ok_or(RejectionCode::AuthorityModeMismatch)?;
+
+        let simulation_namespace =
+            u128::from_be_bytes(bytes[offset..offset + 16].try_into().unwrap());
+        offset += 16;
+        let ownership_epoch = u64::from_be_bytes(bytes[offset..offset + 8].try_into().unwrap());
+        offset += 8;
+        let emission_epoch = u64::from_be_bytes(bytes[offset..offset + 8].try_into().unwrap());
+        offset += 8;
+        let source_lp = u32::from_be_bytes(bytes[offset..offset + 4].try_into().unwrap());
+        offset += 4;
+        let dest_lp = u32::from_be_bytes(bytes[offset..offset + 4].try_into().unwrap());
+        offset += 4;
+        let tick = u128::from_be_bytes(bytes[offset..offset + 16].try_into().unwrap());
+        offset += 16;
+        let incarnation = u64::from_be_bytes(bytes[offset..offset + 8].try_into().unwrap());
+        offset += 8;
+        let kind_raw = u32::from_be_bytes(bytes[offset..offset + 4].try_into().unwrap());
+        offset += 4;
+        let kind = WireMessageKind::from_u32(kind_raw).ok_or_else(|| {
+            RejectionCode::MalformedFraming(format!("Unknown message kind: {kind_raw}"))
+        })?;
+
+        if bytes.len() < offset + 4 {
+            return Err(RejectionCode::MalformedFraming(
+                "Buffer too short for frame count".to_string(),
+            ));
+        }
+        let frame_count =
+            u32::from_be_bytes(bytes[offset..offset + 4].try_into().unwrap()) as usize;
+        offset += 4;
+
+        if frame_count > MAX_ANCESTRY_NODES {
+            return Err(RejectionCode::EnvelopeTooLarge(
+                "ancestry_frames",
+                frame_count,
+                MAX_ANCESTRY_NODES,
+            ));
+        }
+
+        let mut ancestry_frames = Vec::with_capacity(frame_count);
+        for _ in 0..frame_count {
+            if bytes.len() < offset + 1 {
+                return Err(RejectionCode::MalformedFraming(
+                    "Buffer too short for frame tag".to_string(),
+                ));
+            }
+            let tag = bytes[offset];
+            offset += 1;
+            match tag {
+                0 => {
+                    if bytes.len() < offset + 12 {
+                        return Err(RejectionCode::MalformedFraming(
+                            "Buffer too short for root frame".to_string(),
+                        ));
+                    }
+                    let root_source_lp =
+                        u32::from_be_bytes(bytes[offset..offset + 4].try_into().unwrap());
+                    offset += 4;
+                    let root_sequence =
+                        u64::from_be_bytes(bytes[offset..offset + 8].try_into().unwrap());
+                    offset += 8;
+                    ancestry_frames.push(AncestryFrame::Root {
+                        root_source_lp,
+                        root_sequence,
+                    });
+                }
+                1 => {
+                    if bytes.len() < offset + 24 {
+                        return Err(RejectionCode::MalformedFraming(
+                            "Buffer too short for output frame".to_string(),
+                        ));
+                    }
+                    let parent_tick =
+                        u128::from_be_bytes(bytes[offset..offset + 16].try_into().unwrap());
+                    offset += 16;
+                    let parent_source_lp =
+                        u32::from_be_bytes(bytes[offset..offset + 4].try_into().unwrap());
+                    offset += 4;
+                    let ordinal = u32::from_be_bytes(bytes[offset..offset + 4].try_into().unwrap());
+                    offset += 4;
+                    ancestry_frames.push(AncestryFrame::Output {
+                        parent_tick,
+                        parent_source_lp,
+                        ordinal,
+                    });
+                }
+                other => {
+                    return Err(RejectionCode::MalformedFraming(format!(
+                        "Unknown ancestry frame tag: {other}"
+                    )));
+                }
+            }
+        }
+
+        if bytes.len() < offset + 4 {
+            return Err(RejectionCode::MalformedFraming(
+                "Buffer too short for payload length".to_string(),
+            ));
+        }
+        let payload_len =
+            u32::from_be_bytes(bytes[offset..offset + 4].try_into().unwrap()) as usize;
+        offset += 4;
+
+        if payload_len > MAX_PAYLOAD_BYTES {
+            return Err(RejectionCode::EnvelopeTooLarge(
+                "event_payload",
+                payload_len,
+                MAX_PAYLOAD_BYTES,
+            ));
+        }
+
+        if bytes.len() < offset + payload_len {
+            return Err(RejectionCode::MalformedFraming(
+                "Buffer too short for payload bytes".to_string(),
+            ));
+        }
+        let event_payload = bytes[offset..offset + payload_len].to_vec();
+
+        Ok(Self {
+            envelope_schema_version: schema_ver,
+            protocol_id,
+            protocol_version,
+            authority_mode,
+            simulation_namespace,
+            ownership_epoch,
+            emission_epoch,
+            source_lp,
+            dest_lp,
+            tick,
+            ancestry_frames,
+            incarnation,
+            kind,
+            event_payload,
+        })
+    }
+
+    /// Serializes to the legacy big-endian wire envelope (v1) for backward compatibility testing or transitional peers.
+    pub fn encode_legacy_v1(&self) -> Result<Vec<u8>, RejectionCode> {
+        let mut buf = Vec::with_capacity(256 + self.event_payload.len());
+        buf.extend_from_slice(&ENVELOPE_SCHEMA_VERSION_LEGACY_V1.to_be_bytes());
+        let proto_bytes = self.protocol_id.as_bytes();
+        buf.extend_from_slice(&(proto_bytes.len() as u16).to_be_bytes());
+        buf.extend_from_slice(proto_bytes);
+        buf.extend_from_slice(&ENVELOPE_PROTOCOL_VERSION_V1.to_be_bytes());
+        buf.extend_from_slice(&(self.authority_mode as u32).to_be_bytes());
+        buf.extend_from_slice(&self.simulation_namespace.to_be_bytes());
+        buf.extend_from_slice(&self.ownership_epoch.to_be_bytes());
+        buf.extend_from_slice(&self.emission_epoch.to_be_bytes());
+        buf.extend_from_slice(&self.source_lp.to_be_bytes());
+        buf.extend_from_slice(&self.dest_lp.to_be_bytes());
+        buf.extend_from_slice(&self.tick.to_be_bytes());
+        buf.extend_from_slice(&self.incarnation.to_be_bytes());
+        buf.extend_from_slice(&(self.kind as u32).to_be_bytes());
+
+        buf.extend_from_slice(&(self.ancestry_frames.len() as u32).to_be_bytes());
+        for frame in &self.ancestry_frames {
+            match frame {
+                AncestryFrame::Root {
+                    root_source_lp,
+                    root_sequence,
+                } => {
+                    buf.push(0u8);
+                    buf.extend_from_slice(&root_source_lp.to_be_bytes());
+                    buf.extend_from_slice(&root_sequence.to_be_bytes());
+                }
+                AncestryFrame::Output {
+                    parent_tick,
+                    parent_source_lp,
+                    ordinal,
+                } => {
+                    buf.push(1u8);
+                    buf.extend_from_slice(&parent_tick.to_be_bytes());
+                    buf.extend_from_slice(&parent_source_lp.to_be_bytes());
+                    buf.extend_from_slice(&ordinal.to_be_bytes());
+                }
+            }
+        }
+
+        buf.extend_from_slice(&(self.event_payload.len() as u32).to_be_bytes());
+        buf.extend_from_slice(&self.event_payload);
+
+        if buf.len() > MAX_ENCODED_ENVELOPE_BYTES {
+            return Err(RejectionCode::EnvelopeTooLarge(
+                "total_envelope",
+                buf.len(),
+                MAX_ENCODED_ENVELOPE_BYTES,
+            ));
+        }
+
+        Ok(buf)
+    }
+
+    /// Converts this domain envelope to its typed Protobuf wire model (version 2).
     pub fn to_wire(&self) -> Result<WireOptimisticEnvelope, RejectionCode> {
         if self.ancestry_frames.len() > MAX_ANCESTRY_NODES {
             return Err(RejectionCode::EnvelopeTooLarge(
@@ -570,9 +837,9 @@ impl KairoOptimisticEnvelopeV1 {
         }
 
         Ok(WireOptimisticEnvelope {
-            envelope_schema_version: self.envelope_schema_version,
+            envelope_schema_version: ENVELOPE_SCHEMA_VERSION_PROTOBUF_V2,
             protocol_id: self.protocol_id.clone(),
-            protocol_version: self.protocol_version as u32,
+            protocol_version: ENVELOPE_PROTOCOL_VERSION_V2 as u32,
             authority_mode: self.authority_mode as u32,
             simulation_namespace: self.simulation_namespace.to_be_bytes().to_vec(),
             ownership_epoch: self.ownership_epoch,
@@ -587,15 +854,17 @@ impl KairoOptimisticEnvelopeV1 {
         })
     }
 
-    /// Reconstructs the domain envelope from its typed Protobuf wire model.
+    /// Reconstructs the domain envelope from its typed Protobuf wire model (version 2).
     pub fn from_wire(wire: WireOptimisticEnvelope) -> Result<Self, RejectionCode> {
-        if wire.envelope_schema_version != 1 {
+        if wire.envelope_schema_version != ENVELOPE_SCHEMA_VERSION_PROTOBUF_V2 {
             return Err(RejectionCode::UnsupportedEnvelopeVersion(
                 wire.envelope_schema_version,
             ));
         }
-        if wire.protocol_version > u16::MAX as u32 {
-            return Err(RejectionCode::ProtocolVersionMismatch(u16::MAX));
+        if wire.protocol_version != ENVELOPE_PROTOCOL_VERSION_V2 as u32 {
+            return Err(RejectionCode::ProtocolVersionMismatch(
+                wire.protocol_version as u16,
+            ));
         }
         let protocol_version = wire.protocol_version as u16;
 
@@ -763,9 +1032,9 @@ mod tests {
     #[test]
     fn test_envelope_roundtrip_root() {
         let envelope = KairoOptimisticEnvelopeV1 {
-            envelope_schema_version: 1,
+            envelope_schema_version: ENVELOPE_SCHEMA_VERSION_PROTOBUF_V2,
             protocol_id: GRPC_PROTOCOL_ID.to_string(),
-            protocol_version: 1,
+            protocol_version: ENVELOPE_PROTOCOL_VERSION_V2,
             authority_mode: OptimisticAuthorityMode::Scoped,
             simulation_namespace: 0x1234_5678_9abc_def0,
             ownership_epoch: 42,
@@ -793,9 +1062,9 @@ mod tests {
     #[test]
     fn test_envelope_roundtrip_with_ancestry_chain() {
         let envelope = KairoOptimisticEnvelopeV1 {
-            envelope_schema_version: 1,
+            envelope_schema_version: ENVELOPE_SCHEMA_VERSION_PROTOBUF_V2,
             protocol_id: GRPC_PROTOCOL_ID.to_string(),
-            protocol_version: 1,
+            protocol_version: ENVELOPE_PROTOCOL_VERSION_V2,
             authority_mode: OptimisticAuthorityMode::Scoped,
             simulation_namespace: 0x9999,
             ownership_epoch: 10,
@@ -833,6 +1102,40 @@ mod tests {
     }
 
     #[test]
+    fn test_legacy_v1_envelope_roundtrip_backward_compatibility() {
+        let legacy_env = KairoOptimisticEnvelopeV1 {
+            envelope_schema_version: ENVELOPE_SCHEMA_VERSION_LEGACY_V1,
+            protocol_id: GRPC_PROTOCOL_ID.to_string(),
+            protocol_version: ENVELOPE_PROTOCOL_VERSION_V1,
+            authority_mode: OptimisticAuthorityMode::Scoped,
+            simulation_namespace: 0x1111_2222_3333_4444,
+            ownership_epoch: 9,
+            emission_epoch: 9,
+            source_lp: 2,
+            dest_lp: 4,
+            tick: 88,
+            ancestry_frames: vec![AncestryFrame::Root {
+                root_source_lp: 2,
+                root_sequence: 15,
+            }],
+            incarnation: 1,
+            kind: WireMessageKind::Positive,
+            event_payload: b"legacy-v1-bytes".to_vec(),
+        };
+
+        legacy_env
+            .validate(GRPC_PROTOCOL_ID)
+            .expect("legacy v1 envelope must validate");
+        let legacy_bytes = legacy_env.encode_legacy_v1().expect("legacy v1 encode ok");
+        // Verify legacy bytes start with [0, 0, 0, 1]
+        assert_eq!(&legacy_bytes[0..4], &[0, 0, 0, 1]);
+
+        let decoded = KairoOptimisticEnvelopeV1::decode(&legacy_bytes)
+            .expect("decode must transparently handle legacy v1");
+        assert_eq!(legacy_env, decoded);
+    }
+
+    #[test]
     fn test_conversion_to_and_from_optimistic_message() {
         // Construct root OptimisticMessage
         let root_id = LogicalEventId::root(LpId(7), 10);
@@ -862,6 +1165,11 @@ mod tests {
         assert_eq!(env.source_lp, 7);
         assert_eq!(env.dest_lp, 8);
         assert_eq!(env.tick, 50);
+        assert_eq!(
+            env.envelope_schema_version,
+            ENVELOPE_SCHEMA_VERSION_PROTOBUF_V2
+        );
+        assert_eq!(env.protocol_version, ENVELOPE_PROTOCOL_VERSION_V2);
 
         // Convert back to native message
         let recovered = env
@@ -876,11 +1184,11 @@ mod tests {
 
     #[test]
     fn test_rejection_oracles() {
-        // R01: invalid envelope schema version
+        // R01: invalid envelope schema version (3 is unsupported)
         let mut bad_version = KairoOptimisticEnvelopeV1 {
-            envelope_schema_version: 2,
+            envelope_schema_version: 3,
             protocol_id: GRPC_PROTOCOL_ID.to_string(),
-            protocol_version: 1,
+            protocol_version: ENVELOPE_PROTOCOL_VERSION_V2,
             authority_mode: OptimisticAuthorityMode::Scoped,
             simulation_namespace: 1,
             ownership_epoch: 1,
@@ -898,11 +1206,11 @@ mod tests {
         };
         assert_eq!(
             bad_version.validate(GRPC_PROTOCOL_ID),
-            Err(RejectionCode::UnsupportedEnvelopeVersion(2))
+            Err(RejectionCode::UnsupportedEnvelopeVersion(3))
         );
 
         // R02: protocol id mismatch
-        bad_version.envelope_schema_version = 1;
+        bad_version.envelope_schema_version = ENVELOPE_SCHEMA_VERSION_PROTOBUF_V2;
         bad_version.protocol_id = "kairo.invalid".to_string();
         assert!(matches!(
             bad_version.validate(GRPC_PROTOCOL_ID),

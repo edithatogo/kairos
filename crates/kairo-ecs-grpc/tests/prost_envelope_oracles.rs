@@ -1,7 +1,9 @@
 use kairo_ecs_grpc::{
-    AncestryFrame, KairoOptimisticEnvelopeV1, OptimisticAuthorityMode, RejectionCode,
-    WireAncestryFrame, GRPC_PROTOCOL_ID, GRPC_PROTOCOL_VERSION, MAX_ANCESTRY_DEPTH,
-    MAX_ANCESTRY_NODES, MAX_ENCODED_ENVELOPE_BYTES, MAX_PAYLOAD_BYTES,
+    AncestryFrame, GrpcSocketTransport, GrpcTransportConfig, KairoOptimisticEnvelopeV1,
+    OptimisticAuthorityMode, RejectionCode, WireAncestryFrame, ENVELOPE_PROTOCOL_VERSION_V1,
+    ENVELOPE_PROTOCOL_VERSION_V2, ENVELOPE_SCHEMA_VERSION_LEGACY_V1,
+    ENVELOPE_SCHEMA_VERSION_PROTOBUF_V2, GRPC_PROTOCOL_ID, MAX_ANCESTRY_DEPTH, MAX_ANCESTRY_NODES,
+    MAX_ENCODED_ENVELOPE_BYTES, MAX_PAYLOAD_BYTES,
 };
 use kairo_ecs_pdes::{
     LogicalEventId, LpId, OptimisticAuthority, OptimisticEventOrderKey, OptimisticMessage,
@@ -9,12 +11,13 @@ use kairo_ecs_pdes::{
 };
 use kairo_ecs_types::SimTime;
 use prost::Message;
+use std::time::Duration;
 
 fn sample_valid_envelope() -> KairoOptimisticEnvelopeV1 {
     KairoOptimisticEnvelopeV1 {
-        envelope_schema_version: 1,
+        envelope_schema_version: ENVELOPE_SCHEMA_VERSION_PROTOBUF_V2,
         protocol_id: GRPC_PROTOCOL_ID.to_string(),
-        protocol_version: GRPC_PROTOCOL_VERSION,
+        protocol_version: ENVELOPE_PROTOCOL_VERSION_V2,
         authority_mode: OptimisticAuthorityMode::Scoped,
         simulation_namespace: 0xfeed_face_cafe_beef_0123_4567_89ab_cdef_u128,
         ownership_epoch: 101,
@@ -70,9 +73,9 @@ fn oracle_prost_envelope_roundtrip_with_deep_ancestry_chain() {
     }
 
     let env = KairoOptimisticEnvelopeV1 {
-        envelope_schema_version: 1,
+        envelope_schema_version: ENVELOPE_SCHEMA_VERSION_PROTOBUF_V2,
         protocol_id: GRPC_PROTOCOL_ID.to_string(),
-        protocol_version: GRPC_PROTOCOL_VERSION,
+        protocol_version: ENVELOPE_PROTOCOL_VERSION_V2,
         authority_mode: OptimisticAuthorityMode::Scoped,
         simulation_namespace: 0x42,
         ownership_epoch: 1,
@@ -108,9 +111,9 @@ fn oracle_prost_envelope_rejects_ancestry_depth_exceeded() {
     }
 
     let env_depth = KairoOptimisticEnvelopeV1 {
-        envelope_schema_version: 1,
+        envelope_schema_version: ENVELOPE_SCHEMA_VERSION_PROTOBUF_V2,
         protocol_id: GRPC_PROTOCOL_ID.to_string(),
-        protocol_version: GRPC_PROTOCOL_VERSION,
+        protocol_version: ENVELOPE_PROTOCOL_VERSION_V2,
         authority_mode: OptimisticAuthorityMode::Scoped,
         simulation_namespace: 0x42,
         ownership_epoch: 1,
@@ -147,9 +150,9 @@ fn oracle_prost_envelope_rejects_ancestry_depth_exceeded() {
     }
 
     let env_nodes = KairoOptimisticEnvelopeV1 {
-        envelope_schema_version: 1,
+        envelope_schema_version: ENVELOPE_SCHEMA_VERSION_PROTOBUF_V2,
         protocol_id: GRPC_PROTOCOL_ID.to_string(),
-        protocol_version: GRPC_PROTOCOL_VERSION,
+        protocol_version: ENVELOPE_PROTOCOL_VERSION_V2,
         authority_mode: OptimisticAuthorityMode::Scoped,
         simulation_namespace: 0x42,
         ownership_epoch: 1,
@@ -241,14 +244,14 @@ fn oracle_prost_envelope_rejects_unsupported_schema_version() {
     let mut wire = sample_valid_envelope()
         .to_wire()
         .expect("to_wire should succeed");
-    wire.envelope_schema_version = 2; // only version 1 is supported
+    wire.envelope_schema_version = 3; // version 3 is unsupported (v1 legacy and v2 protobuf are supported)
 
     let mut buf = Vec::new();
     wire.encode(&mut buf).expect("wire encode ok");
 
     assert_eq!(
         KairoOptimisticEnvelopeV1::decode(&buf),
-        Err(RejectionCode::UnsupportedEnvelopeVersion(2))
+        Err(RejectionCode::UnsupportedEnvelopeVersion(3))
     );
 }
 
@@ -362,4 +365,116 @@ fn oracle_prost_optimistic_message_full_roundtrip() {
     assert_eq!(recovered_msg.event().tick.ticks(), 20);
     assert_eq!(recovered_msg.incarnation(), 3);
     assert_eq!(recovered_msg.kind(), OptimisticMessageKind::Positive);
+}
+
+#[test]
+fn oracle_legacy_v1_and_protobuf_v2_dual_compatibility() {
+    // 1. Construct and encode legacy v1 envelope
+    let legacy_env = KairoOptimisticEnvelopeV1 {
+        envelope_schema_version: ENVELOPE_SCHEMA_VERSION_LEGACY_V1,
+        protocol_id: GRPC_PROTOCOL_ID.to_string(),
+        protocol_version: ENVELOPE_PROTOCOL_VERSION_V1,
+        authority_mode: OptimisticAuthorityMode::Scoped,
+        simulation_namespace: 0xfeed_cafe_dead_beef_u128,
+        ownership_epoch: 11,
+        emission_epoch: 22,
+        source_lp: 4,
+        dest_lp: 8,
+        tick: 1_000_000_u128,
+        ancestry_frames: vec![AncestryFrame::Root {
+            root_source_lp: 4,
+            root_sequence: 99,
+        }],
+        incarnation: 1,
+        kind: kairo_ecs_grpc::WireMessageKind::Positive,
+        event_payload: b"legacy-v1-dual-test".to_vec(),
+    };
+    legacy_env
+        .validate(GRPC_PROTOCOL_ID)
+        .expect("legacy v1 must validate");
+
+    let legacy_bytes = legacy_env
+        .encode_legacy_v1()
+        .expect("must encode legacy v1");
+    // Verify legacy wire format begins with big-endian u32 1 = [0, 0, 0, 1]
+    assert_eq!(&legacy_bytes[0..4], &[0, 0, 0, 1]);
+
+    // Decode through unified decode entrypoint
+    let decoded_legacy =
+        KairoOptimisticEnvelopeV1::decode(&legacy_bytes).expect("unified decode handles legacy v1");
+    assert_eq!(legacy_env, decoded_legacy);
+    assert_eq!(
+        decoded_legacy.envelope_schema_version,
+        ENVELOPE_SCHEMA_VERSION_LEGACY_V1
+    );
+
+    // 2. Construct and encode protobuf v2 envelope
+    let proto_env = sample_valid_envelope();
+    let proto_bytes = proto_env.encode().expect("must encode protobuf v2");
+    // Protobuf wire format field 1 (tag 1, varint wire type = (1 << 3) | 0 = 0x08)
+    assert_ne!(&proto_bytes[0..4], &[0, 0, 0, 1]);
+
+    // Decode through unified decode entrypoint
+    let decoded_proto =
+        KairoOptimisticEnvelopeV1::decode(&proto_bytes).expect("unified decode handles proto v2");
+    assert_eq!(proto_env, decoded_proto);
+    assert_eq!(
+        decoded_proto.envelope_schema_version,
+        ENVELOPE_SCHEMA_VERSION_PROTOBUF_V2
+    );
+}
+
+#[test]
+fn oracle_socket_receiver_records_envelope_decode_failures() {
+    use std::io::Write;
+    use std::net::TcpStream;
+
+    let transport = GrpcSocketTransport::bind(
+        LpId(99),
+        "127.0.0.1:0".parse().unwrap(),
+        vec![],
+        GrpcTransportConfig::default(),
+    )
+    .expect("bind socket transport");
+
+    assert_eq!(transport.envelope_decode_failure_count(), 0);
+    assert!(transport.envelope_decode_failures().is_empty());
+
+    let addr = transport.bound_addr();
+
+    // Connect raw TCP stream and send an invalid MSG_TYPE_OPTIMISTIC (3) frame
+    let mut stream = TcpStream::connect_timeout(&addr, Duration::from_millis(500))
+        .expect("connect to bound transport");
+
+    let malformed_payload = b"not-a-valid-envelope";
+    let len = (malformed_payload.len() + 1) as u32;
+    // Frame header: 4-byte big-endian len, 1-byte msg_type = 3 (MSG_TYPE_OPTIMISTIC)
+    stream
+        .write_all(&len.to_be_bytes())
+        .expect("write frame len");
+    stream.write_all(&[3u8]).expect("write msg_type");
+    stream.write_all(malformed_payload).expect("write payload");
+    stream.flush().expect("flush stream");
+
+    // Allow socket thread to process the inbound frame
+    let mut recorded = false;
+    for _ in 0..50 {
+        if transport.envelope_decode_failure_count() > 0 {
+            recorded = true;
+            break;
+        }
+        std::thread::sleep(Duration::from_millis(20));
+    }
+
+    assert!(
+        recorded,
+        "socket transport must record decode failure rather than silently discarding"
+    );
+    let failures = transport.envelope_decode_failures();
+    assert_eq!(failures.len(), 1);
+    assert!(
+        failures[0].contains("Optimistic envelope decode error"),
+        "failure message should capture decode error: {}",
+        failures[0]
+    );
 }

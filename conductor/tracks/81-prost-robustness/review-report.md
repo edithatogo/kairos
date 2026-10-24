@@ -32,22 +32,24 @@
 
 ## 3. Behavioral Gates & Test Oracles
 
-All 12 independent behavioral and negative oracles passed:
+All 14 independent behavioral and negative oracles passed:
 1. `oracle_prost_envelope_roundtrip_preserves_full_identity_and_tick_range`: Verifies full 128-bit tick and simulation namespace fidelity.
 2. `oracle_prost_envelope_roundtrip_with_deep_ancestry_chain`: Verifies full depth chain serialization (129 nodes).
 3. `oracle_prost_envelope_rejects_ancestry_depth_exceeded`: Verifies rejection of chains exceeding maximum depth.
 4. `oracle_prost_envelope_rejects_oversized_payload`: Verifies payload size cap (`MAX_PAYLOAD_BYTES = 4_096`).
 5. `oracle_prost_envelope_rejects_oversized_total_envelope`: Verifies total buffer cap (`MAX_ENCODED_ENVELOPE_BYTES = 65_536`).
 6. `oracle_prost_envelope_rejects_truncated_or_malformed_protobuf_bytes`: Verifies rejection of corrupted/truncated buffers with `MalformedFraming`.
-7. `oracle_prost_envelope_rejects_unsupported_schema_version`: Verifies strict version check (`envelope_schema_version == 1`).
+7. `oracle_prost_envelope_rejects_unsupported_schema_version`: Verifies strict version check (`envelope_schema_version == 3` rejected).
 8. `oracle_prost_envelope_rejects_invalid_authority_mode`: Verifies rejection of invalid authority modes with `AuthorityModeMismatch`.
 9. `oracle_prost_envelope_rejects_invalid_message_kind`: Verifies rejection of undefined message kinds.
 10. `oracle_prost_envelope_rejects_invalid_timestamp_byte_length`: Verifies rejection of invalid 128-bit integer encodings.
 11. `oracle_prost_envelope_rejects_missing_oneof_frame`: Verifies rejection of empty ancestry oneof containers.
 12. `oracle_prost_optimistic_message_full_roundtrip`: Verifies end-to-end roundtrip between native `OptimisticMessage` and protobuf wire envelope.
+13. `oracle_legacy_v1_and_protobuf_v2_dual_compatibility`: Verifies backward-compatible dual decoding of both legacy v1 big-endian wire format and protobuf v2.
+14. `oracle_socket_receiver_records_envelope_decode_failures`: Verifies socket receiver captures decode errors rather than silently discarding invalid optimistic frames.
 
 All existing crate tests passed:
-- `crates/kairo-ecs-grpc`: 24 unit tests + 12 oracle tests + 2 multi-process socket tests = 38 tests passed (receipt: [`evidence/cargo-test-grpc.txt`](evidence/cargo-test-grpc.txt)).
+- `crates/kairo-ecs-grpc`: 25 unit tests + 14 oracle tests + 2 multi-process socket tests = 41 tests passed (receipt: [`evidence/cargo-test-grpc.txt`](evidence/cargo-test-grpc.txt)).
 - Entire workspace tests: All passed (receipt: [`evidence/cargo-test-workspace.txt`](evidence/cargo-test-workspace.txt)).
 
 ---
