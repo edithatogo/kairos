@@ -1289,7 +1289,7 @@ entries:
       - "pwsh -NoProfile -File scripts/validate_conductor_dag.ps1"
       - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
     git_status: "clean"
-    commit_sha: "48f027002130099a90e19bcd6a3d838a8d4036a3"
+    commit_sha: "dd091617bd04e6d882107130c616f9186cd4d78e"
     pushed_ref: "origin/feat/track-75-serde-json-robustness"
     next_phase_decision: "Track 75 is Done; advance to Track 76."
 

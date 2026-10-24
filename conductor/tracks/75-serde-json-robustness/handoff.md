@@ -61,7 +61,7 @@ Track 75 evaluated and adopted `serde_json` 1.0.154 for robust, RFC 8259-complia
 
 - `$conductor-review`: Phase 0-2 review completed; serde_json 1.0.154 qualified and adopted; handwritten format templates replaced with typed contract serialization; all 33 CLI tests, 21 Debug tests, and workspace tests passing cleanly.
 - accepted fixes: Added `RunRequestDto` typed contract and removed obsolete handwritten `csv_u32` formatting helper.
-- commit SHA: `48f027002130099a90e19bcd6a3d838a8d4036a3` (integration ancestor; topic commit on `origin/feat/track-75-serde-json-robustness`)
+- commit SHA: `dd091617bd04e6d882107130c616f9186cd4d78e` (topic commit on `origin/feat/track-75-serde-json-robustness`)
 - pushed ref: `origin/feat/track-75-serde-json-robustness`
 - `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: verified clean tree state across phase closeout.
 - next-phase decision: Track 75 is closed; advance to Track 76.
