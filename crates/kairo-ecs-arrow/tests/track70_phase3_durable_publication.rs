@@ -30,7 +30,7 @@ fn test_failing_manifest_last_publication_and_interruption_rejection() {
         .map(|i| sample_v2_record(i, (i * 10) as u128, Some(EntityId::new(i, 1))))
         .collect();
 
-    let writer = DurableRunPublicationWriter::new(&temp_dir, "run-durable-01", 10);
+    let writer = DurableRunPublicationWriter::new(temp_dir, "run-durable-01", 10);
     // Write parts
     let receipt = writer.publish(&records).expect("Publication must succeed");
     assert_eq!(receipt.total_rows, 50);
@@ -38,7 +38,7 @@ fn test_failing_manifest_last_publication_and_interruption_rejection() {
     assert!(receipt.manifest_path.exists());
 
     // Reader must successfully read back completed publication
-    let reader = DurableRunPublicationReader::new(&temp_dir, "run-durable-01");
+    let reader = DurableRunPublicationReader::new(temp_dir, "run-durable-01");
     let read_back = reader.read_all_records().expect("Read back must succeed");
     assert_eq!(read_back.len(), 50);
     assert_eq!(read_back, records);
@@ -58,12 +58,12 @@ fn test_failing_resume_watermark_no_data_duplication() {
         .map(|i| sample_v2_record(i, (i * 10) as u128, None))
         .collect();
 
-    let writer = DurableRunPublicationWriter::new(&temp_dir, "run-resume-01", 10);
+    let writer = DurableRunPublicationWriter::new(temp_dir, "run-resume-01", 10);
     let receipt1 = writer.publish(&batch1).unwrap();
     assert_eq!(receipt1.watermark_sequence, 20);
 
     // Check watermark
-    let reader = DurableRunPublicationReader::new(&temp_dir, "run-resume-01");
+    let reader = DurableRunPublicationReader::new(temp_dir, "run-resume-01");
     assert_eq!(reader.get_watermark_sequence().unwrap(), 20);
 
     // Filter incoming stream by resume watermark
@@ -87,7 +87,7 @@ fn test_failing_tampered_part_file_checksum_rejection() {
         .map(|i| sample_v2_record(i, (i * 100) as u128, None))
         .collect();
 
-    let writer = DurableRunPublicationWriter::new(&temp_dir, "run-tamper", 10);
+    let writer = DurableRunPublicationWriter::new(temp_dir, "run-tamper", 10);
     let _receipt = writer.publish(&records).unwrap();
 
     // Tamper with part-00000.parquet
@@ -96,7 +96,7 @@ fn test_failing_tampered_part_file_checksum_rejection() {
     bytes[10] ^= 0xFF;
     fs::write(&part_file, bytes).unwrap();
 
-    let reader = DurableRunPublicationReader::new(&temp_dir, "run-tamper");
+    let reader = DurableRunPublicationReader::new(temp_dir, "run-tamper");
     let res = reader.read_all_records();
     assert!(
         res.is_err(),

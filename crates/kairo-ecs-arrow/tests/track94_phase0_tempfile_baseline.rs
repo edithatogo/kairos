@@ -12,7 +12,7 @@ fn baseline_direct_write_leaves_partial_file_on_interruption() {
     // In baseline non-atomic publication, bytes are written directly to target_file.
     // If interrupted midway (e.g. only 4 of 1000 bytes written), target_file exists with incomplete bytes.
     let partial_data = [0x50, 0x41, 0x52, 0x31]; // "PAR1" magic only
-    fs::write(&target_file, &partial_data).unwrap();
+    fs::write(&target_file, partial_data).unwrap();
 
     // Verify the flaw: the incomplete file exists on disk
     if target_file.exists() && fs::metadata(&target_file).unwrap().len() == 4 {
