@@ -20,7 +20,7 @@ Kairos delivery precedes parent CareOps pin and processing migration. Both plann
 
 - `$conductor-review`: Phase 4 review completed; native tables, extreme tick limb borrow arithmetic, real Parquet Zstd and Arrow IPC writers/readers, lazy transforms, populated 14-column Arrow C Data Interface Schema v2 exports, Python zero-copy handoff, and manifest-last durable publication verified.
 - accepted fixes: Incorporated all schema validation, borrow limb subtraction, and single-release lifecycle checks across crates and bindings.
-- commit SHA: `f75d9178ad3a9482d8d85f67e584f74d081be802` (merged Phase 0 closeout PR #288 on `origin/main`); Phase 1 PR #289; Phase 2-4 PR #296.
+- commit SHA: `dc35ce9b8e8f80459c55b6a711f62cba394c2e6f` (Track 70 Phases 2-4 implementation); merged Phase 0 closeout PR #288 on `origin/main`; Phase 1 PR #289.
 - pushed ref: `origin/main`
 - `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: verified clean tree state across phase closeout.
 - next-phase decision: Track 70 is closed and approved for CareOps adoption.
