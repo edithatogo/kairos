@@ -2,19 +2,23 @@
   "track_id": "73-petgraph-spatial-routing",
   "title": "petgraph spatial topology and routing adoption",
   "type": "feature",
-  "status": "new",
+  "status": "complete",
   "created_at": "2026-10-22",
-  "updated_at": "2026-10-22",
+  "updated_at": "2026-10-25",
   "spec_approved": true,
-  "implementation_started": false,
-  "accepted_phases": [],
-  "approval_basis": "User-approved adoption plan; explicit separate library/dependency tracks. No runtime acceptance.",
+  "implementation_started": true,
+  "accepted_phases": [
+    "0",
+    "1",
+    "2"
+  ],
+  "approval_basis": "User-approved adoption plan; explicit separate library/dependency tracks. Pinned petgraph 0.7.1 adopted in kairo-ecs-abm with deterministic Dijkstra routing and multi-floor access rules.",
   "library": "petgraph",
   "external_dependencies": [
     {
       "repository": "careops-sim",
       "milestone": "echarts_dashboard_20261022:R28",
-      "status": "unresolved",
+      "status": "resolved",
       "gate_task": "0.1",
       "required_receipt": "Accepted parent milestone and exact Kairos pin with evidence; verify manually before implementation"
     }

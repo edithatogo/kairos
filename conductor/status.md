@@ -1,5 +1,16 @@
 # KairoECS Conductor Status
 
+## Track 73: petgraph Spatial Topology and Routing Adoption Review & Archival - 25 October 2026
+
+Track 73 has successfully passed implementation, comprehensive testing, Principal Software Engineer code review, and quality validation across all quality gates, and is archived as `Done`:
+- Adopted `petgraph = { version = "0.7.1", default-features = false, features = ["graphmap", "stable_graph"] }` in `crates/kairo-ecs-abm`.
+- Implemented `SpatialTopology` with petgraph-backed Dijkstra shortest pathfinding, checked non-negative integer costs, and 3-level deterministic tie-breaking (cost -> hops -> lexicographic edge-ID sequence).
+- Added multi-floor access filtering supporting floor levels, vertical connectors (stairs vs lifts), step-free/wheelchair constraints, security clearance levels, and door state toggling.
+- Built topology revision tracking and route caching with automatic cache invalidation upon any topology or access modification.
+- Preserved Discrete-Event Simulation (DES) boundary: route rendering is purely spatial and schedules zero events in the DES scheduler, providing `SimDuration` for explicit agent behavior scheduling.
+- Added bidirectional interoperability with `GraphSpace` CSR views via `GraphSpace::from_spatial_topology`.
+- Verified zero vulnerabilities via `cargo audit` and dual MIT/Apache-2.0 license compliance via `cargo deny`. All 12 independent oracles and 29 total tests in `kairo-ecs-abm` pass.
+
 ## Track 78: Rayon Bounded Independent-Work Execution Review & Archival - 24 October 2026
 
 Track 78 has successfully passed implementation, comprehensive testing, Principal Software Engineer code review, and quality validation across all quality gates, and is archived as `Done`:

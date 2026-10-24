@@ -1,25 +1,25 @@
 # Plan: petgraph spatial topology and routing adoption
 
-All implementation tasks are pending. Write failing behavioural tests before production replacement. Accept CareOps ECharts R28 and Kairos sampling Track 72 before upstream routing work; accept Kairos Track 73 Phase 2 before CareOps R29 pin adoption.
+All implementation tasks are complete. Pinned petgraph 0.7.1 adopted in `crates/kairo-ecs-abm` with deterministic Dijkstra routing, multi-floor access filtering, and DES event boundary preservation.
 
 ## Phase 0 — Entry and qualification
 
-- [ ] Task 0.1: Verify the entry receipts and ownership handoffs; reject missing/stale upstream or downstream evidence before any pin/dependency/runtime change.
-- [ ] Task 0.2: Inventory actual replace/retain candidates and freeze baseline contracts, fixtures, costs and supported targets; qualify exact pins/features, licences/advisories and compatibility.
-- [ ] Task 0.3: Freeze generic topology/identity/cost/tie/no-route API and CareOps mapping contract; add independent small-graph, access and multi-floor tests.
-- [ ] Task 0.4: Conductor — review and verify phase (workflow.md); apply accepted fixes, record blockers/receipts and explicit next-phase decision.
+- [x] Task 0.1: Verify the entry receipts and ownership handoffs; reject missing/stale upstream or downstream evidence before any pin/dependency/runtime change.
+- [x] Task 0.2: Inventory actual replace/retain candidates and freeze baseline contracts, fixtures, costs and supported targets; qualify exact pins/features, licences/advisories and compatibility.
+- [x] Task 0.3: Freeze generic topology/identity/cost/tie/no-route API and CareOps mapping contract; add independent small-graph, access and multi-floor tests.
+- [x] Task 0.4: Conductor — review and verify phase (workflow.md); apply accepted fixes, record blockers/receipts and explicit next-phase decision.
 
 ## Phase 1 — Replacement and consumers
 
-- [ ] Task 1.1: Adopt petgraph storage/Dijkstra with deterministic route extraction and explicit invalidation; preserve resource/scheduler ownership.
-- [ ] Task 1.2: Migrate actual graph consumers and synthetic CareOps adapters after accepted upstream handoff; remove superseded adjacency/algorithm code only where replaced.
-- [ ] Task 1.3: Conductor — review and verify phase (workflow.md); apply accepted fixes, record blockers/receipts and explicit next-phase decision.
+- [x] Task 1.1: Adopt petgraph storage/Dijkstra with deterministic route extraction and explicit invalidation; preserve resource/scheduler ownership.
+- [x] Task 1.2: Migrate actual graph consumers and synthetic CareOps adapters after accepted upstream handoff; remove superseded adjacency/algorithm code only where replaced.
+- [x] Task 1.3: Conductor — review and verify phase (workflow.md); apply accepted fixes, record blockers/receipts and explicit next-phase decision.
 
 ## Phase 2 — Acceptance and handoff
 
-- [ ] Task 2.1: Run every test-matrix oracle and applicable full native/browser lanes; resolve regressions and record raw evidence.
-- [ ] Task 2.2: Audit deleted/retained production code, update compatibility/user documentation and record rollback plus exact accepted commit/pin receipts.
-- [ ] Task 2.3: Conductor — review and verify phase (workflow.md); apply accepted fixes, record blockers/receipts and explicit next-phase decision.
+- [x] Task 2.1: Run every test-matrix oracle and applicable full native/browser lanes; resolve regressions and record raw evidence.
+- [x] Task 2.2: Audit deleted/retained production code, update compatibility/user documentation and record rollback plus exact accepted commit/pin receipts.
+- [x] Task 2.3: Conductor — review and verify phase (workflow.md); apply accepted fixes, record blockers/receipts and explicit next-phase decision.
 
 ## Phase closeout gate
 

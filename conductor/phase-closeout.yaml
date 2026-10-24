@@ -1271,16 +1271,27 @@ entries:
     next_phase_decision: "Track 72 is Done; advance to Track 78."
 
   - track_id: "73"
-    phase: "0"
-    state: pending
+    phase: "2"
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Planning registered; implementation not started; external receipt gate unresolved"
-    fixes_applied: false
-    validation_commands: []
-    git_status: "planning worktree"
-    commit_sha: ""
-    pushed_ref: ""
-    next_phase_decision: "Verify entry receipts and qualify dependency before implementation"
+    review_result: "petgraph 0.7.1 qualified and adopted in kairo-ecs-abm: implemented SpatialTopology with petgraph-backed Dijkstra shortest pathfinding, 3-level deterministic tie-breaking (cost -> hops -> edge ID), random insertion order invariance, zero-cost cycle resilience, multi-floor access filtering (clearance levels, step-free vertical transit), door state toggling, topology version cache invalidation, and DES event boundary preservation."
+    fixes_applied: true
+    validation_commands:
+      - "cargo test -p kairo-ecs-abm"
+      - "cargo test --workspace"
+      - "cargo clippy --workspace --all-targets --all-features -- -D warnings"
+      - "cargo fmt --all --check"
+      - "cargo deny check advisories sources licenses bans"
+      - "cargo audit"
+      - "node tests/conformance/conformance-check.mjs"
+      - "pwsh -NoProfile -File scripts/validate_cross_binding_conformance.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
+    git_status: "clean"
+    commit_sha: "91bf640af24a8abbaa0f3f4a37b06148b159a410"
+    pushed_ref: "origin/feat/track-73-petgraph-spatial-routing"
+    next_phase_decision: "Track 73 is Done; advance to Track 87."
 
   - track_id: "74"
     phase: "2"
@@ -1372,9 +1383,9 @@ entries:
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
       - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
     git_status: "clean"
-    commit_sha: "0190333fb8cf98073013bdb0d944d49a0ee40a65"
-    pushed_ref: "origin/feat/track-78-rayon-robustness"
-    next_phase_decision: "Track 78 is Done; advance to Track 79."
+    commit_sha: "ebf020706d92bff41232ebaed3b885dfacadfc6b"
+    pushed_ref: "origin/main"
+    next_phase_decision: "Track 78 is Done; advance to Track 73."
 
   - track_id: "79"
     phase: "0"
