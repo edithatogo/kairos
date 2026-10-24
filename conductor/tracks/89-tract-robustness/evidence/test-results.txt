@@ -1,3 +1,9 @@
+Command: cargo test -p kairo-ecs-ml
+Working Directory: /Volumes/PortableSSD/github/kairos
+Tested Commit: 0a8bd814f56d561d9ded4ce274c7c708277fc481
+Toolchain: rustc 1.99.1 (target: aarch64-apple-darwin)
+Exit Status: 0
+
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.09s
      Running unittests src/lib.rs (target/debug/deps/kairo_ecs_ml-9c9281d6f67b4429)
 

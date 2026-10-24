@@ -363,4 +363,10 @@ warning[duplicate]: found 2 duplicate entries for crate 'thiserror-impl'
               ├── kairo-ecs-des v0.1.0 (*)
               └── kairo-ecs-ffi v0.1.0 (*)
 
+Command: cargo deny check advisories sources licenses bans
+Working Directory: /Volumes/PortableSSD/github/kairos
+Tested Commit: 0a8bd814f56d561d9ded4ce274c7c708277fc481
+Toolchain: cargo-deny 0.18.9, rustc 1.99.1 (target: aarch64-apple-darwin)
+Exit Status: 0
+
 advisories ok, bans ok, licenses ok, sources ok

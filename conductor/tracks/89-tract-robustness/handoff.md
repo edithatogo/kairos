@@ -61,3 +61,17 @@ Following the [Robustness-first dependency acceptance policy](../../dependency-v
 
 - Conductor review: `$conductor-review` completed in `review-report.md`.
 - Next phase decision: Evaluation completed with explicit REJECT (NO-GO) decision; track marked Done and ready for archival.
+
+### Reproducible validation provenance (AGENTS.md L58)
+
+- **Tested Commit:** `0a8bd814f56d561d9ded4ce274c7c708277fc481`
+- **Working Directory:** `/Volumes/PortableSSD/github/kairos`
+- **Toolchain:** `rustc 1.99.1 (target: aarch64-apple-darwin), cargo 1.99.1`
+- **Command Receipts:**
+  - `cargo test -p kairo-ecs-ml` -> Exit Status: `0` (17 tests passed, 0 failed) -> [evidence/test-results.txt](file:///Volumes/PortableSSD/github/kairos/conductor/tracks/89-tract-robustness/evidence/test-results.txt)
+  - `cargo deny check advisories sources licenses bans` -> Exit Status: `0` (clean) -> [evidence/cargo-deny.txt](file:///Volumes/PortableSSD/github/kairos/conductor/tracks/89-tract-robustness/evidence/cargo-deny.txt)
+  - `cargo audit` -> Exit Status: `0` (0 vulnerabilities) -> [evidence/cargo-audit.txt](file:///Volumes/PortableSSD/github/kairos/conductor/tracks/89-tract-robustness/evidence/cargo-audit.txt)
+  - `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1 -TrackDir conductor/tracks/89-tract-robustness` -> Exit Status: `0`
+  - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1` -> Exit Status: `0`
+  - `pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1` -> Exit Status: `0`
+  - `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` -> Exit Status: `0`
