@@ -112,14 +112,41 @@ fn negative_control_detects_priority_inversion() {
     let mut runner = fixed_runner(0x8888, 64);
     runner
         .run(&(0i32..10, 11i32..20), |(higher_prio, lower_prio)| {
-            // Higher priority number = lower precedence in KairoECS convention (or vice versa: i32 ordering)
-            // If an event with lower_prio is dispatched before higher_prio at the same tick, report inversion
-            let inverted = true;
-            if inverted {
-                panic!(
-                    "negative control detected priority inversion: {} dispatched before {}",
-                    lower_prio, higher_prio
-                );
+            let mut scheduler = Scheduler::new();
+            // Schedule two events at the same tick with different priorities
+            scheduler.schedule(ScheduleRequest {
+                at: SimTime::from_ticks(100),
+                priority: lower_prio,
+                entity: None,
+                kind: EventKind::Custom(1),
+            });
+            scheduler.schedule(ScheduleRequest {
+                at: SimTime::from_ticks(100),
+                priority: higher_prio,
+                entity: None,
+                kind: EventKind::Custom(2),
+            });
+
+            // Dispatched events from scheduler
+            let mut dispatched = Vec::new();
+            while let StepOutcome::Dispatched(ev) = scheduler.step() {
+                dispatched.push(ev);
+            }
+
+            // Construct deliberately inverted dispatch trace to exercise ordering oracle
+            let mut inverted_trace = dispatched.clone();
+            inverted_trace.reverse();
+
+            // Evaluate ordering oracle against inverted trace
+            for window in inverted_trace.windows(2) {
+                let prev = &window[0];
+                let next = &window[1];
+                if (prev.at, prev.priority, prev.sequence) > (next.at, next.priority, next.sequence) {
+                    panic!(
+                        "negative control detected priority inversion: ({:?}, {}, {}) dispatched before ({:?}, {}, {})",
+                        prev.at, prev.priority, prev.sequence, next.at, next.priority, next.sequence
+                    );
+                }
             }
             Ok(())
         })
