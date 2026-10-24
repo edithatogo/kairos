@@ -51,7 +51,7 @@ All 42 tests in `kairo-ecs-cli` passed (37 unit tests + 5 process integration te
 - accepted fixes: Zero defects remaining; standard Clap derive implemented; reserved Track 22 stub commands preserved; process integration tests verified.
 - rejected findings: None.
 - command/cwd/commit SHA/toolchain/seed/input hashes:
-  - Commit SHA: 978dbd406782bb3173d56e8484164d15a337bf7f
+  - Commit SHA: 704adce2925d207a58c9a2f7f18e6d61cb097b6f
 - pushed ref: origin/feat/track-77-clap-robustness
 - next-phase decision: Track 77 accepted and complete; advance to Track 95.
 - Use `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` before advancement.

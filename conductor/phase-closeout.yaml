@@ -1326,7 +1326,7 @@ entries:
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
       - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
     git_status: "clean"
-    commit_sha: "978dbd406782bb3173d56e8484164d15a337bf7f"
+    commit_sha: "704adce2925d207a58c9a2f7f18e6d61cb097b6f"
     pushed_ref: "origin/feat/track-77-clap-robustness"
     next_phase_decision: "Track 77 is Done; advance to Track 95."
 
