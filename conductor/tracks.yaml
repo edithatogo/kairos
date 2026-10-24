@@ -1468,7 +1468,7 @@ tracks:
 
   - id: 101
     name: criterion existing-tooling
-    status: Planned
+    status: Done
     owner: benchmark-agent
     depends_on: []
     owned_paths:

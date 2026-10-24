@@ -1,5 +1,12 @@
 # KairoECS Conductor Status
 
+## Track 101: criterion existing-tooling Review & Archival - 24 October 2026
+
+Track 101 has successfully passed tooling consolidation review pursuant to [Robustness-first dependency acceptance policy](dependency-value-policy.md) and [Dependency sequencing](dependency-sequencing.md) and is archived as `Done`:
+- Verified existing workspace microbenchmark qualification of `criterion` (v0.5.1) across `kairo-ecs-bench`, `kairo-ecs-debug`, and `kairo-ecs-fmi`.
+- Evaluated non-Criterion benchmark targets: preserved specialized parallel scaling harnesses in `kairo-ecs-pdes` per specification contract to retain multi-LP scaling and runtime counter telemetry (`schema_version: kairoecs.pdes.benchmark.v1`).
+- Reached an explicit `CONSOLIDATE & RETAIN` decision with zero new dependency footprint added to the repository.
+
 ## Track 99: proptest-state-machine qualification Review & Archival - 24 October 2026
 
 Track 99 has successfully passed evaluation review pursuant to [Robustness-first dependency acceptance policy](dependency-value-policy.md) and is archived as `Done` with an explicit `REJECT (NO-GO)` disposition:
