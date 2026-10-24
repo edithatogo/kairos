@@ -28,7 +28,7 @@ Spatial geometry primitives are isolated within `crates/kairo-ecs-abm::geometry`
   - `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` (pass)
   - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1` (pass)
   - `pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1` (pass)
-- Closeout ledger: commit SHA `c37c1c2f124a72e7645d311259899c77095dc3c4` recorded upon slice creation.
+- Closeout ledger: commit SHA `2ba66af34986be85caa8636cf470b066ec823d1f` recorded upon slice creation.
 - Pushed ref: pushed ref `origin/feat/track-87-geo-primitives`.
 - Git closeout verification: `pwsh scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`.
 - Next-phase decision: Track 87 is Done; next-phase decision advances to Track 86 (`rstar spatial indexing evaluation`) / Track 79 (`zip archive format reader/writer adoption`).

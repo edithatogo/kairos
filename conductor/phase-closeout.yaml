@@ -1487,7 +1487,7 @@ entries:
     phase: "2"
     state: closed
     review_command: "$conductor-review"
-    review_result: "geo 0.33.1 qualified and adopted in kairo-ecs-abm: implemented WGS84 GeoCoordinate with explicit degree bounds checking, GIS Point (x=lon, y=lat) ordering, geodesic and haversine distances and bearings, LocalTangentPlaneProjection sub-millimeter forward and inverse unprojection roundtrips, GeoRoute and ProjectedRoute continuous distance and normalized progress interpolation with zero-length segment resilience, endpoint clamping, and negative distance validation, integrated with SpatialTopology waypoints."
+    review_result: "geo 0.33.1 qualified and adopted in kairo-ecs-abm: implemented WGS84 GeoCoordinate with explicit degree bounds checking, GIS Point (x=lon, y=lat) ordering, geodesic and haversine distances and bearings, LocalTangentPlaneProjection sub-millimeter forward and inverse unprojection roundtrips with antimeridian longitude wrapping, GeoRoute and ProjectedRoute continuous distance and normalized progress interpolation with zero-length segment resilience, endpoint clamping, and negative distance validation, integrated with SpatialTopology waypoints."
     fixes_applied: true
     validation_commands:
       - "cargo test -p kairo-ecs-abm"
@@ -1500,7 +1500,7 @@ entries:
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
       - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
     git_status: "clean"
-    commit_sha: "c37c1c2f124a72e7645d311259899c77095dc3c4"
+    commit_sha: "2ba66af34986be85caa8636cf470b066ec823d1f"
     pushed_ref: "origin/feat/track-87-geo-primitives"
     next_phase_decision: "Track 87 is Done; advance to Track 86."
 

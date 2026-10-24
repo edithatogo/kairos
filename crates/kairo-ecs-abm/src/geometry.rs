@@ -199,14 +199,23 @@ impl LocalTangentPlaneProjection {
         self.origin
     }
 
-    /// Projects a geographic WGS84 coordinate into local planar meters (x = East, y = North).
+    /// Projects a geographic WGS84 coordinate into local planar meters (x = East, y = North),
+    /// correctly wrapping longitude differences across the antimeridian (±180°).
     pub fn project(&self, coord: &GeoCoordinate) -> ProjectedCoordinate {
-        let dx = (coord.lon - self.origin.lon) * self.lon_scale;
+        let mut dlon_deg = coord.lon - self.origin.lon;
+        while dlon_deg > 180.0 {
+            dlon_deg -= 360.0;
+        }
+        while dlon_deg < -180.0 {
+            dlon_deg += 360.0;
+        }
+        let dx = dlon_deg * self.lon_scale;
         let dy = (coord.lat - self.origin.lat) * self.lat_scale;
         ProjectedCoordinate { x: dx, y: dy }
     }
 
-    /// Inverts a local planar offset back into a geographic WGS84 coordinate.
+    /// Inverts a local planar offset back into a geographic WGS84 coordinate,
+    /// wrapping longitudes to [-180.0, 180.0] across the antimeridian.
     pub fn unproject(&self, proj: &ProjectedCoordinate) -> Result<GeoCoordinate, GeometryError> {
         let dlat = proj.y / self.lat_scale;
         let dlon = if self.lon_scale.abs() > 1e-12 {
@@ -214,7 +223,15 @@ impl LocalTangentPlaneProjection {
         } else {
             0.0
         };
-        GeoCoordinate::try_new(self.origin.lat + dlat, self.origin.lon + dlon)
+        let target_lat = self.origin.lat + dlat;
+        let mut target_lon = self.origin.lon + dlon;
+        while target_lon > 180.0 {
+            target_lon -= 360.0;
+        }
+        while target_lon < -180.0 {
+            target_lon += 360.0;
+        }
+        GeoCoordinate::try_new(target_lat, target_lon)
     }
 }
 

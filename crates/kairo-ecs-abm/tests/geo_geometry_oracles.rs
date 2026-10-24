@@ -168,6 +168,26 @@ fn test_local_tangent_plane_projection_roundtrip() {
     // Euclidean distance in tangent plane matches projected coordinate distance
     let dist_planar = p0.euclidean_distance_to(&projected);
     assert!(dist_planar > 1_000.0 && dist_planar < 2_000.0);
+
+    // Antimeridian wrap-around test:
+    // Origin at lon 179.99, target at lon -179.99 (0.02 deg East = ~2.2 km at equator)
+    let anti_origin = GeoCoordinate::try_new(0.0, 179.99).unwrap();
+    let anti_target = GeoCoordinate::try_new(0.0, -179.99).unwrap();
+    let anti_ltp = LocalTangentPlaneProjection::new(anti_origin);
+
+    let anti_proj = anti_ltp.project(&anti_target);
+    // x should be positive ~2,224 meters Eastward, NOT -40 million meters
+    assert!(
+        anti_proj.x() > 2_200.0 && anti_proj.x() < 2_250.0,
+        "Antimeridian x projection was {}",
+        anti_proj.x()
+    );
+    assert!(anti_proj.y().abs() < 1e-6);
+
+    // Unproject back across antimeridian
+    let anti_recovered = anti_ltp.unproject(&anti_proj).unwrap();
+    assert!((anti_recovered.lat() - anti_target.lat()).abs() < 1e-9);
+    assert!((anti_recovered.lon() - anti_target.lon()).abs() < 1e-9);
 }
 
 #[test]
