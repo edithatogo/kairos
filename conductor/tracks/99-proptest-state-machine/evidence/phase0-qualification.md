@@ -41,11 +41,10 @@
   features = ["fork", "timeout", "bit-set"]
   default-features = true
   ```
-  - **Severe Transitive Bloat:** Unlike `kairo-ecs-core`'s locked minimal proptest configuration (`default-features = false, features = ["std"]`), `proptest-state-machine` forces on:
-    - `fork`: Pulls in POSIX `nix`, `libc`, process spawning and signal handling.
-    - `timeout`: Pulls in background timer polling threads.
-    - `tempfile`, `regex-syntax`, `lazy_static`, `quick-error`.
-  - **Non-Determinism & Portability Hazard:** Process forking and signal-based timeouts violate Kairo's strict deterministic replay contracts and break compatibility with WASM (`wasm32-unknown-unknown`) and non-POSIX environments.
+  - **Transitive Footprint & Portability Hazard:** Unlike `kairo-ecs-core`'s locked minimal proptest configuration (`default-features = false, features = ["std"]`), `proptest-state-machine` declares `default-features = true` with `features = ["fork", "timeout", "bit-set"]`.
+    - Although proptest defaults `fork: false` and `timeout: 0` at runtime, compiling the `fork` and `timeout` features brings in OS-level dependencies (POSIX `nix`, `libc`, signal handling, and timer polling threads), along with `tempfile`, `regex-syntax`, `lazy_static`, and `quick-error`.
+    - This compiled footprint prevents compilation on WebAssembly (`wasm32-unknown-unknown`) and embedded non-POSIX targets where `fork`/`signal` APIs do not exist.
+    - KairoECS requires headless core test infrastructure to support broad target qualification without unnecessary OS coupling.
 
 ---
 
@@ -53,11 +52,11 @@
 
 | Criterion | Retain Plain `proptest` (Track 96) | Adopt `proptest-state-machine` | Decision Impact |
 |---|---|---|---|
-| **Deterministic Replay** | **PASS** (`RngSeed::Fixed`, zero external threads/forks) | **FAIL** (Requires `fork` and `timeout` features) | Plain proptest strictly preserves DES replay |
-| **Transitive Footprint** | **PASS** (Zero default features; minimal `std`) | **FAIL** (Pulls in `nix`, `tempfile`, `regex-syntax`, etc.) | Unacceptable bloat |
+| **Deterministic Replay** | **PASS** (`RngSeed::Fixed`, zero external threads/forks) | **PASS** (Runtime defaults `fork: false`, `timeout: 0` match, but requires explicit runner discipline) | Plain proptest enforces determinism at the type/feature level |
+| **Transitive Footprint** | **PASS** (Zero default features; minimal `std`) | **FAIL** (Pulls in `nix`, `tempfile`, `regex-syntax`, etc.) | Unacceptable dependency inflation |
 | **Code Simplicity** | **PASS** (Standard Rust enums, `vec(strategy, range)`, match loops) | **FAIL** (Requires `ReferenceStateMachine` + `StateMachineTest` traits, `BoxedStrategy`, and `prop_state_machine!` macro) | Adds ~70 lines boilerplate per state machine |
 | **Shrinking Fidelity** | **PASS** (Native proptest shrinks minimal failing sequences) | **PASS** (Shrinks minimal transition sequence) | Parity; no gain |
-| **WASM / Embedded Compat** | **PASS** (Clean compilation without OS dependencies) | **FAIL** (`fork` feature breaks non-POSIX targets) | Incompatible |
+| **WASM / Embedded Compat** | **PASS** (Clean compilation without OS dependencies) | **FAIL** (Compiled `fork`/`nix` feature breaks non-POSIX targets) | Incompatible |
 | **Maintenance Activity** | **PASS** (Mainline `proptest` active and widely tested) | **CONCERN** (Secondary experimental crate, low adoption) | Plain proptest is superior |
 
 ### Stop Condition / Decision: **REJECT (NO-GO)**

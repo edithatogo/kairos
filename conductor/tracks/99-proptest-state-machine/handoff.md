@@ -54,4 +54,5 @@ Following the [Robustness-first dependency acceptance policy](../../dependency-v
 ## Phase closeout evidence
 
 - Conductor review: `$conductor-review` completed in `review-report.md`.
+- Closeout commit SHA: `dfdae60744d82e1e01762270479bfa4d09c7b7f5` (recorded in `conductor/phase-closeout.yaml`).
 - Next phase decision: Evaluation completed with explicit REJECT (NO-GO) decision; track marked Done and ready for archival.
