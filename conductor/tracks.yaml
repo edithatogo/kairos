@@ -1181,11 +1181,14 @@ tracks:
 
   - id: 77
     name: Clap CLI consolidation
-    status: Planned
+    status: Done
     owner: contracts-agent
     depends_on: ["76"]
     owned_paths:
       - conductor/tracks/77-clap-robustness/
+      - crates/kairo-ecs-cli/src/main.rs
+      - crates/kairo-ecs-cli/Cargo.toml
+      - crates/kairo-ecs-cli/tests/cli_process_stdout.rs
     required_gates:
       - phase-closeout-check
       - dependency-value-proof

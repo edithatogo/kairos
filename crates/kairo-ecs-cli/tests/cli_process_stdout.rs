@@ -81,3 +81,48 @@ fn test_cli_stdout_valid_json_even_with_quoted_and_special_paths() {
     // Clean up
     let _ = fs::remove_dir_all(&temp_dir);
 }
+
+#[test]
+fn test_cli_help_and_version_flags() {
+    let (status, stdout, _stderr) = run_cli(&["--help"]);
+    assert!(status.success());
+    assert!(stdout.contains("KairoECS CLI"));
+    assert!(stdout.contains("validate-scenario"));
+    assert!(stdout.contains("replay"));
+    assert!(stdout.contains("run"));
+
+    let (status_short, stdout_short, _) = run_cli(&["-h"]);
+    assert!(status_short.success());
+    assert!(stdout_short.contains("Usage:"));
+}
+
+#[test]
+fn test_cli_empty_args_prints_help() {
+    let (status, stdout, _) = run_cli(&[]);
+    assert!(status.success());
+    assert!(stdout.contains("Usage:"));
+}
+
+#[test]
+fn test_cli_rejects_missing_and_unknown_flags() {
+    // Missing required flag --seed-manifest on validate-scenario
+    let (status, _stdout, stderr) = run_cli(&["validate-scenario", "--scenario", "/tmp/fake.toml"]);
+    assert!(!status.success());
+    assert!(stderr.contains("seed-manifest") || stderr.contains("required"));
+
+    // Unknown flag
+    let (status, _stdout, stderr) = run_cli(&["run", "--unrecognized-flag"]);
+    assert!(!status.success());
+    assert!(stderr.contains("unexpected argument") || stderr.contains("unrecognized"));
+}
+
+#[test]
+fn test_cli_reserved_commands() {
+    let (status_collect, _stdout, stderr_collect) = run_cli(&["collect"]);
+    assert!(!status_collect.success());
+    assert!(stderr_collect.contains("reserved for Track 22"));
+
+    let (status_analyze, _stdout, stderr_analyze) = run_cli(&["analyze"]);
+    assert!(!status_analyze.success());
+    assert!(stderr_analyze.contains("reserved for Track 22"));
+}
