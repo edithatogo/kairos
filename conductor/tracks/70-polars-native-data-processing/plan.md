@@ -1,6 +1,6 @@
 # Plan: Polars-native data processing and standard interchange
 
-Phase 0 and Phase 1 are complete. Phase 2 implementation work is pending. Write failing behavioural tests before replacement.
+Phase 0 and Phase 1 are complete. Phase 2 Task 2.1 failing consumer tests/fixtures are recorded; Tasks 2.2–2.3 runtime implementation is gated on Tracks 93 (sha2), 94 (tempfile) and 96 (proptest) closing per the 22 October 2026 sequencing refinement. Write failing behavioural tests before replacement.
 
 ## Phase 0 — Baseline and dependency qualification
 
@@ -19,7 +19,7 @@ Phase 0 and Phase 1 are complete. Phase 2 implementation work is pending. Write 
 
 ## Phase 2 — FFI and polyglot consumers
 
-- [ ] Task 2.1: Add failing populated multi-batch/empty/null/lifetime/release tests and affected binding consumer fixtures.
+- [x] Task 2.1: Add failing populated multi-batch/empty/null/lifetime/release tests and affected binding consumer fixtures.
 - [ ] Task 2.2: Implement owned Arrow C Data arrays/streams and native Python-to-Polars handoff; remove dummy capsules and Python-row reconstruction.
 - [ ] Task 2.3: Update C headers, public data API users, all affected native bindings and browser/minimal-build paths; document actual copies and unsupported targets explicitly.
 - [ ] Task 2.4: Conductor — review and verify phase (workflow.md); apply accepted fixes, record rejected/cross-owner work, receipts, clean-tree check and explicit next-phase decision.
