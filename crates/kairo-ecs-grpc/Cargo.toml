@@ -10,6 +10,7 @@ kairo-ecs-pdes = { path = "../kairo-ecs-pdes", version = "0.0.0", features = ["t
 kairo-ecs-types = { path = "../kairo-ecs-types", version = "0.0.0" }
 prost = { version = "0.13.5", default-features = false, features = ["std", "prost-derive"] }
 tokio = { version = "1.54.1", default-features = false, features = ["rt", "rt-multi-thread", "net", "io-util", "sync", "macros", "time"] }
+tokio-stream = { version = "0.1.19", default-features = false, features = ["net"] }
 tonic = { version = "0.14.6", default-features = false, features = ["channel", "server", "router", "transport", "codegen"] }
 
 [dev-dependencies]
