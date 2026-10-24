@@ -1266,7 +1266,7 @@ entries:
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
       - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
     git_status: "clean"
-    commit_sha: "pending-commit"
+    commit_sha: "1f19d8a0b56529f971574ffa1aa9bb520faa6966"
     pushed_ref: "origin/feat/track-72-rand-distr-sampling"
     next_phase_decision: "Track 72 is Done; advance to Track 78."
 

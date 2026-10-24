@@ -73,7 +73,7 @@ All 31 unit & integration tests in `kairo-ecs-rng` passed. Workspace tests pass.
   - Command: `cargo test -p kairo-ecs-rng`
   - CWD: `/Volumes/PortableSSD/github/kairos`
   - Toolchain: `rustc 1.99.1`
-  - Commit SHA: pending-commit
+  - Commit SHA: 1f19d8a0b56529f971574ffa1aa9bb520faa6966
   - Exit code: `0`
 - pushed ref: origin/feat/track-72-rand-distr-sampling
 - next-phase decision: Track 72 accepted and complete; advance to Track 78.
