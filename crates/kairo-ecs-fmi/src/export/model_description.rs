@@ -540,13 +540,17 @@ impl ModelDescription {
             ));
         }
 
-        if let Some(ver) = fmi_version.as_deref() {
-            if ver != "2.0" {
-                return Err(validation_error(
-                    "modelDescription.xml",
-                    format!("unsupported FMI version '{ver}', expected 2.0"),
-                ));
-            }
+        let fmi_version = fmi_version.ok_or_else(|| {
+            validation_error(
+                "modelDescription.xml",
+                "missing required fmiVersion attribute",
+            )
+        })?;
+        if fmi_version != "2.0" {
+            return Err(validation_error(
+                "modelDescription.xml",
+                format!("unsupported FMI version '{fmi_version}', expected 2.0"),
+            ));
         }
 
         let model_name = model_name.ok_or_else(|| {

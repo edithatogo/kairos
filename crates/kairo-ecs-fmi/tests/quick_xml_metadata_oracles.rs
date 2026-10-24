@@ -365,3 +365,38 @@ fn oracle_from_xml_str_rejects_content_after_root_closed() {
         "Expected post-root content error, got: {err_msg}"
     );
 }
+
+#[test]
+fn oracle_from_xml_str_rejects_missing_or_invalid_fmi_version() {
+    let xml_missing_version = r#"<?xml version="1.0" encoding="UTF-8"?>
+<fmiModelDescription modelName="no_version" guid="{nv-guid}" />
+"#;
+    let result = ModelDescription::from_xml_str(xml_missing_version);
+    assert!(
+        result.is_err(),
+        "Must reject XML missing fmiVersion attribute"
+    );
+    assert!(
+        result
+            .unwrap_err()
+            .to_string()
+            .contains("missing required fmiVersion attribute"),
+        "Expected missing fmiVersion attribute error"
+    );
+
+    let xml_unsupported_version = r#"<?xml version="1.0" encoding="UTF-8"?>
+<fmiModelDescription fmiVersion="1.0" modelName="v1" guid="{v1-guid}" />
+"#;
+    let result_v1 = ModelDescription::from_xml_str(xml_unsupported_version);
+    assert!(
+        result_v1.is_err(),
+        "Must reject XML with unsupported fmiVersion"
+    );
+    assert!(
+        result_v1
+            .unwrap_err()
+            .to_string()
+            .contains("unsupported FMI version '1.0'"),
+        "Expected unsupported FMI version error"
+    );
+}
