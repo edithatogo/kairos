@@ -481,3 +481,41 @@ fn oracle_from_xml_str_ignores_nested_scalar_variable_elements_in_annotations() 
     assert_eq!(model.variables[0].value_reference, 10);
     assert_eq!(model.variables[0].variable_type, VariableType::Real);
 }
+
+#[test]
+fn oracle_from_xml_str_ignores_vendor_model_variables_element_in_annotations() {
+    let xml = r#"<?xml version="1.0" encoding="UTF-8"?>
+<fmiModelDescription fmiVersion="2.0" modelName="vendor_container_test" guid="{vct-guid}">
+  <ModelVariables>
+    <ScalarVariable name="first_var" valueReference="1" causality="input">
+      <Real />
+      <Annotations>
+        <Tool name="VendorTool">
+          <ModelVariables>
+            <ScalarVariable name="shadow" valueReference="99">
+              <Integer />
+            </ScalarVariable>
+          </ModelVariables>
+        </Tool>
+      </Annotations>
+    </ScalarVariable>
+    <ScalarVariable name="second_var" valueReference="2" causality="output">
+      <Integer />
+    </ScalarVariable>
+  </ModelVariables>
+  <ModelStructure>
+    <Outputs>
+      <Unknown index="2" />
+    </Outputs>
+  </ModelStructure>
+</fmiModelDescription>
+"#;
+    let model = ModelDescription::from_xml_str(xml).expect(
+        "must successfully parse both variables despite nested ModelVariables in tool annotation",
+    );
+    assert_eq!(model.variables.len(), 2);
+    assert_eq!(model.variables[0].name, "first_var");
+    assert_eq!(model.variables[0].variable_type, VariableType::Real);
+    assert_eq!(model.variables[1].name, "second_var");
+    assert_eq!(model.variables[1].variable_type, VariableType::Integer);
+}
