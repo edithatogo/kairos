@@ -528,7 +528,7 @@ impl ModelDescription {
                 }
                 Ok(Event::End(ref e)) => {
                     depth = depth.saturating_sub(1);
-                    if e.local_name().as_ref() == "fmiModelDescription" {
+                    if depth == 0 && e.local_name().as_ref() == "fmiModelDescription" {
                         root_closed = true;
                     }
                     match e.local_name().as_ref() {

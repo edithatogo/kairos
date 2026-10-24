@@ -519,3 +519,34 @@ fn oracle_from_xml_str_ignores_vendor_model_variables_element_in_annotations() {
     assert_eq!(model.variables[1].name, "second_var");
     assert_eq!(model.variables[1].variable_type, VariableType::Integer);
 }
+
+#[test]
+fn oracle_from_xml_str_and_loader_ignore_nested_vendor_fmi_model_description_elements() {
+    let xml = r#"<?xml version="1.0" encoding="UTF-8"?>
+<fmiModelDescription fmiVersion="2.0" modelName="vendor_root_test" guid="{vrt-guid}">
+  <VendorAnnotations>
+    <Tool name="VendorTool">
+      <fmiModelDescription fmiVersion="2.0">
+        <NestedElement />
+      </fmiModelDescription>
+    </Tool>
+  </VendorAnnotations>
+  <ModelVariables>
+    <ScalarVariable name="real_var" valueReference="1">
+      <Real />
+    </ScalarVariable>
+  </ModelVariables>
+  <ModelStructure />
+</fmiModelDescription>
+"#;
+    let model = ModelDescription::from_xml_str(xml)
+        .expect("must successfully parse model when nested vendor fmiModelDescription closes before ModelVariables");
+    assert_eq!(model.variables.len(), 1);
+    assert_eq!(model.variables[0].name, "real_var");
+
+    let root = temp_path("nested-vendor-root-test");
+    setup_unpacked_fmu(&root, xml);
+    let layout_report = validate_unpacked_fmu_layout(&root)
+        .expect("must validate unpacked FMU layout with nested vendor fmiModelDescription");
+    assert!(layout_report.model_description.exists());
+}

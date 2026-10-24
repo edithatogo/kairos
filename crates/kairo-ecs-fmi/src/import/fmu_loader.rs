@@ -326,7 +326,7 @@ fn validate_model_description_marker(path: &Path) -> FmiResult<()> {
             }
             Ok(Event::End(e)) => {
                 depth = depth.saturating_sub(1);
-                if e.local_name().as_ref() == "fmiModelDescription" {
+                if depth == 0 && e.local_name().as_ref() == "fmiModelDescription" {
                     root_closed = true;
                 }
             }
