@@ -55,6 +55,14 @@ impl TraceHeaderDto {
         }
         Ok(())
     }
+
+    pub fn to_json_string(&self) -> Result<String, serde_json::Error> {
+        serde_json::to_string(self)
+    }
+
+    pub fn from_json_str(s: &str) -> Result<Self, serde_json::Error> {
+        serde_json::from_str(s)
+    }
 }
 
 /// Typed DTO for a point-in-time state snapshot in execution trace.
@@ -105,6 +113,13 @@ impl TraceDeltaDto {
             changes,
         })
     }
+
+    pub fn validate(&self) -> Result<(), DebugContractError> {
+        if self.kind.is_empty() {
+            return Err(DebugContractError::EmptyKind);
+        }
+        Ok(())
+    }
 }
 
 /// Polymorphic trace record DTO supporting both snapshots and deltas.
@@ -124,6 +139,21 @@ impl TraceRecordDto {
             Self::Snapshot(s) => s.tick,
             Self::Delta(d) => d.tick,
         }
+    }
+
+    pub fn validate(&self) -> Result<(), DebugContractError> {
+        match self {
+            Self::Snapshot(_) => Ok(()),
+            Self::Delta(d) => d.validate(),
+        }
+    }
+
+    pub fn to_json_line(&self) -> Result<String, serde_json::Error> {
+        serde_json::to_string(self)
+    }
+
+    pub fn from_json_str(s: &str) -> Result<Self, serde_json::Error> {
+        serde_json::from_str(s)
     }
 }
 
@@ -275,6 +305,9 @@ impl<'de> Deserialize<'de> for TraceRecordDto {
                         let kind = payload
                             .kind
                             .ok_or_else(|| serde::de::Error::missing_field("kind"))?;
+                        if kind.is_empty() {
+                            return Err(serde::de::Error::custom("event kind cannot be empty"));
+                        }
                         let changes = payload.changes.unwrap_or_default();
 
                         Ok(TraceRecordDto::Delta(TraceDeltaDto {
@@ -295,6 +328,56 @@ impl<'de> Deserialize<'de> for TraceRecordDto {
 
         deserializer.deserialize_struct("TraceRecordDto", &["type", "payload"], TraceRecordVisitor)
     }
+}
+
+/// Validates a sequence of JSON Lines containing an optional header followed by trace records,
+/// enforcing monotonically non-decreasing ticks, non-empty event kinds, and schema compliance.
+pub fn validate_jsonl_trace_records(input: &str) -> Result<(), DebugContractError> {
+    let mut lines = input.lines().filter(|l| !l.trim().is_empty());
+    let first = match lines.next() {
+        Some(line) => line,
+        None => return Ok(()),
+    };
+
+    let mut previous_tick = 0u128;
+    let mut first_is_record = false;
+
+    // Check if first line is a valid header
+    if let Ok(header) = serde_json::from_str::<TraceHeaderDto>(first) {
+        header.validate()?;
+    } else {
+        // Not a header; treat as first record
+        let record: TraceRecordDto = serde_json::from_str(first).map_err(|e| {
+            if e.to_string().contains("event kind cannot be empty") {
+                DebugContractError::EmptyKind
+            } else {
+                DebugContractError::MissingSchema
+            }
+        })?;
+        record.validate()?;
+        previous_tick = record.tick();
+        first_is_record = true;
+    }
+
+    for line in lines {
+        let record: TraceRecordDto = serde_json::from_str(line).map_err(|e| {
+            if e.to_string().contains("event kind cannot be empty") {
+                DebugContractError::EmptyKind
+            } else {
+                DebugContractError::MissingSchema
+            }
+        })?;
+        record.validate()?;
+        let tick = record.tick();
+        if (first_is_record || previous_tick > 0) && tick < previous_tick {
+            return Err(DebugContractError::TicksOutOfOrder {
+                previous: previous_tick,
+                current: tick,
+            });
+        }
+        previous_tick = tick;
+    }
+    Ok(())
 }
 
 #[cfg(test)]
@@ -403,5 +486,96 @@ mod tests {
             }
             _ => panic!("expected delta"),
         }
+    }
+
+    #[test]
+    fn unicode_and_control_character_escaping_in_trace_state() {
+        let mut state = BTreeMap::new();
+        let key = "entity.\"special\"\n\t\u{0000}\u{1F680}";
+        let value = "val with quotes \" and \r\n and backslash \\";
+        state.insert(key.to_string(), value.to_string());
+
+        let snapshot = TraceSnapshotDto::new(100, state);
+        let record = TraceRecordDto::Snapshot(snapshot);
+        let json_line = record.to_json_line().expect("serialize to json line");
+
+        assert!(json_line.contains(r#"\u0000"#));
+        assert!(json_line.contains(r#"\"special\""#));
+        assert!(json_line.contains(r#"\\\""#) || json_line.contains(r#"\""#));
+
+        let de = TraceRecordDto::from_json_str(&json_line).expect("deserialize json line");
+        match de {
+            TraceRecordDto::Snapshot(s) => {
+                assert_eq!(s.tick, 100);
+                assert_eq!(s.state.get(key).unwrap(), value);
+            }
+            _ => panic!("expected snapshot"),
+        }
+    }
+
+    #[test]
+    fn exact_u128_tick_preservation_no_f64_narrowing() {
+        // u128::MAX is 340282366920938463463374607431768211455
+        // Standard f64 loses precision past 2^53 - 1 (9007199254740991)
+        let huge_tick: u128 = 340282366920938463463374607431768211450;
+        let mut changes = BTreeMap::new();
+        changes.insert("status".to_string(), "ok".to_string());
+
+        let delta = TraceDeltaDto::new(huge_tick, 1, 0, 1, "test_event", changes).unwrap();
+        let record = TraceRecordDto::Delta(delta);
+
+        let line = record.to_json_line().expect("serialize");
+        let de = TraceRecordDto::from_json_str(&line).expect("deserialize");
+        assert_eq!(de.tick(), huge_tick);
+    }
+
+    #[test]
+    fn rejects_nonfinite_values_and_malformed_inputs() {
+        // Serde_json rejects NaN and Infinity when serializing floats
+        let malformed_record = r#"{"type":"snapshot","payload":{"tick":123,"state":"not-a-map"}}"#;
+        assert!(TraceRecordDto::from_json_str(malformed_record).is_err());
+
+        let malformed_header = r#"{"schema":"wrong.schema"}"#;
+        let header = TraceHeaderDto::from_json_str(malformed_header).expect("parses as json");
+        assert!(header.validate().is_err());
+    }
+
+    #[test]
+    fn jsonl_stream_encoding_and_monotonicity_validation() {
+        let header = TraceHeaderDto::default().to_json_string().unwrap();
+        let rec1 = TraceRecordDto::Snapshot(TraceSnapshotDto::new(10, BTreeMap::new()))
+            .to_json_line()
+            .unwrap();
+        let rec2 = TraceRecordDto::Snapshot(TraceSnapshotDto::new(20, BTreeMap::new()))
+            .to_json_line()
+            .unwrap();
+
+        let valid_stream = format!("{header}\n{rec1}\n{rec2}\n");
+        assert!(validate_jsonl_trace_records(&valid_stream).is_ok());
+
+        // Out of order ticks: 20 then 15
+        let rec3_bad = TraceRecordDto::Snapshot(TraceSnapshotDto::new(15, BTreeMap::new()))
+            .to_json_line()
+            .unwrap();
+        let invalid_stream = format!("{header}\n{rec1}\n{rec2}\n{rec3_bad}\n");
+        let err = validate_jsonl_trace_records(&invalid_stream).unwrap_err();
+        assert!(matches!(err, DebugContractError::TicksOutOfOrder { .. }));
+    }
+
+    #[test]
+    fn rejects_empty_kind_in_delta_at_first_and_subsequent_positions() {
+        // Empty kind delta at first position (headerless stream)
+        let empty_kind_delta_first = r#"{"type":"delta","payload":{"tick":10,"event_id_index":1,"event_id_generation":0,"sequence":1,"kind":"","changes":{}}}"#;
+        let err1 = validate_jsonl_trace_records(empty_kind_delta_first).unwrap_err();
+        assert_eq!(err1, DebugContractError::EmptyKind);
+
+        // Empty kind delta at subsequent position (after valid header and record)
+        let header = TraceHeaderDto::default().to_json_string().unwrap();
+        let valid_rec = TraceRecordDto::Snapshot(TraceSnapshotDto::new(10, BTreeMap::new()))
+            .to_json_line()
+            .unwrap();
+        let stream = format!("{header}\n{valid_rec}\n{empty_kind_delta_first}\n");
+        let err2 = validate_jsonl_trace_records(&stream).unwrap_err();
+        assert_eq!(err2, DebugContractError::EmptyKind);
     }
 }

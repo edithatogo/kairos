@@ -156,7 +156,7 @@ The human sole maintainer explicitly approved Track49 production scheduling afte
 - [x] **Track 74: Serde typed control contracts** — Completed; typed Serde DTO contracts implemented for CLI control manifests and debug traces; Phase 0–2 accepted. [Track](tracks/74-serde-robustness/index.md).
 
 ---
-- [ ] **Track 75: serde_json metadata and control encoding** — Planned; foundation; value gate pending. [Track](tracks/75-serde-json-robustness/index.md).
+- [x] **Track 75: serde_json metadata and control encoding** — Completed; adopted serde_json 1.0.154 for typed control contracts and JSON lines debug trace streams; Phase 0–2 accepted. [Track](tracks/75-serde-json-robustness/index.md).
 
 ---
 - [ ] **Track 76: toml scenario configuration parsing** — Planned; foundation; value gate pending. [Track](tracks/76-toml-robustness/index.md).

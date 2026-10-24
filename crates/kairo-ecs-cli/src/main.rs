@@ -109,14 +109,15 @@ fn handle_run(args: &[String]) -> Result<(), String> {
         );
     } else {
         fs::create_dir_all(&output).map_err(|error| error.to_string())?;
-        fs::write(
-            output.join("run-request.json"),
-            format!(
-                "{{\n  \"schema_version\": \"kairoecs.run-request.v1\",\n  \"scenario\": \"{}\",\n  \"status\": \"accepted-without-seed-manifest\",\n  \"note\": \"Track 39 runner scaffold captured the request; deterministic replay requires --seed-manifest.\"\n}}\n",
-                scenario_path.display()
-            ),
-        )
-        .map_err(|error| error.to_string())?;
+        let request_dto = contracts::RunRequestDto::new(
+            scenario_path.display().to_string(),
+            "accepted-without-seed-manifest",
+            "Track 39 runner scaffold captured the request; deterministic replay requires --seed-manifest.",
+        );
+        request_dto.validate().map_err(|e| e.to_string())?;
+        let json =
+            serde_json::to_string_pretty(&request_dto).map_err(|error| error.to_string())? + "\n";
+        fs::write(output.join("run-request.json"), json).map_err(|error| error.to_string())?;
         println!(
             "{{\"status\":\"ok\",\"command\":\"run\",\"scenario\":\"{}\",\"output\":\"{}\",\"mode\":\"request-captured\"}}",
             scenario_path.display(),
@@ -255,19 +256,9 @@ fn write_replay_outputs(
     );
     manifest_dto.validate().map_err(|e| e.to_string())?;
 
-    fs::write(
-        output.join("manifest.json"),
-        format!(
-            "{{\n  \"schema_version\": \"{}\",\n  \"scenario_id\": \"{}\",\n  \"fixture_id\": \"{}\",\n  \"base_seed\": {},\n  \"replications\": {},\n  \"artifact_root\": \"{}\"\n}}\n",
-            manifest_dto.schema_version,
-            manifest_dto.scenario_id,
-            manifest_dto.fixture_id,
-            manifest_dto.base_seed,
-            manifest_dto.replications,
-            manifest_dto.artifact_root.display()
-        ),
-    )
-    .map_err(|error| error.to_string())?;
+    let manifest_json =
+        serde_json::to_string_pretty(&manifest_dto).map_err(|e| e.to_string())? + "\n";
+    fs::write(output.join("manifest.json"), manifest_json).map_err(|error| error.to_string())?;
 
     let summary_dto = contracts::SummaryDto::new(
         &scenario.scenario_id,
@@ -277,33 +268,18 @@ fn write_replay_outputs(
     );
     summary_dto.validate().map_err(|e| e.to_string())?;
 
-    fs::write(
-        output.join("summary.json"),
-        format!(
-            "{{\n  \"scenario_id\": \"{}\",\n  \"event_count\": {},\n  \"observed_kind_order\": [{}],\n  \"summary_hash\": \"{}\"\n}}\n",
-            summary_dto.scenario_id,
-            summary_dto.event_count,
-            csv_u32(&summary_dto.observed_kind_order),
-            summary_dto.summary_hash
-        ),
-    )
-    .map_err(|error| error.to_string())?;
+    let summary_json =
+        serde_json::to_string_pretty(&summary_dto).map_err(|e| e.to_string())? + "\n";
+    fs::write(output.join("summary.json"), summary_json).map_err(|error| error.to_string())?;
 
     let comparison_dto =
         contracts::ReplayComparisonDto::new_matched(&scenario.fixture_id, &replay.summary_hash);
     comparison_dto.validate().map_err(|e| e.to_string())?;
 
-    fs::write(
-        output.join("replay-comparison.json"),
-        format!(
-            "{{\n  \"fixture_id\": \"{}\",\n  \"status\": \"{}\",\n  \"comparison_basis\": \"{}\",\n  \"summary_hash\": \"{}\"\n}}\n",
-            comparison_dto.fixture_id,
-            comparison_dto.status,
-            comparison_dto.comparison_basis,
-            comparison_dto.summary_hash
-        ),
-    )
-    .map_err(|error| error.to_string())?;
+    let comparison_json =
+        serde_json::to_string_pretty(&comparison_dto).map_err(|e| e.to_string())? + "\n";
+    fs::write(output.join("replay-comparison.json"), comparison_json)
+        .map_err(|error| error.to_string())?;
 
     write_resume_plan(scenario, output)?;
 
@@ -319,16 +295,8 @@ fn write_resume_plan(scenario: &ScenarioManifest, output: &Path) -> Result<(), S
     );
     plan_dto.validate().map_err(|e| e.to_string())?;
 
-    fs::write(
-        output.join("resumability-plan.json"),
-        format!(
-            "{{\n  \"schema_version\": \"{}\",\n  \"scenario_id\": \"{}\",\n  \"checkpoint_every_events\": {},\n  \"resume_requires\": [\"scenario manifest\", \"seed manifest\", \"last completed event index\", \"summary hash comparison\"]\n}}\n",
-            plan_dto.schema_version,
-            plan_dto.scenario_id,
-            plan_dto.checkpoint_every_events
-        ),
-    )
-    .map_err(|error| error.to_string())
+    let plan_json = serde_json::to_string_pretty(&plan_dto).map_err(|e| e.to_string())? + "\n";
+    fs::write(output.join("resumability-plan.json"), plan_json).map_err(|error| error.to_string())
 }
 
 fn write_checkpoint_manifest(output: &Path) -> Result<(), String> {
@@ -338,16 +306,10 @@ fn write_checkpoint_manifest(output: &Path) -> Result<(), String> {
     let checkpoint_dto = contracts::CheckpointManifestDto::new(tick, "interrupted");
     checkpoint_dto.validate().map_err(|e| e.to_string())?;
 
-    fs::write(
-        output.join("checkpoint-manifest.json"),
-        format!(
-            "{{\n  \"schema_version\": \"{}\",\n  \"last_completed_tick\": \"{}\",\n  \"state\": \"{}\"\n}}\n",
-            checkpoint_dto.schema_version,
-            checkpoint_dto.last_completed_tick,
-            checkpoint_dto.state
-        ),
-    )
-    .map_err(|error| error.to_string())
+    let checkpoint_json =
+        serde_json::to_string_pretty(&checkpoint_dto).map_err(|e| e.to_string())? + "\n";
+    fs::write(output.join("checkpoint-manifest.json"), checkpoint_json)
+        .map_err(|error| error.to_string())
 }
 
 fn write_resume_request(checkpoint: &Path, output: &Path) -> Result<(), String> {
@@ -362,22 +324,6 @@ fn write_resume_request(checkpoint: &Path, output: &Path) -> Result<(), String> 
     let resume_dto = contracts::ResumeRequestDto::new(checkpoint.display().to_string(), "accepted");
     resume_dto.validate().map_err(|e| e.to_string())?;
 
-    fs::write(
-        output.join("resume-request.json"),
-        format!(
-            "{{\n  \"schema_version\": \"{}\",\n  \"checkpoint\": \"{}\",\n  \"status\": \"{}\"\n}}\n",
-            resume_dto.schema_version,
-            resume_dto.checkpoint,
-            resume_dto.status
-        ),
-    )
-    .map_err(|error| error.to_string())
-}
-
-fn csv_u32(values: &[u32]) -> String {
-    values
-        .iter()
-        .map(u32::to_string)
-        .collect::<Vec<_>>()
-        .join(", ")
+    let resume_json = serde_json::to_string_pretty(&resume_dto).map_err(|e| e.to_string())? + "\n";
+    fs::write(output.join("resume-request.json"), resume_json).map_err(|error| error.to_string())
 }

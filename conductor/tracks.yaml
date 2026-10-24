@@ -1155,7 +1155,7 @@ tracks:
 
   - id: 75
     name: serde_json metadata and control encoding
-    status: Planned
+    status: Done
     owner: contracts-agent
     depends_on: ["74"]
     owned_paths:

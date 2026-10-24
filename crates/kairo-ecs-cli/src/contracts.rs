@@ -6,6 +6,7 @@ pub const RUN_MANIFEST_SCHEMA_V1: &str = "kairoecs.run-manifest.v1";
 pub const RESUMABILITY_PLAN_SCHEMA_V1: &str = "kairoecs.resumability-plan.v1";
 pub const CHECKPOINT_MANIFEST_SCHEMA_V1: &str = "kairoecs.checkpoint-manifest.v1";
 pub const RESUME_REQUEST_SCHEMA_V1: &str = "kairoecs.resume-request.v1";
+pub const RUN_REQUEST_SCHEMA_V1: &str = "kairoecs.run-request.v1";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ContractValidationError {
@@ -273,6 +274,47 @@ impl ResumeRequestDto {
     }
 }
 
+/// Typed DTO for runner request capture.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct RunRequestDto {
+    pub schema_version: String,
+    pub scenario: String,
+    pub status: String,
+    pub note: String,
+}
+
+impl RunRequestDto {
+    pub fn new(
+        scenario: impl Into<String>,
+        status: impl Into<String>,
+        note: impl Into<String>,
+    ) -> Self {
+        Self {
+            schema_version: RUN_REQUEST_SCHEMA_V1.to_string(),
+            scenario: scenario.into(),
+            status: status.into(),
+            note: note.into(),
+        }
+    }
+
+    pub fn validate(&self) -> Result<(), ContractValidationError> {
+        if self.schema_version != RUN_REQUEST_SCHEMA_V1 {
+            return Err(ContractValidationError::InvalidSchemaVersion {
+                expected: RUN_REQUEST_SCHEMA_V1,
+                found: self.schema_version.clone(),
+            });
+        }
+        if self.scenario.is_empty() {
+            return Err(ContractValidationError::EmptyField("scenario"));
+        }
+        if self.status.is_empty() {
+            return Err(ContractValidationError::EmptyField("status"));
+        }
+        Ok(())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -362,5 +404,60 @@ mod tests {
         let ser = serde_json::to_string(&resume).expect("serialize");
         let de: ResumeRequestDto = serde_json::from_str(&ser).expect("deserialize");
         assert_eq!(resume, de);
+    }
+
+    #[test]
+    fn run_request_dto_roundtrip_and_validation() {
+        let req = RunRequestDto::new(
+            "/path/to/scenario.toml",
+            "accepted-without-seed-manifest",
+            "Deterministic replay requires --seed-manifest.",
+        );
+        assert!(req.validate().is_ok());
+        let ser = serde_json::to_string_pretty(&req).expect("serialize");
+        let de: RunRequestDto = serde_json::from_str(&ser).expect("deserialize");
+        assert_eq!(req, de);
+    }
+
+    #[test]
+    fn unicode_and_control_character_escaping_preservation() {
+        // Test exotic UTF-8, quotes, newlines, and control chars in strings
+        let exotic_str = "scenario/\"special\"/\n\t\u{0000}\u{1F980}-crab";
+        let req = RunRequestDto::new(
+            exotic_str,
+            "status-\"quoted\"",
+            "note with \r\n and \t tabs",
+        );
+        assert!(req.validate().is_ok());
+        let ser = serde_json::to_string(&req).expect("serialize");
+        assert!(ser.contains(r#"\u0000"#));
+        assert!(ser.contains(r#"\"special\""#));
+
+        let de: RunRequestDto = serde_json::from_str(&ser).expect("deserialize");
+        assert_eq!(de.scenario, exotic_str);
+        assert_eq!(de.status, "status-\"quoted\"");
+        assert_eq!(de.note, "note with \r\n and \t tabs");
+    }
+
+    #[test]
+    fn rejects_non_integer_or_floats_in_integer_fields() {
+        // Floating point in integer fields must be rejected
+        let invalid_json = r#"{
+            "schema_version": "kairoecs.run-manifest.v1",
+            "scenario_id": "s1",
+            "fixture_id": "f1",
+            "base_seed": 12.345,
+            "replications": 1,
+            "artifact_root": "/tmp"
+        }"#;
+        let res: Result<RunManifestDto, _> = serde_json::from_str(invalid_json);
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn rejects_malformed_json_and_duplicate_keys() {
+        let malformed = r#"{"schema_version": "kairoecs.run-manifest.v1", broken"#;
+        let res: Result<RunManifestDto, _> = serde_json::from_str(malformed);
+        assert!(res.is_err());
     }
 }
