@@ -1443,8 +1443,8 @@ entries:
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
       - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
     git_status: "clean"
-    commit_sha: "cda797746bceb38f176d4e68d181f9035db7c7e6"
-    pushed_ref: "origin/feat/track-81-prost-envelope-encoding"
+    commit_sha: "0296e676d08612159b5ea70a716f09ae97215bd0"
+    pushed_ref: "origin/main"
     next_phase_decision: "Track 81 is Done; advance to Track 82 (Tokio bounded transport runtime)."
 
   - track_id: "82"
