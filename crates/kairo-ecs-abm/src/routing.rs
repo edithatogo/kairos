@@ -179,8 +179,14 @@ impl SpatialRoute {
         self.path.is_empty()
     }
 
-    pub fn duration(&self) -> SimDuration {
-        SimDuration::from_ticks(self.total_cost as u128)
+    pub fn duration(&self) -> Result<SimDuration, RoutingError> {
+        if self.unit != CostUnit::Ticks {
+            return Err(RoutingError::UnitMismatch {
+                expected: CostUnit::Ticks,
+                actual: self.unit,
+            });
+        }
+        Ok(SimDuration::from_ticks(self.total_cost as u128))
     }
 
     pub fn contains_node(&self, entity: EntityId) -> bool {
@@ -191,7 +197,7 @@ impl SpatialRoute {
 /// Internal metric for Dijkstra with lexicographic tie-breaking by (cost, hops).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
 struct DijkstraMetric {
-    cost: u64,
+    cost: u128,
     hops: u32,
 }
 
@@ -449,7 +455,7 @@ impl SpatialTopology {
         // Run petgraph Dijkstra with (cost, hops) metric
         let scores = dijkstra(&filtered_graph, start_idx, Some(goal_idx), |edge_ref| {
             DijkstraMetric {
-                cost: edge_ref.weight().cost,
+                cost: edge_ref.weight().cost as u128,
                 hops: 1,
             }
         });
@@ -458,7 +464,7 @@ impl SpatialTopology {
             return Err(RoutingError::NoRouteFound { from, to });
         };
 
-        if goal_metric.cost == u64::MAX {
+        if goal_metric.cost > u64::MAX as u128 {
             return Err(RoutingError::CostOverflow);
         }
 
@@ -486,7 +492,7 @@ impl SpatialTopology {
                 };
 
                 // Check exact metric optimality: pred_metric + edge == curr_metric
-                let expected_cost = match pred_metric.cost.checked_add(edge_data.cost) {
+                let expected_cost = match pred_metric.cost.checked_add(edge_data.cost as u128) {
                     Some(c) => c,
                     None => continue,
                 };
@@ -550,7 +556,7 @@ impl SpatialTopology {
         Ok(SpatialRoute {
             path: path_entities,
             segments: route_segments,
-            total_cost: goal_metric.cost,
+            total_cost: goal_metric.cost as u64,
             hop_count: goal_metric.hops as usize,
             unit: self.unit,
             topology_version: self.topology_version,

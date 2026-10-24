@@ -340,17 +340,32 @@ fn test_directionality_and_disconnected() {
 }
 
 #[test]
-fn test_cost_overflow_rejection() {
+fn test_cost_overflow_and_exact_u64_max_handling() {
     let mut topo = SpatialTopology::new(CostUnit::Ticks);
     let a = EntityId::new(1, 0);
     let b = EntityId::new(2, 0);
     let c = EntityId::new(3, 0);
+    let d = EntityId::new(4, 0);
 
     topo.add_node(a, 0, SpatialNodeKind::Room).unwrap();
     topo.add_node(b, 0, SpatialNodeKind::Room).unwrap();
     topo.add_node(c, 0, SpatialNodeKind::Room).unwrap();
+    topo.add_node(d, 0, SpatialNodeKind::Room).unwrap();
 
-    // Large costs that together overflow u64
+    // Exactly u64::MAX cost path: a -> d (cost u64::MAX)
+    topo.add_edge(
+        10,
+        a,
+        d,
+        u64::MAX,
+        SpatialEdgeKind::Walkway,
+        EdgeAccessRule::default(),
+    )
+    .unwrap();
+    let exact_max_route = topo.find_route(a, d, &AccessProfile::standard()).unwrap();
+    assert_eq!(exact_max_route.total_cost, u64::MAX);
+
+    // Costs that together sum to (u64::MAX + 5), exceeding u64 capacity
     topo.add_edge(
         1,
         a,
@@ -374,6 +389,35 @@ fn test_cost_overflow_rejection() {
         .find_route(a, c, &AccessProfile::standard())
         .unwrap_err();
     assert_eq!(err, RoutingError::CostOverflow);
+}
+
+#[test]
+fn test_duration_unit_validation() {
+    let mut topo = SpatialTopology::new(CostUnit::Meters);
+    let a = EntityId::new(1, 0);
+    let b = EntityId::new(2, 0);
+
+    topo.add_node(a, 0, SpatialNodeKind::Room).unwrap();
+    topo.add_node(b, 0, SpatialNodeKind::Room).unwrap();
+    topo.add_edge(
+        1,
+        a,
+        b,
+        50,
+        SpatialEdgeKind::Walkway,
+        EdgeAccessRule::default(),
+    )
+    .unwrap();
+
+    let route = topo.find_route(a, b, &AccessProfile::standard()).unwrap();
+    assert_eq!(route.unit, CostUnit::Meters);
+    assert_eq!(
+        route.duration().unwrap_err(),
+        RoutingError::UnitMismatch {
+            expected: CostUnit::Ticks,
+            actual: CostUnit::Meters,
+        }
+    );
 }
 
 #[test]
@@ -704,7 +748,8 @@ fn test_des_boundary_route_rendering_does_not_schedule_events() {
 
     // Traversal cost is expressed in SimDuration for the agent behavior to schedule explicitly
     let route = topo.find_route(a, b, &AccessProfile::standard()).unwrap();
-    sim_ctx.schedule_behaviour(a, 999, SimTime::from_ticks(route.duration().ticks()));
+    let duration = route.duration().expect("ticks unit converts to duration");
+    sim_ctx.schedule_behaviour(a, 999, SimTime::from_ticks(duration.ticks()));
     assert!(
         matches!(sim_ctx.step(), kairo_ecs_types::StepOutcome::Dispatched(ev) if ev.at == SimTime::from_ticks(25)),
         "Agent behavior explicitly schedules traversal event using route duration"
