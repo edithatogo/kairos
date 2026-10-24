@@ -37,7 +37,11 @@ browser chain. Both candidate npm audits report zero vulnerabilities; five
 pin/integrity regression tests pass. Installed renderer/build qualification now passes: five Mermaid/runtime tests,
 old Zod negative control, site build and quality checks. See
 [local receipt](docs-advisory-qualification.json). Hosted qualification and native
-alert closure remain required before acceptance. This repair does not alter
+alert closure remain required before acceptance. The first fresh CI run caught
+the exact website-lock binding and a separate bootstrap Undici copy; both are
+now repaired with [targeted follow-through evidence](docs-advisory-ci-followthrough.json).
+The real private npm tree passes its strict zero-vulnerability gate, with exact
+source/CLI/Node hashes retained and no legacy exception expansion. This repair does not alter
 Polars, engine pins or simulation behaviour.
 
 ## Historical execution entries

@@ -51,6 +51,8 @@ class DependencyAdvisoryPinTests(unittest.TestCase):
         website = json.loads((ROOT / 'website/package-lock.json').read_text())
         verify_records(website, 'zod')
         verify_records(website, 'undici')
+        bootstrap = json.loads((ROOT / 'scripts/bootstrap-node-tools/package-lock.json').read_text())
+        verify_records(bootstrap, 'undici')
         # Upgrade through the consumer-supported chain, never a forced Zod 4 override.
         self.assertEqual(docs['packages']['node_modules/puppeteer']['version'], '25.16.0')
         self.assertEqual(docs['packages']['node_modules/chromium-bidi']['dependencies']['zod'], '^4.6.5')

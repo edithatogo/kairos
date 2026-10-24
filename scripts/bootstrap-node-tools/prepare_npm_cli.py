@@ -40,7 +40,7 @@ POSTCSS_PARSER_SRI = (
 POSTCSS_PARSER_URL = (
     "https://registry.npmjs.org/postcss-selector-parser/-/postcss-selector-parser-7.1.6.tgz"
 )
-LOCK_SHA256 = "7c6c126c1b19b5af551baa742e47f4568d815822462f5ef9e9ecfb32011698d5"
+LOCK_SHA256 = "cfe2002915f419eea7cca91c24d8dd58a81926701cc2810896fdcc6f89c64835"
 REMOVED_BUNDLES = (
     *PATCHED_DEPENDENCIES,
     "ip-address",
@@ -57,7 +57,7 @@ HCS_ALIAS = "@careops/http-cache-semantics-kairos-prototype"
 HCS_ALIAS_VERSION = "0.1.0"
 HCS_INDEX_SHA256 = "ed6c1faabbe21f7bfef09ce258392cf181678149237a67ce492308a46ca6620c"
 HCS_LICENSE_SHA256 = "ab868ad5a2ef5068560d9cd3b2180ec63c140bb4c5cae1ba779d300a0ac74fa3"
-MIN_UNDICI = (8, 4, 1)
+MIN_UNDICI = (8, 12, 2)
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 PACKAGE_PATH = SCRIPT_DIR / "package.json"

@@ -1,0 +1,201 @@
+{
+  "schema_version": 1,
+  "captured_at": "2026-10-24T00:34:53.702135+00:00",
+  "maturity": "local qualification; fresh hosted head required",
+  "base_commit": "14de07aa533b4c604ac1cab269e04ef6f26b7c65",
+  "cwd": "/Volumes/PortableSSD/codex-worktrees/kairos-python315-conductor",
+  "input_sha256": {
+    "website/package-lock.json": "64e1a663a7df0f56a1ea0a5acfc7ff4cd99cc5e44c32a5516bc31c07981b10ed",
+    "website/scripts/verify_cache_security_evidence.py": "7f849a0cffc893b7f2c9b2ebeac948dc7938f94d70ed1445a5f106e922ca133c",
+    "scripts/bootstrap-node-tools/package-lock.json": "cfe2002915f419eea7cca91c24d8dd58a81926701cc2810896fdcc6f89c64835",
+    "scripts/bootstrap-node-tools/prepare_npm_cli.py": "6b76f67627b06e1fa80f2f8d5d7118603b428d8a4f77392b47ee0a616c224827",
+    "scripts/bootstrap-node-tools/validate_npm_cli.mjs": "91555a19ba04d6ddcb951f82ea8e6b89dde7b015a39db3bf8eccb1aa1e6c8839",
+    "scripts/bootstrap-node-tools/run_strict_npm_audit_gate.py": "74b5ac7fd2085b76375b9a3c8ccf35cd1118aef05d6ac102db767c1deee8fb3d",
+    "tests/test_dependency_advisory_pins.py": "03b71351138a9aef185d80c80bf20e1ff2b20d1409e2bbd481d211cd513aa455"
+  },
+  "changes": [
+    "Rebind website cache verifier to the qualified new exact lock hash; preserve package fixture, regression and source integrity checks.",
+    "Update bootstrap Undici 8.11.2 to 8.12.3; retain npm 12.1.0 and deterministic repack integrity.",
+    "Raise vulnerable Undici rejection floor to first patched 8.12.2; selected lock is latest suitable 8.12.3.",
+    "Refresh exact strict-gate source bindings, with explicit amendment and original historical reference retained."
+  ],
+  "checks": [
+    {
+      "command": ".venv/bin/python -m unittest discover -s tests -p test_website*cache*.py -v",
+      "exit_status": 0,
+      "cases": 28
+    },
+    {
+      "command": ".venv/bin/python -m unittest discover -s tests -p test_dependency_advisory_pins.py -v",
+      "exit_status": 0,
+      "cases": 5
+    },
+    {
+      "command": ".venv/bin/python -m unittest discover -s tests -p test_prepare_npm_cli.py -v",
+      "exit_status": 0,
+      "cases": 1
+    },
+    {
+      "command": ".venv/bin/python -m unittest discover -s tests -p test_bootstrap_postcss_pin.py -v",
+      "exit_status": 0,
+      "cases": 7
+    },
+    {
+      "command": "strict runner and workflow focused unittest files",
+      "exit_status": 0,
+      "cases": 12
+    },
+    {
+      "command": "prepare_npm_cli.py --check; npm ci --ignore-scripts --prefix scripts/bootstrap-node-tools",
+      "exit_status": 0
+    },
+    {
+      "command": "node scripts/bootstrap-node-tools/validate_npm_cli.mjs and --self-test",
+      "exit_status": 0,
+      "rejected_controls": 13
+    },
+    {
+      "command": "run_strict_npm_audit_gate.py with absolute real Node executable and SHA-256",
+      "exit_status": 0,
+      "classification": "passed_zero_reported_vulnerabilities"
+    }
+  ],
+  "strict_receipt": {
+    "classification": "passed_zero_reported_vulnerabilities",
+    "cwd": "/Volumes/PortableSSD/codex-worktrees/kairos-python315-conductor",
+    "reviewed_source_reference_commit": "ad3379dade50ece748eec3f47e85aa56605beec7",
+    "source_binding_amendment": "2026-10-24: Undici 8.12.3; exact source hashes below supersede the baseline digests",
+    "started_at": "2026-10-24T00:33:53.040612+00:00",
+    "checks": [
+      {
+        "argv": [
+          "git",
+          "rev-parse",
+          "HEAD"
+        ],
+        "cwd": "/Volumes/PortableSSD/codex-worktrees/kairos-python315-conductor",
+        "started_at": "2026-10-24T00:33:53.042827+00:00",
+        "stdout_sha256": "0028d18c9cb7b3dba5550baf023709b776c22b7f597d874f05349f4a245ed522",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "exit": 0,
+        "finished_at": "2026-10-24T00:33:53.124206+00:00"
+      },
+      {
+        "argv": [
+          "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+          "--version"
+        ],
+        "cwd": "/Volumes/PortableSSD/codex-worktrees/kairos-python315-conductor",
+        "started_at": "2026-10-24T00:33:53.126958+00:00",
+        "stdout_sha256": "b26441604894a1a4e4cac96bfb464737575d9b6a2e8b9d3e996283005bd67b37",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "exit": 0,
+        "finished_at": "2026-10-24T00:33:53.668809+00:00"
+      },
+      {
+        "argv": [
+          "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+          "/Volumes/PortableSSD/codex-worktrees/kairos-python315-conductor/scripts/bootstrap-node-tools/node_modules/npm/bin/npm-cli.js",
+          "--version"
+        ],
+        "cwd": "/Volumes/PortableSSD/codex-worktrees/kairos-python315-conductor",
+        "started_at": "2026-10-24T00:33:53.669673+00:00",
+        "stdout_sha256": "a712c758275b460d18fa77a26ed3589689bb3f69dcc1ea99b913e32db92a5cd2",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "exit": 0,
+        "finished_at": "2026-10-24T00:33:54.581577+00:00"
+      },
+      {
+        "argv": [
+          "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+          "/Volumes/PortableSSD/codex-worktrees/kairos-python315-conductor/scripts/bootstrap-node-tools/validate_npm_cli.mjs"
+        ],
+        "cwd": "/Volumes/PortableSSD/codex-worktrees/kairos-python315-conductor",
+        "started_at": "2026-10-24T00:33:54.582555+00:00",
+        "stdout_sha256": "e66040c875890b21a737bfcd6310206bc05af08fd895254dcd9b8e626ed2d4f2",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "exit": 0,
+        "finished_at": "2026-10-24T00:33:55.435639+00:00"
+      },
+      {
+        "argv": [
+          "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+          "/Volumes/PortableSSD/codex-worktrees/kairos-python315-conductor/scripts/bootstrap-node-tools/node_modules/npm/bin/npm-cli.js",
+          "audit",
+          "--prefix",
+          "scripts/bootstrap-node-tools",
+          "--json",
+          "--registry=https://registry.npmjs.org/",
+          "--update-notifier=false"
+        ],
+        "cwd": "/Volumes/PortableSSD/codex-worktrees/kairos-python315-conductor",
+        "started_at": "2026-10-24T00:33:55.436579+00:00",
+        "stdout_sha256": "850ce8807746516182c3f35304c354d5a81a8dd3fe71842cc750ac9c9a0e3258",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "exit": 0,
+        "finished_at": "2026-10-24T00:33:58.285591+00:00"
+      }
+    ],
+    "raw_audit": {
+      "status": "executed",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+        "/Volumes/PortableSSD/codex-worktrees/kairos-python315-conductor/scripts/bootstrap-node-tools/node_modules/npm/bin/npm-cli.js",
+        "audit",
+        "--prefix",
+        "scripts/bootstrap-node-tools",
+        "--json",
+        "--registry=https://registry.npmjs.org/",
+        "--update-notifier=false"
+      ],
+      "cwd": "/Volumes/PortableSSD/codex-worktrees/kairos-python315-conductor",
+      "started_at": "2026-10-24T00:33:55.436579+00:00",
+      "stdout_sha256": "850ce8807746516182c3f35304c354d5a81a8dd3fe71842cc750ac9c9a0e3258",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exit": 0,
+      "finished_at": "2026-10-24T00:33:58.285591+00:00"
+    },
+    "scope": "Private bootstrap tree audit; not public advisory closure or release acceptance",
+    "tool_pin_boundary": "Node path and SHA-256 are supplied by the trusted CI tool setup; this runner records and enforces that pin.",
+    "source_sha256_expected": {
+      "scripts/bootstrap-node-tools/package.json": "6fa5e6f92a147021e0953523e5f73ed8f4a12779a39593c55709e356861f23fe",
+      "scripts/bootstrap-node-tools/package-lock.json": "cfe2002915f419eea7cca91c24d8dd58a81926701cc2810896fdcc6f89c64835",
+      "scripts/bootstrap-node-tools/prepare_npm_cli.py": "6b76f67627b06e1fa80f2f8d5d7118603b428d8a4f77392b47ee0a616c224827",
+      "scripts/bootstrap-node-tools/validate_npm_cli.mjs": "91555a19ba04d6ddcb951f82ea8e6b89dde7b015a39db3bf8eccb1aa1e6c8839"
+    },
+    "source_sha256_observed": {
+      "scripts/bootstrap-node-tools/package.json": "6fa5e6f92a147021e0953523e5f73ed8f4a12779a39593c55709e356861f23fe",
+      "scripts/bootstrap-node-tools/package-lock.json": "cfe2002915f419eea7cca91c24d8dd58a81926701cc2810896fdcc6f89c64835",
+      "scripts/bootstrap-node-tools/prepare_npm_cli.py": "6b76f67627b06e1fa80f2f8d5d7118603b428d8a4f77392b47ee0a616c224827",
+      "scripts/bootstrap-node-tools/validate_npm_cli.mjs": "91555a19ba04d6ddcb951f82ea8e6b89dde7b015a39db3bf8eccb1aa1e6c8839"
+    },
+    "tool_hashes": {
+      "node_path_argument": "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+      "node_path_resolved": "/opt/homebrew/Cellar/node/26.12.1/bin/node",
+      "node_sha256": "9af7e24478e538455cf4af53a2607f1b79304bd5e25458b041fb855c3c167991",
+      "npm_cli_path_resolved": "/Volumes/PortableSSD/codex-worktrees/kairos-python315-conductor/scripts/bootstrap-node-tools/node_modules/npm/bin/npm-cli.js",
+      "npm_cli_sha256": "8e5f6f3429f8cdbe693cdc29904e9d5a7b127a494bd15c804bd54c7403bfcbe7"
+    },
+    "commit": "14de07aa533b4c604ac1cab269e04ef6f26b7c65",
+    "node-version": "v26.12.1",
+    "npm-version": "12.1.0",
+    "resolution": "npm 12.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-python315-conductor/scripts/bootstrap-node-tools/node_modules/npm/package.json) and make-fetch-happen 16.0.1 (/Volumes/PortableSSD/codex-worktrees/kairos-python315-conductor/scripts/bootstrap-node-tools/node_modules/make-fetch-happen/package.json) resolve the private HCS archive payload",
+    "finished_at": "2026-10-24T00:33:58.286250+00:00"
+  },
+  "local_artifact_sha256": {
+    "/tmp/kairos-cache-binding-requalification.log": "a7a1adca9a8da63c496a4318a318b67a8def35ab06cf8516d9ddded58c0a3f50",
+    "/tmp/kairos-bootstrap-preparer-tests.log": "27f0db43cec2fff7a62b6f466563ed3b868340d4dc9bc74f8da2b077249ffa58",
+    "/tmp/kairos-bootstrap-postcss-tests.log": "e10a35810705f9e0aa6426f616abec9e73e45ab41ec27669e191f57258c4aed8",
+    "/tmp/kairos-bootstrap-strict-tests.log": "199647e8e85ae49511a26eba0d038da0ecbb723c782c3080208b2bfa8d1b32c0",
+    "/tmp/kairos-bootstrap-prepare-check.log": "06879757bb9ac93b1ee08f545f34816e3a31d40c1d4833679697b84c4af931b5",
+    "/tmp/kairos-bootstrap-resolution.log": "e66040c875890b21a737bfcd6310206bc05af08fd895254dcd9b8e626ed2d4f2",
+    "/tmp/kairos-bootstrap-resolution-controls.log": "abdd531854ae3ec707d7841a7f5b143fc8eaf1e3f468300990a375991ab8de9f",
+    "/tmp/kairos-bootstrap-strict-live/receipt.json": "39feb376df38cc492455cd5ef229da26e31d14d8ad480115a52f188284471a1d",
+    "/tmp/kairos-bootstrap-strict-live/raw-audit.stdout": "850ce8807746516182c3f35304c354d5a81a8dd3fe71842cc750ac9c9a0e3258"
+  },
+  "limits": [
+    "Local Node 26.12.1/Python 3.15.1; selected hosted profile still requires new head checks.",
+    "No legacy EXC-193/199 hashes or exceptions changed.",
+    "Native advisory closure requires merged-main readback."
+  ]
+}
