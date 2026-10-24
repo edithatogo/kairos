@@ -56,3 +56,15 @@ Geographic transport is later and consumer-gated. SUMO stays conditional on traf
 ## Optimisation versus adoption
 
 Prefer reusing qualified existing tooling (Criterion, Python jsonschema) over another framework. Schema libraries replace duplicated structural checks only; preserve domain validation. Capability placeholders and incorrectly named algorithms require truthful correction regardless of whether an alternative dependency is adopted.
+
+## CareOps-Sim impact and opportunity review
+
+At dependency closeout (including defer/reject), the Kairos owner supplies the accepted immutable commit, decision, exact versions/features and relevant behavioural/compatibility receipts. The CareOps-Sim coordinator and actual consumer owner perform a small downstream review in `conductor/dependency-handoffs.json`, keyed by `owner_track`. Review already accepted tracks as follow-through; do not reopen historical implementation phases or rewrite their receipts.
+
+Check actual consumers and implications for APIs/bindings, schemas/output formats, configuration, deterministic streams/checkpoints, builds/deployment and compatibility. Look for worthwhile opportunities to remove bespoke code, reuse capabilities or improve robustness/performance; record evidence and limits rather than assuming benefit from library adoption.
+
+Record one outcome: `no_action`, `pin_update_and_verification`, `bounded_adaptation`, or `implementation_track`. “Reviewed; no implications or worthwhile opportunities” is a valid `no_action` result with a reason and evidence, including no consumer or an upstream no-go. A pin update still requires consumer verification; adaptation names bounded paths, owner and checks. Reuse an existing implementation track first. Create a separate track only for demonstrated substantive work not already covered; register its link once, without mirroring the upstream implementation.
+
+Each review records status, accepted upstream commit, upstream decision, reviewer/consumer owner, review date, consumer context, implications, opportunities, outcome, rationale, evidence and follow-up reference. Pending fields remain null/empty until reviewed. Completion requires the commit, owner, date, context, rationale and evidence, plus an owned follow-up for actionable outcomes. Review completion is distinct from follow-up implementation acceptance. Re-review when the accepted upstream commit or relevant consumer context changes.
+
+Sequence: accepted Kairos receipt -> downstream review -> separately claimed pin/adaptation or existing-track task -> consumer acceptance. This adds no blanket prerequisite to unrelated work and changes no implementation order. Direct dependencies require a demonstrated local consumer; existing `requires_direct_dependency` flags describe planned consumers, not automatic installation authority. Keep DES/domain semantics and existing conditional/deferred decisions intact. No new runtime dependency, automation or mirrored implementation track is required.
