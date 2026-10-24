@@ -28,8 +28,8 @@ Continuous spatial indexing is contained within `crates/kairo-ecs-abm::spatial_i
   - `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` (pass)
   - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1` (pass)
   - `pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1` (pass)
-- Closeout ledger: commit SHA `46cfc00370d9d44b8086dc8f90fedb8a17d1bb66` (implementation commit containing `spatial_index.rs`; integration commit pending PR #320 squash-merge into main) recorded upon slice creation.
-- Pushed ref: pushed ref `origin/feat/track-86-rstar-spatial-index`.
+- Closeout ledger: commit SHA `2e0e7a1226a7c9a2afa79f59a4f821a21a4cfa4e` (integrated via PR #320 squash-merge into main) recorded upon slice creation.
+- Pushed ref: pushed ref `origin/main`.
 - Git closeout verification: `pwsh scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`.
 - Next-phase decision: Track 86 is Done; next-phase decision advances to Track 79 (`zip FMU archive replacement`) / Track 91 (`rust-fmi adapter qualification`).
 
