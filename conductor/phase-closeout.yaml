@@ -1338,8 +1338,8 @@ entries:
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
       - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
     git_status: "clean"
-    commit_sha: "704adce2925d207a58c9a2f7f18e6d61cb097b6f"
-    pushed_ref: "origin/feat/track-77-clap-robustness"
+    commit_sha: "9f94fd334938e7ab3252749aa6a7ade5a1086238"
+    pushed_ref: "origin/main"
     next_phase_decision: "Track 77 is Done; advance to Track 95."
 
   - track_id: "78"
@@ -1573,8 +1573,8 @@ entries:
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
       - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
     git_status: "clean"
-    commit_sha: "9ef83106033f7fd6d6db15f8624564fd537b078a"
-    pushed_ref: "origin/feat/track-95-thiserror-contracts"
+    commit_sha: "72790b5a7f3d1b09eedfd189ff07302d1141d6c1"
+    pushed_ref: "origin/main"
     next_phase_decision: "Track 95 is Done; advance to Track 71."
 
   - track_id: "96"
