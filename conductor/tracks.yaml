@@ -1407,11 +1407,12 @@ tracks:
 
   - id: 96
     name: proptest robustness
-    status: Planned
+    status: Done
     owner: conformance-agent
     depends_on: []
     owned_paths:
       - conductor/tracks/96-proptest-invariants/
+      - crates/kairo-ecs-core/tests/track96_
     required_gates:
       - phase-closeout-check
       - dependency-value-proof

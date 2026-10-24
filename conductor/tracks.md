@@ -101,7 +101,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 93 | sha2 robustness | Done | `arrow-agent` | See `conductor/tracks/93-*/spec.md` |
 | 94 | tempfile robustness | Done | `arrow-agent` | See `conductor/tracks/94-*/spec.md` |
 | 95 | thiserror robustness | Planned | `contracts-agent` | See `conductor/tracks/95-*/spec.md` |
-| 96 | proptest robustness | Planned | `conformance-agent` | See `conductor/tracks/96-*/spec.md` |
+| 96 | proptest robustness | Done | `conformance-agent` | See `conductor/tracks/96-*/spec.md` |
 | 97 | tracing qualification | Planned | `contracts-agent` | See `conductor/tracks/97-*/spec.md` |
 | 98 | loom qualification | Planned | `conformance-agent` | See `conductor/tracks/98-*/spec.md` |
 | 99 | proptest-state-machine qualification | Planned | `conformance-agent` | See `conductor/tracks/99-*/spec.md` |
