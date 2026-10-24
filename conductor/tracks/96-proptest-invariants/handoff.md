@@ -48,6 +48,14 @@ Track 96 qualified the proptest property testing framework (v1.12.0) across `kai
 
 - Property tests run with fixed seeds and bounded budgets (128 cases, 1,000 max shrink iters) to ensure determinism and prevent test timeouts.
 
+## Follow-up issues
+
+- Downstream tracks (e.g. state machine properties in Track 99) can leverage the qualified proptest runner patterns.
+
+## Integration notes
+
+- Fully isolated to dev-dependencies in kairo-ecs-core. Clean integration with no runtime overhead.
+
 ## Phase closeout evidence
 
 - Commands run:
