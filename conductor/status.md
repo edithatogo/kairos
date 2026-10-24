@@ -834,3 +834,13 @@ Track 76 (`toml scenario configuration parsing`) completed Phase 0, 1, and 2:
 - Supported comments, escapes, native TOML arrays `[1, 2, 3]` and legacy comma strings `"1, 2, 3"`, preserved `[streams]` table in `SeedManifest`, and enforced unknown field rejection (`#[serde(deny_unknown_fields)]`) and duplicate key rejection.
 - All 37 CLI tests passed; all workspace tests passed; clippy and rustfmt clean; cargo deny clean. Track 76 is complete.
 
+## Track 77 Phase 0–2 implementation review (2026-10-24)
+
+Track 77 (`Clap CLI consolidation`) completed Phase 0, 1, and 2:
+- Qualified and adopted `clap = { version = "4", features = ["derive"] }` in `crates/kairo-ecs-cli`, adding zero new dependencies as `clap 4.5.61` is already locked in workspace.
+- Replaced fragile bespoke argument parsing (`flag_path`, `optional_flag_path`, manual loops, `print_help`) with standard typed Clap derive subcommands (`ValidateScenario`, `Replay`, `ResumePlan`, `Run`, `RunCaptured`, `Checkpoint`, `Resume`, `Careops`, `Nhra`).
+- Preserved exact JSON stdout status contracts, exit codes, and error formatting.
+- Added 5 comprehensive process integration tests in `crates/kairo-ecs-cli/tests/cli_process_stdout.rs` verifying help, missing flags, invalid arguments, and reserved Track 22 stubs.
+- All 42 tests in `kairo-ecs-cli` passed; clippy and rustfmt clean; cargo deny clean. Track 77 is complete.
+
+

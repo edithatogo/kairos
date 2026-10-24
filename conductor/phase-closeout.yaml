@@ -1312,16 +1312,23 @@ entries:
     next_phase_decision: "Track 76 is Done; advance to Track 77."
 
   - track_id: "77"
-    phase: "0"
-    state: pending
+    phase: "2"
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Planning only; value and consumer gates unresolved"
-    fixes_applied: false
-    validation_commands: []
-    git_status: "planning worktree"
-    commit_sha: ""
-    pushed_ref: ""
-    next_phase_decision: "Verify prerequisites and value; conditional adoption is not automatically authorized"
+    review_result: "clap 4.5.61 qualified and adopted: consolidated CLI argument parsing in kairo-ecs-cli with Clap derive subcommands, replacing bespoke argument parsing; preserved exact stdout status DTOs and exit codes; added 5 process integration tests in cli_process_stdout; all 42 CLI tests and workspace tests passing."
+    fixes_applied: true
+    validation_commands:
+      - "cargo test -p kairo-ecs-cli"
+      - "cargo test --test cli_process_stdout -p kairo-ecs-cli"
+      - "cargo clippy -p kairo-ecs-cli --all-targets -- -D warnings"
+      - "cargo deny check advisories sources licenses bans"
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
+    git_status: "clean"
+    commit_sha: "704adce2925d207a58c9a2f7f18e6d61cb097b6f"
+    pushed_ref: "origin/feat/track-77-clap-robustness"
+    next_phase_decision: "Track 77 is Done; advance to Track 95."
 
   - track_id: "78"
     phase: "0"

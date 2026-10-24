@@ -9,47 +9,125 @@ use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use clap::{Parser, Subcommand};
 use kairo_ecs_core::Scheduler;
 use kairo_ecs_types::{EventKind, ScheduleRequest, SimTime, StepOutcome};
 use scenario::{load_scenario, load_seed_manifest, validate_scenario_and_seed, ScenarioManifest};
 
+#[derive(Parser, Debug)]
+#[command(
+    name = "kairo-ecs-cli",
+    about = "KairoECS CLI for experiment execution and scenario management"
+)]
+pub struct Cli {
+    #[command(subcommand)]
+    pub command: Option<Commands>,
+}
+
+#[derive(Subcommand, Debug, PartialEq, Eq)]
+pub enum Commands {
+    /// Validate scenario and seed manifests
+    #[command(name = "validate-scenario")]
+    ValidateScenario {
+        #[arg(long)]
+        scenario: PathBuf,
+        #[arg(long = "seed-manifest")]
+        seed_manifest: PathBuf,
+    },
+    /// Replay scenario scheduler ordering
+    Replay {
+        #[arg(long)]
+        scenario: PathBuf,
+        #[arg(long = "seed-manifest")]
+        seed_manifest: PathBuf,
+        #[arg(long)]
+        output: PathBuf,
+    },
+    /// Generate scenario resume plan
+    #[command(name = "resume-plan")]
+    ResumePlan {
+        #[arg(long)]
+        scenario: PathBuf,
+        #[arg(long)]
+        output: PathBuf,
+    },
+    /// Run scenario simulation
+    Run {
+        #[arg(long)]
+        scenario: PathBuf,
+        #[arg(long = "seed-manifest")]
+        seed_manifest: Option<PathBuf>,
+        #[arg(long)]
+        output: Option<PathBuf>,
+    },
+    /// Write checkpoint manifest
+    Checkpoint {
+        #[arg(long)]
+        output: PathBuf,
+    },
+    /// Resume from checkpoint manifest
+    Resume {
+        #[arg(long)]
+        checkpoint: PathBuf,
+        #[arg(long)]
+        output: PathBuf,
+    },
+    /// Reserved for Track 22
+    Collect,
+    /// Reserved for Track 22
+    Analyze,
+}
+
 fn main() {
-    if let Err(error) = run(env::args().skip(1).collect()) {
+    let cli = Cli::parse();
+    if let Err(error) = execute(cli) {
         eprintln!("error: {error}");
         std::process::exit(1);
     }
 }
 
-fn run(args: Vec<String>) -> Result<(), String> {
-    let Some(command) = args.first().map(String::as_str) else {
-        print_help();
+pub fn execute(cli: Cli) -> Result<(), String> {
+    use clap::CommandFactory;
+
+    let Some(cmd) = cli.command else {
+        let _ = Cli::command().print_help();
+        println!();
         return Ok(());
     };
 
-    match command {
-        "validate-scenario" => handle_validate_scenario(&args)?,
-        "replay" => handle_replay(&args)?,
-        "resume-plan" => handle_resume_plan(&args)?,
-        "run" => handle_run(&args)?,
-        "checkpoint" => handle_checkpoint(&args)?,
-        "resume" => handle_resume(&args)?,
-        "collect" | "analyze" => {
-            return Err(format!(
-                "`{command}` is reserved for Track 22; use validate-scenario, replay, or resume-plan in this R2 slice"
-            ));
+    match cmd {
+        Commands::ValidateScenario {
+            scenario,
+            seed_manifest,
+        } => handle_validate_scenario(&scenario, &seed_manifest),
+        Commands::Replay {
+            scenario,
+            seed_manifest,
+            output,
+        } => handle_replay(&scenario, &seed_manifest, &output),
+        Commands::ResumePlan { scenario, output } => handle_resume_plan(&scenario, &output),
+        Commands::Run {
+            scenario,
+            seed_manifest,
+            output,
+        } => handle_run(&scenario, seed_manifest.as_deref(), output.as_deref()),
+        Commands::Checkpoint { output } => handle_checkpoint(&output),
+        Commands::Resume { checkpoint, output } => handle_resume(&checkpoint, &output),
+        Commands::Collect | Commands::Analyze => {
+            let name = match cmd {
+                Commands::Collect => "collect",
+                _ => "analyze",
+            };
+            Err(format!(
+                "`{name}` is reserved for Track 22; use validate-scenario, replay, or resume-plan in this R2 slice"
+            ))
         }
-        "--help" | "-h" | "help" => print_help(),
-        other => return Err(format!("unknown command `{other}`")),
     }
-
-    Ok(())
 }
 
-fn handle_validate_scenario(args: &[String]) -> Result<(), String> {
-    let scenario_path = flag_path(args, "--scenario")?;
-    let seed_path = flag_path(args, "--seed-manifest")?;
-    let scenario = load_scenario(&scenario_path).map_err(|error| error.to_string())?;
-    let seed = load_seed_manifest(&seed_path).map_err(|error| error.to_string())?;
+fn handle_validate_scenario(scenario_path: &Path, seed_path: &Path) -> Result<(), String> {
+    let scenario = load_scenario(scenario_path).map_err(|error| error.to_string())?;
+    let seed = load_seed_manifest(seed_path).map_err(|error| error.to_string())?;
     validate_scenario_and_seed(&scenario, &seed).map_err(|error| error.to_string())?;
     let status = contracts::ValidateScenarioStatusDto {
         status: "ok",
@@ -63,15 +141,12 @@ fn handle_validate_scenario(args: &[String]) -> Result<(), String> {
     Ok(())
 }
 
-fn handle_replay(args: &[String]) -> Result<(), String> {
-    let scenario_path = flag_path(args, "--scenario")?;
-    let seed_path = flag_path(args, "--seed-manifest")?;
-    let output = flag_path(args, "--output")?;
-    let scenario = load_scenario(&scenario_path).map_err(|error| error.to_string())?;
-    let seed = load_seed_manifest(&seed_path).map_err(|error| error.to_string())?;
+fn handle_replay(scenario_path: &Path, seed_path: &Path, output: &Path) -> Result<(), String> {
+    let scenario = load_scenario(scenario_path).map_err(|error| error.to_string())?;
+    let seed = load_seed_manifest(seed_path).map_err(|error| error.to_string())?;
     validate_scenario_and_seed(&scenario, &seed).map_err(|error| error.to_string())?;
     let replay = replay_scheduler_ordering(&scenario)?;
-    write_replay_outputs(&scenario, &replay, &output)?;
+    write_replay_outputs(&scenario, &replay, output)?;
     let status = contracts::ReplayStatusDto {
         status: "ok",
         scenario_id: &scenario.scenario_id,
@@ -85,11 +160,9 @@ fn handle_replay(args: &[String]) -> Result<(), String> {
     Ok(())
 }
 
-fn handle_resume_plan(args: &[String]) -> Result<(), String> {
-    let scenario_path = flag_path(args, "--scenario")?;
-    let output = flag_path(args, "--output")?;
-    let scenario = load_scenario(&scenario_path).map_err(|error| error.to_string())?;
-    write_resume_plan(&scenario, &output)?;
+fn handle_resume_plan(scenario_path: &Path, output: &Path) -> Result<(), String> {
+    let scenario = load_scenario(scenario_path).map_err(|error| error.to_string())?;
+    write_resume_plan(&scenario, output)?;
     let status = contracts::ResumePlanStatusDto {
         status: "ok",
         scenario_id: &scenario.scenario_id,
@@ -102,16 +175,19 @@ fn handle_resume_plan(args: &[String]) -> Result<(), String> {
     Ok(())
 }
 
-fn handle_run(args: &[String]) -> Result<(), String> {
-    let scenario_path = flag_path(args, "--scenario")?;
-    let output = flag_path(args, "--output").unwrap_or_else(|_| {
+fn handle_run(
+    scenario_path: &Path,
+    seed_path: Option<&Path>,
+    output: Option<&Path>,
+) -> Result<(), String> {
+    let output = output.map(Path::to_path_buf).unwrap_or_else(|| {
         env::var_os("KAIRO_OUTPUT_URI")
             .map(PathBuf::from)
             .unwrap_or_else(|| PathBuf::from("kairo-run-output"))
     });
-    if let Some(seed_path) = optional_flag_path(args, "--seed-manifest") {
-        let scenario = load_scenario(&scenario_path).map_err(|error| error.to_string())?;
-        let seed = load_seed_manifest(&seed_path).map_err(|error| error.to_string())?;
+    if let Some(seed_path) = seed_path {
+        let scenario = load_scenario(scenario_path).map_err(|error| error.to_string())?;
+        let seed = load_seed_manifest(seed_path).map_err(|error| error.to_string())?;
         validate_scenario_and_seed(&scenario, &seed).map_err(|error| error.to_string())?;
         let replay = replay_scheduler_ordering(&scenario)?;
         write_replay_outputs(&scenario, &replay, &output)?;
@@ -152,9 +228,8 @@ fn handle_run(args: &[String]) -> Result<(), String> {
     Ok(())
 }
 
-fn handle_checkpoint(args: &[String]) -> Result<(), String> {
-    let output = flag_path(args, "--output")?;
-    write_checkpoint_manifest(&output)?;
+fn handle_checkpoint(output: &Path) -> Result<(), String> {
+    write_checkpoint_manifest(output)?;
     let status = contracts::CheckpointStatusDto {
         status: "ok",
         command: "checkpoint",
@@ -167,10 +242,8 @@ fn handle_checkpoint(args: &[String]) -> Result<(), String> {
     Ok(())
 }
 
-fn handle_resume(args: &[String]) -> Result<(), String> {
-    let checkpoint = flag_path(args, "--checkpoint")?;
-    let output = flag_path(args, "--output")?;
-    write_resume_request(&checkpoint, &output)?;
+fn handle_resume(checkpoint: &Path, output: &Path) -> Result<(), String> {
+    write_resume_request(checkpoint, output)?;
     let status = contracts::ResumeStatusDto {
         status: "ok",
         command: "resume",
@@ -182,25 +255,6 @@ fn handle_resume(args: &[String]) -> Result<(), String> {
         serde_json::to_string(&status).map_err(|e| e.to_string())?
     );
     Ok(())
-}
-
-fn print_help() {
-    println!(
-        "kairo-ecs-cli\n\nCommands:\n  validate-scenario --scenario <path> --seed-manifest <path>\n  replay --scenario <path> --seed-manifest <path> --output <dir>\n  resume-plan --scenario <path> --output <dir>\n  run --scenario <path> [--seed-manifest <path>] [--output <dir>]\n  checkpoint --output <dir>\n  resume --checkpoint <path> --output <dir>"
-    );
-}
-
-fn flag_path(args: &[String], flag: &str) -> Result<PathBuf, String> {
-    args.windows(2)
-        .find(|pair| pair[0] == flag)
-        .map(|pair| PathBuf::from(&pair[1]))
-        .ok_or_else(|| format!("missing required flag `{flag}`"))
-}
-
-fn optional_flag_path(args: &[String], flag: &str) -> Option<PathBuf> {
-    args.windows(2)
-        .find(|pair| pair[0] == flag)
-        .map(|pair| PathBuf::from(&pair[1]))
 }
 
 #[derive(Debug)]
