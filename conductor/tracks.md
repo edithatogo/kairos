@@ -94,7 +94,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 86 | rstar continuous spatial index qualification | Done | `abm-api-agent` | See `conductor/tracks/86-*/spec.md` |
 | 87 | geo geometry and route-position primitives | Done | `abm-api-agent` | See `conductor/tracks/87-*/spec.md` |
 | 88 | rsmpi native MPI qualification | Done | `distributed-agent` | See `conductor/tracks/88-*/spec.md` |
-| 89 | Tract inference qualification | Planned | `ml-integration-agent` | See `conductor/tracks/89-*/spec.md` |
+| 89 | Tract inference qualification | Done | `ml-integration-agent` | See `conductor/tracks/89-*/spec.md` |
 | 90 | Argmin calibration optimiser qualification | Planned | `vv-uq-agent` | See `conductor/tracks/90-*/spec.md` |
 | 91 | rust-fmi adapter qualification | Done | `fmi-agent` | See `conductor/tracks/91-*/spec.md` |
 | 92 | Sobol sequence qualification | Planned | `experiment-agent` | See `conductor/tracks/92-*/spec.md` |
@@ -198,7 +198,7 @@ The human sole maintainer explicitly approved Track49 production scheduling afte
 - [x] **Track 88: rsmpi native MPI qualification** — Done; conditional evaluation completed with REJECT (NO-GO) decision. [Track](tracks/88-mpi-robustness/index.md).
 
 ---
-- [ ] **Track 89: Tract inference qualification** — Planned; conditional; value gate pending. [Track](tracks/89-tract-robustness/index.md).
+- [x] **Track 89: Tract inference qualification** — Done; conditional evaluation completed with REJECT (NO-GO) decision. [Track](tracks/89-tract-robustness/index.md).
 
 ---
 - [ ] **Track 90: Argmin calibration optimiser qualification** — Planned; conditional; value gate pending. [Track](tracks/90-argmin-robustness/index.md).

@@ -1,0 +1,372 @@
+warning[license-not-encountered]: license was not encountered
+  ┌─ /Volumes/PortableSSD/GitHub/kairos/deny.toml:2:64
+  │
+2 │ allow = ["MIT", "Apache-2.0", "BSD-2-Clause", "BSD-3-Clause", "ISC", "Unicode-DFS-2016", "Unicode-3.0"]
+  │                                                                ━━━ unmatched license allowance
+
+warning[license-not-encountered]: license was not encountered
+  ┌─ /Volumes/PortableSSD/GitHub/kairos/deny.toml:2:71
+  │
+2 │ allow = ["MIT", "Apache-2.0", "BSD-2-Clause", "BSD-3-Clause", "ISC", "Unicode-DFS-2016", "Unicode-3.0"]
+  │                                                                       ━━━━━━━━━━━━━━━━ unmatched license allowance
+
+warning[duplicate]: found 2 duplicate entries for crate 'itertools'
+   ┌─ /Volumes/PortableSSD/GitHub/kairos/Cargo.lock:98:1
+   │  
+98 │ ╭ itertools 0.10.5 registry+https://github.com/rust-lang/crates.io-index
+99 │ │ itertools 0.11.0 registry+https://github.com/rust-lang/crates.io-index
+   │ ╰──────────────────────────────────────────────────────────────────────┘ lock entries
+   │  
+   ├ itertools v0.10.5
+     ├── criterion v0.5.1
+     │   ├── (dev) kairo-ecs-bench v0.1.0
+     │   ├── (dev) kairo-ecs-debug v0.0.0
+     │   └── (dev) kairo-ecs-fmi v0.1.0
+     ├── criterion-plot v0.5.0
+     │   └── criterion v0.5.1 (*)
+     └── prost-derive v0.13.5
+         └── prost v0.13.5
+             └── kairo-ecs-grpc v0.0.0
+   ├ itertools v0.11.0
+     └── clarabel v0.11.1
+         └── kairo-ecs-game-theory v0.1.0
+
+warning[duplicate]: found 2 duplicate entries for crate 'strsim'
+    ┌─ /Volumes/PortableSSD/GitHub/kairos/Cargo.lock:189:1
+    │  
+189 │ ╭ strsim 0.10.0 registry+https://github.com/rust-lang/crates.io-index
+190 │ │ strsim 0.11.1 registry+https://github.com/rust-lang/crates.io-index
+    │ ╰───────────────────────────────────────────────────────────────────┘ lock entries
+    │  
+    ├ strsim v0.10.0
+      └── darling_core v0.14.4
+          ├── darling v0.14.4
+          │   └── derive_builder_core v0.11.2
+          │       └── derive_builder_macro v0.11.2
+          │           └── derive_builder v0.11.2
+          │               └── clarabel v0.11.1
+          │                   └── kairo-ecs-game-theory v0.1.0
+          └── darling_macro v0.14.4
+              └── darling v0.14.4 (*)
+    ├ strsim v0.11.1
+      └── clap_builder v4.5.61
+          └── clap v4.5.61
+              ├── criterion v0.5.1
+              │   ├── (dev) kairo-ecs-bench v0.1.0
+              │   ├── (dev) kairo-ecs-debug v0.0.0
+              │   └── (dev) kairo-ecs-fmi v0.1.0
+              ├── kairo-ecs-cli v0.1.0
+              └── kairo-ecs-debug v0.0.0 (*)
+
+warning[duplicate]: found 3 duplicate entries for crate 'syn'
+    ┌─ /Volumes/PortableSSD/GitHub/kairos/Cargo.lock:191:1
+    │  
+191 │ ╭ syn 1.0.109 registry+https://github.com/rust-lang/crates.io-index
+192 │ │ syn 2.0.117 registry+https://github.com/rust-lang/crates.io-index
+193 │ │ syn 3.0.6 registry+https://github.com/rust-lang/crates.io-index
+    │ ╰───────────────────────────────────────────────────────────────┘ lock entries
+    │  
+    ├ syn v1.0.109
+      ├── darling_core v0.14.4
+      │   ├── darling v0.14.4
+      │   │   └── derive_builder_core v0.11.2
+      │   │       └── derive_builder_macro v0.11.2
+      │   │           └── derive_builder v0.11.2
+      │   │               └── clarabel v0.11.1
+      │   │                   └── kairo-ecs-game-theory v0.1.0
+      │   └── darling_macro v0.14.4
+      │       └── darling v0.14.4 (*)
+      ├── darling_macro v0.14.4 (*)
+      ├── derive_builder_core v0.11.2 (*)
+      └── derive_builder_macro v0.11.2 (*)
+    ├ syn v2.0.117
+      ├── clap_derive v4.5.61
+      │   └── clap v4.5.61
+      │       ├── criterion v0.5.1
+      │       │   ├── (dev) kairo-ecs-bench v0.1.0
+      │       │   ├── (dev) kairo-ecs-debug v0.0.0
+      │       │   └── (dev) kairo-ecs-fmi v0.1.0
+      │       ├── kairo-ecs-cli v0.1.0
+      │       └── kairo-ecs-debug v0.0.0 (*)
+      ├── enum_dispatch v0.3.13
+      │   └── clarabel v0.11.1
+      │       └── kairo-ecs-game-theory v0.1.0
+      ├── pin-project-internal v1.1.13
+      │   └── pin-project v1.1.13
+      │       └── tonic v0.14.6
+      │           └── kairo-ecs-grpc v0.0.0
+      ├── prost-derive v0.13.5
+      │   └── prost v0.13.5
+      │       └── kairo-ecs-grpc v0.0.0 (*)
+      ├── thiserror-impl v1.0.69
+      │   └── thiserror v1.0.69
+      │       └── clarabel v0.11.1 (*)
+      ├── tracing-attributes v0.1.31
+      │   └── tracing v0.1.44
+      │       ├── h2 v0.4.20
+      │       │   ├── hyper v1.12.0
+      │       │   │   ├── hyper-timeout v0.5.2
+      │       │   │   │   └── tonic v0.14.6 (*)
+      │       │   │   ├── hyper-util v0.1.21
+      │       │   │   │   ├── hyper-timeout v0.5.2 (*)
+      │       │   │   │   └── tonic v0.14.6 (*)
+      │       │   │   └── tonic v0.14.6 (*)
+      │       │   └── tonic v0.14.6 (*)
+      │       ├── hyper-util v0.1.21 (*)
+      │       ├── tonic v0.14.6 (*)
+      │       └── tower v0.5.3
+      │           ├── axum v0.8.9
+      │           │   └── tonic v0.14.6 (*)
+      │           └── tonic v0.14.6 (*)
+      └── zerocopy-derive v0.8.48
+          └── zerocopy v0.8.48
+              ├── half v2.7.1
+              │   └── ciborium-ll v0.2.2
+              │       └── ciborium v0.2.2
+              │           └── criterion v0.5.1 (*)
+              └── ppv-lite86 v0.2.21
+                  └── rand_chacha v0.10.0
+                      └── kairo-ecs-rng v0.0.0
+                          ├── kairo-ecs-abm v0.1.0
+                          ├── kairo-ecs-bench v0.1.0 (*)
+                          ├── (dev) kairo-ecs-core v0.0.0
+                          │   ├── kairo-ecs-abm v0.1.0 (*)
+                          │   ├── kairo-ecs-bench v0.1.0 (*)
+                          │   ├── kairo-ecs-cli v0.1.0 (*)
+                          │   ├── kairo-ecs-debug v0.0.0 (*)
+                          │   ├── kairo-ecs-des v0.1.0
+                          │   ├── kairo-ecs-ffi v0.1.0
+                          │   │   ├── kairo-ecs-cs-bridge v0.1.0
+                          │   │   ├── kairo-ecs-diplomat v0.1.0
+                          │   │   ├── kairo-ecs-uniffi v0.1.0
+                          │   │   └── kairo-ecs-wasm v0.1.0
+                          │   ├── (dev) kairo-ecs-pdes v0.0.0
+                          │   │   ├── kairo-ecs-grpc v0.0.0 (*)
+                          │   │   └── kairo-ecs-mpi v0.0.0
+                          │   └── kairo-ecs-state v0.0.0
+                          │       ├── kairo-ecs-abm v0.1.0 (*)
+                          │       ├── kairo-ecs-bench v0.1.0 (*)
+                          │       ├── kairo-ecs-des v0.1.0 (*)
+                          │       ├── kairo-ecs-ffi v0.1.0 (*)
+                          │       └── kairo-ecs-viz v0.1.0
+                          ├── kairo-ecs-des v0.1.0 (*)
+                          └── kairo-ecs-ffi v0.1.0 (*)
+    ├ syn v3.0.6
+      ├── async-trait v0.1.92
+      │   └── tonic v0.14.6
+      │       └── kairo-ecs-grpc v0.0.0
+      ├── bytemuck_derive v1.12.1
+      │   └── bytemuck v1.25.2
+      │       ├── kairo-ecs-cuda v0.1.0
+      │       └── kairo-ecs-gpu v0.1.0
+      ├── serde_derive v1.0.229
+      │   ├── criterion v0.5.1
+      │   │   ├── (dev) kairo-ecs-bench v0.1.0
+      │   │   ├── (dev) kairo-ecs-debug v0.0.0
+      │   │   └── (dev) kairo-ecs-fmi v0.1.0
+      │   └── serde v1.0.229
+      │       ├── ciborium v0.2.2
+      │       │   └── criterion v0.5.1 (*)
+      │       ├── clarabel v0.11.1
+      │       │   └── kairo-ecs-game-theory v0.1.0
+      │       ├── criterion v0.5.1 (*)
+      │       ├── (dev) kairo-ecs-bench v0.1.0 (*)
+      │       ├── kairo-ecs-cli v0.1.0
+      │       ├── (dev) kairo-ecs-core v0.0.0
+      │       │   ├── kairo-ecs-abm v0.1.0
+      │       │   ├── kairo-ecs-bench v0.1.0 (*)
+      │       │   ├── kairo-ecs-cli v0.1.0 (*)
+      │       │   ├── kairo-ecs-debug v0.0.0 (*)
+      │       │   ├── kairo-ecs-des v0.1.0
+      │       │   ├── kairo-ecs-ffi v0.1.0
+      │       │   │   ├── kairo-ecs-cs-bridge v0.1.0
+      │       │   │   ├── kairo-ecs-diplomat v0.1.0
+      │       │   │   ├── kairo-ecs-uniffi v0.1.0
+      │       │   │   └── kairo-ecs-wasm v0.1.0
+      │       │   ├── (dev) kairo-ecs-pdes v0.0.0
+      │       │   │   ├── kairo-ecs-grpc v0.0.0 (*)
+      │       │   │   └── kairo-ecs-mpi v0.0.0
+      │       │   └── kairo-ecs-state v0.0.0
+      │       │       ├── kairo-ecs-abm v0.1.0 (*)
+      │       │       ├── kairo-ecs-bench v0.1.0 (*)
+      │       │       ├── kairo-ecs-des v0.1.0 (*)
+      │       │       ├── kairo-ecs-ffi v0.1.0 (*)
+      │       │       └── kairo-ecs-viz v0.1.0
+      │       ├── kairo-ecs-debug v0.0.0 (*)
+      │       ├── (dev) kairo-ecs-grpc v0.0.0 (*)
+      │       ├── kairo-ecs-rng v0.0.0
+      │       │   ├── kairo-ecs-abm v0.1.0 (*)
+      │       │   ├── kairo-ecs-bench v0.1.0 (*)
+      │       │   ├── (dev) kairo-ecs-core v0.0.0 (*)
+      │       │   ├── kairo-ecs-des v0.1.0 (*)
+      │       │   └── kairo-ecs-ffi v0.1.0 (*)
+      │       ├── serde-big-array v0.5.1
+      │       │   └── clarabel v0.11.1 (*)
+      │       ├── serde_spanned v0.6.9
+      │       │   ├── toml v0.8.23
+      │       │   │   └── kairo-ecs-cli v0.1.0 (*)
+      │       │   └── toml_edit v0.22.27
+      │       │       └── toml v0.8.23 (*)
+      │       ├── tinytemplate v1.2.1
+      │       │   └── criterion v0.5.1 (*)
+      │       ├── toml v0.8.23 (*)
+      │       ├── toml_datetime v0.6.11
+      │       │   ├── toml v0.8.23 (*)
+      │       │   └── toml_edit v0.22.27 (*)
+      │       └── toml_edit v0.22.27 (*)
+      ├── thiserror-impl v2.0.21
+      │   └── thiserror v2.0.21
+      │       ├── geo-types v0.7.20
+      │       │   └── geo v0.33.1
+      │       │       └── kairo-ecs-abm v0.1.0 (*)
+      │       ├── kairo-ecs-abm v0.1.0 (*)
+      │       ├── kairo-ecs-cli v0.1.0 (*)
+      │       ├── kairo-ecs-debug v0.0.0 (*)
+      │       └── kairo-ecs-rng v0.0.0 (*)
+      ├── tokio-macros v2.7.2
+      │   └── tokio v1.54.1
+      │       ├── h2 v0.4.20
+      │       │   ├── hyper v1.12.0
+      │       │   │   ├── hyper-timeout v0.5.2
+      │       │   │   │   └── tonic v0.14.6 (*)
+      │       │   │   ├── hyper-util v0.1.21
+      │       │   │   │   ├── hyper-timeout v0.5.2 (*)
+      │       │   │   │   └── tonic v0.14.6 (*)
+      │       │   │   └── tonic v0.14.6 (*)
+      │       │   └── tonic v0.14.6 (*)
+      │       ├── hyper v1.12.0 (*)
+      │       ├── hyper-timeout v0.5.2 (*)
+      │       ├── hyper-util v0.1.21 (*)
+      │       ├── kairo-ecs-grpc v0.0.0 (*)
+      │       ├── tokio-stream v0.1.19
+      │       │   ├── kairo-ecs-grpc v0.0.0 (*)
+      │       │   └── tonic v0.14.6 (*)
+      │       ├── tokio-util v0.7.20
+      │       │   ├── h2 v0.4.20 (*)
+      │       │   └── tower v0.5.3
+      │       │       ├── axum v0.8.9
+      │       │       │   └── tonic v0.14.6 (*)
+      │       │       └── tonic v0.14.6 (*)
+      │       ├── tonic v0.14.6 (*)
+      │       └── tower v0.5.3 (*)
+      └── wasm-bindgen-macro-support v0.2.129
+          └── wasm-bindgen-macro v0.2.129
+              └── wasm-bindgen v0.2.129
+                  ├── getrandom v0.4.3
+                  │   ├── rand v0.10.3
+                  │   │   ├── geo v0.33.1 (*)
+                  │   │   ├── kairo-ecs-rng v0.0.0 (*)
+                  │   │   ├── proptest v1.12.0
+                  │   │   │   └── (dev) kairo-ecs-core v0.0.0 (*)
+                  │   │   └── rand_distr v0.6.0
+                  │   │       └── kairo-ecs-rng v0.0.0 (*)
+                  │   ├── tempfile v3.27.0
+                  │   │   └── kairo-ecs-arrow v0.1.0
+                  │   └── zip v9.1.0
+                  │       └── kairo-ecs-fmi v0.1.0 (*)
+                  ├── js-sys v0.3.106
+                  │   ├── getrandom v0.4.3 (*)
+                  │   ├── web-sys v0.3.106
+                  │   │   └── plotters v0.3.7
+                  │   │       └── criterion v0.5.1 (*)
+                  │   └── web-time v0.2.4
+                  │       └── clarabel v0.11.1 (*)
+                  ├── plotters v0.3.7 (*)
+                  ├── web-sys v0.3.106 (*)
+                  └── web-time v0.2.4 (*)
+
+warning[duplicate]: found 2 duplicate entries for crate 'thiserror'
+    ┌─ /Volumes/PortableSSD/GitHub/kairos/Cargo.lock:196:1
+    │  
+196 │ ╭ thiserror 1.0.69 registry+https://github.com/rust-lang/crates.io-index
+197 │ │ thiserror 2.0.21 registry+https://github.com/rust-lang/crates.io-index
+    │ ╰──────────────────────────────────────────────────────────────────────┘ lock entries
+    │  
+    ├ thiserror v1.0.69
+      └── clarabel v0.11.1
+          └── kairo-ecs-game-theory v0.1.0
+    ├ thiserror v2.0.21
+      ├── geo-types v0.7.20
+      │   └── geo v0.33.1
+      │       └── kairo-ecs-abm v0.1.0
+      ├── kairo-ecs-abm v0.1.0 (*)
+      ├── kairo-ecs-cli v0.1.0
+      ├── kairo-ecs-debug v0.0.0
+      └── kairo-ecs-rng v0.0.0
+          ├── kairo-ecs-abm v0.1.0 (*)
+          ├── kairo-ecs-bench v0.1.0
+          ├── (dev) kairo-ecs-core v0.0.0
+          │   ├── kairo-ecs-abm v0.1.0 (*)
+          │   ├── kairo-ecs-bench v0.1.0 (*)
+          │   ├── kairo-ecs-cli v0.1.0 (*)
+          │   ├── kairo-ecs-debug v0.0.0 (*)
+          │   ├── kairo-ecs-des v0.1.0
+          │   ├── kairo-ecs-ffi v0.1.0
+          │   │   ├── kairo-ecs-cs-bridge v0.1.0
+          │   │   ├── kairo-ecs-diplomat v0.1.0
+          │   │   ├── kairo-ecs-uniffi v0.1.0
+          │   │   └── kairo-ecs-wasm v0.1.0
+          │   ├── (dev) kairo-ecs-pdes v0.0.0
+          │   │   ├── kairo-ecs-grpc v0.0.0
+          │   │   └── kairo-ecs-mpi v0.0.0
+          │   └── kairo-ecs-state v0.0.0
+          │       ├── kairo-ecs-abm v0.1.0 (*)
+          │       ├── kairo-ecs-bench v0.1.0 (*)
+          │       ├── kairo-ecs-des v0.1.0 (*)
+          │       ├── kairo-ecs-ffi v0.1.0 (*)
+          │       └── kairo-ecs-viz v0.1.0
+          ├── kairo-ecs-des v0.1.0 (*)
+          └── kairo-ecs-ffi v0.1.0 (*)
+
+warning[duplicate]: found 2 duplicate entries for crate 'thiserror-impl'
+    ┌─ /Volumes/PortableSSD/GitHub/kairos/Cargo.lock:198:1
+    │  
+198 │ ╭ thiserror-impl 1.0.69 registry+https://github.com/rust-lang/crates.io-index
+199 │ │ thiserror-impl 2.0.21 registry+https://github.com/rust-lang/crates.io-index
+    │ ╰───────────────────────────────────────────────────────────────────────────┘ lock entries
+    │  
+    ├ thiserror-impl v1.0.69
+      └── thiserror v1.0.69
+          └── clarabel v0.11.1
+              └── kairo-ecs-game-theory v0.1.0
+    ├ thiserror-impl v2.0.21
+      └── thiserror v2.0.21
+          ├── geo-types v0.7.20
+          │   └── geo v0.33.1
+          │       └── kairo-ecs-abm v0.1.0
+          ├── kairo-ecs-abm v0.1.0 (*)
+          ├── kairo-ecs-cli v0.1.0
+          ├── kairo-ecs-debug v0.0.0
+          └── kairo-ecs-rng v0.0.0
+              ├── kairo-ecs-abm v0.1.0 (*)
+              ├── kairo-ecs-bench v0.1.0
+              ├── (dev) kairo-ecs-core v0.0.0
+              │   ├── kairo-ecs-abm v0.1.0 (*)
+              │   ├── kairo-ecs-bench v0.1.0 (*)
+              │   ├── kairo-ecs-cli v0.1.0 (*)
+              │   ├── kairo-ecs-debug v0.0.0 (*)
+              │   ├── kairo-ecs-des v0.1.0
+              │   ├── kairo-ecs-ffi v0.1.0
+              │   │   ├── kairo-ecs-cs-bridge v0.1.0
+              │   │   ├── kairo-ecs-diplomat v0.1.0
+              │   │   ├── kairo-ecs-uniffi v0.1.0
+              │   │   └── kairo-ecs-wasm v0.1.0
+              │   ├── (dev) kairo-ecs-pdes v0.0.0
+              │   │   ├── kairo-ecs-grpc v0.0.0
+              │   │   └── kairo-ecs-mpi v0.0.0
+              │   └── kairo-ecs-state v0.0.0
+              │       ├── kairo-ecs-abm v0.1.0 (*)
+              │       ├── kairo-ecs-bench v0.1.0 (*)
+              │       ├── kairo-ecs-des v0.1.0 (*)
+              │       ├── kairo-ecs-ffi v0.1.0 (*)
+              │       └── kairo-ecs-viz v0.1.0
+              ├── kairo-ecs-des v0.1.0 (*)
+              └── kairo-ecs-ffi v0.1.0 (*)
+
+Command: cargo deny check advisories sources licenses bans
+Working Directory: /Volumes/PortableSSD/github/kairos
+Tested Commit: 0a8bd814f56d561d9ded4ce274c7c708277fc481
+Toolchain: cargo-deny 0.18.9, rustc 1.99.1 (target: aarch64-apple-darwin)
+Exit Status: 0
+
+advisories ok, bans ok, licenses ok, sources ok

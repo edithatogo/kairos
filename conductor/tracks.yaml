@@ -1346,7 +1346,7 @@ tracks:
 
   - id: 89
     name: Tract inference qualification
-    status: Planned
+    status: Done
     owner: ml-integration-agent
     depends_on: ["78"]
     owned_paths:

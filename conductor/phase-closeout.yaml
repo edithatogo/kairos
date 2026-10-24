@@ -1561,7 +1561,7 @@ entries:
 
   - track_id: "88"
     phase: "0"
-    state: pending
+    state: closed
     review_command: "$conductor-review"
     review_result: "Phase 0 evaluation completed with an explicit REJECT (NO-GO) decision pursuant to dependency-value-policy.md and track stop criterion: no active HPC supercomputer consumer, heavy C toolchain friction, unsafe memory surface, and mature pure-Rust Tonic gRPC (Track 83) alternative retained."
     fixes_applied: true
@@ -1571,21 +1571,25 @@ entries:
       - "cargo audit"
       - "pwsh -File scripts/validate_conductor_phase_gates.ps1 -TrackDir conductor/tracks/88-mpi-robustness"
     git_status: "clean"
-    commit_sha: ""
-    pushed_ref: "feat/track-88-rsmpi-native-mpi"
+    commit_sha: "6d9dcfed7c6333d675abd2216658afb7580bd088"
+    pushed_ref: "origin/main"
     next_phase_decision: "Track 88 Phase 0 evaluation concluded with REJECT (NO-GO); phases 1 and 2 unexecuted per value policy."
 
   - track_id: "89"
     phase: "0"
-    state: pending
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Planning only; value and consumer gates unresolved"
-    fixes_applied: false
-    validation_commands: []
-    git_status: "planning worktree"
-    commit_sha: ""
-    pushed_ref: ""
-    next_phase_decision: "Verify prerequisites and value; conditional adoption is not automatically authorized"
+    review_result: "Phase 0 evaluation completed with an explicit REJECT (NO-GO) decision pursuant to dependency-value-policy.md and track stop criterion: absent required ONNX model, excessive transitive dependency footprint (50+ crates), and existing dependency-free #![forbid(unsafe_code)] kairo-ecs-ml scaffold retained."
+    fixes_applied: true
+    validation_commands:
+      - "cargo test -p kairo-ecs-ml"
+      - "cargo deny check advisories sources licenses bans"
+      - "cargo audit"
+      - "pwsh -File scripts/validate_conductor_phase_gates.ps1 -TrackDir conductor/tracks/89-tract-robustness"
+    git_status: "clean"
+    commit_sha: "0a8bd814f56d561d9ded4ce274c7c708277fc481"
+    pushed_ref: "feat/track-89-tract-inference-qualification"
+    next_phase_decision: "Track 89 Phase 0 evaluation concluded with REJECT (NO-GO); phases 1 and 2 unexecuted per value policy."
 
   - track_id: "90"
     phase: "0"
