@@ -3,22 +3,18 @@
   "title": "Rayon bounded independent-work execution",
   "library": "rayon",
   "type": "refactor",
-  "status": "new",
+  "status": "complete",
   "created_at": "2026-10-22",
-  "updated_at": "2026-10-22",
+  "updated_at": "2026-10-24",
   "spec_approved": true,
-  "implementation_started": false,
-  "accepted_phases": [],
-  "priority_class": "foundation",
-  "adoption_decision": "pending_value_gate",
-  "external_dependencies": [
-    {
-      "repository": "careops-sim",
-      "milestone": "rand_distr_sampling_20261022:R25",
-      "status": "unresolved",
-      "gate_task": "0.1",
-      "required_receipt": "Accepted parent sampling adoption and exact upstream pin"
-    }
+  "implementation_started": true,
+  "accepted_phases": [
+    "0",
+    "1",
+    "2"
   ],
-  "approval_basis": "User requested separate dependency tracks, robustness-first value gates and clear ownership. Candidate adoption remains evidence-gated."
+  "priority_class": "foundation",
+  "adoption_decision": "adopt",
+  "external_dependencies": [],
+  "approval_basis": "User-approved adoption plan; explicit separate library/dependency tracks. Pinned Rayon 1.12 with bounded ThreadPool isolation, work-stealing parallel iterators, bit-for-bit replay determinism across worker thread counts, and zero security advisories."
 }

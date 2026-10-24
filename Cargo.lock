@@ -1240,6 +1240,7 @@ dependencies = [
  "clap",
  "kairo-ecs-core",
  "kairo-ecs-types",
+ "rayon",
  "serde",
  "serde_json",
  "thiserror",

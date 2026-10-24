@@ -14,6 +14,8 @@ Format:
 
 ## Unreleased
 
+- `crates/kairo-ecs-cli` adopts `rayon 1.12` bounded work-stealing thread pools (Track 78), replacing repeated `std::thread::scope` partition and join machinery in parameter sweeps, Sobol global sensitivity analysis, and ABC-SMC calibration while guaranteeing bit-for-bit replay determinism across worker thread counts.
+
 - `crates/kairo-ecs-rng` adopts `rand_distr 0.6` statistical distribution sampling (Track 72), replacing manual uniform and exponential thresholds with library-backed `Open01`, `Exp1`, `Exp`, `Normal`, `Uniform`, and competing risks sampling invariants while preserving mid-buffer checkpoint replay determinism.
 
 - `crates/kairo-ecs-rng` adopts `rand 0.10` and `rand_chacha 0.10` `ChaCha8Rng` with exact stream isolation, mid-buffer word position restoration, serializable `RngCheckpoint`, and rebased `conformance/fixtures/rng_replay.json` (Track 71).

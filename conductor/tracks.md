@@ -83,7 +83,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 75 | serde_json metadata and control encoding | Planned | `contracts-agent` | See `conductor/tracks/75-*/spec.md` |
 | 76 | toml scenario configuration parsing | Done | `contracts-agent` | See `conductor/tracks/76-*/spec.md` |
 | 77 | Clap CLI consolidation | Done | `contracts-agent` | See `conductor/tracks/77-*/spec.md` |
-| 78 | Rayon bounded independent-work execution | Planned | `experiment-agent` | See `conductor/tracks/78-*/spec.md` |
+| 78 | Rayon bounded independent-work execution | Done | `experiment-agent` | See `conductor/tracks/78-*/spec.md` |
 | 79 | zip FMU archive replacement | Planned | `fmi-agent` | See `conductor/tracks/79-*/spec.md` |
 | 80 | quick-xml FMU metadata replacement | Planned | `fmi-agent` | See `conductor/tracks/80-*/spec.md` |
 | 81 | Prost distributed envelope encoding | Planned | `distributed-agent` | See `conductor/tracks/81-*/spec.md` |
@@ -165,7 +165,7 @@ The human sole maintainer explicitly approved Track49 production scheduling afte
 - [x] **Track 77: Clap CLI consolidation** — Completed; consolidated CLI argument parsing in kairo-ecs-cli with Clap 4.5.61 derive subcommands; Phase 0–2 accepted. [Track](tracks/77-clap-robustness/index.md).
 
 ---
-- [ ] **Track 78: Rayon bounded independent-work execution** — Planned; foundation; value gate pending. [Track](tracks/78-rayon-robustness/index.md).
+- [x] **Track 78: Rayon bounded independent-work execution** — Completed; adopted Rayon 1.12 with bounded work-stealing thread pools for parameter sweeps, Sobol analysis, and calibration; Phase 0–2 accepted. [Track](tracks/78-rayon-robustness/index.md).
 
 ---
 - [ ] **Track 79: zip FMU archive replacement** — Planned; subsystem; value gate pending. [Track](tracks/79-zip-robustness/index.md).

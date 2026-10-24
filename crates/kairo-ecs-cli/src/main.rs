@@ -1,7 +1,7 @@
 #![forbid(unsafe_code)]
 
-pub mod contracts;
-pub mod ensemble;
+pub use kairo_ecs_cli::contracts;
+pub use kairo_ecs_cli::ensemble;
 
 mod scenario;
 
