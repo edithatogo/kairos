@@ -3,14 +3,18 @@
   "title": "Clarabel convex solver qualification",
   "library": "clarabel",
   "type": "evaluation",
-  "status": "new",
+  "status": "complete",
   "created_at": "2026-10-22",
-  "updated_at": "2026-10-22",
+  "updated_at": "2026-10-25",
   "spec_approved": true,
-  "implementation_started": false,
-  "accepted_phases": [],
+  "implementation_started": true,
+  "accepted_phases": [
+    "0",
+    "1",
+    "2"
+  ],
   "priority_class": "conditional",
-  "adoption_decision": "pending_value_gate",
+  "adoption_decision": "adopt",
   "external_dependencies": [],
-  "approval_basis": "User requested separate dependency tracks, robustness-first value gates and clear ownership. Candidate adoption remains evidence-gated."
+  "approval_basis": "User requested separate dependency tracks, robustness-first value gates and clear ownership. Candidate adoption completed with verified LP/QP convex formulations and oracles."
 }

@@ -1294,7 +1294,7 @@ tracks:
 
   - id: 85
     name: Clarabel convex solver qualification
-    status: Planned
+    status: Done
     owner: vv-uq-agent
     depends_on: ["78"]
     owned_paths:
