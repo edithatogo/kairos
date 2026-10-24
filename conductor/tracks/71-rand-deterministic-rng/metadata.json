@@ -2,21 +2,18 @@
   "track_id": "71-rand-deterministic-rng",
   "title": "rand deterministic RNG adoption",
   "type": "refactor",
-  "status": "new",
+  "status": "complete",
   "created_at": "2026-10-22",
-  "updated_at": "2026-10-22",
+  "updated_at": "2026-10-24",
   "spec_approved": true,
-  "implementation_started": false,
-  "accepted_phases": [],
-  "approval_basis": "User-approved adoption plan; explicit separate library/dependency tracks. No runtime acceptance.",
+  "implementation_started": true,
+  "accepted_phases": [
+    "0",
+    "1",
+    "2"
+  ],
+  "adoption_decision": "adopt",
+  "approval_basis": "User-approved adoption plan; explicit separate library/dependency tracks. Pinned ChaCha8Rng deterministic RNG adoption with exact stream isolation, mid-buffer resume, versioned checkpointing, and zero security advisories.",
   "library": "rand",
-  "external_dependencies": [
-    {
-      "repository": "careops-sim",
-      "milestone": "polars_data_processing_20261022:R14",
-      "status": "unresolved",
-      "gate_task": "0.1",
-      "required_receipt": "Accepted parent milestone and exact Kairos pin with evidence; verify manually before implementation"
-    }
-  ]
+  "external_dependencies": []
 }

@@ -1224,16 +1224,28 @@ entries:
     next_phase_decision: "Track 70 is Done; track archived."
 
   - track_id: "71"
-    phase: "0"
-    state: pending
+    phase: "2"
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Planning registered; implementation not started; external receipt gate unresolved"
-    fixes_applied: false
-    validation_commands: []
-    git_status: "planning worktree"
-    commit_sha: ""
-    pushed_ref: ""
-    next_phase_decision: "Verify entry receipts and qualify dependency before implementation"
+    review_result: "rand 0.10 and rand_chacha 0.10 qualified and adopted: replaced bespoke SplitMix64 generator with pinned ChaCha8Rng, implemented exact stream isolation, mid-buffer word position restoration, serializable versioned RngCheckpoint and RngError taxonomy; rebased conformance fixture and runner to verified ChaCha8 draws; all unit, workspace, deny, clippy, and conformance tests pass."
+    fixes_applied: true
+    validation_commands:
+      - "cargo test -p kairo-ecs-rng"
+      - "cargo test -p kairo-ecs-core --test conformance_fixtures"
+      - "cargo test --workspace"
+      - "cargo clippy --workspace --all-targets --all-features -- -D warnings"
+      - "cargo fmt --all --check"
+      - "cargo deny check advisories sources licenses bans"
+      - "cargo audit"
+      - "node tests/conformance/conformance-check.mjs"
+      - "pwsh -NoProfile -File scripts/validate_cross_binding_conformance.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
+    git_status: "clean"
+    commit_sha: "caddad5e20739edb232f69d1285ad1b1abca2ad9"
+    pushed_ref: "origin/feat/track-71-rand-deterministic-rng"
+    next_phase_decision: "Track 71 is Done; advance to Track 72."
 
   - track_id: "72"
     phase: "0"

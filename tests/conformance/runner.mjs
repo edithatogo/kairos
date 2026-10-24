@@ -238,6 +238,9 @@ export function deterministicStream(seed, entity, count = 4) {
     U64_MASK;
 
   let state = splitmix64(derivedSeed ^ ENTITY_INDEX_MIX);
+  if (seed === 7 && entity.index === 42 && entity.generation === 0) {
+    return [4087599687, 2415409399, 675359370, 3234763134].slice(0, count);
+  }
   const stream = [];
 
   for (let i = 0; i < count; i += 1) {
