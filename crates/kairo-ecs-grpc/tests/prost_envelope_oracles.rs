@@ -477,4 +477,44 @@ fn oracle_socket_receiver_records_envelope_decode_failures() {
         "failure message should capture decode error: {}",
         failures[0]
     );
+
+    // Send 70 additional malformed frames to verify bounded retention and monotonic counter
+    for i in 0..70 {
+        let payload = format!("malformed-frame-flood-{i}");
+        let payload_bytes = payload.as_bytes();
+        let frame_len = (payload_bytes.len() + 1) as u32;
+        stream
+            .write_all(&frame_len.to_be_bytes())
+            .expect("write frame len");
+        stream.write_all(&[3u8]).expect("write msg_type");
+        stream.write_all(payload_bytes).expect("write payload");
+        stream.flush().expect("flush stream");
+    }
+
+    // Wait for frames to be processed
+    for _ in 0..50 {
+        if transport.envelope_decode_failure_count() >= 71 {
+            break;
+        }
+        std::thread::sleep(Duration::from_millis(20));
+    }
+
+    let total_count = transport.envelope_decode_failure_count();
+    assert!(
+        total_count >= 71,
+        "total failure count must track all rejections monotonically: {total_count}"
+    );
+
+    let retained = transport.envelope_decode_failures();
+    assert_eq!(
+        retained.len(),
+        kairo_ecs_grpc::MAX_RETAINED_DECODE_FAILURES,
+        "retained errors must be capped at MAX_RETAINED_DECODE_FAILURES (64)"
+    );
+
+    // Drain buffer and ensure retention resets while monotonic counter is preserved
+    let drained = transport.drain_envelope_decode_failures();
+    assert_eq!(drained.len(), kairo_ecs_grpc::MAX_RETAINED_DECODE_FAILURES);
+    assert_eq!(transport.envelope_decode_failures().len(), 0);
+    assert_eq!(transport.envelope_decode_failure_count(), total_count);
 }
