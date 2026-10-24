@@ -1282,7 +1282,7 @@ tracks:
 
   - id: 84
     name: hecs ECS storage qualification
-    status: Planned
+    status: Done
     owner: ecs-agent
     depends_on: ["78", "64"]
     owned_paths:

@@ -89,7 +89,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 81 | Prost distributed envelope encoding | Done | `distributed-agent` | See `conductor/tracks/81-*/spec.md` |
 | 82 | Tokio bounded transport runtime | Done | `distributed-agent` | See `conductor/tracks/82-*/spec.md` |
 | 83 | Tonic interoperable RPC transport | Done | `distributed-agent` | See `conductor/tracks/83-*/spec.md` |
-| 84 | hecs ECS storage qualification | Planned | `ecs-agent` | See `conductor/tracks/84-*/spec.md` |
+| 84 | hecs ECS storage qualification | Done | `ecs-agent` | See `conductor/tracks/84-*/spec.md` |
 | 85 | Clarabel convex solver qualification | Planned | `vv-uq-agent` | See `conductor/tracks/85-*/spec.md` |
 | 86 | rstar continuous spatial index qualification | Done | `abm-api-agent` | See `conductor/tracks/86-*/spec.md` |
 | 87 | geo geometry and route-position primitives | Done | `abm-api-agent` | See `conductor/tracks/87-*/spec.md` |
@@ -183,7 +183,7 @@ The human sole maintainer explicitly approved Track49 production scheduling afte
 - [x] **Track 83: Tonic interoperable RPC transport** — Done; conditional; value gate closed (adopted). [Track](tracks/83-tonic-robustness/index.md).
 
 ---
-- [ ] **Track 84: hecs ECS storage qualification** — Planned; evaluation; value gate pending. [Track](tracks/84-hecs-robustness/index.md).
+- [x] **Track 84: hecs ECS storage qualification** — Done; evaluation; value gate closed (rejected/retained native). [Track](tracks/84-hecs-robustness/index.md).
 
 ---
 - [ ] **Track 85: Clarabel convex solver qualification** — Planned; conditional; value gate pending. [Track](tracks/85-clarabel-robustness/index.md).
