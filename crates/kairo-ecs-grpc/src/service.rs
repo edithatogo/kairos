@@ -162,6 +162,25 @@ pub mod simulation_transport_client {
             ));
             self.inner.unary(req, path, codec).await
         }
+        pub async fn send_null_message(
+            &mut self,
+            request: impl tonic::IntoRequest<crate::envelope::WireNullMessage>,
+        ) -> std::result::Result<tonic::Response<crate::envelope::WireNullMessageAck>, tonic::Status>
+        {
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::unknown(format!("Service was not ready: {}", e.into()))
+            })?;
+            let codec = crate::service::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/kairo.ecs.simulation.v1.SimulationTransport/SendNullMessage",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut().insert(GrpcMethod::new(
+                "kairo.ecs.simulation.v1.SimulationTransport",
+                "SendNullMessage",
+            ));
+            self.inner.unary(req, path, codec).await
+        }
         pub async fn migrate_entity(
             &mut self,
             request: impl tonic::IntoRequest<crate::envelope::WireMigrationRequest>,
@@ -257,6 +276,10 @@ pub mod simulation_transport_server {
             &self,
             request: tonic::Request<crate::envelope::WireRemoteEvent>,
         ) -> std::result::Result<tonic::Response<crate::envelope::WireRemoteEvent>, tonic::Status>;
+        async fn send_null_message(
+            &self,
+            request: tonic::Request<crate::envelope::WireNullMessage>,
+        ) -> std::result::Result<tonic::Response<crate::envelope::WireNullMessageAck>, tonic::Status>;
         async fn migrate_entity(
             &self,
             request: tonic::Request<crate::envelope::WireMigrationRequest>,
@@ -374,6 +397,48 @@ pub mod simulation_transport_server {
                     let inner = self.inner.clone();
                     let fut = async move {
                         let method = ExchangeEventsSvc(inner);
+                        let codec = crate::service::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            )
+                            .apply_max_message_size_config(
+                                max_decoding_message_size,
+                                max_encoding_message_size,
+                            );
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/kairo.ecs.simulation.v1.SimulationTransport/SendNullMessage" => {
+                    #[allow(non_camel_case_types)]
+                    struct SendNullMessageSvc<T: SimulationTransport>(pub Arc<T>);
+                    impl<T: SimulationTransport>
+                        tonic::server::UnaryService<crate::envelope::WireNullMessage>
+                        for SendNullMessageSvc<T>
+                    {
+                        type Response = crate::envelope::WireNullMessageAck;
+                        type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<crate::envelope::WireNullMessage>,
+                        ) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move {
+                                <T as SimulationTransport>::send_null_message(&inner, request).await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let method = SendNullMessageSvc(inner);
                         let codec = crate::service::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
                             .apply_compression_config(

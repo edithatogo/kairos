@@ -8,7 +8,8 @@ use std::thread::{self, JoinHandle};
 use std::time::{Duration, Instant};
 
 use kairo_ecs_pdes::{
-    LpId, OptimisticMessage, PdesMessage, PdesTransport, RemoteEvent, Tick, TransportError,
+    LpId, NullMessage, OptimisticMessage, PdesMessage, PdesTransport, RemoteEvent, Tick,
+    TransportError,
 };
 use kairo_ecs_types::EntityId;
 use tonic::transport::{Channel, Endpoint, Server};
@@ -16,8 +17,9 @@ use tonic::{Request, Response, Status};
 
 use crate::envelope::{
     KairoOptimisticEnvelopeV1, WireComponentBlob, WireGvtDecision, WireGvtProposal, WireHeartbeat,
-    WireHeartbeatAck, WireMigrationAck, WireMigrationRequest, WireOptimisticAck,
-    WireOptimisticEnvelope, WireRemoteEvent, ENVELOPE_SCHEMA_VERSION_PROTOBUF_V2,
+    WireHeartbeatAck, WireMigrationAck, WireMigrationRequest, WireNullMessage, WireNullMessageAck,
+    WireOptimisticAck, WireOptimisticEnvelope, WireRemoteEvent,
+    ENVELOPE_SCHEMA_VERSION_PROTOBUF_V2,
 };
 use crate::service::simulation_transport_client::SimulationTransportClient;
 use crate::service::simulation_transport_server::{SimulationTransport, SimulationTransportServer};
@@ -29,6 +31,18 @@ use crate::{
 
 /// Maximum message size accepted over gRPC (128 KiB).
 pub const MAX_GRPC_MESSAGE_BYTES: usize = 128 * 1024;
+
+fn parse_wire_tick(bytes: &[u8]) -> Result<Tick, Status> {
+    if bytes.len() != 16 {
+        return Err(Status::invalid_argument(format!(
+            "invalid tick byte length: expected 16, got {}",
+            bytes.len()
+        )));
+    }
+    let mut arr = [0u8; 16];
+    arr.copy_from_slice(bytes);
+    Ok(Tick::from_ticks(u128::from_be_bytes(arr)))
+}
 
 /// Internal service implementing the standard Tonic SimulationTransport trait.
 #[derive(Clone)]
@@ -51,7 +65,7 @@ impl SimulationTransport for SimulationTransportServiceImpl {
         let wire = request.into_inner();
         let dest = LpId(wire.dest_lp);
         let source = LpId(wire.source_lp);
-        let tick = Tick::from_ticks(wire.tick as u128);
+        let tick = parse_wire_tick(&wire.tick)?;
         let pdes_msg = PdesMessage::Event(RemoteEvent {
             source_lp: source,
             dest_lp: dest,
@@ -63,6 +77,31 @@ impl SimulationTransport for SimulationTransportServiceImpl {
         if let Some(queue) = inboxes.get_mut(&dest) {
             queue.push_back(pdes_msg);
             Ok(Response::new(wire))
+        } else {
+            Err(Status::invalid_argument(format!(
+                "unknown destination logical process {dest:?}"
+            )))
+        }
+    }
+
+    async fn send_null_message(
+        &self,
+        request: Request<WireNullMessage>,
+    ) -> Result<Response<WireNullMessageAck>, Status> {
+        let wire = request.into_inner();
+        let dest = LpId(wire.dest_lp);
+        let source = LpId(wire.source_lp);
+        let safe_time = parse_wire_tick(&wire.safe_time)?;
+        let pdes_msg = PdesMessage::Null(NullMessage {
+            source_lp: source,
+            dest_lp: dest,
+            safe_time,
+        });
+
+        let mut inboxes = self.inboxes.lock().unwrap();
+        if let Some(queue) = inboxes.get_mut(&dest) {
+            queue.push_back(pdes_msg);
+            Ok(Response::new(WireNullMessageAck { accepted: true }))
         } else {
             Err(Status::invalid_argument(format!(
                 "unknown destination logical process {dest:?}"
@@ -169,13 +208,12 @@ impl SimulationTransport for SimulationTransportServiceImpl {
         request: Request<WireGvtProposal>,
     ) -> Result<Response<WireGvtDecision>, Status> {
         let wire = request.into_inner();
+        let min_tick = parse_wire_tick(&wire.local_min_tick)?;
         let mut proposals = self.gvt_proposals.lock().unwrap();
-        proposals.insert(
-            (0, LpId(wire.source_lp)),
-            Tick::from_ticks(wire.local_min_tick as u128),
-        );
+        proposals.insert((wire.round, LpId(wire.source_lp)), min_tick);
         Ok(Response::new(WireGvtDecision {
             gvt_tick: wire.local_min_tick,
+            round: wire.round,
         }))
     }
 
@@ -354,7 +392,7 @@ impl TonicTransport {
             .ok_or(TransportError::UnknownLogicalProcess(dest))?;
 
         let timeout = self.config.request_timeout;
-        let endpoint_str = format!("http://127.0.0.1:{}", addr.port());
+        let endpoint_str = format!("http://{addr}");
 
         let client = self.client_runtime.block_on(async move {
             let endpoint = Endpoint::from_shared(endpoint_str)
@@ -457,16 +495,18 @@ impl TonicTransport {
         })
     }
 
-    /// Proposes local GVT minimum to a remote peer.
+    /// Proposes local GVT minimum to a remote peer for a given consensus round.
     pub fn propose_gvt(
         &self,
         dest: LpId,
+        round: u64,
         local_min: Tick,
     ) -> Result<WireGvtDecision, TransportError> {
         let mut client = self.get_or_connect_client(dest)?;
         let wire = WireGvtProposal {
             source_lp: self.local_lp.0,
-            local_min_tick: local_min.ticks() as u64,
+            local_min_tick: local_min.ticks().to_be_bytes().to_vec(),
+            round,
         };
 
         self.client_runtime.block_on(async move {
@@ -549,7 +589,7 @@ impl PdesTransport for TonicTransport {
                 let wire = WireRemoteEvent {
                     source_lp: event.source_lp.0,
                     dest_lp: event.dest_lp.0,
-                    tick: event.tick.ticks() as u64,
+                    tick: event.tick.ticks().to_be_bytes().to_vec(),
                     event_payload: event.event_payload,
                 };
 
@@ -561,7 +601,22 @@ impl PdesTransport for TonicTransport {
                     Ok(())
                 })
             }
-            PdesMessage::Null(_) => Ok(()),
+            PdesMessage::Null(null_msg) => {
+                let mut client = self.get_or_connect_client(dest)?;
+                let wire = WireNullMessage {
+                    source_lp: null_msg.source_lp.0,
+                    dest_lp: null_msg.dest_lp.0,
+                    safe_time: null_msg.safe_time.ticks().to_be_bytes().to_vec(),
+                };
+
+                self.client_runtime.block_on(async move {
+                    client
+                        .send_null_message(Request::new(wire))
+                        .await
+                        .map_err(|_| TransportError::UnknownLogicalProcess(dest))?;
+                    Ok(())
+                })
+            }
         }
     }
 
@@ -605,7 +660,7 @@ impl PdesTransport for TonicTransport {
 
         let peer_ids: Vec<LpId> = self.peers.keys().copied().collect();
         for dest in &peer_ids {
-            let _ = self.propose_gvt(*dest, timestamp);
+            let _ = self.propose_gvt(*dest, round, timestamp);
         }
 
         let deadline = Instant::now() + self.config.request_timeout;

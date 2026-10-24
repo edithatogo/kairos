@@ -1030,10 +1030,26 @@ pub struct WireRemoteEvent {
     pub source_lp: u32,
     #[prost(uint32, tag = "2")]
     pub dest_lp: u32,
-    #[prost(uint64, tag = "3")]
-    pub tick: u64,
+    #[prost(bytes = "vec", tag = "3")]
+    pub tick: Vec<u8>,
     #[prost(bytes = "vec", tag = "4")]
     pub event_payload: Vec<u8>,
+}
+
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct WireNullMessage {
+    #[prost(uint32, tag = "1")]
+    pub source_lp: u32,
+    #[prost(uint32, tag = "2")]
+    pub dest_lp: u32,
+    #[prost(bytes = "vec", tag = "3")]
+    pub safe_time: Vec<u8>,
+}
+
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct WireNullMessageAck {
+    #[prost(bool, tag = "1")]
+    pub accepted: bool,
 }
 
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -1052,8 +1068,8 @@ pub struct WirePendingEvent {
     pub source_lp: u32,
     #[prost(uint32, tag = "2")]
     pub dest_lp: u32,
-    #[prost(uint64, tag = "3")]
-    pub tick: u64,
+    #[prost(bytes = "vec", tag = "3")]
+    pub tick: Vec<u8>,
     #[prost(uint64, tag = "4")]
     pub sequence: u64,
     #[prost(uint64, tag = "5")]
@@ -1106,14 +1122,18 @@ pub struct WireTelemetryBatch {
 pub struct WireGvtProposal {
     #[prost(uint32, tag = "1")]
     pub source_lp: u32,
-    #[prost(uint64, tag = "2")]
-    pub local_min_tick: u64,
+    #[prost(bytes = "vec", tag = "2")]
+    pub local_min_tick: Vec<u8>,
+    #[prost(uint64, tag = "3")]
+    pub round: u64,
 }
 
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct WireGvtDecision {
-    #[prost(uint64, tag = "1")]
-    pub gvt_tick: u64,
+    #[prost(bytes = "vec", tag = "1")]
+    pub gvt_tick: Vec<u8>,
+    #[prost(uint64, tag = "2")]
+    pub round: u64,
 }
 
 #[derive(Clone, PartialEq, ::prost::Message)]

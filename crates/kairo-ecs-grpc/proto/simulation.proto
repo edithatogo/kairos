@@ -2,12 +2,22 @@ syntax = "proto3";
 
 package kairo.ecs.simulation.v1;
 
-// Runtime transport contract (placeholder): see track 35 migration/telemetry docs.
+// Runtime transport contract: see track 35 migration/telemetry docs.
 message RemoteEvent {
   uint32 source_lp = 1;
   uint32 dest_lp = 2;
-  uint64 tick = 3;
+  bytes tick = 3;
   bytes event_payload = 4;
+}
+
+message NullMessage {
+  uint32 source_lp = 1;
+  uint32 dest_lp = 2;
+  bytes safe_time = 3;
+}
+
+message NullMessageAck {
+  bool accepted = 1;
 }
 
 // Runtime transport contract placeholder for ownership transfer in one migration envelope.
@@ -30,7 +40,7 @@ message ComponentBlob {
 message PendingEvent {
   uint32 source_lp = 1;
   uint32 dest_lp = 2;
-  uint64 tick = 3;
+  bytes tick = 3;
   uint64 sequence = 4;
   uint64 payload_bytes = 5;
   bool anti_message = 6;
@@ -51,17 +61,19 @@ message TelemetryBatch {
 
 message GvtProposal {
   uint32 source_lp = 1;
-  uint64 local_min_tick = 2;
+  bytes local_min_tick = 2;
+  uint64 round = 3;
 }
 
 message GvtDecision {
-  uint64 gvt_tick = 1;
+  bytes gvt_tick = 1;
+  uint64 round = 2;
 }
 
 message AntiMessage {
   uint32 source_lp = 1;
   uint32 dest_lp = 2;
-  uint64 tick = 3;
+  bytes tick = 3;
   uint64 sequence = 4;
 }
 
@@ -130,11 +142,19 @@ message OptimisticEnvelope {
   bytes event_payload = 14;
 }
 
-// Runtime transport contract placeholder for service discovery: this is not wired to
-// transport runtime in the current track slice.
+message OptimisticAck {
+  uint32 source_lp = 1;
+  uint32 dest_lp = 2;
+  bool accepted = 3;
+  string message = 4;
+}
+
+// Standards-compliant simulation transport service (Track 83).
 service SimulationTransport {
-  rpc ExchangeEvents(stream RemoteEvent) returns (stream RemoteEvent);
-  rpc ExchangeAntiMessages(stream AntiMessage) returns (stream AntiMessage);
+  rpc ExchangeEvents(RemoteEvent) returns (RemoteEvent);
+  rpc ExchangeAntiMessages(AntiMessage) returns (AntiMessage);
+  rpc SendNullMessage(NullMessage) returns (NullMessageAck);
+  rpc SendOptimisticEnvelope(OptimisticEnvelope) returns (OptimisticAck);
   rpc MigrateEntity(MigrationRequest) returns (MigrationAck);
   rpc StreamTelemetry(stream TelemetryBatch) returns (MigrationAck);
   rpc GvtSync(GvtProposal) returns (GvtDecision);

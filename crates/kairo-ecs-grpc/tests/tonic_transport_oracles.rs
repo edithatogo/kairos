@@ -7,12 +7,13 @@ use std::time::{Duration, Instant};
 use kairo_ecs_grpc::service::simulation_transport_client::SimulationTransportClient;
 use kairo_ecs_grpc::{
     GrpcComponentBlob, GrpcMigrationRequest, GrpcPeer, GrpcTransportConfig, TonicTransport,
-    WireGvtProposal, WireHeartbeat, WireOptimisticEnvelope, WireRemoteEvent, WorkerHeartbeat,
-    ENVELOPE_PROTOCOL_VERSION_V2, ENVELOPE_SCHEMA_VERSION_PROTOBUF_V2, GRPC_PROTOCOL_ID,
+    WireGvtProposal, WireHeartbeat, WireNullMessage, WireOptimisticEnvelope, WireRemoteEvent,
+    WorkerHeartbeat, ENVELOPE_PROTOCOL_VERSION_V2, ENVELOPE_SCHEMA_VERSION_PROTOBUF_V2,
+    GRPC_PROTOCOL_ID,
 };
 use kairo_ecs_pdes::{
-    LogicalEventId, LpId, OptimisticAuthority, OptimisticMessage, OptimisticMessageKind,
-    PdesMessage, PdesTransport, RemoteEvent,
+    LogicalEventId, LpId, NullMessage, OptimisticAuthority, OptimisticMessage,
+    OptimisticMessageKind, PdesMessage, PdesTransport, RemoteEvent,
 };
 use kairo_ecs_types::{EntityId, SimTime as Tick};
 use tonic::{Code, Request};
@@ -88,20 +89,22 @@ fn oracle_tonic_transport_independent_grpc_peer_rpc_interoperability() {
         // 2. Foreign peer sends GvtProposal RPC
         let gvt_req = Request::new(WireGvtProposal {
             source_lp: 99,
-            local_min_tick: 100,
+            local_min_tick: 100u128.to_be_bytes().to_vec(),
+            round: 0,
         });
         let gvt_resp = client
             .gvt_sync(gvt_req)
             .await
             .expect("gvt_sync response")
             .into_inner();
-        assert_eq!(gvt_resp.gvt_tick, 100);
+        assert_eq!(gvt_resp.gvt_tick, 100u128.to_be_bytes().to_vec());
+        assert_eq!(gvt_resp.round, 0);
 
-        // 3. Foreign peer sends standard Event RPC
+        // 3. Foreign peer sends standard Event RPC with full 128-bit timestamp
         let event_req = Request::new(WireRemoteEvent {
             source_lp: 99,
             dest_lp: 1,
-            tick: 120,
+            tick: 120u128.to_be_bytes().to_vec(),
             event_payload: b"independent_grpc_payload".to_vec(),
         });
         let event_resp = client
@@ -109,16 +112,29 @@ fn oracle_tonic_transport_independent_grpc_peer_rpc_interoperability() {
             .await
             .expect("exchange_events response")
             .into_inner();
-        assert_eq!(event_resp.tick, 120);
+        assert_eq!(event_resp.tick, 120u128.to_be_bytes().to_vec());
+
+        // 4. Foreign peer sends NullMessage RPC
+        let null_req = Request::new(WireNullMessage {
+            source_lp: 99,
+            dest_lp: 1,
+            safe_time: 150u128.to_be_bytes().to_vec(),
+        });
+        let null_resp = client
+            .send_null_message(null_req)
+            .await
+            .expect("send_null_message response")
+            .into_inner();
+        assert!(null_resp.accepted);
     });
 
-    // Server should have recorded the received heartbeat and event in PDES queue
+    // Server should have recorded the received heartbeat and events in PDES queue
     let heartbeats = transport.drain_heartbeats();
     assert_eq!(heartbeats.len(), 1);
     assert_eq!(heartbeats[0].lp_id, LpId(99));
 
     let messages = transport.recv(LpId(1)).expect("recv messages");
-    assert_eq!(messages.len(), 1);
+    assert_eq!(messages.len(), 2);
     match &messages[0] {
         PdesMessage::Event(e) => {
             assert_eq!(e.source_lp, LpId(99));
@@ -127,6 +143,14 @@ fn oracle_tonic_transport_independent_grpc_peer_rpc_interoperability() {
             assert_eq!(e.event_payload, b"independent_grpc_payload");
         }
         _ => panic!("expected event message"),
+    }
+    match &messages[1] {
+        PdesMessage::Null(n) => {
+            assert_eq!(n.source_lp, LpId(99));
+            assert_eq!(n.dest_lp, LpId(1));
+            assert_eq!(n.safe_time, Tick::from_ticks(150));
+        }
+        _ => panic!("expected null message"),
     }
 }
 
@@ -390,13 +414,67 @@ fn oracle_tonic_transport_migration_and_gvt_consensus_round() {
         "Position"
     );
 
-    // 2. Mattern GVT Consensus Round over gRPC
-    // LP 1 has timestamp 500, LP 2 has timestamp 300
-    // all_reduce_min should determine min(500, 300) = 300
-    let t1_thread = thread::spawn(move || transport1.all_reduce_min(Tick::from_ticks(500)));
-    let t2_result = transport2.all_reduce_min(Tick::from_ticks(300));
-    let t1_result = t1_thread.join().expect("join t1");
+    // 2. Null message delivery over gRPC (Finding 2)
+    transport1
+        .send(
+            LpId(2),
+            PdesMessage::Null(NullMessage {
+                source_lp: LpId(1),
+                dest_lp: LpId(2),
+                safe_time: Tick::from_ticks(250),
+            }),
+        )
+        .expect("send remote null message");
+    let recvd_null = transport2.recv(LpId(2)).expect("recv null messages");
+    assert_eq!(recvd_null.len(), 1);
+    match &recvd_null[0] {
+        PdesMessage::Null(n) => {
+            assert_eq!(n.source_lp, LpId(1));
+            assert_eq!(n.dest_lp, LpId(2));
+            assert_eq!(n.safe_time, Tick::from_ticks(250));
+        }
+        _ => panic!("expected null message"),
+    }
 
-    assert_eq!(t1_result, Tick::from_ticks(300));
-    assert_eq!(t2_result, Tick::from_ticks(300));
+    // 3. Large u128 timestamp preservation (> u64::MAX) (Finding 4)
+    let large_tick = Tick::from_ticks(u128::MAX - 100);
+    transport1
+        .send(
+            LpId(2),
+            PdesMessage::Event(RemoteEvent {
+                source_lp: LpId(1),
+                dest_lp: LpId(2),
+                tick: large_tick,
+                event_payload: b"large_tick_payload".to_vec(),
+            }),
+        )
+        .expect("send large tick event");
+    let recvd_event = transport2.recv(LpId(2)).expect("recv event");
+    assert_eq!(recvd_event.len(), 1);
+    match &recvd_event[0] {
+        PdesMessage::Event(e) => {
+            assert_eq!(e.tick, large_tick);
+            assert_eq!(e.event_payload, b"large_tick_payload");
+        }
+        _ => panic!("expected event message"),
+    }
+
+    // 4. Multiple consecutive Mattern GVT Consensus Rounds over gRPC (Finding 3)
+    // Round 0: LP 1 has timestamp 500, LP 2 has timestamp 300 -> min(500, 300) = 300
+    let t1_round0 = thread::spawn(move || {
+        let r0 = transport1.all_reduce_min(Tick::from_ticks(500));
+        let r1 = transport1.all_reduce_min(Tick::from_ticks(600));
+        (r0, r1)
+    });
+
+    let t2_r0 = transport2.all_reduce_min(Tick::from_ticks(300));
+    let t2_r1 = transport2.all_reduce_min(Tick::from_ticks(400));
+    let (t1_r0, t1_r1) = t1_round0.join().expect("join t1");
+
+    assert_eq!(t1_r0, Tick::from_ticks(300));
+    assert_eq!(t2_r0, Tick::from_ticks(300));
+
+    // Round 1 must use round 1 proposals rather than being confused by round 0
+    assert_eq!(t1_r1, Tick::from_ticks(400));
+    assert_eq!(t2_r1, Tick::from_ticks(400));
 }

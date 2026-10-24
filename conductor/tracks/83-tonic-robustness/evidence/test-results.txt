@@ -1,65 +1,64 @@
-   Compiling kairo-ecs-grpc v0.0.0 (/Volumes/PortableSSD/GitHub/kairos/crates/kairo-ecs-grpc)
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 6.18s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s
      Running unittests src/lib.rs (target/debug/deps/kairo_ecs_grpc-8fe1a31c6b4ca40e)
 
 running 25 tests
+test envelope::tests::test_legacy_v1_envelope_roundtrip_backward_compatibility ... ok
+test envelope::tests::test_rejection_oracles ... ok
 test tests::default_timeouts_keep_heartbeat_below_failure_timeout ... ok
+test tests::grpc_contract_envelopes_track_protocol_identity ... ok
 test tests::grpc_contract_rejects_empty_migration_id ... ok
 test tests::grpc_entity_migration_snapshot_preserves_generation_and_pending_events ... ok
+test tests::grpc_proto_contract_covers_generation_pending_events_heartbeats_and_antimessages ... ok
 test envelope::tests::test_conversion_to_and_from_optimistic_message ... ok
 test envelope::tests::test_envelope_roundtrip_root ... ok
 test envelope::tests::test_envelope_roundtrip_with_ancestry_chain ... ok
-test tests::grpc_proto_contract_covers_generation_pending_events_heartbeats_and_antimessages ... ok
-test tests::grpc_contract_envelopes_track_protocol_identity ... ok
-test envelope::tests::test_legacy_v1_envelope_roundtrip_backward_compatibility ... ok
-test envelope::tests::test_rejection_oracles ... ok
 test tests::grpc_two_process_launch_contract_requires_distinct_real_socket_endpoints ... ok
-test tests::heartbeat_classifier_marks_late_worker_failed ... ok
 test tests::local_smoke_validates_peers_and_timeout_config ... ok
-test tests::local_two_node_contract_proof_covers_event_migration_telemetry_and_failure ... ok
 test tests::migration_validator_accepts_complete_request ... ok
-test tests::migration_validator_rejects_empty_component_set ... ok
 test tests::peer_list_is_preserved ... ok
-test tests::peer_validator_rejects_duplicate_peer_ids ... ok
 test tests::protocol_emulator_includes_pending_event_timestamps_in_gvt_round ... ok
 test tests::protocol_emulator_round_trips_null_messages ... ok
+test tests::peer_validator_rejects_duplicate_peer_ids ... ok
+test tests::migration_validator_rejects_empty_component_set ... ok
+test tests::local_two_node_contract_proof_covers_event_migration_telemetry_and_failure ... ok
+test tests::heartbeat_classifier_marks_late_worker_failed ... ok
 test tests::protocol_emulator_uses_current_gvt_candidate_round ... ok
 test tests::retry_policy_rejects_zero_attempts_and_inverted_backoff ... ok
-test tests::transport_send_rejects_unknown_source_and_destination_mismatch ... ok
 test tests::telemetry_batch_validator_requires_monotonic_tick_range ... ok
 test tests::transport_send_rejects_unknown_lp ... ok
+test tests::transport_send_rejects_unknown_source_and_destination_mismatch ... ok
 
 test result: ok. 25 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
 
      Running tests/prost_envelope_oracles.rs (target/debug/deps/prost_envelope_oracles-40e228e4b768ea36)
 
 running 15 tests
+test oracle_legacy_v1_and_protobuf_v2_dual_compatibility ... ok
+test oracle_independent_protobuf_peer_conformance ... ok
 test oracle_prost_envelope_rejects_ancestry_depth_exceeded ... ok
-test oracle_prost_envelope_rejects_oversized_payload ... ok
 test oracle_prost_envelope_rejects_invalid_authority_mode ... ok
+test oracle_prost_envelope_rejects_invalid_message_kind ... ok
 test oracle_prost_envelope_rejects_invalid_timestamp_byte_length ... ok
 test oracle_prost_envelope_rejects_missing_oneof_frame ... ok
-test oracle_legacy_v1_and_protobuf_v2_dual_compatibility ... ok
+test oracle_prost_envelope_rejects_oversized_payload ... ok
 test oracle_prost_envelope_rejects_oversized_total_envelope ... ok
-test oracle_prost_envelope_rejects_invalid_message_kind ... ok
 test oracle_prost_envelope_rejects_truncated_or_malformed_protobuf_bytes ... ok
-test oracle_independent_protobuf_peer_conformance ... ok
 test oracle_prost_envelope_rejects_unsupported_schema_version ... ok
 test oracle_prost_envelope_roundtrip_preserves_full_identity_and_tick_range ... ok
-test oracle_prost_optimistic_message_full_roundtrip ... ok
 test oracle_prost_envelope_roundtrip_with_deep_ancestry_chain ... ok
+test oracle_prost_optimistic_message_full_roundtrip ... ok
 test oracle_socket_receiver_records_envelope_decode_failures ... ok
 
-test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.10s
 
      Running tests/tokio_transport_oracles.rs (target/debug/deps/tokio_transport_oracles-94edb4f86c1e73e9)
 
 running 6 tests
 test oracle_tokio_transport_clean_shutdown_and_cancellation ... ok
-test oracle_tokio_transport_slow_consumer_and_oversized_frame_rejection ... ok
 test oracle_tokio_transport_reconnect_and_transient_failure_recovery ... ok
-test oracle_tokio_transport_bounded_inbound_connection_saturation ... ok
+test oracle_tokio_transport_slow_consumer_and_oversized_frame_rejection ... ok
 test oracle_tokio_transport_deterministic_handoff_ordering_despite_io_jitter ... ok
+test oracle_tokio_transport_bounded_inbound_connection_saturation ... ok
 test oracle_tokio_transport_stalled_read_timeout_releases_permit ... ok
 
 test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.16s
@@ -71,8 +70,8 @@ test oracle_tonic_transport_clean_lifecycle_and_port_rebinding ... ok
 test oracle_tonic_transport_wire_protocol_and_version_rejection ... ok
 test oracle_tonic_transport_independent_grpc_peer_rpc_interoperability ... ok
 test oracle_tonic_transport_transient_failure_recovery_and_deadline_policy ... ok
-test oracle_tonic_transport_migration_and_gvt_consensus_round ... ok
 test oracle_tonic_transport_optimistic_envelope_full_roundtrip_and_pdes_ordering ... ok
+test oracle_tonic_transport_migration_and_gvt_consensus_round ... ok
 
 test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
 
@@ -84,11 +83,11 @@ running 1 test
 test socket_transport_preserves_optimistic_migration_telemetry_heartbeat_and_rejects_https ... ok
 test two_process_smoke ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.23s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.24s
 
 test two_process_smoke ... ok
 
-test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.24s
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.25s
 
    Doc-tests kairo_ecs_grpc
 
