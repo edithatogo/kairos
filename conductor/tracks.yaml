@@ -1198,11 +1198,15 @@ tracks:
 
   - id: 78
     name: Rayon bounded independent-work execution
-    status: Planned
+    status: Done
     owner: experiment-agent
     depends_on: ["72", "77"]
     owned_paths:
       - conductor/tracks/78-rayon-robustness/
+      - crates/kairo-ecs-cli/src/ensemble.rs
+      - crates/kairo-ecs-cli/Cargo.toml
+      - crates/kairo-ecs-cli/src/lib.rs
+      - crates/kairo-ecs-cli/tests/rayon_ensemble_oracles.rs
     required_gates:
       - phase-closeout-check
       - dependency-value-proof

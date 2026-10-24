@@ -3,6 +3,20 @@
 //! Common Random Numbers, Saltelli/Jansen Sobol sensitivity analysis,
 //! and ABC-SMC / Optuna batch objective calibration.
 
+use rayon::prelude::*;
+
+pub use rayon;
+
+/// Helper to construct a bounded Rayon ThreadPool with custom worker naming and sizing.
+pub fn build_bounded_thread_pool(
+    num_threads: usize,
+) -> Result<rayon::ThreadPool, rayon::ThreadPoolBuildError> {
+    rayon::ThreadPoolBuilder::new()
+        .num_threads(num_threads.max(1))
+        .thread_name(|idx| format!("kairo-rayon-{}", idx))
+        .build()
+}
+
 /// 1D / multi-dimensional Sobol sequence generator using direction numbers.
 #[derive(Clone, Debug)]
 pub struct SobolSequence {
@@ -151,32 +165,40 @@ impl ParallelEnsembleRunner {
         if num_points == 0 {
             return Vec::new();
         }
+
         let threads = self.num_threads.max(1).min(num_points);
-        let chunk_size = num_points.div_ceil(threads);
+        let pool = rayon::ThreadPoolBuilder::new()
+            .num_threads(threads)
+            .build()
+            .expect("failed to build rayon thread pool for ensemble sweep");
 
-        let mut results = vec![0.0; num_points];
+        self.run_sweep_with_pool(&pool, parameter_points, evaluator)
+    }
 
-        std::thread::scope(|s| {
-            let results_chunks = results.chunks_mut(chunk_size);
-            let points_chunks = parameter_points.chunks(chunk_size);
+    pub fn run_sweep_with_pool<F>(
+        &self,
+        pool: &rayon::ThreadPool,
+        parameter_points: &[Vec<f64>],
+        evaluator: F,
+    ) -> Vec<f64>
+    where
+        F: Fn(u64, &[f64]) -> f64 + Sync + Send,
+    {
+        let num_points = parameter_points.len();
+        if num_points == 0 {
+            return Vec::new();
+        }
 
-            let evaluator = &evaluator;
-            for (chunk_idx, (res_chunk, pts_chunk)) in results_chunks.zip(points_chunks).enumerate()
-            {
-                let crn_plan = &self.crn_plan;
-                let start_idx = chunk_idx * chunk_size;
-
-                s.spawn(move || {
-                    for (local_idx, point) in pts_chunk.iter().enumerate() {
-                        let run_idx = start_idx + local_idx;
-                        let seed = crn_plan.entity_substream_seed(run_idx as u64, 0);
-                        res_chunk[local_idx] = evaluator(seed, point);
-                    }
-                });
-            }
-        });
-
-        results
+        pool.install(|| {
+            parameter_points
+                .par_iter()
+                .enumerate()
+                .map(|(run_idx, point)| {
+                    let seed = self.crn_plan.entity_substream_seed(run_idx as u64, 0);
+                    evaluator(seed, point)
+                })
+                .collect()
+        })
     }
 }
 
@@ -200,31 +222,33 @@ impl SobolSensitivityAnalyzer {
     where
         F: Fn(&[f64]) -> f64 + Sync,
     {
+        let threads = num_threads.max(1).min(sample_size);
+        let pool = rayon::ThreadPoolBuilder::new()
+            .num_threads(threads)
+            .build()
+            .expect("failed to build rayon thread pool for sobol sensitivity analyzer");
+
+        Self::analyze_parallel_with_pool(model_fn, dimensions, sample_size, &pool)
+    }
+
+    pub fn analyze_parallel_with_pool<F>(
+        model_fn: &F,
+        dimensions: usize,
+        sample_size: usize,
+        pool: &rayon::ThreadPool,
+    ) -> Self
+    where
+        F: Fn(&[f64]) -> f64 + Sync,
+    {
         let l_sampler = LatinHypercubeSampler::new(dimensions, sample_size, 42);
         let a_matrix = l_sampler.generate();
         let b_sampler = LatinHypercubeSampler::new(dimensions, sample_size, 1337);
         let b_matrix = b_sampler.generate();
 
-        let mut y_a = vec![0.0; sample_size];
-        let mut y_b = vec![0.0; sample_size];
-
-        let threads = num_threads.max(1).min(sample_size);
-        let chunk_size = sample_size.div_ceil(threads);
-
-        std::thread::scope(|s| {
-            let ya_chunks = y_a.chunks_mut(chunk_size);
-            let yb_chunks = y_b.chunks_mut(chunk_size);
-            let a_chunks = a_matrix.chunks(chunk_size);
-            let b_chunks = b_matrix.chunks(chunk_size);
-
-            for (((ya_c, yb_c), a_c), b_c) in ya_chunks.zip(yb_chunks).zip(a_chunks).zip(b_chunks) {
-                s.spawn(move || {
-                    for i in 0..a_c.len() {
-                        ya_c[i] = model_fn(&a_c[i]);
-                        yb_c[i] = model_fn(&b_c[i]);
-                    }
-                });
-            }
+        let (y_a, y_b) = pool.install(|| {
+            let ya: Vec<f64> = a_matrix.par_iter().map(|row| model_fn(row)).collect();
+            let yb: Vec<f64> = b_matrix.par_iter().map(|row| model_fn(row)).collect();
+            (ya, yb)
         });
 
         let mean_y: f64 = y_a.iter().sum::<f64>() / (sample_size as f64);
@@ -237,20 +261,15 @@ impl SobolSensitivityAnalyzer {
         for d in 0..dimensions {
             // Evaluate in parallel into per-index slots, then reduce sequentially in
             // index order so results are bit-identical for any thread count.
-            let mut y_ab_all = vec![0.0; sample_size];
-            std::thread::scope(|s| {
-                let yab_chunks = y_ab_all.chunks_mut(chunk_size);
-                let a_chunks = a_matrix.chunks(chunk_size);
-                let b_chunks = b_matrix.chunks(chunk_size);
-                for ((yab_c, ac), bc) in yab_chunks.zip(a_chunks).zip(b_chunks) {
-                    s.spawn(move || {
-                        for i in 0..ac.len() {
-                            let mut ab_row = ac[i].clone();
-                            ab_row[d] = bc[i][d];
-                            yab_c[i] = model_fn(&ab_row);
-                        }
-                    });
-                }
+            let y_ab_all: Vec<f64> = pool.install(|| {
+                (0..sample_size)
+                    .into_par_iter()
+                    .map(|i| {
+                        let mut ab_row = a_matrix[i].clone();
+                        ab_row[d] = b_matrix[i][d];
+                        model_fn(&ab_row)
+                    })
+                    .collect()
             });
 
             let mut total_v1 = 0.0;
@@ -362,32 +381,50 @@ impl AbcSmcCalibrator {
         if num_particles == 0 {
             return (Vec::new(), Vec::new());
         }
+
         let threads = num_threads.max(1).min(num_particles);
-        let chunk_size = num_particles.div_ceil(threads);
+        let pool = rayon::ThreadPoolBuilder::new()
+            .num_threads(threads)
+            .build()
+            .expect("failed to build rayon thread pool for abc-smc calibrator");
 
-        let mut weights = vec![0.0; num_particles];
-        let mut accepted = vec![false; num_particles];
+        self.evaluate_particles_parallel_with_pool(
+            particles,
+            reference_timeseries,
+            simulator,
+            &pool,
+        )
+    }
 
-        std::thread::scope(|s| {
-            let w_chunks = weights.chunks_mut(chunk_size);
-            let a_chunks = accepted.chunks_mut(chunk_size);
-            let p_chunks = particles.chunks(chunk_size);
+    pub fn evaluate_particles_parallel_with_pool<F>(
+        &self,
+        particles: &[Vec<f64>],
+        reference_timeseries: &[f64],
+        simulator: &F,
+        pool: &rayon::ThreadPool,
+    ) -> (Vec<f64>, Vec<bool>)
+    where
+        F: Fn(&[f64]) -> Vec<f64> + Sync,
+    {
+        let num_particles = particles.len();
+        if num_particles == 0 {
+            return (Vec::new(), Vec::new());
+        }
 
-            for ((w_c, a_c), p_c) in w_chunks.zip(a_chunks).zip(p_chunks) {
-                let tolerance = self.tolerance;
-                let reference = reference_timeseries;
+        let tolerance = self.tolerance;
+        let reference = reference_timeseries;
 
-                s.spawn(move || {
-                    for (i, particle) in p_c.iter().enumerate() {
-                        let sim_out = simulator(particle);
-                        if reference.is_empty()
-                            || sim_out.len() != reference.len()
-                            || sim_out.iter().any(|v| !v.is_finite())
-                        {
-                            a_c[i] = false;
-                            w_c[i] = 0.0;
-                            continue;
-                        }
+        let results: Vec<(f64, bool)> = pool.install(|| {
+            particles
+                .par_iter()
+                .map(|particle| {
+                    let sim_out = simulator(particle);
+                    if reference.is_empty()
+                        || sim_out.len() != reference.len()
+                        || sim_out.iter().any(|v| !v.is_finite())
+                    {
+                        (0.0, false)
+                    } else {
                         let mut dist = 0.0;
                         for (s_val, r_val) in sim_out.iter().zip(reference.iter()) {
                             dist += (s_val - r_val).abs();
@@ -395,12 +432,19 @@ impl AbcSmcCalibrator {
                         dist /= reference.len() as f64;
 
                         let is_accepted = dist <= tolerance;
-                        a_c[i] = is_accepted;
-                        w_c[i] = if is_accepted { 1.0 / (1.0 + dist) } else { 0.0 };
+                        let weight = if is_accepted { 1.0 / (1.0 + dist) } else { 0.0 };
+                        (weight, is_accepted)
                     }
-                });
-            }
+                })
+                .collect()
         });
+
+        let mut weights = Vec::with_capacity(num_particles);
+        let mut accepted = Vec::with_capacity(num_particles);
+        for (w, a) in results {
+            weights.push(w);
+            accepted.push(a);
+        }
 
         let sum_w: f64 = weights.iter().sum();
         if sum_w > 1e-12 {

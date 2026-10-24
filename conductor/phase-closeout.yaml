@@ -1266,8 +1266,8 @@ entries:
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
       - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
     git_status: "clean"
-    commit_sha: "aed45137dc5040f927737c3572415c62cc2b97e9"
-    pushed_ref: "origin/feat/track-72-rand-distr-sampling"
+    commit_sha: "68b5543eb399844e9e864a15ba3680b9612c08f9"
+    pushed_ref: "origin/main"
     next_phase_decision: "Track 72 is Done; advance to Track 78."
 
   - track_id: "73"
@@ -1354,16 +1354,27 @@ entries:
     next_phase_decision: "Track 77 is Done; advance to Track 95."
 
   - track_id: "78"
-    phase: "0"
-    state: pending
+    phase: "2"
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Planning only; value and consumer gates unresolved"
-    fixes_applied: false
-    validation_commands: []
-    git_status: "planning worktree"
-    commit_sha: ""
-    pushed_ref: ""
-    next_phase_decision: "Verify prerequisites and value; conditional adoption is not automatically authorized"
+    review_result: "rayon 1.12 qualified and adopted in kairo-ecs-cli: replaced repeated std::thread::scope partition/spawn/join machinery in parameter sweeps, Sobol sensitivity analysis, and ABC-SMC calibration with bounded Rayon thread pools and parallel iterators; preserved bit-for-bit replay determinism across worker thread counts via indexed results and fixed-order reductions; full independent oracles, work-stealing, panic propagation, clippy, fmt, and workspace tests pass."
+    fixes_applied: true
+    validation_commands:
+      - "cargo test -p kairo-ecs-cli"
+      - "cargo test --workspace"
+      - "cargo clippy --workspace --all-targets --all-features -- -D warnings"
+      - "cargo fmt --all --check"
+      - "cargo deny check advisories sources licenses bans"
+      - "cargo audit"
+      - "node tests/conformance/conformance-check.mjs"
+      - "pwsh -NoProfile -File scripts/validate_cross_binding_conformance.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
+    git_status: "clean"
+    commit_sha: "0190333fb8cf98073013bdb0d944d49a0ee40a65"
+    pushed_ref: "origin/feat/track-78-rayon-robustness"
+    next_phase_decision: "Track 78 is Done; advance to Track 79."
 
   - track_id: "79"
     phase: "0"
