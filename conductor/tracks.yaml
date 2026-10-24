@@ -1226,11 +1226,15 @@ tracks:
 
   - id: 80
     name: quick-xml FMU metadata replacement
-    status: Planned
+    status: Done
     owner: fmi-agent
     depends_on: ["79"]
     owned_paths:
       - conductor/tracks/80-quick-xml-robustness/
+      - crates/kairo-ecs-fmi/Cargo.toml
+      - crates/kairo-ecs-fmi/src/import/fmu_loader.rs
+      - crates/kairo-ecs-fmi/src/export/model_description.rs
+      - crates/kairo-ecs-fmi/tests/quick_xml_metadata_oracles.rs
     required_gates:
       - phase-closeout-check
       - dependency-value-proof

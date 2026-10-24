@@ -85,7 +85,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 77 | Clap CLI consolidation | Done | `contracts-agent` | See `conductor/tracks/77-*/spec.md` |
 | 78 | Rayon bounded independent-work execution | Done | `experiment-agent` | See `conductor/tracks/78-*/spec.md` |
 | 79 | zip FMU archive replacement | Done | `fmi-agent` | See `conductor/tracks/79-*/spec.md` |
-| 80 | quick-xml FMU metadata replacement | Planned | `fmi-agent` | See `conductor/tracks/80-*/spec.md` |
+| 80 | quick-xml FMU metadata replacement | Done | `fmi-agent` | See `conductor/tracks/80-*/spec.md` |
 | 81 | Prost distributed envelope encoding | Planned | `distributed-agent` | See `conductor/tracks/81-*/spec.md` |
 | 82 | Tokio bounded transport runtime | Planned | `distributed-agent` | See `conductor/tracks/82-*/spec.md` |
 | 83 | Tonic interoperable RPC transport | Planned | `distributed-agent` | See `conductor/tracks/83-*/spec.md` |
@@ -171,7 +171,7 @@ The human sole maintainer explicitly approved Track49 production scheduling afte
 - [x] **Track 79: zip FMU archive replacement** — Completed; adopted `zip` 9.1.0 and pure-Rust `flate2` 1.1.10 (`rust_backend`); implemented secure extraction, decompression bomb budgets, atomic failure cleanup, and deterministic export packaging; Phase 0–2 accepted. [Track](tracks/79-zip-robustness/index.md).
 
 ---
-- [ ] **Track 80: quick-xml FMU metadata replacement** — Planned; subsystem; value gate pending. [Track](tracks/80-quick-xml-robustness/index.md).
+- [x] **Track 80: quick-xml FMU metadata replacement** — Done; subsystem; value gate closed (adopted). [Track](tracks/80-quick-xml-robustness/index.md).
 
 ---
 - [ ] **Track 81: Prost distributed envelope encoding** — Planned; conditional; value gate pending. [Track](tracks/81-prost-robustness/index.md).

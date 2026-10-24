@@ -1403,21 +1403,29 @@ entries:
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
       - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
     git_status: "clean"
-    commit_sha: "d8bdbe49c421d06025bf0905878c4525ced898aa"
-    pushed_ref: "origin/feat/track-79-zip-fmu-archive"
+    commit_sha: "4ec9bbdc23145c0de47479804fb586d1c925d48e"
+    pushed_ref: "origin/main"
     next_phase_decision: "Track 79 is Done; advance to Track 80."
 
   - track_id: "80"
-    phase: "0"
-    state: pending
+    phase: "track-closeout"
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Planning only; value and consumer gates unresolved"
-    fixes_applied: false
-    validation_commands: []
-    git_status: "planning worktree"
-    commit_sha: ""
-    pushed_ref: ""
-    next_phase_decision: "Verify prerequisites and value; conditional adoption is not automatically authorized"
+    review_result: "Phase 0, Phase 1, and Phase 2 review executed and passed; quick-xml 0.42.0 adopted with zero transitive dependencies; structured FMU metadata parser and serializer implemented and verified against all 8 negative and behavioral oracles."
+    fixes_applied: true
+    validation_commands:
+      - "cargo test -p kairo-ecs-fmi --all-features"
+      - "cargo clippy -p kairo-ecs-fmi --all-targets --all-features -- -D warnings"
+      - "cargo fmt --all --check"
+      - "cargo deny check advisories sources licenses bans"
+      - "cargo audit"
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
+    git_status: "clean"
+    commit_sha: "4c2db7d927f1cb6416f3d8fdffc3553c805406d6"
+    pushed_ref: "origin/feat/track-80-quick-xml-fmu-metadata"
+    next_phase_decision: "Track 80 is Done; advance to Track 81 (Prost distributed envelope encoding)."
 
   - track_id: "81"
     phase: "0"

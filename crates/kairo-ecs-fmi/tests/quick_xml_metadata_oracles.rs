@@ -1,0 +1,552 @@
+#![cfg(feature = "fmi2")]
+
+use std::fs;
+use std::path::{Path, PathBuf};
+use std::time::{SystemTime, UNIX_EPOCH};
+
+use kairo_ecs_fmi::export::model_description::{ModelDescription, ScalarVariable, VariableType};
+use kairo_ecs_fmi::import::fmu_loader::{
+    current_fmi_platform, validate_unpacked_fmu_layout, MAX_XML_BYTES, MAX_XML_DEPTH,
+};
+
+fn temp_path(label: &str) -> PathBuf {
+    std::env::temp_dir().join(format!(
+        "kairo-fmi-xml-oracle-{label}-{}-{}",
+        std::process::id(),
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("time")
+            .as_nanos()
+    ))
+}
+
+fn shared_library_extension() -> &'static str {
+    if cfg!(target_os = "windows") {
+        "dll"
+    } else if cfg!(target_os = "macos") {
+        "dylib"
+    } else {
+        "so"
+    }
+}
+
+fn setup_unpacked_fmu(root: &Path, model_description_xml: &str) {
+    let platform = current_fmi_platform();
+    let binary_dir = root.join("binaries").join(&platform);
+    fs::create_dir_all(&binary_dir).expect("create binary dir");
+    fs::write(root.join("modelDescription.xml"), model_description_xml)
+        .expect("write modelDescription.xml");
+    fs::write(
+        binary_dir.join(format!("model.{}", shared_library_extension())),
+        b"mock_binary_content",
+    )
+    .expect("write binary");
+}
+
+#[test]
+fn oracle_false_root_in_comment_rejected() {
+    let root = temp_path("false-root-comment");
+    // Substring checks would find <fmiModelDescription and fmiVersion="2.0",
+    // but the true XML root element is <maliciousRoot>.
+    let xml = r#"<?xml version="1.0" encoding="UTF-8"?>
+<!-- <fmiModelDescription fmiVersion="2.0"> -->
+<maliciousRoot>
+  <payload />
+</maliciousRoot>
+"#;
+    setup_unpacked_fmu(&root, xml);
+
+    let result = validate_unpacked_fmu_layout(&root);
+    assert!(result.is_err(), "Must reject false root in comment");
+    let err_msg = result.unwrap_err().to_string();
+    assert!(
+        err_msg.contains("fmiModelDescription root"),
+        "Error message must indicate invalid root: {err_msg}"
+    );
+
+    let _ = fs::remove_dir_all(&root);
+}
+
+#[test]
+fn oracle_false_version_in_comment_rejected() {
+    let root = temp_path("false-version-comment");
+    // Substring checks would find fmiVersion="2.0" in the comment,
+    // but the real element declares unsupported fmiVersion="1.0".
+    let xml = r#"<?xml version="1.0" encoding="UTF-8"?>
+<!-- fmiVersion="2.0" -->
+<fmiModelDescription fmiVersion="1.0" modelName="legacy">
+</fmiModelDescription>
+"#;
+    setup_unpacked_fmu(&root, xml);
+
+    let result = validate_unpacked_fmu_layout(&root);
+    assert!(result.is_err(), "Must reject unsupported FMI version");
+    let err_msg = result.unwrap_err().to_string();
+    assert!(
+        err_msg.contains("does not declare FMI version 2.0 or 3.0")
+            || err_msg.contains("unsupported FMI version"),
+        "Expected version error, got: {err_msg}"
+    );
+
+    let _ = fs::remove_dir_all(&root);
+}
+
+#[test]
+fn oracle_fmi3_version_accepted() {
+    let root = temp_path("fmi3-version-accepted");
+    let xml = r#"<?xml version="1.0" encoding="UTF-8"?>
+<fmiModelDescription fmiVersion="3.0" modelName="fmi3_model">
+</fmiModelDescription>
+"#;
+    setup_unpacked_fmu(&root, xml);
+
+    let result = validate_unpacked_fmu_layout(&root);
+    assert!(result.is_ok(), "FMI 3.0 model description must be accepted");
+
+    let _ = fs::remove_dir_all(&root);
+}
+
+#[test]
+fn oracle_malformed_unclosed_xml_rejected() {
+    let root = temp_path("malformed-unclosed");
+    // Substring checks pass because markers exist, but XML syntax is broken
+    let xml = r#"<?xml version="1.0" encoding="UTF-8"?>
+<fmiModelDescription fmiVersion="2.0" modelName="broken">
+  <ModelVariables>
+    <ScalarVariable name="var1" valueReference="1">
+  <!-- unclosed tags -->
+"#;
+    setup_unpacked_fmu(&root, xml);
+
+    let result = validate_unpacked_fmu_layout(&root);
+    assert!(result.is_err(), "Must reject malformed/unclosed XML");
+    let err_msg = result.unwrap_err().to_string();
+    assert!(
+        err_msg.contains("malformed") || err_msg.contains("unclosed"),
+        "Error message should mention malformed or unclosed XML: {err_msg}"
+    );
+
+    let _ = fs::remove_dir_all(&root);
+}
+
+#[test]
+fn oracle_xml_nesting_depth_budget_enforced() {
+    let root = temp_path("depth-limit");
+    let mut deeply_nested = String::from("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<fmiModelDescription fmiVersion=\"2.0\" modelName=\"deep\">\n");
+    for i in 0..40 {
+        deeply_nested.push_str(&format!("<nested level=\"{i}\">\n"));
+    }
+    for _ in 0..40 {
+        deeply_nested.push_str("</nested>\n");
+    }
+    deeply_nested.push_str("</fmiModelDescription>\n");
+
+    setup_unpacked_fmu(&root, &deeply_nested);
+
+    let result = validate_unpacked_fmu_layout(&root);
+    assert!(result.is_err(), "Must reject depth > {MAX_XML_DEPTH}");
+    let err_msg = result.unwrap_err().to_string();
+    assert!(
+        err_msg.contains("nesting depth"),
+        "Error message should mention nesting depth: {err_msg}"
+    );
+
+    let _ = fs::remove_dir_all(&root);
+}
+
+#[test]
+fn oracle_xml_file_size_budget_enforced() {
+    let root = temp_path("size-limit");
+    let platform = current_fmi_platform();
+    let binary_dir = root.join("binaries").join(&platform);
+    fs::create_dir_all(&binary_dir).expect("create binary dir");
+    fs::write(
+        binary_dir.join(format!("model.{}", shared_library_extension())),
+        b"mock_binary_content",
+    )
+    .expect("write binary");
+
+    let xml_path = root.join("modelDescription.xml");
+    let file = fs::File::create(&xml_path).expect("create xml file");
+    // Truncate/set length to MAX_XML_BYTES + 1024 without writing 50 MB
+    file.set_len(MAX_XML_BYTES + 1024).expect("set_len");
+    drop(file);
+
+    let result = validate_unpacked_fmu_layout(&root);
+    assert!(result.is_err(), "Must reject size > {MAX_XML_BYTES}");
+    let err_msg = result.unwrap_err().to_string();
+    assert!(
+        err_msg.contains("exceeds maximum allowed size"),
+        "Error message should mention size limit: {err_msg}"
+    );
+
+    let _ = fs::remove_dir_all(&root);
+}
+
+#[test]
+fn oracle_roundtrip_serialization_and_attribute_order() {
+    let original = ModelDescription::new("oscillator & <pendulum>", "{kairo-guid-\"123\"}")
+        .with_variable(ScalarVariable::real_input("force & strain", 1))
+        .with_variable(ScalarVariable::real_output("position \"x\"", 2));
+
+    let xml = original.to_fmi2_xml();
+
+    // Verify XML entities are properly escaped
+    assert!(xml.contains("&amp;"));
+    assert!(xml.contains("&quot;"));
+    assert!(xml.contains("&lt;"));
+    assert!(xml.contains("&gt;"));
+
+    // Parse back using ModelDescription::from_xml_str
+    let parsed = ModelDescription::from_xml_str(&xml).expect("parse back XML");
+    assert_eq!(parsed.model_name, original.model_name);
+    assert_eq!(parsed.guid, original.guid);
+    assert_eq!(parsed.generation_tool, original.generation_tool);
+    assert_eq!(parsed.variables.len(), original.variables.len());
+    for (orig_var, parsed_var) in original.variables.iter().zip(parsed.variables.iter()) {
+        assert_eq!(orig_var.name, parsed_var.name);
+        assert_eq!(orig_var.value_reference, parsed_var.value_reference);
+        assert_eq!(orig_var.causality, parsed_var.causality);
+        assert_eq!(orig_var.variability, parsed_var.variability);
+        assert_eq!(orig_var.variable_type, parsed_var.variable_type);
+    }
+
+    // Now test attribute order insensitivity: reorder attributes in root and variables
+    let reordered_xml = r#"<?xml version="1.0" encoding="UTF-8"?>
+<fmiModelDescription generationTool="kairo-ecs-fmi" guid="{kairo-guid-&quot;123&quot;}" modelName="oscillator &amp; &lt;pendulum&gt;" fmiVersion="2.0">
+  <CoSimulation modelIdentifier="kairo_ecs_model" />
+  <ModelVariables>
+    <ScalarVariable variability="continuous" causality="input" valueReference="1" name="force &amp; strain">
+      <Real />
+    </ScalarVariable>
+    <ScalarVariable causality="output" name="position &quot;x&quot;" variability="continuous" valueReference="2">
+      <Real />
+    </ScalarVariable>
+  </ModelVariables>
+  <ModelStructure>
+    <Outputs>
+      <Unknown index="2" />
+    </Outputs>
+  </ModelStructure>
+</fmiModelDescription>
+"#;
+    let parsed_reordered =
+        ModelDescription::from_xml_str(reordered_xml).expect("parse reordered XML");
+    assert_eq!(parsed_reordered.model_name, original.model_name);
+    assert_eq!(parsed_reordered.guid, original.guid);
+    assert_eq!(parsed_reordered.variables, original.variables);
+}
+
+#[test]
+fn oracle_validate_generated_fmi2_xml_oracle() {
+    let model = ModelDescription::new("valid_model", "{guid-1}")
+        .with_variable(ScalarVariable::real_input("u", 1))
+        .with_variable(ScalarVariable::real_output("y", 2));
+
+    model
+        .validate_generated_fmi2_xml()
+        .expect("must validate successfully");
+}
+
+#[test]
+fn oracle_from_xml_str_rejects_nested_model_description() {
+    let xml = r#"<?xml version="1.0" encoding="UTF-8"?>
+<wrapper>
+  <fmiModelDescription fmiVersion="2.0" modelName="nested" guid="{g1}">
+  </fmiModelDescription>
+</wrapper>
+"#;
+    let result = ModelDescription::from_xml_str(xml);
+    assert!(result.is_err(), "Must reject nested fmiModelDescription");
+    let err_msg = result.unwrap_err().to_string();
+    assert!(
+        err_msg.contains("expected <fmiModelDescription> at document root"),
+        "Error message must specify expected root, got: {err_msg}"
+    );
+}
+
+#[test]
+fn oracle_from_xml_str_parses_variable_types_in_start_and_end_tags() {
+    let xml = r#"<?xml version="1.0" encoding="UTF-8"?>
+<fmiModelDescription fmiVersion="2.0" modelName="types_test" guid="{types-guid}">
+  <ModelVariables>
+    <ScalarVariable name="int_var" valueReference="1" causality="input" variability="continuous">
+      <Integer start="10"></Integer>
+    </ScalarVariable>
+    <ScalarVariable name="bool_var" valueReference="2" causality="output" variability="continuous">
+      <Boolean></Boolean>
+    </ScalarVariable>
+    <ScalarVariable name="str_var" valueReference="3" causality="local" variability="continuous">
+      <String start="abc" />
+    </ScalarVariable>
+  </ModelVariables>
+  <ModelStructure>
+    <Outputs>
+      <Unknown index="2" />
+    </Outputs>
+  </ModelStructure>
+</fmiModelDescription>
+"#;
+    let model =
+        ModelDescription::from_xml_str(xml).expect("parse XML with explicit start/end type tags");
+    assert_eq!(model.variables.len(), 3);
+    assert_eq!(model.variables[0].variable_type, VariableType::Integer);
+    assert_eq!(model.variables[1].variable_type, VariableType::Boolean);
+    assert_eq!(model.variables[2].variable_type, VariableType::String);
+}
+
+#[test]
+fn oracle_from_xml_str_rejects_unsupported_variable_type() {
+    let xml = r#"<?xml version="1.0" encoding="UTF-8"?>
+<fmiModelDescription fmiVersion="2.0" modelName="enum_test" guid="{enum-guid}">
+  <ModelVariables>
+    <ScalarVariable name="mode" valueReference="1" causality="input" variability="continuous">
+      <Enumeration declaredType="Mode" />
+    </ScalarVariable>
+  </ModelVariables>
+  <ModelStructure />
+</fmiModelDescription>
+"#;
+    let result = ModelDescription::from_xml_str(xml);
+    assert!(
+        result.is_err(),
+        "Must reject unsupported variable type Enumeration"
+    );
+    let err_msg = result.unwrap_err().to_string();
+    assert!(
+        err_msg.contains("missing a supported type"),
+        "Expected unsupported type error, got: {err_msg}"
+    );
+}
+
+#[test]
+fn oracle_from_xml_str_parses_unknown_in_start_and_end_tags() {
+    let xml = r#"<?xml version="1.0" encoding="UTF-8"?>
+<fmiModelDescription fmiVersion="2.0" modelName="unknowns_test" guid="{u-guid}">
+  <ModelVariables>
+    <ScalarVariable name="out1" valueReference="1" causality="output" variability="continuous">
+      <Real />
+    </ScalarVariable>
+    <ScalarVariable name="out2" valueReference="2" causality="output" variability="continuous">
+      <Real />
+    </ScalarVariable>
+  </ModelVariables>
+  <ModelStructure>
+    <Outputs>
+      <Unknown index="1"></Unknown>
+      <Unknown index="2"/>
+    </Outputs>
+  </ModelStructure>
+</fmiModelDescription>
+"#;
+    let model = ModelDescription::from_xml_str(xml)
+        .expect("must parse Unknown elements in both start/end and self-closing forms");
+    assert_eq!(model.variables.len(), 2);
+}
+
+#[test]
+fn oracle_from_xml_str_rejects_content_after_root_closed() {
+    let xml = r#"<?xml version="1.0" encoding="UTF-8"?>
+<fmiModelDescription fmiVersion="2.0" modelName="closed_root" guid="{cr-guid}"/>
+<ModelVariables>
+  <ScalarVariable name="x" valueReference="1">
+    <Real />
+  </ScalarVariable>
+</ModelVariables>
+"#;
+    let result = ModelDescription::from_xml_str(xml);
+    assert!(
+        result.is_err(),
+        "Must reject content after root element closed"
+    );
+    let err_msg = result.unwrap_err().to_string();
+    assert!(
+        err_msg.contains("unexpected element") || err_msg.contains("after root element closed"),
+        "Expected post-root content error, got: {err_msg}"
+    );
+}
+
+#[test]
+fn oracle_from_xml_str_rejects_missing_or_invalid_fmi_version() {
+    let xml_missing_version = r#"<?xml version="1.0" encoding="UTF-8"?>
+<fmiModelDescription modelName="no_version" guid="{nv-guid}" />
+"#;
+    let result = ModelDescription::from_xml_str(xml_missing_version);
+    assert!(
+        result.is_err(),
+        "Must reject XML missing fmiVersion attribute"
+    );
+    assert!(
+        result
+            .unwrap_err()
+            .to_string()
+            .contains("missing required fmiVersion attribute"),
+        "Expected missing fmiVersion attribute error"
+    );
+
+    let xml_unsupported_version = r#"<?xml version="1.0" encoding="UTF-8"?>
+<fmiModelDescription fmiVersion="1.0" modelName="v1" guid="{v1-guid}" />
+"#;
+    let result_v1 = ModelDescription::from_xml_str(xml_unsupported_version);
+    assert!(
+        result_v1.is_err(),
+        "Must reject XML with unsupported fmiVersion"
+    );
+    assert!(
+        result_v1
+            .unwrap_err()
+            .to_string()
+            .contains("unsupported FMI version '1.0'"),
+        "Expected unsupported FMI version error"
+    );
+}
+
+#[test]
+fn oracle_from_xml_str_ignores_annotation_type_names_and_rejects_duplicate_types() {
+    let xml_with_annotations = r#"<?xml version="1.0" encoding="UTF-8"?>
+<fmiModelDescription fmiVersion="2.0" modelName="nested_types" guid="{nt-guid}">
+  <ModelVariables>
+    <ScalarVariable name="annotated_var" valueReference="1" causality="local" variability="continuous">
+      <Real start="1.0" />
+      <Annotations>
+        <Tool name="SomeTool">
+          <Integer start="42" />
+          <Boolean value="true" />
+          <String value="hello" />
+        </Tool>
+      </Annotations>
+    </ScalarVariable>
+  </ModelVariables>
+  <ModelStructure />
+</fmiModelDescription>
+"#;
+    let model = ModelDescription::from_xml_str(xml_with_annotations)
+        .expect("should successfully parse model description with tool annotations");
+    assert_eq!(model.variables.len(), 1);
+    assert_eq!(
+        model.variables[0].variable_type,
+        VariableType::Real,
+        "Variable type must remain Real and not be overwritten by nested annotation elements"
+    );
+
+    let xml_duplicate_types = r#"<?xml version="1.0" encoding="UTF-8"?>
+<fmiModelDescription fmiVersion="2.0" modelName="dup_types" guid="{dt-guid}">
+  <ModelVariables>
+    <ScalarVariable name="invalid_var" valueReference="1">
+      <Real />
+      <Integer />
+    </ScalarVariable>
+  </ModelVariables>
+  <ModelStructure />
+</fmiModelDescription>
+"#;
+    let result_dup = ModelDescription::from_xml_str(xml_duplicate_types);
+    assert!(
+        result_dup.is_err(),
+        "Must reject ScalarVariable declaring multiple types"
+    );
+    assert!(
+        result_dup
+            .unwrap_err()
+            .to_string()
+            .contains("declares multiple type elements"),
+        "Expected multiple type elements error"
+    );
+}
+
+#[test]
+fn oracle_from_xml_str_ignores_nested_scalar_variable_elements_in_annotations() {
+    let xml = r#"<?xml version="1.0" encoding="UTF-8"?>
+<fmiModelDescription fmiVersion="2.0" modelName="nested_scalar_var" guid="{nsv-guid}">
+  <ModelVariables>
+    <ScalarVariable name="outer_var" valueReference="10" causality="input" variability="continuous">
+      <Real start="3.14" />
+      <Annotations>
+        <Tool name="VendorTool">
+          <ScalarVariable name="vendor_inner" valueReference="999" causality="output">
+            <Integer start="42" />
+          </ScalarVariable>
+        </Tool>
+      </Annotations>
+    </ScalarVariable>
+  </ModelVariables>
+  <ModelStructure />
+</fmiModelDescription>
+"#;
+    let model = ModelDescription::from_xml_str(xml).expect(
+        "must successfully parse outer ScalarVariable despite nested annotation ScalarVariable",
+    );
+    assert_eq!(model.variables.len(), 1);
+    assert_eq!(model.variables[0].name, "outer_var");
+    assert_eq!(model.variables[0].value_reference, 10);
+    assert_eq!(model.variables[0].variable_type, VariableType::Real);
+}
+
+#[test]
+fn oracle_from_xml_str_ignores_vendor_model_variables_element_in_annotations() {
+    let xml = r#"<?xml version="1.0" encoding="UTF-8"?>
+<fmiModelDescription fmiVersion="2.0" modelName="vendor_container_test" guid="{vct-guid}">
+  <ModelVariables>
+    <ScalarVariable name="first_var" valueReference="1" causality="input">
+      <Real />
+      <Annotations>
+        <Tool name="VendorTool">
+          <ModelVariables>
+            <ScalarVariable name="shadow" valueReference="99">
+              <Integer />
+            </ScalarVariable>
+          </ModelVariables>
+        </Tool>
+      </Annotations>
+    </ScalarVariable>
+    <ScalarVariable name="second_var" valueReference="2" causality="output">
+      <Integer />
+    </ScalarVariable>
+  </ModelVariables>
+  <ModelStructure>
+    <Outputs>
+      <Unknown index="2" />
+    </Outputs>
+  </ModelStructure>
+</fmiModelDescription>
+"#;
+    let model = ModelDescription::from_xml_str(xml).expect(
+        "must successfully parse both variables despite nested ModelVariables in tool annotation",
+    );
+    assert_eq!(model.variables.len(), 2);
+    assert_eq!(model.variables[0].name, "first_var");
+    assert_eq!(model.variables[0].variable_type, VariableType::Real);
+    assert_eq!(model.variables[1].name, "second_var");
+    assert_eq!(model.variables[1].variable_type, VariableType::Integer);
+}
+
+#[test]
+fn oracle_from_xml_str_and_loader_ignore_nested_vendor_fmi_model_description_elements() {
+    let xml = r#"<?xml version="1.0" encoding="UTF-8"?>
+<fmiModelDescription fmiVersion="2.0" modelName="vendor_root_test" guid="{vrt-guid}">
+  <VendorAnnotations>
+    <Tool name="VendorTool">
+      <fmiModelDescription fmiVersion="2.0">
+        <NestedElement />
+      </fmiModelDescription>
+    </Tool>
+  </VendorAnnotations>
+  <ModelVariables>
+    <ScalarVariable name="real_var" valueReference="1">
+      <Real />
+    </ScalarVariable>
+  </ModelVariables>
+  <ModelStructure />
+</fmiModelDescription>
+"#;
+    let model = ModelDescription::from_xml_str(xml)
+        .expect("must successfully parse model when nested vendor fmiModelDescription closes before ModelVariables");
+    assert_eq!(model.variables.len(), 1);
+    assert_eq!(model.variables[0].name, "real_var");
+
+    let root = temp_path("nested-vendor-root-test");
+    setup_unpacked_fmu(&root, xml);
+    let layout_report = validate_unpacked_fmu_layout(&root)
+        .expect("must validate unpacked FMU layout with nested vendor fmiModelDescription");
+    assert!(layout_report.model_description.exists());
+}
