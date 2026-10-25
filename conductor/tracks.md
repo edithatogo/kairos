@@ -75,12 +75,12 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 68 | Inter-Unit Boundary Channels & Asynchronous Handover Sinks | Done | `des-api-agent + contracts-agent + streaming-agent` | See `conductor/tracks/68-*/spec.md` |
 | 69 | Stochastic Competing Risks & Non-Markovian Hazard Engine | Done | `des-api-agent + vv-uq-agent + core-scheduler-agent` | See `conductor/tracks/69-*/spec.md` |
 
-| 70 | Polars-Native Data Processing and Standard Interchange | In Progress | `arrow-agent + ffi-agent + conformance-agent` | See `conductor/tracks/70-*/spec.md` |
+| 70 | Polars-Native Data Processing and Standard Interchange | Done | `arrow-agent + ffi-agent + conformance-agent` | See `conductor/tracks/70-*/spec.md` |
 | 71 | rand deterministic RNG adoption | Done | `rng-agent + conformance-agent` | See `conductor/tracks/71-*/spec.md` |
 | 72 | rand_distr statistical sampling adoption | Done | `rng-agent + vv-uq-agent + des-api-agent` | See `conductor/tracks/72-*/spec.md` |
 | 73 | petgraph spatial topology and routing adoption | Done | `abm-api-agent + contracts-agent` | See `conductor/tracks/73-*/spec.md` |
-| 74 | Serde typed control contracts | Planned | `contracts-agent` | See `conductor/tracks/74-*/spec.md` |
-| 75 | serde_json metadata and control encoding | Planned | `contracts-agent` | See `conductor/tracks/75-*/spec.md` |
+| 74 | Serde typed control contracts | Done | `contracts-agent` | See `conductor/tracks/74-*/spec.md` |
+| 75 | serde_json metadata and control encoding | Done | `contracts-agent` | See `conductor/tracks/75-*/spec.md` |
 | 76 | toml scenario configuration parsing | Done | `contracts-agent` | See `conductor/tracks/76-*/spec.md` |
 | 77 | Clap CLI consolidation | Done | `contracts-agent` | See `conductor/tracks/77-*/spec.md` |
 | 78 | Rayon bounded independent-work execution | Done | `experiment-agent` | See `conductor/tracks/78-*/spec.md` |
