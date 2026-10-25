@@ -8,10 +8,10 @@ rust-version.workspace = true
 [dependencies]
 kairo-ecs-core = { path = "../kairo-ecs-core", version = "0.0.0" }
 kairo-ecs-types = { path = "../kairo-ecs-types", version = "0.0.0" }
-clap = { version = ">=4.5.0, <4.6.0", features = ["derive"] }
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-thiserror = "2"
+clap = { version = ">=4.6.7, <4.7.0", features = ["derive"] }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+thiserror = "2.0.21"
 
 [lib]
 path = "src/lib.rs"
@@ -21,7 +21,7 @@ name = "kairo-ecs-debug"
 path = "src/main.rs"
 
 [dev-dependencies]
-criterion = "0.5"
+criterion = "0.8.2"
 
 [[bench]]
 name = "reconstruct"
