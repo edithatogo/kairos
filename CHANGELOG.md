@@ -66,6 +66,8 @@ Format:
 
 ### Changed
 
+- `bindings/csharp`: pin the .NET 10 SDK to 10.0.402 for C# build and validation tooling; target frameworks and package APIs are unchanged.
+
 - `crates/kairo-ecs-state` adds cache-line aligned SoA columns (`CacheLineLayout`, `TightLayout`), deterministic typed query execution, archetype partitioning, and strict index-ordered iteration.
 - `crates/kairo-ecs-core` expands linked entity unit test coverage for `linked_entity` domain structures, lifecycle events, and telemetry serialization.
 - Website CSS tooling uses reviewed PostCSS nesting and parser fixes, and website/TypeScript source-map-js locks resolve the fixed 1.2.2 release with preserved evidence checks.
