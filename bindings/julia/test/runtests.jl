@@ -15,7 +15,7 @@ end
     unordered = [
         EventLogRecord(
             run_id = "run-1",
-            event_id = "event-c",
+            event_id_index = UInt64(3),
             time_ticks = UInt128(5),
             priority = Int32(1),
             sequence = UInt64(3),
@@ -23,7 +23,7 @@ end
         ),
         EventLogRecord(
             run_id = "run-1",
-            event_id = "event-a",
+            event_id_index = UInt64(1),
             time_ticks = UInt128(1),
             priority = Int32(0),
             sequence = UInt64(2),
@@ -31,7 +31,7 @@ end
         ),
         EventLogRecord(
             run_id = "run-1",
-            event_id = "event-b",
+            event_id_index = UInt64(2),
             time_ticks = UInt128(1),
             priority = Int32(0),
             sequence = UInt64(1),
@@ -39,11 +39,11 @@ end
         ),
     ]
 
-    @test [event.event_id for event in ordered_events(unordered)] == ["event-b", "event-a", "event-c"]
+    @test [event.event_id_index for event in ordered_events(unordered)] == [UInt64(2), UInt64(1), UInt64(3)]
     @test_throws ArgumentError ordered_events([
         EventLogRecord(
             run_id = "run-1",
-            event_id = "event-invalid",
+            event_id_index = UInt64(99),
             time_ticks = UInt128(1),
             time_scale = "seconds",
             sequence = UInt64(1),
@@ -56,8 +56,9 @@ end
     records = [
         EventLogRecord(
             run_id = "run-1",
-            event_id = "event-b",
-            entity_id = "entity-1",
+            event_id_index = UInt64(0x0000_0000_0000_000b),
+            event_id_gen = UInt32(2),
+            entity_id = (index = UInt64(0x0000_0000_0000_0007), gen = UInt32(1)),
             time_ticks = UInt128(2)^80 + UInt128(42),
             priority = Int32(0),
             sequence = UInt64(2),
@@ -66,7 +67,7 @@ end
         ),
         EventLogRecord(
             run_id = "run-1",
-            event_id = "event-a",
+            event_id_index = UInt64(0x0000_0000_0000_000a),
             time_ticks = UInt128(7),
             priority = Int32(-1),
             sequence = UInt64(1),
@@ -78,23 +79,47 @@ end
     decoded = from_smoke_bytes(to_smoke_bytes(batch))
 
     @test decoded == EventLogBatch(ordered_events(records))
-    @test [record.event_id for record in decoded.records] == ["event-a", "event-b"]
+    @test [record.event_id_index for record in decoded.records] ==
+          [UInt64(0x0000_0000_0000_000a), UInt64(0x0000_0000_0000_000b)]
+    @test decoded.records[2].event_id_gen == UInt32(2)
+    # Null-together generational entity columns.
+    @test decoded.records[1].entity_id === nothing
+    @test decoded.records[2].entity_id.index == UInt64(0x0000_0000_0000_0007)
+    @test decoded.records[2].entity_id.gen == UInt32(1)
     @test decoded.records[2].time_ticks == UInt128(2)^80 + UInt128(42)
     @test decoded.records[2].payload_ref == "payload://arrival"
     @test_throws ArgumentError from_smoke_bytes(UInt8[])
+
+    # Malformed rows are rejected explicitly: a half-null entity row violates
+    # the null-together v2 contract.
+    entityless = EventLogRecord(
+        run_id = "run-1",
+        event_id_index = UInt64(1),
+        time_ticks = UInt128(1),
+        sequence = UInt64(1),
+        event_kind = "custom:start",
+    )
+    payload = String(to_smoke_bytes(EventLogBatch([entityless])))
+    # Make the row half-null: entity index present, generation empty.
+    half_null = replace(payload, "\t0\t\t\t" => "\t0\t7\t\t")
+    @test half_null != payload
+    @test_throws ArgumentError from_smoke_bytes(half_null)
 end
 
 @testset "arrow event log schema facade" begin
     schema = arrow_event_log_schema()
 
-    @test schema.stream == "kairo_ecs.event_log.v1"
-    @test schema.schema_version == UInt16(1)
+    @test schema.stream == "kairo_ecs.event_log.v2"
+    @test schema.schema_version == UInt16(2)
     @test [field.name for field in schema.fields] == [
         "schema_version",
         "run_id",
-        "event_id",
-        "entity_id",
-        "time_ticks",
+        "event_id_index",
+        "event_id_gen",
+        "entity_id_index",
+        "entity_id_gen",
+        "time_ticks_hi",
+        "time_ticks_lo",
         "time_scale",
         "priority",
         "sequence",
@@ -102,8 +127,10 @@ end
         "status",
         "payload_ref",
     ]
-    @test schema.fields[5].type == "FixedSizeBinary(16)"
-    @test schema.fields[11].nullable
+    @test schema.fields[7].type == "UInt64"
+    @test schema.fields[8].type == "UInt64"
+    @test schema.fields[4].type == "UInt32"
+    @test schema.fields[14].nullable
 end
 
 @testset "native ffi status" begin

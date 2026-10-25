@@ -157,12 +157,15 @@ struct EngineState {
     event_handles: HashMap<u64, ScheduledEventHandle>,
     event_handles_by_id: HashMap<EventId, u64>,
     event_log: Vec<FfiEventLogRecord>,
+    next_sequence: u64,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 struct ScheduledEventHandle {
     id: EventId,
     at_ticks: u64,
+    priority: i32,
+    kind: u32,
 }
 
 impl EngineState {
@@ -170,7 +173,7 @@ impl EngineState {
         *self = Self::default();
     }
 
-    fn record_event(&mut self, event_id: EventId, at_ticks: u64) -> u64 {
+    fn record_event(&mut self, event_id: EventId, at_ticks: u64, priority: i32, kind: u32) -> u64 {
         let handle = self
             .next_event_handle
             .checked_add(1)
@@ -181,6 +184,8 @@ impl EngineState {
             ScheduledEventHandle {
                 id: event_id,
                 at_ticks,
+                priority,
+                kind,
             },
         );
         self.event_handles_by_id.insert(event_id, handle);
@@ -202,7 +207,7 @@ impl EngineState {
         });
         self.stats.scheduled_events += 1;
         self.stats.pending_events = self.scheduler.pending_events() as u64;
-        self.record_event(event_id, at_ticks)
+        self.record_event(event_id, at_ticks, priority, kind)
     }
 
     fn schedule_after(&mut self, after_ticks: u64, priority: i32, kind: u32) -> Option<u64> {
@@ -222,6 +227,11 @@ impl EngineState {
                 self.stats.dispatched_events += 1;
                 self.stats.now_ticks = self.scheduler.now().ticks() as u64;
                 self.stats.pending_events = self.scheduler.pending_events() as u64;
+                let scheduled = self
+                    .event_handles_by_id
+                    .get(&event.id)
+                    .and_then(|handle| self.event_handles.get(handle))
+                    .copied();
                 self.forget_event(event.id);
 
                 let ticks = event.at.ticks();
@@ -244,12 +254,13 @@ impl EngineState {
                     time_ticks_hi: hi,
                     time_ticks_lo: lo,
                     time_scale: "ticks".to_string(),
-                    priority: event.priority,
-                    sequence: event.sequence,
+                    priority: scheduled.map_or(event.priority, |item| item.priority),
+                    sequence: self.next_sequence,
                     event_kind: kind_str,
                     status: "dispatched".to_string(),
                     payload_ref: None,
                 });
+                self.next_sequence = self.next_sequence.saturating_add(1);
             }
             StepOutcome::Empty | StepOutcome::LimitReached => {
                 self.stats.now_ticks = self.scheduler.now().ticks() as u64;
@@ -271,6 +282,24 @@ impl EngineState {
         let cancelled = self.scheduler.cancel(scheduled.id);
         if cancelled {
             self.stats.cancelled_events += 1;
+            let ticks = u128::from(scheduled.at_ticks);
+            self.event_log.push(FfiEventLogRecord {
+                schema_version: 2,
+                run_id: "default_run".to_string(),
+                event_id_index: scheduled.id.index,
+                event_id_gen: scheduled.id.generation,
+                entity_id_index: None,
+                entity_id_gen: None,
+                time_ticks_hi: (ticks >> 64) as u64,
+                time_ticks_lo: ticks as u64,
+                time_scale: "ticks".to_string(),
+                priority: scheduled.priority,
+                sequence: self.next_sequence,
+                event_kind: format!("custom:{}", scheduled.kind),
+                status: "cancelled".to_string(),
+                payload_ref: None,
+            });
+            self.next_sequence = self.next_sequence.saturating_add(1);
         } else {
             set_last_error("event handle not found");
         }
@@ -658,7 +687,7 @@ const EVENT_LOG_COLUMNS_V2: [ColumnSchemaDef; 14] = [
     },
     ColumnSchemaDef {
         name: b"run_id\0",
-        format: b"u\0",
+        format: b"U\0",
         flags: 0,
     },
     ColumnSchemaDef {
@@ -693,7 +722,7 @@ const EVENT_LOG_COLUMNS_V2: [ColumnSchemaDef; 14] = [
     },
     ColumnSchemaDef {
         name: b"time_scale\0",
-        format: b"u\0",
+        format: b"U\0",
         flags: 0,
     },
     ColumnSchemaDef {
@@ -708,17 +737,17 @@ const EVENT_LOG_COLUMNS_V2: [ColumnSchemaDef; 14] = [
     },
     ColumnSchemaDef {
         name: b"event_kind\0",
-        format: b"u\0",
+        format: b"U\0",
         flags: 0,
     },
     ColumnSchemaDef {
         name: b"status\0",
-        format: b"u\0",
+        format: b"U\0",
         flags: 0,
     },
     ColumnSchemaDef {
         name: b"payload_ref\0",
-        format: b"u\0",
+        format: b"U\0",
         flags: 2,
     },
 ];
@@ -783,6 +812,102 @@ impl Default for KairoArrowArray {
             private_data: core::ptr::null_mut(),
         }
     }
+}
+
+/// ABI mirror of the Arrow C Stream Interface. Stream callbacks transfer
+/// ownership through Arrow's release functions.
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
+pub struct KairoArrowArrayStream {
+    pub get_schema:
+        Option<unsafe extern "C" fn(*mut KairoArrowArrayStream, *mut KairoArrowSchema) -> i32>,
+    pub get_next:
+        Option<unsafe extern "C" fn(*mut KairoArrowArrayStream, *mut KairoArrowArray) -> i32>,
+    pub get_last_error: Option<unsafe extern "C" fn(*mut KairoArrowArrayStream) -> *const c_char>,
+    pub release: Option<unsafe extern "C" fn(*mut KairoArrowArrayStream)>,
+    pub private_data: *mut core::ffi::c_void,
+}
+
+impl Default for KairoArrowArrayStream {
+    fn default() -> Self {
+        Self {
+            get_schema: None,
+            get_next: None,
+            get_last_error: None,
+            release: None,
+            private_data: core::ptr::null_mut(),
+        }
+    }
+}
+
+#[cfg(feature = "native-data")]
+fn arrow_event_log_records(engine: &EngineState) -> Vec<kairo_ecs_arrow::EventLogRecord> {
+    use kairo_ecs_arrow::{EventLogRecord, EventStatus, SCHEMA_VERSION_V2, TIME_SCALE_TICKS};
+
+    engine
+        .event_log
+        .iter()
+        .map(|record| EventLogRecord {
+            schema_version: SCHEMA_VERSION_V2,
+            run_id: record.run_id.clone(),
+            event_id: EventId::new(record.event_id_index, record.event_id_gen),
+            entity_id: record
+                .entity_id_index
+                .zip(record.entity_id_gen)
+                .map(|(index, generation)| kairo_ecs_types::EntityId::new(index, generation)),
+            time_ticks: (u128::from(record.time_ticks_hi) << 64) | u128::from(record.time_ticks_lo),
+            time_scale: TIME_SCALE_TICKS.to_string(),
+            priority: record.priority,
+            sequence: record.sequence,
+            event_kind: record.event_kind.clone(),
+            status: match record.status.as_str() {
+                "dispatched" => EventStatus::Dispatched,
+                "cancelled" => EventStatus::Cancelled,
+                "skipped" => EventStatus::Skipped,
+                _ => EventStatus::Error,
+            },
+            payload_ref: record.payload_ref.clone(),
+        })
+        .collect()
+}
+
+#[cfg(feature = "native-data")]
+fn bridge_arrow_stream(
+    stream: kairo_ecs_arrow::arrow_c_data::ArrowArrayStream,
+) -> KairoArrowArrayStream {
+    use kairo_ecs_arrow::arrow_c_data::arrow_ffi as abi;
+    // SAFETY: Both types are repr(C) declarations of the Arrow C Stream ABI
+    // with identical field order and pointer signatures. Ownership transfers
+    // with callbacks and private data unchanged.
+    unsafe { core::mem::transmute::<abi::ArrowArrayStream, KairoArrowArrayStream>(stream) }
+}
+
+#[cfg(feature = "native-data")]
+fn export_stream_body(
+    engine: &EngineState,
+    max_batch_rows: usize,
+) -> Result<KairoArrowArrayStream, KairoEcsStatusCode> {
+    let records = arrow_event_log_records(engine);
+    let dataframe =
+        kairo_ecs_arrow::polars_interop::records_to_dataframe(&records).map_err(|error| {
+            set_last_error(&format!("event log export failed: {error}"));
+            KairoEcsStatusCode::KAIRO_ECS_ERR_INVALID_ARGUMENT
+        })?;
+    let stream = kairo_ecs_arrow::arrow_c_data::export_stream(&dataframe, max_batch_rows, None)
+        .map_err(|error| {
+            set_last_error(&format!("event log export failed: {error}"));
+            KairoEcsStatusCode::KAIRO_ECS_ERR_INVALID_ARGUMENT
+        })?;
+    Ok(bridge_arrow_stream(stream))
+}
+
+#[cfg(not(feature = "native-data"))]
+fn export_stream_body(
+    _engine: &EngineState,
+    _max_batch_rows: usize,
+) -> Result<KairoArrowArrayStream, KairoEcsStatusCode> {
+    set_last_error("populated Arrow C stream export requires the native-data feature");
+    Err(KairoEcsStatusCode::KAIRO_ECS_ERR_INVALID_ARGUMENT)
 }
 
 #[allow(clippy::vec_box)]
@@ -858,12 +983,12 @@ fn build_validity_bitmap(validity: &[bool]) -> Vec<u8> {
     bytes
 }
 
-fn build_utf8_buffers(strings: &[Option<&str>]) -> (Vec<u8>, Vec<i32>, Vec<u8>, usize) {
+fn build_utf8_buffers(strings: &[Option<&str>]) -> (Vec<u8>, Vec<i64>, Vec<u8>, usize) {
     let mut null_count = 0;
     let mut validity = Vec::with_capacity(strings.len());
     let mut offsets = Vec::with_capacity(strings.len() + 1);
     let mut data = Vec::new();
-    let mut current_offset: i32 = 0;
+    let mut current_offset: i64 = 0;
     offsets.push(current_offset);
 
     for s in strings {
@@ -872,7 +997,7 @@ fn build_utf8_buffers(strings: &[Option<&str>]) -> (Vec<u8>, Vec<i32>, Vec<u8>, 
                 validity.push(true);
                 data.extend_from_slice(text.as_bytes());
                 current_offset = current_offset
-                    .checked_add(text.len() as i32)
+                    .checked_add(text.len() as i64)
                     .unwrap_or(current_offset);
                 offsets.push(current_offset);
             }
@@ -1343,13 +1468,20 @@ pub unsafe extern "C" fn kairo_ecs_export_event_log_arrow_array(
             _allocated_data: allocated_data,
         }));
 
+        // Struct arrays have one buffer slot for their validity bitmap even
+        // when every parent row is valid. Keep the slot alive with the other
+        // exported buffers for the lifetime of the C array.
+        let mut parent_buffers = Box::new([core::ptr::null()]);
+        let parent_buffers_ptr = parent_buffers.as_mut_ptr();
+        (*private_data)._buffers_storage.push(parent_buffers);
+
         *out_array = KairoArrowArray {
             length: row_count,
             null_count: 0,
             offset: 0,
-            n_buffers: 0,
+            n_buffers: 1,
             n_children: 14,
-            buffers: core::ptr::null_mut(),
+            buffers: parent_buffers_ptr,
             children: (*private_data).children_ptrs.as_mut_ptr(),
             dictionary: core::ptr::null_mut(),
             release: Some(release_arrow_array),
@@ -1358,6 +1490,58 @@ pub unsafe extern "C" fn kairo_ecs_export_event_log_arrow_array(
 
         KairoEcsStatusCode::KAIRO_ECS_OK
     })
+}
+
+/// Export the current event log as a bounded Arrow C Stream. The symbol is
+/// always present; builds without `native-data` return an explicit error.
+///
+/// # Safety
+/// `engine` and `out_stream` must be valid writable pointers when non-null.
+#[no_mangle]
+pub unsafe extern "C" fn kairo_ecs_export_event_log_arrow_stream(
+    engine: *mut u64,
+    max_batch_rows: i64,
+    out_stream: *mut KairoArrowArrayStream,
+) -> KairoEcsStatusCode {
+    ffi_boundary_status(|| {
+        if engine.is_null() || out_stream.is_null() {
+            set_last_error("engine and out_stream pointers must not be null");
+            return KairoEcsStatusCode::KAIRO_ECS_ERR_INVALID_ARGUMENT;
+        }
+        if max_batch_rows <= 0 {
+            set_last_error("max_batch_rows must be positive");
+            return KairoEcsStatusCode::KAIRO_ECS_ERR_INVALID_ARGUMENT;
+        }
+        match with_engine_mut(*engine, |engine| {
+            export_stream_body(engine, max_batch_rows as usize)
+        }) {
+            Ok(Ok(stream)) => {
+                *out_stream = stream;
+                KairoEcsStatusCode::KAIRO_ECS_OK
+            }
+            Ok(Err(code)) | Err(code) => code,
+        }
+    })
+}
+
+/// Export a bounded Arrow C Stream as the native polars-arrow stream type.
+#[cfg(feature = "native-data")]
+pub fn export_event_log_arrow_stream(
+    engine_handle: u64,
+    max_batch_rows: usize,
+) -> Result<kairo_ecs_arrow::arrow_c_data::ArrowArrayStream, KairoEcsStatusCode> {
+    let records = with_engine_mut(engine_handle, |engine| arrow_event_log_records(engine))?;
+    let dataframe =
+        kairo_ecs_arrow::polars_interop::records_to_dataframe(&records).map_err(|error| {
+            set_last_error(&format!("event log export failed: {error}"));
+            KairoEcsStatusCode::KAIRO_ECS_ERR_INVALID_ARGUMENT
+        })?;
+    kairo_ecs_arrow::arrow_c_data::export_stream(&dataframe, max_batch_rows, None).map_err(
+        |error| {
+            set_last_error(&format!("event log export failed: {error}"));
+            KairoEcsStatusCode::KAIRO_ECS_ERR_INVALID_ARGUMENT
+        },
+    )
 }
 
 #[cfg(test)]
@@ -1443,6 +1627,16 @@ typedef struct KairoArrowArray {
 
 KairoEcsStatusCode kairo_ecs_export_event_log_arrow_schema(KairoArrowSchema* out_schema);
 KairoEcsStatusCode kairo_ecs_export_event_log_arrow_array(KairoEcsEngineHandle* engine, KairoArrowArray* out_array);
+
+typedef struct KairoArrowArrayStream {
+  int (*get_schema)(struct KairoArrowArrayStream* stream, KairoArrowSchema* out_schema);
+  int (*get_next)(struct KairoArrowArrayStream* stream, KairoArrowArray* out_array);
+  const char* (*get_last_error)(struct KairoArrowArrayStream* stream);
+  void (*release)(struct KairoArrowArrayStream* stream);
+  void* private_data;
+} KairoArrowArrayStream;
+
+KairoEcsStatusCode kairo_ecs_export_event_log_arrow_stream(KairoEcsEngineHandle* engine, int64_t max_batch_rows, KairoArrowArrayStream* out_stream);
 
 #ifdef __cplusplus
 }

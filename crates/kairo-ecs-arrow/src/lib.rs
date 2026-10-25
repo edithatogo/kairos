@@ -14,6 +14,26 @@ pub mod native_schema;
 #[cfg(feature = "polars-native")]
 pub mod polars_interop;
 
+/// Track 70 Phase 2: owned Arrow C Data Interface exports (populated arrays
+/// and bounded multi-batch streams) for Schema v2 event logs. Same Polars
+/// isolation as `polars_interop`: default-off, absent from minimal-core and
+/// browser/Wasm dependency graphs.
+#[cfg(feature = "polars-native")]
+pub mod arrow_c_data;
+
+/// Track 70 Phase 3: durable run-output publication — unique run directories,
+/// bounded per-replication parts staged beside their destination and renamed
+/// into place, manifest-last publication, and readers that require a
+/// completed manifest with valid file hashes. Same Polars isolation as the
+/// other Track 70 modules: default-off, absent from minimal-core and
+/// browser/Wasm dependency graphs.
+///
+/// Task 3.2 implements the Task 3.1 contract; the 15-test contract suite
+/// (merged to 14 order-robust tests for the process-global thread budget) is
+/// its acceptance oracle.
+#[cfg(feature = "polars-native")]
+pub mod run_output;
+
 pub const SCHEMA_VERSION: u16 = 1;
 pub const SCHEMA_VERSION_V2: u16 = 2;
 pub const EVENT_LOG_SCHEMA_MAJOR: u16 = 1;
@@ -358,6 +378,13 @@ pub enum ArrowError {
     /// Track 62: a declared column type string has no official Arrow mapping.
     UnsupportedDataType(String),
     UnsupportedSchemaVersion(u16),
+    /// Track 70 Phase 2: a requested schema does not deep-equal the canonical
+    /// v2 export, or the data shape violates the declared contract; the call
+    /// fails explicitly instead of coercing or truncating.
+    UnsupportedSchemaNegotiation(String),
+    /// Track 70 Phase 2: a call argument is outside the documented contract
+    /// (e.g. a zero-row batch bound).
+    InvalidArgument(&'static str),
     WrongCellCount {
         expected: usize,
         actual: usize,
@@ -397,6 +424,10 @@ impl Display for ArrowError {
             Self::UnsupportedSchemaVersion(version) => {
                 write!(f, "unsupported event-log schema version: {version}")
             }
+            Self::UnsupportedSchemaNegotiation(reason) => {
+                write!(f, "unsupported schema negotiation: {reason}")
+            }
+            Self::InvalidArgument(reason) => write!(f, "invalid argument: {reason}"),
             Self::WrongCellCount { expected, actual } => {
                 write!(f, "expected {expected} cells, got {actual}")
             }
@@ -1084,7 +1115,10 @@ fn stable_hash(value: &str) -> u64 {
     stable_hash_bytes(value.as_bytes())
 }
 
-fn stable_hash_bytes(bytes: &[u8]) -> u64 {
+/// Track 70 Phase 3: the crate's canonical non-cryptographic content checksum
+/// (FNV-1a 64), shared with the run-output publication module's file
+/// attestation. Cryptographic digests are Track 93's qualification scope.
+pub(crate) fn stable_hash_bytes(bytes: &[u8]) -> u64 {
     bytes.iter().fold(0xcbf29ce484222325, |hash, byte| {
         (hash ^ u64::from(*byte)).wrapping_mul(0x100000001b3)
     })

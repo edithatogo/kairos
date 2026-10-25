@@ -29,7 +29,7 @@ test_that("scheduler dispatch order is deterministic", {
   log <- kairoecs_event_log(scheduler)
   expect_identical(log$event_kind, c("first", "same-time-earlier-priority", "late"))
   expect_identical(log$status, rep("dispatched", 3))
-  expect_identical(log$sequence, c(2, 3, 1))
+  expect_identical(log$sequence, c("2", "3", "1"))
 })
 
 test_that("scheduler rejects unknown duplicate and dispatched cancellation", {
@@ -49,25 +49,55 @@ test_that("scheduler rejects unknown duplicate and dispatched cancellation", {
   expect_identical(log$status, c("dispatched", "cancelled"))
 })
 
-test_that("event log roundtrip preserves the v1 schema facade", {
+test_that("event log roundtrip preserves the v2 schema facade", {
   scheduler <- kairoecs_new_scheduler(run_id = "roundtrip", time_scale = "ticks")
   scheduler <- kairoecs_schedule_at(scheduler, 1, "arrive", entity_id = 42)
 
   log <- kairoecs_arrow_roundtrip(kairoecs_event_log(scheduler))
 
-  expect_identical(attr(log, "kairoecs_schema"), "kairo_ecs.event_log.v1")
+  expect_identical(attr(log, "kairoecs_schema"), "kairo_ecs.event_log.v2")
   expect_identical(
     names(log),
     c(
-      "run_id", "event_id", "entity_id", "time_ticks", "time_scale",
-      "priority", "sequence", "event_kind", "status", "payload_ref"
+      "schema_version", "run_id", "event_id_index", "event_id_gen",
+      "entity_id_index", "entity_id_gen", "time_ticks_hi", "time_ticks_lo",
+      "time_scale", "priority", "sequence", "event_kind", "status", "payload_ref"
     )
   )
   expect_identical(log$run_id, "roundtrip")
-  expect_identical(log$entity_id, 42)
+  # Null-together generational entity columns, projected explicitly.
+  expect_identical(log$entity_id_index, "42")
+  expect_identical(log$entity_id_gen, 0)
+  expect_identical(log$time_ticks_hi, "0")
+  expect_identical(log$time_ticks_lo, "1")
 })
 
-test_that("optional Arrow roundtrip preserves the v1 schema facade", {
+test_that("out-of-range ticks and entity ids reject explicitly", {
+  scheduler <- kairoecs_new_scheduler(run_id = "bounds")
+
+  # Exactly 2^53 is representable and stays exact through the limb projection.
+  bounded <- kairoecs_schedule_at(scheduler, 2^53, "boundary")
+  expect_identical(bounded$events$time_ticks_hi, "0")
+  expect_identical(bounded$events$time_ticks_lo, "9007199254740992")
+
+  expect_error(
+    kairoecs_schedule_at(scheduler, 2^60 + 1, "too-large"),
+    "exceeds the pure-R facade's exact precision limit",
+    fixed = TRUE
+  )
+  expect_error(
+    kairoecs_schedule_at(scheduler, 1, "entity-too-large", entity_id = 2^60 + 1),
+    "exceeds the pure-R facade's exact precision limit",
+    fixed = TRUE
+  )
+  expect_error(
+    kairoecs_schedule_at(scheduler, 1, "entity-negative", entity_id = -3),
+    "must be a single non-negative integer value",
+    fixed = TRUE
+  )
+})
+
+test_that("optional Arrow roundtrip preserves the v2 schema facade", {
   testthat::skip_if_not_installed("arrow")
 
   scheduler <- kairoecs_new_scheduler(run_id = "arrow-roundtrip", time_scale = "ticks")
@@ -75,15 +105,16 @@ test_that("optional Arrow roundtrip preserves the v1 schema facade", {
 
   log <- kairoecs_arrow_roundtrip(kairoecs_event_log(scheduler), use_arrow = TRUE)
 
-  expect_identical(attr(log, "kairoecs_schema"), "kairo_ecs.event_log.v1")
+  expect_identical(attr(log, "kairoecs_schema"), "kairo_ecs.event_log.v2")
   expect_identical(
     names(log),
     c(
-      "run_id", "event_id", "entity_id", "time_ticks", "time_scale",
-      "priority", "sequence", "event_kind", "status", "payload_ref"
+      "schema_version", "run_id", "event_id_index", "event_id_gen",
+      "entity_id_index", "entity_id_gen", "time_ticks_hi", "time_ticks_lo",
+      "time_scale", "priority", "sequence", "event_kind", "status", "payload_ref"
     )
   )
   expect_identical(log$run_id, "arrow-roundtrip")
   expect_identical(log$event_kind, "arrive")
-  expect_equal(log$entity_id, 42)
+  expect_equal(log$entity_id_index, "42")
 })

@@ -18,8 +18,10 @@ export EventLogRecord,
     native_library_loader
 
 const VERSION_STRING = "0.1.0"
-const EVENT_LOG_STREAM = "kairo_ecs.event_log.v1"
-const EVENT_LOG_SCHEMA_VERSION = UInt16(1)
+# Track 70 Phase 2 (Task 2.3): explicit Schema v2 identifiers, matching the
+# Rust (`EVENT_LOG_FIELDS_V2`) and Python v2 binding surfaces.
+const EVENT_LOG_STREAM = "kairo_ecs.event_log.v2"
+const EVENT_LOG_SCHEMA_VERSION = UInt16(2)
 const JULIA_BINDING_TRACK_ID = "08"
 
 version_string() = VERSION_STRING
@@ -32,8 +34,9 @@ core contract: `(time_ticks, priority, sequence)`.
 """
 Base.@kwdef struct EventLogRecord
     run_id::String
-    event_id::String
-    entity_id::Union{Nothing,String} = nothing
+    event_id_index::UInt64
+    event_id_gen::UInt32 = UInt32(0)
+    entity_id::Union{Nothing,@NamedTuple{index::UInt64, gen::UInt32}} = nothing
     time_ticks::UInt128
     time_scale::String = "ticks"
     priority::Int32 = Int32(0)
@@ -61,9 +64,12 @@ end
 const _EVENT_LOG_FIELDS = (
     (name = "schema_version", type = "UInt16", nullable = false),
     (name = "run_id", type = "Utf8", nullable = false),
-    (name = "event_id", type = "FixedSizeBinary(12)", nullable = false),
-    (name = "entity_id", type = "FixedSizeBinary(12)", nullable = true),
-    (name = "time_ticks", type = "FixedSizeBinary(16)", nullable = false),
+    (name = "event_id_index", type = "UInt64", nullable = false),
+    (name = "event_id_gen", type = "UInt32", nullable = false),
+    (name = "entity_id_index", type = "UInt64", nullable = true),
+    (name = "entity_id_gen", type = "UInt32", nullable = true),
+    (name = "time_ticks_hi", type = "UInt64", nullable = false),
+    (name = "time_ticks_lo", type = "UInt64", nullable = false),
     (name = "time_scale", type = "Utf8", nullable = false),
     (name = "priority", type = "Int32", nullable = false),
     (name = "sequence", type = "UInt64", nullable = false),
@@ -74,7 +80,6 @@ const _EVENT_LOG_FIELDS = (
 
 function _validate_event(event::EventLogRecord)
     !isempty(strip(event.run_id)) || throw(ArgumentError("run_id must not be empty"))
-    !isempty(strip(event.event_id)) || throw(ArgumentError("event_id must not be empty"))
     event.time_scale == "ticks" || throw(ArgumentError("time_scale must be ticks"))
     !isempty(strip(event.event_kind)) || throw(ArgumentError("event_kind must not be empty"))
     event.status in ("dispatched", "cancelled", "skipped", "error") ||
@@ -88,9 +93,10 @@ end
 """
     EventLogBatch(records)
 
-Validated event-log batch for the Track 04 `kairo_ecs.event_log.v1` boundary.
-The smoke-byte codec mirrors the Rust/Python lightweight Arrow gate shape while
-the native Arrow.jl IPC path is deferred until Julia tooling is available.
+Validated event-log batch for the Track 70 Schema v2 `kairo_ecs.event_log.v2`
+boundary. The smoke-byte codec mirrors the Rust/Python lightweight Arrow gate
+shape (14 contract columns, decimal integer limbs) while the native Arrow.jl
+IPC path is deferred until Julia tooling is available.
 """
 struct EventLogBatch
     records::Vector{EventLogRecord}
@@ -114,7 +120,8 @@ end
 """
     arrow_event_log_schema()
 
-Return the Track 04 event-log schema facade without requiring Arrow.jl at load time.
+Return the Track 70 Schema v2 event-log schema facade without requiring
+Arrow.jl at load time.
 """
 function arrow_event_log_schema()
     return (
@@ -159,21 +166,6 @@ function _unescape_cell(value::AbstractString)
     return String(take!(output))
 end
 
-function _uint128_le_hex(value::UInt128)
-    bytes = UInt8[(value >> (8 * offset)) & 0xff for offset in 0:15]
-    return bytes2hex(bytes)
-end
-
-function _parse_uint128_le_hex(value::AbstractString)
-    bytes = hex2bytes(value)
-    length(bytes) == 16 || throw(ArgumentError("time_ticks must be 16 little-endian bytes"))
-    result = UInt128(0)
-    for (offset, byte) in enumerate(bytes)
-        result |= UInt128(byte) << (8 * (offset - 1))
-    end
-    return result
-end
-
 function _payload_text(payload::AbstractVector{UInt8})
     return String(copy(payload))
 end
@@ -182,28 +174,45 @@ function _payload_text(payload::AbstractString)
     return String(payload)
 end
 
+const _U64_MASK = UInt128(0xffffffffffffffff)
+
+function _smoke_field_header()
+    return join((field.name for field in _EVENT_LOG_FIELDS), "\t")
+end
+
+function _entity_cells(entity_id)
+    entity_id === nothing && return ("", "")
+    return (string(entity_id.index), string(entity_id.gen))
+end
+
 """
     to_smoke_bytes(batch)
 
 Serialize an event-log batch to the repository's dependency-light Arrow smoke
-payload. This is a deterministic table-shaped gate, not a replacement for
-Arrow.jl IPC once the native Julia package lane is available.
+payload. This is a deterministic table-shaped gate with one cell per Schema v2
+contract column (decimal integer limbs, string cells escaped, absent optional
+cells empty), not a replacement for Arrow.jl IPC once the native Julia package
+lane is available.
 """
 function to_smoke_bytes(batch::EventLogBatch)
     lines = [
         "stream=$(EVENT_LOG_STREAM);schema_version=$(EVENT_LOG_SCHEMA_VERSION)",
-        "schema_version\trun_id\tevent_id\tentity_id\ttime_ticks_le_hex\ttime_scale\tpriority\tsequence\tevent_kind\tstatus\tpayload_ref",
+        _smoke_field_header(),
     ]
     for record in ordered_events(batch.records)
+        entity_cells = _entity_cells(record.entity_id)
         push!(
             lines,
             join(
                 [
                     string(EVENT_LOG_SCHEMA_VERSION),
                     _escape_cell(record.run_id),
-                    _escape_cell(record.event_id),
-                    _escape_cell(something(record.entity_id, "")),
-                    _uint128_le_hex(record.time_ticks),
+                    string(record.event_id_index),
+                    string(record.event_id_gen),
+                    entity_cells[1],
+                    entity_cells[2],
+                    string(record.time_ticks >> 64),
+                    string(record.time_ticks & _U64_MASK),
                     _escape_cell(record.time_scale),
                     string(record.priority),
                     string(record.sequence),
@@ -229,30 +238,34 @@ function from_smoke_bytes(payload)
     expected_header = "stream=$(EVENT_LOG_STREAM);schema_version=$(EVENT_LOG_SCHEMA_VERSION)"
     length(lines) >= 2 && lines[1] == expected_header ||
         throw(ArgumentError("unexpected stream header"))
-    expected_fields =
-        "schema_version\trun_id\tevent_id\tentity_id\ttime_ticks_le_hex\ttime_scale\tpriority\tsequence\tevent_kind\tstatus\tpayload_ref"
-    lines[2] == expected_fields || throw(ArgumentError("unexpected field header"))
+    lines[2] == _smoke_field_header() || throw(ArgumentError("unexpected field header"))
 
     records = EventLogRecord[]
     for line in lines[3:end]
         cells = split(line, '\t'; keepempty = true)
-        length(cells) == 11 || throw(ArgumentError("expected 11 cells, got $(length(cells))"))
+        length(cells) == length(_EVENT_LOG_FIELDS) ||
+            throw(ArgumentError("expected $(length(_EVENT_LOG_FIELDS)) cells, got $(length(cells))"))
         parse(UInt16, cells[1]) == EVENT_LOG_SCHEMA_VERSION ||
             throw(ArgumentError("unsupported schema_version: $(cells[1])"))
-        entity_id = isempty(cells[4]) ? nothing : _unescape_cell(cells[4])
-        payload_ref = isempty(cells[11]) ? nothing : _unescape_cell(cells[11])
+        isempty(cells[5]) == isempty(cells[6]) ||
+            throw(ArgumentError("entity_id index and generation must null together"))
+        entity_id = isempty(cells[5]) ? nothing :
+            (index = parse(UInt64, cells[5]), gen = parse(UInt32, cells[6]))
+        payload_ref = isempty(cells[14]) ? nothing : _unescape_cell(cells[14])
         push!(
             records,
             EventLogRecord(
                 run_id = _unescape_cell(cells[2]),
-                event_id = _unescape_cell(cells[3]),
+                event_id_index = parse(UInt64, cells[3]),
+                event_id_gen = parse(UInt32, cells[4]),
                 entity_id = entity_id,
-                time_ticks = _parse_uint128_le_hex(cells[5]),
-                time_scale = _unescape_cell(cells[6]),
-                priority = parse(Int32, cells[7]),
-                sequence = parse(UInt64, cells[8]),
-                event_kind = _unescape_cell(cells[9]),
-                status = _unescape_cell(cells[10]),
+                time_ticks =
+                    (UInt128(parse(UInt64, cells[7])) << 64) | UInt128(parse(UInt64, cells[8])),
+                time_scale = _unescape_cell(cells[9]),
+                priority = parse(Int32, cells[10]),
+                sequence = parse(UInt64, cells[11]),
+                event_kind = _unescape_cell(cells[12]),
+                status = _unescape_cell(cells[13]),
                 payload_ref = payload_ref,
             ),
         )

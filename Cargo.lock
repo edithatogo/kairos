@@ -1634,8 +1634,12 @@ name = "kairo-ecs-arrow"
 version = "0.1.0"
 dependencies = [
  "arrow-schema",
+ "criterion",
  "kairo-ecs-types",
  "polars",
+ "polars-arrow",
+ "serde",
+ "serde_json",
  "sha2",
  "tempfile",
 ]
@@ -1727,6 +1731,7 @@ dependencies = [
 name = "kairo-ecs-ffi"
 version = "0.1.0"
 dependencies = [
+ "kairo-ecs-arrow",
  "kairo-ecs-core",
  "kairo-ecs-rng",
  "kairo-ecs-state",
