@@ -1587,8 +1587,8 @@ entries:
       - "cargo audit"
       - "pwsh -File scripts/validate_conductor_phase_gates.ps1 -TrackDir conductor/tracks/89-tract-robustness"
     git_status: "clean"
-    commit_sha: "0a8bd814f56d561d9ded4ce274c7c708277fc481"
-    pushed_ref: "feat/track-89-tract-inference-qualification"
+    commit_sha: "4cd00e2de04ae6a06aa275e4ea98aae4668bce66"
+    pushed_ref: "origin/main"
     next_phase_decision: "Track 89 Phase 0 evaluation concluded with REJECT (NO-GO); phases 1 and 2 unexecuted per value policy."
 
   - track_id: "90"
