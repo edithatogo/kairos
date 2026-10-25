@@ -7,6 +7,8 @@ fails explicitly), and consumes Arrow tables column-first — the
 ``to_pylist()`` Python-row reconstruction detour is gone.
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any
@@ -70,7 +72,7 @@ class EventLogRecord:
     payload_ref: str | None = None
 
     @classmethod
-    def dispatched(cls, run_id: str, event: DispatchedEvent) -> "EventLogRecord":
+    def dispatched(cls, run_id: str, event: DispatchedEvent) -> EventLogRecord:
         return cls(
             schema_version=SCHEMA_VERSION,
             run_id=run_id,
@@ -96,9 +98,8 @@ class EventLogRecord:
         if self.payload_ref is not None and not self.payload_ref.strip():
             raise ValueError("payload_ref must not be empty when present")
         # spec.md: nullable generational IDs null together.
-        if self.entity_id is not None:
-            if not isinstance(self.entity_id, EntityId):
-                raise ValueError("entity_id must be an EntityId")
+        if self.entity_id is not None and not isinstance(self.entity_id, EntityId):
+            raise ValueError("entity_id must be an EntityId")
 
 
 @dataclass(frozen=True)
@@ -161,7 +162,7 @@ class EventLogBatch:
         return ("\n".join(lines) + "\n").encode("utf-8")
 
     @classmethod
-    def from_smoke_bytes(cls, payload: bytes) -> "EventLogBatch":
+    def from_smoke_bytes(cls, payload: bytes) -> EventLogBatch:
         lines = payload.decode("utf-8").splitlines()
         expected_header = f"stream={EVENT_LOG_STREAM};schema_version={SCHEMA_VERSION}"
         if len(lines) < 2 or lines[0] != expected_header:
@@ -328,7 +329,7 @@ class EventLogBatch:
         }
 
     @classmethod
-    def from_pyarrow_table(cls, table: Any) -> "EventLogBatch":
+    def from_pyarrow_table(cls, table: Any) -> EventLogBatch:
         if tuple(table.schema.names) != tuple(field[0] for field in EVENT_LOG_FIELDS):
             raise ValueError("unexpected Arrow event-log field order")
 

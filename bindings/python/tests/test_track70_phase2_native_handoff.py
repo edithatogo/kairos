@@ -23,10 +23,9 @@ from __future__ import annotations
 
 from typing import Any
 
-import pytest
-
 import kairo_ecs
 import kairo_ecs._arrow
+import pytest
 
 V2_EVENT_LOG_FIELDS = (
     ("schema_version", "UInt16", False),
@@ -46,7 +45,7 @@ V2_EVENT_LOG_FIELDS = (
 )
 
 
-def _dispatched_batch(run_id: str, records: int) -> "kairo_ecs.EventLogBatch":
+def _dispatched_batch(run_id: str, records: int) -> kairo_ecs.EventLogBatch:
     """Build a deterministic batch of `records` dispatched custom events."""
 
     scheduler = kairo_ecs.Scheduler()
