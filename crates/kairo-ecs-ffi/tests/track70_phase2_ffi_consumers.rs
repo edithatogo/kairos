@@ -4,10 +4,10 @@
 //!
 //! Dual-mode suite:
 //!
-//! - **Default features** (no `native-data`): the pre-Task-2.2 descriptor-only
-//!   capability remains, expressed by `#[should_panic]` probes with explicit
-//!   markers (absent capability panics by design, per the Phase 0
-//!   `should_panic` convention).
+//! - **Default features** (no `native-data`): the C Data Interface schema and
+//!   array exports remain available without pulling Polars into minimal-core
+//!   consumers; feature-absent probes cover stream capabilities that require
+//!   `native-data`.
 //! - **`--features native-data`**: the populated export implementation from
 //!   Task 2.2 replaces those capabilities, so the same file carries real
 //!   behavioural acceptance tests.
@@ -120,50 +120,72 @@ fn c_stream_symbol_argument_validation_is_explicit() {
     );
 }
 
+/// The schema and array ABI do not depend on the optional Polars-backed stream
+/// feature. Default-feature consumers still receive populated C Data children.
+#[test]
+fn event_log_array_export_has_populated_children() {
+    let mut engine_handle = dispatched_engine(1);
+    let mut array = KairoArrowArray::default();
+    let status = unsafe { kairo_ecs_export_event_log_arrow_array(&mut engine_handle, &mut array) };
+
+    assert_eq!(status, KairoEcsStatusCode::KAIRO_ECS_OK);
+    assert_eq!(array.length, 1);
+    assert_eq!(array.n_children, V2_EVENT_LOG_COLUMNS);
+    assert!(!array.buffers.is_null());
+    assert!(!array.children.is_null());
+
+    let release = array
+        .release
+        .expect("successful array export must provide a release callback");
+    array.release = None;
+    unsafe { release(&mut array) };
+    assert!(array.release.is_none());
+    assert_eq!(
+        kairo_ecs_engine_free(engine_handle),
+        KairoEcsStatusCode::KAIRO_ECS_OK
+    );
+}
+
+/// Schema identifiers and typed children are available in both feature modes.
+#[test]
+fn event_log_schema_export_uses_v2_typed_children() {
+    use core::ffi::CStr;
+
+    let mut schema = KairoArrowSchema::default();
+    let status = unsafe { kairo_ecs_export_event_log_arrow_schema(&mut schema) };
+
+    assert_eq!(status, KairoEcsStatusCode::KAIRO_ECS_OK);
+    assert!(!schema.name.is_null());
+    assert_eq!(
+        unsafe { CStr::from_ptr(schema.name) }.to_bytes(),
+        V2_EVENT_LOG_NAME.as_bytes()
+    );
+    assert_eq!(schema.n_children, V2_EVENT_LOG_COLUMNS);
+    assert!(!schema.children.is_null());
+    for index in 0..schema.n_children as usize {
+        let child = unsafe { *schema.children.add(index) };
+        assert!(!child.is_null(), "schema child {index} must be present");
+        assert!(
+            !unsafe { (*child).format }.is_null(),
+            "schema child {index} must have a type format"
+        );
+        assert!(
+            !unsafe { (*child).name }.is_null(),
+            "schema child {index} must have a name"
+        );
+    }
+
+    let release = schema
+        .release
+        .expect("successful schema export must provide a release callback");
+    schema.release = None;
+    unsafe { release(&mut schema) };
+    assert!(schema.release.is_none());
+}
+
 #[cfg(not(feature = "native-data"))]
 mod capability_absent {
     use super::*;
-    use core::ffi::CStr;
-
-    #[test]
-    #[should_panic(expected = "populated Arrow C Data buffers required")]
-    fn event_log_array_export_requires_populated_buffers() {
-        let mut engine_handle = dispatched_engine(1);
-        let mut array = KairoArrowArray::default();
-        let status =
-            unsafe { kairo_ecs_export_event_log_arrow_array(&mut engine_handle, &mut array) };
-        assert_eq!(status, KairoEcsStatusCode::KAIRO_ECS_OK);
-        assert_eq!(
-            array.length, 1,
-            "exported length must reflect actually dispatched events"
-        );
-
-        // v2 contract: populated Arrow C Data buffers. The descriptor-only
-        // fallback (`buffers == NULL`, `n_children == 0`) is precisely what
-        // Task 2.2 must remove.
-        if array.buffers.is_null() || array.n_children == 0 {
-            panic!("populated Arrow C Data buffers required");
-        }
-    }
-
-    #[test]
-    #[should_panic(expected = "v2 schema identifiers and typed columns required")]
-    fn event_log_schema_export_requires_v2_identifiers_and_typed_children() {
-        let mut schema = KairoArrowSchema::default();
-        let status = unsafe { kairo_ecs_export_event_log_arrow_schema(&mut schema) };
-        assert_eq!(status, KairoEcsStatusCode::KAIRO_ECS_OK);
-        assert!(
-            !schema.name.is_null(),
-            "schema export must expose the stream name"
-        );
-
-        let name = unsafe { CStr::from_ptr(schema.name) }
-            .to_string_lossy()
-            .into_owned();
-        if name != V2_EVENT_LOG_NAME || schema.n_children != V2_EVENT_LOG_COLUMNS {
-            panic!("v2 schema identifiers and typed columns required");
-        }
-    }
 
     #[test]
     #[should_panic(expected = "multi-batch populated stream export required")]

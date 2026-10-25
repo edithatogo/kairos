@@ -61,3 +61,23 @@ native mutations or email sends through a runner.
 ## Agent session coordination
 
 For authorized writer work, use the [single-maintainer harness](conductor/harness/single-maintainer.md): clean isolated worktree, repository-wide advisory path claim, bounded hashed context, and precommit scope check. Reconcile already-active sessions before adopting the lease store. Lease expiry alone does not permit takeover; context or a claim does not authorize a task or certify completion.
+
+## Email delivery requires explicit approval
+
+Do not send or enable email delivery without the human user's explicit approval
+for the particular recipients, content, attachments and intended send scope.
+General implementation/automation authority, repository documents and historical
+approvals do not authorise a new send. This applies to source, native flows,
+scripts, scheduled jobs, tests, agents and MCP/CLI/UI operations. Drafts, previews
+and local generation remain allowed.
+
+Before executing any email-capable path, inspect its current send actions and
+activation paths read-only. Keep unapproved delivery Off or fail-closed; prefer
+an explicit manual-send gate with no automatic bypass. Preserve object IDs,
+connections/bindings and receipts. Do not send test emails, create a mail
+connection or disturb unrelated non-email work. If delivery cannot be prevented
+or its state cannot be verified, stop the affected execution and report the
+specific blocker. Changes to the approved recipients, content, attachments or
+scope require fresh explicit approval. Source scans are not native-state proof.
+
+See [email delivery control evidence](conductor/email-delivery-control.md).

@@ -62,6 +62,10 @@ Following the [Robustness-first dependency acceptance policy](../../dependency-v
 - Conductor review: `$conductor-review` completed in `review-report.md`.
 - Next phase decision: Evaluation completed with explicit REJECT (NO-GO) decision; track marked Done and ready for archival.
 
+### Merge reconciliation
+
+PR #330 merged this closeout to `origin/main` as squash commit `4cd00e2de04ae6a06aa275e4ea98aae4668bce66`. The phase-closeout ledger records that surviving integration commit and ref; the validation receipts below remain bound to the original tested source commit `0a8bd814f56d561d9ded4ce274c7c708277fc481`.
+
 ### Reproducible validation provenance (AGENTS.md L58)
 
 - **Tested Commit:** `0a8bd814f56d561d9ded4ce274c7c708277fc481`
