@@ -35,6 +35,17 @@ impl PartialOrd for QueueEntry {
     }
 }
 
+/// Experimental API: copied projection of the next live event, without dispatching it.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct ScheduledEventPreview {
+    pub id: EventId,
+    pub at: SimTime,
+    pub priority: i32,
+    pub sequence: u64,
+    pub entity: Option<EntityId>,
+    pub kind: EventKind,
+}
+
 /// Deterministic single-threaded scheduler.
 #[derive(Debug, Default)]
 pub struct Scheduler {
@@ -98,6 +109,23 @@ impl Scheduler {
             cancelled_events: self.cancelled_events,
             pending_events: self.pending.len() as u64,
         }
+    }
+
+    /// Experimental API: preview the next live event in time, priority, and insertion order.
+    ///
+    /// Cancelled heap entries may be pruned, but virtual time, counters, and
+    /// live pending membership are unchanged. Scheduling or cancellation after
+    /// this call may change which event is next. This is not a dispatch.
+    pub fn peek_next(&mut self) -> Option<ScheduledEventPreview> {
+        self.prune_dead_entries();
+        self.heap.peek().map(|entry| ScheduledEventPreview {
+            id: entry.id,
+            at: entry.request.at,
+            priority: entry.request.priority,
+            sequence: entry.sequence,
+            entity: entry.request.entity,
+            kind: entry.request.kind,
+        })
     }
 
     fn prune_dead_entries(&mut self) {
