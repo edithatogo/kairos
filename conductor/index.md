@@ -20,7 +20,7 @@ A status label alone does not prove implementation or release acceptance.
 
 ## Polars migration
 
-[Track 70](tracks/70-polars-native-data-processing/index.md) is Planned; no implementation started. Dependencies 04/62/63 are routing context, not runtime proof. Requalify source and interoperability. Complete upstream Phase 4 before CareOps `polars_data_processing_20261022` adopts the pin.
+[Track 70](tracks/70-polars-native-data-processing/index.md) completed upstream Phases 0–4 in Kairos, including native tables, Arrow C Data Schema v2, the Python Polars handoff and durable publication. CareOps `polars_data_processing_20261022` remains a separate downstream adoption; its source, interoperability and consumer acceptance must be qualified before use. Dependencies 04/62/63 provide routing context, not runtime proof.
 
 ## Separate library adoption tracks
 
