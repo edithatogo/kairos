@@ -20,19 +20,19 @@ fn test_arrow_c_schema_export_v2_and_children() {
 
     let expected_cols = [
         ("schema_version", "S"),
-        ("run_id", "u"),
+        ("run_id", "U"),
         ("event_id_index", "L"),
         ("event_id_gen", "I"),
         ("entity_id_index", "L"),
         ("entity_id_gen", "I"),
         ("time_ticks_hi", "L"),
         ("time_ticks_lo", "L"),
-        ("time_scale", "u"),
+        ("time_scale", "U"),
         ("priority", "i"),
         ("sequence", "L"),
-        ("event_kind", "u"),
-        ("status", "u"),
-        ("payload_ref", "u"),
+        ("event_kind", "U"),
+        ("status", "U"),
+        ("payload_ref", "U"),
     ];
 
     for (i, (expected_name, expected_fmt)) in expected_cols.iter().enumerate() {

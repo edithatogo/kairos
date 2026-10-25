@@ -46,6 +46,7 @@ Format:
 - Conductor closeout records now reference actual main integrations; the development-tool validator follows the devcontainer runtime guard and supports existing three-digit track identifiers.
 
 - `crates/kairo-ecs-ffi` and `bindings/python` add populated 14-column Arrow C Data Interface Schema v2 exports with verified single-release lifecycles, native Python-to-Polars `EventLogBatch.to_polars()` zero-copy handoff, bounded output batches, and manifest-last durable publication (`DurableRunPublicationWriter`, `DurableRunPublicationReader`) for Track 70 Phase 2, Phase 3, and Phase 4.
+- `crates/kairo-ecs-ffi` adds the bounded Arrow C Stream ABI; Python, TypeScript, R, and Julia expose the Track 70 Schema v2 event-log contract with generational-ID and full-range tick limbs. `crates/kairo-ecs-arrow` adds durable run-output benchmarks and resume validation.
 - `crates/kairo-ecs-arrow` adds Polars-native DataFrame conversion, checked 128-bit tick limb borrow arithmetic, real Parquet Zstd and Arrow IPC writers/readers, and lazy tabular transforms for Track 70 Phase 1.
 - `conformance/fixtures/event_log_v2_conformance.json` and `conformance/fixtures/manifest.json` add the canonical Schema v2 event log conformance fixture and ADR for Track 70 Task 0.4.
 - `schemas/arrow/event_log_v2.schema.json` and `crates/kairo-ecs-arrow` add the Schema v2 specification and verification contract for Track 70 Phase 0, supporting generational entity IDs (`UInt64`/`UInt32`) and full-range 128-bit simulation tick limbs (`time_ticks_hi`, `time_ticks_lo`).

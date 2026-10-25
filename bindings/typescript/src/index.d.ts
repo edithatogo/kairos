@@ -1,14 +1,17 @@
 export declare const PACKAGE_NAME: "@kairo-ecs/typescript";
 export declare const BINDING_KIND: "typescript-wasm";
-export declare const EVENT_LOG_SCHEMA_NAME: "kairo_ecs.event_log.v1";
-export declare const EVENT_LOG_SCHEMA_VERSION: 1;
+export declare const EVENT_LOG_SCHEMA_NAME: "kairo_ecs.event_log.v2";
+export declare const EVENT_LOG_SCHEMA_VERSION: 2;
 export declare const NOT_CONFIGURED_STATUS: "not-configured";
 export declare const EVENT_LOG_FIELDS: readonly [
   readonly ["schema_version", "UInt16", false],
   readonly ["run_id", "Utf8", false],
-  readonly ["event_id", "FixedSizeBinary(12)", false],
-  readonly ["entity_id", "FixedSizeBinary(12)", true],
-  readonly ["time_ticks", "FixedSizeBinary(16)", false],
+  readonly ["event_id_index", "UInt64", false],
+  readonly ["event_id_gen", "UInt32", false],
+  readonly ["entity_id_index", "UInt64", true],
+  readonly ["entity_id_gen", "UInt32", true],
+  readonly ["time_ticks_hi", "UInt64", false],
+  readonly ["time_ticks_lo", "UInt64", false],
   readonly ["time_scale", "Utf8", false],
   readonly ["priority", "Int32", false],
   readonly ["sequence", "UInt64", false],
@@ -69,12 +72,12 @@ export interface SchedulerSnapshot {
 export interface ArrowEventLogRow {
   readonly schemaVersion: typeof EVENT_LOG_SCHEMA_VERSION;
   readonly runId: string;
-  readonly eventId: string;
-  readonly eventIdHex: string;
-  readonly entityId: string | null;
-  readonly entityIdHex: string | null;
-  readonly timeTicks: string;
-  readonly timeTicksLeHex: string;
+  readonly eventIdIndex: string;
+  readonly eventIdGen: number;
+  readonly entityIdIndex: string | null;
+  readonly entityIdGen: number | null;
+  readonly timeTicksHi: string;
+  readonly timeTicksLo: string;
   readonly timeScale: "ticks";
   readonly priority: number;
   readonly sequence: string;

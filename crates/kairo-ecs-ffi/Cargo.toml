@@ -15,8 +15,17 @@ kairo-ecs-core = { path = "../kairo-ecs-core", version = "0.0.0" }
 kairo-ecs-state = { path = "../kairo-ecs-state", version = "0.0.0" }
 kairo-ecs-types = { path = "../kairo-ecs-types", version = "0.0.0" }
 kairo-ecs-rng = { path = "../kairo-ecs-rng", version = "0.0.0" }
+# Track 70 Phase 2: populated Arrow C Data Interface export of the engine
+# event log. Optional and default-off: minimal-core and browser/Wasm builds
+# stay free of Polars ("Polars absent from the minimal core and browser/Wasm
+# dependency graphs", spec.md). Native data consumers enable it.
+kairo-ecs-arrow = { path = "../kairo-ecs-arrow", version = "0.1.0", default-features = false, optional = true }
 
 [features]
 default = []
 arrow-c-data = []
 numa = ["kairo-ecs-core/numa", "kairo-ecs-state/numa"]
+# Track 70 Phase 2: populated owned Arrow C Data arrays/streams for the engine
+# event log, plus the engine event-retention export path. Pulls Polars in
+# transitively through kairo-ecs-arrow/polars-native.
+native-data = ["dep:kairo-ecs-arrow", "kairo-ecs-arrow/polars-native"]
