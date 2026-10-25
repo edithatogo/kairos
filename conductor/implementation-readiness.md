@@ -144,3 +144,11 @@ See [current sequencing](dependency-sequencing.md): Polars inventory first, with
 ## Python runtime qualification — 23 October 2026
 
 [Python 3.15 migration and qualification](tracks/105-python315-runtime-qualification/index.md) is In Progress. The preserved candidate is reconciled and local CI runtime guards are implemented; hosted/main/runtime handover acceptance remains pending. Track 30 retains version policy; bounded shared-path handoffs precede implementation.
+
+## Track 106 readiness
+
+Track 106 is In Progress at the approved candidate base `5692e6a9ee866131262d60103a84e2544dc51e4a`. CareOps R10.3 requires `ScheduledEventPreview` and `Scheduler::peek_next`; compatibility implementation and fixtures are scoped, but no parent pin update is permitted until core, API-governance and conformance owner reviews and the exact CareOps consumer checks pass.
+
+## Track 106 readiness
+
+Track 106 is In Progress at the approved candidate base `5692e6a9ee866131262d60103a84e2544dc51e4a`. CareOps R10.3 requires `ScheduledEventPreview` and `Scheduler::peek_next`; compatibility implementation and fixtures are scoped, but no parent pin update is permitted until core, API-governance and conformance owner reviews and the exact CareOps consumer checks pass.

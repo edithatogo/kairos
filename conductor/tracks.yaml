@@ -1552,3 +1552,22 @@ tracks:
       - phase-closeout-check
       - toolchain-matrix-current
       - version-drop-policy-check
+
+  - id: 106
+    name: Scheduler Preview API Compatibility
+    status: In Progress
+    owner: core-scheduler-agent + conformance-agent + api-governance-agent + careops-consumer-owner
+    depends_on: ["01", "12", "25"]
+    owned_paths:
+      - conductor/tracks/106-scheduler-preview-compatibility/
+      - crates/kairo-ecs-core/src/lib.rs
+      - crates/kairo-ecs-core/tests/track106_scheduler_preview.rs
+      - conformance/fixtures/track106-scheduler-preview.json
+      - conformance/fixtures/manifest.json
+    required_gates:
+      - phase-closeout-check
+      - dependency-106-preview-behaviour
+      - core-api-owner-review
+      - conformance-owner-review
+      - api-compatibility-review
+      - careops-r10.3-consumer-check

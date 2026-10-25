@@ -36,6 +36,7 @@ KairoECS uses Conductor tracks as independently reviewable units of work. The ro
 | 23 | Domain Starter Kits & Model Zoo | DES/ABM/hybrid examples and templates | model-zoo-agent | Starts after Flow API draft |
 | 24 | Playground, Demos & Visualization UX | Browser demos, event timeline, Arrow viewer | playground-agent | Starts after Wasm + viz contracts |
 | 25 | API Design Review & Compatibility Governance | Cross-language API review and compatibility matrix | api-governance-agent | Starts before public bindings |
+| 106 | Scheduler Preview API Compatibility | Restore additive scheduler preview surface; preserve queue semantics and verify CareOps R10.3 consumer compatibility | core-scheduler-agent + conformance-agent + api-governance-agent + careops-consumer-owner | Depends on Tracks 01, 12 and 25; parent pin waits for reviews and exact consumer checks |
 | 26 | Interoperability Standards Review | DEVS/FMI/SBML/OpenTelemetry/Arrow mappings | standards-agent | Starts during architecture review |
 | 27 | Developer Experience & Reproducible Environments | Devcontainer, devbox/mise, bootstrap scripts, task runner | dx-agent | Starts immediately; supports all subagents |
 | 28 | Red Team & Devil's Advocate Review | Continuous adversarial review of roadmap, architecture, governance, release | redteam-agent | Starts immediately and recurs before releases |

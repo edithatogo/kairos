@@ -1,0 +1,15 @@
+{
+  "track_id": "106-scheduler-preview-compatibility",
+  "track_number": "106",
+  "title": "Scheduler Preview API Compatibility",
+  "type": "compatibility",
+  "status": "in_progress",
+  "created_at": "2026-10-25",
+  "updated_at": "2026-10-25",
+  "base_commit": "5692e6a9ee866131262d60103a84e2544dc51e4a",
+  "spec_approved": true,
+  "implementation_started": true,
+  "accepted_phases": [],
+  "dependencies": ["01", "12", "25"],
+  "approval_basis": "User approved the bounded Track 106 scope and implementation."
+}

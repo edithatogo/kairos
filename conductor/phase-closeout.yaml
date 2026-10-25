@@ -1833,3 +1833,23 @@ entries:
     commit_sha: ""
     pushed_ref: ""
     next_phase_decision: "Reconcile active-use inventory, exact source evidence and owners"
+
+  - track_id: "106"
+    phase: "1"
+    state: pending
+    review_command: "$conductor-review"
+    review_result: "Local review complete; two in-scope fixes applied. Core, conformance, API-governance and CareOps acceptance pending"
+    fixes_applied: true
+    validation_commands:
+      - "cargo test --locked -p kairo-ecs-core --test track106_scheduler_preview"
+      - "cargo test --locked -p kairo-ecs-core"
+      - "cargo fmt --all --check"
+      - "cargo doc --locked -p kairo-ecs-core --no-deps"
+      - "pwsh -NoProfile -File scripts/validate_conformance_fixtures.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
+    git_status: "local candidate; owner review pending"
+    commit_sha: ""
+    pushed_ref: ""
+    next_phase_decision: "Submit exact candidate for owner review and CareOps consumer validation; do not advance parent pin"

@@ -252,3 +252,7 @@ Polars inventory leads; sha2/tempfile/proptest are separate tracks with gates on
 ## Python runtime migration — 23 October 2026
 
 - [~] **Track: Python 3.15 migration and qualification** — [Python 3.15 migration and qualification](tracks/105-python315-runtime-qualification/index.md); existing candidate evidence retained, main acceptance pending.
+
+---
+
+- [~] **Track 106: Scheduler Preview API Compatibility** — [track record](tracks/106-scheduler-preview-compatibility/index.md); additive `ScheduledEventPreview`/`Scheduler::peek_next` restoration, owner reviews and CareOps R10.3 acceptance pending.
