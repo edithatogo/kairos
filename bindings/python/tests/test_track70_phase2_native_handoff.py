@@ -23,9 +23,10 @@ from __future__ import annotations
 
 from typing import Any
 
+import pytest
+
 import kairo_ecs
 import kairo_ecs._arrow
-import pytest
 
 V2_EVENT_LOG_FIELDS = (
     ("schema_version", "UInt16", False),
