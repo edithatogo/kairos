@@ -48,7 +48,7 @@ time.}
 \item{event_id}{Event identifier returned in the event log.}
 \item{until_ticks}{Simulation time through which scheduled events are
 dispatched.}
-\item{event_log}{A data frame matching \code{kairo_ecs.event_log.v1}.}
+\item{event_log}{A data frame matching \code{kairo_ecs.event_log.v2}.}
 \item{use_arrow}{If \code{TRUE}, require the optional \pkg{arrow} package and
 roundtrip through \code{arrow::Table}. If \code{FALSE}, normalize via base R.}
 }
@@ -56,7 +56,7 @@ roundtrip through \code{arrow::Table}. If \code{FALSE}, normalize via base R.}
 \code{kairoecs_ffi_status()} returns a list. Scheduler mutators return an
 updated scheduler object. \code{kairoecs_event_log()} and
 \code{kairoecs_arrow_roundtrip()} return data frames with the
-\code{kairo_ecs.event_log.v1} field order.
+\code{kairo_ecs.event_log.v2} field order.
 }
 \examples{
 scheduler <- kairoecs_new_scheduler("example")

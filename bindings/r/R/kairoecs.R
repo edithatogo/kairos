@@ -27,6 +27,13 @@ kairoecs_ffi_status <- function() {
   )
 }
 
+# Track 70 Phase 2 (Task 2.3): explicit Schema v2 identifiers and the 14
+# contract columns (generational-ID index/generation pairs, time_ticks_hi/lo
+# limbs) projected onto a precision-safe pure-R data-frame facade. See
+# README.md for the documented copies and limits.
+KAIRECS_SCHEMA_NAME <- "kairo_ecs.event_log.v2"
+KAIRECS_SCHEMA_VERSION <- 2L
+
 kairoecs_new_scheduler <- function(run_id = "r-local", time_scale = "nanoseconds") {
   stopifnot(length(run_id) == 1, !is.na(run_id), nzchar(run_id))
   stopifnot(length(time_scale) == 1, !is.na(time_scale), nzchar(time_scale))
@@ -57,14 +64,21 @@ kairoecs_schedule_at <- function(
   stopifnot(length(entity_id) <= 1)
   stopifnot(length(payload_ref) <= 1)
 
+  ticks_limbs <- kairoecs_u64_limbs(as.numeric(time_ticks))
+  entity_limbs <- kairoecs_entity_limbs(entity_id)
+
   event <- data.frame(
+    schema_version = KAIRECS_SCHEMA_VERSION,
     run_id = scheduler$run_id,
-    event_id = scheduler$next_event_id,
-    entity_id = normalize_nullable_number(entity_id),
-    time_ticks = as.numeric(time_ticks),
+    event_id_index = kairoecs_u64_decimal(scheduler$next_event_id),
+    event_id_gen = 0,
+    entity_id_index = entity_limbs[["index"]],
+    entity_id_gen = entity_limbs[["gen"]],
+    time_ticks_hi = kairoecs_u64_decimal(ticks_limbs[["hi"]]),
+    time_ticks_lo = kairoecs_u64_decimal(ticks_limbs[["lo"]]),
     time_scale = scheduler$time_scale,
     priority = as.integer(priority),
-    sequence = scheduler$next_sequence,
+    sequence = kairoecs_u64_decimal(scheduler$next_sequence),
     event_kind = as.character(event_kind),
     status = "scheduled",
     payload_ref = normalize_nullable_character(payload_ref),
@@ -82,7 +96,7 @@ kairoecs_cancel_event <- function(scheduler, event_id) {
   assert_scheduler(scheduler)
   stopifnot(length(event_id) == 1, is.finite(event_id))
 
-  idx <- scheduler$events$event_id == as.numeric(event_id) &
+  idx <- scheduler$events$event_id_index == kairoecs_u64_decimal(event_id) &
     scheduler$events$status == "scheduled"
   if (!any(idx)) {
     stop("Event is not pending and cannot be cancelled.", call. = FALSE)
@@ -96,11 +110,11 @@ kairoecs_run_until <- function(scheduler, until_ticks = Inf) {
   stopifnot(length(until_ticks) == 1, !is.na(until_ticks))
 
   runnable <- scheduler$events$status == "scheduled" &
-    scheduler$events$time_ticks <= until_ticks
+    kairoecs_row_ticks(scheduler$events) <= until_ticks
   scheduler$events$status[runnable] <- "dispatched"
 
   if (any(runnable)) {
-    scheduler$current_time <- max(scheduler$events$time_ticks[runnable])
+    scheduler$current_time <- max(kairoecs_row_ticks(scheduler$events[runnable, , drop = FALSE]))
   } else if (is.finite(until_ticks)) {
     scheduler$current_time <- max(scheduler$current_time, as.numeric(until_ticks))
   }
@@ -125,19 +139,23 @@ kairoecs_arrow_roundtrip <- function(event_log, use_arrow = FALSE) {
     event_log <- as.data.frame(table)
   }
 
-  attr(event_log, "kairoecs_schema") <- "kairo_ecs.event_log.v1"
+  attr(event_log, "kairoecs_schema") <- KAIRECS_SCHEMA_NAME
   event_log
 }
 
 kairoecs_empty_event_log <- function() {
   data.frame(
+    schema_version = integer(),
     run_id = character(),
-    event_id = numeric(),
-    entity_id = numeric(),
-    time_ticks = numeric(),
+    event_id_index = character(),
+    event_id_gen = numeric(),
+    entity_id_index = character(),
+    entity_id_gen = numeric(),
+    time_ticks_hi = character(),
+    time_ticks_lo = character(),
     time_scale = character(),
     priority = integer(),
-    sequence = numeric(),
+    sequence = character(),
     event_kind = character(),
     status = character(),
     payload_ref = character(),
@@ -165,6 +183,72 @@ normalize_nullable_character <- function(value) {
   as.character(value)
 }
 
+# u64 columns project as exact decimal character strings (base-R doubles lose
+# integer precision above 2^53); u32 generations stay numeric.
+kairoecs_u64_decimal <- function(value) {
+  if (is.na(value)) {
+    return(NA_character_)
+  }
+  sprintf("%.0f", as.numeric(value))
+}
+
+# Exact-integer guard shared by the facade's u64 projections: base-R doubles
+# represent integers exactly up to 2^53, so inputs beyond it reject explicitly
+# per the v2 contract ("overflow and malformed IDs reject explicitly"); the
+# documented full-u64/u128 interchange path is the native FFI surface.
+kairoecs_exact_integer <- function(value, what) {
+  value <- as.numeric(value)
+  if (length(value) != 1 || is.na(value) || !is.finite(value) ||
+      value < 0 || value != floor(value)) {
+    stop(paste0(what, " must be a single non-negative integer value."), call. = FALSE)
+  }
+  if (value > 2^53) {
+    stop(
+      paste0(
+        what,
+        " exceeds the pure-R facade's exact precision limit (2^53);",
+        " the native FFI surface carries full u64/u128 interchange."
+      ),
+      call. = FALSE
+    )
+  }
+  value
+}
+
+# Split an exact (<= 2^53) non-negative double tick count into u64 hi/lo
+# limbs.
+kairoecs_u64_limbs <- function(value) {
+  value <- kairoecs_exact_integer(value, "time_ticks")
+  hi <- floor(value / 2^64)
+  lo <- value - hi * 2^64
+  list(hi = hi, lo = lo)
+}
+
+# Entity projections are null-together per the v2 contract: both columns are
+# set together or both are NA. Facade-local single-generation handles project
+# generation 0 explicitly (the pure-R facade cannot observe engine-side ID
+# recycling).
+kairoecs_entity_limbs <- function(entity_id) {
+  if (length(entity_id) == 0 || is.na(entity_id[1])) {
+    return(list(index = NA_character_, gen = NA_real_))
+  }
+  entity_id <- kairoecs_exact_integer(entity_id, "entity_id")
+  list(
+    index = kairoecs_u64_decimal(entity_id),
+    gen = 0
+  )
+}
+
+# Numeric tick value of a limb row bundle for dispatch comparisons;
+# ordering uses (hi, lo) so the comparison stays inside the facade's
+# documented double precision limits.
+kairoecs_row_ticks <- function(event_log) {
+  if (nrow(event_log) == 0) {
+    return(numeric(0))
+  }
+  as.numeric(event_log$time_ticks_hi) * (2^64) + as.numeric(event_log$time_ticks_lo)
+}
+
 normalize_event_log <- function(event_log) {
   required <- names(kairoecs_empty_event_log())
   missing <- setdiff(required, names(event_log))
@@ -176,13 +260,17 @@ normalize_event_log <- function(event_log) {
   }
 
   event_log <- event_log[required]
+  event_log$schema_version <- as.integer(event_log$schema_version)
   event_log$run_id <- as.character(event_log$run_id)
-  event_log$event_id <- as.numeric(event_log$event_id)
-  event_log$entity_id <- as.numeric(event_log$entity_id)
-  event_log$time_ticks <- as.numeric(event_log$time_ticks)
+  event_log$event_id_index <- as.character(event_log$event_id_index)
+  event_log$event_id_gen <- as.numeric(event_log$event_id_gen)
+  event_log$entity_id_index <- as.character(event_log$entity_id_index)
+  event_log$entity_id_gen <- as.numeric(event_log$entity_id_gen)
+  event_log$time_ticks_hi <- as.character(event_log$time_ticks_hi)
+  event_log$time_ticks_lo <- as.character(event_log$time_ticks_lo)
   event_log$time_scale <- as.character(event_log$time_scale)
   event_log$priority <- as.integer(event_log$priority)
-  event_log$sequence <- as.numeric(event_log$sequence)
+  event_log$sequence <- as.character(event_log$sequence)
   event_log$event_kind <- as.character(event_log$event_kind)
   event_log$status <- as.character(event_log$status)
   event_log$payload_ref <- as.character(event_log$payload_ref)
@@ -190,11 +278,18 @@ normalize_event_log <- function(event_log) {
 }
 
 order_event_log <- function(event_log) {
+  # Limb ordering pairs the numeric view with a lexicographic decimal-string
+  # tie-break so externally supplied rows above the 2^53 double limit still
+  # sort in strict numeric limb order instead of collapsing in as.numeric().
   event_log[order(
-    event_log$time_ticks,
+    as.numeric(event_log$time_ticks_hi),
+    event_log$time_ticks_hi,
+    as.numeric(event_log$time_ticks_lo),
+    event_log$time_ticks_lo,
     event_log$priority,
+    as.numeric(event_log$sequence),
     event_log$sequence,
-    event_log$event_id
+    event_log$event_id_index
   ), , drop = FALSE]
 }
 

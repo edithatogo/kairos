@@ -1,14 +1,22 @@
 export const PACKAGE_NAME = "@kairo-ecs/typescript" as const;
 export const BINDING_KIND = "typescript-wasm" as const;
-export const EVENT_LOG_SCHEMA_NAME = "kairo_ecs.event_log.v1" as const;
-export const EVENT_LOG_SCHEMA_VERSION = 1 as const;
+// Track 70 Phase 2 (Task 2.3): explicit Schema v2 identifiers. The binding
+// projects the v2 event-log contract (generational-ID index/generation
+// columns, `time_ticks_hi`/`time_ticks_lo` limbs) onto an interchange
+// payload without a native engine behind it; see README for the documented
+// copies and limits.
+export const EVENT_LOG_SCHEMA_NAME = "kairo_ecs.event_log.v2" as const;
+export const EVENT_LOG_SCHEMA_VERSION = 2 as const;
 export const NOT_CONFIGURED_STATUS = "not-configured" as const;
 export const EVENT_LOG_FIELDS = [
   ["schema_version", "UInt16", false],
   ["run_id", "Utf8", false],
-  ["event_id", "FixedSizeBinary(12)", false],
-  ["entity_id", "FixedSizeBinary(12)", true],
-  ["time_ticks", "FixedSizeBinary(16)", false],
+  ["event_id_index", "UInt64", false],
+  ["event_id_gen", "UInt32", false],
+  ["entity_id_index", "UInt64", true],
+  ["entity_id_gen", "UInt32", true],
+  ["time_ticks_hi", "UInt64", false],
+  ["time_ticks_lo", "UInt64", false],
   ["time_scale", "Utf8", false],
   ["priority", "Int32", false],
   ["sequence", "UInt64", false],
@@ -69,12 +77,14 @@ export interface SchedulerSnapshot {
 export interface ArrowEventLogRow {
   readonly schemaVersion: typeof EVENT_LOG_SCHEMA_VERSION;
   readonly runId: string;
-  readonly eventId: string;
-  readonly eventIdHex: string;
-  readonly entityId: string | null;
-  readonly entityIdHex: string | null;
-  readonly timeTicks: string;
-  readonly timeTicksLeHex: string;
+  // Numeric projections are precision-safe: u64 limbs use decimal strings,
+  // u32 generations fit in `number` exactly.
+  readonly eventIdIndex: string;
+  readonly eventIdGen: number;
+  readonly entityIdIndex: string | null;
+  readonly entityIdGen: number | null;
+  readonly timeTicksHi: string;
+  readonly timeTicksLo: string;
   readonly timeScale: "ticks";
   readonly priority: number;
   readonly sequence: string;
@@ -348,21 +358,36 @@ export function compareScheduledEvents(left: SchedulerEvent, right: SchedulerEve
     || compareBigInt(left.sequence, right.sequence);
 }
 
+// Track 70 Phase 2 (Task 2.3): the pure-TypeScript facade has no engine
+// behind it, so it cannot observe engine-side ID recycling; single-generation
+// handles are therefore projected with generation 0, explicitly (documented
+// in binding README). Entity projections are null-together per the v2
+// contract: both generation columns are set together or both are null.
 function toArrowEventLogRow(runId: string, event: DispatchedEvent | CancelledEvent): ArrowEventLogRow {
   const normalizedRunId = runId.trim();
   if (normalizedRunId.length === 0) {
     throw new Error("runId must not be empty");
   }
 
+  const eventIdIndex = normalizeBoundedUnsignedBigInt(
+    event.eventId,
+    "eventId",
+    2n ** 64n - 1n,
+  );
+  const entityIdIndex =
+    event.entityId === null
+      ? null
+      : normalizeBoundedUnsignedBigInt(event.entityId, "entityId", 2n ** 64n - 1n);
+
   return {
     schemaVersion: EVENT_LOG_SCHEMA_VERSION,
     runId: normalizedRunId,
-    eventId: event.eventId.toString(),
-    eventIdHex: fixedSizeHandleHex(event.eventId),
-    entityId: event.entityId?.toString() ?? null,
-    entityIdHex: event.entityId === null ? null : fixedSizeHandleHex(event.entityId),
-    timeTicks: event.timeTicks.toString(),
-    timeTicksLeHex: fixedSizeU128Hex(event.timeTicks),
+    eventIdIndex: eventIdIndex.toString(),
+    eventIdGen: 0,
+    entityIdIndex: entityIdIndex?.toString() ?? null,
+    entityIdGen: entityIdIndex === null ? null : 0,
+    timeTicksHi: (event.timeTicks >> 64n).toString(),
+    timeTicksLo: (event.timeTicks & 0xffff_ffff_ffff_ffffn).toString(),
     timeScale: event.timeScale,
     priority: event.priority,
     sequence: event.sequence.toString(),
@@ -429,27 +454,6 @@ function compareBigInt(left: bigint, right: bigint): number {
   }
 
   return 0;
-}
-
-function fixedSizeHandleHex(value: bigint): string {
-  return littleEndianHex(normalizeBoundedUnsignedBigInt(value, "event/entity handle", 2n ** 64n - 1n), 8)
-    + littleEndianHex(0n, 4);
-}
-
-function fixedSizeU128Hex(value: bigint): string {
-  return littleEndianHex(normalizeBoundedUnsignedBigInt(value, "timeTicks", 2n ** 128n - 1n), 16);
-}
-
-function littleEndianHex(value: bigint, byteCount: number): string {
-  let remaining = value;
-  const bytes: string[] = [];
-
-  for (let index = 0; index < byteCount; index += 1) {
-    bytes.push(Number(remaining & 0xffn).toString(16).padStart(2, "0"));
-    remaining >>= 8n;
-  }
-
-  return bytes.join("");
 }
 
 // Track 63: WasmBridgeLoader & TimeTravelInspectorClient

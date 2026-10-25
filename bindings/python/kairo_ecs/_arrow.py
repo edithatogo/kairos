@@ -1,21 +1,26 @@
-"""Event-log v1 smoke roundtrip helpers for the Python binding."""
+"""Event-log Schema v2 columnar helpers for the Python binding.
 
-from __future__ import annotations
+Track 70 Phase 2 (Task 2.2): the binding ships the explicit v2 schema
+identifiers and 14 typed columns, exports real populated Arrow C Data arrays
+(the fabricated-capsule fallback is removed: an unavailable native export
+fails explicitly), and consumes Arrow tables column-first — the
+``to_pylist()`` Python-row reconstruction detour is gone.
+"""
 
-import ctypes
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
 from ._types import DispatchedEvent, EntityId, EventId
 
-SCHEMA_VERSION = 1
-SCHEMA_VERSION_V2 = 2
-EVENT_LOG_STREAM = "kairo_ecs.event_log.v1"
-EVENT_LOG_STREAM_V2 = "kairo_ecs.event_log.v2"
+SCHEMA_VERSION = 2
+EVENT_LOG_STREAM = "kairo_ecs.event_log.v2"
 TIME_SCALE_TICKS = "ticks"
 
-EVENT_LOG_FIELDS_V2 = (
+# The Schema v2 event-log fields, defined once here and mirrored by
+# `EVENT_LOG_FIELDS_V2` in `crates/kairo-ecs-arrow/src/lib.rs` (same order,
+# names, contract types, nullability).
+EVENT_LOG_FIELDS = (
     ("schema_version", "UInt16", False),
     ("run_id", "Utf8", False),
     ("event_id_index", "UInt64", False),
@@ -32,19 +37,15 @@ EVENT_LOG_FIELDS_V2 = (
     ("payload_ref", "Utf8", True),
 )
 
-EVENT_LOG_FIELDS = (
-    ("schema_version", "UInt16", False),
-    ("run_id", "Utf8", False),
-    ("event_id", "FixedSizeBinary(12)", False),
-    ("entity_id", "FixedSizeBinary(12)", True),
-    ("time_ticks", "FixedSizeBinary(16)", False),
-    ("time_scale", "Utf8", False),
-    ("priority", "Int32", False),
-    ("sequence", "UInt64", False),
-    ("event_kind", "Utf8", False),
-    ("status", "Utf8", False),
-    ("payload_ref", "Utf8", True),
-)
+# Compatibility names retained for callers that adopted the explicit v2
+# aliases during the staged migration.
+SCHEMA_VERSION_V2 = SCHEMA_VERSION
+EVENT_LOG_STREAM_V2 = EVENT_LOG_STREAM
+EVENT_LOG_FIELDS_V2 = EVENT_LOG_FIELDS
+
+_U64_MASK = (1 << 64) - 1
+
+_SMOKE_FIELD_HEADER = "\t".join(field[0] for field in EVENT_LOG_FIELDS)
 
 
 class EventStatus(str, Enum):
@@ -69,7 +70,7 @@ class EventLogRecord:
     payload_ref: str | None = None
 
     @classmethod
-    def dispatched(cls, run_id: str, event: DispatchedEvent) -> EventLogRecord:
+    def dispatched(cls, run_id: str, event: DispatchedEvent) -> "EventLogRecord":
         return cls(
             schema_version=SCHEMA_VERSION,
             run_id=run_id,
@@ -94,15 +95,17 @@ class EventLogRecord:
             raise ValueError("event_kind must not be empty")
         if self.payload_ref is not None and not self.payload_ref.strip():
             raise ValueError("payload_ref must not be empty when present")
+        # spec.md: nullable generational IDs null together.
+        if self.entity_id is not None:
+            if not isinstance(self.entity_id, EntityId):
+                raise ValueError("entity_id must be an EntityId")
 
 
 @dataclass(frozen=True)
 class EventLogBatch:
     records: tuple[EventLogRecord, ...]
 
-    def __init__(
-        self, records: list[EventLogRecord] | tuple[EventLogRecord, ...]
-    ) -> None:
+    def __init__(self, records: list[EventLogRecord] | tuple[EventLogRecord, ...]) -> None:
         for record in records:
             record.validate()
         object.__setattr__(self, "records", tuple(records))
@@ -111,25 +114,41 @@ class EventLogBatch:
     def schema(self) -> tuple[tuple[str, str, bool], ...]:
         return EVENT_LOG_FIELDS
 
+    def to_polars(self) -> Any:
+        """Convert the v2 event log through Arrow's columnar interchange."""
+        import polars as pl
+
+        return pl.from_arrow(self.to_pyarrow_table())
+
     def to_smoke_bytes(self) -> bytes:
+        # The smoke format is a human-readable dev roundtrip: cells correspond
+        # 1:1 to EVENT_LOG_FIELDS in contract order; string cells are escaped,
+        # numeric cells are decimal integers, and absent optional cells stay
+        # empty.
         lines = [
             f"stream={EVENT_LOG_STREAM};schema_version={SCHEMA_VERSION}",
-            (
-                "schema_version\trun_id\tevent_id_hex\tentity_id_hex\t"
-                "time_ticks_le_hex\ttime_scale\tpriority\tsequence\t"
-                "event_kind\tstatus\tpayload_ref"
-            ),
+            _SMOKE_FIELD_HEADER,
         ]
         for record in self.records:
-            entity_hex = _handle_hex(record.entity_id) if record.entity_id else ""
+            entity_cells = (
+                (
+                    str(record.entity_id.index),
+                    str(record.entity_id.generation),
+                )
+                if record.entity_id is not None
+                else ("", "")
+            )
             lines.append(
                 "\t".join(
                     [
                         str(record.schema_version),
                         _escape_cell(record.run_id),
-                        _handle_hex(record.event_id),
-                        entity_hex,
-                        record.time_ticks.to_bytes(16, "little").hex(),
+                        str(record.event_id.index),
+                        str(record.event_id.generation),
+                        entity_cells[0],
+                        entity_cells[1],
+                        str(record.time_ticks >> 64),
+                        str(record.time_ticks & _U64_MASK),
                         _escape_cell(record.time_scale),
                         str(record.priority),
                         str(record.sequence),
@@ -141,160 +160,147 @@ class EventLogBatch:
             )
         return ("\n".join(lines) + "\n").encode("utf-8")
 
-    def to_polars(self) -> Any:
-        """Return a native Polars DataFrame via PyArrow zero-copy interchange."""
-        import polars as pl
-
-        table = self.to_pyarrow_table()
-        return pl.from_arrow(table)
-
-    def to_pyarrow_table(self, version: int | None = None) -> Any:
-        """Return a pyarrow Table using the Schema v2 or v1 event-log contract."""
-        try:
-            import pyarrow as pa
-        except ModuleNotFoundError as exc:
-            raise RuntimeError(
-                "pyarrow is required for Arrow table roundtrips"
-            ) from exc
-
-        target_version = version
-        if target_version is None:
-            target_version = 2 if self.records and self.records[0].schema_version == 2 else 1
-
-        if target_version == 2:
-            schema = pa.schema(
-                [
-                    pa.field("schema_version", pa.uint16(), nullable=False),
-                    pa.field("run_id", pa.utf8(), nullable=False),
-                    pa.field("event_id_index", pa.uint64(), nullable=False),
-                    pa.field("event_id_gen", pa.uint32(), nullable=False),
-                    pa.field("entity_id_index", pa.uint64(), nullable=True),
-                    pa.field("entity_id_gen", pa.uint32(), nullable=True),
-                    pa.field("time_ticks_hi", pa.uint64(), nullable=False),
-                    pa.field("time_ticks_lo", pa.uint64(), nullable=False),
-                    pa.field("time_scale", pa.utf8(), nullable=False),
-                    pa.field("priority", pa.int32(), nullable=False),
-                    pa.field("sequence", pa.uint64(), nullable=False),
-                    pa.field("event_kind", pa.utf8(), nullable=False),
-                    pa.field("status", pa.utf8(), nullable=False),
-                    pa.field("payload_ref", pa.utf8(), nullable=True),
-                ]
-            )
-            rows = [
-                {
-                    "schema_version": 2,
-                    "run_id": record.run_id,
-                    "event_id_index": record.event_id.index,
-                    "event_id_gen": record.event_id.generation,
-                    "entity_id_index": record.entity_id.index if record.entity_id else None,
-                    "entity_id_gen": record.entity_id.generation if record.entity_id else None,
-                    "time_ticks_hi": (record.time_ticks >> 64) & 0xFFFFFFFFFFFFFFFF,
-                    "time_ticks_lo": record.time_ticks & 0xFFFFFFFFFFFFFFFF,
-                    "time_scale": record.time_scale,
-                    "priority": record.priority,
-                    "sequence": record.sequence,
-                    "event_kind": record.event_kind,
-                    "status": record.status.value,
-                    "payload_ref": record.payload_ref,
-                }
-                for record in self.records
-            ]
-            return pa.Table.from_pylist(rows, schema=schema)
-
-        rows = [
-            {
-                "schema_version": record.schema_version,
-                "run_id": record.run_id,
-                "event_id": _handle_bytes(record.event_id),
-                "entity_id": _handle_bytes(record.entity_id)
-                if record.entity_id
-                else None,
-                "time_ticks": record.time_ticks.to_bytes(16, "little"),
-                "time_scale": record.time_scale,
-                "priority": record.priority,
-                "sequence": record.sequence,
-                "event_kind": record.event_kind,
-                "status": record.status.value,
-                "payload_ref": record.payload_ref,
-            }
-            for record in self.records
-        ]
-        schema = pa.schema(
-            [
-                pa.field("schema_version", pa.uint16(), nullable=False),
-                pa.field("run_id", pa.utf8(), nullable=False),
-                pa.field("event_id", pa.binary(12), nullable=False),
-                pa.field("entity_id", pa.binary(12), nullable=True),
-                pa.field("time_ticks", pa.binary(16), nullable=False),
-                pa.field("time_scale", pa.utf8(), nullable=False),
-                pa.field("priority", pa.int32(), nullable=False),
-                pa.field("sequence", pa.uint64(), nullable=False),
-                pa.field("event_kind", pa.utf8(), nullable=False),
-                pa.field("status", pa.utf8(), nullable=False),
-                pa.field("payload_ref", pa.utf8(), nullable=True),
-            ]
-        )
-        return pa.Table.from_pylist(rows, schema=schema)
-
     @classmethod
-    def from_smoke_bytes(cls, payload: bytes) -> EventLogBatch:
+    def from_smoke_bytes(cls, payload: bytes) -> "EventLogBatch":
         lines = payload.decode("utf-8").splitlines()
         expected_header = f"stream={EVENT_LOG_STREAM};schema_version={SCHEMA_VERSION}"
         if len(lines) < 2 or lines[0] != expected_header:
             raise ValueError("unexpected stream header")
-        expected_fields = (
-            "schema_version\trun_id\tevent_id_hex\tentity_id_hex\t"
-            "time_ticks_le_hex\ttime_scale\tpriority\tsequence\t"
-            "event_kind\tstatus\tpayload_ref"
-        )
-        if lines[1] != expected_fields:
+        if lines[1] != _SMOKE_FIELD_HEADER:
             raise ValueError("unexpected field header")
 
         records: list[EventLogRecord] = []
         for line in lines[2:]:
             cells = line.split("\t")
-            if len(cells) != 11:
-                raise ValueError(f"expected 11 cells, got {len(cells)}")
+            if len(cells) != len(EVENT_LOG_FIELDS):
+                raise ValueError(
+                    f"expected {len(EVENT_LOG_FIELDS)} cells, got {len(cells)}"
+                )
             records.append(
                 EventLogRecord(
                     schema_version=int(cells[0]),
                     run_id=_unescape_cell(cells[1]),
-                    event_id=_parse_handle(cells[2], EventId),
-                    entity_id=_parse_handle(cells[3], EntityId) if cells[3] else None,
-                    time_ticks=int.from_bytes(bytes.fromhex(cells[4]), "little"),
-                    time_scale=_unescape_cell(cells[5]),
-                    priority=int(cells[6]),
-                    sequence=int(cells[7]),
-                    event_kind=_unescape_cell(cells[8]),
-                    status=EventStatus(cells[9]),
-                    payload_ref=_unescape_cell(cells[10]) or None,
+                    event_id=EventId(int(cells[2]), int(cells[3])),
+                    entity_id=EntityId(int(cells[4]), int(cells[5]))
+                    if cells[4] != "" or cells[5] != ""
+                    else None,
+                    time_ticks=(int(cells[6]) << 64) | int(cells[7]),
+                    time_scale=_unescape_cell(cells[8]),
+                    priority=int(cells[9]),
+                    sequence=int(cells[10]),
+                    event_kind=_unescape_cell(cells[11]),
+                    status=EventStatus(cells[12]),
+                    payload_ref=_unescape_cell(cells[13]) or None,
                 )
             )
         return cls(records)
 
-    def __arrow_c_schema__(self) -> Any:
+    def _column_values(self) -> dict[str, list[Any]]:
+        """Columnar projection of the records — no per-row dictionaries."""
+
+        values: dict[str, list[Any]] = {field[0]: [] for field in EVENT_LOG_FIELDS}
+        for record in self.records:
+            values["schema_version"].append(record.schema_version)
+            values["run_id"].append(record.run_id)
+            values["event_id_index"].append(record.event_id.index)
+            values["event_id_gen"].append(record.event_id.generation)
+            values["entity_id_index"].append(
+                record.entity_id.index if record.entity_id is not None else None
+            )
+            values["entity_id_gen"].append(
+                record.entity_id.generation if record.entity_id is not None else None
+            )
+            values["time_ticks_hi"].append(record.time_ticks >> 64)
+            values["time_ticks_lo"].append(record.time_ticks & _U64_MASK)
+            values["time_scale"].append(record.time_scale)
+            values["priority"].append(record.priority)
+            values["sequence"].append(record.sequence)
+            values["event_kind"].append(record.event_kind)
+            values["status"].append(record.status.value)
+            values["payload_ref"].append(record.payload_ref)
+        return values
+
+    @staticmethod
+    def _pyarrow_types() -> dict[str, Any]:
+        import pyarrow as pa
+
+        return {
+            "schema_version": pa.uint16(),
+            "run_id": pa.utf8(),
+            "event_id_index": pa.uint64(),
+            "event_id_gen": pa.uint32(),
+            "entity_id_index": pa.uint64(),
+            "entity_id_gen": pa.uint32(),
+            "time_ticks_hi": pa.uint64(),
+            "time_ticks_lo": pa.uint64(),
+            "time_scale": pa.utf8(),
+            "priority": pa.int32(),
+            "sequence": pa.uint64(),
+            "event_kind": pa.utf8(),
+            "status": pa.utf8(),
+            "payload_ref": pa.utf8(),
+        }
+
+    def to_pyarrow_table(self) -> Any:
+        """Return a pyarrow Table using the Schema v2 event-log columns.
+
+        Columnar construction: arrays are built per column, never from per-row
+        Python dictionaries.
+        """
+
         try:
-            return self.to_pyarrow_table().schema.__arrow_c_schema__()
-        except (RuntimeError, AttributeError):
-            return _allocate_arrow_schema_capsule()
+            import pyarrow as pa
+        except ModuleNotFoundError as exc:
+            raise RuntimeError("pyarrow is required for Arrow table roundtrips") from exc
+
+        values = self._column_values()
+        types = self._pyarrow_types()
+        arrays = [
+            pa.array(values[field_name], type=types[field_name])
+            for field_name, _, _ in EVENT_LOG_FIELDS
+        ]
+        schema = self._pyarrow_schema(pa, types)
+        return pa.Table.from_arrays(arrays, schema=schema)
+
+    @staticmethod
+    def _pyarrow_schema(pa: Any, types: dict[str, Any]) -> Any:
+        return pa.schema(
+            [
+                pa.field(field_name, types[field_name], nullable=nullable)
+                for field_name, _, nullable in EVENT_LOG_FIELDS
+            ]
+        )
+
+    def __arrow_c_schema__(self) -> Any:
+        return self.to_pyarrow_table().schema.__arrow_c_schema__()
 
     def __arrow_c_array__(self, requested_schema: Any = None) -> tuple[Any, Any]:
+        """Hand the columnar record batch across the Arrow C data interface.
+
+        There is no fabricated-capsule fallback: if the native export is
+        unavailable (pyarrow missing or conversion failing) the error surfaces
+        explicitly, never as a fake ``+s`` capsule pair.
+        """
+
         try:
             table = self.to_pyarrow_table()
             batches = table.combine_chunks().to_batches()
             if batches:
                 return batches[0].__arrow_c_array__(requested_schema=requested_schema)
-            import pyarrow as pa
+        except Exception as exc:
+            raise RuntimeError(f"native Arrow export unavailable: {exc}") from exc
 
-            empty_batch = pa.RecordBatch.from_pydict(
-                self.to_column_dict(), schema=table.schema
-            )
-            return empty_batch.__arrow_c_array__(requested_schema=requested_schema)
-        except (RuntimeError, AttributeError):
-            return (
-                _allocate_arrow_schema_capsule(),
-                _allocate_arrow_array_capsule(len(self.records)),
-            )
+        import pyarrow as pa
+
+        types = self._pyarrow_types()
+        arrays = [
+            pa.array([], type=types[field_name])
+            for field_name, _, _ in EVENT_LOG_FIELDS
+        ]
+        empty_batch = pa.RecordBatch.from_arrays(
+            arrays, schema=self._pyarrow_schema(pa, types)
+        )
+        return empty_batch.__arrow_c_array__(requested_schema=requested_schema)
 
     def export_arrow_c_capsule_descriptor(self) -> dict[str, Any]:
         schema_cap, array_cap = self.__arrow_c_array__()
@@ -302,18 +308,17 @@ class EventLogBatch:
             "schema_capsule": schema_cap,
             "array_capsule": array_cap,
             "format": "+s",
-            "name": "event_log_batch",
+            "name": EVENT_LOG_STREAM,
             "records_count": len(self.records),
         }
 
     def to_polars_dict(self) -> dict[str, list[Any]]:
-        return {
-            "run_id": [r.run_id for r in self.records],
-            "time_ticks": [r.time_ticks for r in self.records],
-            "priority": [r.priority for r in self.records],
-            "sequence": [r.sequence for r in self.records],
-            "status": [r.status.value for r in self.records],
-        }
+        """Columnar projection for the Polars consumer path (v2 columns).
+
+        The v2 `sequence` column is the canonical per-run sort key.
+        """
+
+        return self._column_values()
 
     def to_duckdb_relation_spec(self) -> dict[str, Any]:
         return {
@@ -323,56 +328,49 @@ class EventLogBatch:
         }
 
     @classmethod
-    def from_pyarrow_table(cls, table: Any) -> EventLogBatch:
+    def from_pyarrow_table(cls, table: Any) -> "EventLogBatch":
         if tuple(table.schema.names) != tuple(field[0] for field in EVENT_LOG_FIELDS):
             raise ValueError("unexpected Arrow event-log field order")
 
-        records = []
-        for row in table.to_pylist():
+        # Column-first reading: pull each column once, then zip rows. No
+        # per-row dictionary reconstruction detour.
+        columns = {}
+        for field_name, _, _ in EVENT_LOG_FIELDS:
+            columns[field_name] = table.column(field_name).to_pylist()
+
+        records: list[EventLogRecord] = []
+        for row in range(len(table)):
+            entity_index = columns["entity_id_index"][row]
+            entity_gen = columns["entity_id_gen"][row]
+            # spec.md: nullable generational IDs null together.
+            if (entity_index is None) != (entity_gen is None):
+                raise ValueError(
+                    "entity_id_index and entity_id_gen must null together"
+                )
             records.append(
                 EventLogRecord(
-                    schema_version=int(row["schema_version"]),
-                    run_id=str(row["run_id"]),
-                    event_id=_parse_handle_bytes(row["event_id"], EventId),
-                    entity_id=_parse_handle_bytes(row["entity_id"], EntityId)
-                    if row["entity_id"] is not None
+                    schema_version=int(columns["schema_version"][row]),
+                    run_id=str(columns["run_id"][row]),
+                    event_id=EventId(
+                        int(columns["event_id_index"][row]),
+                        int(columns["event_id_gen"][row]),
+                    ),
+                    entity_id=EntityId(int(entity_index), int(entity_gen))
+                    if entity_index is not None
                     else None,
-                    time_ticks=int.from_bytes(row["time_ticks"], "little"),
-                    time_scale=str(row["time_scale"]),
-                    priority=int(row["priority"]),
-                    sequence=int(row["sequence"]),
-                    event_kind=str(row["event_kind"]),
-                    status=EventStatus(row["status"]),
-                    payload_ref=row["payload_ref"],
+                    time_ticks=(
+                        (int(columns["time_ticks_hi"][row]) << 64)
+                        | int(columns["time_ticks_lo"][row])
+                    ),
+                    time_scale=str(columns["time_scale"][row]),
+                    priority=int(columns["priority"][row]),
+                    sequence=int(columns["sequence"][row]),
+                    event_kind=str(columns["event_kind"][row]),
+                    status=EventStatus(columns["status"][row]),
+                    payload_ref=columns["payload_ref"][row],
                 )
             )
         return cls(records)
-
-
-def _handle_hex(handle: EventId | EntityId) -> str:
-    return _handle_bytes(handle).hex()
-
-
-def _handle_bytes(handle: EventId | EntityId) -> bytes:
-    return handle.index.to_bytes(8, "little") + handle.generation.to_bytes(4, "little")
-
-
-def _parse_handle[HandleT: (EventId, EntityId)](
-    hex_value: str, kind: type[HandleT]
-) -> HandleT:
-    if len(hex_value) != 24:
-        raise ValueError("handle must be 12 bytes")
-    return _parse_handle_bytes(bytes.fromhex(hex_value), kind)
-
-
-def _parse_handle_bytes[HandleT: (EventId, EntityId)](
-    payload: bytes, kind: type[HandleT]
-) -> HandleT:
-    if len(payload) != 12:
-        raise ValueError("handle must be 12 bytes")
-    return kind(
-        int.from_bytes(payload[:8], "little"), int.from_bytes(payload[8:12], "little")
-    )
 
 
 def _escape_cell(value: str) -> str:
@@ -387,99 +385,8 @@ def _unescape_cell(value: str) -> str:
         if char == "\\" and index + 1 < len(value):
             index += 1
             next_char = value[index]
-            output.append(
-                {"t": "\t", "n": "\n", "\\": "\\"}.get(next_char, "\\" + next_char)
-            )
+            output.append({"t": "\t", "n": "\n", "\\": "\\"}.get(next_char, "\\" + next_char))
         else:
             output.append(char)
         index += 1
     return "".join(output)
-
-
-class _CArrowSchema(ctypes.Structure):
-    pass
-
-
-_SCHEMA_RELEASE_TYPE = ctypes.CFUNCTYPE(None, ctypes.POINTER(_CArrowSchema))
-_CArrowSchema._fields_ = [
-    ("format", ctypes.c_char_p),
-    ("name", ctypes.c_char_p),
-    ("metadata", ctypes.c_char_p),
-    ("flags", ctypes.c_int64),
-    ("n_children", ctypes.c_int64),
-    ("children", ctypes.c_void_p),
-    ("dictionary", ctypes.c_void_p),
-    ("release", _SCHEMA_RELEASE_TYPE),
-    ("private_data", ctypes.c_void_p),
-]
-
-
-class _CArrowArray(ctypes.Structure):
-    pass
-
-
-_ARRAY_RELEASE_TYPE = ctypes.CFUNCTYPE(None, ctypes.POINTER(_CArrowArray))
-_CArrowArray._fields_ = [
-    ("length", ctypes.c_int64),
-    ("null_count", ctypes.c_int64),
-    ("offset", ctypes.c_int64),
-    ("n_buffers", ctypes.c_int64),
-    ("n_children", ctypes.c_int64),
-    ("buffers", ctypes.c_void_p),
-    ("children", ctypes.c_void_p),
-    ("dictionary", ctypes.c_void_p),
-    ("release", _ARRAY_RELEASE_TYPE),
-    ("private_data", ctypes.c_void_p),
-]
-
-
-@_SCHEMA_RELEASE_TYPE
-def _noop_schema_release(ptr: Any) -> None:
-    if ptr:
-        ptr.contents.release = _SCHEMA_RELEASE_TYPE(0)
-
-
-@_ARRAY_RELEASE_TYPE
-def _noop_array_release(ptr: Any) -> None:
-    if ptr:
-        ptr.contents.release = _ARRAY_RELEASE_TYPE(0)
-
-
-_LIVE_CAPSULE_KEEPALIVE: list[Any] = []
-_PYCAPSULE_NEW = ctypes.pythonapi.PyCapsule_New
-_PYCAPSULE_NEW.restype = ctypes.py_object
-_PYCAPSULE_NEW.argtypes = [ctypes.c_void_p, ctypes.c_char_p, ctypes.c_void_p]
-
-
-def _allocate_arrow_schema_capsule() -> Any:
-    schema = _CArrowSchema(
-        format=b"+s",
-        name=b"event_log_batch",
-        metadata=None,
-        flags=0,
-        n_children=0,
-        children=0,
-        dictionary=0,
-        release=_noop_schema_release,
-        private_data=0,
-    )
-    _LIVE_CAPSULE_KEEPALIVE.append(schema)
-    return _PYCAPSULE_NEW(ctypes.addressof(schema), b"arrow_schema", None)
-
-
-def _allocate_arrow_array_capsule(length: int) -> Any:
-    buf_ptr = (ctypes.c_void_p * 1)(0)
-    array = _CArrowArray(
-        length=length,
-        null_count=0,
-        offset=0,
-        n_buffers=1,
-        n_children=0,
-        buffers=ctypes.addressof(buf_ptr),
-        children=0,
-        dictionary=0,
-        release=_noop_array_release,
-        private_data=0,
-    )
-    _LIVE_CAPSULE_KEEPALIVE.append((array, buf_ptr))
-    return _PYCAPSULE_NEW(ctypes.addressof(array), b"arrow_array", None)

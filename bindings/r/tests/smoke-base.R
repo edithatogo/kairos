@@ -23,6 +23,6 @@ tryCatch(
 log <- kairoecs_arrow_roundtrip(kairoecs_event_log(scheduler))
 stopifnot(identical(log$event_kind, c("first", "second")))
 stopifnot(identical(log$status, c("dispatched", "dispatched")))
-stopifnot(identical(attr(log, "kairoecs_schema"), "kairo_ecs.event_log.v1"))
+stopifnot(identical(attr(log, "kairoecs_schema"), "kairo_ecs.event_log.v2"))
 
 cat("base R smoke passed\n")
