@@ -92,7 +92,7 @@ the original pin and lock were restored after the check.
   conformance and API Governance reviews remain pending.
 - Accepted fixes: experimental maturity rustdoc and live-pending/cancelled-only
   preview assertions were applied.
-- Commit SHA: implementation candidate `29abb88718fb1e76b7dedf81766f7d49058dc5d2`; documentation reconciliation commit pending.
-- Pushed ref: `refs/heads/codex/r10-3-scheduler-preview-compat-20261025` contains the implementation candidate; documentation reconciliation push pending.
-- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: pending until documentation commit.
+- Commit SHA: implementation candidate `29abb88718fb1e76b7dedf81766f7d49058dc5d2`; documentation reconciliation `fec06b928845b44352a2ac1edcf3c81712b3175a`.
+- Pushed ref: `refs/heads/codex/r10-3-scheduler-preview-compat-20261025` contains both commits.
+- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: passed after the documentation reconciliation commit.
 - Next-phase decision: await owner reviews, complete hosted checks and lock-delta acceptance; do not advance CareOps parent pin.

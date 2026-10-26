@@ -13,7 +13,7 @@ gates that remain open. Python helper commands use the verified repo-local
 | shared fixture contract | `pwsh -NoProfile -File scripts/validate_conformance_fixtures.ps1` | Passed locally; fixture remains planned in the generic runner manifest until a runner adapter is registered |
 | Conductor registration | `pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1`; `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`; `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1` | Artifact and DAG passed in prior verification; phase-gate validator is being rerun after this reconciliation |
 | track coverage | `pwsh -NoProfile -File scripts/validate_track_coverage.ps1 -SkipCargo` | Passed after adding the required machine-readable Track 106 row |
-| hosted PR checks | GitHub Actions at PR #333 head `29abb88718fb1e76b7dedf81766f7d49058dc5d2` | All 18 workflow runs observed on this head completed successfully; refresh after documentation push |
+| hosted PR checks | GitHub Actions at implementation head `29abb88718fb1e76b7dedf81766f7d49058dc5d2`; docs reconciliation commit `fec06b928845b44352a2ac1edcf3c81712b3175a` | All 18 workflow runs on the implementation head completed successfully. Fresh checks on the docs-only PR head are running; refresh before claiming hosted validation current. |
 | core scheduler review | Independent review against exact PR head | Pending; no reviewer registered |
 | conformance review | Independent review against exact PR head | Pending; no reviewer registered |
 | API compatibility review | API Governance review against exact PR head | Pending; no reviewer registered |
