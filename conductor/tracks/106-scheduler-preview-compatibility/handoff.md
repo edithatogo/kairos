@@ -4,23 +4,20 @@ Last updated: 2026-10-26.
 
 ## Summary
 
-The bounded scheduler preview implementation is on PR #333 and is ready for
-review. It restores the retained `ScheduledEventPreview` projection and
+The bounded scheduler preview implementation is on PR #333. It restores the retained `ScheduledEventPreview` projection and
 `Scheduler::peek_next` observer without changing dispatch behavior. The proposed
-head at last verification is `29abb88718fb1e76b7dedf81766f7d49058dc5d2`, based
+current source head is `b9250f5e013a6f27d43f1e58e20c4be1ff0421fb`, based
 on `main` at `80063b7413a26013e265107ea462828d94a49849`.
 
 ## Current state
 
 The PR is open and unmerged. The repository uses reviewer-agent/subagent
 assessments for technical review; no separate human owner review is required.
-Three reviewer agents assessed the candidate at
-`89e713e23bf1784b9b4dd4b72d13a0c4e0c33749`. Their reports found no scheduler
-correctness defect, confirmed the fixture should remain planned, and identified
-three small fixes: exercise `Some(EntityId)`, assert the fixture's descriptive
-ordering/requirement fields, and name the affected crate root in the ADR. These
-fixes are applied; request a final review of the integrated commit before phase
-acceptance. All 18 workflow runs on implementation head
+Three reviewer agents assessed the integrated candidate at
+`b9250f5e013a6f27d43f1e58e20c4be1ff0421fb` and passed from core scheduler,
+conformance and API compatibility lenses. Earlier findings were fixed: tests
+exercise `Some(EntityId)` and assert fixture ordering/requirement; the ADR names
+the affected crate root. All 18 workflow runs on implementation head
 `29abb88718fb1e76b7dedf81766f7d49058dc5d2` passed. Later docs-only commits
 triggered fresh hosted checks; final PR-head status must be refreshed. Automated
 Codex review on the implementation head reported no findings.
@@ -47,8 +44,8 @@ Codex review on the implementation head reported no findings.
 - The candidate lock adds/updates RNG dependencies (`rand`, `rand_chacha`,
   `rand_core`, `rand_distr`, `libm`) and removes `thiserror` from `careops-ed`;
   the lock contains parallel rand 0.9/0.10 versions. This delta needs owner
-  assessment before any parent lock or pin change. The single maintainer remains
-  final integrator; no separate owner reviewer is required.
+  disposition before any parent lock or pin change. The single maintainer remains
+  final integrator; the agent reports provide technical review evidence.
 - The disposable CareOps checkout was restored to pin
   `44261eb5cf8275f132f63a3396903d116d701dbe` and the original lock. The parent
   CareOps pin and lock remain unchanged.
@@ -65,14 +62,11 @@ hosted status.
 
 ## Remaining gates
 
-1. Record the three reviewer-agent reports and coordinator dispositions on the
-   exact candidate commit.
-2. Confirm all hosted CI jobs complete successfully on the final PR head.
-3. Record final reviewer-agent assessments and the single maintainer's disposition of
-   the CareOps candidate lock delta. Candidate-lock tests passing alone do not
-   authorize a parent change.
-4. Only after these gates, consider a separately reviewed CareOps pin and lock
-   update, then run final consumer acceptance and closeout.
+1. Confirm all hosted CI jobs complete successfully on the final PR head.
+2. Record the single maintainer's disposition of the CareOps candidate lock
+   delta. Candidate-lock tests passing alone do not authorize a parent change.
+3. Only after these gates, consider a CareOps pin and lock update, then run final
+   consumer acceptance and closeout.
 
 ## Parent repository boundary
 
@@ -94,13 +88,11 @@ the original pin and lock were restored after the check.
 
 ## Phase closeout evidence
 
-- `$conductor-review`: local source review completed. Reviewer-agent reports on
-  `89e713e` returned; the three reported improvements are applied, and final-head
-  reviewer-agent confirmation remains pending.
+- `$conductor-review`: three reviewer-agent assessments passed on source head `b9250f5e013a6f27d43f1e58e20c4be1ff0421fb`; earlier findings were fixed. Current hosted checks remain pending readback.
+- Reviewer-agent reports on exact source head `b9250f5e013a6f27d43f1e58e20c4be1ff0421fb` passed for core scheduler, conformance and API compatibility. No separate human owner review is required under the single-maintainer workflow.
 - Accepted fixes: experimental maturity rustdoc; live-pending/cancelled-only and
   `Some(EntityId)` preview assertions; parsing/asserting fixture ordering and
   requirement; ADR names `crates/kairo-ecs-core` as the affected API root.
-- Commit SHA: implementation candidate `29abb88718fb1e76b7dedf81766f7d49058dc5d2`; documentation reconciliation `fec06b928845b44352a2ac1edcf3c81712b3175a`.
-- Pushed ref: `refs/heads/codex/r10-3-scheduler-preview-compat-20261025` contains both commits.
-- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: passed after the documentation reconciliation commit.
-- Next-phase decision: record the three reviewer-agent reports, complete hosted checks and lock-delta acceptance; do not advance CareOps parent pin.
+- Source candidate commit SHA: `b9250f5e013a6f27d43f1e58e20c4be1ff0421fb`; pushed ref: `refs/heads/codex/r10-3-scheduler-preview-compat-20261025`.
+- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: pending for this documentation synchronization commit.
+- Next-phase decision: complete current hosted checks and the single maintainer's lock-delta disposition; do not advance the CareOps parent pin yet.
