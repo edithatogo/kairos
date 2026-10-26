@@ -110,3 +110,8 @@ pin remains `44261eb5cf8275f132f63a3396903d116d701dbe` until separate acceptance
 CareOps pin and lockfile are unchanged. No upstream acceptance, push, release or
 consumer acceptance is claimed by this draft. Pin work can start only after the
 candidate commit passes the listed reviews and exact CareOps tests.
+
+
+## Hosted validation follow-up
+
+The first hosted run showed that the generic conformance runner rejects new ready fixture IDs until it has an adapter. Track 106 therefore keeps `scheduler_preview_v1` as planned in the runner manifest with a null runner source; the Rust integration tests still include and deserialize the shared fixture directly. The hosted changelog and quality-gate validator findings are addressed in this review revision.

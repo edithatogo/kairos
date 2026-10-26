@@ -4,9 +4,9 @@
   "fixtures": [
     {
       "id": "scheduler_preview_v1",
-      "status": "ready",
+      "status": "planned",
       "kind": "scheduler",
-      "source": "track106-scheduler-preview.json",
+      "source": null,
       "consumers": ["01", "02"],
       "assertions": [
         "preview returns the next live event in time, priority, and insertion order",

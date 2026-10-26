@@ -65,6 +65,15 @@ Every gate listed in `conductor/tracks.yaml` must appear here as a bold gate ID.
 
 **deterministic-ordering-fixture**: validates the deterministic ordering conformance fixture and any scheduler code that consumes it.
 
+**dependency-106-preview-behaviour**: runs `cargo test --locked -p kairo-ecs-core --test track106_scheduler_preview` and verifies preview ordering, cancellation, repeated observation, and non-dispatch behavior.
+
+**core-api-owner-review**: records an independent core/API owner review of the public scheduler preview shape, state effects, experimental maturity, and compatibility contract.
+
+**conformance-owner-review**: records conformance-owner review of fixture semantics, fixture readiness, and consumer coverage before a Track 106 fixture is exposed as ready to the shared runner.
+
+**api-compatibility-review**: records API governance review of source compatibility, experimental API documentation, and downstream consumer compatibility.
+
+
 **ffi-lifecycle-tests**: validates FFI handle lifecycle, allocation/free, and double-free guard behavior for the checked-in FFI slice.
 
 **panic-boundary-tests**: validates panic containment and error reporting across FFI boundary code.
