@@ -12,12 +12,18 @@ on `main` at `80063b7413a26013e265107ea462828d94a49849`.
 
 ## Current state
 
-The PR is open and unmerged. No independent core scheduler, conformance, or API
-Governance reviewer is registered. The CODEOWNERS team request was rejected by
-GitHub with HTTP 422 because the team is not a collaborator on this repository;
-no owner review is claimed. All 18 workflow runs observed on this exact head have
-completed successfully. GitHub's automated Codex review also completed with no
-findings on this head; it does not substitute for the named owner reviews.
+The PR is open and unmerged. The repository uses reviewer-agent/subagent
+assessments for technical review; no separate human owner review is required.
+Three reviewer agents assessed the candidate at
+`89e713e23bf1784b9b4dd4b72d13a0c4e0c33749`. Their reports found no scheduler
+correctness defect, confirmed the fixture should remain planned, and identified
+three small fixes: exercise `Some(EntityId)`, assert the fixture's descriptive
+ordering/requirement fields, and name the affected crate root in the ADR. These
+fixes are applied; request a final review of the integrated commit before phase
+acceptance. All 18 workflow runs on implementation head
+`29abb88718fb1e76b7dedf81766f7d49058dc5d2` passed. Later docs-only commits
+triggered fresh hosted checks; final PR-head status must be refreshed. Automated
+Codex review on the implementation head reported no findings.
 
 ## Evidence
 
@@ -41,7 +47,8 @@ findings on this head; it does not substitute for the named owner reviews.
 - The candidate lock adds/updates RNG dependencies (`rand`, `rand_chacha`,
   `rand_core`, `rand_distr`, `libm`) and removes `thiserror` from `careops-ed`;
   the lock contains parallel rand 0.9/0.10 versions. This delta needs owner
-  acceptance before any parent lock or pin change.
+  assessment before any parent lock or pin change. The single maintainer remains
+  final integrator; no separate owner reviewer is required.
 - The disposable CareOps checkout was restored to pin
   `44261eb5cf8275f132f63a3396903d116d701dbe` and the original lock. The parent
   CareOps pin and lock remain unchanged.
@@ -58,27 +65,26 @@ hosted status.
 
 ## Remaining gates
 
-1. Obtain independent core scheduler, conformance, and API Governance review on
-   exact candidate head `29abb88718fb1e76b7dedf81766f7d49058dc5d2`.
-2. Confirm all hosted CI jobs complete successfully, including `R oldrel-1`.
-3. Obtain acceptance for the CareOps candidate lock delta and record consumer
-   owner acceptance. Candidate-lock tests passing alone do not authorize a
-   parent change.
+1. Record the three reviewer-agent reports and coordinator dispositions on the
+   exact candidate commit.
+2. Confirm all hosted CI jobs complete successfully on the final PR head.
+3. Record final reviewer-agent assessments and the single maintainer's disposition of
+   the CareOps candidate lock delta. Candidate-lock tests passing alone do not
+   authorize a parent change.
 4. Only after these gates, consider a separately reviewed CareOps pin and lock
    update, then run final consumer acceptance and closeout.
 
 ## Parent repository boundary
 
 No Track 106 acceptance, merge, release, or CareOps parent pin/lock update is
-claimed. The PR remains unmerged. The user is recorded as CareOps consumer owner;
-that role does not substitute for Kairos core, conformance, or API Governance
-review.
+claimed. The PR remains unmerged. The user is the single maintainer and final
+integrator; reviewer-agent reports provide the technical review evidence.
 
 ## Follow-up issues
 
-Independent owner review, the final hosted job, and acceptance of the consumer
-dependency-lock delta remain open. Parent pin and lock must remain unchanged
-until all are resolved.
+Final reviewer-agent reports, hosted checks, and the single maintainer's
+disposition of the consumer dependency-lock delta remain open. Parent pin and
+lock must remain unchanged until all are resolved.
 
 ## Integration notes
 
@@ -88,11 +94,13 @@ the original pin and lock were restored after the check.
 
 ## Phase closeout evidence
 
-- `$conductor-review`: local source review completed; independent core,
-  conformance and API Governance reviews remain pending.
-- Accepted fixes: experimental maturity rustdoc and live-pending/cancelled-only
-  preview assertions were applied.
+- `$conductor-review`: local source review completed. Reviewer-agent reports on
+  `89e713e` returned; the three reported improvements are applied, and final-head
+  reviewer-agent confirmation remains pending.
+- Accepted fixes: experimental maturity rustdoc; live-pending/cancelled-only and
+  `Some(EntityId)` preview assertions; parsing/asserting fixture ordering and
+  requirement; ADR names `crates/kairo-ecs-core` as the affected API root.
 - Commit SHA: implementation candidate `29abb88718fb1e76b7dedf81766f7d49058dc5d2`; documentation reconciliation `fec06b928845b44352a2ac1edcf3c81712b3175a`.
 - Pushed ref: `refs/heads/codex/r10-3-scheduler-preview-compat-20261025` contains both commits.
 - `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: passed after the documentation reconciliation commit.
-- Next-phase decision: await owner reviews, complete hosted checks and lock-delta acceptance; do not advance CareOps parent pin.
+- Next-phase decision: record the three reviewer-agent reports, complete hosted checks and lock-delta acceptance; do not advance CareOps parent pin.

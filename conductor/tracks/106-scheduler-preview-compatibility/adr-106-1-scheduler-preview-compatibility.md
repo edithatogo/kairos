@@ -2,8 +2,9 @@
 
 - Status: Proposed; implementation approved in the bounded Track 106 scope.
 - Decision date: 2026-10-25.
-- Review: Track 25 API Governance and Track 01 core scheduler owner review are
-  pending against the exact candidate commit.
+- Review: reviewer-agent/subagent assessments from Track 25 API compatibility,
+  Track 01 core scheduler, and Track 12 conformance perspectives are pending
+  against the exact candidate commit.
 
 ## Context
 
@@ -20,6 +21,8 @@ the current `(time, priority, sequence)` ordering and dispatch implementation
 unchanged. Repeated preview is not a dispatch and must not change virtual time,
 statistics, or live pending membership.
 
+Affected Rust API root: `crates/kairo-ecs-core`.
+
 ## Consequences
 
 - The Rust core API is additive and preserves the retained consumer signature.
@@ -28,6 +31,7 @@ statistics, or live pending membership.
   or cancel calls.
 - A deterministic shared fixture and focused core test pin the observable
   contract.
-- API compatibility and conformance owner review are required before acceptance.
+- API compatibility and conformance reviewer-agent assessments are required
+  before acceptance.
 - CareOps pin changes remain a separate gated action after the exact consumer
   validation passes.

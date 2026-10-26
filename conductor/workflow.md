@@ -29,6 +29,13 @@ These are the handoff points for subagents. A subagent may implement behind a mo
 
 Each subagent owns a narrow set of paths and should not modify another agent's path without a handoff note.
 
+Track `owner` fields name the responsible agent role; they do not create a
+separate human-owner review requirement in this single-maintainer repository.
+Use a reviewer agent/subagent with a distinct review lens and record its exact
+commit, role, findings and disposition. The human maintainer sets scope and
+accepts the integrated result. Preserve explicit human approvals only where the
+decision itself requires external, legal, security, release, or domain authority.
+
 | Subagent | Primary paths |
 |---|---|
 | foundation-agent | root metadata, license, governance files |

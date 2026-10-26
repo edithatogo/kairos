@@ -1567,7 +1567,7 @@ tracks:
     required_gates:
       - phase-closeout-check
       - dependency-106-preview-behaviour
-      - core-api-owner-review
-      - conformance-owner-review
-      - api-compatibility-review
+      - core-api-agent-review
+      - conformance-agent-review
+      - api-compatibility-agent-review
       - careops-r10.3-consumer-check

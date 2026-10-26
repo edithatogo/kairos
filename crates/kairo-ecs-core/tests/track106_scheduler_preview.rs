@@ -1,5 +1,5 @@
 use kairo_ecs_core::{ScheduledEventPreview, Scheduler};
-use kairo_ecs_types::{EventId, EventKind, ScheduleRequest, SimTime, StepOutcome};
+use kairo_ecs_types::{EntityId, EventId, EventKind, ScheduleRequest, SimTime, StepOutcome};
 use serde::Deserialize;
 
 #[derive(Deserialize)]
@@ -23,9 +23,11 @@ struct ExpectedPreview {
 struct PreviewFixture {
     fixture: String,
     version: u32,
+    ordering: Vec<String>,
     events: Vec<PreviewEvent>,
     expected_preview: ExpectedPreview,
     expected_kind_order: Vec<u32>,
+    requirement: String,
 }
 
 fn fixture() -> PreviewFixture {
@@ -41,6 +43,14 @@ fn peek_returns_the_next_live_event_without_changing_observable_state() {
     let fixture = fixture();
     assert_eq!(fixture.fixture, "scheduler_preview");
     assert_eq!(fixture.version, 1);
+    assert_eq!(
+        fixture.ordering,
+        ["at_ticks ASC", "priority ASC", "sequence ASC"]
+    );
+    assert_eq!(
+        fixture.requirement,
+        "Repeated preview returns the same next live event without dispatch or observable scheduler-state change; the next step dispatches it."
+    );
 
     let mut scheduler = Scheduler::new();
     let mut ids = Vec::<EventId>::new();
@@ -48,7 +58,7 @@ fn peek_returns_the_next_live_event_without_changing_observable_state() {
         let id = scheduler.schedule(ScheduleRequest {
             at: SimTime::from_ticks(event.at_ticks as u128),
             priority: event.priority,
-            entity: None,
+            entity: Some(EntityId::new(17, 4)),
             kind: EventKind::custom(event.kind),
         });
         ids.push(id);
@@ -66,7 +76,7 @@ fn peek_returns_the_next_live_event_without_changing_observable_state() {
         at: SimTime::from_ticks(expected.at_ticks as u128),
         priority: expected.priority,
         sequence: expected.sequence,
-        entity: None,
+        entity: Some(EntityId::new(17, 4)),
         kind: EventKind::custom(expected.kind),
     };
 
@@ -83,6 +93,7 @@ fn peek_returns_the_next_live_event_without_changing_observable_state() {
     assert_eq!(first.at, expected_preview.at);
     assert_eq!(first.priority, expected_preview.priority);
     assert_eq!(first.sequence, expected_preview.sequence);
+    assert_eq!(first.entity, expected_preview.entity);
     assert_eq!(first.kind, expected_preview.kind);
 
     let mut kinds = vec![first.kind.code()];

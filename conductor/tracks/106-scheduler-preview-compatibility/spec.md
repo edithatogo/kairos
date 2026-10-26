@@ -27,7 +27,7 @@ live event without dispatching it.
   test covering empty, ordering, cancellation, repeat observation, and the
   following dispatch.
 - API rustdoc, a compatibility ADR, exact CareOps downstream validation, and
-  owner review receipts.
+  reviewer-agent/subagent assessment receipts.
 
 ## Acceptance criteria
 
@@ -39,8 +39,9 @@ live event without dispatching it.
 4. Repeated preview calls do not dispatch, advance time, alter counters, or
    change pending live events; `step()` then dispatches the previewed event.
 5. Shared fixture validation and focused core tests pass.
-6. The API Governance, core scheduler, and conformance owners review the exact
-   candidate. The user as CareOps consumer owner records the R10.3 validation.
+6. Reviewer agents/subagents assess the exact candidate from core scheduler,
+   conformance, and API compatibility perspectives. The user as CareOps consumer
+   owner records the R10.3 validation.
 7. The CareOps parent pin remains unchanged until all prior gates pass and the
    accepted Kairos commit is available.
 
@@ -53,7 +54,8 @@ live event without dispatching it.
 - `conformance/fixtures/manifest.json` (one fixture registration only)
 
 The user-approved bounded track authorizes these exact additions; existing
-Track 01/12/25 owners retain review authority over their respective surfaces.
+Track 01/12/25 ownership roles retain their contract and path boundaries; reviewer
+agents assess the change against those contracts.
 
 ## Blocked paths
 
@@ -66,7 +68,8 @@ Track 01/12/25 owners retain review authority over their respective surfaces.
 ## Dependencies and sequencing
 
 Tracks 01, 12, and 25 provide the core, conformance, and compatibility
-contracts. Their owners must review before acceptance. CareOps R10.3 is the
+contracts. Reviewer agents assess the exact change against those contracts;
+the single maintainer integrates and accepts the result. CareOps R10.3 is the
 downstream consumer gate. Implementation begins with failing fixture-driven
 tests, then restores the additive API, documents it, and runs exact local and
 downstream checks.
@@ -82,7 +85,7 @@ single-maintainer lease.
 See [test matrix](test-matrix.md). Track phase review, Conductor validators,
 focused Cargo tests, shared fixture validation, and the exact CareOps R10.3
 build and reference tests are required. Local evidence does not substitute for
-owner review or upstream acceptance.
+reviewer-agent assessment or any separately required upstream acceptance.
 
 ## Release implications
 

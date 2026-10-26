@@ -67,11 +67,11 @@ Every gate listed in `conductor/tracks.yaml` must appear here as a bold gate ID.
 
 **dependency-106-preview-behaviour**: runs `cargo test --locked -p kairo-ecs-core --test track106_scheduler_preview` and verifies preview ordering, cancellation, repeated observation, and non-dispatch behavior.
 
-**core-api-owner-review**: records an independent core/API owner review of the public scheduler preview shape, state effects, experimental maturity, and compatibility contract.
+**core-api-agent-review**: records a reviewer-agent/subagent assessment of the public scheduler preview shape, state effects, experimental maturity, and compatibility contract on the exact candidate commit.
 
-**conformance-owner-review**: records conformance-owner review of fixture semantics, fixture readiness, and consumer coverage before a Track 106 fixture is exposed as ready to the shared runner.
+**conformance-agent-review**: records a reviewer-agent/subagent assessment of fixture semantics, fixture readiness, and consumer coverage before a Track 106 fixture is exposed as ready to the shared runner.
 
-**api-compatibility-review**: records API governance review of source compatibility, experimental API documentation, and downstream consumer compatibility.
+**api-compatibility-agent-review**: records a reviewer-agent/subagent assessment of source compatibility, experimental API documentation, and downstream consumer compatibility.
 
 
 **ffi-lifecycle-tests**: validates FFI handle lifecycle, allocation/free, and double-free guard behavior for the checked-in FFI slice.

@@ -16,13 +16,13 @@ review and consumer acceptance.
 - [x] Task 1.2: Restore the copied `ScheduledEventPreview` projection and `peek_next`, preserving existing queue ordering and lifecycle behavior.
 - [x] Task 1.3: Add API documentation and compatibility notes; record any public API owner objections.
 - [x] Task 1.4: Run focused core tests, formatting, rustdoc, fixture validation and required Conductor validators; retain exact command receipts.
-- [x] Task 1.5: Conductor source review completed; two accepted in-scope fixes applied, current-head checks passed locally, and PR #333 opened ready for review. Independent owner review and hosted CI remain gates before phase acceptance.
+- [x] Task 1.5: Conductor source review completed; two accepted in-scope fixes applied, current-head checks passed locally, and PR #333 opened ready for review. Reviewer-agent assessments and hosted CI remain gates before phase acceptance.
 
-## Phase 2 — Owner review and CareOps integration gate
+## Phase 2 — Reviewer-agent assessment and CareOps integration gate
 
-- [ ] Task 2.1: Obtain independent core scheduler, conformance and API Governance review against the exact candidate commit. PR is ready, but no reviewers are registered; the CODEOWNERS team request was rejected because the team is not a repository collaborator.
+- [ ] Task 2.1: Obtain reviewer-agent/subagent assessments from core scheduler, conformance and API compatibility perspectives against the exact candidate commit; retain separate review receipts and coordinator dispositions.
 - [x] Task 2.2: In an isolated CareOps checkout, verify the candidate using a candidate-specific lock: `cargo check --locked --offline -p careops-ed-cli`, R10.3 references and rustfmt passed. The original lock fails before compile because it requires updating; original lock and parent pin were restored unchanged.
-- [ ] Task 2.3: Record consumer-owner acceptance and resolve original-lock/dependency-delta acceptance. Exact consumer checks pass with the candidate lock, but no parent pin or lock change is authorized until the upstream owner and lock acceptance gates pass.
+- [ ] Task 2.3: Record exact consumer-check results and assess the original-lock dependency delta with reviewer-agent evidence. The single maintainer integrates and accepts the outcome; no separate consumer-owner reviewer is required. Keep the parent pin and lock unchanged until upstream and consumer checks pass.
 - [ ] Task 2.4: Conductor review and closeout; only after acceptance may a separate pin-update task be considered.
 
 ## Phase closeout gate
