@@ -12,6 +12,7 @@ repository toolchain (`1.99.1`).
 | formatting | `cargo fmt --all --check` | Passed |
 | shared fixture contract | `pwsh -NoProfile -File scripts/validate_conformance_fixtures.ps1` | Passed locally; fixture remains planned in the generic runner manifest until a runner adapter is registered |
 | track registration | `pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1`; `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`; `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1` | Passed: artifacts 0 errors/0 warnings, phase gates 0 errors/0 warnings, DAG 0 errors/0 warnings |
+| track coverage | `pwsh -NoProfile -File scripts/validate_track_coverage.ps1 -SkipCargo` | Passed after adding the required machine-readable Track 106 row in `tracks.md` |
 | owner review | Core scheduler, conformance, and API Governance reviewers confirm the exact candidate; retain review receipt | Pending |
 | CareOps consumer | Isolated consumer checkout: `cargo check --locked -p careops-ed-cli`, focused R10.3 references, `rustfmt --check`; exact parent commit and lockfile recorded | Pending |
 | git closeout | `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` | Pending |
