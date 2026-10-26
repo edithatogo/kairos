@@ -1,6 +1,6 @@
 # Plan: Scheduler Preview API Compatibility
 
-Candidate base is fixed at `5692e6a9ee866131262d60103a84e2544dc51e4a`.
+The implementation branch is rebased on current `main` at `80063b7413a26013e265107ea462828d94a49849`; exact proposed head is tracked by PR #333 (`29abb88718fb1e76b7dedf81766f7d49058dc5d2` at last verification). The original CareOps dependency failure was observed against `5692e6a9ee866131262d60103a84e2544dc51e4a`.
 Implementation and parent pin work remain separate; no pin update occurs before
 review and consumer acceptance.
 
@@ -16,13 +16,13 @@ review and consumer acceptance.
 - [x] Task 1.2: Restore the copied `ScheduledEventPreview` projection and `peek_next`, preserving existing queue ordering and lifecycle behavior.
 - [x] Task 1.3: Add API documentation and compatibility notes; record any public API owner objections.
 - [x] Task 1.4: Run focused core tests, formatting, rustdoc, fixture validation and required Conductor validators; retain exact command receipts.
-- [ ] Task 1.5: Conductor review, apply accepted in-scope fixes, validate phase, record commit and next-phase decision.
+- [x] Task 1.5: Conductor source review completed; two accepted in-scope fixes applied, current-head checks passed locally, and PR #333 opened ready for review. Independent owner review and hosted CI remain gates before phase acceptance.
 
 ## Phase 2 — Owner review and CareOps integration gate
 
-- [ ] Task 2.1: Obtain core scheduler, conformance and API Governance review against the exact candidate commit.
-- [ ] Task 2.2: In an isolated CareOps checkout, run `cargo check --locked -p careops-ed-cli` and R10.3 reference tests against the candidate; retain exact evidence.
-- [ ] Task 2.3: Record consumer-owner acceptance and any required remediation. Stop without changing the parent pin if an owner review or check is unavailable or fails.
+- [ ] Task 2.1: Obtain independent core scheduler, conformance and API Governance review against the exact candidate commit. PR is ready, but no reviewers are registered; the CODEOWNERS team request was rejected because the team is not a repository collaborator.
+- [x] Task 2.2: In an isolated CareOps checkout, verify the candidate using a candidate-specific lock: `cargo check --locked --offline -p careops-ed-cli`, R10.3 references and rustfmt passed. The original lock fails before compile because it requires updating; original lock and parent pin were restored unchanged.
+- [ ] Task 2.3: Record consumer-owner acceptance and resolve original-lock/dependency-delta acceptance. Exact consumer checks pass with the candidate lock, but no parent pin or lock change is authorized until the upstream owner and lock acceptance gates pass.
 - [ ] Task 2.4: Conductor review and closeout; only after acceptance may a separate pin-update task be considered.
 
 ## Phase closeout gate
@@ -36,6 +36,5 @@ findings in `handoff.md`. Synchronize `conductor/tracks.yaml`,
 `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1`,
 and this track's gates; commit the cleaned slice and run
 `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`.
-Commit and push the cleaned slice as required by the repository workflow; this
-approved local scope does not authorize remote push or parent pin advance, so
-record a pending push as a blocker unless separately authorized.
+The approved candidate has already been pushed as PR #333. Parent pin advancement remains a separate gated action.
+Commit and push the cleaned slice only after phase review; the implementation slice is pushed, while this documentation reconciliation is being validated before commit/push.

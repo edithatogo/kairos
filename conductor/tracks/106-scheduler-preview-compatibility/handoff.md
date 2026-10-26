@@ -1,117 +1,98 @@
 # Track 106 handoff
 
-Last updated: 2026-10-25.
+Last updated: 2026-10-26.
 
 ## Summary
 
-Track registration and the bounded preview implementation are underway. The
-candidate restores the retained API shape without changing dispatch behavior.
+The bounded scheduler preview implementation is on PR #333 and is ready for
+review. It restores the retained `ScheduledEventPreview` projection and
+`Scheduler::peek_next` observer without changing dispatch behavior. The proposed
+head at last verification is `29abb88718fb1e76b7dedf81766f7d49058dc5d2`, based
+on `main` at `80063b7413a26013e265107ea462828d94a49849`.
 
 ## Current state
 
-Track registration is in progress at exact base
-`5692e6a9ee866131262d60103a84e2544dc51e4a`. The local candidate is isolated in
-worktree `/Volumes/PortableSSD/codex-worktrees/kairos-r10-3-compat-20261025`.
+The PR is open and unmerged. No independent core scheduler, conformance, or API
+Governance reviewer is registered. The CODEOWNERS team request was rejected by
+GitHub with HTTP 422 because the team is not a collaborator on this repository;
+no owner review is claimed. All 18 workflow runs observed on this exact head have
+completed successfully. GitHub's automated Codex review also completed with no
+findings on this head; it does not substitute for the named owner reviews.
 
 ## Evidence
 
-- Before implementation, CareOps R10.3 compilation was observed to fail because
-  `Scheduler::peek_next` is absent at `crates/careops-ed/src/pathway.rs:269,274`.
-- The retained CareOps Kairos pin `44261eb5cf8275f132f63a3396903d116d701dbe`
-  contains the exact `ScheduledEventPreview` shape and observer semantics now
-  scoped by this track.
-- Track registration review, implementation, native checks, owner reviews and
-  CareOps consumer checks are pending until their respective evidence is added.
+- The original CareOps R10.3 failure was observed at Kairos base
+  `5692e6a9ee866131262d60103a84e2544dc51e4a`: `Scheduler::peek_next` was absent.
+- The retained CareOps pin
+  `44261eb5cf8275f132f63a3396903d116d701dbe` contains the expected preview
+  shape and observer semantics.
+- Current-head CareOps consumer source: `f2c4f7efb709a8ac184b111688f1656051a30b39`.
+  R10.3 test hash:
+  `1a453cd35ee3ae224f7318f73eb28f5c68740dc7d6ecd5f40725f352b5de6853`.
+- With the original CareOps lockfile hash
+  `9ad9d38b8fe43a10a90a02989c1c1adf83607a90d620a64242386398e1a671f3`,
+  `cargo check --locked --offline -p careops-ed-cli` stopped before compilation
+  because Cargo needed to update the lock.
+- With a candidate-specific lock hash
+  `24747479d6663d57aa4bacec437f60c652d78f07ec4c7a17883e98391ce2ffb8`,
+  `cargo check --locked --offline -p careops-ed-cli`,
+  `cargo test --locked --offline -p careops-ed --test r10_tabular_reference`,
+  and Rust 1.99.1 rustfmt checks passed. The two R10.3 reference tests passed.
+- The candidate lock adds/updates RNG dependencies (`rand`, `rand_chacha`,
+  `rand_core`, `rand_distr`, `libm`) and removes `thiserror` from `careops-ed`;
+  the lock contains parallel rand 0.9/0.10 versions. This delta needs owner
+  acceptance before any parent lock or pin change.
+- The disposable CareOps checkout was restored to pin
+  `44261eb5cf8275f132f63a3396903d116d701dbe` and the original lock. The parent
+  CareOps pin and lock remain unchanged.
 
-## Local Conductor review
+## Local review and checks
 
-The source review found and fixed two in-scope gaps before closeout: rustdoc now
-labels this public API as experimental, and a third test proves live pending
-membership remains cancellable after preview, including a cancelled-only queue.
-No ordering, timing, dispatch or API-shape issue remains in the local review.
-This is not a substitute for the named core, conformance or API Governance
-owner reviews; all three remain pending.
+Local source review found and fixed two in-scope issues: the rustdoc now labels
+the public API experimental, and tests prove live pending membership remains
+cancellable after preview, including a cancelled-only queue. Rebased Kairos
+checks passed: 51 `kairo-ecs-core` tests, the focused Track 106 tests, formatting,
+rustdoc, shared fixture validation, Conductor phase gates, DAG, artifact and
+track coverage validators. Current PR check readback remains authoritative for
+hosted status.
 
-## Validation receipts
+## Remaining gates
 
-Working directory: `/Volumes/PortableSSD/codex-worktrees/kairos-r10-3-compat-20261025`.
-Candidate base: `5692e6a9ee866131262d60103a84e2544dc51e4a`.
-Toolchain: Rust `1.99.1`, Cargo `1.99.1`; repository-local Python `3.15.1`
-was verified with `scripts/python_runtime.py` for the advisory harness.
-
-- `cargo test --locked -p kairo-ecs-core --test track106_scheduler_preview`:
-  passed, 3 tests. Before implementation, the same command failed only because
-  `ScheduledEventPreview` and `peek_next` were absent.
-- `cargo test --locked -p kairo-ecs-core`: passed, 47 tests.
-- `cargo fmt --all --check`: passed.
-- `cargo doc --locked -p kairo-ecs-core --no-deps`: passed; output at
-  `target/doc/kairo_ecs_core/index.html`.
-- `pwsh -NoProfile -File scripts/validate_conformance_fixtures.ps1`: passed.
-- `pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1`: passed,
-  0 errors and 0 warnings (informational findings remain in older tracks).
-- `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`: passed,
-  0 errors and 0 warnings.
-- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1`:
-  passed, 0 errors and 0 warnings.
-- Source commit SHA and clean-tree closeout: pending.
-
-## Files changed
-
-`crates/kairo-ecs-core/src/lib.rs`,
-`crates/kairo-ecs-core/tests/track106_scheduler_preview.rs`,
-`conformance/fixtures/track106-scheduler-preview.json`,
-`conformance/fixtures/manifest.json`, and the Track 106 Conductor artifacts.
-
-## Contracts consumed
-
-Track 01 core ordering/cancellation contract, Track 12 fixture contract, Track
-25 versioning/compatibility rules, and the CareOps R10.3 exact consumer contract.
-
-## Contracts changed
-
-No shared Track 01/12/25 policy contract is changed. The additive preview API
-contract is documented in the Track 106 ADR and fixture pending owner review.
-
-## Tests added
-
-Focused preview behavior tests passed (2/2); the full `kairo-ecs-core` package
-passed 46 tests. Formatting, docs build and shared fixture validation passed;
-exact receipts are recorded in `test-matrix.md`.
-
-## Known risks
-
-Core scheduler, conformance and API Governance owner reviews, plus downstream
-CareOps R10.3 verification, remain outstanding.
-
-## Follow-up issues
-
-If remote push is required for owner review, obtain authorization before that
-remote mutation. Keep the CareOps parent pin unchanged until every review and
-consumer gate passes.
-
-## Integration notes
-
-Candidate base is `5692e6a9ee866131262d60103a84e2544dc51e4a`; retained consumer
-pin remains `44261eb5cf8275f132f63a3396903d116d701dbe` until separate acceptance.
-
-## Phase closeout evidence
-
-- `$conductor-review`: local review completed for track registration and source.
-- Accepted fixes: experimental maturity label and live-pending/cancelled-only
-  assertions applied; no other in-scope fixes remain.
-- Commit SHA: pending local commit.
-- Pushed ref: pending; owner-review and downstream acceptance remain open.
-- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: pending.
-- Next-phase decision: submit exact candidate for core/API/conformance review;
-  then run the exact CareOps consumer gate. Parent pin remains unchanged.
+1. Obtain independent core scheduler, conformance, and API Governance review on
+   exact candidate head `29abb88718fb1e76b7dedf81766f7d49058dc5d2`.
+2. Confirm all hosted CI jobs complete successfully, including `R oldrel-1`.
+3. Obtain acceptance for the CareOps candidate lock delta and record consumer
+   owner acceptance. Candidate-lock tests passing alone do not authorize a
+   parent change.
+4. Only after these gates, consider a separately reviewed CareOps pin and lock
+   update, then run final consumer acceptance and closeout.
 
 ## Parent repository boundary
 
-CareOps pin and lockfile are unchanged. No upstream acceptance, push, release or
-consumer acceptance is claimed by this draft. Pin work can start only after the
-candidate commit passes the listed reviews and exact CareOps tests.
+No Track 106 acceptance, merge, release, or CareOps parent pin/lock update is
+claimed. The PR remains unmerged. The user is recorded as CareOps consumer owner;
+that role does not substitute for Kairos core, conformance, or API Governance
+review.
 
+## Follow-up issues
 
-## Hosted validation follow-up
+Independent owner review, the final hosted job, and acceptance of the consumer
+dependency-lock delta remain open. Parent pin and lock must remain unchanged
+until all are resolved.
 
-The first hosted run showed that the generic conformance runner rejects new ready fixture IDs until it has an adapter. Track 106 therefore keeps `scheduler_preview_v1` as planned in the runner manifest with a null runner source; the Rust integration tests still include and deserialize the shared fixture directly. The hosted changelog and quality-gate validator findings are addressed in this review revision.
+## Integration notes
+
+The proposed API candidate is PR #333 at the head recorded above. CareOps
+consumer validation used an isolated disposable checkout and candidate lock;
+the original pin and lock were restored after the check.
+
+## Phase closeout evidence
+
+- `$conductor-review`: local source review completed; independent core,
+  conformance and API Governance reviews remain pending.
+- Accepted fixes: experimental maturity rustdoc and live-pending/cancelled-only
+  preview assertions were applied.
+- Commit SHA: implementation candidate `29abb88718fb1e76b7dedf81766f7d49058dc5d2`; documentation reconciliation commit pending.
+- Pushed ref: `refs/heads/codex/r10-3-scheduler-preview-compat-20261025` contains the implementation candidate; documentation reconciliation push pending.
+- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: pending until documentation commit.
+- Next-phase decision: await owner reviews, complete hosted checks and lock-delta acceptance; do not advance CareOps parent pin.

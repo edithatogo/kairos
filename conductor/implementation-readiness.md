@@ -147,8 +147,4 @@ See [current sequencing](dependency-sequencing.md): Polars inventory first, with
 
 ## Track 106 readiness
 
-Track 106 is In Progress at the approved candidate base `5692e6a9ee866131262d60103a84e2544dc51e4a`. CareOps R10.3 requires `ScheduledEventPreview` and `Scheduler::peek_next`; compatibility implementation and fixtures are scoped, but no parent pin update is permitted until core, API-governance and conformance owner reviews and the exact CareOps consumer checks pass.
-
-## Track 106 readiness
-
-Track 106 is In Progress at the approved candidate base `5692e6a9ee866131262d60103a84e2544dc51e4a`. CareOps R10.3 requires `ScheduledEventPreview` and `Scheduler::peek_next`; compatibility implementation and fixtures are scoped, but no parent pin update is permitted until core, API-governance and conformance owner reviews and the exact CareOps consumer checks pass.
+Track 106 is In Progress on PR #333, rebased onto `main` at `80063b7413a26013e265107ea462828d94a49849` (last verified candidate head `29abb88718fb1e76b7dedf81766f7d49058dc5d2`). The additive preview implementation and local checks are complete; all 18 hosted workflow runs observed on that head passed, and the automated Codex review reported no findings. Independent core, conformance and API Governance reviews remain outstanding. CareOps R10.3 passed against this candidate with a regenerated candidate lock, while the original lock requires an update. Parent pin and lock remain unchanged pending reviewer and dependency-delta acceptance.

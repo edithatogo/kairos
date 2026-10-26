@@ -1,21 +1,24 @@
 # Track 106 test matrix
 
-All commands are pending until actually executed. Python helper commands use
-the verified repo-local `.venv/bin/python` (3.15.1); Rust checks use the
-repository toolchain (`1.99.1`).
+Statuses below distinguish completed local checks from hosted and ownership
+gates that remain open. Python helper commands use the verified repo-local
+`.venv/bin/python` (3.15.1); Rust checks use repository Rust/Cargo `1.99.1`.
 
 | Gate | Oracle | Status |
 |---|---|---|
-| dependency-106-preview-behaviour | `cargo test --locked -p kairo-ecs-core --test track106_scheduler_preview` checks empty, ordered, cancelled-only, live-cancellation, repeat-peek and subsequent dispatch behavior using the shared fixture | Passed locally: 3 Track 106 tests; baseline first failed only on the intended missing API |
-| core-library regression | `cargo test --locked -p kairo-ecs-core` | Passed: 47 tests across unit, integration, conformance, property and Track 106 suites |
-| API rustdoc | `cargo doc --locked -p kairo-ecs-core --no-deps` | Passed; generated `target/doc/kairo_ecs_core/index.html` |
-| formatting | `cargo fmt --all --check` | Passed |
+| dependency-106-preview-behaviour | `cargo test --locked -p kairo-ecs-core --test track106_scheduler_preview` checks empty, ordered, cancelled-only, live-cancellation, repeat-peek and subsequent dispatch behavior using the shared fixture | Passed locally on rebased candidate; 3 Track 106 tests |
+| core-library regression | `cargo test --locked -p kairo-ecs-core` | Passed locally on rebased candidate: 51 tests across unit, integration, conformance, property and Track 106 suites |
+| API rustdoc | `cargo doc --locked -p kairo-ecs-core --no-deps` | Passed locally; generated `target/doc/kairo_ecs_core/index.html` |
+| formatting | `cargo fmt --all --check` | Passed locally |
 | shared fixture contract | `pwsh -NoProfile -File scripts/validate_conformance_fixtures.ps1` | Passed locally; fixture remains planned in the generic runner manifest until a runner adapter is registered |
-| track registration | `pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1`; `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`; `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1` | Passed: artifacts 0 errors/0 warnings, phase gates 0 errors/0 warnings, DAG 0 errors/0 warnings |
-| track coverage | `pwsh -NoProfile -File scripts/validate_track_coverage.ps1 -SkipCargo` | Passed after adding the required machine-readable Track 106 row in `tracks.md` |
-| owner review | Core scheduler, conformance, and API Governance reviewers confirm the exact candidate; retain review receipt | Pending |
-| CareOps consumer | Isolated consumer checkout: `cargo check --locked -p careops-ed-cli`, focused R10.3 references, `rustfmt --check`; exact parent commit and lockfile recorded | Pending |
-| git closeout | `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` | Pending |
+| Conductor registration | `pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1`; `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`; `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1` | Artifact and DAG passed in prior verification; phase-gate validator is being rerun after this reconciliation |
+| track coverage | `pwsh -NoProfile -File scripts/validate_track_coverage.ps1 -SkipCargo` | Passed after adding the required machine-readable Track 106 row |
+| hosted PR checks | GitHub Actions at PR #333 head `29abb88718fb1e76b7dedf81766f7d49058dc5d2` | All 18 workflow runs observed on this head completed successfully; refresh after documentation push |
+| core scheduler review | Independent review against exact PR head | Pending; no reviewer registered |
+| conformance review | Independent review against exact PR head | Pending; no reviewer registered |
+| API compatibility review | API Governance review against exact PR head | Pending; no reviewer registered |
+| CareOps consumer | Disposable CareOps checkout: `cargo check --locked --offline -p careops-ed-cli`, R10.3 references and rustfmt | Candidate-specific lock: passed; 2 reference tests passed. Original lock: locked check failed before compile because lock update is required. Candidate lock delta awaits acceptance. Parent pin and original lock restored unchanged. |
+| git closeout | `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` | Pending for documentation synchronization commit |
 
 Unexecuted, unavailable, or owner-pending gates remain Pending and block track
 acceptance and the parent pin update.

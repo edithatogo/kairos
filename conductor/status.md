@@ -899,6 +899,6 @@ Track 95 (`thiserror robustness`) completed Phase 0, 1, and 2:
 
 
 
-## Track 106 started — 25 October 2026
+## Track 106 status — 26 October 2026
 
-[Track 106](tracks/106-scheduler-preview-compatibility/index.md) restores the additive scheduler preview API expected by CareOps R10.3 on exact base `5692e6a9ee866131262d60103a84e2544dc51e4a`. Scope is limited to `ScheduledEventPreview`, `Scheduler::peek_next`, deterministic compatibility/conformance coverage and API documentation. Core/API/conformance owner reviews and the exact CareOps consumer check remain acceptance gates; the parent CareOps pin is unchanged.
+[Track 106](tracks/106-scheduler-preview-compatibility/index.md) is In Progress on PR #333, proposed head `29abb88718fb1e76b7dedf81766f7d49058dc5d2`, based on `main` at `80063b7413a26013e265107ea462828d94a49849`. The additive preview implementation and local checks are complete; all 18 hosted workflow runs observed on this head passed, and the automated Codex review reported no findings. CareOps R10.3 compiled and its two reference tests passed with a candidate-specific lock, while the original lock requires updating and its dependency delta awaits acceptance. No independent core scheduler, conformance, or API Governance review is registered. The CareOps parent pin and lock remain unchanged.
