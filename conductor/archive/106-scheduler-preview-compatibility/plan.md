@@ -1,6 +1,6 @@
 # Plan: Scheduler Preview API Compatibility
 
-The implementation branch is rebased on current `main` at `80063b7413a26013e265107ea462828d94a49849`; exact proposed head is tracked by PR #333 (`29abb88718fb1e76b7dedf81766f7d49058dc5d2` at last verification). The original CareOps dependency failure was observed against `5692e6a9ee866131262d60103a84e2544dc51e4a`.
+The implementation branch is rebased on current `main` at `80063b7413a26013e265107ea462828d94a49849`; PR #333 currently proposes `e3c7dc2f9f66e3c980b9d3cfb631be31842368c5`. The original CareOps dependency failure was observed against `5692e6a9ee866131262d60103a84e2544dc51e4a`.
 Implementation and parent pin work remain separate; no pin update occurs before
 review and consumer acceptance.
 
@@ -20,10 +20,10 @@ review and consumer acceptance.
 
 ## Phase 2 — Reviewer-agent assessment and CareOps integration gate
 
-- [ ] Task 2.1: Obtain reviewer-agent/subagent assessments from core scheduler, conformance and API compatibility perspectives against the exact candidate commit; retain separate review receipts and coordinator dispositions.
+- [x] Task 2.1: Reviewer-agent assessments from core scheduler, conformance and API compatibility perspectives passed on source commit `b9250f5e013a6f27d43f1e58e20c4be1ff0421fb`; findings and dispositions are recorded in the test matrix and handoff. The docs-only descendant `e3c7dc2` does not change reviewed source.
 - [x] Task 2.2: In an isolated CareOps checkout, verify the candidate using a candidate-specific lock: `cargo check --locked --offline -p careops-ed-cli`, R10.3 references and rustfmt passed. The original lock fails before compile because it requires updating; original lock and parent pin were restored unchanged.
-- [ ] Task 2.3: Record exact consumer-check results and assess the original-lock dependency delta with reviewer-agent evidence. The single maintainer integrates and accepts the outcome; no separate consumer-owner reviewer is required. Keep the parent pin and lock unchanged until upstream and consumer checks pass.
-- [ ] Task 2.4: Conductor review and closeout; only after acceptance may a separate pin-update task be considered.
+- [x] Task 2.3: Reviewer-agent assessment found the candidate lock delta is explainable but the candidate pin also changes Kairos RNG behavior from SplitMix64 to ChaCha8, outside Track 106 and without old-pin replay parity evidence. Do not adopt that broad pin/lock update. At retained CareOps pin `44261eb5cf8275f132f63a3396903d116d701dbe` with original lock hash `9ad9d38b8fe43a10a90a02989c1c1adf83607a90d620a64242386398e1a671f3`, `cargo check --locked --offline -p careops-ed-cli`, both R10.3 reference tests, and focused Rust 1.99.1 rustfmt pass. The pin and lock remain unchanged; broader RNG migration/replay qualification stays with the separate CareOps dependency track.
+- [x] Task 2.4: Conductor review completed with no in-scope code findings; all accepted review findings were fixed. Track 106 is archived in this PR branch. The separate CareOps RNG/pin migration remains outside this track.
 
 ## Phase closeout gate
 
@@ -36,5 +36,5 @@ findings in `handoff.md`. Synchronize `conductor/tracks.yaml`,
 `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1`,
 and this track's gates; commit the cleaned slice and run
 `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`.
-The approved candidate has already been pushed as PR #333. Parent pin advancement remains a separate gated action.
+PR #333 carries the reviewed API implementation and archive closeout. No CareOps parent pin advancement is included.
 Commit and push the cleaned slice only after phase review; the implementation slice is pushed, while this documentation reconciliation is being validated before commit/push.

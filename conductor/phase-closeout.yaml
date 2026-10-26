@@ -1835,10 +1835,10 @@ entries:
     next_phase_decision: "Reconcile active-use inventory, exact source evidence and owners"
 
   - track_id: "106"
-    phase: "1"
-    state: pending
+    phase: "track-closeout"
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Three reviewer-agent assessments passed on source head b9250f5e013a6f27d43f1e58e20c4be1ff0421fb for core scheduler, conformance and API compatibility. Earlier findings were fixed. CareOps candidate-lock check passed; dependency-delta disposition remains pending."
+    review_result: "Conductor review completed with no remaining in-scope code findings. Core scheduler, conformance and API compatibility reviewer-agent assessments passed. CareOps retained-pin consumer checks passed; candidate pin RNG change was identified as separate migration risk and not adopted."
     fixes_applied: true
     validation_commands:
       - "cargo test --locked -p kairo-ecs-core --test track106_scheduler_preview"
@@ -1849,7 +1849,7 @@ entries:
       - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
-    git_status: "PR #333 open; all 18 hosted workflow runs passed on implementation head 29abb88718fb1e76b7dedf81766f7d49058dc5d2; checks on current docs-updated PR head must be refreshed"
-    commit_sha: "b9250f5e013a6f27d43f1e58e20c4be1ff0421fb"
+    git_status: "Track archived in PR #333; required hosted checks must pass on final archive-closeout head before merge"
+    commit_sha: "e3c7dc2f9f66e3c980b9d3cfb631be31842368c5"
     pushed_ref: "refs/heads/codex/r10-3-scheduler-preview-compat-20261025"
-    next_phase_decision: "Complete hosted CI on current PR head and obtain the single maintainer's disposition of the CareOps dependency-lock delta; do not advance parent pin yet"
+    next_phase_decision: "Merge PR #333 after required hosted checks pass; keep CareOps pin unchanged and handle RNG replay qualification separately"
