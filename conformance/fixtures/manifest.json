@@ -3,6 +3,18 @@
   "root": "conformance/fixtures",
   "fixtures": [
     {
+      "id": "scheduler_preview_v1",
+      "status": "planned",
+      "kind": "scheduler",
+      "source": null,
+      "consumers": ["01", "02"],
+      "assertions": [
+        "preview returns the next live event in time, priority, and insertion order",
+        "cancelled events are skipped",
+        "repeated preview does not dispatch or change observable scheduler state"
+      ]
+    },
+    {
       "id": "scheduler_ordering_v1",
       "status": "ready",
       "kind": "ordering",

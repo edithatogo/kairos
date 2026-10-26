@@ -14,6 +14,8 @@ Format:
 
 ## Unreleased
 
+- `crates/kairo-ecs-core`: restore the experimental `ScheduledEventPreview` projection and `Scheduler::peek_next` inspection API without changing event ordering or dispatch behavior; add focused scheduler compatibility coverage.
+
 - `crates/kairo-ecs-ffi`: keep populated Arrow C Data schema and array exports available without `native-data`, and align Track 70 consumer tests with the default-feature ABI.
 
 - `crates/kairo-ecs-grpc` adopts `tonic 0.14.6` and `prost 0.13.5` (Track 83) for standards-compliant, interoperable gRPC simulation RPC transport, providing `TonicTransport` with pure-Rust code generation eliminating external `protoc` host dependencies, full `PdesTransport` compliance over HTTP/2, Jefferson Time Warp optimistic envelope exchange with ancestry rollback preservation, dynamic entity migration, and distributed Mattern GVT consensus rounds.

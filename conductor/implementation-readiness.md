@@ -144,3 +144,7 @@ See [current sequencing](dependency-sequencing.md): Polars inventory first, with
 ## Python runtime qualification — 23 October 2026
 
 [Python 3.15 migration and qualification](tracks/105-python315-runtime-qualification/index.md) is In Progress. The preserved candidate is reconciled and local CI runtime guards are implemented; hosted/main/runtime handover acceptance remains pending. Track 30 retains version policy; bounded shared-path handoffs precede implementation.
+
+## Track 106 readiness
+
+[Archived Track 106](archive/106-scheduler-preview-compatibility/index.md) is complete on PR #333. The additive preview API passed focused/core tests, formatting, documentation, fixture and Conductor validation; three reviewer-agent assessments passed. CareOps R10.3 passes at its retained Kairos pin and original lock. The candidate pin's RNG switch from SplitMix64 to ChaCha8 is a separate migration risk, so the parent pin and lock remain unchanged. Hosted checks must be re-read on the final archive-closeout PR head before merge.
