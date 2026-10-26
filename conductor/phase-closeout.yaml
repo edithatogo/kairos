@@ -1851,5 +1851,5 @@ entries:
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
     git_status: "Track archived in PR #333; required hosted checks must pass on final archive-closeout head before merge"
     commit_sha: "e3c7dc2f9f66e3c980b9d3cfb631be31842368c5"
-    pushed_ref: "refs/heads/codex/r10-3-scheduler-preview-compat-20261025"
+    pushed_ref: "HEAD"
     next_phase_decision: "Merge PR #333 after required hosted checks pass; keep CareOps pin unchanged and handle RNG replay qualification separately"
