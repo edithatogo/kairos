@@ -30,7 +30,7 @@
 - Migration: `docs/release/migration.md`
 - Fixture/test: `conformance/fixtures/track107-careops-staged-allocation.json` and crate conformance test
 - API governance: inventory, compatibility matrix, versioning contract and release compatibility note updated
-- Reviewer-agent API governance and red-team review: completed for the experimental alpha boundary; see signoffs below
+- Reviewer-agent API governance and red-team review: completed for source commit `5897ebf95d5993d069d85a1fd70a1a62123c0873`; see `evidence/reviewer-agent-review.md`
 
 ## Release decision
 
@@ -41,7 +41,7 @@
 
 ## Reviewer signoff
 
-- API governance reviewer: reviewer-agent completed focused design and implementation assessment; accepted fixes applied
-- Release reviewer: reviewer-agent found no remaining API-scope or lifecycle blocker for experimental alpha
-- Red-team objection status: no remaining blocker; full former `FlowRuntime` compatibility remains explicitly excluded
+- API governance reviewer: two independent reviewer agents assessed source commit `5897ebf95d5993d069d85a1fd70a1a62123c0873`; no remaining code or contract blockers
+- Release reviewer: CareOps migration and seeded replay remain explicit downstream acceptance gates
+- Red-team objection status: no remaining blocker within the reviewed staged-allocation scope; full former `FlowRuntime` compatibility remains explicitly excluded
 - Final decision: accepted for alpha implementation; beta-or-later remains on hold pending CareOps migration/acceptance

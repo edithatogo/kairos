@@ -15,6 +15,7 @@
 - `Cargo.lock` SHA256: `db047fde8908ffd2995e66db50aec2d4c5f58f07704b1cb29cb94ea69d5c1ca5`; it is unchanged from base `797e969b4a3cd3605a617a32d0134d0a093aa06a`. The findings come through Polars 0.45.1 → `polars-arrow` → zstd 0.13.3 and zstd-safe 7.3.0; see `zstd-dependency-path.log`. No dependency or lock changes are in Track107 scope. A separate reviewed dependency task is required to remediate them; no advisory is allowlisted here.
 - Mainline fixture, compatibility inventory, Conductor DAG, phase-gate, artifact, and track-document validators passed; see the `*-mainline.log` files.
 - CareOps parent pin and lockfile have not been changed. R10.3 consumer migration and seeded replay qualification remain separate acceptance gates.
+- The released-lease fix passed the focused 4-test target and formatting check at source commit `5897ebf95d5993d069d85a1fd70a1a62123c0873`; exact command output is in `review-fix-validation.log`. Two independent reviewer agents assessed that exact source commit; their scoped receipts are in `reviewer-agent-review.md`.
 
 ## Prototype receipts
 
