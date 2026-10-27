@@ -1,0 +1,9 @@
+Commit under test: 1a7734e757a55df38d80a7decd8b5e788642998a
+Working directory: /Users/doughnut/.codex/worktrees/kairos-track107-mainline
+Toolchain: Rust via rustup 1.99.1 (LLVM 23.1.1); repo-local Python 3.15.1 for agent-session scope check
+Commands:
+  .venv/bin/python scripts/agent_session.py check --token 040c4630f00c458aa5ea6e5f8f95d23b --paths crates/kairo-ecs-des/src/staged_runtime.rs crates/kairo-ecs-des/tests/careops_staged_allocation_compatibility.rs
+  cargo fmt --all --check
+  cargo test --locked -p kairo-ecs-des --test careops_staged_allocation_compatibility
+Results: all commands exited 0; focused test target passed 4/4.
+Changes validated: clear released request active lease in snapshots; assert released request lease is None.

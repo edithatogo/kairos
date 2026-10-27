@@ -42,6 +42,7 @@ fn capacity_one_contention_promotes_fifo_request_after_scheduled_release() {
         runtime.request(request_a).unwrap().state,
         StagedRequestState::Released
     );
+    assert_eq!(runtime.request(request_a).unwrap().lease, None);
     let after = runtime.resource(resource).unwrap();
     assert_eq!(after.active.len(), 1);
     assert_eq!(after.active[0].request_id(), request_b);

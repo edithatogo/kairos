@@ -414,6 +414,7 @@ impl StagedResourceRuntime {
         resource.active.remove(position);
         let record = self.requests.get_mut(&request).unwrap();
         record.state = StagedRequestState::Released;
+        record.lease = None;
         record.release_pending = false;
         if let Some(next) = resource.queued.pop_front() {
             Self::activate(&mut self.requests, resource, next)?;

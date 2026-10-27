@@ -30,12 +30,12 @@
 - Migration: `docs/release/migration.md`
 - Fixture/test: `conformance/fixtures/track107-careops-staged-allocation.json` and crate conformance test
 - API governance: inventory, compatibility matrix, versioning contract and release compatibility note updated
-- Reviewer-agent API governance and red-team review: pending
+- Reviewer-agent API governance and red-team review: completed for the experimental alpha boundary; see signoffs below
 
 ## Release decision
 
 - Compatibility level: `compatible` additive experimental API at alpha
-- Release hold: yes for beta or later until reviewer-agent assessment, migration and conformance gates pass
+- Release hold: yes for beta or later until CareOps migration, conformance and seeded replay gates pass
 - First release stage allowed: alpha
 - Transition: migrate CareOps consumer; do not recreate the removed `FlowRuntime` surface
 
