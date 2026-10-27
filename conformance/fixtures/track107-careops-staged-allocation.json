@@ -1,5 +1,5 @@
 {
-  "fixture": "careops_staged_allocation_v1",
+  "fixture": "track107-careops-staged-allocation",
   "version": 1,
   "resource_capacity": 1,
   "requests": [

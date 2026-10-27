@@ -19,6 +19,7 @@ Outputs: `StagedResourceRuntime`, deterministic contention/lease/queue behavior,
 - `crates/kairo-ecs-des/src/lib.rs`, `crates/kairo-ecs-des/src/staged_runtime.rs`
 - `crates/kairo-ecs-des/tests/careops_staged_allocation_compatibility.rs`
 - `conformance/fixtures/manifest.json`, `conformance/fixtures/track107-careops-staged-allocation.json`
+- `tests/conformance/runner.mjs`, `tests/conformance/runner-self-test.mjs`, `.github/workflows/conformance.yml` for registering and validating the new ready fixture
 - `docs/adr/adr-track107-careops-staged-flow.md`, release compatibility/migration notes, `CHANGELOG.md`
 
 ## Blocked paths and exclusions

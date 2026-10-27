@@ -16,31 +16,39 @@ const ROOT_MANIFEST = JSON.parse(readFileSync(join(ROOT, 'conformance/fixtures/m
 
 const fullReport = runConformance(ROOT);
 assert.equal(fullReport.status, 'ok');
-assert.equal(fullReport.validated_fixtures, 6);
+assert.equal(fullReport.validated_fixtures, 9);
 assert.deepEqual(fullReport.selected_fixtures, [
   'scheduler_ordering_v1',
   'scheduler_cancellation_v1',
   'rng_reproducibility_v1',
   'vvuq_scenario_replay_v1',
+  'optimistic_envelope_v2_conformance',
+  'event_log_v2_conformance',
   'zero_delay_guard_v1',
   'pdes_conservative_parity_v1',
+  'des_resource_queue_v1',
 ]);
-assert.equal(fullReport.results[0].kind, 'ordering');
-assert.deepEqual(fullReport.results[0].observed.observed_kind_order, [1, 2, 4, 3]);
-assert.equal(fullReport.results[4].id, 'zero_delay_guard_v1');
-assert.deepEqual(fullReport.results[4].observed.observed_kind_order, [1, 2, 5, 10]);
-assert.equal(fullReport.results[4].observed.zero_delay_event_count, 4);
-assert.equal(fullReport.results[5].observed.validation_scope, 'fixture-contract-only');
-assert.equal(fullReport.results[5].observed.native_consumer, 'crates/kairo-ecs-pdes/tests/production_parity.rs');
+const orderingResult = fullReport.results.find((result) => result.id === 'scheduler_ordering_v1');
+assert.equal(orderingResult.kind, 'ordering');
+assert.deepEqual(orderingResult.observed.observed_kind_order, [1, 2, 4, 3]);
+const zeroDelayResult = fullReport.results.find((result) => result.id === 'zero_delay_guard_v1');
+assert.deepEqual(zeroDelayResult.observed.observed_kind_order, [1, 2, 5, 10]);
+assert.equal(zeroDelayResult.observed.zero_delay_event_count, 4);
+const pdesResult = fullReport.results.find((result) => result.id === 'pdes_conservative_parity_v1');
+assert.equal(pdesResult.observed.validation_scope, 'fixture-contract-only');
+assert.equal(pdesResult.observed.native_consumer, 'crates/kairo-ecs-pdes/tests/production_parity.rs');
+const stagedAllocationResult = fullReport.results.find((result) => result.id === 'des_resource_queue_v1');
+assert.equal(stagedAllocationResult.observed.validation_scope, 'fixture-contract-only');
+assert.equal(stagedAllocationResult.observed.native_command, 'cargo test --locked -p kairo-ecs-des --test careops_staged_allocation_compatibility');
 
 const filteredReport = runConformance(ROOT, { fixtureIds: ['rng_reproducibility_v1'] });
 assert.equal(filteredReport.validated_fixtures, 1);
 assert.equal(filteredReport.results[0].id, 'rng_reproducibility_v1');
 assert.deepEqual(filteredReport.results[0].observed.observed_stream, [
-  58032735,
-  2654218578,
-  73301494,
-  760398727,
+  4087599687,
+  2415409399,
+  675359370,
+  3234763134,
 ]);
 assert.throws(
   () => deterministicStream(Number.MAX_SAFE_INTEGER + 1, { index: 42, generation: 0 }, 4),
@@ -310,6 +318,7 @@ console.log(JSON.stringify({
     'runner CLI --list',
     'runner CLI --fixture',
     'zero-delay guard fixture support',
+    'staged-allocation fixture contract validation',
     'unsafe RNG integer rejection',
     'native PDES case-set, duplicate-seed and lookahead corruption rejection',
   ],

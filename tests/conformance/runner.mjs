@@ -14,6 +14,7 @@ export const OPTIONAL_READY_FIXTURE_IDS = Object.freeze([
   'pdes_conservative_parity_v1',
   'event_log_v2_conformance',
   'optimistic_envelope_v2_conformance',
+  'des_resource_queue_v1',
 ]);
 
 const KNOWN_READY_FIXTURE_IDS = Object.freeze([
@@ -386,6 +387,29 @@ export function runFixture(fixture, payload) {
       validation_scope: 'fixture-contract-only',
       native_consumer: payload.consumer,
       native_command: 'cargo test -p kairo-ecs-pdes --features pdes --test production_parity',
+    };
+  }
+
+  if (fixture.id === 'des_resource_queue_v1') {
+    assert(payload.fixture === 'track107-careops-staged-allocation', 'unexpected staged-allocation fixture name');
+    assert(payload.version === 1, 'staged-allocation fixture version must be 1');
+    assert(payload.resource_capacity === 1, 'staged-allocation fixture must use capacity one');
+    assert(payload.requests?.length === 2, 'staged-allocation fixture must contain two requests');
+    assert(
+      JSON.stringify(payload.expected_after_submit_dispatch?.active_requests) === JSON.stringify([0]) &&
+        JSON.stringify(payload.expected_after_submit_dispatch?.queued_requests) === JSON.stringify([1]),
+      'staged-allocation fixture must start with request 0 active and request 1 queued'
+    );
+    assert(
+      JSON.stringify(payload.expected_after_release_dispatch?.active_requests) === JSON.stringify([1]) &&
+        JSON.stringify(payload.expected_after_release_dispatch?.released_requests) === JSON.stringify([0]),
+      'staged-allocation fixture must promote request 1 after releasing request 0'
+    );
+    return {
+      validation_scope: 'fixture-contract-only',
+      native_command: 'cargo test --locked -p kairo-ecs-des --test careops_staged_allocation_compatibility',
+      capacity: payload.resource_capacity,
+      request_count: payload.requests.length,
     };
   }
 
