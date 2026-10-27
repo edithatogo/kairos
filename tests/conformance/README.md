@@ -43,7 +43,14 @@ node tests/conformance/runner.mjs --kind rng
 ```
 
 The ready fixture IDs are `scheduler_ordering_v1`, `scheduler_cancellation_v1`,
-`rng_reproducibility_v1`, `vvuq_scenario_replay_v1`, and `zero_delay_guard_v1`.
+`rng_reproducibility_v1`, `vvuq_scenario_replay_v1`,
+`optimistic_envelope_v2_conformance`, `event_log_v2_conformance`,
+`zero_delay_guard_v1`, `pdes_conservative_parity_v1`, and
+`des_resource_queue_v1`.
+
+The staged-allocation and conservative-PDES entries are contract-validated by
+Node and link to native Rust test commands; the Node runner does not simulate
+those native behaviors.
 
 The canonical benchmark scenarios reported by `--list` and validated by the smoke
 metadata are `schedule_1m_events`, `pop_1m_events`, `schedule_cancel_1m_mixed`,

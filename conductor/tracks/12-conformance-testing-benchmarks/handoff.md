@@ -81,7 +81,7 @@ cargo check -p kairo-ecs-bench
 ## Known risks
 
 Fixture and benchmark names must stay stable once Track 01 and the binding tracks start consuming them.
-The remaining planned fixture families are still future scope: `des_resource_queue_v1`, `abm_behavior_update_v1`, `hybrid_des_abm_v1`, `arrow_event_log_v1`, and `ffi_lifecycle_v1`.
+Track107 added `des_resource_queue_v1` as a ready, contract-validated fixture with a native DES scheduler test. The remaining planned fixture families are still future scope: `abm_behavior_update_v1`, `hybrid_des_abm_v1`, `arrow_event_log_v1`, and `ffi_lifecycle_v1`.
 Native chaos validation, nightly scheduling, and OSS-Fuzz language in the plan/spec remain future scope until checked-in runtime harnesses exist.
 The JavaScript runner now duplicates the Rust RNG seed derivation constants. Any future Rust RNG contract change must update both the Rust fixture consumer and `tests/conformance/runner.mjs` in the same change.
 
@@ -90,7 +90,7 @@ The JavaScript runner now duplicates the Rust RNG seed derivation constants. Any
 Track 01 consumes the scheduler ordering, scheduler cancellation, and RNG fixtures.
 Track 02 consumes the FFI lifecycle fixture once the facade contract is ready.
 Tracks 06-11 should use the manifest instead of re-stating fixture semantics locally.
-The JavaScript runner now validates `rng_reproducibility_v1` against the same expected stream as the Rust Track 01 fixture consumer, so binding tracks can rely on the runner for the bootstrap RNG replay check.
+The JavaScript runner validates `rng_reproducibility_v1` against the same expected stream as the Rust Track 01 fixture consumer. It now also registers `des_resource_queue_v1` as a contract-only fixture and points to its native Track107 test; the runner itself does not execute DES behavior.
 
 ## Follow-up issues
 

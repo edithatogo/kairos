@@ -122,5 +122,6 @@ jobs:
       - name: Run offline conformance validators
         run: |
           node tests/conformance/conformance-check.mjs
+          node tests/conformance/runner-self-test.mjs
           node tests/conformance/track07_13_hardening_check.mjs
           node tests/conformance/track12_20_evidence_check.mjs

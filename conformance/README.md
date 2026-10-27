@@ -16,16 +16,18 @@ Current ready fixture IDs:
 2. `scheduler_cancellation_v1`
 3. `rng_reproducibility_v1`
 4. `vvuq_scenario_replay_v1`
-5. `zero_delay_guard_v1`
-6. `pdes_conservative_parity_v1`
+5. `optimistic_envelope_v2_conformance`
+6. `event_log_v2_conformance`
+7. `zero_delay_guard_v1`
+8. `pdes_conservative_parity_v1`
+9. `des_resource_queue_v1`
 
 Current planned fixture families that are still future scope:
 
-1. `des_resource_queue_v1`
-2. `abm_behavior_update_v1`
-3. `hybrid_des_abm_v1`
-4. `arrow_event_log_v1`
-5. `ffi_lifecycle_v1`
+1. `abm_behavior_update_v1`
+2. `hybrid_des_abm_v1`
+3. `arrow_event_log_v1`
+4. `ffi_lifecycle_v1`
 
 The fixture family semantics are:
 
@@ -33,8 +35,11 @@ The fixture family semantics are:
 - `scheduler_cancellation_v1` covers cancellation without reordering remaining events.
 - `rng_reproducibility_v1` covers reproducible entity-derived RNG streams.
 - `vvuq_scenario_replay_v1` covers scenario/seed replay evidence boundaries for VVUQ and experiment-runner smoke checks.
+- `optimistic_envelope_v2_conformance` covers independent protobuf wire compatibility for versioned optimistic simulation envelopes.
+- `event_log_v2_conformance` covers v2 event-log schema and generational ID/timestamp representation.
 - `zero_delay_guard_v1` covers zero-delay event ordering guardrails without claiming a native livelock harness.
 - `pdes_conservative_parity_v1` defines the LP counts, workloads, seeds, horizon and lookahead consumed by `crates/kairo-ecs-pdes/tests/production_parity.rs`. The Node runner validates the fixture contract only; the Rust integration test executes sequential/parallel parity and GVT assertions.
+- `des_resource_queue_v1` defines capacity-one staged allocation for Track107. The Node runner validates the fixture contract only; `crates/kairo-ecs-des/tests/careops_staged_allocation_compatibility.rs` executes the native scheduler behavior.
 
 The metadata-only chaos manifest lives at `conformance/chaos/manifest.json` and
 is validated by `tests/conformance/chaos-check.mjs`. It covers event

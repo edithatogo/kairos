@@ -447,6 +447,9 @@ tracks:
       - crates/kairo-ecs-des/tests/careops_staged_allocation_compatibility.rs
       - conformance/fixtures/manifest.json
       - conformance/fixtures/track107-careops-staged-allocation.json
+      - tests/conformance/runner.mjs
+      - tests/conformance/runner-self-test.mjs
+      - .github/workflows/conformance.yml
       - docs/design/protected-surface-inventory.json
       - docs/design/compatibility-matrix.md
       - conductor/api-design-review.md

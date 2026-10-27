@@ -312,6 +312,11 @@ const stagedRoot = mkdtempSync(join(tmpdir(), 'kairo-staged-allocation-fixture-'
 try {
   const descriptor = ROOT_MANIFEST.fixtures.find((fixture) => fixture.id === 'des_resource_queue_v1');
   const original = JSON.parse(readFileSync(join(ROOT, 'conformance/fixtures', descriptor.source), 'utf8'));
+  const reorderedKeys = structuredClone(original);
+  reorderedKeys.requests = reorderedKeys.requests.map(({ request, actor, at_ticks }) => ({ at_ticks, actor, request }));
+  writeTextFile(stagedRoot, `conformance/fixtures/${descriptor.source}`, JSON.stringify(reorderedKeys));
+  assert.doesNotThrow(() => validateFixturePayload(descriptor, stagedRoot));
+
   for (const [mutated, error] of [
     [{ ...original, requests: [{ request: 8, actor: 4, at_ticks: 99 }, original.requests[1]] }, /requests must contain the two same-time requests/],
     [{ ...original, release: { ...original.release, revision: 2 } }, /release must release request 0 revision 1/],
