@@ -191,7 +191,10 @@ if ($expectedTrackIds.Count -eq 0) {
     throw "No track ids found in conductor/tracks.yaml"
 }
 
-$trackDirs = @(Get-ChildItem -LiteralPath "conductor/tracks" -Directory)
+$trackDirs = @(
+    (Get-ChildItem -LiteralPath "conductor/tracks" -Directory) +
+    (Get-ChildItem -LiteralPath "conductor/archive" -Directory | Where-Object { $_.Name -match '^\d+-' })
+)
 $actualTrackIds = @($trackDirs | ForEach-Object {
     if ($_.Name -match '^(\d+)-') {
         "{0:D2}" -f [int]$matches[1]
