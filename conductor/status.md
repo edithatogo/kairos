@@ -899,9 +899,9 @@ Track 95 (`thiserror robustness`) completed Phase 0, 1, and 2:
 
 
 
-## Track 106 status — 26 October 2026
+## Track 106 status — 27 October 2026
 
-[Track 106](archive/106-scheduler-preview-compatibility/index.md) is complete in PR #333, with merge gated on required checks at its final archive-closeout head. Focused/core tests, formatting, docs, fixture validation, Conductor validation and core/conformance/API reviewer-agent assessments passed. CareOps R10.3 also passes at the retained Kairos pin and original lock. The candidate pin changes RNG behavior from SplitMix64 to ChaCha8, so its broader pin/lock delta remains a separate migration and the parent pin was not advanced.
+[Track 106](archive/106-scheduler-preview-compatibility/index.md) is complete and merged in PR #333 at `797e969b4a3cd3605a617a32d0134d0a093aa06a` after all required hosted checks passed. Focused/core tests, formatting, docs, fixture validation, Conductor validation and core/conformance/API reviewer-agent assessments passed. CareOps R10.3 also passed at the retained Kairos pin and original lock. The candidate pin changes RNG behavior from SplitMix64 to ChaCha8, so its broader pin/lock delta remains a separate migration and the parent pin was not advanced.
 
 ## Track 107 in progress — 27 October 2026
 

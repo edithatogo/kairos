@@ -1,6 +1,6 @@
 # Track 106: Scheduler Preview API Compatibility
 
-Status: In Progress. Candidate base: `5692e6a9ee866131262d60103a84e2544dc51e4a`.
+Status: Done, merged in PR #333 at `797e969b4a3cd3605a617a32d0134d0a093aa06a`. Candidate base: `5692e6a9ee866131262d60103a84e2544dc51e4a`.
 
 ## Objective
 
@@ -47,7 +47,7 @@ live event without dispatching it.
 
 ## Owned paths
 
-- `conductor/tracks/106-scheduler-preview-compatibility/`
+- `conductor/archive/106-scheduler-preview-compatibility/`
 - `crates/kairo-ecs-core/src/lib.rs` (additive preview surface only)
 - `crates/kairo-ecs-core/tests/track106_scheduler_preview.rs`
 - `conformance/fixtures/track106-scheduler-preview.json`

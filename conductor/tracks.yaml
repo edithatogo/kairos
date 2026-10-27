@@ -435,6 +435,24 @@ tracks:
       - toolchain-matrix-current
       - version-drop-policy-check
 
+  - id: 106
+    name: Scheduler Preview API Compatibility
+    status: Done
+    owner: core-scheduler-agent + conformance-agent + api-governance-agent
+    depends_on: ["01", "12", "25"]
+    owned_paths:
+      - conductor/archive/106-scheduler-preview-compatibility/
+      - crates/kairo-ecs-core/src/lib.rs
+      - crates/kairo-ecs-core/tests/track106_scheduler_preview.rs
+      - conformance/fixtures/track106-scheduler-preview.json
+      - conformance/fixtures/manifest.json
+    required_gates:
+      - phase-closeout-check
+      - dependency-106-preview-behaviour
+      - core-api-agent-review
+      - conformance-agent-review
+      - api-compatibility-agent-review
+
   - id: 107
     name: CareOps staged allocation flow compatibility
     status: In Progress
