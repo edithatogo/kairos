@@ -1858,7 +1858,7 @@ entries:
     phase: "1"
     state: pending
     review_command: "$conductor-review"
-    review_result: "Two independent reviewer agents found no remaining source or contract blocker at 5897ebf95d5993d069d85a1fd70a1a62123c0873; the hosted fixture-validator failure was fixed by registering and contract-validating the new ready fixture; cargo-audit reports three baseline zstd advisories; CareOps consumer acceptance remains pending"
+    review_result: "Two independent reviewer agents found no remaining source, API, or fixture-contract blocker at 1817934e2802df943f58b555955ecdd8d1e35a9c; the earlier hosted fixture-validator failure was fixed and rerun evidence is recorded locally; cargo-audit reports three baseline zstd advisories; CareOps consumer acceptance remains pending"
     fixes_applied: true
     validation_commands:
       - "cargo fmt --all -- --check"
@@ -1868,7 +1868,7 @@ entries:
       - "pwsh -NoProfile -File docs/design/validate-compatibility-pack.ps1"
       - "pwsh -NoProfile -File scripts/validate_conductor_dag.ps1"
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
-    git_status: "PR #334 open on the reviewed Track107 candidate; conformance runner and fixture checks pass locally; hosted Actions rerun pending; full just-ci remains blocked by three baseline zstd advisories through unchanged Polars/zstd lock; parent pin unchanged"
-    commit_sha: "d8c7e58de771059175c74724f0f3f725f849596b"
+    git_status: "PR #334 remains open on the earlier head with its fixture-validation failure; local candidate 1817934e2802df943f58b555955ecdd8d1e35a9c passes conformance runner and fixture checks; push and hosted rerun pending; full just-ci remains blocked by three baseline zstd advisories through unchanged Polars/zstd lock; parent pin unchanged"
+    commit_sha: "1817934e2802df943f58b555955ecdd8d1e35a9c"
     pushed_ref: "origin/codex/track107-careops-staged-flow-20261027"
     next_phase_decision: "Do not merge until all required hosted checks pass and the separately reviewed zstd dependency issue is resolved; then complete CareOps consumer and RNG compatibility gates before parent pin adoption"

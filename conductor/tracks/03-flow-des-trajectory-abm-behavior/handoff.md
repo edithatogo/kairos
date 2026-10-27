@@ -73,7 +73,7 @@ No additional follow-up issues were recorded by this Conductor hygiene update.
 
 - `$conductor-review` result: the untracked DES/ABM fixture tests are in Track 03-owned paths and should be retained as implementation-slice hardening evidence.
 - Accepted fixes: added the two named fixture tests and linked them to Track 03 handoff, test matrix, status, and phase-closeout evidence.
-- Deferred or blocked fixes: shared fixture files under `conformance/fixtures/des_resource_queue_v1`, `conformance/fixtures/abm_behavior_update_v1`, and `conformance/fixtures/hybrid_des_abm_v1` remain future Track 03/12 integration work.
+- Deferred or blocked fixes at Track 03 closeout: shared resource-queue, ABM behavior-update, and hybrid fixture families remained future Track 03/12 integration work. Since then, Track107 added the capacity-one DES resource-queue fixture at `conformance/fixtures/track107-careops-staged-allocation.json`; the ABM behavior-update and hybrid fixture families remain future scope.
 - Validation commands: `cargo +stable-x86_64-pc-windows-gnu fmt -p kairo-ecs-abm -p kairo-ecs-des --check`, `cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-des -p kairo-ecs-abm`, and `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`.
 - Cleanup state: the only in-scope dirty files were the two new Track 03 tests and their Conductor evidence updates.
 - Commit SHA / pushed ref: `5dd1937566898b2e028ac61dab1e9dd173e6d919` on `origin/main` is the current pushed base for this local closeout pass.
