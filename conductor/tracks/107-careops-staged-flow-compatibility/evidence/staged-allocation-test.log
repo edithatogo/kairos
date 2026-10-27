@@ -1,0 +1,11 @@
+   Compiling kairo-ecs-des v0.1.0 (/Users/doughnut/.codex/worktrees/kairos-careops-flow-compat-5692/crates/kairo-ecs-des)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.90s
+     Running tests/careops_staged_allocation_compatibility.rs (target/debug/deps/careops_staged_allocation_compatibility-aa42f63b2acac7b6)
+
+running 4 tests
+test handles_from_another_runtime_cannot_alias_local_ids ... ok
+test capacity_one_contention_promotes_fifo_request_after_scheduled_release ... ok
+test large_capacity_is_preserved_without_narrowing ... ok
+test invalid_times_and_zero_capacity_are_rejected_without_mutation ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s

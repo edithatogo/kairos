@@ -257,3 +257,4 @@ Polars inventory leads; sha2/tempfile/proptest are separate tracks with gates on
 ---
 
 - [x] **Track 106: Scheduler Preview API Compatibility** — [archived record](archive/106-scheduler-preview-compatibility/index.md); additive preview API restored and reviewed, CareOps retained-pin acceptance passed, and parent pin left unchanged pending separate RNG migration.
+- [ ] **Track 107: CareOps staged allocation flow compatibility** — [Track 107](tracks/107-careops-staged-flow-compatibility/index.md); experimental DES API candidate, CareOps pin unchanged pending consumer and RNG qualification.

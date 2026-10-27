@@ -1,5 +1,5 @@
 schema_version: 1
-last_verified: 2026-05-19
+last_verified: 2026-10-27
 status_vocabulary:
   - Planned
   - Spec Approved
@@ -434,6 +434,32 @@ tracks:
       - phase-closeout-check
       - toolchain-matrix-current
       - version-drop-policy-check
+
+  - id: 107
+    name: CareOps staged allocation flow compatibility
+    status: In Progress
+    owner: des-api-agent + conformance-agent + api-governance-agent
+    depends_on: ["03", "12", "25"]
+    owned_paths:
+      - conductor/tracks/107-careops-staged-flow-compatibility/
+      - crates/kairo-ecs-des/src/lib.rs
+      - crates/kairo-ecs-des/src/staged_runtime.rs
+      - crates/kairo-ecs-des/tests/careops_staged_allocation_compatibility.rs
+      - conformance/fixtures/manifest.json
+      - conformance/fixtures/track107-careops-staged-allocation.json
+      - docs/design/protected-surface-inventory.json
+      - docs/design/compatibility-matrix.md
+      - conductor/api-design-review.md
+      - conductor/contracts/versioning-compatibility.md
+      - docs/adr/adr-track107-careops-staged-flow.md
+      - docs/release/compatibility.md
+      - docs/release/migration.md
+      - CHANGELOG.md
+    required_gates:
+      - phase-closeout-check
+      - dependency-107-runtime-contract
+      - dependency-107-api-review
+      - dependency-107-consumer-conformance
   - id: 31
     name: Performance Regression Guard
     status: Done

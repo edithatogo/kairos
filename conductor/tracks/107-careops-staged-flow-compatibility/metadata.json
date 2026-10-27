@@ -1,0 +1,11 @@
+{
+  "id": 107,
+  "slug": "careops-staged-flow-compatibility",
+  "title": "CareOps staged allocation flow compatibility",
+  "status": "In Progress",
+  "base": "797e969b4a3cd3605a617a32d0134d0a093aa06a",
+  "parent_track": "CareOps R10.3",
+  "release_stage": "alpha",
+  "owner": "des-api-agent",
+  "review": "reviewer-agent"
+}

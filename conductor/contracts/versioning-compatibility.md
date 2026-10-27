@@ -27,6 +27,7 @@ artifacts are required.
 |---|---|---|---|
 | Rust types API | `crates/kairo-ecs-types` | experimental | `SimTime`, `SimDuration`, IDs, shared errors, and versioned DTOs |
 | Rust core API | `crates/kairo-ecs-core` | experimental | Scheduler ordering, run loop, queue behavior, cancellation, and deterministic event ordering |
+| Rust DES API | `crates/kairo-ecs-des` | experimental | Trajectory and staged resource flow semantics, request/lease lifecycle, and snapshots |
 | Rust state API | `crates/kairo-ecs-state` | experimental | Entity/component storage, generational handles, query behavior, and state snapshots |
 | Rust RNG API | `crates/kairo-ecs-rng` | experimental | Seed derivation, stream naming, and deterministic distribution behavior |
 | C ABI | `include/kairo_ecs.h` | migration-only until public preview | `kairo_ecs_ffi_version`, handle ownership, status codes, and exported C symbols |

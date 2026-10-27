@@ -111,13 +111,13 @@
     },
     {
       "id": "des_resource_queue_v1",
-      "status": "planned",
+      "status": "ready",
       "kind": "des",
-      "source": null,
-      "consumers": ["01", "02", "06", "07", "08", "09", "10", "11"],
+      "source": "track107-careops-staged-allocation.json",
+      "consumers": ["107"],
       "assertions": [
-        "resource queue behavior is stable",
-        "queue semantics do not change across bindings"
+        "capacity-one contention creates one active revisioned lease and FIFO queued work",
+        "dispatching a release promotes the next queued request"
       ]
     },
     {

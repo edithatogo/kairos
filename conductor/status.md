@@ -902,3 +902,7 @@ Track 95 (`thiserror robustness`) completed Phase 0, 1, and 2:
 ## Track 106 status — 26 October 2026
 
 [Track 106](archive/106-scheduler-preview-compatibility/index.md) is complete in PR #333, with merge gated on required checks at its final archive-closeout head. Focused/core tests, formatting, docs, fixture validation, Conductor validation and core/conformance/API reviewer-agent assessments passed. CareOps R10.3 also passes at the retained Kairos pin and original lock. The candidate pin changes RNG behavior from SplitMix64 to ChaCha8, so its broader pin/lock delta remains a separate migration and the parent pin was not advanced.
+
+## Track 107 in progress — 27 October 2026
+
+[Track 107](tracks/107-careops-staged-flow-compatibility/index.md) adds an experimental purpose-specific `StagedResourceRuntime` candidate on current mainline. Mainline formatting, clippy, 899 tests, 93.39% core coverage, rustdoc, cargo-deny and Conductor checks pass; `cargo audit` reports three zstd advisories already present in the unchanged base lockfile. Reviewer-agent source assessment passed. Hosted PR checks, CareOps consumer migration and RNG replay qualification remain pending; parent pin is unchanged.

@@ -148,3 +148,5 @@ See [current sequencing](dependency-sequencing.md): Polars inventory first, with
 ## Track 106 readiness
 
 [Archived Track 106](archive/106-scheduler-preview-compatibility/index.md) is complete on PR #333. The additive preview API passed focused/core tests, formatting, documentation, fixture and Conductor validation; three reviewer-agent assessments passed. CareOps R10.3 passes at its retained Kairos pin and original lock. The candidate pin's RNG switch from SplitMix64 to ChaCha8 is a separate migration risk, so the parent pin and lock remain unchanged. Hosted checks must be re-read on the final archive-closeout PR head before merge.
+
+[Track 107 staged flow compatibility](tracks/107-careops-staged-flow-compatibility/index.md) is In Progress on current mainline. API design and reviewer-agent assessment passed; local formatting, clippy, tests, coverage, rustdoc and cargo-deny checks pass. The final cargo-audit step finds three zstd advisories on the unchanged mainline lockfile, so hosted closeout is pending. CareOps R10.3 must migrate its consumer and qualify baseline RNG behavior before advancing the parent pin.

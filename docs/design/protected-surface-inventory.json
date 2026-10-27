@@ -22,6 +22,15 @@
       "release_hold_when": ["root_missing", "root_renamed", "public_semantics_changed_without_adr"]
     },
     {
+      "id": "rust-des-api",
+      "kind": "rust_api",
+      "root": "crates/kairo-ecs-des",
+      "status": "experimental",
+      "example": "Trajectory and staged resource flow APIs built on the deterministic scheduler",
+      "breaking_change_requires": ["compatibility_note", "adr", "migration_note_before_beta"],
+      "release_hold_when": ["root_missing", "root_renamed", "public_semantics_changed_without_adr"]
+    },
+    {
       "id": "rust-state-api",
       "kind": "rust_api",
       "root": "crates/kairo-ecs-state",

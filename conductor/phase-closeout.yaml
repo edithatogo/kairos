@@ -1853,3 +1853,22 @@ entries:
     commit_sha: "e3c7dc2f9f66e3c980b9d3cfb631be31842368c5"
     pushed_ref: "HEAD"
     next_phase_decision: "Merge PR #333 after required hosted checks pass; keep CareOps pin unchanged and handle RNG replay qualification separately"
+
+  - track_id: "107"
+    phase: "1"
+    state: pending
+    review_command: "$conductor-review"
+    review_result: "Reviewer-agent design and implementation assessment passed on prototype and current mainline candidate; local CI passes through cargo-deny; cargo-audit reports three baseline zstd advisories; CareOps consumer acceptance remains pending"
+    fixes_applied: true
+    validation_commands:
+      - "cargo fmt --all -- --check"
+      - "cargo test --locked -p kairo-ecs-des --test careops_staged_allocation_compatibility"
+      - "cargo test --locked --workspace"
+      - "cargo check --workspace --locked"
+      - "pwsh -NoProfile -File docs/design/validate-compatibility-pack.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_dag.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+    git_status: "Track107 candidate on current mainline branch; 899 tests, 93.39% core coverage, clippy, rustdoc and cargo-deny pass; cargo-audit reports three advisories through unchanged Polars/zstd lock; no hosted PR; parent pin unchanged"
+    commit_sha: ""
+    pushed_ref: ""
+    next_phase_decision: "Open PR with the baseline audit blocker recorded; do not merge until required hosted checks pass and the separately reviewed zstd dependency issue is resolved; then complete CareOps consumer and RNG compatibility gates before parent pin adoption"

@@ -14,6 +14,8 @@ Format:
 
 ## Unreleased
 
+- `kairo-ecs-des` adds experimental `StagedResourceRuntime` for scheduler-backed staged allocation; CareOps migration remains separately gated and `FlowRuntime` is not restored.
+
 - `crates/kairo-ecs-core`: restore the experimental `ScheduledEventPreview` projection and `Scheduler::peek_next` inspection API without changing event ordering or dispatch behavior; add focused scheduler compatibility coverage.
 
 - `crates/kairo-ecs-ffi`: keep populated Arrow C Data schema and array exports available without `native-data`, and align Track 70 consumer tests with the default-feature ABI.

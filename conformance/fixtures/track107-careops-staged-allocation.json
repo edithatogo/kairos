@@ -1,0 +1,23 @@
+{
+  "fixture": "careops_staged_allocation_v1",
+  "version": 1,
+  "resource_capacity": 1,
+  "requests": [
+    { "request": 0, "actor": 0, "at_ticks": 1 },
+    { "request": 1, "actor": 1, "at_ticks": 1 }
+  ],
+  "expected_after_submit_dispatch": {
+    "active_requests": [0],
+    "queued_requests": [1],
+    "available": 0
+  },
+  "release": { "request": 0, "revision": 1, "at_ticks": 1 },
+  "expected_after_release_dispatch": {
+    "released_requests": [0],
+    "active_requests": [1],
+    "queued_requests": [],
+    "available": 0
+  },
+  "ordering": ["at_ticks ASC", "priority ASC", "sequence ASC"],
+  "requirement": "Capacity-one contention creates one active revisioned lease and a FIFO waiter; dispatching the valid release promotes the waiter. Duplicate release and past submission are rejected without state change."
+}

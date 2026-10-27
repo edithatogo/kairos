@@ -1,0 +1,3 @@
+# Track 107 agent contract
+
+Own only the paths listed in `spec.md`. Preserve scheduler order, SplitMix RNG, and CareOps staged allocator semantics. The runtime must dispatch through `Scheduler`; never fabricate conformance results. Keep the new API purpose-named and experimental. Reviewer agents inspect design and implementation without editing. Parent pin/lock changes belong exclusively to CareOps R10.3. The shared fixture uses the repository's currently validator-supported bootstrap single-JSON source format, consistent with Track106; `conductor/contracts/conformance-contract.md` specifies directory-backed fixtures as the target format, so this is a documented bootstrap exception and not evidence that the directory-backed contract is implemented.
