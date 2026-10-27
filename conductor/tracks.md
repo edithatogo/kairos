@@ -112,6 +112,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 104 | tokio-tungstenite conditional | Planned | `streaming-agent` | See `conductor/tracks/104-*/spec.md` |
 | 105 | Python 3.15 Runtime Migration and Qualification | In Progress | `python-agent + ci-agent + dx-agent` | See `conductor/tracks/105-*/spec.md` |
 | 106 | Scheduler Preview API Compatibility | Done | `core-scheduler-agent + conformance-agent + api-governance-agent` | See `conductor/archive/106-scheduler-preview-compatibility/spec.md` |
+| 107 | CareOps staged allocation flow compatibility | In Progress | `des-api-agent + conformance-agent + api-governance-agent` | See `conductor/tracks/107-careops-staged-flow-compatibility/spec.md` |
 
 ## Track status vocabulary
 
