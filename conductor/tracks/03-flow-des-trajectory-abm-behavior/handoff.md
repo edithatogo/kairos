@@ -58,11 +58,11 @@ No shared contracts were changed for this track.
 
 ## Known risks
 
-The current APIs are intentionally minimal. They do not yet export shared conformance fixture files under `conformance/fixtures/des_resource_queue_v1`, `abm_behavior_update_v1`, or `hybrid_des_abm_v1`. The ABM update kind is currently a crate-local `EventKind::Custom` value and should be reconciled if Track 01 later introduces domain-specific event kinds.
+At the 2026-05-08 Track 03 closeout, the APIs were intentionally minimal and had not yet exported shared conformance fixtures for DES resource queues, ABM behavior updates, or hybrid workflows. Track107 has since added the capacity-one DES resource-queue contract at `conformance/fixtures/track107-careops-staged-allocation.json`; the ABM and hybrid fixture families remain future work. The ABM update kind is currently a crate-local `EventKind::Custom` value and should be reconciled if Track 01 later introduces domain-specific event kinds.
 
 ## Integration notes
 
-Next step: bind the DES and ABM smoke paths to shared conformance fixture files under `conformance/fixtures/`, then add richer resource/queue and agent-decision examples under `examples/flow/`.
+At the 2026-05-08 handoff, the next step was to bind DES and ABM smoke paths to shared fixtures. Track107 has since supplied the shared DES resource-queue fixture; the remaining ABM smoke path and richer resource/queue and agent-decision examples under `examples/flow/` are still separate work.
 
 ## Follow-up issues
 
