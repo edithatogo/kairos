@@ -80,7 +80,11 @@ conformance/fixtures/deterministic_ordering.json
 conformance/fixtures/cancellation.json
 conformance/fixtures/rng_replay.json
 conformance/fixtures/vvuq_scenario_replay.json
+conformance/fixtures/optimistic_envelope_v2_conformance.json
+conformance/fixtures/event_log_v2_conformance.json
 conformance/fixtures/zero_delay_guard.json
+conformance/fixtures/pdes_conservative_parity_v1.json
+conformance/fixtures/track107-careops-staged-allocation.json
 ```
 
 Each ready fixture must define:
