@@ -1,7 +1,7 @@
 # Track107 reviewer-agent receipts
 
 Reviewed source commit: `5897ebf95d5993d069d85a1fd70a1a62123c0873`
-Review mode: independent read-only agent/subagent assessments.
+Review mode: independent read-only agent/subagent assessments, as required by Track107's spec. A separate red-team review was not performed and is not claimed.
 
 ## Core/API review
 
