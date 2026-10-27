@@ -307,6 +307,24 @@ try {
   rmSync(pdesRoot, { recursive: true, force: true });
 }
 
+// Corruption in any staged-allocation contract field must fail validation.
+const stagedRoot = mkdtempSync(join(tmpdir(), 'kairo-staged-allocation-fixture-'));
+try {
+  const descriptor = ROOT_MANIFEST.fixtures.find((fixture) => fixture.id === 'des_resource_queue_v1');
+  const original = JSON.parse(readFileSync(join(ROOT, 'conformance/fixtures', descriptor.source), 'utf8'));
+  for (const [mutated, error] of [
+    [{ ...original, requests: [{ request: 8, actor: 4, at_ticks: 99 }, original.requests[1]] }, /requests must contain the two same-time requests/],
+    [{ ...original, release: { ...original.release, revision: 2 } }, /release must release request 0 revision 1/],
+    [{ ...original, ordering: ['sequence ASC', 'priority ASC', 'at_ticks ASC'] }, /ordering must preserve time, priority and sequence/],
+    [{ ...original, expected_after_release_dispatch: { ...original.expected_after_release_dispatch, available: 1 } }, /expected_after_release_dispatch must release request 0 and promote request 1/],
+  ]) {
+    writeTextFile(stagedRoot, `conformance/fixtures/${descriptor.source}`, JSON.stringify(mutated));
+    assert.throws(() => validateFixturePayload(descriptor, stagedRoot), error);
+  }
+} finally {
+  rmSync(stagedRoot, { recursive: true, force: true });
+}
+
 console.log(JSON.stringify({
   status: 'ok',
   validator: 'tests/conformance/runner-self-test.mjs',
@@ -319,6 +337,7 @@ console.log(JSON.stringify({
     'runner CLI --fixture',
     'zero-delay guard fixture support',
     'staged-allocation fixture contract validation',
+    'staged-allocation request, release, ordering and state corruption rejection',
     'unsafe RNG integer rejection',
     'native PDES case-set, duplicate-seed and lookahead corruption rejection',
   ],

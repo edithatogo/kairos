@@ -187,6 +187,44 @@ function assertPdesParityPayload(payload, fixture) {
   assertString(payload.requirement, `${fixture.id}.requirement`);
 }
 
+function assertStagedAllocationPayload(payload, fixture) {
+  assertBaseFixture(payload, fixture);
+  assert(payload.resource_capacity === 1, `${fixture.id}.resource_capacity must be 1`);
+  assert(
+    JSON.stringify(payload.requests) === JSON.stringify([
+      { request: 0, actor: 0, at_ticks: 1 },
+      { request: 1, actor: 1, at_ticks: 1 },
+    ]),
+    `${fixture.id}.requests must contain the two same-time requests in FIFO order`
+  );
+  assert(
+    JSON.stringify(payload.expected_after_submit_dispatch) === JSON.stringify({
+      active_requests: [0],
+      queued_requests: [1],
+      available: 0,
+    }),
+    `${fixture.id}.expected_after_submit_dispatch must preserve the capacity-one active/queued state`
+  );
+  assert(
+    JSON.stringify(payload.release) === JSON.stringify({ request: 0, revision: 1, at_ticks: 1 }),
+    `${fixture.id}.release must release request 0 revision 1 at tick 1`
+  );
+  assert(
+    JSON.stringify(payload.expected_after_release_dispatch) === JSON.stringify({
+      released_requests: [0],
+      active_requests: [1],
+      queued_requests: [],
+      available: 0,
+    }),
+    `${fixture.id}.expected_after_release_dispatch must release request 0 and promote request 1`
+  );
+  assert(
+    JSON.stringify(payload.ordering) === JSON.stringify(['at_ticks ASC', 'priority ASC', 'sequence ASC']),
+    `${fixture.id}.ordering must preserve time, priority and sequence order`
+  );
+  assertString(payload.requirement, `${fixture.id}.requirement`);
+}
+
 export function sortEvents(events) {
   return [...events].sort((left, right) => {
     const leftTicks = left.at_ticks ?? 0;
@@ -367,6 +405,7 @@ export function validateFixturePayload(fixture, root = process.cwd()) {
   else if (fixture.id === 'rng_reproducibility_v1') assertRngPayload(payload, fixture);
   else if (fixture.id === 'vvuq_scenario_replay_v1') assertVvuqPayload(payload, fixture, root);
   else if (fixture.id === 'pdes_conservative_parity_v1') assertPdesParityPayload(payload, fixture);
+  else if (fixture.id === 'des_resource_queue_v1') assertStagedAllocationPayload(payload, fixture);
   else assertBaseFixture(payload, fixture);
 
   return payload;
@@ -391,20 +430,6 @@ export function runFixture(fixture, payload) {
   }
 
   if (fixture.id === 'des_resource_queue_v1') {
-    assert(payload.fixture === 'track107-careops-staged-allocation', 'unexpected staged-allocation fixture name');
-    assert(payload.version === 1, 'staged-allocation fixture version must be 1');
-    assert(payload.resource_capacity === 1, 'staged-allocation fixture must use capacity one');
-    assert(payload.requests?.length === 2, 'staged-allocation fixture must contain two requests');
-    assert(
-      JSON.stringify(payload.expected_after_submit_dispatch?.active_requests) === JSON.stringify([0]) &&
-        JSON.stringify(payload.expected_after_submit_dispatch?.queued_requests) === JSON.stringify([1]),
-      'staged-allocation fixture must start with request 0 active and request 1 queued'
-    );
-    assert(
-      JSON.stringify(payload.expected_after_release_dispatch?.active_requests) === JSON.stringify([1]) &&
-        JSON.stringify(payload.expected_after_release_dispatch?.released_requests) === JSON.stringify([0]),
-      'staged-allocation fixture must promote request 1 after releasing request 0'
-    );
     return {
       validation_scope: 'fixture-contract-only',
       native_command: 'cargo test --locked -p kairo-ecs-des --test careops_staged_allocation_compatibility',
