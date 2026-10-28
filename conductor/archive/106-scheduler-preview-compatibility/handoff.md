@@ -1,5 +1,10 @@
 # Track 106 handoff
 
+PR #333 was squash-merged to `origin/main` as
+`797e969b4a3cd3605a617a32d0134d0a093aa06a`. The closeout ledger identifies
+that integrated commit; the review and test receipts below remain bound to
+their original source commits, including `e3c7dc2`.
+
 Last updated: 2026-10-26.
 
 ## Summary
