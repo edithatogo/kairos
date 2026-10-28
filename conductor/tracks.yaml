@@ -1552,3 +1552,13 @@ tracks:
       - phase-closeout-check
       - toolchain-matrix-current
       - version-drop-policy-check
+
+  - id: 108
+    name: Scientific ecosystem alignment
+    status: Blocked
+    owner: api-governance-agent
+    depends_on: []
+    owned_paths:
+      - conductor/tracks/108-scientific-ecosystem-alignment/
+    required_gates:
+      - phase-closeout-check

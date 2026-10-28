@@ -111,6 +111,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 103 | tungstenite conditional | Planned | `streaming-agent` | See `conductor/tracks/103-*/spec.md` |
 | 104 | tokio-tungstenite conditional | Planned | `streaming-agent` | See `conductor/tracks/104-*/spec.md` |
 | 105 | Python 3.15 Runtime Migration and Qualification | In Progress | `python-agent + ci-agent + dx-agent` | See `conductor/tracks/105-*/spec.md` |
+| 108 | Scientific ecosystem alignment | Blocked | `api-governance-agent` | See `conductor/tracks/108-*/spec.md` |
 | 106 | Scheduler Preview API Compatibility | In Progress | `core-scheduler-agent + conformance-agent + api-governance-agent + careops-consumer-owner` | See `conductor/tracks/106-*/spec.md` |
 
 ## Track status vocabulary
@@ -257,3 +258,6 @@ Polars inventory leads; sha2/tempfile/proptest are separate tracks with gates on
 ---
 
 - [x] **Track 106: Scheduler Preview API Compatibility** — [archived record](archive/106-scheduler-preview-compatibility/index.md); additive preview API restored and reviewed, CareOps retained-pin acceptance passed, and parent pin left unchanged pending separate RNG migration.
+
+---
+- [ ] **Track 108: Scientific ecosystem alignment** — [record](tracks/108-scientific-ecosystem-alignment/index.md); Track 107 and consumer acceptance are prerequisites. [Issue #336](https://github.com/edithatogo/kairos/issues/336).
