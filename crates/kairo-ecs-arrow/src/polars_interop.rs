@@ -466,9 +466,7 @@ impl DurableRunPublicationWriter {
         let root = std::path::absolute(parent).map_err(|e| ArrowError::Io(e.to_string()))?;
         // An exclusive directory creation prevents concurrent publishers or a retry
         // from modifying any completed or interrupted run.
-        let base = open_run_directory(&root)?;
-        kairo_ecs_fs_guard::verify_directory(&base, false)
-            .map_err(|e| ArrowError::Io(format!("Output root is not protected: {e}")))?;
+        let base = open_protected_root(&root)?;
         let name = Path::new(&self.run_id);
         let directory_options = cap_primitives::fs::DirOptions::new();
         #[cfg(unix)]
@@ -588,13 +586,24 @@ type OpenRunDirectory = fs::File;
 
 // Stage and publish relative to the held directory. A hard link publishes the
 // fully synced file atomically and fails if the destination already exists.
-fn write_run_file(
+pub(crate) fn write_run_file(
     directory: &OpenRunDirectory,
     name: &str,
     bytes: &[u8],
 ) -> Result<(), ArrowError> {
+    write_run_file_staged(directory, name, bytes, &format!(".{name}.staging"))
+}
+
+pub(crate) fn write_run_file_staged(
+    directory: &OpenRunDirectory,
+    name: &str,
+    bytes: &[u8],
+    staging: &str,
+) -> Result<(), ArrowError> {
     use std::io::Write;
-    let staging = format!(".{name}.staging");
+    if !valid_component(name) || !valid_component(staging) || name == staging {
+        return Err(ArrowError::Io("Invalid publication filename".into()));
+    }
     let mut options = cap_primitives::fs::OpenOptions::new();
     options.write(true).create_new(true);
     #[cfg(unix)]
@@ -602,8 +611,27 @@ fn write_run_file(
         use cap_primitives::fs::OpenOptionsExt;
         options.mode(0o600);
     }
-    let mut file = cap_primitives::fs::open(directory, Path::new(&staging), &options)
-        .map_err(|e| ArrowError::Io(format!("Cannot create publication staging file: {e}")))?;
+    // Names are unique among live calls and create_new resolves stale names
+    // after process-ID reuse. They are not an access-control mechanism: the
+    // protected-directory policy supplies that boundary.
+    static NEXT_STAGE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+    let (staging, mut file) = (0..1024)
+        .find_map(|_| {
+            let ordinal = NEXT_STAGE.fetch_add(1, Ordering::Relaxed);
+            let name = format!("{staging}-{}-{ordinal}", std::process::id());
+            match cap_primitives::fs::open(directory, Path::new(&name), &options) {
+                Ok(file) => Some(Ok((name, file))),
+                Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => None,
+                Err(error) => Some(Err(ArrowError::Io(format!(
+                    "Cannot create publication staging file: {error}"
+                )))),
+            }
+        })
+        .unwrap_or_else(|| {
+            Err(ArrowError::Io(
+                "Publication staging collision limit exceeded".into(),
+            ))
+        })?;
     file.write_all(bytes)
         .and_then(|()| file.sync_all())
         .map_err(|e| ArrowError::Io(format!("Cannot write publication staging file: {e}")))?;
@@ -649,7 +677,15 @@ mod publication_file_tests {
     }
 }
 
-fn open_run_directory(path: &Path) -> Result<OpenRunDirectory, ArrowError> {
+pub(crate) fn open_protected_root(path: &Path) -> Result<OpenRunDirectory, ArrowError> {
+    let absolute = std::path::absolute(path).map_err(|e| ArrowError::Io(e.to_string()))?;
+    let root = open_run_directory(&absolute)?;
+    kairo_ecs_fs_guard::verify_directory(&root, false)
+        .map_err(|e| ArrowError::Io(format!("Output root is not protected: {e}")))?;
+    Ok(root)
+}
+
+pub(crate) fn open_run_directory(path: &Path) -> Result<OpenRunDirectory, ArrowError> {
     let parent = path
         .parent()
         .ok_or_else(|| ArrowError::Io("Missing run parent".to_string()))?;
@@ -662,16 +698,18 @@ fn open_run_directory(path: &Path) -> Result<OpenRunDirectory, ArrowError> {
         .map_err(|e| ArrowError::Io(format!("Cannot open run directory: {e}")))
 }
 
-fn read_run_file(directory: &OpenRunDirectory, name: &str) -> Result<Vec<u8>, ArrowError> {
+pub(crate) fn open_run_file(
+    directory: &OpenRunDirectory,
+    name: &str,
+) -> Result<fs::File, ArrowError> {
     #[cfg(unix)]
     use cap_fs_ext::OpenOptionsSyncExt;
     use cap_fs_ext::{FollowSymlinks, OpenOptionsFollowExt};
-    use std::io::Read;
     let mut options = cap_primitives::fs::OpenOptions::new();
     options.read(true).follow(FollowSymlinks::No);
     #[cfg(unix)]
     options.nonblock(true);
-    let mut file = cap_primitives::fs::open(directory, Path::new(name), &options)
+    let file = cap_primitives::fs::open(directory, Path::new(name), &options)
         .map_err(|e| ArrowError::Io(format!("Cannot open run file: {e}")))?;
     if !file
         .metadata()
@@ -680,6 +718,15 @@ fn read_run_file(directory: &OpenRunDirectory, name: &str) -> Result<Vec<u8>, Ar
     {
         return Err(ArrowError::Io("Run file is not regular".to_string()));
     }
+    Ok(file)
+}
+
+pub(crate) fn read_run_file(
+    directory: &OpenRunDirectory,
+    name: &str,
+) -> Result<Vec<u8>, ArrowError> {
+    use std::io::Read;
+    let mut file = open_run_file(directory, name)?;
     let mut bytes = Vec::new();
     file.read_to_end(&mut bytes)
         .map_err(|e| ArrowError::Io(e.to_string()))?;

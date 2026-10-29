@@ -6,6 +6,7 @@
 #include <windows.h>
 #include <aclapi.h>
 #include <wchar.h>
+#include <stddef.h>
 
 static int trusted_sid(PSID sid, PSID user, PSID system, PSID administrators) {
     return IsValidSid(sid) && (EqualSid(sid, user) || EqualSid(sid, system) || EqualSid(sid, administrators));
@@ -19,7 +20,7 @@ int kairo_fs_guard(uintptr_t raw, int private_directory) {
     DWORD size = 0, result;
     TOKEN_USER *user = NULL;
     union { DWORD alignment; BYTE bytes[SECURITY_MAX_SID_SIZE]; } system, administrators;
-    DWORD system_size = sizeof(system.bytes), admin_size = sizeof(administrators.bytes);
+    DWORD system_size = (DWORD)sizeof(system.bytes), admin_size = (DWORD)sizeof(administrators.bytes);
     FILE_ATTRIBUTE_TAG_INFO attributes;
     WCHAR path[32768], filesystem[32];
     DWORD volume_flags;
@@ -28,7 +29,7 @@ int kairo_fs_guard(uintptr_t raw, int private_directory) {
     if (!(attributes.FileAttributes & FILE_ATTRIBUTE_DIRECTORY) || (attributes.FileAttributes & FILE_ATTRIBUTE_REPARSE_POINT)) return 6;
     size = GetFinalPathNameByHandleW(directory, path, 32768, FILE_NAME_NORMALIZED);
     if (!size || size >= 32768) return 4;
-    if (wcsncmp(path, L"\\\\?\\UNC\\", 8) == 0) return 5;
+    if (_wcsnicmp(path, L"\\\\?\\UNC\\", 8) == 0) return 5;
     if (!GetVolumeInformationByHandleW(directory, NULL, 0, NULL, NULL, &volume_flags, filesystem, 32)) return 4;
     if (!(volume_flags & FILE_PERSISTENT_ACLS) || (wcscmp(filesystem, L"NTFS") && wcscmp(filesystem, L"ReFS"))) return 5;
     result = GetSecurityInfo(directory, SE_FILE_OBJECT, OWNER_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION, &owner, NULL, &acl, NULL, &descriptor);
@@ -46,10 +47,15 @@ int kairo_fs_guard(uintptr_t raw, int private_directory) {
         void *entry = NULL;
         if (!GetAce(acl, i, &entry)) { verdict = 4; break; }
         ACE_HEADER *header = (ACE_HEADER *)entry;
-        if (header->AceFlags & INHERIT_ONLY_ACE) continue;
+        /* Include inherit-only grants: they can become effective on newly
+           created staging files even while absent from directory access. */
         if (header->AceType == ACCESS_DENIED_ACE_TYPE) continue;
         if (header->AceType != ACCESS_ALLOWED_ACE_TYPE) { verdict = 3; break; }
+        if (header->AceSize < offsetof(ACCESS_ALLOWED_ACE, SidStart) + 8) { verdict = 4; break; }
         ACCESS_ALLOWED_ACE *allow = (ACCESS_ALLOWED_ACE *)entry;
+        const BYTE *sid_bytes = (const BYTE *)&allow->SidStart;
+        size_t sid_length = 8 + 4 * (size_t)sid_bytes[1];
+        if (sid_bytes[1] > SID_MAX_SUB_AUTHORITIES || sid_length > header->AceSize - offsetof(ACCESS_ALLOWED_ACE, SidStart)) { verdict = 4; break; }
         DWORD prohibited = GENERIC_ALL | GENERIC_WRITE | WRITE_DAC | WRITE_OWNER | DELETE | FILE_DELETE_CHILD | FILE_WRITE_DATA | FILE_APPEND_DATA | FILE_WRITE_EA | FILE_WRITE_ATTRIBUTES;
         if (private_directory) prohibited |= GENERIC_READ | GENERIC_EXECUTE | FILE_READ_DATA | FILE_READ_EA | FILE_READ_ATTRIBUTES | FILE_EXECUTE;
         if ((allow->Mask & prohibited) && !trusted_sid((PSID)&allow->SidStart, user->User.Sid, system.bytes, administrators.bytes)) { verdict = 3; break; }

@@ -28,6 +28,29 @@ mod windows_tests {
         verify_directory(&file, false).unwrap();
         verify_directory(&file, true).unwrap();
     }
+
+    #[test]
+    fn file_only_inherited_write_grant_is_rejected() {
+        let root = tempfile::tempdir().unwrap();
+        let file = std::fs::OpenOptions::new()
+            .read(true)
+            .custom_flags(0x02000000)
+            .open(root.path())
+            .unwrap();
+        verify_directory(&file, false).unwrap();
+        let icacls = std::path::PathBuf::from(std::env::var_os("SystemRoot").unwrap())
+            .join("System32/icacls.exe");
+        let status = std::process::Command::new(icacls)
+            .arg(root.path())
+            .args(["/grant", "*S-1-1-0:(OI)(IO)(W)"])
+            .status()
+            .unwrap();
+        assert!(status.success());
+        assert_eq!(
+            verify_directory(&file, false).unwrap_err().kind(),
+            io::ErrorKind::PermissionDenied
+        );
+    }
 }
 
 /// Require a directory owned by the current identity, protected from writes by

@@ -588,3 +588,91 @@ fn empty_run_publishes_zero_part_manifest() {
         "empty completed run validates, got: {validated:?}"
     );
 }
+
+#[cfg(unix)]
+#[test]
+fn protected_root_is_enforced_for_create_and_resume() {
+    use std::os::unix::fs::PermissionsExt;
+    let parent = tempfile::tempdir().unwrap();
+    let mut run = RunOutput::create(config(2), parent.path()).unwrap();
+    run.write_batch(&batch(1..=2)).unwrap();
+    let boundary = run.checkpoint_boundary().unwrap();
+    drop(run);
+    let existing = fs::read_dir(parent.path()).unwrap().count();
+    fs::set_permissions(parent.path(), fs::Permissions::from_mode(0o777)).unwrap();
+    assert!(RunOutput::create(config(2), parent.path()).is_err());
+    assert!(RunOutput::resume(config(2), parent.path(), boundary).is_err());
+    assert_eq!(fs::read_dir(parent.path()).unwrap().count(), existing);
+}
+
+#[test]
+fn existing_part_is_never_replaced() {
+    let parent = tempfile::tempdir().unwrap();
+    let mut run = RunOutput::create(config(2), parent.path()).unwrap();
+    let dir = run_dir(parent.path());
+    let part = dir.join("part-00001.parquet");
+    fs::write(&part, b"preexisting").unwrap();
+    assert!(run.write_batch(&batch(1..=2)).is_err());
+    assert_eq!(fs::read(part).unwrap(), b"preexisting");
+    assert!(run.parts().is_empty());
+    assert!(!dir.join(RUN_MANIFEST_FILE_NAME).exists());
+}
+
+#[cfg(unix)]
+#[test]
+fn replacement_run_path_is_rejected_before_writing() {
+    let parent = tempfile::tempdir().unwrap();
+    let outside = tempfile::tempdir().unwrap();
+    let mut run = RunOutput::create(config(2), parent.path()).unwrap();
+    let dir = run_dir(parent.path());
+    let moved = parent.path().join("moved");
+    fs::rename(&dir, &moved).unwrap();
+    std::os::unix::fs::symlink(outside.path(), &dir).unwrap();
+    assert!(run.write_batch(&batch(1..=2)).is_err());
+    assert!(run.complete().is_err());
+    assert_eq!(fs::read_dir(outside.path()).unwrap().count(), 0);
+    assert_eq!(fs::read_dir(moved).unwrap().count(), 0);
+}
+
+#[cfg(unix)]
+#[test]
+fn reader_rejects_symlinked_part_even_with_matching_bytes() {
+    let parent = tempfile::tempdir().unwrap();
+    let mut run = RunOutput::create(config(2), parent.path()).unwrap();
+    run.write_batch(&batch(1..=2)).unwrap();
+    let manifest = run.complete().unwrap();
+    let dir = run_dir(parent.path());
+    let part = dir.join(&manifest.parts[0].file_name);
+    let moved = parent.path().join("original-part");
+    fs::rename(&part, &moved).unwrap();
+    std::os::unix::fs::symlink(&moved, &part).unwrap();
+    assert!(validate_run_output(&dir).is_err());
+}
+
+#[test]
+fn resume_ignores_abandoned_staging_names_without_overwriting_them() {
+    let parent = tempfile::tempdir().unwrap();
+    let mut run = RunOutput::create(config(2), parent.path()).unwrap();
+    run.write_batch(&batch(1..=2)).unwrap();
+    let boundary = run.checkpoint_boundary().unwrap();
+    let dir = run_dir(parent.path());
+    let abandoned_part = dir.join(".staging-part-00002.parquet");
+    let abandoned_manifest = dir.join(".staging-run_manifest.json");
+    fs::write(&abandoned_part, b"partial part").unwrap();
+    fs::write(&abandoned_manifest, b"partial manifest").unwrap();
+    drop(run);
+    let mut resumed = RunOutput::resume(config(2), parent.path(), boundary).unwrap();
+    resumed.write_batch(&batch(3..=4)).unwrap();
+    resumed.complete().unwrap();
+    let manifest = validate_run_output(&dir).unwrap();
+    assert_eq!(
+        manifest
+            .parts
+            .iter()
+            .map(|part| part.row_count)
+            .sum::<usize>(),
+        4
+    );
+    assert_eq!(fs::read(abandoned_part).unwrap(), b"partial part");
+    assert_eq!(fs::read(abandoned_manifest).unwrap(), b"partial manifest");
+}

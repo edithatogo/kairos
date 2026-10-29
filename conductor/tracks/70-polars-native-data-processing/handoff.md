@@ -1,5 +1,43 @@
 # Track 70 handoff: Polars-native data processing and standard interchange
 
+## Protected-root implementation checkpoint — 29 October 2026
+
+The existing integration chat `01a18344-cfb8-7711-8c38-fef1052b9fcf` continues in
+the same Arrow repair worktree and branch. The user explicitly selected enforced
+protected output roots. Scope now includes both publication implementations,
+`RunOutput` resume/read/complete, and the isolated native permission helper
+`crates/kairo-ecs-fs-guard`. No tenant objects or authentication are involved.
+Earlier assignments below remain history. Next operation is platform and package
+qualification of this frozen source, followed by hosted checks when safe.
+
+Local commit `f50e57a` introduced the guard and the first publisher integration.
+The next source checkpoint applies the same boundary to `RunOutput`, opens runs
+relative to held roots, uses no-clobber staged publication, holds reader handles,
+and preserves resume after abandoned staging files. The ADR in this track
+records the approved behavior change, accepted filesystem profiles and limits.
+
+A read-only independent review identified Windows file-only inherited ACL grants,
+ambient reacquisition in `RunOutput`, and deterministic staging-name collisions
+on resume. The candidate addresses all three; Windows runtime verification is
+still required. macOS aarch64 Rust 1.99.1 focused verification passed 7 native
+table/IPC tests, 19 durability tests, 13 durable-publication tests and 2 native
+guard tests. Focused Clippy with warnings denied passed. These are local results,
+not hosted acceptance or a declaration that the security finding is closed.
+
+An isolated Linux aarch64 qualification VM now runs at
+`LIMA_HOME=/Volumes/PortableSSD/kairos-lima`, instance `kairos-guard`. Its fresh
+Ubuntu minimal image matched the official SHA256
+`6e971c7935c62c8ea7796b085e4ea038e2301a067f8c853e154133f8df192c85`.
+Its tools and task directory are separate from the stopped CareOps VM. The
+earlier attempt to start that VM failed downloading container tooling into the
+full system cache; no guest operation was started there.
+
+The zstd package blocker remains: workspace-only patches do not propagate into
+the packaged consumer, and a feature-split experiment still retained vulnerable
+optional versions in the regenerated lockfile. No audit ignore, exception or
+release/merge claim is introduced. Full security, package, platform and PR gates
+must pass before merge and pruning.
+
 ## Publication repair assignment — 29 October 2026
 
 The user assigned integration chat `01a18344-cfb8-7711-8c38-fef1052b9fcf` the
