@@ -478,8 +478,7 @@ impl DurableRunPublicationWriter {
         };
         cap_primitives::fs::create_dir(&base, name, &directory_options)
             .map_err(|e| ArrowError::Io(format!("Cannot create unique run directory: {e}")))?;
-        let directory = cap_primitives::fs::open_dir_nofollow(&base, name)
-            .map_err(|e| ArrowError::Io(format!("Cannot open new run directory: {e}")))?;
+        let directory = open_run_child(&base, name)?;
         kairo_ecs_fs_guard::verify_directory(&directory, true)
             .map_err(|e| ArrowError::Io(format!("New run directory is not private: {e}")))?;
         after_open();
@@ -662,21 +661,6 @@ pub(crate) fn write_run_file_staged(
     Ok(())
 }
 
-#[cfg(test)]
-mod publication_file_tests {
-    use super::*;
-
-    #[test]
-    fn publication_is_no_clobber() {
-        let parent = tempfile::tempdir().unwrap();
-        fs::create_dir(parent.path().join("run")).unwrap();
-        let directory = open_run_directory(&parent.path().join("run")).unwrap();
-        write_run_file(&directory, "part", b"original").unwrap();
-        assert!(write_run_file(&directory, "part", b"replacement").is_err());
-        assert_eq!(read_run_file(&directory, "part").unwrap(), b"original");
-    }
-}
-
 pub(crate) fn open_protected_root(path: &Path) -> Result<OpenRunDirectory, ArrowError> {
     let absolute = std::path::absolute(path).map_err(|e| ArrowError::Io(e.to_string()))?;
     let root = open_run_directory(&absolute)?;
@@ -694,8 +678,36 @@ pub(crate) fn open_run_directory(path: &Path) -> Result<OpenRunDirectory, ArrowE
         .ok_or_else(|| ArrowError::Io("Missing run identifier".to_string()))?;
     let base = cap_primitives::fs::open_ambient_dir(parent, cap_primitives::ambient_authority())
         .map_err(|e| ArrowError::Io(format!("Cannot open run parent: {e}")))?;
-    cap_primitives::fs::open_dir_nofollow(&base, Path::new(name))
-        .map_err(|e| ArrowError::Io(format!("Cannot open run directory: {e}")))
+    open_run_child(&base, Path::new(name))
+}
+
+pub(crate) fn open_run_child(base: &fs::File, name: &Path) -> Result<fs::File, ArrowError> {
+    #[cfg(windows)]
+    let directory = cap_primitives::fs::open_dir_nofollow(base, name)
+        .map_err(|e| ArrowError::Io(format!("Cannot open run directory: {e}")))?;
+    #[cfg(not(windows))]
+    let directory = {
+        use cap_fs_ext::{FollowSymlinks, OpenOptionsFollowExt};
+        let mut options = cap_primitives::fs::OpenOptions::new();
+        options.read(true).follow(FollowSymlinks::No);
+        #[cfg(unix)]
+        {
+            use cap_fs_ext::OpenOptionsSyncExt;
+            options.nonblock(true);
+        }
+        // Linux open_dir_nofollow may return O_PATH. Directory fsync needs an
+        // actual readable descriptor; no-follow lookup still binds the object.
+        cap_primitives::fs::open(base, name, &options)
+            .map_err(|e| ArrowError::Io(format!("Cannot open run directory: {e}")))?
+    };
+    if !directory
+        .metadata()
+        .map_err(|e| ArrowError::Io(e.to_string()))?
+        .is_dir()
+    {
+        return Err(ArrowError::Io("Run path is not a directory".into()));
+    }
+    Ok(directory)
 }
 
 pub(crate) fn open_run_file(
@@ -731,83 +743,6 @@ pub(crate) fn read_run_file(
     file.read_to_end(&mut bytes)
         .map_err(|e| ArrowError::Io(e.to_string()))?;
     Ok(bytes)
-}
-
-#[cfg(all(test, unix))]
-mod path_hardening_tests {
-    use super::*;
-
-    #[test]
-    fn open_directory_remains_bound_after_path_replacement() {
-        use std::os::unix::fs::symlink;
-        let parent = tempfile::tempdir().unwrap();
-        let run = parent.path().join("run");
-        let old = parent.path().join("old");
-        let other = parent.path().join("other");
-        fs::create_dir(&run).unwrap();
-        fs::create_dir(&other).unwrap();
-        fs::write(run.join("part"), b"original").unwrap();
-        fs::write(other.join("part"), b"replacement").unwrap();
-        let directory = open_run_directory(&run).unwrap();
-        fs::rename(&run, &old).unwrap();
-        symlink(&other, &run).unwrap();
-        assert_eq!(read_run_file(&directory, "part").unwrap(), b"original");
-        assert!(open_run_directory(&run).is_err());
-        symlink(other.join("part"), old.join("linked")).unwrap();
-        assert!(read_run_file(&directory, "linked").is_err());
-        write_run_file(&directory, "manifest.json", b"published").unwrap();
-        assert_eq!(fs::read(old.join("manifest.json")).unwrap(), b"published");
-        assert!(!other.join("manifest.json").exists());
-        assert!(write_run_file(&directory, "manifest.json", b"replacement").is_err());
-        assert_eq!(fs::read(old.join("manifest.json")).unwrap(), b"published");
-    }
-
-    #[test]
-    fn publisher_does_not_follow_replaced_run_path() {
-        use std::os::unix::fs::symlink;
-        let parent = tempfile::tempdir().unwrap();
-        let run = parent.path().join("run");
-        let moved = parent.path().join("moved");
-        let outside = tempfile::tempdir().unwrap();
-        let writer = DurableRunPublicationWriter::new(parent.path(), "run", 10);
-        let record = EventLogRecord {
-            schema_version: SCHEMA_VERSION_V2,
-            run_id: "run".into(),
-            event_id: EventId::new(1, 1),
-            entity_id: None,
-            time_ticks: 1,
-            time_scale: "ticks".into(),
-            priority: 0,
-            sequence: 1,
-            event_kind: "custom:test".into(),
-            status: EventStatus::Dispatched,
-            payload_ref: None,
-        };
-        let result = writer.publish_with_hook(&[record], || {
-            fs::rename(&run, &moved).unwrap();
-            symlink(outside.path(), &run).unwrap();
-        });
-        assert!(result.is_err());
-        assert!(moved.join("manifest.json").is_file());
-        assert!(moved.join("part-00000.parquet").is_file());
-        assert!(!outside.path().join("manifest.json").exists());
-        assert!(!outside.path().join("part-00000.parquet").exists());
-    }
-
-    #[test]
-    fn publisher_rejects_replacement_directory_receipt() {
-        let parent = tempfile::tempdir().unwrap();
-        let run = parent.path().join("run");
-        let moved = parent.path().join("moved");
-        let writer = DurableRunPublicationWriter::new(parent.path(), "run", 10);
-        let result = writer.publish_with_hook(&[], || {
-            fs::rename(&run, &moved).unwrap();
-            fs::create_dir(&run).unwrap();
-        });
-        assert!(result.is_err());
-        assert!(moved.join("manifest.json").is_file());
-        assert!(!run.join("manifest.json").exists());
-    }
 }
 
 pub struct DurableRunPublicationReader {
@@ -917,5 +852,105 @@ impl DurableRunPublicationReader {
         }
 
         Ok((manifest, all_records))
+    }
+}
+
+#[cfg(test)]
+mod publication_file_tests {
+    use super::*;
+
+    #[test]
+    fn publication_is_no_clobber() {
+        let parent = tempfile::tempdir().unwrap();
+        fs::create_dir(parent.path().join("run")).unwrap();
+        let directory = open_run_directory(&parent.path().join("run")).unwrap();
+        write_run_file(&directory, "part", b"original").unwrap();
+        assert!(write_run_file(&directory, "part", b"replacement").is_err());
+        assert_eq!(read_run_file(&directory, "part").unwrap(), b"original");
+    }
+}
+
+#[cfg(all(test, unix))]
+mod path_hardening_tests {
+    use super::*;
+
+    #[test]
+    fn held_directory_supports_durability_sync() {
+        let parent = tempfile::tempdir().unwrap();
+        fs::create_dir(parent.path().join("run")).unwrap();
+        let directory = open_run_directory(&parent.path().join("run")).unwrap();
+        directory.sync_all().unwrap();
+    }
+
+    #[test]
+    fn open_directory_remains_bound_after_path_replacement() {
+        use std::os::unix::fs::symlink;
+        let parent = tempfile::tempdir().unwrap();
+        let run = parent.path().join("run");
+        let old = parent.path().join("old");
+        let other = parent.path().join("other");
+        fs::create_dir(&run).unwrap();
+        fs::create_dir(&other).unwrap();
+        fs::write(run.join("part"), b"original").unwrap();
+        fs::write(other.join("part"), b"replacement").unwrap();
+        let directory = open_run_directory(&run).unwrap();
+        fs::rename(&run, &old).unwrap();
+        symlink(&other, &run).unwrap();
+        assert_eq!(read_run_file(&directory, "part").unwrap(), b"original");
+        assert!(open_run_directory(&run).is_err());
+        symlink(other.join("part"), old.join("linked")).unwrap();
+        assert!(read_run_file(&directory, "linked").is_err());
+        write_run_file(&directory, "manifest.json", b"published").unwrap();
+        assert_eq!(fs::read(old.join("manifest.json")).unwrap(), b"published");
+        assert!(!other.join("manifest.json").exists());
+        assert!(write_run_file(&directory, "manifest.json", b"replacement").is_err());
+        assert_eq!(fs::read(old.join("manifest.json")).unwrap(), b"published");
+    }
+
+    #[test]
+    fn publisher_does_not_follow_replaced_run_path() {
+        use std::os::unix::fs::symlink;
+        let parent = tempfile::tempdir().unwrap();
+        let run = parent.path().join("run");
+        let moved = parent.path().join("moved");
+        let outside = tempfile::tempdir().unwrap();
+        let writer = DurableRunPublicationWriter::new(parent.path(), "run", 10);
+        let record = EventLogRecord {
+            schema_version: SCHEMA_VERSION_V2,
+            run_id: "run".into(),
+            event_id: EventId::new(1, 1),
+            entity_id: None,
+            time_ticks: 1,
+            time_scale: "ticks".into(),
+            priority: 0,
+            sequence: 1,
+            event_kind: "custom:test".into(),
+            status: EventStatus::Dispatched,
+            payload_ref: None,
+        };
+        let result = writer.publish_with_hook(&[record], || {
+            fs::rename(&run, &moved).unwrap();
+            symlink(outside.path(), &run).unwrap();
+        });
+        assert!(result.is_err());
+        assert!(moved.join("manifest.json").is_file());
+        assert!(moved.join("part-00000.parquet").is_file());
+        assert!(!outside.path().join("manifest.json").exists());
+        assert!(!outside.path().join("part-00000.parquet").exists());
+    }
+
+    #[test]
+    fn publisher_rejects_replacement_directory_receipt() {
+        let parent = tempfile::tempdir().unwrap();
+        let run = parent.path().join("run");
+        let moved = parent.path().join("moved");
+        let writer = DurableRunPublicationWriter::new(parent.path(), "run", 10);
+        let result = writer.publish_with_hook(&[], || {
+            fs::rename(&run, &moved).unwrap();
+            fs::create_dir(&run).unwrap();
+        });
+        assert!(result.is_err());
+        assert!(moved.join("manifest.json").is_file());
+        assert!(!run.join("manifest.json").exists());
     }
 }

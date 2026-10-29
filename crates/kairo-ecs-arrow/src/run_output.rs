@@ -72,8 +72,8 @@ use serde::{Deserialize, Serialize};
 #[cfg(unix)]
 use crate::polars_interop::open_run_file;
 use crate::polars_interop::{
-    dataframe_to_records, open_protected_root, open_run_directory, read_parquet, read_run_file,
-    records_to_dataframe, write_parquet_zstd, write_run_file_staged,
+    dataframe_to_records, open_protected_root, open_run_child, open_run_directory, read_parquet,
+    read_run_file, records_to_dataframe, write_parquet_zstd, write_run_file_staged,
 };
 use crate::{ArrowError, EventLogRecord};
 
@@ -410,8 +410,7 @@ impl RunOutput {
             if error.kind() != std::io::ErrorKind::AlreadyExists {
                 return Err(io_err(error));
             }
-            let existing = cap_primitives::fs::open_dir_nofollow(&root_directory, Path::new(&name))
-                .map_err(io_err)?;
+            let existing = open_run_child(&root_directory, Path::new(&name)).map_err(arrow_err)?;
             if run_entry_exists(&existing, RUN_MANIFEST_FILE_NAME)? {
                 return Err(RunOutputError::CompletedRunExists {
                     path: run_dir.display().to_string(),
@@ -421,8 +420,7 @@ impl RunOutput {
                 "interrupted run output exists for this identity; resume it instead of recreating",
             ));
         }
-        let directory = cap_primitives::fs::open_dir_nofollow(&root_directory, Path::new(&name))
-            .map_err(io_err)?;
+        let directory = open_run_child(&root_directory, Path::new(&name)).map_err(arrow_err)?;
         kairo_ecs_fs_guard::verify_directory(&directory, true).map_err(io_err)?;
         #[cfg(unix)]
         root_directory.sync_all().map_err(io_err)?;
@@ -456,8 +454,7 @@ impl RunOutput {
         let root_directory = open_protected_root(&root_path).map_err(arrow_err)?;
         let name = run_directory_name(&config);
         let run_dir = root_path.join(&name);
-        let directory = cap_primitives::fs::open_dir_nofollow(&root_directory, Path::new(&name))
-            .map_err(io_err)?;
+        let directory = open_run_child(&root_directory, Path::new(&name)).map_err(arrow_err)?;
         kairo_ecs_fs_guard::verify_directory(&directory, true).map_err(io_err)?;
         if run_entry_exists(&directory, RUN_MANIFEST_FILE_NAME)? {
             return Err(RunOutputError::CompletedRunExists {

@@ -33,6 +33,16 @@ the release manifest; its registration is included in this follow-up. All three
 Rust source archives (types, guard, Arrow) were produced without verification;
 that establishes archive creation, not full consumer or security qualification.
 
+Hosted run `40808879819` passed the macOS platform job. Windows passed its native
+guard and Arrow runtime/unit steps, then failed a Clippy test-module placement
+rule. Linux identified that capability `open_dir_nofollow` yields lookup-only
+`O_PATH` descriptors, which cannot be synced. The follow-up opens real readable
+Unix directory handles without following symlinks, while preserving Windows'
+directory-handle behavior, and adds a directory-sync regression test. Test modules
+are moved after production items for the Windows lint. Local macOS focused
+durability/publication tests and the four path/sync tests pass; focused Clippy
+passes. Hosted reruns are still required for these corrections.
+
 An isolated Linux aarch64 qualification VM now runs at
 `LIMA_HOME=/Volumes/PortableSSD/kairos-lima`, instance `kairos-guard`. Its fresh
 Ubuntu minimal image matched the official SHA256
