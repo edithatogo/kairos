@@ -1,5 +1,31 @@
 # Track 70 handoff: Polars-native data processing and standard interchange
 
+## Polars 0.55.2 qualification — 29 October 2026
+
+The user explicitly requested upgrade and qualification against Rust Polars
+0.55.2. Integration chat `01a18344-cfb8-7711-8c38-fef1052b9fcf` owns the
+Arrow manifest/source, Cargo.lock and this track's qualification records in
+`/Volumes/PortableSSD/codex-worktrees/kairos-arrow-publication-repair-20261029`.
+Both direct Polars dependencies now select exactly 0.55.2. A fresh isolated
+build target is `/Volumes/PortableSSD/codex-builds/kairos-polars0552-20261029`.
+Next: compile/API adaptation, focused Arrow/IPC/publication tests, package and
+dependency policy qualification, then platform checks. No native objects,
+authentication, downstream pin or upstream publication is in scope. Earlier
+accepted-version evidence remains historical; this candidate is not qualified
+merely because dependency resolution succeeds.
+
+The adapted library compiles on macOS ARM64/Rust 1.99.1. All 65 selected tests
+pass: 21 library, 7 native table/IPC, 19 durability, 13 protected publication and
+5 tempfile tests. DataFrame construction now supplies the explicit row count;
+column access follows the renamed Polars API. Cargo-deny advisory/licence/source
+checks pass, but cargo-audit fails with five vulnerabilities: the three existing
+zstd findings plus two quick-xml 0.39.4 findings introduced through object_store
+0.13.2 (which requires quick-xml 0.39; fixes begin at 0.41). No security waiver,
+upstream patch promotion or complete qualification claim is made. Raw local logs
+are `/tmp/kairos-polars0552-{check,tests,audit,deny,clippy,package}.log`; build
+cache is the isolated target above. Hosted platform and extracted-package proof
+remain required, and the candidate must remain draft while the audit fails.
+
 ## Protected-root implementation checkpoint — 29 October 2026
 
 The existing integration chat `01a18344-cfb8-7711-8c38-fef1052b9fcf` continues in

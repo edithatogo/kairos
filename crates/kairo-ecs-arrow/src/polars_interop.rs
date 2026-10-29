@@ -112,7 +112,7 @@ pub fn records_to_dataframe(records: &[EventLogRecord]) -> Result<DataFrame, Arr
         Series::new("payload_ref".into(), &payload_refs),
     ];
 
-    DataFrame::new(cols.into_iter().map(|s| s.into()).collect())
+    DataFrame::new(n, cols.into_iter().map(|s| s.into()).collect())
         .map_err(|e| ArrowError::Io(e.to_string()))
 }
 

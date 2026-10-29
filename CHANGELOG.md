@@ -14,6 +14,8 @@ Format:
 
 ## Unreleased
 
+- `crates/kairo-ecs-arrow`: upgrade optional native Polars and Arrow interchange dependencies from 0.45.1 to exactly 0.55.2 and adapt DataFrame construction and column access. Dependency security and platform qualification remain required before release.
+
 - `crates/kairo-ecs-arrow`: durable publication and checkpoint resume require an existing protected output root; unsafe permissions and unsupported ACL/filesystem profiles fail explicitly. New runs and files are private, completed output is never replaced, and abandoned staging files do not block recovery. Native permission checks are isolated in the new Apache-2.0 `kairo-ecs-fs-guard` helper, with Linux/macOS/Windows qualification checks.
 
 - `crates/kairo-ecs-arrow`: stream-named IPC APIs now use the Arrow IPC stream format; use `read_ipc_file` for files produced by the earlier writer. Manifest/part consistency is verified before recovery watermarks are returned, and the telemetry example is included in Rust source packages.
