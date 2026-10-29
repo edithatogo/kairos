@@ -943,3 +943,9 @@ Track 95 (`thiserror robustness`) completed Phase 0, 1, and 2:
 ## Integration checkpoint — 29 October 2026
 
 Sole integrator chat `01a18344-cfb8-7711-8c38-fef1052b9fcf` accepted dependency/Arrow PR #340 at `4134a3733ba7e833a8c520621ec2af5a4bd4b31a` after 69 passing hosted checks and five conditional skips. The final owned source lane is standard Git worktree `/Volumes/PortableSSD/codex-worktrees/kairos-pr334-frontier-reconcile-20261029`, branch `codex/pr334-frontier-reconcile-20261029`, covering PR #334 source/Conductor integration only. No native objects or parent pin are promoted. Next operation: final exact-head PR #334 checks, merge qualified source, then prune only completed clean owned worktrees with verified recoverable history. Dirty prototypes and unaccepted scientific/consumer work remain preserved.
+
+## Provider follow-through — 29 October 2026
+
+Integrator chat `01a18344-cfb8-7711-8c38-fef1052b9fcf` owns the bounded quality-readback helper/tests and this provider record in managed worktree `/Users/doughnut/.codex/worktrees/kairos-provider-gates-20261029/kairos`, branch `codex/provider-gates-20261029`. Source claims exclude all CareOps runtime/consumer/backport paths. The active CareOps lane owns its temporary compatibility branch and parent acceptance; its five seeded-vector failures against main remain distinct from the passing staged allocation test. No parent pin or RNG acceptance is promoted here.
+
+Next operations: qualify the immutable GitHub commit-status binding, complete native Renovate/Codecov readback, independently review the bounded packet, pass hosted checks, merge and archive only this lane. Polars registry still reports stable 0.55.2; its `polars-io` dependency ranges retain `zstd ^0.13` and `object_store ^0.13.1`. Current Git security closure and disabled Arrow publication remain unchanged pending a suitable published release.

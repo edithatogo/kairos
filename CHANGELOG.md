@@ -14,6 +14,8 @@ Format:
 
 ## Unreleased
 
+- Bind hosted commit-status evidence to the exact immutable GitHub request and validate its API URL; Codecov project status can now be recognized without relying on a nonexistent response SHA field.
+
 - `kairo-ecs-des` adds experimental `StagedResourceRuntime` for scheduler-backed staged allocation; CareOps migration remains separately gated.
 
 - Upgrade active Rust, Python, Node documentation/binding and .NET test dependencies to the 29 October registry frontier; qualify Python 3.15.2 and Node 26.13.0 in isolated environments. Update rstar spatial queries and Prost's derive feature for their new APIs.

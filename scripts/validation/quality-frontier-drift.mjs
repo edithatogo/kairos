@@ -312,10 +312,6 @@ function ghJsonOptional(path) {
   }
 }
 
-function ghJsonFiltered(path, expression) {
-  return JSON.parse(run('gh', ['api', path, '--jq', expression]));
-}
-
 function ghJsonLinesPaginated(path, expression) {
   const output = run('gh', ['api', '--paginate', path, '--jq', expression]);
   return output ? output.split(/\r?\n/).map((line) => JSON.parse(line)) : [];
@@ -372,6 +368,19 @@ function getMainCiSkipGuard(repository, defaultBranchCommit) {
   return { sha: entry.sha, ...ciSkipGuardContract(text) };
 }
 
+// GitHub's commit-status list omits sha; bind each result to the exact
+// immutable request using its API URL before evaluating provider evidence.
+function bindCommitStatuses(repository, commit, statuses) {
+  const expectedUrl = `https://api.github.com/repos/${repository}/statuses/${commit}`;
+  if (!Array.isArray(statuses)) throw new Error('Commit statuses must be an array');
+  return statuses.map((status) => {
+    if (status?.url !== expectedUrl || (status.sha != null && status.sha !== commit)) {
+      throw new Error('Commit status does not match the requested repository and commit');
+    }
+    return { ...status, sha: commit };
+  });
+}
+
 function collectHosted(repository, source) {
   const repo = ghJson(`repos/${repository}`);
   const defaultBranch = repo.default_branch;
@@ -391,8 +400,9 @@ function collectHosted(repository, source) {
   const checkNames = EXPECTED_CHECKS.map((name) => `.name == ${JSON.stringify(name)}`).join(' or ');
   const checkRunFilter = `.check_runs[] | select(.head_sha == ${JSON.stringify(defaultBranchCommit)} and (${checkNames} or (.name | ascii_downcase | contains("codecov")) or (.app.slug | ascii_downcase | contains("codecov")))) | {name, status, conclusion, head_sha, started_at, details_url, app: {slug: .app.slug}}`;
   const mainChecks = ghJsonLinesPaginated(`repos/${repository}/commits/${defaultBranchCommit}/check-runs?per_page=100`, checkRunFilter);
-  const mainStatuses = ghJsonFiltered(`repos/${repository}/commits/${defaultBranchCommit}/statuses`,
-    '[.[] | {context, state, sha, created_at, target_url}]');
+  const mainStatuses = bindCommitStatuses(repository, defaultBranchCommit,
+    ghJsonLinesPaginated(`repos/${repository}/commits/${defaultBranchCommit}/statuses?per_page=100`,
+      '.[] | {context, state, sha, url, created_at, target_url}'));
   const openPulls = ghJsonLinesPaginated(`repos/${repository}/pulls?state=open&per_page=100`,
     '.[] | {number, headRef: .head.ref, headSha: .head.sha, author: .user.login, createdAt: .created_at, updatedAt: .updated_at, url: .html_url}');
   const renovateDashboardResult = ghJsonOptional(`repos/${repository}/issues/136`);
@@ -509,4 +519,4 @@ function main() {
 const isMain = process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href;
 if (isMain) main();
 
-export { ciSkipGuardContract, evaluateDrift, isAfterIntegration, dashboardEditEvidence };
+export { ciSkipGuardContract, evaluateDrift, isAfterIntegration, dashboardEditEvidence, bindCommitStatuses };
