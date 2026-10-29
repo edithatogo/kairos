@@ -14,6 +14,7 @@ export const OPTIONAL_READY_FIXTURE_IDS = Object.freeze([
   'pdes_conservative_parity_v1',
   'event_log_v2_conformance',
   'optimistic_envelope_v2_conformance',
+  'des_resource_queue_v1',
 ]);
 
 const KNOWN_READY_FIXTURE_IDS = Object.freeze([
@@ -183,6 +184,42 @@ function assertPdesParityPayload(payload, fixture) {
   assertNonNegativeSafeInteger(payload.lookahead_ticks, `${fixture.id}.lookahead_ticks`);
   assert(payload.lookahead_ticks > 0 && payload.horizon_ticks > payload.lookahead_ticks, `${fixture.id} needs positive lookahead below horizon`);
   assertString(payload.consumer, `${fixture.id}.consumer`);
+  assertString(payload.requirement, `${fixture.id}.requirement`);
+}
+
+function assertStagedAllocationPayload(payload, fixture) {
+  assertBaseFixture(payload, fixture);
+  assert(payload.resource_capacity === 1, `${fixture.id}.resource_capacity must be 1`);
+  assert(
+    Array.isArray(payload.requests) && payload.requests.length === 2,
+    `${fixture.id}.requests must contain exactly two requests`
+  );
+  assert(
+    payload.requests[0].request === 0 && payload.requests[0].actor === 0 && payload.requests[0].at_ticks === 1 &&
+      payload.requests[1].request === 1 && payload.requests[1].actor === 1 && payload.requests[1].at_ticks === 1,
+    `${fixture.id}.requests must contain the two same-time requests in FIFO order`
+  );
+  assert(
+    JSON.stringify(payload.expected_after_submit_dispatch?.active_requests) === JSON.stringify([0]) &&
+      JSON.stringify(payload.expected_after_submit_dispatch?.queued_requests) === JSON.stringify([1]) &&
+      payload.expected_after_submit_dispatch?.available === 0,
+    `${fixture.id}.expected_after_submit_dispatch must preserve the capacity-one active/queued state`
+  );
+  assert(
+    payload.release?.request === 0 && payload.release?.revision === 1 && payload.release?.at_ticks === 1,
+    `${fixture.id}.release must release request 0 revision 1 at tick 1`
+  );
+  assert(
+    JSON.stringify(payload.expected_after_release_dispatch?.released_requests) === JSON.stringify([0]) &&
+      JSON.stringify(payload.expected_after_release_dispatch?.active_requests) === JSON.stringify([1]) &&
+      JSON.stringify(payload.expected_after_release_dispatch?.queued_requests) === JSON.stringify([]) &&
+      payload.expected_after_release_dispatch?.available === 0,
+    `${fixture.id}.expected_after_release_dispatch must release request 0 and promote request 1`
+  );
+  assert(
+    JSON.stringify(payload.ordering) === JSON.stringify(['at_ticks ASC', 'priority ASC', 'sequence ASC']),
+    `${fixture.id}.ordering must preserve time, priority and sequence order`
+  );
   assertString(payload.requirement, `${fixture.id}.requirement`);
 }
 
@@ -366,6 +403,7 @@ export function validateFixturePayload(fixture, root = process.cwd()) {
   else if (fixture.id === 'rng_reproducibility_v1') assertRngPayload(payload, fixture);
   else if (fixture.id === 'vvuq_scenario_replay_v1') assertVvuqPayload(payload, fixture, root);
   else if (fixture.id === 'pdes_conservative_parity_v1') assertPdesParityPayload(payload, fixture);
+  else if (fixture.id === 'des_resource_queue_v1') assertStagedAllocationPayload(payload, fixture);
   else assertBaseFixture(payload, fixture);
 
   return payload;
@@ -386,6 +424,15 @@ export function runFixture(fixture, payload) {
       validation_scope: 'fixture-contract-only',
       native_consumer: payload.consumer,
       native_command: 'cargo test -p kairo-ecs-pdes --features pdes --test production_parity',
+    };
+  }
+
+  if (fixture.id === 'des_resource_queue_v1') {
+    return {
+      validation_scope: 'fixture-contract-only',
+      native_command: 'cargo test --locked -p kairo-ecs-des --test careops_staged_allocation_compatibility',
+      capacity: payload.resource_capacity,
+      request_count: payload.requests.length,
     };
   }
 

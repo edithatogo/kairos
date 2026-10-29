@@ -1,0 +1,30 @@
+Source commit: 1817934e2802df943f58b555955ecdd8d1e35a9c
+Working directory: /Users/doughnut/.codex/worktrees/kairos-track107-mainline
+Node: v26.12.1
+
+Command: node tests/conformance/conformance-check.mjs
+Exit: 0
+Result: status=ok; ready_fixtures=9; des_resource_queue_v1=pass; validation_scope=fixture-contract-only.
+
+Command: node tests/conformance/runner-self-test.mjs
+Exit: 0
+Result: exercised positive staged-allocation fixture validation; reordered JSON object-key acceptance; rejection of malformed request, release, ordering and post-release state fields; existing runner and CLI checks.
+
+Command: pwsh -NoProfile -File scripts/validate_conformance_fixtures.ps1
+Exit: 0
+Result: Conformance fixture validation passed.
+
+Command: pwsh -NoProfile -File docs/design/validate-compatibility-pack.ps1
+Exit: 0
+
+Command: pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1
+Exit: 0
+Result: 0 errors, 0 warnings, 54 informational notices.
+
+Command: pwsh -NoProfile -File scripts/validate_conductor_dag.ps1
+Exit: 0
+Result: 0 errors, 0 warnings.
+
+Command: pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1
+Exit: 0
+Result: 0 errors, 0 warnings.

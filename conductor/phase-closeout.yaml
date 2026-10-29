@@ -1853,3 +1853,22 @@ entries:
     commit_sha: "797e969b4a3cd3605a617a32d0134d0a093aa06a"
     pushed_ref: "origin/main"
     next_phase_decision: "Keep CareOps pin unchanged and handle RNG replay qualification separately"
+
+  - track_id: "107"
+    phase: "1"
+    state: pending
+    review_command: "$conductor-review"
+    review_result: "Two independent reviewer agents found no remaining source, API, or fixture-contract blocker at 1817934e2802df943f58b555955ecdd8d1e35a9c; the earlier hosted fixture-validator failure was fixed and rerun evidence is recorded locally; cargo-audit reports three baseline zstd advisories; CareOps consumer acceptance remains pending"
+    fixes_applied: true
+    validation_commands:
+      - "cargo fmt --all -- --check"
+      - "cargo test --locked -p kairo-ecs-des --test careops_staged_allocation_compatibility"
+      - "cargo test --locked --workspace"
+      - "cargo check --workspace --locked"
+      - "pwsh -NoProfile -File docs/design/validate-compatibility-pack.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_dag.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+    git_status: "PR #334 remains open on the earlier head with its fixture-validation failure; local candidate 1817934e2802df943f58b555955ecdd8d1e35a9c passes conformance runner and fixture checks; push and hosted rerun pending; full just-ci remains blocked by three baseline zstd advisories through unchanged Polars/zstd lock; parent pin unchanged"
+    commit_sha: "1817934e2802df943f58b555955ecdd8d1e35a9c"
+    pushed_ref: "origin/codex/track107-careops-staged-flow-20261027"
+    next_phase_decision: "Do not merge until all required hosted checks pass and the separately reviewed zstd dependency issue is resolved; then complete CareOps consumer and RNG compatibility gates before parent pin adoption"

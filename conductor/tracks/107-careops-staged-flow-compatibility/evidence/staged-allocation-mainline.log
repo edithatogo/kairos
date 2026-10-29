@@ -1,0 +1,33 @@
+   Compiling proc-macro2 v1.0.106
+   Compiling quote v1.0.45
+   Compiling unicode-ident v1.0.24
+   Compiling zerocopy v0.8.48
+   Compiling autocfg v1.5.0
+   Compiling libm v0.2.16
+   Compiling serde_core v1.0.229
+   Compiling rand_core v0.10.1
+   Compiling serde v1.0.229
+   Compiling kairo-ecs-types v0.0.0 (/Users/doughnut/.codex/worktrees/kairos-track107-mainline/crates/kairo-ecs-types)
+   Compiling thiserror v2.0.21
+   Compiling rand v0.10.3
+   Compiling kairo-ecs-core v0.0.0 (/Users/doughnut/.codex/worktrees/kairos-track107-mainline/crates/kairo-ecs-core)
+   Compiling num-traits v0.2.19
+   Compiling kairo-ecs-state v0.0.0 (/Users/doughnut/.codex/worktrees/kairos-track107-mainline/crates/kairo-ecs-state)
+   Compiling syn v3.0.6
+   Compiling rand_distr v0.6.0
+   Compiling thiserror-impl v2.0.21
+   Compiling serde_derive v1.0.229
+   Compiling ppv-lite86 v0.2.21
+   Compiling rand_chacha v0.10.0
+   Compiling kairo-ecs-rng v0.0.0 (/Users/doughnut/.codex/worktrees/kairos-track107-mainline/crates/kairo-ecs-rng)
+   Compiling kairo-ecs-des v0.1.0 (/Users/doughnut/.codex/worktrees/kairos-track107-mainline/crates/kairo-ecs-des)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 18.37s
+     Running tests/careops_staged_allocation_compatibility.rs (/tmp/kairo-track107-mainline-target/debug/deps/careops_staged_allocation_compatibility-cafa8493f2bfd9e8)
+
+running 4 tests
+test capacity_one_contention_promotes_fifo_request_after_scheduled_release ... ok
+test handles_from_another_runtime_cannot_alias_local_ids ... ok
+test invalid_times_and_zero_capacity_are_rejected_without_mutation ... ok
+test large_capacity_is_preserved_without_narrowing ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s

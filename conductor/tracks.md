@@ -112,7 +112,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 104 | tokio-tungstenite conditional | Planned | `streaming-agent` | See `conductor/tracks/104-*/spec.md` |
 | 105 | Python 3.15 Runtime Migration and Qualification | In Progress | `python-agent + ci-agent + dx-agent` | See `conductor/tracks/105-*/spec.md` |
 | 106 | Scheduler Preview API Compatibility | Done | `core-api-agent + conformance-agent + api-governance-agent` | See [archived record](archive/106-scheduler-preview-compatibility/index.md) |
-| 107 | CareOps staged allocation flow compatibility | Blocked | `des-api-agent` | See `conductor/tracks/107-*/spec.md` |
+| 107 | CareOps staged allocation flow compatibility | Blocked | `des-api-agent + conformance-agent + api-governance-agent` | See `conductor/tracks/107-*/spec.md` |
 | 108 | Scientific ecosystem alignment | Blocked | `api-governance-agent` | See `conductor/tracks/108-*/spec.md` |
 
 ## Track status vocabulary
@@ -260,7 +260,7 @@ Polars inventory leads; sha2/tempfile/proptest are separate tracks with gates on
 
 - [x] **Track 106: Scheduler Preview API Compatibility** — [archived record](archive/106-scheduler-preview-compatibility/index.md); additive preview API restored and reviewed, CareOps retained-pin acceptance passed, and parent pin left unchanged pending separate RNG migration.
 
-- [ ] **Track 107: CareOps staged allocation flow compatibility** — [record](tracks/107-careops-staged-flow-compatibility/index.md); blocked on PR #334 source integration, zstd package qualification and separate CareOps consumer acceptance. Registration imports planning records only.
+- [ ] **Track 107: CareOps staged allocation flow compatibility** — [record](tracks/107-careops-staged-flow-compatibility/index.md); blocked on separate CareOps consumer acceptance and parent pin migration. Source integration is governed by exact-head PR #334 checks. The combined candidate includes runtime, tests and fixture with the qualified dependency frontier; Arrow crates.io publication remains separately disabled.
 
 ---
 - [ ] **Track 108: Scientific ecosystem alignment** — [record](tracks/108-scientific-ecosystem-alignment/index.md); Track 107 and consumer acceptance are prerequisites. [Issue #336](https://github.com/edithatogo/kairos/issues/336).

@@ -11,7 +11,7 @@ machine-readable root list.
 
 | Surface family | Current checked-in roots | Review consequence |
 |---|---|---|
-| Rust crate APIs | `crates/kairo-ecs-types`, `crates/kairo-ecs-core`, `crates/kairo-ecs-state`, `crates/kairo-ecs-rng` | Name the exact crate root in the compatibility note, ADR, or migration note. |
+| Rust crate APIs | `crates/kairo-ecs-types`, `crates/kairo-ecs-core`, `crates/kairo-ecs-des`, `crates/kairo-ecs-state`, `crates/kairo-ecs-rng` | Name the exact crate root in the compatibility note, ADR, or migration note. |
 | Host-language package APIs | `bindings/python`, `bindings/r`, `bindings/julia`, `bindings/typescript`, `bindings/csharp`, `bindings/go` | Name the exact binding root in the compatibility note, ADR, or migration note. |
 | C ABI surface | `include/kairo_ecs.h` | Treat signature, symbol, ownership, allocation, status-code, and error-buffer changes as release-gated. |
 | Arrow telemetry schemas | `schemas/arrow/event_log_v1.schema.json` | Treat field, metadata, nullability, meaning, and schema-version changes as compatibility changes even when the Rust API is unchanged. |
@@ -79,6 +79,7 @@ The live roots that must stay aligned across policy, catalog, and release notes 
 ```text
 crates/kairo-ecs-types
 crates/kairo-ecs-core
+crates/kairo-ecs-des
 crates/kairo-ecs-state
 crates/kairo-ecs-rng
 bindings/python

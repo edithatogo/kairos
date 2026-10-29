@@ -1,0 +1,113 @@
+zstd v0.13.3
+├── polars-arrow v0.45.1
+│   ├── kairo-ecs-arrow v0.1.0 (/Users/doughnut/.codex/worktrees/kairos-track107-mainline/crates/kairo-ecs-arrow)
+│   │   └── kairo-ecs-ffi v0.1.0 (/Users/doughnut/.codex/worktrees/kairos-track107-mainline/crates/kairo-ecs-ffi)
+│   │       ├── kairo-ecs-cs-bridge v0.1.0 (/Users/doughnut/.codex/worktrees/kairos-track107-mainline/crates/kairo-ecs-cs-bridge)
+│   │       ├── kairo-ecs-diplomat v0.1.0 (/Users/doughnut/.codex/worktrees/kairos-track107-mainline/crates/kairo-ecs-diplomat)
+│   │       ├── kairo-ecs-uniffi v0.1.0 (/Users/doughnut/.codex/worktrees/kairos-track107-mainline/crates/kairo-ecs-uniffi)
+│   │       └── kairo-ecs-wasm v0.1.0 (/Users/doughnut/.codex/worktrees/kairos-track107-mainline/crates/kairo-ecs-wasm)
+│   ├── polars v0.45.1
+│   │   └── kairo-ecs-arrow v0.1.0 (/Users/doughnut/.codex/worktrees/kairos-track107-mainline/crates/kairo-ecs-arrow) (*)
+│   ├── polars-compute v0.45.1
+│   │   ├── polars-core v0.45.1
+│   │   │   ├── polars v0.45.1 (*)
+│   │   │   ├── polars-expr v0.45.1
+│   │   │   │   ├── polars-lazy v0.45.1
+│   │   │   │   │   └── polars v0.45.1 (*)
+│   │   │   │   └── polars-mem-engine v0.45.1
+│   │   │   │       └── polars-lazy v0.45.1 (*)
+│   │   │   ├── polars-io v0.45.1
+│   │   │   │   ├── polars v0.45.1 (*)
+│   │   │   │   ├── polars-expr v0.45.1 (*)
+│   │   │   │   ├── polars-lazy v0.45.1 (*)
+│   │   │   │   ├── polars-mem-engine v0.45.1 (*)
+│   │   │   │   └── polars-plan v0.45.1
+│   │   │   │       ├── polars-expr v0.45.1 (*)
+│   │   │   │       ├── polars-lazy v0.45.1 (*)
+│   │   │   │       └── polars-mem-engine v0.45.1 (*)
+│   │   │   ├── polars-lazy v0.45.1 (*)
+│   │   │   ├── polars-mem-engine v0.45.1 (*)
+│   │   │   ├── polars-ops v0.45.1
+│   │   │   │   ├── polars v0.45.1 (*)
+│   │   │   │   ├── polars-expr v0.45.1 (*)
+│   │   │   │   ├── polars-lazy v0.45.1 (*)
+│   │   │   │   ├── polars-mem-engine v0.45.1 (*)
+│   │   │   │   └── polars-plan v0.45.1 (*)
+│   │   │   └── polars-plan v0.45.1 (*)
+│   │   ├── polars-expr v0.45.1 (*)
+│   │   ├── polars-ops v0.45.1 (*)
+│   │   ├── polars-parquet v0.45.1
+│   │   │   ├── polars v0.45.1 (*)
+│   │   │   ├── polars-io v0.45.1 (*)
+│   │   │   └── polars-plan v0.45.1 (*)
+│   │   ├── polars-plan v0.45.1 (*)
+│   │   └── polars-row v0.45.1
+│   │       ├── polars-core v0.45.1 (*)
+│   │       └── polars-expr v0.45.1 (*)
+│   ├── polars-core v0.45.1 (*)
+│   ├── polars-expr v0.45.1 (*)
+│   ├── polars-io v0.45.1 (*)
+│   ├── polars-lazy v0.45.1 (*)
+│   ├── polars-mem-engine v0.45.1 (*)
+│   ├── polars-ops v0.45.1 (*)
+│   ├── polars-parquet v0.45.1 (*)
+│   ├── polars-plan v0.45.1 (*)
+│   └── polars-row v0.45.1 (*)
+└── polars-parquet v0.45.1 (*)
+zstd-safe v7.3.0
+└── zstd v0.13.3
+    ├── polars-arrow v0.45.1
+    │   ├── kairo-ecs-arrow v0.1.0 (/Users/doughnut/.codex/worktrees/kairos-track107-mainline/crates/kairo-ecs-arrow)
+    │   │   └── kairo-ecs-ffi v0.1.0 (/Users/doughnut/.codex/worktrees/kairos-track107-mainline/crates/kairo-ecs-ffi)
+    │   │       ├── kairo-ecs-cs-bridge v0.1.0 (/Users/doughnut/.codex/worktrees/kairos-track107-mainline/crates/kairo-ecs-cs-bridge)
+    │   │       ├── kairo-ecs-diplomat v0.1.0 (/Users/doughnut/.codex/worktrees/kairos-track107-mainline/crates/kairo-ecs-diplomat)
+    │   │       ├── kairo-ecs-uniffi v0.1.0 (/Users/doughnut/.codex/worktrees/kairos-track107-mainline/crates/kairo-ecs-uniffi)
+    │   │       └── kairo-ecs-wasm v0.1.0 (/Users/doughnut/.codex/worktrees/kairos-track107-mainline/crates/kairo-ecs-wasm)
+    │   ├── polars v0.45.1
+    │   │   └── kairo-ecs-arrow v0.1.0 (/Users/doughnut/.codex/worktrees/kairos-track107-mainline/crates/kairo-ecs-arrow) (*)
+    │   ├── polars-compute v0.45.1
+    │   │   ├── polars-core v0.45.1
+    │   │   │   ├── polars v0.45.1 (*)
+    │   │   │   ├── polars-expr v0.45.1
+    │   │   │   │   ├── polars-lazy v0.45.1
+    │   │   │   │   │   └── polars v0.45.1 (*)
+    │   │   │   │   └── polars-mem-engine v0.45.1
+    │   │   │   │       └── polars-lazy v0.45.1 (*)
+    │   │   │   ├── polars-io v0.45.1
+    │   │   │   │   ├── polars v0.45.1 (*)
+    │   │   │   │   ├── polars-expr v0.45.1 (*)
+    │   │   │   │   ├── polars-lazy v0.45.1 (*)
+    │   │   │   │   ├── polars-mem-engine v0.45.1 (*)
+    │   │   │   │   └── polars-plan v0.45.1
+    │   │   │   │       ├── polars-expr v0.45.1 (*)
+    │   │   │   │       ├── polars-lazy v0.45.1 (*)
+    │   │   │   │       └── polars-mem-engine v0.45.1 (*)
+    │   │   │   ├── polars-lazy v0.45.1 (*)
+    │   │   │   ├── polars-mem-engine v0.45.1 (*)
+    │   │   │   ├── polars-ops v0.45.1
+    │   │   │   │   ├── polars v0.45.1 (*)
+    │   │   │   │   ├── polars-expr v0.45.1 (*)
+    │   │   │   │   ├── polars-lazy v0.45.1 (*)
+    │   │   │   │   ├── polars-mem-engine v0.45.1 (*)
+    │   │   │   │   └── polars-plan v0.45.1 (*)
+    │   │   │   └── polars-plan v0.45.1 (*)
+    │   │   ├── polars-expr v0.45.1 (*)
+    │   │   ├── polars-ops v0.45.1 (*)
+    │   │   ├── polars-parquet v0.45.1
+    │   │   │   ├── polars v0.45.1 (*)
+    │   │   │   ├── polars-io v0.45.1 (*)
+    │   │   │   └── polars-plan v0.45.1 (*)
+    │   │   ├── polars-plan v0.45.1 (*)
+    │   │   └── polars-row v0.45.1
+    │   │       ├── polars-core v0.45.1 (*)
+    │   │       └── polars-expr v0.45.1 (*)
+    │   ├── polars-core v0.45.1 (*)
+    │   ├── polars-expr v0.45.1 (*)
+    │   ├── polars-io v0.45.1 (*)
+    │   ├── polars-lazy v0.45.1 (*)
+    │   ├── polars-mem-engine v0.45.1 (*)
+    │   ├── polars-ops v0.45.1 (*)
+    │   ├── polars-parquet v0.45.1 (*)
+    │   ├── polars-plan v0.45.1 (*)
+    │   └── polars-row v0.45.1 (*)
+    └── polars-parquet v0.45.1 (*)

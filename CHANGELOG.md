@@ -14,6 +14,8 @@ Format:
 
 ## Unreleased
 
+- `kairo-ecs-des` adds experimental `StagedResourceRuntime` for scheduler-backed staged allocation; CareOps migration remains separately gated.
+
 - Upgrade active Rust, Python, Node documentation/binding and .NET test dependencies to the 29 October registry frontier; qualify Python 3.15.2 and Node 26.13.0 in isolated environments. Update rstar spatial queries and Prost's derive feature for their new APIs.
 - `kairo-ecs-arrow` source integration pins Polars development revision `96439685eb2f95108f51087d2b76091917f2593c` and its required hashbrown revision. This resolves the zstd and object_store/XML vulnerability closure. Git consumers must retain the documented workspace patch; crates.io publication is disabled until a separately qualified published Polars closure is available.
 

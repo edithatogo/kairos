@@ -51,3 +51,7 @@ Candidate base is `d3a6d831ddbe5886078541468e3fbf08b6f8c4c9`, a Track106/SplitMi
 - pushed ref: pending; candidate remains local.
 - `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: pending until commit/push and cleanup.
 - next-phase decision: hold Track107 closeout until reviewed implementation gate, commit/push evidence, and separate CareOps R10.3 consumer acceptance.
+
+## Source integration qualification — 29 October 2026
+
+The integration candidate now includes PR #334 runtime, tests and fixture alongside the immutable dependency frontier from PR #340. The earlier registration-only statement describes that historical packet. No CareOps pin or consumer acceptance is promoted. Source checks are being rerun against this combined tree; historical 899-test and baseline audit results remain historical. Track 107 remains Blocked pending its source integration and separate CareOps acceptance. Crates.io Arrow publication remains disabled independently.

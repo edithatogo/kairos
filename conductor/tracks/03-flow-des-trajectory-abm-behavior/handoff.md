@@ -58,11 +58,11 @@ No shared contracts were changed for this track.
 
 ## Known risks
 
-The current APIs are intentionally minimal. They do not yet export shared conformance fixture files under `conformance/fixtures/des_resource_queue_v1`, `abm_behavior_update_v1`, or `hybrid_des_abm_v1`. The ABM update kind is currently a crate-local `EventKind::Custom` value and should be reconciled if Track 01 later introduces domain-specific event kinds.
+At the 2026-05-08 Track 03 closeout, the APIs were intentionally minimal and had not yet exported shared conformance fixtures for DES resource queues, ABM behavior updates, or hybrid workflows. Track107 has since added the capacity-one DES resource-queue contract at `conformance/fixtures/track107-careops-staged-allocation.json`; the ABM and hybrid fixture families remain future work. The ABM update kind is currently a crate-local `EventKind::Custom` value and should be reconciled if Track 01 later introduces domain-specific event kinds.
 
 ## Integration notes
 
-Next step: bind the DES and ABM smoke paths to shared conformance fixture files under `conformance/fixtures/`, then add richer resource/queue and agent-decision examples under `examples/flow/`.
+At the 2026-05-08 handoff, the next step was to bind DES and ABM smoke paths to shared fixtures. Track107 has since supplied the shared DES resource-queue fixture; the remaining ABM smoke path and richer resource/queue and agent-decision examples under `examples/flow/` are still separate work.
 
 ## Follow-up issues
 
@@ -73,7 +73,7 @@ No additional follow-up issues were recorded by this Conductor hygiene update.
 
 - `$conductor-review` result: the untracked DES/ABM fixture tests are in Track 03-owned paths and should be retained as implementation-slice hardening evidence.
 - Accepted fixes: added the two named fixture tests and linked them to Track 03 handoff, test matrix, status, and phase-closeout evidence.
-- Deferred or blocked fixes: shared fixture files under `conformance/fixtures/des_resource_queue_v1`, `conformance/fixtures/abm_behavior_update_v1`, and `conformance/fixtures/hybrid_des_abm_v1` remain future Track 03/12 integration work.
+- Deferred or blocked fixes at Track 03 closeout: shared resource-queue, ABM behavior-update, and hybrid fixture families remained future Track 03/12 integration work. Since then, Track107 added the capacity-one DES resource-queue fixture at `conformance/fixtures/track107-careops-staged-allocation.json`; the ABM behavior-update and hybrid fixture families remain future scope.
 - Validation commands: `cargo +stable-x86_64-pc-windows-gnu fmt -p kairo-ecs-abm -p kairo-ecs-des --check`, `cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-des -p kairo-ecs-abm`, and `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`.
 - Cleanup state: the only in-scope dirty files were the two new Track 03 tests and their Conductor evidence updates.
 - Commit SHA / pushed ref: `5dd1937566898b2e028ac61dab1e9dd173e6d919` on `origin/main` is the current pushed base for this local closeout pass.

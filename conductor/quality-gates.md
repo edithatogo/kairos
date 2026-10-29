@@ -826,3 +826,11 @@ Real loopback browser/native interoperability; malformed/oversize/fragmented mes
 ### **dependency-104-behaviour**
 
 Cancellation-safe connection lifecycle, bounded queues/backpressure, shutdown/reconnect, slow consumers, no lost/duplicate command effects and same protocol conformance as Track 103. Measure actual benefit over accepted simpler transport and count transitive/build cost.
+
+## Track 107 staged allocation gates
+
+**dependency-107-runtime-contract**: validate capacity-one contention, deterministic FIFO queueing, scheduler-dispatched release and promotion, active-lease snapshot lifecycle, invalid-input and foreign-handle rejection, and full-width capacity. Require focused DES tests and the Track107 fixture validation receipts in [the test matrix](tracks/107-careops-staged-flow-compatibility/test-matrix.md); Node fixture validation is contract-only and does not replace the native Rust test.
+
+**dependency-107-api-review**: keep `StagedResourceRuntime` experimental and purpose-named; do not claim broad `FlowRuntime` compatibility. Require an agent/subagent API and acceptance assessment on the exact candidate, an ADR, compatibility inventory and matrix alignment, and explicit beta/R10.3 holds in [the API review](tracks/107-careops-staged-flow-compatibility/api-review.md).
+
+**dependency-107-consumer-conformance**: migrate the CareOps R10.3 consumer and run its locked reference tests, ED compatibility suite, CLI, and seeded replay/RNG comparison against the retained parent pin. Update the parent pin only after these consumer acceptance checks pass; upstream Track107 tests and hosted CI alone do not satisfy this gate.

@@ -1,5 +1,5 @@
 schema_version: 1
-last_verified: 2026-05-19
+last_verified: 2026-10-27
 status_vocabulary:
   - Planned
   - Spec Approved
@@ -434,6 +434,53 @@ tracks:
       - phase-closeout-check
       - toolchain-matrix-current
       - version-drop-policy-check
+
+  - id: 106
+    name: Scheduler Preview API Compatibility
+    status: Done
+    owner: core-api-agent + conformance-agent + api-governance-agent
+    depends_on: ["01", "12", "25"]
+    owned_paths:
+      - conductor/archive/106-scheduler-preview-compatibility/
+      - crates/kairo-ecs-core/src/lib.rs
+      - crates/kairo-ecs-core/tests/track106_scheduler_preview.rs
+      - conformance/fixtures/track106-scheduler-preview.json
+      - conformance/fixtures/manifest.json
+    required_gates:
+      - phase-closeout-check
+      - dependency-106-preview-behaviour
+      - core-api-agent-review
+      - conformance-agent-review
+      - api-compatibility-agent-review
+
+  - id: 107
+    name: CareOps staged allocation flow compatibility
+    status: Blocked
+    owner: des-api-agent + conformance-agent + api-governance-agent
+    depends_on: ["03", "12", "25", "106"]
+    owned_paths:
+      - conductor/tracks/107-careops-staged-flow-compatibility/
+      - crates/kairo-ecs-des/src/lib.rs
+      - crates/kairo-ecs-des/src/staged_runtime.rs
+      - crates/kairo-ecs-des/tests/careops_staged_allocation_compatibility.rs
+      - conformance/fixtures/manifest.json
+      - conformance/fixtures/track107-careops-staged-allocation.json
+      - tests/conformance/runner.mjs
+      - tests/conformance/runner-self-test.mjs
+      - .github/workflows/conformance.yml
+      - docs/design/protected-surface-inventory.json
+      - docs/design/compatibility-matrix.md
+      - conductor/api-design-review.md
+      - conductor/contracts/versioning-compatibility.md
+      - docs/adr/adr-track107-careops-staged-flow.md
+      - docs/release/compatibility.md
+      - docs/release/migration.md
+      - CHANGELOG.md
+    required_gates:
+      - phase-closeout-check
+      - dependency-107-runtime-contract
+      - dependency-107-api-review
+      - dependency-107-consumer-conformance
   - id: 31
     name: Performance Regression Guard
     status: Done
@@ -1552,26 +1599,6 @@ tracks:
       - phase-closeout-check
       - toolchain-matrix-current
       - version-drop-policy-check
-
-  - id: 106
-    name: Scheduler Preview API Compatibility
-    status: Done
-    owner: core-api-agent + conformance-agent + api-governance-agent
-    depends_on: ["01", "12", "25"]
-    owned_paths:
-      - conductor/archive/106-scheduler-preview-compatibility/
-    required_gates:
-      - phase-closeout-check
-
-  - id: 107
-    name: CareOps staged allocation flow compatibility
-    status: Blocked
-    owner: des-api-agent
-    depends_on: ["106"]
-    owned_paths:
-      - conductor/tracks/107-careops-staged-flow-compatibility/
-    required_gates:
-      - phase-closeout-check
 
   - id: 108
     name: Scientific ecosystem alignment

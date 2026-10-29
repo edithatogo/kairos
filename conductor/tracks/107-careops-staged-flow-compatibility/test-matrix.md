@@ -22,3 +22,7 @@ execution. Raw receipts remain in that commit's `evidence/` directory.
 | Git closeout | `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` | Pending: PR #334 Actions and cargo-audit baseline blocker unresolved |
 
 Record executed commands and exit codes in `evidence/`; a pending command is not a pass. Strict Git closeout remains pending until required hosted checks pass, the audit blocker is resolved, and the final commit is clean and pushed.
+
+## Combined frontier candidate — 29 October 2026
+
+The historical table above records the original lock. Focused DES/core tests, conformance runner self-tests, fixtures, compatibility pack and phase gates pass against the combined PR #334 / #340 source. The dependency-frontier audit has zero vulnerabilities; full exact-head hosted checks remain pending. No parent pin or CareOps consumer acceptance is inferred. Logs: `/tmp/kairos-pr334-*.log` in the integration lane.
