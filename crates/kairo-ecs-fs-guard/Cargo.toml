@@ -1,0 +1,15 @@
+[package]
+name = "kairo-ecs-fs-guard"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+license = "Apache-2.0"
+repository = "https://github.com/edithatogo/kairos"
+description = "Descriptor-bound output directory permission checks for KairoECS"
+
+[build-dependencies]
+cc = "1"
+
+[dev-dependencies]
+tempfile = "3.17.1"
+

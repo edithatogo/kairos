@@ -5,6 +5,79 @@ use kairo_ecs_arrow::*;
 use kairo_ecs_types::{EntityId, EventId};
 use std::fs;
 
+#[cfg(unix)]
+#[test]
+fn shared_writable_root_is_rejected_before_run_creation() {
+    use std::os::unix::fs::PermissionsExt;
+    let root = tempfile::tempdir().unwrap();
+    fs::set_permissions(root.path(), fs::Permissions::from_mode(0o777)).unwrap();
+    let writer = DurableRunPublicationWriter::new(root.path(), "rejected", 10);
+    assert!(writer.publish(&[]).is_err());
+    assert!(!root.path().join("rejected").exists());
+}
+
+#[cfg(target_os = "macos")]
+#[test]
+fn root_acl_write_grant_is_rejected_before_run_creation() {
+    let root = tempfile::tempdir().unwrap();
+    let status = std::process::Command::new("/bin/chmod")
+        .args(["+a", "everyone allow add_file,delete_child"])
+        .arg(root.path())
+        .status()
+        .unwrap();
+    assert!(status.success());
+    let writer = DurableRunPublicationWriter::new(root.path(), "rejected", 10);
+    assert!(writer.publish(&[]).is_err());
+    assert!(!root.path().join("rejected").exists());
+}
+
+#[cfg(unix)]
+#[test]
+fn published_run_and_files_are_private() {
+    use std::os::unix::fs::PermissionsExt;
+    let root = tempfile::tempdir().unwrap();
+    let writer = DurableRunPublicationWriter::new(root.path(), "private", 10);
+    let receipt = writer.publish(&[sample_v2_record(1, 10, None)]).unwrap();
+    assert_eq!(
+        fs::metadata(root.path().join("private"))
+            .unwrap()
+            .permissions()
+            .mode()
+            & 0o777,
+        0o700
+    );
+    for file in [
+        receipt.manifest_path,
+        root.path().join("private/part-00000.parquet"),
+    ] {
+        assert_eq!(
+            fs::metadata(file).unwrap().permissions().mode() & 0o777,
+            0o600
+        );
+    }
+}
+
+#[test]
+fn absent_output_root_is_not_created_implicitly() {
+    let root = tempfile::tempdir().unwrap();
+    let absent = root.path().join("absent");
+    let writer = DurableRunPublicationWriter::new(&absent, "rejected", 10);
+    assert!(writer.publish(&[]).is_err());
+    assert!(!absent.exists());
+}
+
+#[cfg(unix)]
+#[test]
+fn symlink_output_root_is_rejected_before_run_creation() {
+    let root = tempfile::tempdir().unwrap();
+    let target = tempfile::tempdir().unwrap();
+    let link = root.path().join("link");
+    std::os::unix::fs::symlink(target.path(), &link).unwrap();
+    let writer = DurableRunPublicationWriter::new(link, "rejected", 10);
+    assert!(writer.publish(&[]).is_err());
+    assert!(!target.path().join("rejected").exists());
+}
+
 #[test]
 fn manifest_json_is_strict_and_roundtrips_escaped_strings() {
     let manifest = DurableManifest {

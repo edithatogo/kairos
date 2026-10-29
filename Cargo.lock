@@ -1711,6 +1711,7 @@ dependencies = [
  "cap-fs-ext",
  "cap-primitives",
  "criterion",
+ "kairo-ecs-fs-guard",
  "kairo-ecs-types",
  "polars",
  "polars-arrow",
@@ -1825,6 +1826,14 @@ dependencies = [
  "quick-xml",
  "serde_json",
  "zip",
+]
+
+[[package]]
+name = "kairo-ecs-fs-guard"
+version = "0.1.0"
+dependencies = [
+ "cc",
+ "tempfile",
 ]
 
 [[package]]

@@ -442,10 +442,11 @@ impl DurableRunPublicationWriter {
         self
     }
 
-    /// Publish a new run. The caller must prevent other actors from modifying
-    /// the run parent and the new run directory during publication. Directory
-    /// handles prevent later path substitutions from redirecting these writes,
-    /// but cannot make a concurrently writable directory trustworthy.
+    /// Publish beneath an existing protected output root owned by this OS user.
+    /// Roots writable by other users, unsupported filesystems and unverifiable
+    /// ACLs are rejected before creating a run. New run directories are private.
+    /// Processes sharing this OS identity, administrators and hostile filesystem
+    /// servers are outside this boundary. The caller must preserve permissions.
     pub fn publish(&self, records: &[EventLogRecord]) -> Result<PublicationReceipt, ArrowError> {
         self.publish_with_hook(records, || {})
     }
@@ -462,17 +463,27 @@ impl DurableRunPublicationWriter {
             .run_dir
             .parent()
             .ok_or_else(|| ArrowError::Io("Missing run parent".to_string()))?;
-        fs::create_dir_all(parent).map_err(|e| ArrowError::Io(e.to_string()))?;
+        let root = std::path::absolute(parent).map_err(|e| ArrowError::Io(e.to_string()))?;
         // An exclusive directory creation prevents concurrent publishers or a retry
         // from modifying any completed or interrupted run.
-        let base =
-            cap_primitives::fs::open_ambient_dir(parent, cap_primitives::ambient_authority())
-                .map_err(|e| ArrowError::Io(format!("Cannot open run parent: {e}")))?;
+        let base = open_run_directory(&root)?;
+        kairo_ecs_fs_guard::verify_directory(&base, false)
+            .map_err(|e| ArrowError::Io(format!("Output root is not protected: {e}")))?;
         let name = Path::new(&self.run_id);
-        cap_primitives::fs::create_dir(&base, name, &cap_primitives::fs::DirOptions::new())
+        let directory_options = cap_primitives::fs::DirOptions::new();
+        #[cfg(unix)]
+        let directory_options = {
+            use cap_primitives::fs::DirBuilderExt;
+            let mut directory_options = directory_options;
+            directory_options.mode(0o700);
+            directory_options
+        };
+        cap_primitives::fs::create_dir(&base, name, &directory_options)
             .map_err(|e| ArrowError::Io(format!("Cannot create unique run directory: {e}")))?;
         let directory = cap_primitives::fs::open_dir_nofollow(&base, name)
             .map_err(|e| ArrowError::Io(format!("Cannot open new run directory: {e}")))?;
+        kairo_ecs_fs_guard::verify_directory(&directory, true)
+            .map_err(|e| ArrowError::Io(format!("New run directory is not private: {e}")))?;
         after_open();
         #[cfg(unix)]
         base.sync_all()
@@ -541,6 +552,16 @@ impl DurableRunPublicationWriter {
         if held_identity != current_identity {
             return Err(ArrowError::Io("Run path changed during publication".into()));
         }
+        let current_root = open_run_directory(&root)?;
+        let root_identity =
+            same_file::Handle::from_file(base).map_err(|e| ArrowError::Io(e.to_string()))?;
+        let current_root_identity = same_file::Handle::from_file(current_root)
+            .map_err(|e| ArrowError::Io(e.to_string()))?;
+        if root_identity != current_root_identity {
+            return Err(ArrowError::Io(
+                "Output root path changed during publication".into(),
+            ));
+        }
 
         Ok(PublicationReceipt {
             manifest_path,
@@ -576,14 +597,34 @@ fn write_run_file(
     let staging = format!(".{name}.staging");
     let mut options = cap_primitives::fs::OpenOptions::new();
     options.write(true).create_new(true);
+    #[cfg(unix)]
+    {
+        use cap_primitives::fs::OpenOptionsExt;
+        options.mode(0o600);
+    }
     let mut file = cap_primitives::fs::open(directory, Path::new(&staging), &options)
         .map_err(|e| ArrowError::Io(format!("Cannot create publication staging file: {e}")))?;
     file.write_all(bytes)
         .and_then(|()| file.sync_all())
         .map_err(|e| ArrowError::Io(format!("Cannot write publication staging file: {e}")))?;
-    drop(file);
     cap_primitives::fs::hard_link(directory, Path::new(&staging), directory, Path::new(name))
         .map_err(|e| ArrowError::Io(format!("Cannot publish file without clobbering: {e}")))?;
+    use cap_fs_ext::{FollowSymlinks, OpenOptionsFollowExt};
+    let mut published_options = cap_primitives::fs::OpenOptions::new();
+    published_options.read(true).follow(FollowSymlinks::No);
+    let published = cap_primitives::fs::open(directory, Path::new(name), &published_options)
+        .map_err(|e| ArrowError::Io(format!("Cannot verify published file: {e}")))?;
+    let staged_identity =
+        same_file::Handle::from_file(file).map_err(|e| ArrowError::Io(e.to_string()))?;
+    let published_identity =
+        same_file::Handle::from_file(published).map_err(|e| ArrowError::Io(e.to_string()))?;
+    if staged_identity != published_identity {
+        return Err(ArrowError::Io(
+            "Staging file changed during publication".into(),
+        ));
+    }
+    drop(staged_identity);
+    drop(published_identity);
     cap_primitives::fs::remove_file(directory, Path::new(&staging))
         .map_err(|e| ArrowError::Io(format!("Cannot remove publication staging file: {e}")))?;
     #[cfg(unix)]
