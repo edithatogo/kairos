@@ -131,7 +131,7 @@ fn contract_arrow_dtype(contract: &str) -> ArrowDataType {
 /// nulls in contract-required columns. Unknown shapes, wrong order and
 /// required-null violations reject explicitly.
 pub fn validate_v2_dataframe(df: &DataFrame) -> Result<(), ArrowError> {
-    let columns = df.get_columns();
+    let columns = df.columns();
     if columns.len() != EVENT_LOG_FIELDS_V2.len() {
         return Err(ArrowError::UnsupportedSchemaNegotiation(format!(
             "event log must carry {} columns, got {}",
@@ -195,7 +195,7 @@ fn rechunked_clone(df: &DataFrame) -> DataFrame {
 /// Convert an already rechunked dataframe into per-column base chunk arrays.
 fn base_child_arrays(rechunked: &DataFrame) -> Vec<Box<dyn polars_arrow::array::Array>> {
     rechunked
-        .get_columns()
+        .columns()
         .iter()
         .map(|column| {
             column
@@ -555,7 +555,7 @@ mod tests {
     #[test]
     fn validation_rejects_non_v2_dataframes_explicitly() {
         let df = sample_df(&[sample_record(100, None, 1)]);
-        let truncated = DataFrame::new(df.get_columns().iter().take(3).cloned().collect())
+        let truncated = DataFrame::new(df.height(), df.columns().iter().take(3).cloned().collect())
             .expect("three v2 columns form a valid (non-contract) frame");
         assert!(matches!(
             validate_v2_dataframe(&truncated),

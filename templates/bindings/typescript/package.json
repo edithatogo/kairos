@@ -11,14 +11,14 @@
     "docs": "typedoc src/index.ts"
   },
   "dependencies": {
-    "apache-arrow": "21.1.0"
+    "apache-arrow": "21.2.0"
   },
   "devDependencies": {
-    "typescript": "6.0.3",
+    "typescript": "7.0.2",
     "vite": "8.3.5",
-    "vitest": "4.1.12",
+    "vitest": "5.0.5",
     "typedoc": "0.29.0",
-    "eslint": "9.39.1",
-    "prettier": "3.6.2"
+    "eslint": "10.13.0",
+    "prettier": "3.9.10"
   }
 }

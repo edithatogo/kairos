@@ -173,7 +173,7 @@ def validate_docker_surface() -> None:
     bake = read("docker/docker-bake.hcl")
 
     assert "FROM rust:" in dockerfile
-    assert re.search(r"(?m)^FROM python:3\.15\.1-alpine3\.24@sha256:[0-9a-f]{64}$", dockerfile)
+    assert re.search(r"(?m)^FROM python:3\.15\.2-alpine3\.24@sha256:[0-9a-f]{64}$", dockerfile)
     assert "RUN python3 -m venv .venv" in dockerfile
     assert 'sys.prefix == "/work/.venv"' in dockerfile
     assert 'ENV PATH="/work/.venv/bin:${PATH}"' in dockerfile
@@ -423,7 +423,10 @@ def main() -> int:
 
     require("docker/Dockerfile", ["kairo-ecs-cli", "ENTRYPOINT"])
     require("docker/entrypoint.sh", ["trap on_term TERM INT", "checkpoint-manifest.json"])
-    require("crates/kairo-ecs-cli/src/main.rs", ['"run" =>', '"checkpoint" =>', '"resume" =>'])
+    require(
+        "crates/kairo-ecs-cli/src/main.rs",
+        ["Commands::Run {", "Commands::Checkpoint {", "Commands::Resume {"],
+    )
     require("k8s/crd/kairoecs-experiment.yaml", ["KairoECSExperiment", "checkpoint", "completedRuns"])
     require("k8s/operator/kairoecs_operator.py", ["render_job", "batch/v1"])
     require("cloud/aws/batch-job-definition.yaml", ["resourceRequirements", "KAIRO_OUTPUT_URI"])

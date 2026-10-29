@@ -31,17 +31,17 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
-          python-version: "3.15.1"
-      - name: Verify repository-local Python 3.15.1
+          python-version: "3.15.2"
+      - name: Verify repository-local Python 3.15.2
         run: python scripts/python_runtime.py --github
       - name: Record and verify execution host
         run: |
           python3 --version
           uname -m
           test "$(uname -m)" = "$EXPECTED_ARCH"
-          python3 -c 'import sys; assert sys.version_info[:3] == (3, 15, 1)'
+          python3 -c 'import sys; assert sys.version_info[:3] == (3, 15, 2)'
       - name: Exercise session races and context boundaries
         run: python3 -m unittest discover -s tests/agent_harness -v
       - name: Exercise local runtime refusal cases

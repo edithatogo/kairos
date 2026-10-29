@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 rustup component add rustfmt clippy || true
-cargo install just --version "1.50.0" --locked || true
+cargo install just --version "1.59.0" --locked || true
 for spec in \
-  "cargo-nextest@0.9.146" \
+  "cargo-nextest@0.9.150" \
   "cargo-deny@0.20.2" \
   "cargo-audit@0.22.2" \
   "cargo-llvm-cov@0.9.1"; do
   cargo install "${spec%@*}" --version "${spec#*@}" --locked || true
 done
-if [ ! -d .venv ]; then uv venv --python 3.15.1 .venv; fi
+if [ ! -d .venv ]; then uv venv --python 3.15.2 .venv; fi
 source .venv/bin/activate
 python scripts/python_runtime.py
 uv pip sync --python .venv/bin/python scripts/bootstrap-python-tools.lock

@@ -17,11 +17,12 @@ ROOT = Path(__file__).resolve().parents[2]
 # The 24 October dependency amendment qualifies Undici 8.12.3 with new exact
 # source digests; SOURCE_COMMIT retains the initial reviewed baseline reference.
 # The receipt records the actual execution commit separately.
+# 29 October frontier: ip-address 10.7.5 and selector parser 7.1.7; no audit exceptions.
 EXPECTED_SOURCE_SHA256 = {
-    "scripts/bootstrap-node-tools/package.json": "6fa5e6f92a147021e0953523e5f73ed8f4a12779a39593c55709e356861f23fe",
-    "scripts/bootstrap-node-tools/package-lock.json": "cfe2002915f419eea7cca91c24d8dd58a81926701cc2810896fdcc6f89c64835",
-    "scripts/bootstrap-node-tools/prepare_npm_cli.py": "6b76f67627b06e1fa80f2f8d5d7118603b428d8a4f77392b47ee0a616c224827",
-    "scripts/bootstrap-node-tools/validate_npm_cli.mjs": "91555a19ba04d6ddcb951f82ea8e6b89dde7b015a39db3bf8eccb1aa1e6c8839",
+    "scripts/bootstrap-node-tools/package.json": "150691f728a1922e9f2306b4ac69b1ce30f7fa4da76a342bf66376b6945629e6",
+    "scripts/bootstrap-node-tools/package-lock.json": "82f3ccd32f5e61dab421905e0cbd4c906212315aaa3b2cac12ffbcf3f9e71d6e",
+    "scripts/bootstrap-node-tools/prepare_npm_cli.py": "b2bd01531d0883972f17b44bb155c635782910f7e188356a00ef1f1f5d93c723",
+    "scripts/bootstrap-node-tools/validate_npm_cli.mjs": "68f9e028966b711579fa64788c252dc0897fd56d4e10046d7d626090c831d3d2",
 }
 EXPECTED_NPM_CLI_SHA256 = "8e5f6f3429f8cdbe693cdc29904e9d5a7b127a494bd15c804bd54c7403bfcbe7"
 SOURCE_COMMIT = "ad3379dade50ece748eec3f47e85aa56605beec7"
@@ -174,7 +175,7 @@ def run_gate(root, output, *, node_path, node_sha256, _execute=subprocess.run,
             if code != 0 or stderr:
                 raise ValueError("preflight failed: " + label)
             receipt[label] = stdout.strip()
-        if receipt["npm-version"] != "12.1.0":
+        if receipt["npm-version"] != "12.2.1":
             raise ValueError("npm version differs")
         stdout, stderr, code = command([
             node, str(npm), "audit", "--prefix", "scripts/bootstrap-node-tools", "--json",

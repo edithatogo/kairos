@@ -5,26 +5,27 @@ version = "0.1.0"
 edition = "2021"
 license.workspace = true
 repository = "https://github.com/edithatogo/kairos"
+publish = false # Git Polars closure: crates.io publication awaits a separately qualified release.
 description = "Arrow telemetry and event log serialization for KairoECS"
 
 [dependencies]
 kairo-ecs-types = { path = "../kairo-ecs-types", version = "0.0.0" }
-sha2 = { version = "0.10.8", default-features = false }
-tempfile = "3.17.1"
+sha2 = { version = "0.11.1", default-features = false }
+tempfile = "3.27.0"
 
 # Track 62 Phase 0: the official Arrow logical-type crate, admitted default-off
 # behind `arrow-native`. Phase 0 only needs schema types; see the handoff for
 # why arrow-array/arrow-ipc/parquet are deliberately NOT admitted yet.
-arrow-schema = { version = "60.0.0", optional = true }
+arrow-schema = { version = "60.1.0", optional = true }
 
 # Track 70 Phase 0: Polars tabular processing engine, admitted default-off
 # behind `polars-native`.
-polars = { version = "0.45", default-features = false, features = ["lazy", "parquet", "ipc", "fmt", "dtype-u16"], optional = true }
+polars = { git = "https://github.com/pola-rs/polars.git", rev = "96439685eb2f95108f51087d2b76091917f2593c", version = "0.55.1", default-features = false, features = ["lazy", "parquet", "ipc", "ipc_streaming", "fmt", "dtype-u16"], optional = true }
 
 # Track 70 Phase 2: same pinned polars-arrow version, named edge only for the
 # Arrow C Data Interface FFI layer (`polars_arrow::ffi`). No new transitive
-# dependencies: polars already pulls polars-arrow 0.45.1.
-polars-arrow = { version = "0.45.1", default-features = false, optional = true }
+# dependencies: polars already pulls polars-arrow 0.55.2.
+polars-arrow = { git = "https://github.com/pola-rs/polars.git", rev = "96439685eb2f95108f51087d2b76091917f2593c", version = "0.55.1", default-features = false, optional = true }
 
 # Track 70 Phase 3 Task 3.2: run-output manifest (de)serialization behind
 # `serde-runtime` (wired into `polars-native`). serde_json 1.x is already a
@@ -32,6 +33,10 @@ polars-arrow = { version = "0.45.1", default-features = false, optional = true }
 # only.
 serde = { version = "1", features = ["derive"], optional = true }
 serde_json = { version = "1", optional = true }
+cap-primitives = { version = "4.0.3", optional = true }
+cap-fs-ext = { version = "4.0.3", default-features = false, optional = true }
+same-file = { version = "1.0.6", optional = true }
+kairo-ecs-fs-guard = { path = "../kairo-ecs-fs-guard", version = "0.1.0", optional = true }
 
 [features]
 default = []
@@ -43,7 +48,7 @@ arrow-native = ["dep:arrow-schema"]
 # (kairo-ecs-core); no new transitive trees. Maintainer override of the
 # Tracks 93/94/96 sequencing gate recorded in the track handoff.
 serde-runtime = ["dep:serde", "dep:serde_json"]
-polars-native = ["dep:polars", "dep:polars-arrow", "serde-runtime"]
+polars-native = ["dep:polars", "dep:polars-arrow", "dep:cap-primitives", "dep:cap-fs-ext", "dep:same-file", "dep:kairo-ecs-fs-guard", "serde-runtime"]
 # Still a stub, as registered in #261. Admitting parquet pulls arrow-array,
 # which transitively pulls tiny-keccak (CC0-1.0); that licence decision belongs
 # to Track 29/20 and is deliberately not taken here.
@@ -56,11 +61,11 @@ adios2 = ["parallel-io"]
 # Track 70 Phase 3 Task 3.3: run-output publication benchmarks. Criterion is
 # already a workspace dependency via kairo-ecs-bench (no new transitive tree);
 # the bench target is polars-native-only so default builds never compile it.
-criterion = "0.5"
+criterion = "0.8.2"
 
 [[example]]
 name = "telemetry_event_log_roundtrip"
-path = "../../examples/telemetry/event_log_roundtrip.rs"
+path = "examples/telemetry_event_log_roundtrip.rs"
 
 [[bench]]
 name = "run_output"

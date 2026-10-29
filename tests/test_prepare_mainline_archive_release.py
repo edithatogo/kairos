@@ -279,7 +279,7 @@ class MainlineArchivePreparationTests(unittest.TestCase):
         (base / "logs").mkdir()
         binary_sha = digest(b"trusted-linux-syft")
         output = f"/home/runner/work/_temp/{label}/syft-linux-amd64-1-1"
-        python = "/opt/hostedtoolcache/Python/3.15.1/x64/bin/python3"
+        python = "/opt/hostedtoolcache/Python/3.15.2/x64/bin/python3"
         installer = "/home/runner/work/kairos/kairos/scripts/supply_chain/install_verified_syft.py"
         checksum = output + "/downloads/syft-checksums.txt"
         bundle = output + "/downloads/syft-checksums.sigstore.json"
@@ -334,8 +334,8 @@ class MainlineArchivePreparationTests(unittest.TestCase):
         command_rows[5]["stdout_sha256"] = digest(b"")
         command_rows[5]["stderr_sha256"] = digest((base / "logs/05-verify-signed-checksum-document.log").read_bytes())
         receipt = {**stable, "commands": command_rows, "events": [],
-                   "python_toolchain": {"version": "3.15.1 (native fixture)",
-                                        "executable": "/opt/hostedtoolcache/Python/3.15.1/x64/bin/python3.15"}}
+                   "python_toolchain": {"version": "3.15.2 (native fixture)",
+                                        "executable": "/opt/hostedtoolcache/Python/3.15.2/x64/bin/python3.15"}}
         receipt_path = base / "evidence/receipt.json"
         receipt_bytes = json_bytes(receipt)
         receipt_path.write_bytes(receipt_bytes)

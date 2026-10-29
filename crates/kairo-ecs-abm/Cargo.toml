@@ -12,7 +12,7 @@ kairo-ecs-types = { path = "../kairo-ecs-types", version = "0.0.0" }
 kairo-ecs-core = { path = "../kairo-ecs-core", version = "0.0.0" }
 kairo-ecs-state = { path = "../kairo-ecs-state", version = "0.0.0" }
 kairo-ecs-rng = { path = "../kairo-ecs-rng", version = "0.0.0" }
-petgraph = { version = "0.7.1", default-features = false, features = ["graphmap", "stable_graph"] }
-thiserror = "2.0"
+petgraph = { version = "0.8.3", default-features = false, features = ["graphmap", "stable_graph"] }
+thiserror = "2.0.21"
 geo = { version = "0.33.1", default-features = false }
-rstar = { version = "0.12.2", default-features = false }
+rstar = { version = "0.13.0", default-features = false }

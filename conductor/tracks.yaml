@@ -1552,3 +1552,33 @@ tracks:
       - phase-closeout-check
       - toolchain-matrix-current
       - version-drop-policy-check
+
+  - id: 106
+    name: Scheduler Preview API Compatibility
+    status: Done
+    owner: core-api-agent + conformance-agent + api-governance-agent
+    depends_on: ["01", "12", "25"]
+    owned_paths:
+      - conductor/archive/106-scheduler-preview-compatibility/
+    required_gates:
+      - phase-closeout-check
+
+  - id: 107
+    name: CareOps staged allocation flow compatibility
+    status: Blocked
+    owner: des-api-agent
+    depends_on: ["106"]
+    owned_paths:
+      - conductor/tracks/107-careops-staged-flow-compatibility/
+    required_gates:
+      - phase-closeout-check
+
+  - id: 108
+    name: Scientific ecosystem alignment
+    status: Blocked
+    owner: api-governance-agent
+    depends_on: ["107"]
+    owned_paths:
+      - conductor/tracks/108-scientific-ecosystem-alignment/
+    required_gates:
+      - phase-closeout-check

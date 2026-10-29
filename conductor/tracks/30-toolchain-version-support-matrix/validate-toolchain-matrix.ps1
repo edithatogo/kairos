@@ -66,8 +66,8 @@ function ConvertFrom-PythonVersionText {
     throw "Could not parse exact final Python version from: $Text"
 }
 
-if ((ConvertFrom-PythonVersionText 'Python 3.15.1') -cne '3.15.1') { throw "Python parser lost the patch version." }
-foreach ($text in @('Python 3.15', 'Python 3.15.1rc1', 'Python 3.15.1.1', 'Python 3.15.1 extra')) {
+if ((ConvertFrom-PythonVersionText 'Python 3.15.2') -cne '3.15.2') { throw "Python parser lost the patch version." }
+foreach ($text in @('Python 3.15', 'Python 3.15.2rc1', 'Python 3.15.2.1', 'Python 3.15.2 extra')) {
     $rejected = $false
     try { [void](ConvertFrom-PythonVersionText $text) } catch { $rejected = $true }
     if (-not $rejected) { throw "Python parser incorrectly accepted: $text" }
@@ -92,12 +92,12 @@ function Get-InstalledVersion {
         }
         "julia" {
             $text = Get-CommandOutput @("julia", "-e", "print(VERSION)")
-            if ($text -match "([0-9]+\.[0-9]+)") { return $Matches[1] }
+            if ($text -match "^([0-9]+\.[0-9]+\.[0-9]+)$") { return $Matches[1] }
             throw "Could not parse Julia version from: $text"
         }
         "node" {
             $text = Get-CommandOutput @("node", "--version")
-            if ($text -match "v?([0-9]+)") { return $Matches[1] }
+            if ($text -match "^v?([0-9]+\.[0-9]+\.[0-9]+)$") { return $Matches[1] }
             throw "Could not parse Node version from: $text"
         }
         "dotnet" {
@@ -165,13 +165,13 @@ foreach ($token in @("conductor/toolchain-matrix.md", "bindings/python/pyproject
 
 $laneExpectations = @(
     @{ Matrix = 'Rust `1.99.1` only'; Workflow = 'expected-version: "1.99.1"' }
-    @{ Matrix = 'CPython `3.15.1`'; Workflow = 'python-version: ["3.15.1"]' }
-    @{ Matrix = 'CPython `3.15.1`'; Workflow = 'python-version: ["3.15.1"]' }
+    @{ Matrix = 'CPython `3.15.2`'; Workflow = 'python-version: ["3.15.2"]' }
+    @{ Matrix = 'CPython `3.15.2`'; Workflow = 'python-version: ["3.15.2"]' }
     @{ Matrix = 'R `4.6.x`'; Workflow = 'expected-prefix: "4.6"' }
-    @{ Matrix = 'Julia `1.10`'; Workflow = 'julia-version: ["1.10", "1.12"]' }
-    @{ Matrix = 'Julia `1.12.x`'; Workflow = 'julia-version: ["1.10", "1.12"]' }
-    @{ Matrix = 'Node `22`'; Workflow = 'node-version: ["22", "24"]' }
-    @{ Matrix = 'Node `24`'; Workflow = 'node-version: ["22", "24"]' }
+    @{ Matrix = 'Julia `1.10`'; Workflow = 'julia-version: ["1.10", "1.13.3"]' }
+    @{ Matrix = 'Julia `1.13.3`'; Workflow = 'julia-version: ["1.10", "1.13.3"]' }
+    @{ Matrix = 'Node `22`'; Workflow = 'node-version: ["22", "24", "26.13.0"]' }
+    @{ Matrix = 'Node `24`'; Workflow = 'node-version: ["22", "24", "26.13.0"]' }
     @{ Matrix = '.NET SDK `10.0.x`'; Workflow = 'dotnet-version: "10.0.x"' }
     @{ Matrix = '.NET SDK `11.0.x`'; Workflow = 'dotnet-version: "11.0.x"' }
     @{ Matrix = 'Go `1.26.x`'; Workflow = 'go-version: "1.26.x"' }
@@ -216,7 +216,7 @@ Assert-Contains -Text $bindingWorkflow -Needle 'go-version: ''stable''' -Label "
 Assert-Contains -Text $bindingWorkflow -Needle 'go vet ./...' -Label "Go binding vet coverage"
 Assert-Contains -Text $bindingWorkflow -Needle 'go test ./...' -Label "Go binding test coverage"
 
-if ($typescriptPackage.engines.node -ne ">=22 <25") {
+if ($typescriptPackage.engines.node -ne ">=22 <27") {
     throw "TypeScript package engines.node must stay aligned with the Node 22/24 production support floor."
 }
 
@@ -232,7 +232,7 @@ if ($CheckInstalled) {
         Write-Host "$Ecosystem installed version check passed: exact $actual"
     } else {
         if ([string]::IsNullOrWhiteSpace($ExpectedPrefix) -or -not [string]::IsNullOrWhiteSpace($ExpectedVersion)) { throw "-CheckInstalled requires -ExpectedPrefix for $Ecosystem and rejects -ExpectedVersion." }
-        if (-not $actual.StartsWith($ExpectedPrefix)) { throw "$Ecosystem version mismatch: expected prefix $ExpectedPrefix, got $actual." }
+        if ($actual -cne $ExpectedPrefix -and -not $actual.StartsWith("$ExpectedPrefix.")) { throw "$Ecosystem version mismatch: expected prefix $ExpectedPrefix, got $actual." }
         Write-Host "$Ecosystem installed version check passed: $actual matches $ExpectedPrefix"
     }
 }

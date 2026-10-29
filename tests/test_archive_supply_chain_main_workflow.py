@@ -247,7 +247,7 @@ class ArchiveSupplyChainMainWorkflowTests(unittest.TestCase):
         self.assertLess(self.scan.index("Run pinned offline archive scanner and evidence builder"), self.scan.index("Verify the complete generated archive evidence profile"))
         self.assertLess(self.scan.index("Verify the complete generated archive evidence profile"), self.scan.index("actions/upload-artifact@"))
         self.assertIn("--target linux-amd64", self.scan)
-        self.assertIn('python-version: "3.15.1"', self.scan)
+        self.assertIn('python-version: "3.15.2"', self.scan)
         self.assertIn('[[ "$(uname -m)" == x86_64 ]]', self.scan)
         self.assertIn("d46a9a61a6ae3d367f0a03748c5e9c59253e586c4388ab26ddcacebc2efa0d92", self.scan)
         self.assertIn("--expected-binding", self.scan)

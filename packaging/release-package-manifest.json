@@ -113,6 +113,10 @@
           "path": "crates/kairo-ecs-cuda/Cargo.toml"
         },
         {
+          "package": "kairo-ecs-fs-guard",
+          "path": "crates/kairo-ecs-fs-guard/Cargo.toml"
+        },
+        {
           "package": "kairo-ecs-game-ontology",
           "path": "crates/kairo-ecs-game-ontology/Cargo.toml"
         },

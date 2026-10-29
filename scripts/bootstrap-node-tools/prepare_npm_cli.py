@@ -26,21 +26,21 @@ import urllib.request
 from pathlib import Path
 
 
-VERSION = "12.1.0"
+VERSION = "12.2.1"
 SOURCE_URL = f"https://registry.npmjs.org/npm/-/npm-{VERSION}.tgz"
 SOURCE_INTEGRITY = (
-    "sha512-Fyhu62pNx70YCs/5+dEmJQTFVmSKwvo5CA0qvBkGDRpob42MJ6G2RQ2tdxeKM4nYnIZDqkYAxEgqtoejn9QGtQ=="
+    "sha512-bKCmFRVT/BB+YPEYbZwQ1XUI3N5t4xKSpU1MxOjo7z3iWzKBJ0ZXRC1xFdEN+TC7N5TdywaBzf2dMXGJq/e2PQ=="
 )
 PATCHED_DEPENDENCIES = ("make-fetch-happen", "node-gyp")
 POSTCSS_PARSER = "postcss-selector-parser"
-POSTCSS_PARSER_VERSION = "7.1.6"
+POSTCSS_PARSER_VERSION = "7.1.7"
 POSTCSS_PARSER_SRI = (
-    "sha512-7qASPzhKF2l2KLboRZux8CCTRMdGiV08vWmyKzPz22qZ7ZjQBOeY7rNzNoCLSUiftJ7HUq0GERHmxw/t0dCdMw=="
+    "sha512-wWBro/7hJ40ye6TPiXkUQoXKCw23xSsjriUvqd7Uls9Sso3oLiON1flc18cCdnjgCRXw4fBVqUJJeOdDTh3P3g=="
 )
 POSTCSS_PARSER_URL = (
-    "https://registry.npmjs.org/postcss-selector-parser/-/postcss-selector-parser-7.1.6.tgz"
+    "https://registry.npmjs.org/postcss-selector-parser/-/postcss-selector-parser-7.1.7.tgz"
 )
-LOCK_SHA256 = "cfe2002915f419eea7cca91c24d8dd58a81926701cc2810896fdcc6f89c64835"
+LOCK_SHA256 = "82f3ccd32f5e61dab421905e0cbd4c906212315aaa3b2cac12ffbcf3f9e71d6e"
 REMOVED_BUNDLES = (
     *PATCHED_DEPENDENCIES,
     "ip-address",
@@ -50,7 +50,7 @@ REMOVED_BUNDLES = (
     POSTCSS_PARSER,
 )
 FIXED_DEPENDENCIES = {
-    "ip-address": "10.7.4",
+    "ip-address": "10.7.5",
     "brace-expansion": "5.0.12",
 }
 HCS_ALIAS = "@careops/http-cache-semantics-kairos-prototype"
@@ -150,7 +150,7 @@ def repack(source_data: bytes) -> bytes:
             raise RuntimeError("npm bundle layout changed: transitive parser manifests are unreadable")
         parser_manifest = json.load(parser_file)
         query_manifest = json.load(query_file)
-        if (parser_manifest.get("name"), parser_manifest.get("version")) != (POSTCSS_PARSER, "7.1.4"):
+        if (parser_manifest.get("name"), parser_manifest.get("version")) != (POSTCSS_PARSER, "7.1.6"):
             raise RuntimeError("npm bundle layout changed: parser source identity or version drifted")
         if (
             query_manifest.get("name"),

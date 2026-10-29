@@ -112,7 +112,7 @@ pub fn records_to_dataframe(records: &[EventLogRecord]) -> Result<DataFrame, Arr
         Series::new("payload_ref".into(), &payload_refs),
     ];
 
-    DataFrame::new(cols.into_iter().map(|s| s.into()).collect())
+    DataFrame::new(n, cols.into_iter().map(|s| s.into()).collect())
         .map_err(|e| ArrowError::Io(e.to_string()))
 }
 
@@ -278,7 +278,7 @@ pub fn read_parquet<R: MmapBytesReader>(reader: R) -> Result<DataFrame, ArrowErr
 
 /// Write a [`DataFrame`] to an Arrow IPC stream.
 pub fn write_ipc_stream<W: Write>(df: &mut DataFrame, writer: W) -> Result<(), ArrowError> {
-    IpcWriter::new(writer)
+    IpcStreamWriter::new(writer)
         .finish(df)
         .map_err(|e| ArrowError::Io(e.to_string()))?;
     Ok(())
@@ -286,6 +286,13 @@ pub fn write_ipc_stream<W: Write>(df: &mut DataFrame, writer: W) -> Result<(), A
 
 /// Read a [`DataFrame`] from an Arrow IPC stream reader.
 pub fn read_ipc_stream<R: MmapBytesReader>(reader: R) -> Result<DataFrame, ArrowError> {
+    IpcStreamReader::new(reader)
+        .finish()
+        .map_err(|e| ArrowError::Io(e.to_string()))
+}
+
+/// Read an Arrow IPC file produced by the earlier file-format writer.
+pub fn read_ipc_file<R: MmapBytesReader>(reader: R) -> Result<DataFrame, ArrowError> {
     IpcReader::new(reader)
         .finish()
         .map_err(|e| ArrowError::Io(e.to_string()))
@@ -361,7 +368,7 @@ pub fn calculate_checksum(bytes: &[u8]) -> u64 {
 }
 
 /// Metadata for a single published Parquet part file.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct DurablePartMetadata {
     pub filename: String,
     pub row_count: usize,
@@ -370,7 +377,7 @@ pub struct DurablePartMetadata {
 }
 
 /// Run-level manifest containing completion status, row counts, and checksums.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct DurableManifest {
     pub run_id: String,
     pub schema_stream: String,
@@ -382,97 +389,21 @@ pub struct DurableManifest {
 
 impl DurableManifest {
     pub fn to_json(&self) -> String {
-        let parts_json = self
-            .parts
-            .iter()
-            .map(|p| {
-                format!(
-                    r#"{{"filename":"{}","row_count":{},"checksum":{},"max_sequence":{}}}"#,
-                    p.filename, p.row_count, p.checksum, p.max_sequence
-                )
-            })
-            .collect::<Vec<_>>()
-            .join(",");
-
-        format!(
-            r#"{{"run_id":"{}","schema_stream":"{}","total_rows":{},"watermark_sequence":{},"completed":{},"parts":[{}]}}"#,
-            self.run_id,
-            self.schema_stream,
-            self.total_rows,
-            self.watermark_sequence,
-            self.completed,
-            parts_json
-        )
+        serde_json::to_string(self).expect("manifest contains only JSON-representable values")
     }
 
     pub fn from_json(json: &str) -> Result<Self, ArrowError> {
-        let run_id = extract_json_str(json, "run_id")?;
-        let schema_stream = extract_json_str(json, "schema_stream")?;
-        let total_rows = extract_json_u64(json, "total_rows")? as usize;
-        let watermark_sequence = extract_json_u64(json, "watermark_sequence")?;
-        let completed = json.contains(r#""completed":true"#);
-
-        let mut parts = Vec::new();
-        if let Some(parts_start) = json.find(r#""parts":["#) {
-            let rest = &json[parts_start + 9..];
-            if let Some(parts_end) = rest.find(']') {
-                let parts_str = &rest[..parts_end];
-                for part_str in parts_str.split("},{") {
-                    let part_clean = part_str.trim_matches('{').trim_matches('}');
-                    if part_clean.is_empty() {
-                        continue;
-                    }
-                    let filename = extract_json_str(part_clean, "filename")?;
-                    let row_count = extract_json_u64(part_clean, "row_count")? as usize;
-                    let checksum = extract_json_u64(part_clean, "checksum")?;
-                    let max_sequence = extract_json_u64(part_clean, "max_sequence")?;
-                    parts.push(DurablePartMetadata {
-                        filename,
-                        row_count,
-                        checksum,
-                        max_sequence,
-                    });
-                }
-            }
-        }
-
-        Ok(Self {
-            run_id,
-            schema_stream,
-            total_rows,
-            watermark_sequence,
-            completed,
-            parts,
-        })
+        serde_json::from_str(json)
+            .map_err(|e| ArrowError::Io(format!("Invalid manifest JSON: {e}")))
     }
 }
 
-fn extract_json_str(json: &str, key: &str) -> Result<String, ArrowError> {
-    let pattern = format!(r#""{}":""#, key);
-    let start = json
-        .find(&pattern)
-        .ok_or_else(|| ArrowError::Io(format!("Key {key} not found in manifest JSON")))?
-        + pattern.len();
-    let rest = &json[start..];
-    let end = rest
-        .find('"')
-        .ok_or_else(|| ArrowError::Io(format!("Unterminated string for key {key}")))?;
-    Ok(rest[..end].to_string())
-}
-
-fn extract_json_u64(json: &str, key: &str) -> Result<u64, ArrowError> {
-    let pattern = format!(r#""{}":"#, key);
-    let start = json
-        .find(&pattern)
-        .ok_or_else(|| ArrowError::Io(format!("Key {key} not found in manifest JSON")))?
-        + pattern.len();
-    let rest = &json[start..];
-    let end = rest
-        .find(|c: char| !c.is_ascii_digit())
-        .unwrap_or(rest.len());
-    rest[..end]
-        .parse::<u64>()
-        .map_err(|e| ArrowError::Io(format!("Invalid number for {key}: {e}")))
+fn valid_component(value: &str) -> bool {
+    use std::path::Component;
+    let mut components = std::path::Path::new(value).components();
+    !value.contains('\\')
+        && matches!(components.next(), Some(Component::Normal(part)) if part == value)
+        && components.next().is_none()
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -487,7 +418,6 @@ pub struct DurableRunPublicationWriter {
     run_dir: PathBuf,
     run_id: String,
     batch_size: usize,
-    allow_overwrite: bool,
 }
 
 impl DurableRunPublicationWriter {
@@ -498,22 +428,63 @@ impl DurableRunPublicationWriter {
             run_dir,
             run_id: r_id,
             batch_size: if batch_size == 0 { 10_000 } else { batch_size },
-            allow_overwrite: true,
         }
     }
 
-    pub fn with_no_clobber(mut self) -> Self {
-        self.allow_overwrite = false;
+    /// Publications always refuse to reuse an existing run directory.
+    pub fn with_no_clobber(self) -> Self {
         self
     }
 
-    pub fn with_overwrite(mut self, allow_overwrite: bool) -> Self {
-        self.allow_overwrite = allow_overwrite;
+    /// Retained for source compatibility; completed or interrupted runs are
+    /// never overwritten, regardless of the requested setting.
+    pub fn with_overwrite(self, _allow_overwrite: bool) -> Self {
         self
     }
 
+    /// Publish beneath an existing protected output root owned by this OS user.
+    /// Roots writable by other users, unsupported filesystems and unverifiable
+    /// ACLs are rejected before creating a run. New run directories are private.
+    /// Processes sharing this OS identity, administrators and hostile filesystem
+    /// servers are outside this boundary. The caller must preserve permissions.
     pub fn publish(&self, records: &[EventLogRecord]) -> Result<PublicationReceipt, ArrowError> {
-        fs::create_dir_all(&self.run_dir).map_err(|e| ArrowError::Io(e.to_string()))?;
+        self.publish_with_hook(records, || {})
+    }
+
+    fn publish_with_hook(
+        &self,
+        records: &[EventLogRecord],
+        after_open: impl FnOnce(),
+    ) -> Result<PublicationReceipt, ArrowError> {
+        if !valid_component(&self.run_id) {
+            return Err(ArrowError::Io("Invalid run identifier".to_string()));
+        }
+        let parent = self
+            .run_dir
+            .parent()
+            .ok_or_else(|| ArrowError::Io("Missing run parent".to_string()))?;
+        let root = std::path::absolute(parent).map_err(|e| ArrowError::Io(e.to_string()))?;
+        // An exclusive directory creation prevents concurrent publishers or a retry
+        // from modifying any completed or interrupted run.
+        let base = open_protected_root(&root)?;
+        let name = Path::new(&self.run_id);
+        let directory_options = cap_primitives::fs::DirOptions::new();
+        #[cfg(unix)]
+        let directory_options = {
+            use cap_primitives::fs::DirBuilderExt;
+            let mut directory_options = directory_options;
+            directory_options.mode(0o700);
+            directory_options
+        };
+        cap_primitives::fs::create_dir(&base, name, &directory_options)
+            .map_err(|e| ArrowError::Io(format!("Cannot create unique run directory: {e}")))?;
+        let directory = open_run_child(&base, name)?;
+        kairo_ecs_fs_guard::verify_directory(&directory, true)
+            .map_err(|e| ArrowError::Io(format!("New run directory is not private: {e}")))?;
+        after_open();
+        #[cfg(unix)]
+        base.sync_all()
+            .map_err(|e| ArrowError::Io(format!("Cannot sync run parent directory: {e}")))?;
 
         // Explicit canonical sort keys: time_ticks, priority, sequence
         let mut sorted_records = records.to_vec();
@@ -530,13 +501,11 @@ impl DurableRunPublicationWriter {
 
         for (part_idx, chunk) in sorted_records.chunks(self.batch_size).enumerate() {
             let part_name = format!("part-{part_idx:05}.parquet");
-            let part_path = self.run_dir.join(&part_name);
-
             let mut df = records_to_dataframe(chunk)?;
             let mut buf = Vec::new();
             write_parquet_zstd(&mut df, &mut buf)?;
 
-            crate::atomic_write_file(&part_path, &buf, self.allow_overwrite)?;
+            write_run_file(&directory, &part_name, &buf)?;
             let checksum = calculate_checksum(&buf);
 
             let max_seq = chunk.iter().map(|r| r.sequence).max().unwrap_or(0);
@@ -564,11 +533,32 @@ impl DurableRunPublicationWriter {
 
         let manifest_json = manifest.to_json();
         let manifest_path = self.run_dir.join("manifest.json");
-        crate::atomic_write_file(
-            &manifest_path,
-            manifest_json.as_bytes(),
-            self.allow_overwrite,
-        )?;
+        write_run_file(&directory, "manifest.json", manifest_json.as_bytes())?;
+        // Catch a replaced receipt path before reporting success.
+        // A pathname can still change after this check; callers must protect
+        // the run parent if they require the receipt path to remain stable.
+        let current = cap_primitives::fs::open_dir_nofollow(&base, name)
+            .map_err(|e| ArrowError::Io(format!("Run path changed during publication: {e}")))?;
+        let held_identity =
+            same_file::Handle::from_file(directory.try_clone().map_err(|e| {
+                ArrowError::Io(format!("Cannot duplicate run directory handle: {e}"))
+            })?)
+            .map_err(|e| ArrowError::Io(format!("Cannot identify run directory: {e}")))?;
+        let current_identity = same_file::Handle::from_file(current)
+            .map_err(|e| ArrowError::Io(format!("Cannot identify current run path: {e}")))?;
+        if held_identity != current_identity {
+            return Err(ArrowError::Io("Run path changed during publication".into()));
+        }
+        let current_root = open_run_directory(&root)?;
+        let root_identity =
+            same_file::Handle::from_file(base).map_err(|e| ArrowError::Io(e.to_string()))?;
+        let current_root_identity = same_file::Handle::from_file(current_root)
+            .map_err(|e| ArrowError::Io(e.to_string()))?;
+        if root_identity != current_root_identity {
+            return Err(ArrowError::Io(
+                "Output root path changed during publication".into(),
+            ));
+        }
 
         Ok(PublicationReceipt {
             manifest_path,
@@ -591,47 +581,251 @@ impl DurableRunPublicationWriter {
     }
 }
 
+type OpenRunDirectory = fs::File;
+
+// Stage and publish relative to the held directory. A hard link publishes the
+// fully synced file atomically and fails if the destination already exists.
+pub(crate) fn write_run_file(
+    directory: &OpenRunDirectory,
+    name: &str,
+    bytes: &[u8],
+) -> Result<(), ArrowError> {
+    write_run_file_staged(directory, name, bytes, &format!(".{name}.staging"))
+}
+
+pub(crate) fn write_run_file_staged(
+    directory: &OpenRunDirectory,
+    name: &str,
+    bytes: &[u8],
+    staging: &str,
+) -> Result<(), ArrowError> {
+    use std::io::Write;
+    if !valid_component(name) || !valid_component(staging) || name == staging {
+        return Err(ArrowError::Io("Invalid publication filename".into()));
+    }
+    let mut options = cap_primitives::fs::OpenOptions::new();
+    options.write(true).create_new(true);
+    #[cfg(unix)]
+    {
+        use cap_primitives::fs::OpenOptionsExt;
+        options.mode(0o600);
+    }
+    // Names are unique among live calls and create_new resolves stale names
+    // after process-ID reuse. They are not an access-control mechanism: the
+    // protected-directory policy supplies that boundary.
+    static NEXT_STAGE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+    let (staging, mut file) = (0..1024)
+        .find_map(|_| {
+            let ordinal = NEXT_STAGE.fetch_add(1, Ordering::Relaxed);
+            let name = format!("{staging}-{}-{ordinal}", std::process::id());
+            match cap_primitives::fs::open(directory, Path::new(&name), &options) {
+                Ok(file) => Some(Ok((name, file))),
+                Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => None,
+                Err(error) => Some(Err(ArrowError::Io(format!(
+                    "Cannot create publication staging file: {error}"
+                )))),
+            }
+        })
+        .unwrap_or_else(|| {
+            Err(ArrowError::Io(
+                "Publication staging collision limit exceeded".into(),
+            ))
+        })?;
+    file.write_all(bytes)
+        .and_then(|()| file.sync_all())
+        .map_err(|e| ArrowError::Io(format!("Cannot write publication staging file: {e}")))?;
+    cap_primitives::fs::hard_link(directory, Path::new(&staging), directory, Path::new(name))
+        .map_err(|e| ArrowError::Io(format!("Cannot publish file without clobbering: {e}")))?;
+    use cap_fs_ext::{FollowSymlinks, OpenOptionsFollowExt};
+    let mut published_options = cap_primitives::fs::OpenOptions::new();
+    published_options.read(true).follow(FollowSymlinks::No);
+    let published = cap_primitives::fs::open(directory, Path::new(name), &published_options)
+        .map_err(|e| ArrowError::Io(format!("Cannot verify published file: {e}")))?;
+    let staged_identity =
+        same_file::Handle::from_file(file).map_err(|e| ArrowError::Io(e.to_string()))?;
+    let published_identity =
+        same_file::Handle::from_file(published).map_err(|e| ArrowError::Io(e.to_string()))?;
+    if staged_identity != published_identity {
+        return Err(ArrowError::Io(
+            "Staging file changed during publication".into(),
+        ));
+    }
+    drop(staged_identity);
+    drop(published_identity);
+    cap_primitives::fs::remove_file(directory, Path::new(&staging))
+        .map_err(|e| ArrowError::Io(format!("Cannot remove publication staging file: {e}")))?;
+    #[cfg(unix)]
+    directory
+        .sync_all()
+        .map_err(|e| ArrowError::Io(format!("Cannot sync run directory: {e}")))?;
+    Ok(())
+}
+
+pub(crate) fn open_protected_root(path: &Path) -> Result<OpenRunDirectory, ArrowError> {
+    let absolute = std::path::absolute(path).map_err(|e| ArrowError::Io(e.to_string()))?;
+    let root = open_run_directory(&absolute)?;
+    kairo_ecs_fs_guard::verify_directory(&root, false)
+        .map_err(|e| ArrowError::Io(format!("Output root is not protected: {e}")))?;
+    Ok(root)
+}
+
+pub(crate) fn open_run_directory(path: &Path) -> Result<OpenRunDirectory, ArrowError> {
+    let parent = path
+        .parent()
+        .ok_or_else(|| ArrowError::Io("Missing run parent".to_string()))?;
+    let name = path
+        .file_name()
+        .ok_or_else(|| ArrowError::Io("Missing run identifier".to_string()))?;
+    let base = cap_primitives::fs::open_ambient_dir(parent, cap_primitives::ambient_authority())
+        .map_err(|e| ArrowError::Io(format!("Cannot open run parent: {e}")))?;
+    open_run_child(&base, Path::new(name))
+}
+
+pub(crate) fn open_run_child(base: &fs::File, name: &Path) -> Result<fs::File, ArrowError> {
+    #[cfg(windows)]
+    let directory = cap_primitives::fs::open_dir_nofollow(base, name)
+        .map_err(|e| ArrowError::Io(format!("Cannot open run directory: {e}")))?;
+    #[cfg(not(windows))]
+    let directory = {
+        use cap_fs_ext::{FollowSymlinks, OpenOptionsFollowExt};
+        let mut options = cap_primitives::fs::OpenOptions::new();
+        options.read(true).follow(FollowSymlinks::No);
+        #[cfg(unix)]
+        {
+            use cap_fs_ext::OpenOptionsSyncExt;
+            options.nonblock(true);
+        }
+        // Linux open_dir_nofollow may return O_PATH. Directory fsync needs an
+        // actual readable descriptor; no-follow lookup still binds the object.
+        cap_primitives::fs::open(base, name, &options)
+            .map_err(|e| ArrowError::Io(format!("Cannot open run directory: {e}")))?
+    };
+    if !directory
+        .metadata()
+        .map_err(|e| ArrowError::Io(e.to_string()))?
+        .is_dir()
+    {
+        return Err(ArrowError::Io("Run path is not a directory".into()));
+    }
+    Ok(directory)
+}
+
+pub(crate) fn open_run_file(
+    directory: &OpenRunDirectory,
+    name: &str,
+) -> Result<fs::File, ArrowError> {
+    #[cfg(unix)]
+    use cap_fs_ext::OpenOptionsSyncExt;
+    use cap_fs_ext::{FollowSymlinks, OpenOptionsFollowExt};
+    let mut options = cap_primitives::fs::OpenOptions::new();
+    options.read(true).follow(FollowSymlinks::No);
+    #[cfg(unix)]
+    options.nonblock(true);
+    let file = cap_primitives::fs::open(directory, Path::new(name), &options)
+        .map_err(|e| ArrowError::Io(format!("Cannot open run file: {e}")))?;
+    if !file
+        .metadata()
+        .map_err(|e| ArrowError::Io(e.to_string()))?
+        .is_file()
+    {
+        return Err(ArrowError::Io("Run file is not regular".to_string()));
+    }
+    Ok(file)
+}
+
+pub(crate) fn read_run_file(
+    directory: &OpenRunDirectory,
+    name: &str,
+) -> Result<Vec<u8>, ArrowError> {
+    use std::io::Read;
+    let mut file = open_run_file(directory, name)?;
+    let mut bytes = Vec::new();
+    file.read_to_end(&mut bytes)
+        .map_err(|e| ArrowError::Io(e.to_string()))?;
+    Ok(bytes)
+}
+
 pub struct DurableRunPublicationReader {
     run_dir: PathBuf,
+    valid_run_id: bool,
 }
 
 impl DurableRunPublicationReader {
     pub fn new(base_dir: impl AsRef<Path>, run_id: impl AsRef<Path>) -> Self {
+        let run_id = run_id.as_ref();
         Self {
             run_dir: base_dir.as_ref().join(run_id),
+            valid_run_id: run_id.to_str().is_some_and(valid_component),
         }
     }
 
+    fn open_run(&self) -> Result<OpenRunDirectory, ArrowError> {
+        if !self.valid_run_id {
+            return Err(ArrowError::Io("Invalid run identifier".to_string()));
+        }
+        open_run_directory(&self.run_dir)
+    }
+
     pub fn read_manifest(&self) -> Result<DurableManifest, ArrowError> {
-        let manifest_path = self.run_dir.join("manifest.json");
-        if !manifest_path.exists() {
+        self.read_manifest_at(&self.open_run()?)
+    }
+
+    fn read_manifest_at(
+        &self,
+        directory: &OpenRunDirectory,
+    ) -> Result<DurableManifest, ArrowError> {
+        let bytes = read_run_file(directory, "manifest.json")?;
+        let content = std::str::from_utf8(&bytes).map_err(|e| ArrowError::Io(e.to_string()))?;
+        let manifest = DurableManifest::from_json(content)?;
+        if !manifest.completed
+            || manifest.schema_stream != crate::EVENT_LOG_STREAM_V2
+            || self.run_dir.file_name() != Some(std::ffi::OsStr::new(&manifest.run_id))
+        {
             return Err(ArrowError::Io(
-                "Missing manifest.json: run is incomplete or interrupted".to_string(),
+                "Run manifest is incomplete or has an unsupported schema".to_string(),
             ));
         }
-        let content =
-            fs::read_to_string(&manifest_path).map_err(|e| ArrowError::Io(e.to_string()))?;
-        let manifest = DurableManifest::from_json(&content)?;
-        if !manifest.completed {
+        let mut names = std::collections::HashSet::new();
+        let mut rows = 0usize;
+        let mut watermark = 0u64;
+        for part in &manifest.parts {
+            if !valid_component(&part.filename)
+                || !names.insert(&part.filename)
+                || part.row_count == 0
+            {
+                return Err(ArrowError::Io(
+                    "Invalid or duplicate manifest part".to_string(),
+                ));
+            }
+            rows = rows
+                .checked_add(part.row_count)
+                .ok_or_else(|| ArrowError::Io("Manifest row count overflow".to_string()))?;
+            watermark = watermark.max(part.max_sequence);
+        }
+        if rows != manifest.total_rows || watermark != manifest.watermark_sequence {
             return Err(ArrowError::Io(
-                "Run manifest is marked incomplete".to_string(),
+                "Manifest totals do not match its parts".to_string(),
             ));
         }
         Ok(manifest)
     }
 
     pub fn get_watermark_sequence(&self) -> Result<u64, ArrowError> {
-        let manifest = self.read_manifest()?;
+        let (manifest, _) = self.read_verified_run()?;
         Ok(manifest.watermark_sequence)
     }
 
     pub fn read_all_records(&self) -> Result<Vec<EventLogRecord>, ArrowError> {
-        let manifest = self.read_manifest()?;
-        let mut all_records = Vec::with_capacity(manifest.total_rows);
+        self.read_verified_run().map(|(_, records)| records)
+    }
 
-        for part in manifest.parts {
-            let part_path = self.run_dir.join(&part.filename);
-            let bytes = fs::read(&part_path).map_err(|e| ArrowError::Io(e.to_string()))?;
+    fn read_verified_run(&self) -> Result<(DurableManifest, Vec<EventLogRecord>), ArrowError> {
+        let directory = self.open_run()?;
+        let manifest = self.read_manifest_at(&directory)?;
+        let mut all_records = Vec::new();
+
+        for part in &manifest.parts {
+            let bytes = read_run_file(&directory, &part.filename)?;
 
             let checksum = calculate_checksum(&bytes);
             if checksum != part.checksum {
@@ -642,9 +836,127 @@ impl DurableRunPublicationReader {
 
             let df = read_parquet(Cursor::new(bytes))?;
             let records = dataframe_to_records(&df)?;
+            if records.len() != part.row_count
+                || records
+                    .iter()
+                    .map(|record| record.sequence)
+                    .max()
+                    .unwrap_or(0)
+                    != part.max_sequence
+            {
+                return Err(ArrowError::Io(
+                    "Manifest part metadata does not match its records".to_string(),
+                ));
+            }
             all_records.extend(records);
         }
 
-        Ok(all_records)
+        Ok((manifest, all_records))
+    }
+}
+
+#[cfg(test)]
+#[path = "../tests/support/mod.rs"]
+mod test_support;
+#[cfg(test)]
+use test_support::protected_tempdir as protected_test_root;
+
+#[cfg(test)]
+mod publication_file_tests {
+    use super::*;
+
+    #[test]
+    fn publication_is_no_clobber() {
+        let parent = protected_test_root().unwrap();
+        fs::create_dir(parent.path().join("run")).unwrap();
+        let directory = open_run_directory(&parent.path().join("run")).unwrap();
+        write_run_file(&directory, "part", b"original").unwrap();
+        assert!(write_run_file(&directory, "part", b"replacement").is_err());
+        assert_eq!(read_run_file(&directory, "part").unwrap(), b"original");
+    }
+}
+
+#[cfg(all(test, unix))]
+mod path_hardening_tests {
+    use super::*;
+
+    #[test]
+    fn held_directory_supports_durability_sync() {
+        let parent = protected_test_root().unwrap();
+        fs::create_dir(parent.path().join("run")).unwrap();
+        let directory = open_run_directory(&parent.path().join("run")).unwrap();
+        directory.sync_all().unwrap();
+    }
+
+    #[test]
+    fn open_directory_remains_bound_after_path_replacement() {
+        use std::os::unix::fs::symlink;
+        let parent = protected_test_root().unwrap();
+        let run = parent.path().join("run");
+        let old = parent.path().join("old");
+        let other = parent.path().join("other");
+        fs::create_dir(&run).unwrap();
+        fs::create_dir(&other).unwrap();
+        fs::write(run.join("part"), b"original").unwrap();
+        fs::write(other.join("part"), b"replacement").unwrap();
+        let directory = open_run_directory(&run).unwrap();
+        fs::rename(&run, &old).unwrap();
+        symlink(&other, &run).unwrap();
+        assert_eq!(read_run_file(&directory, "part").unwrap(), b"original");
+        assert!(open_run_directory(&run).is_err());
+        symlink(other.join("part"), old.join("linked")).unwrap();
+        assert!(read_run_file(&directory, "linked").is_err());
+        write_run_file(&directory, "manifest.json", b"published").unwrap();
+        assert_eq!(fs::read(old.join("manifest.json")).unwrap(), b"published");
+        assert!(!other.join("manifest.json").exists());
+        assert!(write_run_file(&directory, "manifest.json", b"replacement").is_err());
+        assert_eq!(fs::read(old.join("manifest.json")).unwrap(), b"published");
+    }
+
+    #[test]
+    fn publisher_does_not_follow_replaced_run_path() {
+        use std::os::unix::fs::symlink;
+        let parent = protected_test_root().unwrap();
+        let run = parent.path().join("run");
+        let moved = parent.path().join("moved");
+        let outside = protected_test_root().unwrap();
+        let writer = DurableRunPublicationWriter::new(parent.path(), "run", 10);
+        let record = EventLogRecord {
+            schema_version: SCHEMA_VERSION_V2,
+            run_id: "run".into(),
+            event_id: EventId::new(1, 1),
+            entity_id: None,
+            time_ticks: 1,
+            time_scale: "ticks".into(),
+            priority: 0,
+            sequence: 1,
+            event_kind: "custom:test".into(),
+            status: EventStatus::Dispatched,
+            payload_ref: None,
+        };
+        let result = writer.publish_with_hook(&[record], || {
+            fs::rename(&run, &moved).unwrap();
+            symlink(outside.path(), &run).unwrap();
+        });
+        assert!(result.is_err());
+        assert!(moved.join("manifest.json").is_file());
+        assert!(moved.join("part-00000.parquet").is_file());
+        assert!(!outside.path().join("manifest.json").exists());
+        assert!(!outside.path().join("part-00000.parquet").exists());
+    }
+
+    #[test]
+    fn publisher_rejects_replacement_directory_receipt() {
+        let parent = protected_test_root().unwrap();
+        let run = parent.path().join("run");
+        let moved = parent.path().join("moved");
+        let writer = DurableRunPublicationWriter::new(parent.path(), "run", 10);
+        let result = writer.publish_with_hook(&[], || {
+            fs::rename(&run, &moved).unwrap();
+            fs::create_dir(&run).unwrap();
+        });
+        assert!(result.is_err());
+        assert!(moved.join("manifest.json").is_file());
+        assert!(!run.join("manifest.json").exists());
     }
 }

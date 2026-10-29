@@ -191,23 +191,9 @@ if ($expectedTrackIds.Count -eq 0) {
     throw "No track ids found in conductor/tracks.yaml"
 }
 
-$trackDirs = @(Get-ChildItem -LiteralPath "conductor/tracks" -Directory)
-$actualTrackIds = @($trackDirs | ForEach-Object {
-    if ($_.Name -match '^(\d+)-') {
-        "{0:D2}" -f [int]$matches[1]
-    } else {
-        throw "Track directory name does not start with a numeric id: $($_.Name)"
-    }
-} | Sort-Object -Unique)
+. (Join-Path $PSScriptRoot "conductor_track_inventory.ps1")
 
-$missingTrackIds = @($expectedTrackIds | Where-Object { $actualTrackIds -notcontains $_ })
-$extraTrackIds = @($actualTrackIds | Where-Object { $expectedTrackIds -notcontains $_ })
-if ($missingTrackIds.Count -gt 0 -or $extraTrackIds.Count -gt 0) {
-    throw "Track directory ids do not match conductor/tracks.yaml. Missing: $($missingTrackIds -join ', '); Extra: $($extraTrackIds -join ', ')"
-}
-if ($trackDirs.Count -ne $expectedTrackIds.Count) {
-    throw "Expected $($expectedTrackIds.Count) track directories from conductor/tracks.yaml, found $($trackDirs.Count)"
-}
+$trackDirs = @(Get-ConductorTrackDirectories -ExpectedTrackIds $expectedTrackIds)
 
 foreach ($track in $trackDirs) {
     foreach ($file in $requiredTrackFiles) {

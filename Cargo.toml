@@ -11,6 +11,7 @@ members = [
   "crates/kairo-ecs-uniffi",
   "crates/kairo-ecs-diplomat",
   "crates/kairo-ecs-arrow",
+  "crates/kairo-ecs-fs-guard",
   "crates/kairo-ecs-bench",
   "crates/kairo-ecs-cli",
   "crates/kairo-ecs-gpu",
@@ -41,3 +42,8 @@ rust-version = "1.99"
 
 [workspace.lints.rust]
 unsafe_code = "forbid"
+
+# Polars development source requires its immutable upstream hashbrown patch.
+# Git consumers must retain this patch in their workspace root.
+[patch.crates-io]
+hashbrown = { git = "https://github.com/pola-rs/hashbrown", rev = "d76a6f81abd8f388676aff15068236a8d21c7e1a" }

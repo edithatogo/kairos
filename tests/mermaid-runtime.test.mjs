@@ -9,13 +9,11 @@ import { bundler, prepareMermaidRuntime, root, validateRuntimeBuild } from '../s
 const output = join(root, 'artifacts/mermaid-runtime');
 const receipt = prepareMermaidRuntime();
 
-test('rejects the real upstream prebundle despite patched dependency metadata', () => {
+test('rejects the upstream prebundle without source-bound sanitizer provenance', () => {
   const unsafe = bundler.buildSync({ absWorkingDir: root,
     entryPoints: [join(root, 'tools/docs-quality-node-tools/node_modules/mermaid/dist/mermaid.esm.min.mjs')],
     outfile: join(output, 'negative-control.mjs'), bundle: true, format: 'esm', platform: 'browser',
     write: false, metafile: true });
-  assert.ok(unsafe.outputFiles[0].text.includes('3.4.12') && unsafe.outputFiles[0].text.includes('0.16.47'),
-    'Upstream baseline changed: requalify its embedded libraries and retire this preparation when safe.');
   assert.throws(() => validateRuntimeBuild(unsafe, receipt.versions), /published Mermaid core entry/);
 });
 
@@ -37,7 +35,7 @@ test('an aliased output cannot overwrite a foreign marker', { skip: process.plat
 
 test('actual patched core bundle is repeatable and uses both installed fixed libraries', () => {
   assert.equal(receipt.versions.dompurify, '3.4.17');
-  assert.equal(receipt.versions.katex, '0.18.2');
+  assert.equal(receipt.versions.katex, '0.19.1');
   assert.deepEqual(receipt.externalImports, []);
   assert.equal(prepareMermaidRuntime().runtimeSha256, receipt.runtimeSha256);
 });

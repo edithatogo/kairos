@@ -26,7 +26,7 @@ FIXTURE_SHA256 = "d75e1e6a11587954da5e2f0e2b5c4b397a16d28cc2f7bdf64e9027fc2fe593
 FIXTURE_SRI = "sha512-M5t5LlJpS1UHMjvwRQVdFHvPISGeLAxNcrWuJkeGh0KxsqCHZ1O3NXZU/8x7cD0BDcGW8kapxMKTvwlqrNkHkA=="
 
 REPO_HASHES = {
-    "website/package-lock.json": "64e1a663a7df0f56a1ea0a5acfc7ff4cd99cc5e44c32a5516bc31c07981b10ed",
+    "website/package-lock.json": "de0d764841646b81e76f6e29761611fa3d3c3e9139c95d80a25f88fd4e0e418a",
     "website/scripts/apply_http_cache_fix.py": "b999e9cb2e1bd2d292a1ca295a10c5149d9790311ae608ccb01b62f112153855",
     "scripts/bootstrap-node-tools/apply_http_cache_fix.py": LEGACY_HELPER_SHA256,
     "tests/http-cache-security-regression.mjs": REGRESSION_SHA256,

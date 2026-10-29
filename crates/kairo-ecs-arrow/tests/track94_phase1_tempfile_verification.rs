@@ -2,6 +2,9 @@ use kairo_ecs_arrow::*;
 use std::fs;
 use std::thread;
 
+mod support;
+use support::protected_tempdir;
+
 #[test]
 fn test_concurrent_directory_creation_and_hermetic_isolation() {
     let thread_count = 8;
@@ -9,7 +12,7 @@ fn test_concurrent_directory_creation_and_hermetic_isolation() {
 
     for thread_idx in 0..thread_count {
         let handle = thread::spawn(move || {
-            let temp_dir = tempfile::tempdir().expect("Failed to create isolated tempdir");
+            let temp_dir = protected_tempdir().expect("Failed to create isolated tempdir");
             let dir_path = temp_dir.path().to_path_buf();
             assert!(dir_path.exists());
 
@@ -43,7 +46,7 @@ fn test_concurrent_directory_creation_and_hermetic_isolation() {
 
 #[test]
 fn test_atomic_publication_staging_and_cleanup_on_failure() {
-    let temp_dir = tempfile::tempdir().expect("tempdir");
+    let temp_dir = protected_tempdir().expect("tempdir");
     let target_file = temp_dir.path().join("part-00001.parquet");
 
     // 1. Staged write interrupted before persist
@@ -75,7 +78,7 @@ fn test_atomic_publication_staging_and_cleanup_on_failure() {
 
 #[test]
 fn test_no_clobber_protection_preserves_existing_output() {
-    let temp_dir = tempfile::tempdir().expect("tempdir");
+    let temp_dir = protected_tempdir().expect("tempdir");
     let target_file = temp_dir.path().join("protected_output.bin");
 
     let original_data = b"original-unmodified-data";
@@ -105,7 +108,7 @@ fn test_no_clobber_protection_preserves_existing_output() {
 
 #[test]
 fn test_checkpoint_writer_atomic_write_file_with_sha256() {
-    let temp_dir = tempfile::tempdir().expect("tempdir");
+    let temp_dir = protected_tempdir().expect("tempdir");
     let checkpoint_path = temp_dir.path().join("checkpoint.parquet");
 
     let schema = ArrowNativeSchema::from_event_log_fields();
@@ -164,8 +167,8 @@ mod polars_publication_tests {
 
     #[test]
     fn test_durable_publication_writer_no_clobber_and_deterministic_identity() {
-        let temp1 = tempfile::tempdir().unwrap();
-        let temp2 = tempfile::tempdir().unwrap();
+        let temp1 = protected_tempdir().unwrap();
+        let temp2 = protected_tempdir().unwrap();
 
         let records: Vec<EventLogRecord> = (1..=30)
             .map(|i| sample_record(i, (i * 10) as u128))

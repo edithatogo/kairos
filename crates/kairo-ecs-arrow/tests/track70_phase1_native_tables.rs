@@ -219,13 +219,26 @@ fn test_independent_ipc_reader_roundtrip() {
     let mut buf = Vec::new();
     write_ipc_stream(&mut df, &mut buf).expect("write_ipc_stream must succeed");
 
-    // Arrow IPC stream begins with magic or valid record batch stream header
-    assert!(!buf.is_empty(), "IPC buffer must not be empty");
+    // Stream encapsulation starts with the Arrow continuation marker, not
+    // the ARROW1 file magic emitted by the previous implementation.
+    assert_eq!(&buf[..4], &[0xff; 4]);
+    assert!(!buf.starts_with(b"ARROW1"));
 
     let roundtrip_df = read_ipc_stream(Cursor::new(buf)).expect("read_ipc_stream must succeed");
     assert_eq!(roundtrip_df.height(), 2);
     let roundtrip_records = dataframe_to_records(&roundtrip_df).unwrap();
     assert_eq!(roundtrip_records, records);
+}
+
+#[test]
+fn previously_written_ipc_files_have_an_explicit_reader() {
+    let records = vec![sample_v2_record(1000, None)];
+    let mut df = records_to_dataframe(&records).unwrap();
+    let mut bytes = Vec::new();
+    IpcWriter::new(&mut bytes).finish(&mut df).unwrap();
+    assert!(bytes.starts_with(b"ARROW1"));
+    let recovered = read_ipc_file(Cursor::new(bytes)).unwrap();
+    assert_eq!(dataframe_to_records(&recovered).unwrap(), records);
 }
 
 #[test]

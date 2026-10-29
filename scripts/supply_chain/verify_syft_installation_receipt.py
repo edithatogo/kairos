@@ -216,7 +216,7 @@ def validate(output: Path, target_key: str, repo: Path) -> dict:
     require(isinstance(probe, dict) and probe.get("application") == "syft" and probe.get("version") == VERSION and probe.get("gitCommit") == COMMIT and probe.get("platform") == platform_name and probe.get("gitDescription") == TAG, "Syft version probe mismatch")
     version_log = strict_json(read_regular(output / "logs/08-syft-version.log", MAX_LOG))
     require(version_log == probe, "version command log differs from receipt probe")
-    require(isinstance(receipt.get("python_toolchain"), dict) and receipt["python_toolchain"].get("version", "").startswith(("3.14.8 ", "3.15.1 ")), "Python toolchain is neither historical 3.14.8 nor current 3.15.1")
+    require(isinstance(receipt.get("python_toolchain"), dict) and receipt["python_toolchain"].get("version", "").startswith(("3.14.8 ", "3.15.1 ", "3.15.2 ")), "Python toolchain is neither historical 3.14.8 nor current 3.15.2")
     return {"schema": "kairos.syft-installation-validation.v1", "result": "pass", "target": target_key,
             "platform": platform_name, "version": VERSION, "installer_source_sha256": digest(source_bytes),
             "verifier_lock_sha256": digest(lock_bytes), "receipt_sha256": digest(read_regular(evidence, MAX_RECEIPT)),
