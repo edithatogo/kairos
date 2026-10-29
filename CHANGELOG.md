@@ -20,6 +20,8 @@ Format:
 
 - `crates/kairo-ecs-arrow`: stream-named IPC APIs now use the Arrow IPC stream format; use `read_ipc_file` for files produced by the earlier writer. Manifest/part consistency is verified before recovery watermarks are returned, and the telemetry example is included in Rust source packages.
 
+- `.github/workflows` updates pinned actions while retaining the qualified Python 3.15.1 runtime. Exact-pin policy checks follow the updated actions, and `cloud/validate_cloud_hpc.py` recognizes the existing typed CLI command dispatch.
+
 - `crates/kairo-ecs-core`: restore the experimental `ScheduledEventPreview` projection and `Scheduler::peek_next` inspection API without changing event ordering or dispatch behavior; add focused scheduler compatibility coverage.
 
 - `crates/kairo-ecs-ffi`: keep populated Arrow C Data schema and array exports available without `native-data`, and align Track 70 consumer tests with the default-feature ABI.

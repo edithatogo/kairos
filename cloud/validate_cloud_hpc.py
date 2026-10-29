@@ -423,7 +423,10 @@ def main() -> int:
 
     require("docker/Dockerfile", ["kairo-ecs-cli", "ENTRYPOINT"])
     require("docker/entrypoint.sh", ["trap on_term TERM INT", "checkpoint-manifest.json"])
-    require("crates/kairo-ecs-cli/src/main.rs", ['"run" =>', '"checkpoint" =>', '"resume" =>'])
+    require(
+        "crates/kairo-ecs-cli/src/main.rs",
+        ["Commands::Run {", "Commands::Checkpoint {", "Commands::Resume {"],
+    )
     require("k8s/crd/kairoecs-experiment.yaml", ["KairoECSExperiment", "checkpoint", "completedRuns"])
     require("k8s/operator/kairoecs_operator.py", ["render_job", "batch/v1"])
     require("cloud/aws/batch-job-definition.yaml", ["resourceRequirements", "KAIRO_OUTPUT_URI"])
