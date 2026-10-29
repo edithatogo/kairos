@@ -63,7 +63,7 @@ criterion = "0.5"
 
 [[example]]
 name = "telemetry_event_log_roundtrip"
-path = "../../examples/telemetry/event_log_roundtrip.rs"
+path = "examples/telemetry_event_log_roundtrip.rs"
 
 [[bench]]
 name = "run_output"
