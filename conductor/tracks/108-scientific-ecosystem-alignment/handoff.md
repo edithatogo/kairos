@@ -32,6 +32,18 @@ remaining human-table inconsistency: Track 106 still said In Progress and Track
 archive link while keeping Tracks 107 and 108 Blocked. The reviewer otherwise
 confirmed the planning-only scope and retained acceptance boundaries.
 
+Hosted Windows setup validation then identified its active-directory-only
+inventory: archived Track 106 was omitted. Setup inventory now includes both
+active and archived records while retaining exact ID, cardinality, duplicate,
+extra/missing and required-artifact checks. Focused synthetic fixtures exercise
+archive inclusion and rejection of duplicate, extra and missing IDs. No
+acceptance or runtime gate is skipped by this compatibility correction.
+
+The focused inventory regression passed, including all three rejection controls.
+`validate_conductor_setup.ps1 -SkipCargo` passed against the real active/archive
+inventory. That local command deliberately excludes Cargo execution; hosted
+Windows/Linux setup and the existing Rust gates remain required.
+
 Planning only. Track 107 and the accepted CareOps baseline remain prerequisites. Issue: https://github.com/edithatogo/kairos/issues/336. No provider API, RNG fixture or consumer pin changed.
 
 ## Follow-up issues
