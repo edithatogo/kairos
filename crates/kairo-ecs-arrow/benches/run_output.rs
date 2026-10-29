@@ -50,7 +50,15 @@ fn fresh_parent(label: &str) -> PathBuf {
         std::process::id()
     ));
     let _ = fs::remove_dir_all(&parent);
-    fs::create_dir_all(&parent).expect("bench parent");
+    let builder = fs::DirBuilder::new();
+    #[cfg(unix)]
+    let builder = {
+        use std::os::unix::fs::DirBuilderExt;
+        let mut builder = builder;
+        builder.mode(0o700);
+        builder
+    };
+    builder.create(&parent).expect("private bench parent");
     *previous = Some(parent.clone());
     parent
 }

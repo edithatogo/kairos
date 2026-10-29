@@ -1,5 +1,8 @@
 #![cfg(feature = "polars-native")]
 
+mod support;
+use support::protected_tempdir;
+
 use kairo_ecs_arrow::polars_interop::*;
 use kairo_ecs_arrow::*;
 use kairo_ecs_types::{EntityId, EventId};
@@ -9,7 +12,7 @@ use std::fs;
 #[test]
 fn shared_writable_root_is_rejected_before_run_creation() {
     use std::os::unix::fs::PermissionsExt;
-    let root = tempfile::tempdir().unwrap();
+    let root = protected_tempdir().unwrap();
     fs::set_permissions(root.path(), fs::Permissions::from_mode(0o777)).unwrap();
     let writer = DurableRunPublicationWriter::new(root.path(), "rejected", 10);
     assert!(writer.publish(&[]).is_err());
@@ -19,7 +22,7 @@ fn shared_writable_root_is_rejected_before_run_creation() {
 #[cfg(target_os = "macos")]
 #[test]
 fn root_acl_write_grant_is_rejected_before_run_creation() {
-    let root = tempfile::tempdir().unwrap();
+    let root = protected_tempdir().unwrap();
     let status = std::process::Command::new("/bin/chmod")
         .args(["+a", "everyone allow add_file,delete_child"])
         .arg(root.path())
@@ -35,7 +38,7 @@ fn root_acl_write_grant_is_rejected_before_run_creation() {
 #[test]
 fn published_run_and_files_are_private() {
     use std::os::unix::fs::PermissionsExt;
-    let root = tempfile::tempdir().unwrap();
+    let root = protected_tempdir().unwrap();
     let writer = DurableRunPublicationWriter::new(root.path(), "private", 10);
     let receipt = writer.publish(&[sample_v2_record(1, 10, None)]).unwrap();
     assert_eq!(
@@ -59,7 +62,7 @@ fn published_run_and_files_are_private() {
 
 #[test]
 fn absent_output_root_is_not_created_implicitly() {
-    let root = tempfile::tempdir().unwrap();
+    let root = protected_tempdir().unwrap();
     let absent = root.path().join("absent");
     let writer = DurableRunPublicationWriter::new(&absent, "rejected", 10);
     assert!(writer.publish(&[]).is_err());
@@ -69,8 +72,8 @@ fn absent_output_root_is_not_created_implicitly() {
 #[cfg(unix)]
 #[test]
 fn symlink_output_root_is_rejected_before_run_creation() {
-    let root = tempfile::tempdir().unwrap();
-    let target = tempfile::tempdir().unwrap();
+    let root = protected_tempdir().unwrap();
+    let target = protected_tempdir().unwrap();
     let link = root.path().join("link");
     std::os::unix::fs::symlink(target.path(), &link).unwrap();
     let writer = DurableRunPublicationWriter::new(link, "rejected", 10);
@@ -97,7 +100,7 @@ fn manifest_json_is_strict_and_roundtrips_escaped_strings() {
 
 #[test]
 fn completed_run_cannot_be_overwritten_even_when_requested() {
-    let temp = tempfile::tempdir().unwrap();
+    let temp = protected_tempdir().unwrap();
     let writer = DurableRunPublicationWriter::new(temp.path(), "run", 10).with_overwrite(true);
     let records = vec![sample_v2_record(1, 10, None)];
     let receipt = writer.publish(&records).unwrap();
@@ -108,7 +111,7 @@ fn completed_run_cannot_be_overwritten_even_when_requested() {
 
 #[test]
 fn manifest_reader_rejects_traversal_and_inconsistent_totals() {
-    let temp = tempfile::tempdir().unwrap();
+    let temp = protected_tempdir().unwrap();
     let dir = temp.path().join("run");
     fs::create_dir(&dir).unwrap();
     let reader = DurableRunPublicationReader::new(temp.path(), "run");
@@ -138,7 +141,7 @@ fn manifest_reader_rejects_traversal_and_inconsistent_totals() {
 #[test]
 fn reader_rejects_symlink_part() {
     use std::os::unix::fs::symlink;
-    let temp = tempfile::tempdir().unwrap();
+    let temp = protected_tempdir().unwrap();
     let dir = temp.path().join("run");
     fs::create_dir(&dir).unwrap();
     fs::write(temp.path().join("outside"), b"data").unwrap();
@@ -180,7 +183,7 @@ fn sample_v2_record(seq: u64, time_ticks: u128, entity_id: Option<EntityId>) -> 
 
 #[test]
 fn test_failing_manifest_last_publication_and_interruption_rejection() {
-    let temp = tempfile::tempdir().expect("isolated tempdir");
+    let temp = protected_tempdir().expect("isolated tempdir");
     let temp_dir = temp.path();
 
     let records: Vec<EventLogRecord> = (1..=50)
@@ -208,7 +211,7 @@ fn test_failing_manifest_last_publication_and_interruption_rejection() {
 
 #[test]
 fn test_failing_resume_watermark_no_data_duplication() {
-    let temp = tempfile::tempdir().expect("isolated tempdir");
+    let temp = protected_tempdir().expect("isolated tempdir");
     let temp_dir = temp.path();
 
     let batch1: Vec<EventLogRecord> = (1..=20)
@@ -237,7 +240,7 @@ fn test_failing_resume_watermark_no_data_duplication() {
 
 #[test]
 fn test_failing_tampered_part_file_checksum_rejection() {
-    let temp = tempfile::tempdir().expect("isolated tempdir");
+    let temp = protected_tempdir().expect("isolated tempdir");
     let temp_dir = temp.path();
 
     let records: Vec<EventLogRecord> = (1..=10)

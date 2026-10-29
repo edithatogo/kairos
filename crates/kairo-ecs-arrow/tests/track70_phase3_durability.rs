@@ -32,6 +32,9 @@ use std::num::NonZeroUsize;
 use std::path::{Path, PathBuf};
 use std::thread;
 
+mod support;
+use support::protected_tempdir;
+
 fn sample_record(sequence: u64, time_ticks: u128, kind_suffix: u64) -> EventLogRecord {
     EventLogRecord {
         schema_version: SCHEMA_VERSION_V2,
@@ -83,7 +86,15 @@ fn temp_parent(label: &str) -> PathBuf {
         "kairo-ecs-arrow-p3-{label}-{}-{nanos}",
         std::process::id()
     ));
-    fs::create_dir_all(&parent).expect("temp parent");
+    let builder = fs::DirBuilder::new();
+    #[cfg(unix)]
+    let builder = {
+        use std::os::unix::fs::DirBuilderExt;
+        let mut builder = builder;
+        builder.mode(0o700);
+        builder
+    };
+    builder.create(&parent).expect("private temp parent");
     parent
 }
 
@@ -593,7 +604,7 @@ fn empty_run_publishes_zero_part_manifest() {
 #[test]
 fn protected_root_is_enforced_for_create_and_resume() {
     use std::os::unix::fs::PermissionsExt;
-    let parent = tempfile::tempdir().unwrap();
+    let parent = protected_tempdir().unwrap();
     let mut run = RunOutput::create(config(2), parent.path()).unwrap();
     run.write_batch(&batch(1..=2)).unwrap();
     let boundary = run.checkpoint_boundary().unwrap();
@@ -607,7 +618,7 @@ fn protected_root_is_enforced_for_create_and_resume() {
 
 #[test]
 fn existing_part_is_never_replaced() {
-    let parent = tempfile::tempdir().unwrap();
+    let parent = protected_tempdir().unwrap();
     let mut run = RunOutput::create(config(2), parent.path()).unwrap();
     let dir = run_dir(parent.path());
     let part = dir.join("part-00001.parquet");
@@ -621,8 +632,8 @@ fn existing_part_is_never_replaced() {
 #[cfg(unix)]
 #[test]
 fn replacement_run_path_is_rejected_before_writing() {
-    let parent = tempfile::tempdir().unwrap();
-    let outside = tempfile::tempdir().unwrap();
+    let parent = protected_tempdir().unwrap();
+    let outside = protected_tempdir().unwrap();
     let mut run = RunOutput::create(config(2), parent.path()).unwrap();
     let dir = run_dir(parent.path());
     let moved = parent.path().join("moved");
@@ -637,7 +648,7 @@ fn replacement_run_path_is_rejected_before_writing() {
 #[cfg(unix)]
 #[test]
 fn reader_rejects_symlinked_part_even_with_matching_bytes() {
-    let parent = tempfile::tempdir().unwrap();
+    let parent = protected_tempdir().unwrap();
     let mut run = RunOutput::create(config(2), parent.path()).unwrap();
     run.write_batch(&batch(1..=2)).unwrap();
     let manifest = run.complete().unwrap();
@@ -651,7 +662,7 @@ fn reader_rejects_symlinked_part_even_with_matching_bytes() {
 
 #[test]
 fn resume_ignores_abandoned_staging_names_without_overwriting_them() {
-    let parent = tempfile::tempdir().unwrap();
+    let parent = protected_tempdir().unwrap();
     let mut run = RunOutput::create(config(2), parent.path()).unwrap();
     run.write_batch(&batch(1..=2)).unwrap();
     let boundary = run.checkpoint_boundary().unwrap();

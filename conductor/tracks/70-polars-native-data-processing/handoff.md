@@ -43,6 +43,20 @@ are moved after production items for the Windows lint. Local macOS focused
 durability/publication tests and the four path/sync tests pass; focused Clippy
 passes. Hosted reruns are still required for these corrections.
 
+The Linux VM's default umask also exposed group-writable test fixture roots.
+The policy correctly rejected them; fixtures and the benchmark now request
+private roots explicitly without changing a process-global umask. On macOS, all
+58 selected Arrow unit/durability/publication/tempfile tests pass under a child
+shell umask of `0002`, and focused Clippy passes. The Linux run uses one Cargo
+build job after parallel test linking hit the VM memory limit; first-failure
+logs are retained rather than treated as a transient test retry.
+
+Separate native checks demonstrate that a Linux second identity cannot write
+through a masked ACL, while an effective write grant is rejected by the guard.
+A macOS ACL-denied security query returns a guard error rather than acceptance
+of an apparently absent ACL. These are synthetic local fixtures, with retained
+source and raw logs in the Codex Security standalone artifact collection.
+
 An isolated Linux aarch64 qualification VM now runs at
 `LIMA_HOME=/Volumes/PortableSSD/kairos-lima`, instance `kairos-guard`. Its fresh
 Ubuntu minimal image matched the official SHA256

@@ -856,12 +856,18 @@ impl DurableRunPublicationReader {
 }
 
 #[cfg(test)]
+#[path = "../tests/support/mod.rs"]
+mod test_support;
+#[cfg(test)]
+use test_support::protected_tempdir as protected_test_root;
+
+#[cfg(test)]
 mod publication_file_tests {
     use super::*;
 
     #[test]
     fn publication_is_no_clobber() {
-        let parent = tempfile::tempdir().unwrap();
+        let parent = protected_test_root().unwrap();
         fs::create_dir(parent.path().join("run")).unwrap();
         let directory = open_run_directory(&parent.path().join("run")).unwrap();
         write_run_file(&directory, "part", b"original").unwrap();
@@ -876,7 +882,7 @@ mod path_hardening_tests {
 
     #[test]
     fn held_directory_supports_durability_sync() {
-        let parent = tempfile::tempdir().unwrap();
+        let parent = protected_test_root().unwrap();
         fs::create_dir(parent.path().join("run")).unwrap();
         let directory = open_run_directory(&parent.path().join("run")).unwrap();
         directory.sync_all().unwrap();
@@ -885,7 +891,7 @@ mod path_hardening_tests {
     #[test]
     fn open_directory_remains_bound_after_path_replacement() {
         use std::os::unix::fs::symlink;
-        let parent = tempfile::tempdir().unwrap();
+        let parent = protected_test_root().unwrap();
         let run = parent.path().join("run");
         let old = parent.path().join("old");
         let other = parent.path().join("other");
@@ -910,10 +916,10 @@ mod path_hardening_tests {
     #[test]
     fn publisher_does_not_follow_replaced_run_path() {
         use std::os::unix::fs::symlink;
-        let parent = tempfile::tempdir().unwrap();
+        let parent = protected_test_root().unwrap();
         let run = parent.path().join("run");
         let moved = parent.path().join("moved");
-        let outside = tempfile::tempdir().unwrap();
+        let outside = protected_test_root().unwrap();
         let writer = DurableRunPublicationWriter::new(parent.path(), "run", 10);
         let record = EventLogRecord {
             schema_version: SCHEMA_VERSION_V2,
@@ -941,7 +947,7 @@ mod path_hardening_tests {
 
     #[test]
     fn publisher_rejects_replacement_directory_receipt() {
-        let parent = tempfile::tempdir().unwrap();
+        let parent = protected_test_root().unwrap();
         let run = parent.path().join("run");
         let moved = parent.path().join("moved");
         let writer = DurableRunPublicationWriter::new(parent.path(), "run", 10);
