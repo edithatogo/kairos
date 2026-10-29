@@ -31,8 +31,8 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
-          python-version: "3.15.1"
-      - name: Verify repository-local Python 3.15.1
+          python-version: "3.15.2"
+      - name: Verify repository-local Python 3.15.2
         run: python scripts/python_runtime.py --github
       - name: Check that public release surface edits update CHANGELOG.md
         shell: bash

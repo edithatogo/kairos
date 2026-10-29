@@ -1,6 +1,7 @@
-use criterion::{black_box, criterion_group, criterion_main, BatchSize, Criterion, Throughput};
+use criterion::{criterion_group, criterion_main, BatchSize, Criterion, Throughput};
 use kairo_ecs_bench::BENCH_SCALE;
 use kairo_ecs_state::{ComponentRegistry, World};
+use std::hint::black_box;
 
 fn bench_create_1m_entities(c: &mut Criterion) {
     let scale = BENCH_SCALE;

@@ -24,14 +24,14 @@ const INDEX_SHA256 = 'ed6c1faabbe21f7bfef09ce258392cf181678149237a67ce492308a46c
 const LICENSE_SHA256 = 'ab868ad5a2ef5068560d9cd3b2180ec63c140bb4c5cae1ba779d300a0ac74fa3';
 const ARCHIVE_SHA256 = 'fbd36545bda6d9cd7da805cff6967f96ca2f7f9c59b45e79f97a3e129eec7485';
 const ARCHIVE_SRI = 'sha512-MtoYfkkiGt+8PL2ax7Gb7IQuIXfKIiR4Wde5aoC9h6BupT33oitaV4I+4DXVJqk1JLTVAQisOJrp9BVbQ5Ipsw==';
-const NPM_ARCHIVE_SHA256 = '3c6d8cb8da512e43f135bd254d70e21cc5d7b7962d24933892c9da614e4df783';
-const NPM_PACKAGE_SHA256 = '76a37a84bfec6c4dfba991bec5fadfe2b72c5867cca402b5d46908604fa6ae51';
+const NPM_ARCHIVE_SHA256 = '98d27165e01199bbfd911e0f816ea44acb92024bfed91f1e79a0d9a880e1bd61';
+const NPM_PACKAGE_SHA256 = '4a63368079bd0ee0e126dc7788f21cfa51482e77cea262ddaa8c4f8a9d77744e';
 const NPM_CLI_SHA256 = '8e5f6f3429f8cdbe693cdc29904e9d5a7b127a494bd15c804bd54c7403bfcbe7';
-const LOCK_SHA256 = 'cfe2002915f419eea7cca91c24d8dd58a81926701cc2810896fdcc6f89c64835';
+const LOCK_SHA256 = '82f3ccd32f5e61dab421905e0cbd4c906212315aaa3b2cac12ffbcf3f9e71d6e';
 const POSTCSS_PARSER = 'postcss-selector-parser';
-const POSTCSS_PARSER_VERSION = '7.1.6';
-const POSTCSS_PARSER_SRI = 'sha512-7qASPzhKF2l2KLboRZux8CCTRMdGiV08vWmyKzPz22qZ7ZjQBOeY7rNzNoCLSUiftJ7HUq0GERHmxw/t0dCdMw==';
-const POSTCSS_PARSER_RESOLVED = 'https://registry.npmjs.org/postcss-selector-parser/-/postcss-selector-parser-7.1.6.tgz';
+const POSTCSS_PARSER_VERSION = '7.1.7';
+const POSTCSS_PARSER_SRI = 'sha512-wWBro/7hJ40ye6TPiXkUQoXKCw23xSsjriUvqd7Uls9Sso3oLiON1flc18cCdnjgCRXw4fBVqUJJeOdDTh3P3g==';
+const POSTCSS_PARSER_RESOLVED = 'https://registry.npmjs.org/postcss-selector-parser/-/postcss-selector-parser-7.1.7.tgz';
 const MANIFEST_OVERRIDE = 'file:../../../../vendor/http-cache-semantics-kairos-prototype-0.1.0.tgz';
 const LOCK_RESOLVED = 'file:../../vendor/http-cache-semantics-kairos-prototype-0.1.0.tgz';
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
@@ -233,10 +233,10 @@ function validateInstalled(root) {
   const npmPackagePath = join(toolsDirectory, 'node_modules/npm/package.json');
   assertNoSymlinkPath(root, npmPackagePath, 'file');
   assert.equal(sha256(readFileSync(npmPackagePath)), NPM_PACKAGE_SHA256,
-    'installed npm package manifest differs from the pinned npm 12.1.0 artifact');
+    'installed npm package manifest differs from the pinned npm 12.2.1 artifact');
   const requireFromNpm = createRequire(npmPackagePath);
   const npmPackage = requireFromNpm(npmPackagePath);
-  assert.equal(npmPackage.version, '12.1.0');
+  assert.equal(npmPackage.version, '12.2.1');
   validatePostcssParser(resolve(root), npmPackagePath, lock);
   const npmCliPath = join(toolsDirectory, 'node_modules/npm/bin/npm-cli.js');
   assertNoSymlinkPath(root, npmCliPath, 'file');
@@ -264,7 +264,7 @@ function validateInstalled(root) {
   const ipAddressPackagePath = createRequire(agentPackagePath).resolve('ip-address/package.json');
   const ipAddressPackage = createRequire(agentPackagePath)(ipAddressPackagePath);
   assert.equal(dirname(ipAddressPackagePath), join(nodeModules, 'ip-address'));
-  assert.equal(ipAddressPackage.version, '10.7.4');
+  assert.equal(ipAddressPackage.version, '10.7.5');
 
   const braceExpansionPath = createRequire(npmPackagePath).resolve('brace-expansion/package.json');
   const braceExpansionPackage = createRequire(npmPackagePath)(braceExpansionPath);
@@ -300,7 +300,7 @@ function postcssFixtureRoot() {
   mkdirSync(dirname(npmPackagePath), { recursive: true });
   mkdirSync(dirname(queryPackagePath), { recursive: true });
   mkdirSync(dirname(parserPackagePath), { recursive: true });
-  writeFileSync(npmPackagePath, JSON.stringify({ name: 'npm', version: '12.1.0' }));
+  writeFileSync(npmPackagePath, JSON.stringify({ name: 'npm', version: '12.2.1' }));
   writeFileSync(queryPackagePath, JSON.stringify({
     name: '@npmcli/query',
     version: '5.0.0',
@@ -430,5 +430,5 @@ if (process.argv.length === 3 && process.argv[2] === '--self-test') {
   assert.equal(process.argv.length, 2, 'usage: node validate_npm_cli.mjs [--self-test]');
   const root = resolve(repositoryRoot);
   const { npmPackagePath, mfhPackagePath } = validateInstalled(root);
-  console.log(`npm 12.1.0 (${npmPackagePath}) and make-fetch-happen 16.0.1 (${mfhPackagePath}) resolve the private HCS archive payload`);
+  console.log(`npm 12.2.1 (${npmPackagePath}) and make-fetch-happen 16.0.1 (${mfhPackagePath}) resolve the private HCS archive payload`);
 }

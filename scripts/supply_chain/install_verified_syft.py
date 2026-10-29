@@ -304,8 +304,8 @@ def _scan_tar_gzip_bounds(archive_data: bytes, deadline_check: Callable[[], floa
 
 def require_supported_python(version_info: Any = sys.version_info) -> None:
     actual = tuple(version_info[:3])
-    if actual != (3, 15, 1):
-        raise RuntimeError(f"Python 3.15.1 is required; found {'.'.join(map(str, actual))}")
+    if actual != (3, 15, 2):
+        raise RuntimeError(f"Python 3.15.2 is required; found {'.'.join(map(str, actual))}")
 
 
 def strict_json(data: bytes, *, label: str, byte_limit: int = MAX_JSON_BYTES, depth_limit: int = 32) -> Any:

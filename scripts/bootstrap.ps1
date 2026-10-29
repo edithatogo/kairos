@@ -79,12 +79,12 @@ if (-not $SkipCargoInstalls) {
 
 if (-not $SkipPython) {
     if (-not (Test-Path .venv)) {
-        uv venv --python 3.15.1 .venv
+        uv venv --python 3.15.2 .venv
         if ($LASTEXITCODE -ne 0) { throw "Python environment creation failed" }
     }
     $pythonPath = Join-Path $PWD ".venv/Scripts/python.exe"
     & $pythonPath scripts/python_runtime.py
-    if ($LASTEXITCODE -ne 0) { throw "Expected Python 3.15.1" }
+    if ($LASTEXITCODE -ne 0) { throw "Expected Python 3.15.2" }
     uv pip sync --python $pythonPath scripts/bootstrap-python-tools.lock
     if ($LASTEXITCODE -ne 0) { throw "Python dependency installation failed" }
 }

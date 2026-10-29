@@ -27,13 +27,13 @@ class LocalPythonTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual(subprocess.check_output(['git', '-C', str(root), 'status', '--porcelain'], text=True), '')
             receipt = json.loads(result.stdout)
-            self.assertEqual(receipt['version'], '3.15.1')
+            self.assertEqual(receipt['version'], '3.15.2')
             self.assertEqual(Path(receipt['prefix']), root / '.venv')
             executable = receipt['executable']
             if os.name != 'nt':
                 self.assertTrue(Path(executable).is_symlink())
             child = subprocess.check_output([executable, '-c', 'import sys; print(sys.version_info[:3]); print(sys.prefix)'], text=True)
-            self.assertIn('(3, 15, 1)', child)
+            self.assertIn('(3, 15, 2)', child)
             self.assertIn(str(root / '.venv'), child)
             marker = root / '.venv' / 'preserve-me'
             marker.write_text('in-flight recovery state')
@@ -92,7 +92,7 @@ class LocalPythonTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             with patch.object(module.sys, 'version_info', (3, 16, 0, 'alpha', 1)):
-                with self.assertRaisesRegex(RuntimeError, '3.15.1'):
+                with self.assertRaisesRegex(RuntimeError, '3.15.2'):
                     module.prepare(root)
             self.assertFalse((root / '.venv').exists())
 
@@ -114,7 +114,7 @@ class LocalPythonTests(unittest.TestCase):
                     continue
                 with self.subTest(workflow=workflow.name, job=job.splitlines()[0]):
                     self.assertIn('python-version:', job)
-                    self.assertIn('3.15.1', job)
+                    self.assertIn('3.15.2', job)
                     if workflow.name == 'archive-supply-chain-main.yml' and job.startswith('  acquire:'):
                         self.assertLess(job.index('actions/setup-python@'), job.index('id: dispatch-pins'))
                         self.assertIn('Bootstrap isolated Python for dispatch pin validation', job)
@@ -139,7 +139,7 @@ class LocalPythonTests(unittest.TestCase):
                                     env=dict(os.environ, GITHUB_WORKSPACE=str(root), GITHUB_PATH=str(output)))
             self.assertEqual(result.returncode, 0, result.stderr)
             version, prefix = json.loads(result.stdout)
-            self.assertEqual(version, [3, 15, 1])
+            self.assertEqual(version, [3, 15, 2])
             self.assertEqual(Path(prefix), root / '.venv')
             self.assertEqual(output.read_text().strip(), str(root / '.venv/bin'))
 
@@ -152,7 +152,7 @@ class LocalPythonTests(unittest.TestCase):
         module.validate_docker_surface()
         read = module.read
         original = read('docker/Dockerfile')
-        for candidate in [original.replace('python:3.15.1-', 'python:3.14.8-'),
+        for candidate in [original.replace('python:3.15.2-', 'python:3.14.8-'),
                           original.replace('RUN python3 -m venv .venv', 'RUN true'),
                           original.replace('/work/.venv/bin:${PATH}', '/usr/local/bin:${PATH}')]:
             with self.subTest(candidate=candidate.splitlines()[-3:]):

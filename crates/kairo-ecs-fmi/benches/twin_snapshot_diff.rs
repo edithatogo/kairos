@@ -1,5 +1,6 @@
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use kairo_ecs_fmi::digital_twin::sync::{TwinStateEntry, TwinStateSnapshot};
+use std::hint::black_box;
 
 // This is the pre-optimization implementation retained as a benchmark baseline.
 // Both algorithms receive the same constructor-produced sorted, unique inputs;

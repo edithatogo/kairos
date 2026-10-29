@@ -448,7 +448,11 @@ class AcquisitionTests(unittest.TestCase):
         real_popen = a.subprocess.Popen
         children = []
         def start(*args, **kwargs):
-            child = real_popen(*args, **kwargs); children.append(child); return child
+            child = real_popen(*args, **kwargs)
+            # macOS cleanup can also spawn a bounded ps group probe.
+            if args[0] == [sys.executable, '-c', code]:
+                children.append(child)
+            return child
         with tempfile.TemporaryDirectory() as t:
             path = Path(t) / 'sigterm.zip'; old = a.DOWNLOAD_TIMEOUT_SECONDS; a.DOWNLOAD_TIMEOUT_SECONDS = 0.15
             try:

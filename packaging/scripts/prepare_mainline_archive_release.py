@@ -59,12 +59,13 @@ SYFT_BUNDLE_URL = SYFT_CHECKSUM_URL + ".sigstore.json"
 SYFT_ARCHIVE_URL = "https://github.com/anchore/syft/releases/download/v1.54.0/syft_1.54.0_linux_amd64.tar.gz"
 SYFT_RELEASE_COMMIT = "cc326e45a6213360266dda4b30cc68095946d676"
 SYFT_CERT_IDENTITY = "https://github.com/anchore/syft/.github/workflows/release.yaml@refs/heads/main"
-SYFT_PYTHON_BIN = "/opt/hostedtoolcache/Python/3.15.1/x64/bin"
+SYFT_PYTHON_BIN = "/opt/hostedtoolcache/Python/3.15.2/x64/bin"
 SYFT_PYTHON_NAMES = {"python", "python3", "python3.15"}
-# Receipt validation preserves immutable historical provenance; execution uses 3.15.1.
+# Receipt validation preserves immutable historical provenance; execution uses 3.15.2.
 SYFT_RECEIPT_PYTHONS = {
     "3.14.8": ("/opt/hostedtoolcache/Python/3.14.8/x64/bin", {"python", "python3", "python3.14"}),
-    "3.15.1": (SYFT_PYTHON_BIN, SYFT_PYTHON_NAMES),
+    "3.15.1": ("/opt/hostedtoolcache/Python/3.15.1/x64/bin", SYFT_PYTHON_NAMES),
+    "3.15.2": (SYFT_PYTHON_BIN, SYFT_PYTHON_NAMES),
 }
 CLAIM_SCOPE = "local consistency only; unsigned and untrusted builder; no SLSA level or release acceptance"
 READBACK_VALIDATOR = "packaging/scripts/validate_actual_archive_release.py"

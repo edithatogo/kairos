@@ -47,7 +47,7 @@ class StrictNpmAuditWorkflowTests(unittest.TestCase):
         self.assertLess(self.job.index("- name: Test bootstrap parser security pin"),
                         self.job.index("- name: Run strict private-tree npm audit"))
         manifest = json.loads((ROOT / "scripts/bootstrap-node-tools/package.json").read_text())
-        self.assertEqual(manifest["overrides"]["postcss-selector-parser"], "7.1.6")
+        self.assertEqual(manifest["overrides"]["postcss-selector-parser"], "7.1.7")
 
     def test_node_binary_is_resolved_before_both_suites_and_reused(self):
         setup = self.job.index("uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1")
@@ -96,8 +96,8 @@ class StrictNpmAuditWorkflowTests(unittest.TestCase):
             "test_npm_audit_runner.py",
         ):
             self.assertNotIn(forbidden, self.job)
-        self.assertIn("node-version: '22.23.3'", self.job)
-        self.assertIn('python-version: "3.15.1"', self.job)
+        self.assertIn("node-version: '26.13.0'", self.job)
+        self.assertIn('python-version: "3.15.2"', self.job)
         self.assertIn("npm ci --ignore-scripts", self.job)
         self.assertIn("npm run build", self.job)
         self.assertIn("npm pack --ignore-scripts", self.job)
@@ -143,7 +143,7 @@ class StrictNpmAuditWorkflowTests(unittest.TestCase):
                 if argv[0] == "git":
                     stdout = gate.SOURCE_COMMIT + "\n"
                 elif argv[-1] == "--version" and len(argv) > 2:
-                    stdout = "12.1.0\n"
+                    stdout = "12.2.1\n"
                 elif argv[-1] == "--version":
                     stdout = "v26.10.0\n"
                 else:

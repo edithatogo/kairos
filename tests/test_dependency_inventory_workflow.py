@@ -34,7 +34,7 @@ def fixture(root):
                    'metadata': {'input_contract': 'installed-tooling-inventory-no-edge-or-extras-claims'},
                    'manifests': {manifest: {'resolved': {'pkg:pypi/fictional-' + identifier + '@1.2.3': {'package_url': 'pkg:pypi/fictional-' + identifier + '@1.2.3'}}}}}
         (leaf / 'snapshot.json').write_text(json.dumps(payload))
-        receipt = {'sourceCommit': SHA, 'manifest': manifest, 'python': '3.15.1', 'localPrefixVerified': True,
+        receipt = {'sourceCommit': SHA, 'manifest': manifest, 'python': '3.15.2', 'localPrefixVerified': True,
                    'lockSha256': hashlib.sha256(sources[manifest].encode()).hexdigest()}
         (leaf / 'receipt.json').write_text(json.dumps(receipt))
     (root / 'sources.json').write_text(json.dumps(sources))

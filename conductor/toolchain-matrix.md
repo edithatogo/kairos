@@ -12,15 +12,15 @@ Prefer latest suitable qualified versions. The human clarification of 24 October
 |---|---|
 | `rust-toolchain.toml` | Rust channel is exactly `1.99.1`; components are `rustfmt` and `clippy`. |
 | `Cargo.toml` | Workspace `rust-version` is `1.99`; edition is `2021`. |
-| `mise.toml` | Repo-local developer defaults are Rust `1.99.1`, Python `3.15.1`, Node `24.22.1`, Go `latest`, Julia `latest`, R `latest`, .NET `10.0`. |
-| `bindings/python/pyproject.toml` | Python binding declares `requires-python = ">=3.15.1,<3.16"`. |
+| `mise.toml` | Repo-local developer defaults are Rust `1.99.1`, Python `3.15.2`, Node `26.13.0`, Go `latest`, Julia `latest`, R `latest`, .NET `10.0`. |
+| `bindings/python/pyproject.toml` | Python binding declares `requires-python = ">=3.15.2,<3.16"`. |
 | `bindings/r/DESCRIPTION` | R binding declares `Depends: R (>= 4.2)`. |
 | `bindings/julia/Project.toml` | Julia binding declares `[compat] julia = "1.10"`. |
-| `bindings/typescript/package.json` | TypeScript binding declares `engines.node = ">=22 <25"` for the production Node support floor. |
-| `bindings/csharp/global.json` | C# SDK default is `10.0.202` with `latestFeature` roll-forward. |
+| `bindings/typescript/package.json` | TypeScript binding declares `engines.node = ">=22 <27"` for the production Node support floor. |
+| `bindings/csharp/global.json` | C# SDK default is `10.0.403` with `latestFeature` roll-forward. |
 | `bindings/csharp/src/Kairo.ECS/Kairo.ECS.csproj` | C# binding targets `net10.0;net11.0`. |
 | `bindings/go/go.mod` | Go binding declares `go 1.23`. |
-| `.github/workflows/ci-bindings.yml` | Current binding CI covers Python 3.15.1, .NET 10/11, Node LTS, Go stable, and Ubuntu hosted runners. |
+| `.github/workflows/ci-bindings.yml` | Current binding CI covers Python 3.15.2, .NET 10/11, Node LTS, Go stable, and Ubuntu hosted runners. |
 
 ## Support Matrix
 
@@ -33,9 +33,9 @@ Support labels:
 | Ecosystem | Binding track | Minimum supported version | Latest/current supported version | Experimental or preview lane | CI selector | Deprecation horizon | Linux x86_64 | Linux aarch64 | macOS x86_64 | macOS aarch64 | Windows x86_64 |
 |---|---:|---|---|---|---|---|---|---|---|---|---|
 | Rust core | 00/01/13 | Rust `1.99.1` only in current profile | Rust `1.99.1` only in current profile | None currently qualified | `1.99.1` exact | Current exact profile retained; necessary alternatives require consumer-specific qualification under the dependency policy. | Rust 1.99.1 checks and test suite; exact version parser rejects aliases and prerelease suffixes | best-effort | best-effort | best-effort | best-effort |
-| Python binding | 06 | CPython `3.15.1` | CPython `3.15.1` | None currently qualified | `3.15.1` | 3.15.1 remains the accepted default; necessary alternatives may be qualified under the revised dependency policy. | CI-covered | best-effort | best-effort | best-effort | best-effort |
+| Python binding | 06 | CPython `3.15.2` | CPython `3.15.2` | None currently qualified | `3.15.2` | 3.15.2 remains the accepted default; necessary alternatives may be qualified under the revised dependency policy. | CI-covered | best-effort | best-effort | best-effort | best-effort |
 | R binding | 07 | R `4.2` package floor; CI floor is previous CRAN release | R `4.6.x` current release | R-devel advisory lane only | `oldrel-1`, `release` | Drop a package floor only after CRAN support pressure or dependency incompatibility is documented for 2 cycles/6 months. | CI-covered | best-effort | best-effort | best-effort | best-effort |
-| Julia binding | 08 | Julia `1.10` LTS-compatible floor | Julia `1.12.x` current stable | Julia `1.13` beta advisory lane only | `1.10`, `1.12` | Drop an LTS-compatible floor only after Julia LTS guidance changes and 2 cycles/6 months notice is complete. | CI-covered | best-effort | best-effort | best-effort | best-effort |
+| Julia binding | 08 | Julia `1.10` LTS-compatible floor | Julia `1.13.3` current stable | Julia `1.13` beta advisory lane only | `1.10`, `1.12` | Drop an LTS-compatible floor only after Julia LTS guidance changes and 2 cycles/6 months notice is complete. | CI-covered | best-effort | best-effort | best-effort | best-effort |
 | TypeScript/Wasm binding | 09 | Node `22` LTS | Node `24` Active LTS/current production lane | Node `25` current advisory lane; Wasm browser smoke best-effort | `22`, `24` | Drop an LTS major only after Node EOL and 2 cycles/6 months notice is complete. | CI-covered | best-effort | best-effort | best-effort | best-effort |
 | C# binding | 10 | .NET SDK `10.0.x`; target `net10.0` | .NET SDK `10.0.x` LTS | .NET SDK `11.0.x` preview; target `net11.0` is allowed to fail only while explicitly marked experimental | `10.0.x`, `11.0.x` | Drop a TFM only after Microsoft support ends or package validation becomes unsustainable with 2 cycles/6 months notice. | CI-covered | best-effort | best-effort | best-effort | best-effort |
 | Go binding | 11 | Go module floor `1.23`; CI support floor `1.25` | Go `1.26.x` | Go tip advisory lane only | `1.25.x`, `1.26.x` | Drop a Go release only when it is older than the two supported upstream releases and 2 cycles/6 months notice is complete. | CI-covered | best-effort | best-effort | best-effort | best-effort |
@@ -66,7 +66,7 @@ The TypeScript/Wasm support row is the source of truth for Node/Wasm binding CI 
 
 The C# support row is the source of truth for .NET SDK lanes, target frameworks, and preview handling.
 
-Local Windows validation must not set `MSBuildSDKsPath` to the .NET 11 preview SDK when running the Track 10 net10 lane. The repository `global.json` selects SDK `10.0.202`; a stale preview `MSBuildSDKsPath` causes MSBuild task-host resolution failures before project compilation. The local net10 lane passed after clearing `MSBuildSDKsPath`, setting `DOTNET_CLI_TELEMETRY_OPTOUT=1`, disabling shared compilation, and using single-node MSBuild with node reuse disabled.
+Local Windows validation must not set `MSBuildSDKsPath` to the .NET 11 preview SDK when running the Track 10 net10 lane. The repository `global.json` selects SDK `10.0.403`; a stale preview `MSBuildSDKsPath` causes MSBuild task-host resolution failures before project compilation. The local net10 lane passed after clearing `MSBuildSDKsPath`, setting `DOTNET_CLI_TELEMETRY_OPTOUT=1`, disabling shared compilation, and using single-node MSBuild with node reuse disabled.
 
 The experimental net11 lane requires invoking the preview SDK outside the `bindings/csharp` `global.json` scope. Local restore passes with `C:\Users\60217257\scoop\apps\dotnet-sdk-preview\current\dotnet.exe` from the repository root, but the preview build is blocked in this shell by Roslyn named-pipe access denial under `\\.\pipe\LOCAL\dotnet_*`.
 

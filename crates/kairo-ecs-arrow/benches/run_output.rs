@@ -22,12 +22,13 @@ use std::sync::Mutex;
 use std::thread;
 use std::time::Duration;
 
-use criterion::{black_box, criterion_group, criterion_main, BatchSize, Criterion, Throughput};
+use criterion::{criterion_group, criterion_main, BatchSize, Criterion, Throughput};
 use kairo_ecs_arrow::run_output::{
     read_completed_manifest, validate_run_output, RunOutput, RunOutputConfig,
 };
 use kairo_ecs_arrow::{EventLogRecord, EventStatus, SCHEMA_VERSION_V2};
 use kairo_ecs_types::{EntityId, EventId};
+use std::hint::black_box;
 
 const SMALL_ROWS: usize = 100;
 const LARGE_BATCHES: usize = 20;

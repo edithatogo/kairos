@@ -56,8 +56,8 @@ jobs:
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         id: python
         with:
-          python-version: '3.15.1'
-      - name: Verify repository-local Python 3.15.1
+          python-version: '3.15.2'
+      - name: Verify repository-local Python 3.15.2
         id: runtime
         run: python scripts/python_runtime.py --github
       - name: Install the existing public hash lock
@@ -72,7 +72,7 @@ jobs:
           import hashlib, json, os, platform, subprocess, sys
           from pathlib import Path
           from urllib.parse import urlsplit
-          assert tuple(sys.version_info) == (3, 15, 1, 'final', 0)
+          assert tuple(sys.version_info) == (3, 15, 2, 'final', 0)
           assert Path(sys.prefix).resolve() == Path('.venv').resolve()
           assert subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip() == os.environ['SOURCE_SHA']
           lock = Path(os.environ['LOCKFILE'])
@@ -156,7 +156,7 @@ jobs:
               assert.equal(payload.job.id, context.runId + '.' + id);
               assert.equal(payload.job.correlator, 'kairos-python315-inventory:' + id);
               assert.deepEqual(Object.keys(payload.manifests), [manifest]);
-              assert.equal(receipt.sourceCommit, context.sha); assert.equal(receipt.python, '3.15.1');
+              assert.equal(receipt.sourceCommit, context.sha); assert.equal(receipt.python, '3.15.2');
               assert.equal(receipt.localPrefixVerified, true); assert.equal(receipt.manifest, manifest);
               const source = await github.rest.repos.getContent({...context.repo,path:manifest,ref:context.sha});
               const digest = crypto.createHash('sha256').update(Buffer.from(source.data.content,'base64')).digest('hex');

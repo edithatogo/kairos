@@ -15,15 +15,15 @@
     "serve": "astro preview"
   },
   "dependencies": {
-    "@astrojs/mdx": "8.0.2",
-    "@astrojs/starlight": "^0.42.4",
-    "astro": "^7.3.5",
+    "@astrojs/mdx": "8.1.2",
+    "@astrojs/starlight": "0.42.7",
+    "astro": "7.4.4",
     "hast-util-select": "6.0.4",
     "rehype-parse": "9.0.1",
     "rehype-remark": "10.0.1",
     "remark-gfm": "4.0.1",
     "remark-stringify": "11.0.0",
-    "starlight-links-validator": "^0.26.0",
+    "starlight-links-validator": "0.27.0",
     "starlight-plugin-icons": "^1.1.6",
     "starlight-versions": "^0.10.1",
     "unified": "11.0.5",
@@ -31,9 +31,12 @@
   },
   "overrides": {
     "@expressive-code/core": {
-      "postcss-nested": "8.0.1"
+      "postcss-nested": "9.0.1"
     },
-    "postcss-selector-parser": "7.1.6",
+    "postcss-selector-parser": "7.1.7",
     "source-map-js": "1.2.2"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
   }
 }

@@ -220,7 +220,7 @@ impl ContinuousSpatialIndex2D {
         let mut candidates: Vec<(EntityId, f64)> = Vec::new();
         let mut cutoff_dist: Option<f64> = None;
 
-        for item in self.tree.nearest_neighbor_iter(&query_point) {
+        for item in self.tree.nearest_neighbor_iter(query_point) {
             let dist = item.distance_2(&query_point).sqrt();
             if let Some(cutoff) = cutoff_dist {
                 // Keep collecting as long as items have the same distance (within floating point precision)
@@ -270,7 +270,7 @@ impl ContinuousSpatialIndex2D {
         let aabb = AABB::from_corners([min_x, min_y], [max_x, max_y]);
         let mut results: Vec<EntityId> = self
             .tree
-            .locate_in_envelope(&aabb)
+            .locate_in_envelope(aabb)
             .map(|item| item.entity)
             .collect();
 

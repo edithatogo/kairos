@@ -1,3 +1,10 @@
+## 29 October 2026: active checkout recovery
+
+Chat `01a18344-cfb8-7711-8c38-fef1052b9fcf` remains the sole Kairos integrator.
+Active standard Git worktree: `/Volumes/PortableSSD/codex-worktrees/kairos-dependency-frontier-recovery-20261029`, branch `codex/dependency-frontier-recovery-20261029`, whole-repository advisory claim. Native scope: none. Next: latest-dependency source, package and platform qualification.
+
+A concurrent bulk filesystem removal deleted the active app-managed checkout and earlier integration checkout during qualification. Git commits and external build evidence survived; uncommitted edits were reconstructed from retained scripts/tool evidence. Managed attachment returned ENOENT. The original managed checkout was restored at its committed base using ordinary `git worktree add --force` solely to release its ownership claim through the supported harness CLI; source work continues in this external fallback. It is not app-managed. Interrupted results are not qualification of the recovered tree. Preserve every active Kairos worktree and external evidence/cache path during cleanup. The user authorized an exclusion message to the storage maintenance chat; cleanup ownership remains unconfirmed.
+
 # KairoECS Conductor Status
 
 ## Dependency frontier qualification assignment — 29 October 2026

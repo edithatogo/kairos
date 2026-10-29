@@ -112,7 +112,7 @@ class StrictAuditTests(unittest.TestCase):
             if mode == "validator" and argv[-1].endswith("validate_npm_cli.mjs"):
                 return subprocess.CompletedProcess(argv, 1, "", "resolution failed")
             if argv[-1] == "--version" and len(argv) > 2:
-                value = "12.1.0\n"
+                value = "12.2.1\n"
             elif argv[-1] == "--version":
                 value = "v26.10.0\n"
             elif argv[0] == "git":
@@ -150,7 +150,7 @@ class StrictAuditTests(unittest.TestCase):
                     self.assertEqual(receipt["tool_hashes"]["node_sha256"], node_hash)
                     self.assertEqual(receipt["tool_hashes"]["npm_cli_sha256"], npm_hash)
                     self.assertTrue(all(call[0][0] != "node" for call in calls if call[0][0] != "git"))
-                    self.assertEqual(receipt["npm-version"], "12.1.0")
+                    self.assertEqual(receipt["npm-version"], "12.2.1")
                 self.assertTrue(all(call[1]["cwd"] == root.resolve() and call[1]["timeout"] == 180 for call in calls))
                 self.assertTrue((output / "receipt.json").is_file())
                 with self.assertRaises(FileExistsError):

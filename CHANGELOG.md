@@ -14,13 +14,16 @@ Format:
 
 ## Unreleased
 
-- `crates/kairo-ecs-arrow`: upgrade optional native Polars and Arrow interchange dependencies from 0.45.1 to exactly 0.55.2 and adapt DataFrame construction and column access. Dependency security and platform qualification remain required before release.
+- Upgrade active Rust, Python, Node documentation/binding and .NET test dependencies to the 29 October registry frontier; qualify Python 3.15.2 and Node 26.13.0 in isolated environments. Update rstar spatial queries and Prost's derive feature for their new APIs.
+- `kairo-ecs-arrow` source integration pins Polars development revision `96439685eb2f95108f51087d2b76091917f2593c` and its required hashbrown revision. This resolves the zstd and object_store/XML vulnerability closure. Git consumers must retain the documented workspace patch; crates.io publication is disabled until a separately qualified published Polars closure is available.
+
+- `crates/kairo-ecs-arrow`: adapt DataFrame construction and column access for the new native Polars API. Source and published-package qualification remain separate gates.
 
 - `crates/kairo-ecs-arrow`: durable publication and checkpoint resume require an existing protected output root; unsafe permissions and unsupported ACL/filesystem profiles fail explicitly. New runs and files are private, completed output is never replaced, and abandoned staging files do not block recovery. Native permission checks are isolated in the new Apache-2.0 `kairo-ecs-fs-guard` helper, with Linux/macOS/Windows qualification checks.
 
 - `crates/kairo-ecs-arrow`: stream-named IPC APIs now use the Arrow IPC stream format; use `read_ipc_file` for files produced by the earlier writer. Manifest/part consistency is verified before recovery watermarks are returned, and the telemetry example is included in Rust source packages.
 
-- `.github/workflows` updates pinned actions while retaining the qualified Python 3.15.1 runtime. Exact-pin policy checks follow the updated actions, and `cloud/validate_cloud_hpc.py` recognizes the existing typed CLI command dispatch.
+- `.github/workflows` updates pinned actions while qualifying the Python 3.15.2 runtime. Exact-pin policy checks follow the updated actions, and `cloud/validate_cloud_hpc.py` recognizes the existing typed CLI command dispatch.
 
 - `crates/kairo-ecs-core`: restore the experimental `ScheduledEventPreview` projection and `Scheduler::peek_next` inspection API without changing event ordering or dispatch behavior; add focused scheduler compatibility coverage.
 

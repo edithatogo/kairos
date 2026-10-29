@@ -28,7 +28,7 @@ class MainlineArchiveReleaseWorkflowTests(unittest.TestCase):
 
     def test_native_pinned_tools_and_locked_dependencies(self):
         self.assertIn("runs-on: ubuntu-24.04", self.workflow)
-        self.assertIn('python-version: "3.15.1"', self.workflow)
+        self.assertIn('python-version: "3.15.2"', self.workflow)
         self.assertIn("--require-hashes -r scripts/archive-python-tools.lock", self.workflow)
         self.assertLess(self.workflow.index("Install hash-locked"), self.workflow.index("packaging/scripts/prepare_mainline_archive_release.py"))
 
