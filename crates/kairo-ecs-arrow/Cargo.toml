@@ -33,6 +33,9 @@ polars-arrow = { version = "0.45.1", default-features = false, optional = true }
 serde = { version = "1", features = ["derive"], optional = true }
 serde_json = { version = "1", optional = true }
 
+[target.'cfg(unix)'.dependencies]
+rustix = { version = "1.1.5", features = ["fs"], optional = true }
+
 [features]
 default = []
 # Real from Phase 0: official arrow_schema::Schema parity for EVENT_LOG_FIELDS.
@@ -43,7 +46,7 @@ arrow-native = ["dep:arrow-schema"]
 # (kairo-ecs-core); no new transitive trees. Maintainer override of the
 # Tracks 93/94/96 sequencing gate recorded in the track handoff.
 serde-runtime = ["dep:serde", "dep:serde_json"]
-polars-native = ["dep:polars", "dep:polars-arrow", "serde-runtime"]
+polars-native = ["dep:polars", "dep:polars-arrow", "dep:rustix", "serde-runtime"]
 # Still a stub, as registered in #261. Admitting parquet pulls arrow-array,
 # which transitively pulls tiny-keccak (CC0-1.0); that licence decision belongs
 # to Track 29/20 and is deliberately not taken here.

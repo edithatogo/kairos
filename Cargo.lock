@@ -1638,6 +1638,7 @@ dependencies = [
  "kairo-ecs-types",
  "polars",
  "polars-arrow",
+ "rustix",
  "serde",
  "serde_json",
  "sha2",

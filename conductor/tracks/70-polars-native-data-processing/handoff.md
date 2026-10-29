@@ -20,11 +20,14 @@ atomic-write and Track 70 durability test files passed 27 tests with Rust
 1.99.1 and `--locked --features polars-native`. Focused Clippy and rustfmt
 also passed. Build artifacts are in
 `/Volumes/PortableSSD/codex-builds/kairos-arrow-publication-20261029`.
-The regular-file checks do not prevent a hostile concurrent filesystem actor
-from replacing paths between metadata and open; no adversarial race safety is
-claimed. Directory fsync is Unix-only, and an error after rename may leave an
-already-published file visible. Independent review, cross-platform execution,
-security audit, `just ci`, hosted checks and consumer acceptance remain open.
+The follow-up candidate uses a held directory descriptor and no-follow opens on
+Unix via the already-locked rustix crate, preventing path replacement between
+the check and open on that platform. The non-Unix fallback still uses path
+checks and is not qualified against concurrent replacement. Directory fsync is
+Unix-only, and an error after rename may leave an already-published file
+visible. Independent security and compatibility review, cross-platform
+execution, security audit, `just ci`, hosted checks and consumer acceptance
+remain open.
 
 ## Summary
 All phases (Phase 0 through Phase 4) of Track 70 are complete and verified across all criteria:

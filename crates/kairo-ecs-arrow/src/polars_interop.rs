@@ -525,6 +525,92 @@ impl DurableRunPublicationWriter {
     }
 }
 
+#[cfg(unix)]
+type OpenRunDirectory = fs::File;
+#[cfg(not(unix))]
+type OpenRunDirectory = PathBuf;
+
+#[cfg(unix)]
+fn open_run_directory(path: &Path) -> Result<OpenRunDirectory, ArrowError> {
+    use rustix::fs::{open, Mode, OFlags};
+    let fd = open(
+        path,
+        OFlags::RDONLY | OFlags::DIRECTORY | OFlags::NOFOLLOW | OFlags::CLOEXEC,
+        Mode::empty(),
+    )
+    .map_err(|e| ArrowError::Io(format!("Cannot open run directory: {e}")))?;
+    Ok(fs::File::from(fd))
+}
+
+#[cfg(not(unix))]
+fn open_run_directory(path: &Path) -> Result<OpenRunDirectory, ArrowError> {
+    let metadata = fs::symlink_metadata(path).map_err(|e| ArrowError::Io(e.to_string()))?;
+    if !metadata.file_type().is_dir() {
+        return Err(ArrowError::Io("Run path is not a directory".to_string()));
+    }
+    Ok(path.to_path_buf())
+}
+
+#[cfg(unix)]
+fn read_run_file(directory: &OpenRunDirectory, name: &str) -> Result<Vec<u8>, ArrowError> {
+    use rustix::fs::{openat, Mode, OFlags};
+    use std::io::Read;
+    let fd = openat(
+        directory,
+        name,
+        OFlags::RDONLY | OFlags::NOFOLLOW | OFlags::CLOEXEC | OFlags::NONBLOCK,
+        Mode::empty(),
+    )
+    .map_err(|e| ArrowError::Io(format!("Cannot open run file: {e}")))?;
+    let mut file = fs::File::from(fd);
+    if !file
+        .metadata()
+        .map_err(|e| ArrowError::Io(e.to_string()))?
+        .is_file()
+    {
+        return Err(ArrowError::Io("Run file is not regular".to_string()));
+    }
+    let mut bytes = Vec::new();
+    file.read_to_end(&mut bytes)
+        .map_err(|e| ArrowError::Io(e.to_string()))?;
+    Ok(bytes)
+}
+
+#[cfg(all(test, unix))]
+mod path_hardening_tests {
+    use super::*;
+
+    #[test]
+    fn open_directory_remains_bound_after_path_replacement() {
+        use std::os::unix::fs::symlink;
+        let parent = tempfile::tempdir().unwrap();
+        let run = parent.path().join("run");
+        let old = parent.path().join("old");
+        let other = parent.path().join("other");
+        fs::create_dir(&run).unwrap();
+        fs::create_dir(&other).unwrap();
+        fs::write(run.join("part"), b"original").unwrap();
+        fs::write(other.join("part"), b"replacement").unwrap();
+        let directory = open_run_directory(&run).unwrap();
+        fs::rename(&run, &old).unwrap();
+        symlink(&other, &run).unwrap();
+        assert_eq!(read_run_file(&directory, "part").unwrap(), b"original");
+        assert!(open_run_directory(&run).is_err());
+        symlink(other.join("part"), old.join("linked")).unwrap();
+        assert!(read_run_file(&directory, "linked").is_err());
+    }
+}
+
+#[cfg(not(unix))]
+fn read_run_file(directory: &OpenRunDirectory, name: &str) -> Result<Vec<u8>, ArrowError> {
+    let path = directory.join(name);
+    let metadata = fs::symlink_metadata(&path).map_err(|e| ArrowError::Io(e.to_string()))?;
+    if !metadata.file_type().is_file() {
+        return Err(ArrowError::Io("Run file is not regular".to_string()));
+    }
+    fs::read(path).map_err(|e| ArrowError::Io(e.to_string()))
+}
+
 pub struct DurableRunPublicationReader {
     run_dir: PathBuf,
     valid_run_id: bool,
@@ -539,29 +625,24 @@ impl DurableRunPublicationReader {
         }
     }
 
-    pub fn read_manifest(&self) -> Result<DurableManifest, ArrowError> {
+    fn open_run(&self) -> Result<OpenRunDirectory, ArrowError> {
         if !self.valid_run_id {
             return Err(ArrowError::Io("Invalid run identifier".to_string()));
         }
-        let run_metadata =
-            fs::symlink_metadata(&self.run_dir).map_err(|e| ArrowError::Io(e.to_string()))?;
-        if !run_metadata.file_type().is_dir() {
-            return Err(ArrowError::Io("Run path is not a directory".to_string()));
-        }
-        let manifest_path = self.run_dir.join("manifest.json");
-        if !manifest_path.exists() {
-            return Err(ArrowError::Io(
-                "Missing manifest.json: run is incomplete or interrupted".to_string(),
-            ));
-        }
-        let metadata =
-            fs::symlink_metadata(&manifest_path).map_err(|e| ArrowError::Io(e.to_string()))?;
-        if !metadata.file_type().is_file() {
-            return Err(ArrowError::Io("Manifest is not a regular file".to_string()));
-        }
-        let content =
-            fs::read_to_string(&manifest_path).map_err(|e| ArrowError::Io(e.to_string()))?;
-        let manifest = DurableManifest::from_json(&content)?;
+        open_run_directory(&self.run_dir)
+    }
+
+    pub fn read_manifest(&self) -> Result<DurableManifest, ArrowError> {
+        self.read_manifest_at(&self.open_run()?)
+    }
+
+    fn read_manifest_at(
+        &self,
+        directory: &OpenRunDirectory,
+    ) -> Result<DurableManifest, ArrowError> {
+        let bytes = read_run_file(directory, "manifest.json")?;
+        let content = std::str::from_utf8(&bytes).map_err(|e| ArrowError::Io(e.to_string()))?;
+        let manifest = DurableManifest::from_json(content)?;
         if !manifest.completed
             || manifest.schema_stream != crate::EVENT_LOG_STREAM_V2
             || self.run_dir.file_name() != Some(std::ffi::OsStr::new(&manifest.run_id))
@@ -601,19 +682,12 @@ impl DurableRunPublicationReader {
     }
 
     pub fn read_all_records(&self) -> Result<Vec<EventLogRecord>, ArrowError> {
-        let manifest = self.read_manifest()?;
+        let directory = self.open_run()?;
+        let manifest = self.read_manifest_at(&directory)?;
         let mut all_records = Vec::new();
 
         for part in manifest.parts {
-            let part_path = self.run_dir.join(&part.filename);
-            let metadata =
-                fs::symlink_metadata(&part_path).map_err(|e| ArrowError::Io(e.to_string()))?;
-            if !metadata.file_type().is_file() {
-                return Err(ArrowError::Io(
-                    "Manifest part is not a regular file".to_string(),
-                ));
-            }
-            let bytes = fs::read(&part_path).map_err(|e| ArrowError::Io(e.to_string()))?;
+            let bytes = read_run_file(&directory, &part.filename)?;
 
             let checksum = calculate_checksum(&bytes);
             if checksum != part.checksum {
