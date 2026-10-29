@@ -442,6 +442,10 @@ impl DurableRunPublicationWriter {
         self
     }
 
+    /// Publish a new run. The caller must prevent other actors from modifying
+    /// the run parent and the new run directory during publication. Directory
+    /// handles prevent later path substitutions from redirecting these writes,
+    /// but cannot make a concurrently writable directory trustworthy.
     pub fn publish(&self, records: &[EventLogRecord]) -> Result<PublicationReceipt, ArrowError> {
         self.publish_with_hook(records, || {})
     }
@@ -522,11 +526,21 @@ impl DurableRunPublicationWriter {
         let manifest_json = manifest.to_json();
         let manifest_path = self.run_dir.join("manifest.json");
         write_run_file(&directory, "manifest.json", manifest_json.as_bytes())?;
-        // Catch a missing or symlinked receipt path before reporting success.
+        // Catch a replaced receipt path before reporting success.
         // A pathname can still change after this check; callers must protect
         // the run parent if they require the receipt path to remain stable.
-        cap_primitives::fs::open_dir_nofollow(&base, name)
+        let current = cap_primitives::fs::open_dir_nofollow(&base, name)
             .map_err(|e| ArrowError::Io(format!("Run path changed during publication: {e}")))?;
+        let held_identity =
+            same_file::Handle::from_file(directory.try_clone().map_err(|e| {
+                ArrowError::Io(format!("Cannot duplicate run directory handle: {e}"))
+            })?)
+            .map_err(|e| ArrowError::Io(format!("Cannot identify run directory: {e}")))?;
+        let current_identity = same_file::Handle::from_file(current)
+            .map_err(|e| ArrowError::Io(format!("Cannot identify current run path: {e}")))?;
+        if held_identity != current_identity {
+            return Err(ArrowError::Io("Run path changed during publication".into()));
+        }
 
         Ok(PublicationReceipt {
             manifest_path,
@@ -690,6 +704,21 @@ mod path_hardening_tests {
         assert!(moved.join("part-00000.parquet").is_file());
         assert!(!outside.path().join("manifest.json").exists());
         assert!(!outside.path().join("part-00000.parquet").exists());
+    }
+
+    #[test]
+    fn publisher_rejects_replacement_directory_receipt() {
+        let parent = tempfile::tempdir().unwrap();
+        let run = parent.path().join("run");
+        let moved = parent.path().join("moved");
+        let writer = DurableRunPublicationWriter::new(parent.path(), "run", 10);
+        let result = writer.publish_with_hook(&[], || {
+            fs::rename(&run, &moved).unwrap();
+            fs::create_dir(&run).unwrap();
+        });
+        assert!(result.is_err());
+        assert!(moved.join("manifest.json").is_file());
+        assert!(!run.join("manifest.json").exists());
     }
 }
 
