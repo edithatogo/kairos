@@ -34,7 +34,9 @@ int kairo_fs_guard(uintptr_t raw, int private_directory) {
     if (!(volume_flags & FILE_PERSISTENT_ACLS) || (wcscmp(filesystem, L"NTFS") && wcscmp(filesystem, L"ReFS"))) return 5;
     result = GetSecurityInfo(directory, SE_FILE_OBJECT, OWNER_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION, &owner, NULL, &acl, NULL, &descriptor);
     if (result != ERROR_SUCCESS || !descriptor || !owner || !acl || !IsValidSecurityDescriptor(descriptor) || !IsValidAcl(acl)) goto done;
-    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token)) goto done;
+    if (!OpenThreadToken(GetCurrentThread(), TOKEN_QUERY, TRUE, &token)) {
+        if (GetLastError() != ERROR_NO_TOKEN || !OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token)) goto done;
+    }
     size = 0;
     GetTokenInformation(token, TokenUser, NULL, 0, &size);
     if (!size || GetLastError() != ERROR_INSUFFICIENT_BUFFER) goto done;
