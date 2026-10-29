@@ -65,3 +65,9 @@ At `49f826a`, all hosted checks except `docs-quality` passed, including Arrow on
 ## Relative publication review follow-up
 
 After all 69 checks passed at `9d4b572`, hosted review identified an empty-parent error for bare relative filenames. The writer now normalizes an empty parent to the current directory before staging and directory sync. A child-process regression exercises creation, no-clobber preservation, explicit overwrite and checkpoint publication without changing the test runner's global working directory. The exact regression target is included in Linux/macOS/Windows Arrow checks. Independent bounded review approved the source delta with no findings; previous green hosted results do not certify this new commit.
+
+## Accepted dependency source and remaining consumer gate
+
+PR #340 merged at `4134a3733ba7e833a8c520621ec2af5a4bd4b31a` after all 69 hosted checks passed (five conditional skips) at `79fa931fa54c540ee670958997bd9e8c48cc33d0`, including Linux/macOS/Windows Arrow. Final local `just ci` passed 918 tests with zero skips and 93.39% core coverage. The final immutable Git consumer also passed bare relative publication/no-clobber and full-width IPC/Zstd round trips. Terminal logs and SHA-256 manifest are retained under `evidence/final-qualification` in the external build root.
+
+PR #334 now incorporates this accepted mainline. Its previously reviewed runtime contributes four additional tests; the combined pre-relative-fix `just ci` passed 921 tests with zero skips. The final relative-publication native profile passed the new regression and five existing tempfile/publication tests. Final exact-head hosted checks govern source merge. Track 107 remains Blocked for separate CareOps consumer acceptance and parent pin migration; Track 108 remains dependent on it. Arrow registry publication remains disabled until a supported published Polars closure is qualified.
