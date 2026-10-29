@@ -242,4 +242,3 @@ Native table/IPC, durability, protected publication, source/Git consumers and pl
 ## Known risks
 
 Crates.io publication stays disabled; final CI and package qualification remain required.
-

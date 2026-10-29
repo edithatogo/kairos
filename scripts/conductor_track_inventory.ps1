@@ -27,4 +27,3 @@ function Get-ConductorTrackDirectories {
     }
     return $directories
 }
-
