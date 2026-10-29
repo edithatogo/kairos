@@ -24,7 +24,9 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
       - name: Validate Rust CI routing
-        run: node tests/conformance/classify-rust-ci-changes-check.mjs
+        run: |
+          node tests/conformance/classify-rust-ci-changes-check.mjs
+          node tests/conformance/project-coverage-check.mjs
       - name: Classify changed files
         id: classify
         env:
@@ -120,10 +122,38 @@ jobs:
       - name: Check wasm-export on Rust 1.99.1
         run: cargo +1.99.1 check --locked --manifest-path crates/kairo-ecs-wasm/Cargo.toml --features wasm-export --target wasm32-unknown-unknown
 
+  project-coverage:
+    name: Rust project coverage
+    if: needs.changes.outputs.rust == 'true'
+    needs: [changes, rust-stable]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read # Read the exact base commit's trusted main coverage artifact.
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: rust-coverage
+      - name: Require zero workspace coverage regression against exact base
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COVERAGE_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: node scripts/validation/check-project-coverage.mjs lcov.info
+      - name: Preserve project coverage decision
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: project-coverage-decision
+          path: artifacts/project-coverage/receipt.json
+          if-no-files-found: error
+
   rust-core:
     name: Rust core quality
     if: always()
-    needs: [changes, rust-stable, rust-msrv, rust-wasm-msrv]
+    needs: [changes, rust-stable, rust-msrv, rust-wasm-msrv, project-coverage]
     runs-on: ubuntu-latest
     steps:
       - name: Require Rust verification or a valid selective skip
@@ -133,6 +163,7 @@ jobs:
           RUST_STABLE_RESULT: ${{ needs.rust-stable.result }}
           RUST_MSRV_RESULT: ${{ needs.rust-msrv.result }}
           RUST_WASM_MSRV_RESULT: ${{ needs.rust-wasm-msrv.result }}
+          PROJECT_COVERAGE_RESULT: ${{ needs.project-coverage.result }}
         run: |
           set -euo pipefail
           test "$CHANGES_RESULT" = success
@@ -141,11 +172,13 @@ jobs:
               test "$RUST_STABLE_RESULT" = success
               test "$RUST_MSRV_RESULT" = success
               test "$RUST_WASM_MSRV_RESULT" = success
+              test "$PROJECT_COVERAGE_RESULT" = success
               ;;
             false)
               test "$RUST_STABLE_RESULT" = skipped
               test "$RUST_MSRV_RESULT" = skipped
               test "$RUST_WASM_MSRV_RESULT" = skipped
+              test "$PROJECT_COVERAGE_RESULT" = skipped
               ;;
             *)
               echo "Rust change classification did not produce true or false." >&2

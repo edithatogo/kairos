@@ -49,6 +49,7 @@ const EVIDENCE_SOURCES = {
   current_required_check_runs: 'GitHub REST: commits/{default_branch_sha}/check-runs',
   main_ci_skip_guard_workflow_current: 'GitHub REST: repos/{owner}/{repo}/contents/.github/workflows/ci-skip-guard.yml?ref={resolved_default_branch_sha}',
   trusted_main_codecov_upload_and_status: 'GitHub REST: commits/{default_branch_sha}/check-runs and /statuses',
+  trusted_main_project_coverage: 'GitHub Actions: exact-default-branch Rust project coverage check; required Rust core quality includes this job',
 };
 
 function stable(value) {
@@ -278,11 +279,30 @@ function evaluateDrift({ source, hosted }) {
     ? 'The trusted-main upload and commit status can only be verified after the candidate is integrated.'
     : undefined);
 
-  const status = checks.some((check) => check.status === 'drift')
+  // Provider delivery remains visible but is no longer the enforcement oracle.
+  // The replacement is a real exact-main Actions decision, not a synthetic
+  // codecov/project status or a waiver for absent coverage evidence.
+  checks.at(-1).enforcement = 'diagnostic';
+  const projectChecks = currentMainChecks.filter((check) => check.name === 'Rust project coverage'
+    && check.app?.slug === 'github-actions');
+  const projectCheck = projectChecks.reduce((latest, check) => !latest
+    || (check.started_at ?? '') > (latest.started_at ?? '') ? check : latest, null);
+  const projectFailed = projectCheck?.status === 'completed' && projectCheck.conclusion !== 'success';
+  const projectStatus = checkStatus(hosted, 'mainChecks') ?? (projectFailed ? 'drift'
+    : hosted.integrationPending ? 'pending'
+      : projectCheck?.status === 'completed' && projectCheck.conclusion === 'success' ? 'pass'
+        : inFlightMainChecks.length > 0 ? 'pending' : 'drift');
+  addCheck(checks, 'trusted_main_project_coverage', {
+    name: 'Rust project coverage', app: 'github-actions', status: 'completed', conclusion: 'success',
+    scope: 'full workspace LCOV; zero regression against exact trusted base; core floor remains 90%',
+  }, projectCheck ?? null, projectStatus);
+
+  const enforcedChecks = checks.filter((check) => check.enforcement !== 'diagnostic');
+  const status = enforcedChecks.some((check) => check.status === 'drift')
     ? 'drift'
-    : checks.some((check) => check.status === 'unavailable')
+    : enforcedChecks.some((check) => check.status === 'unavailable')
       ? 'unavailable'
-      : checks.some((check) => check.status === 'pending')
+      : enforcedChecks.some((check) => check.status === 'pending')
         ? 'pending'
         : 'pass';
   for (const check of checks) {
@@ -407,7 +427,7 @@ function collectHosted(repository, source) {
   const privateReporting = ghJson(`repos/${repository}/private-vulnerability-reporting`);
   const mainRenovateResult = getMainRenovate(repository, defaultBranchCommit);
   const mainRenovate = mainRenovateResult.value ?? null;
-  const checkNames = EXPECTED_CHECKS.map((name) => `.name == ${JSON.stringify(name)}`).join(' or ');
+  const checkNames = [...EXPECTED_CHECKS, 'Rust project coverage'].map((name) => `.name == ${JSON.stringify(name)}`).join(' or ');
   const checkRunFilter = `.check_runs[] | select(.head_sha == ${JSON.stringify(defaultBranchCommit)} and (${checkNames} or (.name | ascii_downcase | contains("codecov")) or (.app.slug | ascii_downcase | contains("codecov")) or (.status != "completed" and .app.slug == "github-actions"))) | {name, status, conclusion, head_sha, started_at, details_url, app: {slug: .app.slug}}`;
   const mainChecks = ghJsonLinesPaginated(`repos/${repository}/commits/${defaultBranchCommit}/check-runs?per_page=100`, checkRunFilter);
   const mainStatuses = bindCommitStatuses(repository, defaultBranchCommit,

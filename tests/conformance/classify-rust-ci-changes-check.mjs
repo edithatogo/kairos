@@ -102,7 +102,7 @@ assert.match(aggregateScript, /test "\$CHANGES_RESULT" = success/);
 assert.match(aggregateScript, /true\)/);
 assert.match(aggregateScript, /false\)/);
 
-function aggregate(changesResult, rustRequired, stable, workspace, wasm) {
+function aggregate(changesResult, rustRequired, stable, workspace, wasm, coverage) {
   return spawnSync('bash', ['-e', '-o', 'pipefail', '-c', aggregateScript], {
     encoding: 'utf8',
     env: {
@@ -112,23 +112,28 @@ function aggregate(changesResult, rustRequired, stable, workspace, wasm) {
       RUST_STABLE_RESULT: stable,
       RUST_MSRV_RESULT: workspace,
       RUST_WASM_MSRV_RESULT: wasm,
+      PROJECT_COVERAGE_RESULT: coverage,
     },
   });
 }
 
 for (const args of [
-  ['success', 'true', 'success', 'success', 'success'],
-  ['success', 'false', 'skipped', 'skipped', 'skipped'],
+  ['success', 'true', 'success', 'success', 'success', 'success'],
+  ['success', 'false', 'skipped', 'skipped', 'skipped', 'skipped'],
 ]) assert.equal(aggregate(...args).status, 0, args.join(','));
 
 for (const args of [
-  ['failure', 'false', 'skipped', 'skipped', 'skipped'],
-  ['success', 'true', 'skipped', 'success', 'success'],
-  ['success', 'true', 'success', 'failure', 'success'],
-  ['success', 'true', 'success', 'success', 'cancelled'],
-  ['success', 'false', 'success', 'skipped', 'skipped'],
-  ['success', 'false', 'skipped', 'failure', 'skipped'],
-  ['success', 'maybe', 'skipped', 'skipped', 'skipped'],
+  ['success', 'true', 'success', 'success', 'success', 'failure'],
+  ['success', 'true', 'success', 'success', 'success', 'skipped'],
+  ['success', 'true', 'success', 'success', 'success', 'cancelled'],
+  ['success', 'false', 'skipped', 'skipped', 'skipped', 'success'],
+  ['failure', 'false', 'skipped', 'skipped', 'skipped', 'skipped'],
+  ['success', 'true', 'skipped', 'success', 'success', 'success'],
+  ['success', 'true', 'success', 'failure', 'success', 'success'],
+  ['success', 'true', 'success', 'success', 'cancelled', 'success'],
+  ['success', 'false', 'success', 'skipped', 'skipped', 'skipped'],
+  ['success', 'false', 'skipped', 'failure', 'skipped', 'skipped'],
+  ['success', 'maybe', 'skipped', 'skipped', 'skipped', 'skipped'],
 ]) assert.notEqual(aggregate(...args).status, 0, args.join(','));
 
 console.log('Rust CI classifier and aggregate contract checks passed.');
