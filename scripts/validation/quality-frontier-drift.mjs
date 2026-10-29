@@ -244,16 +244,25 @@ function evaluateDrift({ source, hosted }) {
     const check = currentCheckContexts.get(name);
     return { name, status: check?.status ?? 'missing', conclusion: check?.conclusion ?? null, headSha: check?.head_sha ?? null, url: check?.details_url ?? null };
   });
+  const inFlightMainChecks = [...currentCheckContexts.values()]
+    .filter((check) => check.app?.slug === 'github-actions' && ['queued', 'in_progress'].includes(check.status))
+    .map((check) => ({ name: check.name, status: check.status, headSha: check.head_sha }));
+  const requiredCheckFailed = requiredChecks.some((check) => check.status === 'completed' && check.conclusion !== 'success');
   const allRequiredChecksPassed = requiredChecks.every((check) => check.status === 'completed' && check.conclusion === 'success');
-  const requiredCheckStatus = checkStatus(hosted, 'mainChecks') ?? (allRequiredChecksPassed
-    ? 'pass'
-    : (hosted.integrationPending || requiredChecks.some((check) => check.status === 'queued' || check.status === 'in_progress')
-      ? 'pending' : 'drift'));
+  const requiredCheckStatus = checkStatus(hosted, 'mainChecks') ?? (requiredCheckFailed
+    ? 'drift' : (allRequiredChecksPassed ? 'pass'
+      : (hosted.integrationPending || inFlightMainChecks.length > 0 ? 'pending' : 'drift')));
   addCheck(checks, 'current_required_check_runs', EXPECTED_PUSH_CHECKS.map((name) => ({ name, status: 'completed', conclusion: 'success', headSha: hosted.defaultBranchCommit })),
     requiredChecks, requiredCheckStatus, hosted.integrationPending ? 'Current default-branch checks are recorded after the candidate is integrated.' : undefined);
   const codecovStillRunning = ['queued', 'in_progress'].includes(latestUpload?.status) || latestProjectStatus?.state === 'pending';
-  const codecovStatus = checkStatus(hosted, 'mainChecks') ?? checkStatus(hosted, 'mainStatuses') ?? (hosted.integrationPending
-    ? 'pending' : (hasSuccessfulUpload && hasCommitStatus ? 'pass' : (codecovStillRunning ? 'pending' : 'drift')));
+  const codecovFailed = (latestUpload?.status === 'completed' && latestUpload.conclusion !== 'success')
+    || ['failure', 'error'].includes(latestProjectStatus?.state);
+  let codecovOutcome = 'drift';
+  if (codecovFailed) codecovOutcome = 'drift';
+  else if (hosted.integrationPending) codecovOutcome = 'pending';
+  else if (hasSuccessfulUpload && hasCommitStatus) codecovOutcome = 'pass';
+  else if (codecovStillRunning || inFlightMainChecks.length > 0) codecovOutcome = 'pending';
+  const codecovStatus = checkStatus(hosted, 'mainChecks') ?? checkStatus(hosted, 'mainStatuses') ?? codecovOutcome;
   addCheck(checks, 'trusted_main_codecov_upload_and_status', {
     successfulUploadCheck: 'Codecov OIDC upload completed successfully on default branch SHA',
     successfulProjectStatus: 'codecov/project success on default branch SHA',
@@ -262,6 +271,7 @@ function evaluateDrift({ source, hosted }) {
     successfulProjectStatus: hasCommitStatus,
     latestUpload,
     latestProjectStatus,
+    inFlightMainChecks,
     checks: codecovChecks,
     statuses: codecovStatuses,
   }, codecovStatus, hosted.integrationPending
@@ -398,7 +408,7 @@ function collectHosted(repository, source) {
   const mainRenovateResult = getMainRenovate(repository, defaultBranchCommit);
   const mainRenovate = mainRenovateResult.value ?? null;
   const checkNames = EXPECTED_CHECKS.map((name) => `.name == ${JSON.stringify(name)}`).join(' or ');
-  const checkRunFilter = `.check_runs[] | select(.head_sha == ${JSON.stringify(defaultBranchCommit)} and (${checkNames} or (.name | ascii_downcase | contains("codecov")) or (.app.slug | ascii_downcase | contains("codecov")))) | {name, status, conclusion, head_sha, started_at, details_url, app: {slug: .app.slug}}`;
+  const checkRunFilter = `.check_runs[] | select(.head_sha == ${JSON.stringify(defaultBranchCommit)} and (${checkNames} or (.name | ascii_downcase | contains("codecov")) or (.app.slug | ascii_downcase | contains("codecov")) or (.status != "completed" and .app.slug == "github-actions"))) | {name, status, conclusion, head_sha, started_at, details_url, app: {slug: .app.slug}}`;
   const mainChecks = ghJsonLinesPaginated(`repos/${repository}/commits/${defaultBranchCommit}/check-runs?per_page=100`, checkRunFilter);
   const mainStatuses = bindCommitStatuses(repository, defaultBranchCommit,
     ghJsonLinesPaginated(`repos/${repository}/commits/${defaultBranchCommit}/statuses?per_page=100`,

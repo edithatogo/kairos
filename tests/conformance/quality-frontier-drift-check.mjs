@@ -210,6 +210,49 @@ const wrongCodecov = evaluateDrift({
 });
 assert.equal(wrongCodecov.checks.find((check) => check.name === 'trusted_main_codecov_upload_and_status').status, 'drift');
 
+// Dependent upload/aggregate checks do not exist while upstream Actions run.
+const upstreamAction = { name: 'Classify Rust changes', status: 'queued',
+  conclusion: null, head_sha: 'abc123', app: { slug: 'github-actions' } };
+const awaitingUpload = { ...hosted,
+  mainChecks: [...hosted.mainChecks.filter((check) => check.name !== 'Codecov OIDC upload' && check.name !== 'Rust core quality'), upstreamAction],
+  mainStatuses: [],
+};
+const awaitingReceipt = evaluateDrift({ source, hosted: awaitingUpload });
+assert.equal(awaitingReceipt.checks.find((check) => check.name === 'current_required_check_runs').status, 'pending');
+assert.equal(awaitingReceipt.checks.find((check) => check.name === 'trusted_main_codecov_upload_and_status').status, 'pending');
+for (const action of [
+  { ...upstreamAction, head_sha: 'another-head' },
+  { ...upstreamAction, app: { slug: 'other-app' } },
+  { ...upstreamAction, status: 'completed', conclusion: 'success' },
+]) {
+  const receipt = evaluateDrift({ source, hosted: { ...awaitingUpload,
+    mainChecks: [...awaitingUpload.mainChecks.filter((check) => check !== upstreamAction), action] } });
+  assert.equal(receipt.checks.find((check) => check.name === 'trusted_main_codecov_upload_and_status').status, 'drift');
+}
+const uploadedAwaitingCi = evaluateDrift({ source, hosted: { ...hosted,
+  mainChecks: [...hosted.mainChecks, upstreamAction], mainStatuses: [] } });
+assert.equal(uploadedAwaitingCi.checks.find((check) => check.name === 'trusted_main_codecov_upload_and_status').status, 'pending');
+const terminalWithoutProject = evaluateDrift({ source, hosted: { ...hosted, mainStatuses: [] } });
+assert.equal(terminalWithoutProject.checks.find((check) => check.name === 'trusted_main_codecov_upload_and_status').status, 'drift');
+const failedUploadWhileQueued = evaluateDrift({ source, hosted: { ...awaitingUpload,
+  mainChecks: [...awaitingUpload.mainChecks, { name: 'Codecov OIDC upload', head_sha: 'abc123',
+    status: 'completed', conclusion: 'failure', app: { slug: 'github-actions' } }],
+  mainStatuses: [{ context: 'codecov/project', state: 'pending', sha: 'abc123' }] } });
+assert.equal(failedUploadWhileQueued.checks.find((check) => check.name === 'trusted_main_codecov_upload_and_status').status, 'drift');
+const unmergedCandidate = evaluateDrift({
+  source: { ...source, branch: 'codex/candidate', commit: 'candidate-head' },
+  hosted: { ...hosted, integrationPending: true },
+});
+assert.equal(unmergedCandidate.checks.find((check) => check.name === 'trusted_main_codecov_upload_and_status').status,
+  'pending', 'healthy old-main coverage cannot certify an unmerged candidate');
+const failedWhileQueued = evaluateDrift({ source, hosted: { ...awaitingUpload,
+  mainStatuses: [{ context: 'codecov/project', state: 'failure', sha: 'abc123' }] } });
+assert.equal(failedWhileQueued.checks.find((check) => check.name === 'trusted_main_codecov_upload_and_status').status, 'drift');
+const requiredFailureWhileQueued = evaluateDrift({ source, hosted: { ...awaitingUpload,
+  mainChecks: [...awaitingUpload.mainChecks, { name: 'Rust core quality', head_sha: 'abc123',
+    status: 'completed', conclusion: 'failure', app: { slug: 'github-actions' } }] } });
+assert.equal(requiredFailureWhileQueued.checks.find((check) => check.name === 'current_required_check_runs').status, 'drift');
+
 const newerCodecovFailure = evaluateDrift({
   source,
   hosted: {
