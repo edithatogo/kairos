@@ -57,6 +57,7 @@ jobs:
       - name: Arrow publication, recovery and IPC checks
         run: >-
           cargo test --locked -p kairo-ecs-arrow --features polars-native
+          --test relative_atomic_publication
           --test track70_phase3_durable_publication
           --test track70_phase3_durability
           --test track70_phase1_native_tables
