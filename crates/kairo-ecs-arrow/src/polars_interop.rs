@@ -278,7 +278,7 @@ pub fn read_parquet<R: MmapBytesReader>(reader: R) -> Result<DataFrame, ArrowErr
 
 /// Write a [`DataFrame`] to an Arrow IPC stream.
 pub fn write_ipc_stream<W: Write>(df: &mut DataFrame, writer: W) -> Result<(), ArrowError> {
-    IpcWriter::new(writer)
+    IpcStreamWriter::new(writer)
         .finish(df)
         .map_err(|e| ArrowError::Io(e.to_string()))?;
     Ok(())
@@ -286,6 +286,13 @@ pub fn write_ipc_stream<W: Write>(df: &mut DataFrame, writer: W) -> Result<(), A
 
 /// Read a [`DataFrame`] from an Arrow IPC stream reader.
 pub fn read_ipc_stream<R: MmapBytesReader>(reader: R) -> Result<DataFrame, ArrowError> {
+    IpcStreamReader::new(reader)
+        .finish()
+        .map_err(|e| ArrowError::Io(e.to_string()))
+}
+
+/// Read an Arrow IPC file produced by the earlier file-format writer.
+pub fn read_ipc_file<R: MmapBytesReader>(reader: R) -> Result<DataFrame, ArrowError> {
     IpcReader::new(reader)
         .finish()
         .map_err(|e| ArrowError::Io(e.to_string()))

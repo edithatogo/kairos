@@ -19,7 +19,7 @@ arrow-schema = { version = "60.0.0", optional = true }
 
 # Track 70 Phase 0: Polars tabular processing engine, admitted default-off
 # behind `polars-native`.
-polars = { version = "0.45", default-features = false, features = ["lazy", "parquet", "ipc", "fmt", "dtype-u16"], optional = true }
+polars = { version = "0.45", default-features = false, features = ["lazy", "parquet", "ipc", "ipc_streaming", "fmt", "dtype-u16"], optional = true }
 
 # Track 70 Phase 2: same pinned polars-arrow version, named edge only for the
 # Arrow C Data Interface FFI layer (`polars_arrow::ffi`). No new transitive

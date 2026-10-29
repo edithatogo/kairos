@@ -44,6 +44,21 @@ IPC SHA-256 `76fd7129f6f68d7c4a57b2599fdc74e71dd9eadbb21cbff26803f29578a8d538`.
 The apparent stream behavior and file/stream migration require contract and
 consumer review; no independent stream interoperability is claimed.
 
+An IPC repair candidate enables Polars `ipc_streaming` and changes the two
+stream-named APIs to use the stream reader/writer. Previously produced IPC
+files remain unchanged and can be opened explicitly with `read_ipc_file`.
+This is a behavior change for callers that used the old stream-named APIs for
+files; consumer migration and compatibility review are required before merge.
+At base `8e385c6` with the IPC candidate, the seven focused Rust native-table
+tests pass locally, including the stream marker and old-file reader. On macOS
+ARM64 with repo-local Python 3.15.1 and PyArrow 26.0.0, an independently built
+synthetic producer's output was read with `pyarrow.ipc.open_stream`; its one
+logical row matched Parquet, including tick limbs 1:1. The stream SHA-256 is
+`d0b3c5add601febbd4fc85ac7ff37b646ec5c7ba601fa96011d8f782e46d1297` and the
+producer and output are retained in
+`/Volumes/PortableSSD/codex-builds/kairos-ipc-independent-reader`. This is one
+synthetic case, not cross-platform, hosted or downstream acceptance.
+
 ## Summary
 All phases (Phase 0 through Phase 4) of Track 70 are complete and verified across all criteria:
 - **Phase 0 (Baseline & qualification)**: Data path inventory, failing baseline characterizations, Polars dependency pin ADR, and Schema v2 conformance fixtures.
