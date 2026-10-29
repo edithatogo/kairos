@@ -43,3 +43,11 @@ Commands run in the active worktree with Rust 1.99.1 unless stated otherwise; de
 ## Remaining acceptance gates
 
 `just ci` is running with cargo-nextest 0.9.150, including the core coverage floor. The final source needs independent exact-commit review, a clean extracted/Git consumer check, current Linux/macOS/Windows hosted checks, final package/security readbacks and R package qualification. Source integration can proceed after its own gates pass; crates.io publication remains separately disabled. Do not merge or prune an active lane merely because this checkpoint is committed.
+
+## Source review and CI repair packet
+
+Independent reviewer `pr332_pin_repair_review` approved exact source commit `177d938622b7924b92e25c6dd0ccabb39536fd54` against `7be4ae7`, with no actionable findings. Approval excludes pending CI/coverage, publication and final extraction gates. The immutable standalone Git consumer subsequently passed full-width tick reconstruction through IPC streams and Zstd Parquet. R 4.6.1 passed 33 tests with one real optional Arrow-package skip, and its source package built. Final npm 12.2.1 repeated all 60 + 248 + five cache adversarial cases, passed strict zero-vulnerability audit and verified 193 registry signatures/91 attestations.
+
+PR #340 first hosted run passed Arrow on Linux and macOS. Identified failures were truncated installed-version parsing, a stale Python classifier assertion, active-only track coverage, missing canonical handoff sections and the website verifier's previous lock pin. This repair shares one archive-aware inventory function between setup and coverage validators, preserves malformed/missing/extra/duplicate negative controls, records the missing handoff fields without promoting phases, and binds current website evidence to the actually tested new lock. A new negative test rejects reusing the retained historical lock to certify current source. Prior receipt files remain unchanged.
+
+The first `just ci` executed all 917 tests successfully, then failed coverage reporting because Homebrew Rust lacks LLVM tools at its compiler-relative path. A fresh run selects the installed Rust 1.99.1 LLVM tools explicitly; no shared compiler installation was modified. Native qualification logs remain under the external build evidence root.

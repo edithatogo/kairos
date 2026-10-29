@@ -33,10 +33,6 @@ def sha256(data: bytes) -> str:
 
 def source_bytes(relative: str) -> bytes:
     """Read only repository source files for a controlled temporary fixture."""
-    # This historical completion profile must keep its original source closure.
-    # Current website dependencies are qualified by the strict audit/render tests.
-    if relative == "website/package-lock.json":
-        return gzip.decompress((ROOT / "tests/fixtures/website-cache-security-lock-20261023.json.gz").read_bytes())
     source = TEST_SOURCE_ROOT / relative
     if not source.is_file() or source.is_symlink():
         raise AssertionError(f"test fixture source is missing or unsafe: {source}")
@@ -183,6 +179,12 @@ class WebsiteCacheEvidenceTests(unittest.TestCase):
         self.assertEqual(result["adapter_unittest_cases"], 23)
         self.assertEqual(result["named_regression_cases"], 248)
         self.assertEqual(marker["payload_sha256"]["negative-control.log"], sha256((self.fixture.evidence / "negative-control.log").read_bytes()))
+
+    def test_historical_lock_cannot_certify_current_website_source(self):
+        historical = gzip.decompress((ROOT / "tests/fixtures/website-cache-security-lock-20261023.json.gz").read_bytes())
+        (self.fixture.repo / "website/package-lock.json").write_bytes(historical)
+        with self.assertRaisesRegex(verifier.EvidenceError, "source hash mismatch"):
+            self.fixture.complete()
 
     def test_rejects_each_missing_required_receipt_and_clears_stale_marker(self):
         for name in verifier.LOG_FILES:

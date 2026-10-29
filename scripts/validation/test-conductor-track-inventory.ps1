@@ -1,5 +1,5 @@
 $ErrorActionPreference = "Stop"
-$source = Join-Path $PSScriptRoot "../validate_conductor_setup.ps1"
+$source = Join-Path $PSScriptRoot "../conductor_track_inventory.ps1"
 $tokens = $null
 $errors = $null
 $ast = [System.Management.Automation.Language.Parser]::ParseFile($source, [ref]$tokens, [ref]$errors)

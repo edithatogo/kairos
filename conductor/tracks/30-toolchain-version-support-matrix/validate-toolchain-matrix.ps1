@@ -92,12 +92,12 @@ function Get-InstalledVersion {
         }
         "julia" {
             $text = Get-CommandOutput @("julia", "-e", "print(VERSION)")
-            if ($text -match "([0-9]+\.[0-9]+)") { return $Matches[1] }
+            if ($text -match "^([0-9]+\.[0-9]+\.[0-9]+)$") { return $Matches[1] }
             throw "Could not parse Julia version from: $text"
         }
         "node" {
             $text = Get-CommandOutput @("node", "--version")
-            if ($text -match "v?([0-9]+)") { return $Matches[1] }
+            if ($text -match "^v?([0-9]+\.[0-9]+\.[0-9]+)$") { return $Matches[1] }
             throw "Could not parse Node version from: $text"
         }
         "dotnet" {
@@ -232,7 +232,7 @@ if ($CheckInstalled) {
         Write-Host "$Ecosystem installed version check passed: exact $actual"
     } else {
         if ([string]::IsNullOrWhiteSpace($ExpectedPrefix) -or -not [string]::IsNullOrWhiteSpace($ExpectedVersion)) { throw "-CheckInstalled requires -ExpectedPrefix for $Ecosystem and rejects -ExpectedVersion." }
-        if (-not $actual.StartsWith($ExpectedPrefix)) { throw "$Ecosystem version mismatch: expected prefix $ExpectedPrefix, got $actual." }
+        if ($actual -cne $ExpectedPrefix -and -not $actual.StartsWith("$ExpectedPrefix.")) { throw "$Ecosystem version mismatch: expected prefix $ExpectedPrefix, got $actual." }
         Write-Host "$Ecosystem installed version check passed: $actual matches $ExpectedPrefix"
     }
 }

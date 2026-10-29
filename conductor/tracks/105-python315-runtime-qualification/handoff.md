@@ -175,3 +175,30 @@ Main-only checks exposed the publishing docs evidence omission and12Scorecard de
 The hosted Dependabot graph updater explicitly rejects Python>=3.15.1,<3.16 (only3.10–3.14 supported). No downgrade or feature disabling is accepted. A separate [source-bound inventory caller](dependency-inventory-evidence.json) reuses the independently qualified shared adapter at MAIN`cb62ad8`, installs all4existing locks on3.15.1, preserves privacy, and isolates trusted-main submission from read-only verification. All local caller/provenance/negative controls pass. This is package inventory, not graph/extras evidence, and no API submission has been claimed. Accepted native responses, async graph package readback, final-head/main checks and remaining provider status still gate this Kairos track.
 
 CareOps Sim independently accepted its own runtime at main`43ea690` through PRs178/179; its engine pin and domain acceptance remain separate. Polars/FMI/private source and environments remain preserved. This Kairos track remains In Progress; neither the goal nor full migration is marked complete while provider/main acceptance remains open.
+
+## Current handoff structure — 29 October 2026
+
+## Summary
+
+Python runtime qualification and CI guard alignment.
+
+## Files changed
+
+Runtime guards, CI workflows and packaging helpers; detailed historical packets follow.
+
+## Contracts consumed
+
+Selected Python profile, hash-locked dependencies and repository-local prefix contract.
+
+## Contracts changed
+
+The current frontier selects Python 3.15.2; prior receipts retain their original versions.
+
+## Tests added
+
+Runtime/prefix negative controls, packaging and workflow contracts.
+
+## Known risks
+
+Hosted/platform acceptance remains distinct from local qualification.
+

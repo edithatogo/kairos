@@ -220,3 +220,26 @@ Kairos delivery precedes parent CareOps pin and processing migration. Both plann
 ## Sequencing revision — 23 October 2026
 
 User-authorized planning change: supporting dependencies gate only demonstrated affected tasks. The existing implementation history and phase decisions above are preserved. No runtime paths, FMI work, pins, acceptance statuses or phase closeouts changed. See the Conductor dependency-sequencing.md decision contract.
+
+## Current handoff structure — 29 October 2026
+
+## Files changed
+
+Arrow manifest/source, native filesystem guard, dependency locks and evidence.
+
+## Contracts consumed
+
+Arrow schema, deterministic full-width identity/ticks and protected publication contract.
+
+## Contracts changed
+
+Immutable Polars development source and hashbrown closure; source integration and crates.io gates are separate.
+
+## Tests added
+
+Native table/IPC, durability, protected publication, source/Git consumers and platform checks.
+
+## Known risks
+
+Crates.io publication stays disabled; final CI and package qualification remain required.
+
