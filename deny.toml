@@ -1,6 +1,17 @@
 [licenses]
 allow = ["MIT", "Apache-2.0", "BSD-2-Clause", "BSD-3-Clause", "ISC", "Unicode-DFS-2016", "Unicode-3.0"]
 confidence-threshold = 0.8
+# petgraph 0.8.3 retains foldhash under its upstream permissive Zlib licence.
+exceptions = [
+  { name = "foldhash", version = "=0.1.5", allow = ["Zlib"] },
+  { name = "foldhash", version = "=0.2.0", allow = ["Zlib"] },
+  { name = "slotmap", version = "=1.1.1", allow = ["Zlib"] },
+  { name = "zlib-rs", version = "=0.6.8", allow = ["Zlib"] },
+  { name = "ar_archive_writer", version = "=0.5.3", allow = ["Apache-2.0 WITH LLVM-exception"] },
+  { name = "winx", version = "=0.36.4", allow = ["Apache-2.0 WITH LLVM-exception"] },
+  { name = "xxhash-rust", version = "=0.8.19", allow = ["BSL-1.0"] },
+  { name = "webpki-root-certs", version = "=1.0.11", allow = ["CDLA-Permissive-2.0"] },
+]
 
 [bans]
 multiple-versions = "warn"
@@ -15,3 +26,6 @@ unmaintained = "workspace"
 unknown-registry = "deny"
 unknown-git = "deny"
 allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+
+# Immutable Polars security integration; manifests pin exact Git revisions.
+allow-git = ["https://github.com/pola-rs/polars", "https://github.com/pola-rs/hashbrown"]

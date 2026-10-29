@@ -1,0 +1,15 @@
+{
+  "track_id": "108-scientific-ecosystem-alignment",
+  "type": "refactor",
+  "status": "blocked",
+  "approved": true,
+  "repository": "kairos",
+  "created_at": "2026-10-28T16:38:07.417775+00:00",
+  "title": "Scientific ecosystem alignment",
+  "spec_approved": true,
+  "implementation_started": false,
+  "accepted_phases": [],
+  "active_phase": null,
+  "blocker": "Reconcile Track 107 and accepted CareOps consumer baseline before provider promotion.",
+  "coordinating_track": "scientific_ecosystem_alignment_20261029"
+}

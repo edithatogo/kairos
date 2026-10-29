@@ -1,4 +1,37 @@
+## 29 October 2026: active checkout recovery
+
+Chat `01a18344-cfb8-7711-8c38-fef1052b9fcf` remains the sole Kairos integrator.
+Active standard Git worktree: `/Volumes/PortableSSD/codex-worktrees/kairos-dependency-frontier-recovery-20261029`, branch `codex/dependency-frontier-recovery-20261029`, whole-repository advisory claim. Native scope: none. Next: latest-dependency source, package and platform qualification.
+
+A concurrent bulk filesystem removal deleted the active app-managed checkout and earlier integration checkout during qualification. Git commits and external build evidence survived; uncommitted edits were reconstructed from retained scripts/tool evidence. Managed attachment returned ENOENT. The original managed checkout was restored at its committed base using ordinary `git worktree add --force` solely to release its ownership claim through the supported harness CLI; source work continues in this external fallback. It is not app-managed. Interrupted results are not qualification of the recovered tree. Preserve every active Kairos worktree and external evidence/cache path during cleanup. The user authorized an exclusion message to the storage maintenance chat; cleanup ownership remains unconfirmed.
+
 # KairoECS Conductor Status
+
+## Dependency frontier qualification assignment — 29 October 2026
+
+The user requested all inventoried dependencies be updated to their latest
+versions. Integration chat `01a18344-cfb8-7711-8c38-fef1052b9fcf` owns the
+repo-wide manifest, lock, runtime, policy and API adaptation packet in managed
+worktree `/Users/doughnut/.codex/worktrees/kairos-dependency-frontier-20261029/kairos`,
+branch `codex/dependency-frontier-20261029`. Other worktrees and private/native
+bindings remain with their existing owners. No tenant objects, authentication,
+public registry publication or downstream pin promotion are authorized here.
+
+The inventory snapshot and live registry receipts are retained at
+`/Volumes/PortableSSD/codex-builds/kairos-dependency-inventory-20261029`.
+Update stable release candidates, regenerate locks using supported package tools,
+adapt actual consumers, and qualify affected behavior and security before merge.
+Retain immutable historical evidence and the local HTTP-cache/Polars prototypes.
+Polars has an explicit development-source exception: pin a verified immutable
+revision carrying the dependency security fixes, qualify source/Git consumers,
+and keep crates.io publication as a distinct unresolved gate.
+
+The first candidate integrates the reviewed Arrow/Polars, CI and registry repair
+commits without marking their pending gates passed. Next: dependency updates,
+isolated Python 3.15.2/runtime qualification and focused consumer tests.
+The two October 18 advisory claims were recovered through the supported harness
+after confirming Tracks 65/66 closed, both worktrees removed and no active cwd
+operation. Earlier assignments and acceptance receipts remain historical.
 
 ## Track 73: petgraph Spatial Topology and Routing Adoption Review & Archival - 25 October 2026
 

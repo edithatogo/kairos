@@ -15,8 +15,8 @@ PREPARER_PATH = ROOT / "scripts/bootstrap-node-tools/prepare_npm_cli.py"
 VALIDATOR_PATH = ROOT / "scripts/bootstrap-node-tools/validate_npm_cli.mjs"
 PACKAGE_PATH = ROOT / "scripts/bootstrap-node-tools/package.json"
 LOCK_PATH = ROOT / "scripts/bootstrap-node-tools/package-lock.json"
-POSTCSS_VERSION = "7.1.6"
-POSTCSS_SRI = "sha512-7qASPzhKF2l2KLboRZux8CCTRMdGiV08vWmyKzPz22qZ7ZjQBOeY7rNzNoCLSUiftJ7HUq0GERHmxw/t0dCdMw=="
+POSTCSS_VERSION = "7.1.7"
+POSTCSS_SRI = "sha512-wWBro/7hJ40ye6TPiXkUQoXKCw23xSsjriUvqd7Uls9Sso3oLiON1flc18cCdnjgCRXw4fBVqUJJeOdDTh3P3g=="
 QUERY_MEMBER = "package/node_modules/@npmcli/query/package.json"
 PARSER_MEMBER = "package/node_modules/postcss-selector-parser/package.json"
 NESTED_PARSER_MEMBER = (
@@ -41,7 +41,7 @@ def pinned_lock_entry(**updates):
         "version": POSTCSS_VERSION,
         "resolved": (
             "https://registry.npmjs.org/postcss-selector-parser/-/"
-            "postcss-selector-parser-7.1.6.tgz"
+            "postcss-selector-parser-7.1.7.tgz"
         ),
         "integrity": POSTCSS_SRI,
         "license": "MIT",
@@ -53,7 +53,7 @@ def pinned_lock_entry(**updates):
 def package_members(*, query_manifest=None, parser_manifest=None):
     root_manifest = {
         "name": "npm",
-        "version": "12.1.0",
+        "version": "12.2.1",
         "dependencies": {"@npmcli/query": "^5.0.0"},
         "bundleDependencies": ["make-fetch-happen", "node-gyp"],
     }
@@ -64,7 +64,7 @@ def package_members(*, query_manifest=None, parser_manifest=None):
     }
     parser_manifest = parser_manifest or {
         "name": "postcss-selector-parser",
-        "version": "7.1.4",
+        "version": "7.1.6",
     }
     members = {
         "package/package.json": json.dumps(root_manifest).encode(),
@@ -127,7 +127,7 @@ class BootstrapPostcssPinTests(unittest.TestCase):
             },
             "noncanonical registry URL": {
                 "node_modules/npm/node_modules/postcss-selector-parser": pinned_lock_entry(
-                    resolved="https://example.invalid/postcss-selector-parser-7.1.6.tgz",
+                    resolved="https://example.invalid/postcss-selector-parser-7.1.7.tgz",
                 ),
             },
             "noncanonical lock path": {
@@ -163,7 +163,7 @@ class BootstrapPostcssPinTests(unittest.TestCase):
         self.assertEqual(PREPARER.POSTCSS_PARSER_VERSION, POSTCSS_VERSION)
         self.assertEqual(
             PREPARER.POSTCSS_PARSER_URL,
-            "https://registry.npmjs.org/postcss-selector-parser/-/postcss-selector-parser-7.1.6.tgz",
+            "https://registry.npmjs.org/postcss-selector-parser/-/postcss-selector-parser-7.1.7.tgz",
         )
         self.assertEqual(PREPARER.POSTCSS_PARSER_SRI, POSTCSS_SRI)
 
@@ -196,7 +196,7 @@ class BootstrapPostcssPinTests(unittest.TestCase):
             "missing parser manifest": package_members() | {PARSER_MEMBER: None},
             "wrong parser package name": package_members(parser_manifest={
                 "name": "different-parser",
-                "version": "7.1.4",
+                "version": "7.1.6",
             }),
         }
         for label, members in cases.items():

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import contextlib
 import copy
+from datetime import datetime, timedelta
 import hashlib
 import importlib.util
 import io
@@ -53,6 +54,9 @@ class NpmAuditRunnerTests(unittest.TestCase):
         )
         if not cls.installed_package.is_dir():
             cls.installed_package = None
+        elif json.loads((cls.installed_package / "package.json").read_text()).get("name") != "http-cache-semantics":
+            # The current private-vendor tree is not the historical two-copy profile.
+            cls.installed_package = None
 
     def make_source_root(self, directory: Path, policy=None) -> Path:
         """Build an offline tree from tracked proofs and, when present, installed bytes."""
@@ -87,16 +91,20 @@ class NpmAuditRunnerTests(unittest.TestCase):
                 shutil.copyfile(self.installed_package / "package.json", package / "package.json")
         return directory
 
+    def test_current_frontier_cannot_reuse_historical_pr199_approval(self):
+        with self.assertRaisesRegex(ValueError, "proof drift"):
+            runner.verify_sources(ROOT, copy.deepcopy(self.policy))
+
     def test_exact_two_corrected_pr199_copies_and_proofs_pass(self):
         if self.installed_package is None:
-            self.skipTest("installed npm dependency tree is absent; this task does not install packages")
+            self.skipTest("historical upstream two-copy dependency profile is unavailable; current private-vendor profile is qualified separately")
         with tempfile.TemporaryDirectory() as temp:
             root = self.make_source_root(Path(temp))
             runner.verify_sources(root, copy.deepcopy(self.policy))
 
     def test_corrected_pr199_extra_copy_source_drift_identity_and_proof_removal_reject(self):
         if self.installed_package is None:
-            self.skipTest("installed npm dependency tree is absent; this task does not install packages")
+            self.skipTest("historical upstream two-copy dependency profile is unavailable; current private-vendor profile is qualified separately")
         cases = ("extra_copy", "source_drift", "identity_drift", "proof_removal", "manifest_removal")
         for case in cases:
             with self.subTest(case=case), tempfile.TemporaryDirectory() as temp:
@@ -238,7 +246,7 @@ class NpmAuditRunnerTests(unittest.TestCase):
 
     def test_pr199_verify_sources_checks_approved_proofs_evidence_and_installed_copies(self):
         if self.installed_package is None:
-            self.skipTest("installed npm dependency tree is absent; this task does not install packages")
+            self.skipTest("historical upstream two-copy dependency profile is unavailable; current private-vendor profile is qualified separately")
         policy = json.loads((EXCEPTIONS / "EXC-199-http-cache.json").read_text())
         proof = "scripts/bootstrap-node-tools/apply_http_cache_fix.py"
         with tempfile.TemporaryDirectory() as temp:
@@ -309,9 +317,16 @@ class NpmAuditRunnerTests(unittest.TestCase):
         raw_stderr: str = "",
         scope_error: str | None = None,
         source_error: str | None = None,
+        qualification_time: datetime | None = None,
     ):
         policy = json.loads((EXCEPTIONS / "EXC-199-http-cache.json").read_text())
         raw_argv = policy["raw_audit_command"]
+        # The approved-record scenario is historical; never extend real expiry.
+        policy_module = runner._policy_module()
+        original_classify = policy_module.classify
+        when = qualification_time or (max(datetime.fromisoformat(policy["approvals"]["approved_at"]), datetime.fromisoformat(policy["source_binding_amendment"]["owner_approval"]["approved_at"])) + timedelta(minutes=1))
+        def historical_classify(*args, **kwargs):
+            return original_classify(*args, now=when, **kwargs)
 
         def fake_run(argv, **kwargs):
             if argv == raw_argv:
@@ -336,6 +351,8 @@ class NpmAuditRunnerTests(unittest.TestCase):
             )
             with (
                 context_patch,
+                mock.patch.object(runner, "_policy_module", return_value=policy_module),
+                mock.patch.object(policy_module, "classify", side_effect=historical_classify),
                 mock.patch.object(
                     runner, "verify_sources", side_effect=ValueError(source_error) if source_error else None
                 ) as verify_sources,
@@ -365,6 +382,15 @@ class NpmAuditRunnerTests(unittest.TestCase):
         self.assertEqual(hashlib.sha256(raw_bytes).hexdigest(), receipt["raw_audit"]["stdout_sha256"])
         self.assertEqual(raw_stderr, b"")
         self.assertEqual(hashlib.sha256(raw_stderr).hexdigest(), receipt["raw_audit"]["stderr_sha256"])
+
+    def test_main_expired_historical_record_fails_and_retains_raw_audit(self):
+        raw = (EXCEPTIONS / "evidence/EXC-199/audit/pr199-0a3b86a/raw-audit.json").read_text()
+        after_expiry = datetime.fromisoformat(self.policy["expires_at"]) + timedelta(seconds=1)
+        result, _, receipt, raw_bytes, _, _ = self._run_main_with_fake_commands(raw, 1, qualification_time=after_expiry)
+        self.assertEqual(result, 1)
+        self.assertEqual(receipt["classification"], "failed")
+        self.assertIn("expired", receipt["error"])
+        self.assertEqual(raw_bytes.decode(), raw)
 
     def test_main_clean_audit_passes_without_using_blocked_exception(self):
         clean = json.loads((EXCEPTIONS / "evidence/EXC-199/audit/pr199-0a3b86a/raw-audit.json").read_text())

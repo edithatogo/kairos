@@ -9,11 +9,11 @@ PINS = {
     'undici': ('8.12.3', 'sha512-+fdndUTwBP86cVjihTp21hZHo7d6oj1c/47XPA3lL8mM0XHs+C4EkcjmgRsFnFk2f/UONGDy9ItBItmXsLOQHw=='),
     'zod': ('4.6.7', 'sha512-g8W2D2kU6a8untc053fX1uVBKzM7yqAxW/3zwk83+6RyF2+SKOuV+c0wBDhUwzV1PaGapmZH+rmcUzPf+3CGwg=='),
     "source-map-js": ("1.2.2", "sha512-KGj/8Y43x35aZVDtt+J4mK1hoLGHULMYfSkODJNQjNDC3oW1PqPoxMwo0pLUsWM/UEGzON/NxeHywEfNXNP3Vw=="),
-    "postcss-selector-parser": ("7.1.6", "sha512-7qASPzhKF2l2KLboRZux8CCTRMdGiV08vWmyKzPz22qZ7ZjQBOeY7rNzNoCLSUiftJ7HUq0GERHmxw/t0dCdMw=="),
+    "postcss-selector-parser": ('7.1.7', 'sha512-wWBro/7hJ40ye6TPiXkUQoXKCw23xSsjriUvqd7Uls9Sso3oLiON1flc18cCdnjgCRXw4fBVqUJJeOdDTh3P3g=='),
     'vite': ('8.3.5', 'sha512-z1YpjieJ9g0ebTmQpLBv/oq9E3F9EIlOe+7LahW8SrE3LTiG3udBRUXQOlYXP9b+IC2q2phHeVxj9xGlw34OEQ=='),
-    'vitest': ('4.1.12', 'sha512-5eWdz2yb3ajxWF3C8C4TjkXl7FGm3n2E/VlazALrQHzK7nYMSGFnCZto0bbPNl77AwkOZVLk0YnBAejUu0NiWA=='),
+    'vitest': ('5.0.5', 'sha512-cPODOMF8YnkiiYtDdHo6n4wWmBrOBBbOIYH2d33M4l3CdNn72h+qMmO6uXffUN6A5AZFXNND/d+krS9mgkXRfg=='),
     'dompurify': ('3.4.17', 'sha512-B/pSlYVHQ58kqISD/yDjuJ1yfzI34m1gF4lAod2bwSRhiN4K5Cl3H8Af7hqB2PmTL911tdEudnnXn5FnhRoz0w=='),
-    'katex': ('0.18.2', 'sha512-3snve4y0SXTMequLim1FMiPvLGElySam0blN5xQZBqEY3lOJz1TnuaaiugnBZBqHzlSAGmFTYL7MCQkORuLKCA=='),
+    'katex': ('0.19.1', 'sha512-jG8uKntjSEcm2EpQOh0XturpPuuC9r3Sq5HLHdsFdWZT27E672SF19QEi+of0/YeOy15lDgRhKvr5614uRrEfA=='),
 }
 
 
@@ -40,10 +40,10 @@ class DependencyAdvisoryPinTests(unittest.TestCase):
                 verify_records(json.loads((ROOT / file).read_text()), 'vite')
         binding = json.loads((ROOT / 'bindings/typescript/package-lock.json').read_text())
         verify_records(binding, 'vitest')
-        self.assertEqual(binding['packages']['node_modules/@vitest/mocker']['version'], '4.1.12')
+        self.assertEqual(binding['packages']['node_modules/@vitest/mocker']['version'], '5.0.5')
         template = json.loads((ROOT / 'templates/bindings/typescript/package.json').read_text())
         self.assertEqual(template['devDependencies']['vite'], '8.3.5')
-        self.assertEqual(template['devDependencies']['vitest'], '4.1.12')
+        self.assertEqual(template['devDependencies']['vitest'], '5.0.5')
         docs = json.loads((ROOT / 'tools/docs-quality-node-tools/package-lock.json').read_text())
         verify_records(docs, 'dompurify')
         verify_records(docs, 'katex')
@@ -61,11 +61,11 @@ class DependencyAdvisoryPinTests(unittest.TestCase):
         lock = json.loads((ROOT / "website/package-lock.json").read_text())
         manifest = json.loads((ROOT / "website/package.json").read_text())
         verify_records(lock, "postcss-selector-parser")
-        self.assertEqual(manifest["overrides"]["@expressive-code/core"]["postcss-nested"], "8.0.1")
-        self.assertEqual(manifest["overrides"]["postcss-selector-parser"], "7.1.6")
+        self.assertEqual(manifest["overrides"]["@expressive-code/core"]["postcss-nested"], "9.0.1")
+        self.assertEqual(manifest["overrides"]["postcss-selector-parser"], "7.1.7")
         self.assertEqual(manifest["overrides"]["source-map-js"], "1.2.2")
-        self.assertEqual(lock["packages"]["node_modules/postcss-nested"]["version"], "8.0.1")
-        self.assertEqual(lock["packages"]["node_modules/postcss-nested"]["dependencies"]["postcss-selector-parser"], "^7.1.4")
+        self.assertEqual(lock["packages"]["node_modules/postcss-nested"]["version"], "9.0.1")
+        self.assertEqual(lock["packages"]["node_modules/postcss-nested"]["dependencies"]["postcss-selector-parser"], "^7.1.7")
 
     def test_oracle_rejects_stale_missing_bundled_or_tampered_record(self):
         for package, (version, integrity) in PINS.items():

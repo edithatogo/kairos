@@ -1,5 +1,10 @@
 # Track 107 test matrix
 
+The results below are retained candidate-source history at PR #334 head
+`56ac7691946d8cfc08f4d601e91ba4ea5547e886`, not verification of runtime code on
+main. This registration imports no runtime or tests and repeats no runtime
+execution. Raw receipts remain in that commit's `evidence/` directory.
+
 | Gate | Command | Status |
 |---|---|---|
 | Format | `cargo fmt --all -- --check` | Pass |
@@ -17,3 +22,7 @@
 | Git closeout | `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` | Pending: PR #334 Actions and cargo-audit baseline blocker unresolved |
 
 Record executed commands and exit codes in `evidence/`; a pending command is not a pass. Strict Git closeout remains pending until required hosted checks pass, the audit blocker is resolved, and the final commit is clean and pushed.
+
+## Combined frontier candidate — 29 October 2026
+
+The historical table above records the original lock. Focused DES/core tests, conformance runner self-tests, fixtures, compatibility pack and phase gates pass against the combined PR #334 / #340 source. The dependency-frontier audit has zero vulnerabilities; full exact-head hosted checks remain pending. No parent pin or CareOps consumer acceptance is inferred. Logs: `/tmp/kairos-pr334-*.log` in the integration lane.

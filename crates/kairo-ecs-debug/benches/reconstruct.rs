@@ -1,7 +1,8 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{criterion_group, criterion_main, Criterion};
 use kairo_ecs_debug::EventTrace;
 use kairo_ecs_types::{DispatchedEvent, EventId, EventKind, SimTime};
 use std::collections::BTreeMap;
+use std::hint::black_box;
 
 fn bench_reconstruct_at(c: &mut Criterion) {
     let mut trace = EventTrace::default();

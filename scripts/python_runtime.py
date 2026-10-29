@@ -10,7 +10,7 @@ import subprocess
 import sys
 import venv
 
-VERSION = (3, 15, 1, 'final', 0)
+VERSION = (3, 15, 2, 'final', 0)
 PROBE = ('import json, platform, sys; '
          'print(json.dumps(dict(version=platform.python_version(), '
          'executable=sys.executable, prefix=sys.prefix)))')
@@ -18,7 +18,7 @@ PROBE = ('import json, platform, sys; '
 
 def prepare(root: Path) -> dict[str, str]:
     if tuple(sys.version_info) != VERSION:
-        raise RuntimeError('Bootstrap must use exactly Python 3.15.1 (final).')
+        raise RuntimeError('Bootstrap must use exactly Python 3.15.2 (final).')
     root = root.resolve(strict=True)
     target = root / '.venv'
     if target.is_symlink():
@@ -34,8 +34,8 @@ def prepare(root: Path) -> dict[str, str]:
         receipt = json.loads(result.stdout)
     except (OSError, subprocess.CalledProcessError, ValueError) as error:
         raise RuntimeError('Local runtime unavailable; preserve it for safe handover.') from error
-    if receipt.get('version') != '3.15.1':
-        raise RuntimeError('Local runtime must be exactly Python 3.15.1; no replacement attempted.')
+    if receipt.get('version') != '3.15.2':
+        raise RuntimeError('Local runtime must be exactly Python 3.15.2; no replacement attempted.')
     if Path(receipt.get('prefix', '')).resolve() != target:
         raise RuntimeError('Interpreter prefix is not the repository-local environment.')
     receipt['executable'] = str(executable)

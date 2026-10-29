@@ -4,8 +4,8 @@ Approved planning direction: 22 October 2026. Primary goal is robustness and red
 
 ## Version selection — user clarification, 24 October 2026
 
-Prefer the latest suitable qualified releases, including Python 3.15.1 as the
-current repository default. A necessary alternate runtime or dependency version
+Prefer the latest suitable qualified releases, including Python 3.15.2 as the
+current repository default (29 October qualification update). A necessary alternate runtime or dependency version
 is permitted for application, tooling, CI/helper or provider compatibility;
 it does not require additional user permission. This supersedes the earlier
 mandatory Python 3.15-only/no-alternate rule in current instructions and plans.

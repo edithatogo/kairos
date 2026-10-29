@@ -8,10 +8,10 @@ rust-version.workspace = true
 [dependencies]
 kairo-ecs-pdes = { path = "../kairo-ecs-pdes", version = "0.0.0", features = ["time-warp", "pdes"] }
 kairo-ecs-types = { path = "../kairo-ecs-types", version = "0.0.0" }
-prost = { version = "0.13.5", default-features = false, features = ["std", "prost-derive"] }
+prost = { version = "0.14.4", default-features = false, features = ["std", "derive"] }
 tokio = { version = "1.54.1", default-features = false, features = ["rt", "rt-multi-thread", "net", "io-util", "sync", "macros", "time"] }
 tokio-stream = { version = "0.1.19", default-features = false, features = ["net"] }
-tonic = { version = "0.14.6", default-features = false, features = ["channel", "server", "router", "transport", "codegen"] }
+tonic = { version = "0.14.8", default-features = false, features = ["channel", "server", "router", "transport", "codegen"] }
 
 [dev-dependencies]
 serde = { version = "1", features = ["derive"] }

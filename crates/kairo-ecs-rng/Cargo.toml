@@ -8,11 +8,11 @@ rust-version.workspace = true
 
 [dependencies]
 kairo-ecs-types = { path = "../kairo-ecs-types", version = "0.0.0" }
-rand = { version = "0.10", default-features = false }
-rand_chacha = { version = "0.10", default-features = false }
-rand_distr = { version = "0.6", default-features = false, features = ["alloc"] }
+rand = { version = "0.10.3", default-features = false }
+rand_chacha = { version = "0.10.0", default-features = false }
+rand_distr = { version = "0.6.0", default-features = false, features = ["alloc"] }
 serde = { version = "1", features = ["derive"] }
-thiserror = "2"
+thiserror = "2.0.21"
 
 [lib]
 path = "src/lib.rs"

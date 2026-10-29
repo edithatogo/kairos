@@ -66,7 +66,7 @@ paths while native FFI artifacts are still being stabilized.
 
 Prefer the newest suitable qualified versions. Necessary compatibility versions
 are permitted with a recorded reason/scope and actual consumer qualification;
-see [dependency policy](conductor/dependency-value-policy.md). Python 3.15.1
+see [dependency policy](conductor/dependency-value-policy.md). Python 3.15.2
 remains the qualified default. Follow [AGENTS.md](AGENTS.md) for explicit local
 interpreter selection and safe environment handover.
 

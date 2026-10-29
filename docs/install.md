@@ -21,7 +21,7 @@ cargo test --workspace
 ## Python binding
 
 ### Prerequisites
-- Python 3.15.1
+- Python 3.15.2
 - pip / venv
 
 ### Install
@@ -147,4 +147,4 @@ docker build -t kairo-ecs-cli -f docker/Dockerfile .
 
 ## Qualified Python runtime
 
-The current qualified default is CPython 3.15.1. When `.venv` is absent, run `uv venv --python 3.15.1 .venv`, then use `.venv/bin/python` (Windows: `.venv\Scripts\python.exe`) and verify `--version` before executing helpers. Install the relevant hash-locked tool file with `uv pip sync --python .venv/bin/python scripts/bootstrap-python-tools.lock`. Do not replace an environment while it is in use. Necessary alternate profiles are permitted under the [dependency policy](../conductor/dependency-value-policy.md), with a concrete consumer/reason, exact constraints/locks and actual runtime/native/CI qualification. No alternate profile is adopted here; historical receipts remain unchanged.
+The current qualified default is CPython 3.15.2. When `.venv` is absent, run `uv venv --python 3.15.2 .venv`, then use `.venv/bin/python` (Windows: `.venv\Scripts\python.exe`) and verify `--version` before executing helpers. Install the relevant hash-locked tool file with `uv pip sync --python .venv/bin/python scripts/bootstrap-python-tools.lock`. Do not replace an environment while it is in use. Necessary alternate profiles are permitted under the [dependency policy](../conductor/dependency-value-policy.md), with a concrete consumer/reason, exact constraints/locks and actual runtime/native/CI qualification. No alternate profile is adopted here; historical receipts remain unchanged.

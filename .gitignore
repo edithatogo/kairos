@@ -25,3 +25,6 @@ crates/kairo-ecs-pyo3/
 
 # Qualified repository-local Python environment; never tracked source.
 /.venv/
+
+# Local Python editable-install metadata.
+*.egg-info/

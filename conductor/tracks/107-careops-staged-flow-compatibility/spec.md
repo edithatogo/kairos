@@ -1,6 +1,6 @@
 # Track 107: CareOps staged allocation flow compatibility
 
-Status: In Progress. Mainline integration base: `797e969b4a3cd3605a617a32d0134d0a093aa06a`; API prototype was reviewed on Track106 descendant `d3a6d831ddbe5886078541468e3fbf08b6f8c4c9`.
+Status: Blocked pending exact-head PR #334 source integration and separate CareOps acceptance. The combined runtime/dependency candidate resolves the source audit blocker; Arrow crates.io publication remains separately disabled. Mainline integration base: `797e969b4a3cd3605a617a32d0134d0a093aa06a`; API prototype was reviewed on Track106 descendant `d3a6d831ddbe5886078541468e3fbf08b6f8c4c9`.
 
 ## Objective
 

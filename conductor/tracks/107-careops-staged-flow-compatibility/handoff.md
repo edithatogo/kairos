@@ -1,5 +1,16 @@
 # Track 107 handoff — 2026-10-27
 
+## Registration reconciliation — 29 October 2026
+
+Only the eight planning and handoff records are imported from frozen PR #334
+head `56ac7691946d8cfc08f4d601e91ba4ea5547e886`. Runtime code, tests, ready
+fixtures, pins and acceptance are not imported by this registration packet.
+The registry records Blocked and the metadata accepts no phases. Historical
+candidate claims below apply to that source lane; its
+[raw evidence](https://github.com/edithatogo/kairos/tree/56ac7691946d8cfc08f4d601e91ba4ea5547e886/conductor/tracks/107-careops-staged-flow-compatibility/evidence)
+remains at the immutable source. PR #334 and the zstd audit must pass, followed
+by separate CareOps acceptance, before promotion. This does not close a phase.
+
 ## Summary
 
 Local candidate adds experimental `StagedResourceRuntime` for the narrow staged allocation contract. CareOps consumer migration and parent acceptance remain separate.
@@ -40,3 +51,7 @@ Candidate base is `d3a6d831ddbe5886078541468e3fbf08b6f8c4c9`, a Track106/SplitMi
 - pushed ref: pending; candidate remains local.
 - `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: pending until commit/push and cleanup.
 - next-phase decision: hold Track107 closeout until reviewed implementation gate, commit/push evidence, and separate CareOps R10.3 consumer acceptance.
+
+## Source integration qualification — 29 October 2026
+
+The integration candidate now includes PR #334 runtime, tests and fixture alongside the immutable dependency frontier from PR #340. The earlier registration-only statement describes that historical packet. No CareOps pin or consumer acceptance is promoted. Source checks are being rerun against this combined tree; historical 899-test and baseline audit results remain historical. Track 107 remains Blocked pending its source integration and separate CareOps acceptance. Crates.io Arrow publication remains disabled independently.

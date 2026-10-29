@@ -40,6 +40,7 @@ jobs:
           test -f .github/workflows/ci-core.yml
           test -f .github/workflows/ci-policy.yml
           test -f .github/workflows/archive-supply-chain-main.yml
+          test -f .github/workflows/arrow-platform.yml
           test -f .github/workflows/ci-skip-guard.yml
           test -f .github/workflows/cloud-smoke.yml
           test -f .github/workflows/code-health.yml
@@ -128,7 +129,7 @@ jobs:
           test -f .github/workflows/validate-conductor.yml
           test -f .github/workflows/workflow-security.yml
       - name: Run zizmor
-        uses: zizmorcore/zizmor-action@85b2b9fb8e3325e7a23d7d0a9d7ba5ae0f999e3e # v0.7.1
+        uses: zizmorcore/zizmor-action@53290badfa369cb0bf7ad16342cb62c2fa47ac7b # v0.8.0
         with:
           persona: pedantic
           online-audits: false

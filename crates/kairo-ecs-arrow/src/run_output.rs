@@ -13,16 +13,20 @@
 //!
 //! Parts are encoded to a bounded in-memory buffer (one part at most — the
 //! memory bound is the configured part row bound), written to a `.staging-`
-//! file beside their destination, fsynced, renamed into place, and recorded
-//! in the ledger only after the rename. `complete` fsyncs every published
+//! file beside their destination, fsynced, published without replacement, and recorded
+//! in the ledger only after publication. `complete` fsyncs every published
 //! part and the run directory, then writes the manifest to a staging file,
-//! fsyncs it, renames it into place, and fsyncs the directory again:
+//! fsyncs it, publishes it without replacement, and fsyncs the directory again:
 //! manifest-last, so the manifest's presence is the completion marker and
 //! interrupted runs (before or during any staged write) have no manifest a
 //! reader could accept. Filesystem rename/sync semantics are the
 //! local-filesystem contract (spec: "Output publication is a
 //! local-filesystem contract in this migration"); directory syncing applies
 //! where the platform supports it (`cfg(unix)`).
+//!
+//! Publication and resume require an existing protected root. Native permission
+//! checks reject shared-writable roots and unverifiable ACL/filesystem models;
+//! new runs are private. Writes and resume reads use held directory handles.
 //!
 //! # Content attestation
 //!
@@ -58,15 +62,18 @@
 //! imports keep compiling until it is retired with the Phase 3 closeout;
 //! every other variant is live.
 
-use std::io::{BufWriter, Write};
+use std::io::Write;
 use std::num::NonZeroUsize;
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 
 use serde::{Deserialize, Serialize};
 
+#[cfg(unix)]
+use crate::polars_interop::open_run_file;
 use crate::polars_interop::{
-    dataframe_to_records, read_parquet, records_to_dataframe, write_parquet_zstd,
+    dataframe_to_records, open_protected_root, open_run_child, open_run_directory, read_parquet,
+    read_run_file, records_to_dataframe, write_parquet_zstd, write_run_file_staged,
 };
 use crate::{ArrowError, EventLogRecord};
 
@@ -363,7 +370,9 @@ fn sequence_range(records: &[EventLogRecord]) -> (u64, u64) {
 /// manifest last, consuming the handle so no write can follow completion.
 #[derive(Debug)]
 pub struct RunOutput {
-    run_dir: PathBuf,
+    root_path: PathBuf,
+    root_directory: std::fs::File,
+    directory: std::fs::File,
     config: RunOutputConfig,
     parts: Vec<PartReceipt>,
     next_part_id: u32,
@@ -371,8 +380,8 @@ pub struct RunOutput {
 }
 
 impl RunOutput {
-    /// Create a unique run output directory under `parent_dir` for
-    /// `config`.
+    /// Create a unique private run under an existing protected `parent_dir`.
+    /// Missing roots, symlink roots and unsafe permissions are explicit errors.
     ///
     /// Contract: the directory name derives deterministically from the
     /// run/replication identity (sanitized); path containment is validated
@@ -383,9 +392,26 @@ impl RunOutput {
     /// alike — so a run is never silently rewritten.
     pub fn create(config: RunOutputConfig, parent_dir: &Path) -> Result<Self, RunOutputError> {
         validate_identity(&config)?;
-        let run_dir = parent_dir.join(run_directory_name(&config));
-        if run_dir.exists() {
-            if run_dir.join(RUN_MANIFEST_FILE_NAME).is_file() {
+        let root_path = std::path::absolute(parent_dir).map_err(io_err)?;
+        let root_directory = open_protected_root(&root_path).map_err(arrow_err)?;
+        let name = run_directory_name(&config);
+        let run_dir = root_path.join(&name);
+        let options = cap_primitives::fs::DirOptions::new();
+        #[cfg(unix)]
+        let options = {
+            use cap_primitives::fs::DirBuilderExt;
+            let mut options = options;
+            options.mode(0o700);
+            options
+        };
+        if let Err(error) =
+            cap_primitives::fs::create_dir(&root_directory, Path::new(&name), &options)
+        {
+            if error.kind() != std::io::ErrorKind::AlreadyExists {
+                return Err(io_err(error));
+            }
+            let existing = open_run_child(&root_directory, Path::new(&name)).map_err(arrow_err)?;
+            if run_entry_exists(&existing, RUN_MANIFEST_FILE_NAME)? {
                 return Err(RunOutputError::CompletedRunExists {
                     path: run_dir.display().to_string(),
                 });
@@ -394,9 +420,14 @@ impl RunOutput {
                 "interrupted run output exists for this identity; resume it instead of recreating",
             ));
         }
-        std::fs::create_dir_all(&run_dir).map_err(io_err)?;
+        let directory = open_run_child(&root_directory, Path::new(&name)).map_err(arrow_err)?;
+        kairo_ecs_fs_guard::verify_directory(&directory, true).map_err(io_err)?;
+        #[cfg(unix)]
+        root_directory.sync_all().map_err(io_err)?;
         Ok(Self {
-            run_dir,
+            root_path,
+            root_directory,
+            directory,
             config,
             parts: Vec::new(),
             next_part_id: 1,
@@ -419,13 +450,13 @@ impl RunOutput {
         boundary: CheckpointBoundary,
     ) -> Result<Self, RunOutputError> {
         validate_identity(&config)?;
-        let run_dir = parent_dir.join(run_directory_name(&config));
-        if !run_dir.is_dir() {
-            return Err(RunOutputError::ManifestMissing {
-                path: run_dir.display().to_string(),
-            });
-        }
-        if run_dir.join(RUN_MANIFEST_FILE_NAME).is_file() {
+        let root_path = std::path::absolute(parent_dir).map_err(io_err)?;
+        let root_directory = open_protected_root(&root_path).map_err(arrow_err)?;
+        let name = run_directory_name(&config);
+        let run_dir = root_path.join(&name);
+        let directory = open_run_child(&root_directory, Path::new(&name)).map_err(arrow_err)?;
+        kairo_ecs_fs_guard::verify_directory(&directory, true).map_err(io_err)?;
+        if run_entry_exists(&directory, RUN_MANIFEST_FILE_NAME)? {
             return Err(RunOutputError::CompletedRunExists {
                 path: run_dir.display().to_string(),
             });
@@ -436,9 +467,11 @@ impl RunOutput {
             ));
         }
 
-        let mut entries: Vec<(u32, String)> = std::fs::read_dir(&run_dir)
+        let mut entries: Vec<(u32, String)> = cap_primitives::fs::read_base_dir(&directory)
             .map_err(io_err)?
-            .filter_map(|entry| entry.ok())
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(io_err)?
+            .into_iter()
             .filter_map(|entry| {
                 let name = entry.file_name().to_string_lossy().into_owned();
                 let part_id = parse_part_id(&name)?;
@@ -456,8 +489,7 @@ impl RunOutput {
                     "existing part files are not a contiguous sequence",
                 ));
             }
-            let path = run_dir.join(&file_name);
-            let bytes = std::fs::read(&path).map_err(io_err)?;
+            let bytes = read_run_file(&directory, &file_name).map_err(arrow_err)?;
             let file_hash = format!("{:016x}", crate::stable_hash_bytes(&bytes));
             let frame = read_parquet(std::io::Cursor::new(bytes)).map_err(arrow_err)?;
             let records = dataframe_to_records(&frame).map_err(arrow_err)?;
@@ -496,7 +528,9 @@ impl RunOutput {
         }
 
         Ok(Self {
-            run_dir,
+            root_path,
+            root_directory,
+            directory,
             config,
             parts,
             next_part_id: last_part_id + 1,
@@ -520,6 +554,7 @@ impl RunOutput {
         &mut self,
         records: &[EventLogRecord],
     ) -> Result<Vec<PartReceipt>, RunOutputError> {
+        self.verify_location()?;
         if records.is_empty() {
             return Ok(Vec::new());
         }
@@ -547,19 +582,13 @@ impl RunOutput {
             let mut slice = records_to_dataframe(&window).map_err(arrow_err)?;
             let encoded = encode_part(&mut slice)?;
 
-            let staging_path = self
-                .run_dir
-                .join(format!("{PART_STAGING_PREFIX}{file_name}"));
-            {
-                let file = std::fs::File::create(&staging_path).map_err(io_err)?;
-                let mut writer = BufWriter::new(file);
-                writer.write_all(&encoded).map_err(io_err)?;
-                writer.flush().map_err(io_err)?;
-            }
-            sync_path(&staging_path)?;
-            let final_path = self.run_dir.join(&file_name);
-            std::fs::rename(&staging_path, &final_path).map_err(io_err)?;
-            sync_path(&self.run_dir)?;
+            write_run_file_staged(
+                &self.directory,
+                &file_name,
+                &encoded,
+                &format!("{PART_STAGING_PREFIX}{file_name}"),
+            )
+            .map_err(arrow_err)?;
 
             let receipt = PartReceipt {
                 part_id,
@@ -575,6 +604,7 @@ impl RunOutput {
             receipts.push(receipt);
             offset += len;
         }
+        self.verify_location()?;
         Ok(receipts)
     }
 
@@ -656,10 +686,16 @@ impl RunOutput {
     /// the manifest (staged, fsynced, renamed, directory fsynced) last.
     /// Consumes the handle; the manifest's presence is the completion marker.
     pub fn complete(self) -> Result<RunManifest, RunOutputError> {
+        self.verify_location()?;
+        #[cfg(unix)]
         for part in &self.parts {
-            sync_path(&self.run_dir.join(&part.file_name))?;
+            open_run_file(&self.directory, &part.file_name)
+                .map_err(arrow_err)?
+                .sync_all()
+                .map_err(io_err)?;
         }
-        sync_path(&self.run_dir)?;
+        #[cfg(unix)]
+        self.directory.sync_all().map_err(io_err)?;
 
         let manifest = RunManifest {
             schema: RUN_MANIFEST_SCHEMA.to_string(),
@@ -682,39 +718,50 @@ impl RunOutput {
 
         let payload = serde_json::to_vec_pretty(&manifest)
             .map_err(|error| RunOutputError::Io(error.to_string()))?;
-        let staging_path = self
-            .run_dir
-            .join(format!("{PART_STAGING_PREFIX}{RUN_MANIFEST_FILE_NAME}"));
-        {
-            let file = std::fs::File::create(&staging_path).map_err(io_err)?;
-            let mut writer = BufWriter::new(file);
-            writer.write_all(&payload).map_err(io_err)?;
-            writer.flush().map_err(io_err)?;
-        }
-        sync_path(&staging_path)?;
-        let manifest_path = self.run_dir.join(RUN_MANIFEST_FILE_NAME);
-        std::fs::rename(&staging_path, &manifest_path).map_err(io_err)?;
-        sync_path(&self.run_dir)?;
+        write_run_file_staged(
+            &self.directory,
+            RUN_MANIFEST_FILE_NAME,
+            &payload,
+            &format!("{PART_STAGING_PREFIX}{RUN_MANIFEST_FILE_NAME}"),
+        )
+        .map_err(arrow_err)?;
+        self.verify_location()?;
         Ok(manifest)
+    }
+
+    fn verify_location(&self) -> Result<(), RunOutputError> {
+        kairo_ecs_fs_guard::verify_directory(&self.root_directory, false).map_err(io_err)?;
+        kairo_ecs_fs_guard::verify_directory(&self.directory, true).map_err(io_err)?;
+        let current_run = cap_primitives::fs::open_dir_nofollow(
+            &self.root_directory,
+            Path::new(&run_directory_name(&self.config)),
+        )
+        .map_err(io_err)?;
+        let held_run = same_file::Handle::from_file(self.directory.try_clone().map_err(io_err)?)
+            .map_err(io_err)?;
+        if held_run != same_file::Handle::from_file(current_run).map_err(io_err)? {
+            return Err(RunOutputError::Io(
+                "run directory changed beneath output root".into(),
+            ));
+        }
+        let held = same_file::Handle::from_file(self.root_directory.try_clone().map_err(io_err)?)
+            .map_err(io_err)?;
+        let current =
+            same_file::Handle::from_file(open_run_directory(&self.root_path).map_err(arrow_err)?)
+                .map_err(io_err)?;
+        if held != current {
+            return Err(RunOutputError::Io("output directory path changed".into()));
+        }
+        Ok(())
     }
 }
 
-/// Flush a file's (or directory's) contents to stable storage where the
-/// platform supports it (`cfg(unix)`); other platforms skip the explicit sync
-/// and rely on close ordering (documented platform caveat).
-fn sync_path(path: &Path) -> Result<(), RunOutputError> {
-    #[cfg(unix)]
-    {
-        std::fs::File::open(path)
-            .map_err(io_err)?
-            .sync_all()
-            .map_err(io_err)?;
+fn run_entry_exists(directory: &std::fs::File, name: &str) -> Result<bool, RunOutputError> {
+    match cap_primitives::fs::stat(directory, Path::new(name), cap_fs_ext::FollowSymlinks::No) {
+        Ok(_) => Ok(true),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(false),
+        Err(error) => Err(io_err(error)),
     }
-    #[cfg(not(unix))]
-    {
-        let _ = path;
-    }
-    Ok(())
 }
 
 /// Read the completed manifest of a run directory.
@@ -724,13 +771,21 @@ fn sync_path(path: &Path) -> Result<(), RunOutputError> {
 /// a manifest that is malformed, carries the wrong schema identifier, or
 /// lacks the completed status ([`RunOutputError::ManifestInvalid`]).
 pub fn read_completed_manifest(run_dir: &Path) -> Result<RunManifest, RunOutputError> {
+    let directory = open_run_directory(run_dir).map_err(arrow_err)?;
+    read_completed_manifest_at(run_dir, &directory)
+}
+
+fn read_completed_manifest_at(
+    run_dir: &Path,
+    directory: &std::fs::File,
+) -> Result<RunManifest, RunOutputError> {
     let manifest_path = run_dir.join(RUN_MANIFEST_FILE_NAME);
-    if !manifest_path.is_file() {
+    if !run_entry_exists(directory, RUN_MANIFEST_FILE_NAME)? {
         return Err(RunOutputError::ManifestMissing {
             path: manifest_path.display().to_string(),
         });
     }
-    let payload = std::fs::read(&manifest_path).map_err(io_err)?;
+    let payload = read_run_file(directory, RUN_MANIFEST_FILE_NAME).map_err(arrow_err)?;
     let manifest: RunManifest = serde_json::from_slice(&payload)
         .map_err(|error| RunOutputError::ManifestInvalid(error.to_string()))?;
     if manifest.schema != RUN_MANIFEST_SCHEMA {
@@ -747,7 +802,8 @@ pub fn read_completed_manifest(run_dir: &Path) -> Result<RunManifest, RunOutputE
 /// ranges) so readers only accept runs whose files still match their manifest
 /// ([`RunOutputError::HashMismatch`] on any divergence).
 pub fn validate_run_output(run_dir: &Path) -> Result<RunManifest, RunOutputError> {
-    let manifest = read_completed_manifest(run_dir)?;
+    let directory = open_run_directory(run_dir).map_err(arrow_err)?;
+    let manifest = read_completed_manifest_at(run_dir, &directory)?;
     for part in &manifest.parts {
         if part.file_name.contains('/')
             || part.file_name.contains('\\')
@@ -758,8 +814,10 @@ pub fn validate_run_output(run_dir: &Path) -> Result<RunManifest, RunOutputError
             ));
         }
         let path = run_dir.join(&part.file_name);
-        let bytes = std::fs::read(&path).map_err(|_| RunOutputError::HashMismatch {
-            path: path.display().to_string(),
+        let bytes = read_run_file(&directory, &part.file_name).map_err(|_| {
+            RunOutputError::HashMismatch {
+                path: path.display().to_string(),
+            }
         })?;
         let recorded = u64::from_str_radix(&part.file_hash, 16).map_err(|_| {
             RunOutputError::ManifestInvalid(format!(

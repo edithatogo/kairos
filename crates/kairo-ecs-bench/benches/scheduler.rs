@@ -1,9 +1,10 @@
-use criterion::{black_box, criterion_group, criterion_main, BatchSize, Criterion, Throughput};
+use criterion::{criterion_group, criterion_main, BatchSize, Criterion, Throughput};
 use kairo_ecs_bench::{BENCH_SCALE, PRIORITY_RANGE};
 use kairo_ecs_core::Scheduler;
 use kairo_ecs_rng::DeterministicStream;
 use kairo_ecs_state::World;
 use kairo_ecs_types::{EventKind, ScheduleRequest, SimTime};
+use std::hint::black_box;
 
 fn bench_schedule_1m(c: &mut Criterion) {
     let scale = BENCH_SCALE;

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+import gzip
 import hashlib
 import importlib.util
 import io
@@ -178,6 +179,12 @@ class WebsiteCacheEvidenceTests(unittest.TestCase):
         self.assertEqual(result["adapter_unittest_cases"], 23)
         self.assertEqual(result["named_regression_cases"], 248)
         self.assertEqual(marker["payload_sha256"]["negative-control.log"], sha256((self.fixture.evidence / "negative-control.log").read_bytes()))
+
+    def test_historical_lock_cannot_certify_current_website_source(self):
+        historical = gzip.decompress((ROOT / "tests/fixtures/website-cache-security-lock-20261023.json.gz").read_bytes())
+        (self.fixture.repo / "website/package-lock.json").write_bytes(historical)
+        with self.assertRaisesRegex(verifier.EvidenceError, "source hash mismatch"):
+            self.fixture.complete()
 
     def test_rejects_each_missing_required_receipt_and_clears_stale_marker(self):
         for name in verifier.LOG_FILES:

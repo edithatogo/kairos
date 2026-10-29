@@ -34,7 +34,7 @@ PATCHED_ARCHIVE_SHA256 = "fbd36545bda6d9cd7da805cff6967f96ca2f7f9c59b45e79f97a3e
 EVIDENCE_ZIP_SHA256 = "1efb1d1bcf379111854e49e50b3371027bf422a529eadcd69efec4ccdcf3fab8"
 QUALIFICATION_SHA256 = "41f2137e9dc6c12023e13eb55be32ef8588ceabd1a511423332f0d9ddf6372f1"
 GENERATOR_VERSION = "1.0.0"
-VALIDATOR_DISTRIBUTIONS = {"jsonschema": "4.26.0", "attrs": "26.1.0", "jsonschema-specifications": "2025.9.1", "referencing": "0.37.0", "rpds-py": "2026.5.1"}
+VALIDATOR_DISTRIBUTIONS = {"jsonschema": "4.26.0", "attrs": "26.1.0", "jsonschema-specifications": "2025.9.1", "referencing": "0.37.0", "rpds-py": "2026.9.1"}
 
 PACKAGE_FILES = {
     "package.json": "0159915b5e6dac00760bf8ce50daebfcf441cbdb66ef6aa8f05017248b4ccb42",

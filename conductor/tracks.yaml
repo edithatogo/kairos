@@ -438,7 +438,7 @@ tracks:
   - id: 106
     name: Scheduler Preview API Compatibility
     status: Done
-    owner: core-scheduler-agent + conformance-agent + api-governance-agent
+    owner: core-api-agent + conformance-agent + api-governance-agent
     depends_on: ["01", "12", "25"]
     owned_paths:
       - conductor/archive/106-scheduler-preview-compatibility/
@@ -455,9 +455,9 @@ tracks:
 
   - id: 107
     name: CareOps staged allocation flow compatibility
-    status: In Progress
+    status: Blocked
     owner: des-api-agent + conformance-agent + api-governance-agent
-    depends_on: ["03", "12", "25"]
+    depends_on: ["03", "12", "25", "106"]
     owned_paths:
       - conductor/tracks/107-careops-staged-flow-compatibility/
       - crates/kairo-ecs-des/src/lib.rs
@@ -1599,3 +1599,13 @@ tracks:
       - phase-closeout-check
       - toolchain-matrix-current
       - version-drop-policy-check
+
+  - id: 108
+    name: Scientific ecosystem alignment
+    status: Blocked
+    owner: api-governance-agent
+    depends_on: ["107"]
+    owned_paths:
+      - conductor/tracks/108-scientific-ecosystem-alignment/
+    required_gates:
+      - phase-closeout-check
