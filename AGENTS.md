@@ -14,8 +14,8 @@ qualify the real interpreter/dependency behaviour and retain security/functional
 gates. Do not downgrade or rebuild working latest-version environments merely
 because an alternate is permitted.
 
-The current qualified default remains repo-local Python 3.15.1. Create an isolated
-`.venv` with `uv venv --python 3.15.1` only when absent, then verify actual version
+The current selected default is repo-local Python 3.15.2. Create an isolated
+`.venv` with `uv venv --python 3.15.2` only when absent, then verify actual version
 and prefix with `.venv/bin/python scripts/python_runtime.py`. Activate it before
 `python`/`python3` commands, or invoke its absolute path. Existing locks, guards
 and CI enforce this selected profile. A necessary alternate profile needs its own
