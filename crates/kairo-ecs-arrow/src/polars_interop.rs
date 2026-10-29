@@ -443,6 +443,14 @@ impl DurableRunPublicationWriter {
     }
 
     pub fn publish(&self, records: &[EventLogRecord]) -> Result<PublicationReceipt, ArrowError> {
+        self.publish_with_hook(records, || {})
+    }
+
+    fn publish_with_hook(
+        &self,
+        records: &[EventLogRecord],
+        after_open: impl FnOnce(),
+    ) -> Result<PublicationReceipt, ArrowError> {
         if !valid_component(&self.run_id) {
             return Err(ArrowError::Io("Invalid run identifier".to_string()));
         }
@@ -453,11 +461,17 @@ impl DurableRunPublicationWriter {
         fs::create_dir_all(parent).map_err(|e| ArrowError::Io(e.to_string()))?;
         // An exclusive directory creation prevents concurrent publishers or a retry
         // from modifying any completed or interrupted run.
-        fs::create_dir(&self.run_dir)
+        let base =
+            cap_primitives::fs::open_ambient_dir(parent, cap_primitives::ambient_authority())
+                .map_err(|e| ArrowError::Io(format!("Cannot open run parent: {e}")))?;
+        let name = Path::new(&self.run_id);
+        cap_primitives::fs::create_dir(&base, name, &cap_primitives::fs::DirOptions::new())
             .map_err(|e| ArrowError::Io(format!("Cannot create unique run directory: {e}")))?;
+        let directory = cap_primitives::fs::open_dir_nofollow(&base, name)
+            .map_err(|e| ArrowError::Io(format!("Cannot open new run directory: {e}")))?;
+        after_open();
         #[cfg(unix)]
-        fs::File::open(parent)
-            .and_then(|dir| dir.sync_all())
+        base.sync_all()
             .map_err(|e| ArrowError::Io(format!("Cannot sync run parent directory: {e}")))?;
 
         // Explicit canonical sort keys: time_ticks, priority, sequence
@@ -475,13 +489,11 @@ impl DurableRunPublicationWriter {
 
         for (part_idx, chunk) in sorted_records.chunks(self.batch_size).enumerate() {
             let part_name = format!("part-{part_idx:05}.parquet");
-            let part_path = self.run_dir.join(&part_name);
-
             let mut df = records_to_dataframe(chunk)?;
             let mut buf = Vec::new();
             write_parquet_zstd(&mut df, &mut buf)?;
 
-            crate::atomic_write_file(&part_path, &buf, false)?;
+            write_run_file(&directory, &part_name, &buf)?;
             let checksum = calculate_checksum(&buf);
 
             let max_seq = chunk.iter().map(|r| r.sequence).max().unwrap_or(0);
@@ -509,7 +521,12 @@ impl DurableRunPublicationWriter {
 
         let manifest_json = manifest.to_json();
         let manifest_path = self.run_dir.join("manifest.json");
-        crate::atomic_write_file(&manifest_path, manifest_json.as_bytes(), false)?;
+        write_run_file(&directory, "manifest.json", manifest_json.as_bytes())?;
+        // Catch a missing or symlinked receipt path before reporting success.
+        // A pathname can still change after this check; callers must protect
+        // the run parent if they require the receipt path to remain stable.
+        cap_primitives::fs::open_dir_nofollow(&base, name)
+            .map_err(|e| ArrowError::Io(format!("Run path changed during publication: {e}")))?;
 
         Ok(PublicationReceipt {
             manifest_path,
@@ -533,6 +550,49 @@ impl DurableRunPublicationWriter {
 }
 
 type OpenRunDirectory = fs::File;
+
+// Stage and publish relative to the held directory. A hard link publishes the
+// fully synced file atomically and fails if the destination already exists.
+fn write_run_file(
+    directory: &OpenRunDirectory,
+    name: &str,
+    bytes: &[u8],
+) -> Result<(), ArrowError> {
+    use std::io::Write;
+    let staging = format!(".{name}.staging");
+    let mut options = cap_primitives::fs::OpenOptions::new();
+    options.write(true).create_new(true);
+    let mut file = cap_primitives::fs::open(directory, Path::new(&staging), &options)
+        .map_err(|e| ArrowError::Io(format!("Cannot create publication staging file: {e}")))?;
+    file.write_all(bytes)
+        .and_then(|()| file.sync_all())
+        .map_err(|e| ArrowError::Io(format!("Cannot write publication staging file: {e}")))?;
+    drop(file);
+    cap_primitives::fs::hard_link(directory, Path::new(&staging), directory, Path::new(name))
+        .map_err(|e| ArrowError::Io(format!("Cannot publish file without clobbering: {e}")))?;
+    cap_primitives::fs::remove_file(directory, Path::new(&staging))
+        .map_err(|e| ArrowError::Io(format!("Cannot remove publication staging file: {e}")))?;
+    #[cfg(unix)]
+    directory
+        .sync_all()
+        .map_err(|e| ArrowError::Io(format!("Cannot sync run directory: {e}")))?;
+    Ok(())
+}
+
+#[cfg(test)]
+mod publication_file_tests {
+    use super::*;
+
+    #[test]
+    fn publication_is_no_clobber() {
+        let parent = tempfile::tempdir().unwrap();
+        fs::create_dir(parent.path().join("run")).unwrap();
+        let directory = open_run_directory(&parent.path().join("run")).unwrap();
+        write_run_file(&directory, "part", b"original").unwrap();
+        assert!(write_run_file(&directory, "part", b"replacement").is_err());
+        assert_eq!(read_run_file(&directory, "part").unwrap(), b"original");
+    }
+}
 
 fn open_run_directory(path: &Path) -> Result<OpenRunDirectory, ArrowError> {
     let parent = path
@@ -593,6 +653,43 @@ mod path_hardening_tests {
         assert!(open_run_directory(&run).is_err());
         symlink(other.join("part"), old.join("linked")).unwrap();
         assert!(read_run_file(&directory, "linked").is_err());
+        write_run_file(&directory, "manifest.json", b"published").unwrap();
+        assert_eq!(fs::read(old.join("manifest.json")).unwrap(), b"published");
+        assert!(!other.join("manifest.json").exists());
+        assert!(write_run_file(&directory, "manifest.json", b"replacement").is_err());
+        assert_eq!(fs::read(old.join("manifest.json")).unwrap(), b"published");
+    }
+
+    #[test]
+    fn publisher_does_not_follow_replaced_run_path() {
+        use std::os::unix::fs::symlink;
+        let parent = tempfile::tempdir().unwrap();
+        let run = parent.path().join("run");
+        let moved = parent.path().join("moved");
+        let outside = tempfile::tempdir().unwrap();
+        let writer = DurableRunPublicationWriter::new(parent.path(), "run", 10);
+        let record = EventLogRecord {
+            schema_version: SCHEMA_VERSION_V2,
+            run_id: "run".into(),
+            event_id: EventId::new(1, 1),
+            entity_id: None,
+            time_ticks: 1,
+            time_scale: "ticks".into(),
+            priority: 0,
+            sequence: 1,
+            event_kind: "custom:test".into(),
+            status: EventStatus::Dispatched,
+            payload_ref: None,
+        };
+        let result = writer.publish_with_hook(&[record], || {
+            fs::rename(&run, &moved).unwrap();
+            symlink(outside.path(), &run).unwrap();
+        });
+        assert!(result.is_err());
+        assert!(moved.join("manifest.json").is_file());
+        assert!(moved.join("part-00000.parquet").is_file());
+        assert!(!outside.path().join("manifest.json").exists());
+        assert!(!outside.path().join("part-00000.parquet").exists());
     }
 }
 
