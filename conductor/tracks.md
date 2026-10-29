@@ -259,5 +259,7 @@ Polars inventory leads; sha2/tempfile/proptest are separate tracks with gates on
 
 - [x] **Track 106: Scheduler Preview API Compatibility** — [archived record](archive/106-scheduler-preview-compatibility/index.md); additive preview API restored and reviewed, CareOps retained-pin acceptance passed, and parent pin left unchanged pending separate RNG migration.
 
+- [ ] **Track 107: CareOps staged allocation flow compatibility** — [record](tracks/107-careops-staged-flow-compatibility/index.md); blocked on PR #334 source integration, zstd package qualification and separate CareOps consumer acceptance. Registration imports planning records only.
+
 ---
 - [ ] **Track 108: Scientific ecosystem alignment** — [record](tracks/108-scientific-ecosystem-alignment/index.md); Track 107 and consumer acceptance are prerequisites. [Issue #336](https://github.com/edithatogo/kairos/issues/336).

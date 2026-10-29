@@ -1,5 +1,11 @@
 # Track 106 handoff
 
+Metadata reconciliation on 29 October 2026 restores this archived track's machine
+registry row and mirrors its already closed phase ledger and completed Phases
+0–2 plan. Live PR #333 readback confirms the published merge below. This records
+historical acceptance only; no implementation test or CareOps pin promotion is
+repeated or newly claimed.
+
 PR #333 was squash-merged to `origin/main` as
 `797e969b4a3cd3605a617a32d0134d0a093aa06a`. The closeout ledger identifies
 that integrated commit; the review and test receipts below remain bound to
