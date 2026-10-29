@@ -61,3 +61,7 @@ Packaging inspection found the Python and TypeScript distributions declared Apac
 ## Final hosted documentation repair
 
 At `49f826a`, all hosted checks except `docs-quality` passed, including Arrow on Linux, macOS and Windows. The remaining renderer contract fixture still pinned the pre-upgrade direct dependencies and lock. Its updated exact dependency map, MDX integrity fingerprint, complete lock SHA-256 and normalized retained graph SHA-256 were independently checked by `pr332_pin_repair_review` (reviewed test blob `493571087ae05cb31de254e382d1c6c7766acfcd`, no findings). All four renderer tests pass on Node 26.13.0. Forbidden dependency/edge checks and the reviewed cache identity remain enforced.
+
+## Relative publication review follow-up
+
+After all 69 checks passed at `9d4b572`, hosted review identified an empty-parent error for bare relative filenames. The writer now normalizes an empty parent to the current directory before staging and directory sync. A child-process regression exercises creation, no-clobber preservation, explicit overwrite and checkpoint publication without changing the test runner's global working directory. The exact regression target is included in Linux/macOS/Windows Arrow checks. Independent bounded review approved the source delta with no findings; previous green hosted results do not certify this new commit.

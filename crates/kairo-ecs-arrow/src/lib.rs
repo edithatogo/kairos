@@ -2135,7 +2135,10 @@ pub fn atomic_write_file(
 ) -> Result<(), ArrowError> {
     use std::io::Write;
     let dest = destination.as_ref();
-    let parent = dest.parent().unwrap_or_else(|| std::path::Path::new("."));
+    let parent = dest
+        .parent()
+        .filter(|parent| !parent.as_os_str().is_empty())
+        .unwrap_or_else(|| std::path::Path::new("."));
     std::fs::create_dir_all(parent).map_err(|e| ArrowError::Io(e.to_string()))?;
 
     let mut staged = tempfile::NamedTempFile::new_in(parent)
