@@ -191,23 +191,37 @@ if ($expectedTrackIds.Count -eq 0) {
     throw "No track ids found in conductor/tracks.yaml"
 }
 
-$trackDirs = @(Get-ChildItem -LiteralPath "conductor/tracks" -Directory)
-$actualTrackIds = @($trackDirs | ForEach-Object {
-    if ($_.Name -match '^(\d+)-') {
-        "{0:D2}" -f [int]$matches[1]
-    } else {
-        throw "Track directory name does not start with a numeric id: $($_.Name)"
-    }
-} | Sort-Object -Unique)
+function Get-ConductorTrackDirectories {
+    param(
+        [string[]]$ExpectedTrackIds,
+        [string]$ActivePath = "conductor/tracks",
+        [string]$ArchivePath = "conductor/archive"
+    )
 
-$missingTrackIds = @($expectedTrackIds | Where-Object { $actualTrackIds -notcontains $_ })
-$extraTrackIds = @($actualTrackIds | Where-Object { $expectedTrackIds -notcontains $_ })
-if ($missingTrackIds.Count -gt 0 -or $extraTrackIds.Count -gt 0) {
-    throw "Track directory ids do not match conductor/tracks.yaml. Missing: $($missingTrackIds -join ', '); Extra: $($extraTrackIds -join ', ')"
+    $directories = @(Get-ChildItem -LiteralPath $ActivePath -Directory)
+    if (Test-Path -LiteralPath $ArchivePath) {
+        $directories += @(Get-ChildItem -LiteralPath $ArchivePath -Directory)
+    }
+    $actualIds = @($directories | ForEach-Object {
+        if ($_.Name -match '^(\d+)-') {
+            "{0:D2}" -f [int]$matches[1]
+        } else {
+            throw "Track directory name does not start with a numeric id: $($_.Name)"
+        }
+    } | Sort-Object -Unique)
+
+    $missingIds = @($ExpectedTrackIds | Where-Object { $actualIds -notcontains $_ })
+    $extraIds = @($actualIds | Where-Object { $ExpectedTrackIds -notcontains $_ })
+    if ($missingIds.Count -gt 0 -or $extraIds.Count -gt 0) {
+        throw "Track directory ids do not match conductor/tracks.yaml. Missing: $($missingIds -join ', '); Extra: $($extraIds -join ', ')"
+    }
+    if ($directories.Count -ne $ExpectedTrackIds.Count) {
+        throw "Expected $($ExpectedTrackIds.Count) track directories from conductor/tracks.yaml, found $($directories.Count)"
+    }
+    return $directories
 }
-if ($trackDirs.Count -ne $expectedTrackIds.Count) {
-    throw "Expected $($expectedTrackIds.Count) track directories from conductor/tracks.yaml, found $($trackDirs.Count)"
-}
+
+$trackDirs = @(Get-ConductorTrackDirectories -ExpectedTrackIds $expectedTrackIds)
 
 foreach ($track in $trackDirs) {
     foreach ($file in $requiredTrackFiles) {
