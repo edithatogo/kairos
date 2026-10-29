@@ -5,6 +5,90 @@ use kairo_ecs_arrow::*;
 use kairo_ecs_types::{EntityId, EventId};
 use std::fs;
 
+#[test]
+fn manifest_json_is_strict_and_roundtrips_escaped_strings() {
+    let manifest = DurableManifest {
+        run_id: "quoted\"id\\suffix".into(),
+        schema_stream: "v2".into(),
+        total_rows: 0,
+        watermark_sequence: 0,
+        completed: true,
+        parts: vec![],
+    };
+    let json = manifest.to_json();
+    let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
+    assert_eq!(parsed["run_id"], manifest.run_id);
+    assert_eq!(DurableManifest::from_json(&json).unwrap(), manifest);
+    assert!(DurableManifest::from_json(r#"{"run_id":"x","schema_stream":"v2","total_rows":1,"watermark_sequence":0,"completed":true}"#).is_err());
+}
+
+#[test]
+fn completed_run_cannot_be_overwritten_even_when_requested() {
+    let temp = tempfile::tempdir().unwrap();
+    let writer = DurableRunPublicationWriter::new(temp.path(), "run", 10).with_overwrite(true);
+    let records = vec![sample_v2_record(1, 10, None)];
+    let receipt = writer.publish(&records).unwrap();
+    let before = fs::read(&receipt.manifest_path).unwrap();
+    assert!(writer.publish(&[]).is_err());
+    assert_eq!(before, fs::read(&receipt.manifest_path).unwrap());
+}
+
+#[test]
+fn manifest_reader_rejects_traversal_and_inconsistent_totals() {
+    let temp = tempfile::tempdir().unwrap();
+    let dir = temp.path().join("run");
+    fs::create_dir(&dir).unwrap();
+    let reader = DurableRunPublicationReader::new(temp.path(), "run");
+    let invalid = DurableManifest {
+        run_id: "run".into(),
+        schema_stream: EVENT_LOG_STREAM_V2.into(),
+        total_rows: 1,
+        watermark_sequence: 1,
+        completed: true,
+        parts: vec![DurablePartMetadata {
+            filename: "../outside".into(),
+            row_count: 1,
+            checksum: 0,
+            max_sequence: 1,
+        }],
+    };
+    fs::write(dir.join("manifest.json"), invalid.to_json()).unwrap();
+    assert!(reader.read_manifest().is_err());
+    assert!(reader.read_all_records().is_err());
+    let mut invalid = invalid;
+    invalid.parts.clear();
+    fs::write(dir.join("manifest.json"), invalid.to_json()).unwrap();
+    assert!(reader.read_all_records().is_err());
+}
+
+#[cfg(unix)]
+#[test]
+fn reader_rejects_symlink_part() {
+    use std::os::unix::fs::symlink;
+    let temp = tempfile::tempdir().unwrap();
+    let dir = temp.path().join("run");
+    fs::create_dir(&dir).unwrap();
+    fs::write(temp.path().join("outside"), b"data").unwrap();
+    symlink(temp.path().join("outside"), dir.join("part.parquet")).unwrap();
+    let manifest = DurableManifest {
+        run_id: "run".into(),
+        schema_stream: EVENT_LOG_STREAM_V2.into(),
+        total_rows: 1,
+        watermark_sequence: 1,
+        completed: true,
+        parts: vec![DurablePartMetadata {
+            filename: "part.parquet".into(),
+            row_count: 1,
+            checksum: calculate_checksum(b"data"),
+            max_sequence: 1,
+        }],
+    };
+    fs::write(dir.join("manifest.json"), manifest.to_json()).unwrap();
+    assert!(DurableRunPublicationReader::new(temp.path(), "run")
+        .read_all_records()
+        .is_err());
+}
+
 fn sample_v2_record(seq: u64, time_ticks: u128, entity_id: Option<EntityId>) -> EventLogRecord {
     EventLogRecord {
         schema_version: SCHEMA_VERSION_V2,

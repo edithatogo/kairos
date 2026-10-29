@@ -1,5 +1,31 @@
 # Track 70 handoff: Polars-native data processing and standard interchange
 
+## Publication repair assignment — 29 October 2026
+
+The user assigned integration chat `01a18344-cfb8-7711-8c38-fef1052b9fcf` the
+bounded Arrow publication repair. Its isolated standard Git worktree is
+`/Volumes/PortableSSD/codex-worktrees/kairos-arrow-publication-repair-20261029`.
+The registry names Arrow, FFI and interoperability roles; no live Arrow-path
+lease or Arrow-owner worktree was identified. This assignment covers the
+durable Polars manifest, writer/reader, shared atomic-write sync and focused
+tests. FFI, bindings, native objects, dependency promotion and CareOps pin
+ownership remain separate. Next: repair and focused tests, then compatibility
+and security review and hosted checks. Earlier assignments remain historical.
+
+The isolated candidate uses Serde for the manifest, exclusively creates run
+directories, checks manifest names and totals, and propagates Unix directory
+sync failures. A baseline run of the focused test file at `534c9bd` had four
+passes and three new failures; after the changes, the publication, Track 94
+atomic-write and Track 70 durability test files passed 27 tests with Rust
+1.99.1 and `--locked --features polars-native`. Focused Clippy and rustfmt
+also passed. Build artifacts are in
+`/Volumes/PortableSSD/codex-builds/kairos-arrow-publication-20261029`.
+The regular-file checks do not prevent a hostile concurrent filesystem actor
+from replacing paths between metadata and open; no adversarial race safety is
+claimed. Directory fsync is Unix-only, and an error after rename may leave an
+already-published file visible. Independent review, cross-platform execution,
+security audit, `just ci`, hosted checks and consumer acceptance remain open.
+
 ## Summary
 All phases (Phase 0 through Phase 4) of Track 70 are complete and verified across all criteria:
 - **Phase 0 (Baseline & qualification)**: Data path inventory, failing baseline characterizations, Polars dependency pin ADR, and Schema v2 conformance fixtures.

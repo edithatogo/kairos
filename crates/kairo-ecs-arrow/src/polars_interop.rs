@@ -361,7 +361,7 @@ pub fn calculate_checksum(bytes: &[u8]) -> u64 {
 }
 
 /// Metadata for a single published Parquet part file.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct DurablePartMetadata {
     pub filename: String,
     pub row_count: usize,
@@ -370,7 +370,7 @@ pub struct DurablePartMetadata {
 }
 
 /// Run-level manifest containing completion status, row counts, and checksums.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct DurableManifest {
     pub run_id: String,
     pub schema_stream: String,
@@ -382,97 +382,21 @@ pub struct DurableManifest {
 
 impl DurableManifest {
     pub fn to_json(&self) -> String {
-        let parts_json = self
-            .parts
-            .iter()
-            .map(|p| {
-                format!(
-                    r#"{{"filename":"{}","row_count":{},"checksum":{},"max_sequence":{}}}"#,
-                    p.filename, p.row_count, p.checksum, p.max_sequence
-                )
-            })
-            .collect::<Vec<_>>()
-            .join(",");
-
-        format!(
-            r#"{{"run_id":"{}","schema_stream":"{}","total_rows":{},"watermark_sequence":{},"completed":{},"parts":[{}]}}"#,
-            self.run_id,
-            self.schema_stream,
-            self.total_rows,
-            self.watermark_sequence,
-            self.completed,
-            parts_json
-        )
+        serde_json::to_string(self).expect("manifest contains only JSON-representable values")
     }
 
     pub fn from_json(json: &str) -> Result<Self, ArrowError> {
-        let run_id = extract_json_str(json, "run_id")?;
-        let schema_stream = extract_json_str(json, "schema_stream")?;
-        let total_rows = extract_json_u64(json, "total_rows")? as usize;
-        let watermark_sequence = extract_json_u64(json, "watermark_sequence")?;
-        let completed = json.contains(r#""completed":true"#);
-
-        let mut parts = Vec::new();
-        if let Some(parts_start) = json.find(r#""parts":["#) {
-            let rest = &json[parts_start + 9..];
-            if let Some(parts_end) = rest.find(']') {
-                let parts_str = &rest[..parts_end];
-                for part_str in parts_str.split("},{") {
-                    let part_clean = part_str.trim_matches('{').trim_matches('}');
-                    if part_clean.is_empty() {
-                        continue;
-                    }
-                    let filename = extract_json_str(part_clean, "filename")?;
-                    let row_count = extract_json_u64(part_clean, "row_count")? as usize;
-                    let checksum = extract_json_u64(part_clean, "checksum")?;
-                    let max_sequence = extract_json_u64(part_clean, "max_sequence")?;
-                    parts.push(DurablePartMetadata {
-                        filename,
-                        row_count,
-                        checksum,
-                        max_sequence,
-                    });
-                }
-            }
-        }
-
-        Ok(Self {
-            run_id,
-            schema_stream,
-            total_rows,
-            watermark_sequence,
-            completed,
-            parts,
-        })
+        serde_json::from_str(json)
+            .map_err(|e| ArrowError::Io(format!("Invalid manifest JSON: {e}")))
     }
 }
 
-fn extract_json_str(json: &str, key: &str) -> Result<String, ArrowError> {
-    let pattern = format!(r#""{}":""#, key);
-    let start = json
-        .find(&pattern)
-        .ok_or_else(|| ArrowError::Io(format!("Key {key} not found in manifest JSON")))?
-        + pattern.len();
-    let rest = &json[start..];
-    let end = rest
-        .find('"')
-        .ok_or_else(|| ArrowError::Io(format!("Unterminated string for key {key}")))?;
-    Ok(rest[..end].to_string())
-}
-
-fn extract_json_u64(json: &str, key: &str) -> Result<u64, ArrowError> {
-    let pattern = format!(r#""{}":"#, key);
-    let start = json
-        .find(&pattern)
-        .ok_or_else(|| ArrowError::Io(format!("Key {key} not found in manifest JSON")))?
-        + pattern.len();
-    let rest = &json[start..];
-    let end = rest
-        .find(|c: char| !c.is_ascii_digit())
-        .unwrap_or(rest.len());
-    rest[..end]
-        .parse::<u64>()
-        .map_err(|e| ArrowError::Io(format!("Invalid number for {key}: {e}")))
+fn valid_component(value: &str) -> bool {
+    use std::path::Component;
+    let mut components = std::path::Path::new(value).components();
+    !value.contains('\\')
+        && matches!(components.next(), Some(Component::Normal(part)) if part == value)
+        && components.next().is_none()
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -487,7 +411,6 @@ pub struct DurableRunPublicationWriter {
     run_dir: PathBuf,
     run_id: String,
     batch_size: usize,
-    allow_overwrite: bool,
 }
 
 impl DurableRunPublicationWriter {
@@ -498,22 +421,37 @@ impl DurableRunPublicationWriter {
             run_dir,
             run_id: r_id,
             batch_size: if batch_size == 0 { 10_000 } else { batch_size },
-            allow_overwrite: true,
         }
     }
 
-    pub fn with_no_clobber(mut self) -> Self {
-        self.allow_overwrite = false;
+    /// Publications always refuse to reuse an existing run directory.
+    pub fn with_no_clobber(self) -> Self {
         self
     }
 
-    pub fn with_overwrite(mut self, allow_overwrite: bool) -> Self {
-        self.allow_overwrite = allow_overwrite;
+    /// Retained for source compatibility; completed or interrupted runs are
+    /// never overwritten, regardless of the requested setting.
+    pub fn with_overwrite(self, _allow_overwrite: bool) -> Self {
         self
     }
 
     pub fn publish(&self, records: &[EventLogRecord]) -> Result<PublicationReceipt, ArrowError> {
-        fs::create_dir_all(&self.run_dir).map_err(|e| ArrowError::Io(e.to_string()))?;
+        if !valid_component(&self.run_id) {
+            return Err(ArrowError::Io("Invalid run identifier".to_string()));
+        }
+        let parent = self
+            .run_dir
+            .parent()
+            .ok_or_else(|| ArrowError::Io("Missing run parent".to_string()))?;
+        fs::create_dir_all(parent).map_err(|e| ArrowError::Io(e.to_string()))?;
+        // An exclusive directory creation prevents concurrent publishers or a retry
+        // from modifying any completed or interrupted run.
+        fs::create_dir(&self.run_dir)
+            .map_err(|e| ArrowError::Io(format!("Cannot create unique run directory: {e}")))?;
+        #[cfg(unix)]
+        fs::File::open(parent)
+            .and_then(|dir| dir.sync_all())
+            .map_err(|e| ArrowError::Io(format!("Cannot sync run parent directory: {e}")))?;
 
         // Explicit canonical sort keys: time_ticks, priority, sequence
         let mut sorted_records = records.to_vec();
@@ -536,7 +474,7 @@ impl DurableRunPublicationWriter {
             let mut buf = Vec::new();
             write_parquet_zstd(&mut df, &mut buf)?;
 
-            crate::atomic_write_file(&part_path, &buf, self.allow_overwrite)?;
+            crate::atomic_write_file(&part_path, &buf, false)?;
             let checksum = calculate_checksum(&buf);
 
             let max_seq = chunk.iter().map(|r| r.sequence).max().unwrap_or(0);
@@ -564,11 +502,7 @@ impl DurableRunPublicationWriter {
 
         let manifest_json = manifest.to_json();
         let manifest_path = self.run_dir.join("manifest.json");
-        crate::atomic_write_file(
-            &manifest_path,
-            manifest_json.as_bytes(),
-            self.allow_overwrite,
-        )?;
+        crate::atomic_write_file(&manifest_path, manifest_json.as_bytes(), false)?;
 
         Ok(PublicationReceipt {
             manifest_path,
@@ -593,28 +527,69 @@ impl DurableRunPublicationWriter {
 
 pub struct DurableRunPublicationReader {
     run_dir: PathBuf,
+    valid_run_id: bool,
 }
 
 impl DurableRunPublicationReader {
     pub fn new(base_dir: impl AsRef<Path>, run_id: impl AsRef<Path>) -> Self {
+        let run_id = run_id.as_ref();
         Self {
             run_dir: base_dir.as_ref().join(run_id),
+            valid_run_id: run_id.to_str().is_some_and(valid_component),
         }
     }
 
     pub fn read_manifest(&self) -> Result<DurableManifest, ArrowError> {
+        if !self.valid_run_id {
+            return Err(ArrowError::Io("Invalid run identifier".to_string()));
+        }
+        let run_metadata =
+            fs::symlink_metadata(&self.run_dir).map_err(|e| ArrowError::Io(e.to_string()))?;
+        if !run_metadata.file_type().is_dir() {
+            return Err(ArrowError::Io("Run path is not a directory".to_string()));
+        }
         let manifest_path = self.run_dir.join("manifest.json");
         if !manifest_path.exists() {
             return Err(ArrowError::Io(
                 "Missing manifest.json: run is incomplete or interrupted".to_string(),
             ));
         }
+        let metadata =
+            fs::symlink_metadata(&manifest_path).map_err(|e| ArrowError::Io(e.to_string()))?;
+        if !metadata.file_type().is_file() {
+            return Err(ArrowError::Io("Manifest is not a regular file".to_string()));
+        }
         let content =
             fs::read_to_string(&manifest_path).map_err(|e| ArrowError::Io(e.to_string()))?;
         let manifest = DurableManifest::from_json(&content)?;
-        if !manifest.completed {
+        if !manifest.completed
+            || manifest.schema_stream != crate::EVENT_LOG_STREAM_V2
+            || self.run_dir.file_name() != Some(std::ffi::OsStr::new(&manifest.run_id))
+        {
             return Err(ArrowError::Io(
-                "Run manifest is marked incomplete".to_string(),
+                "Run manifest is incomplete or has an unsupported schema".to_string(),
+            ));
+        }
+        let mut names = std::collections::HashSet::new();
+        let mut rows = 0usize;
+        let mut watermark = 0u64;
+        for part in &manifest.parts {
+            if !valid_component(&part.filename)
+                || !names.insert(&part.filename)
+                || part.row_count == 0
+            {
+                return Err(ArrowError::Io(
+                    "Invalid or duplicate manifest part".to_string(),
+                ));
+            }
+            rows = rows
+                .checked_add(part.row_count)
+                .ok_or_else(|| ArrowError::Io("Manifest row count overflow".to_string()))?;
+            watermark = watermark.max(part.max_sequence);
+        }
+        if rows != manifest.total_rows || watermark != manifest.watermark_sequence {
+            return Err(ArrowError::Io(
+                "Manifest totals do not match its parts".to_string(),
             ));
         }
         Ok(manifest)
@@ -627,10 +602,17 @@ impl DurableRunPublicationReader {
 
     pub fn read_all_records(&self) -> Result<Vec<EventLogRecord>, ArrowError> {
         let manifest = self.read_manifest()?;
-        let mut all_records = Vec::with_capacity(manifest.total_rows);
+        let mut all_records = Vec::new();
 
         for part in manifest.parts {
             let part_path = self.run_dir.join(&part.filename);
+            let metadata =
+                fs::symlink_metadata(&part_path).map_err(|e| ArrowError::Io(e.to_string()))?;
+            if !metadata.file_type().is_file() {
+                return Err(ArrowError::Io(
+                    "Manifest part is not a regular file".to_string(),
+                ));
+            }
             let bytes = fs::read(&part_path).map_err(|e| ArrowError::Io(e.to_string()))?;
 
             let checksum = calculate_checksum(&bytes);
@@ -642,6 +624,18 @@ impl DurableRunPublicationReader {
 
             let df = read_parquet(Cursor::new(bytes))?;
             let records = dataframe_to_records(&df)?;
+            if records.len() != part.row_count
+                || records
+                    .iter()
+                    .map(|record| record.sequence)
+                    .max()
+                    .unwrap_or(0)
+                    != part.max_sequence
+            {
+                return Err(ArrowError::Io(
+                    "Manifest part metadata does not match its records".to_string(),
+                ));
+            }
             all_records.extend(records);
         }
 

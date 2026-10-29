@@ -2164,9 +2164,10 @@ pub fn atomic_write_file(
         })?;
     }
 
-    if let Ok(dir) = std::fs::File::open(parent) {
-        let _ = dir.sync_all();
-    }
+    #[cfg(unix)]
+    std::fs::File::open(parent)
+        .and_then(|dir| dir.sync_all())
+        .map_err(|e| ArrowError::Io(format!("Failed to sync parent directory: {e}")))?;
     Ok(())
 }
 
