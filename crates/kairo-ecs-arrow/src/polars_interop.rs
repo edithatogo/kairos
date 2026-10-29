@@ -662,16 +662,20 @@ impl DurableRunPublicationReader {
     }
 
     pub fn get_watermark_sequence(&self) -> Result<u64, ArrowError> {
-        let manifest = self.read_manifest()?;
+        let (manifest, _) = self.read_verified_run()?;
         Ok(manifest.watermark_sequence)
     }
 
     pub fn read_all_records(&self) -> Result<Vec<EventLogRecord>, ArrowError> {
+        self.read_verified_run().map(|(_, records)| records)
+    }
+
+    fn read_verified_run(&self) -> Result<(DurableManifest, Vec<EventLogRecord>), ArrowError> {
         let directory = self.open_run()?;
         let manifest = self.read_manifest_at(&directory)?;
         let mut all_records = Vec::new();
 
-        for part in manifest.parts {
+        for part in &manifest.parts {
             let bytes = read_run_file(&directory, &part.filename)?;
 
             let checksum = calculate_checksum(&bytes);
@@ -698,6 +702,6 @@ impl DurableRunPublicationReader {
             all_records.extend(records);
         }
 
-        Ok(all_records)
+        Ok((manifest, all_records))
     }
 }

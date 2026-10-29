@@ -186,6 +186,9 @@ fn test_failing_tampered_part_file_checksum_rejection() {
         res.is_err(),
         "Must reject tampered part file with checksum mismatch"
     );
+    assert!(reader.get_watermark_sequence().is_err());
+    fs::remove_file(part_file).unwrap();
+    assert!(reader.get_watermark_sequence().is_err());
 }
 
 #[test]
