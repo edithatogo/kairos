@@ -525,44 +525,32 @@ impl DurableRunPublicationWriter {
     }
 }
 
-#[cfg(unix)]
 type OpenRunDirectory = fs::File;
-#[cfg(not(unix))]
-type OpenRunDirectory = PathBuf;
 
-#[cfg(unix)]
 fn open_run_directory(path: &Path) -> Result<OpenRunDirectory, ArrowError> {
-    use rustix::fs::{open, Mode, OFlags};
-    let fd = open(
-        path,
-        OFlags::RDONLY | OFlags::DIRECTORY | OFlags::NOFOLLOW | OFlags::CLOEXEC,
-        Mode::empty(),
-    )
-    .map_err(|e| ArrowError::Io(format!("Cannot open run directory: {e}")))?;
-    Ok(fs::File::from(fd))
+    let parent = path
+        .parent()
+        .ok_or_else(|| ArrowError::Io("Missing run parent".to_string()))?;
+    let name = path
+        .file_name()
+        .ok_or_else(|| ArrowError::Io("Missing run identifier".to_string()))?;
+    let base = cap_primitives::fs::open_ambient_dir(parent, cap_primitives::ambient_authority())
+        .map_err(|e| ArrowError::Io(format!("Cannot open run parent: {e}")))?;
+    cap_primitives::fs::open_dir_nofollow(&base, Path::new(name))
+        .map_err(|e| ArrowError::Io(format!("Cannot open run directory: {e}")))
 }
 
-#[cfg(not(unix))]
-fn open_run_directory(path: &Path) -> Result<OpenRunDirectory, ArrowError> {
-    let metadata = fs::symlink_metadata(path).map_err(|e| ArrowError::Io(e.to_string()))?;
-    if !metadata.file_type().is_dir() {
-        return Err(ArrowError::Io("Run path is not a directory".to_string()));
-    }
-    Ok(path.to_path_buf())
-}
-
-#[cfg(unix)]
 fn read_run_file(directory: &OpenRunDirectory, name: &str) -> Result<Vec<u8>, ArrowError> {
-    use rustix::fs::{openat, Mode, OFlags};
+    #[cfg(unix)]
+    use cap_fs_ext::OpenOptionsSyncExt;
+    use cap_fs_ext::{FollowSymlinks, OpenOptionsFollowExt};
     use std::io::Read;
-    let fd = openat(
-        directory,
-        name,
-        OFlags::RDONLY | OFlags::NOFOLLOW | OFlags::CLOEXEC | OFlags::NONBLOCK,
-        Mode::empty(),
-    )
-    .map_err(|e| ArrowError::Io(format!("Cannot open run file: {e}")))?;
-    let mut file = fs::File::from(fd);
+    let mut options = cap_primitives::fs::OpenOptions::new();
+    options.read(true).follow(FollowSymlinks::No);
+    #[cfg(unix)]
+    options.nonblock(true);
+    let mut file = cap_primitives::fs::open(directory, Path::new(name), &options)
+        .map_err(|e| ArrowError::Io(format!("Cannot open run file: {e}")))?;
     if !file
         .metadata()
         .map_err(|e| ArrowError::Io(e.to_string()))?
@@ -599,16 +587,6 @@ mod path_hardening_tests {
         symlink(other.join("part"), old.join("linked")).unwrap();
         assert!(read_run_file(&directory, "linked").is_err());
     }
-}
-
-#[cfg(not(unix))]
-fn read_run_file(directory: &OpenRunDirectory, name: &str) -> Result<Vec<u8>, ArrowError> {
-    let path = directory.join(name);
-    let metadata = fs::symlink_metadata(&path).map_err(|e| ArrowError::Io(e.to_string()))?;
-    if !metadata.file_type().is_file() {
-        return Err(ArrowError::Io("Run file is not regular".to_string()));
-    }
-    fs::read(path).map_err(|e| ArrowError::Io(e.to_string()))
 }
 
 pub struct DurableRunPublicationReader {
