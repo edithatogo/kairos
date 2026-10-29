@@ -13,7 +13,8 @@
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "LICENSE-APACHE"
   ],
   "engines": {
     "node": ">=22 <27"
