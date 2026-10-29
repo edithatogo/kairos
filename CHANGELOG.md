@@ -14,6 +14,10 @@ Format:
 
 ## Unreleased
 
+- `crates/kairo-ecs-arrow`: durable publication and checkpoint resume require an existing protected output root; unsafe permissions and unsupported ACL/filesystem profiles fail explicitly. New runs and files are private, completed output is never replaced, and abandoned staging files do not block recovery. Native permission checks are isolated in the new Apache-2.0 `kairo-ecs-fs-guard` helper, with Linux/macOS/Windows qualification checks.
+
+- `crates/kairo-ecs-arrow`: stream-named IPC APIs now use the Arrow IPC stream format; use `read_ipc_file` for files produced by the earlier writer. Manifest/part consistency is verified before recovery watermarks are returned, and the telemetry example is included in Rust source packages.
+
 - `crates/kairo-ecs-core`: restore the experimental `ScheduledEventPreview` projection and `Scheduler::peek_next` inspection API without changing event ordering or dispatch behavior; add focused scheduler compatibility coverage.
 
 - `crates/kairo-ecs-ffi`: keep populated Arrow C Data schema and array exports available without `native-data`, and align Track 70 consumer tests with the default-feature ABI.
