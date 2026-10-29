@@ -48,9 +48,9 @@ jobs:
         run: |
           rustup toolchain install 1.99.1 --profile minimal --component rustfmt --component clippy
           rustup default 1.99.1
-      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
       - name: Install pinned cargo tools
-        uses: taiki-e/install-action@8cca0918f8471c33515202b73f56ab27f2bed283 # v2.87.29
+        uses: taiki-e/install-action@86f7a0ffb25f40114606501a311ebcfaf882ea32 # v2.88.0
         with:
           tool: |
             cargo-nextest@0.9.146
@@ -99,7 +99,7 @@ jobs:
           persist-credentials: false
       - name: Install Rust 1.99.1
         run: rustup toolchain install 1.99.1 --profile minimal
-      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
       - name: Check workspace on Rust 1.99.1
         run: cargo +1.99.1 check --workspace --exclude kairo-ecs-wasm --exclude kairo-ecs-arrow --lib --bins --all-features --locked
       - name: Check default Arrow telemetry on Rust 1.99.1
@@ -116,7 +116,7 @@ jobs:
           persist-credentials: false
       - name: Install Rust 1.99.1 WebAssembly target
         run: rustup toolchain install 1.99.1 --profile minimal --target wasm32-unknown-unknown
-      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
       - name: Check wasm-export on Rust 1.99.1
         run: cargo +1.99.1 check --locked --manifest-path crates/kairo-ecs-wasm/Cargo.toml --features wasm-export --target wasm32-unknown-unknown
 
