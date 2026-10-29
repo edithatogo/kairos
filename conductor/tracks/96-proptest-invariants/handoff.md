@@ -2,6 +2,34 @@
 
 Updated: 2026-10-24. Maturity: Done.
 
+## Metadata reconciliation — 29 October 2026
+
+Chat `01a18344-cfb8-7711-8c38-fef1052b9fcf` owns this bounded metadata
+correction in the clean reused worktree
+`/Users/doughnut/.codex/worktrees/kairos-track107-reconcile/kairos`, branch
+`codex/track96-metadata-reconcile-20261029`, based on main `534c9bdf`.
+Scope is this note and `metadata.json`; no native objects, authentication,
+Arrow paths or dependency/runtime promotion are involved. Earlier assignments
+and acceptance evidence remain historical. Next operation is focused Conductor
+validation and a source commit for the repository integrator.
+
+GitHub readback confirms PR #305 merged as
+`418b6bc593f0e4108ece5d11a669ad21dfb87a14` on 24 October 2026. That commit is
+an ancestor of main `534c9bdf62188044e2e6e4985608479a3b515e39`; its complete
+tree matches the recorded tested head
+`2e8782b60ab99ff2460db750c6096dd481c94fb7` (`git diff --exit-code`). The
+registry says Done, the phase ledger is closed, and the plan marks Phases 0–2
+complete. Metadata now mirrors those existing records: complete, implementation
+started, Phases 0–2 accepted, adoption adopt. No tests were rerun to relabel this
+historical acceptance, and downstream impact review remains separate.
+
+Reconciliation checks passed: JSON parsing with repo-local Python 3.15.1,
+`git diff --check`, `validate_conductor_phase_gates.ps1` and
+`validate_conductor_artifacts.ps1` (zero errors and warnings; the latter retains
+52 existing informational observations). The published ancestry and full-tree
+comparison also passed. This source packet is ready for integrator handoff;
+no fresh implementation acceptance, hosted pass or merge is claimed.
+
 ## Summary
 
 Track 96 qualified the proptest property testing framework (v1.12.0) across `kairo-ecs-core` and verified core simulation invariants:
