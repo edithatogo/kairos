@@ -59,6 +59,25 @@ producer and output are retained in
 `/Volumes/PortableSSD/codex-builds/kairos-ipc-independent-reader`. This is one
 synthetic case, not cross-platform, hosted or downstream acceptance.
 
+## zstd upstream and package readback — 29 October 2026
+
+The workspace-only qualification candidate is retained in
+`/Volumes/PortableSSD/codex-worktrees/kairos-zstd-compat-qualification-20261029`.
+Its locally patched Arrow and Parquet crates resolve `zstd-safe 8.2.0` and
+passed the recorded focused tests and cached advisory, source and licence
+checks. It is not a distributable remediation: packaging `kairo-ecs-types`
+and `kairo-ecs-arrow` together with `--offline --no-verify` succeeded, but the
+actual Arrow archive's lockfile resolves registry `zstd 0.13.3` and
+`zstd-safe 7.3.0`. The archive and exact receipt are retained at
+`/Volumes/PortableSSD/codex-builds/kairos-zstd-package-qualification-20261029`.
+
+Upstream Polars [commit e81e8cd](https://github.com/pola-rs/polars/commit/e81e8cd9068e0b8eae4c2b50f99058df33407dcc)
+updated its development tree to the zstd 0.14 line. At readback, crates.io's
+latest `polars-parquet 0.55.2` still declares zstd 0.13. The next supported
+published version needs actual Arrow and Parquet dependency-tree, package,
+independent reader, security, platform and consumer qualification; the
+upstream commit or local workspace patch alone does not satisfy those gates.
+
 ## Summary
 All phases (Phase 0 through Phase 4) of Track 70 are complete and verified across all criteria:
 - **Phase 0 (Baseline & qualification)**: Data path inventory, failing baseline characterizations, Polars dependency pin ADR, and Schema v2 conformance fixtures.
