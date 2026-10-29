@@ -1,0 +1,20 @@
+{
+  "fixture": "scheduler_preview",
+  "version": 1,
+  "ordering": ["at_ticks ASC", "priority ASC", "sequence ASC"],
+  "events": [
+    { "at_ticks": 9, "priority": 0, "kind": 90 },
+    { "at_ticks": 4, "priority": 2, "kind": 42 },
+    { "at_ticks": 4, "priority": -1, "kind": 41, "cancel": true },
+    { "at_ticks": 4, "priority": 2, "kind": 43 }
+  ],
+  "expected_preview": {
+    "event_list_index": 1,
+    "at_ticks": 4,
+    "priority": 2,
+    "sequence": 1,
+    "kind": 42
+  },
+  "expected_kind_order": [42, 43, 90],
+  "requirement": "Repeated preview returns the same next live event without dispatch or observable scheduler-state change; the next step dispatches it."
+}
