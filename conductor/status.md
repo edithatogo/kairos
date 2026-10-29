@@ -955,3 +955,10 @@ Provider readback update: human GitHub sign-in completed; the authenticated Code
 ## Provider queue-state correction
 
 After accepted PR #341, exact-main readback exposed a second diagnostic defect: missing dependent upload/aggregate checks were labelled drift while upstream Actions were still queued. The same owned managed worktree now carries branch `codex/provider-pending-state-20261029` for this bounded helper/test correction. In-flight evidence is restricted to the resolved default-branch SHA and GitHub Actions app; completed failures stay drift, and both genuine upload and project status remain necessary for pass. This changes diagnostics, not provider entitlement, coverage thresholds or acceptance requirements. CareOps entries above are frozen handoff snapshots keyed to their commits; subsequent user-authorized bridge-only native qualification and bounded parent integration remain owned by that separate lane.
+
+
+## Native project coverage replacement — 30 October 2026
+
+User-authorized CI integration owned by chat `01a18344-cfb8-7711-8c38-fef1052b9fcf` in `/Users/doughnut/.codex/worktrees/kairos-provider-gates-20261029/kairos`, branch `codex/coverage-project-gate-20261030`. Scope: `ci-core.yml`, the workspace LCOV comparator and focused tests, quality readback and this bounded gate record. Existing Track 13 CI ownership is consumed through this integrator packet; no track phase or runtime/publication acceptance is advanced.
+
+The candidate replaces the blocked external project-status requirement with an exact-base, complete-workspace, zero-regression Actions decision required by `Rust core quality`. Existing core90% remains mandatory; Codecov stays diagnostic. Both genuine status and artifact provenance failures remain failures. Next operation: independent review, hosted positive/negative wiring proof, then normal protected integration. The local Polars patch and separate CareOps acceptance history remain preserved.

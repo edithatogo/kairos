@@ -26,6 +26,39 @@ runs doctests as their own test class. The aggregate accepts either three
 successful lanes or a validated known non-Rust pull-request skip; classification
 errors fail the aggregate.
 
+## Workspace project coverage replacement
+
+The user-authorized replacement for blocked `codecov/project` is the native
+`Rust project coverage` job in `ci-core.yml`. It is required by the existing
+protected `Rust core quality` aggregate. This retains the 90% kairo-ecs-core floor
+and adds an unrounded zero-regression comparison over the **entire workspace**
+LCOV report: `rust-core` was the upload flag for that whole report, not a
+core-crate-only scope. Candidate covered/total lines must be at least the exact
+base ratio; the comparator uses integer cross-products.
+
+PRs compare the tested merge candidate with the event's exact base SHA; main
+pushes compare with the event's `before` SHA. The baseline must come from a
+successful `ci-core.yml` push run on this repository's main branch at that SHA.
+The helper binds the artifact's run/repository/head metadata, verifies its
+SHA-256 archive digest and reads only `lcov.info`. Missing/expired/ambiguous
+artifacts, wrong provenance, checksum mismatch, invalid LCOV or a regression
+fail closed. Restore missing baseline evidence by qualifying that exact base,
+never by choosing a more convenient older report or zero baseline.
+
+Coverage generation remains the same pinned, full-feature workspace nextest
+pass. No changed-files-only comparison, crate exclusion, tolerance, automatic
+retry or provider-plan purchase is introduced. Known non-Rust PR skips retain
+the existing classification contract; every main push runs coverage. Codecov
+upload/report delivery remains diagnostic; it cannot satisfy or bypass the
+native job. The quality readback requires a successful GitHub Actions coverage
+check on the exact default-branch SHA.
+
+Focused checks: `node tests/conformance/project-coverage-check.mjs` and
+`node tests/conformance/quality-frontier-drift-check.mjs`. The decision artifact
+records base/candidate SHAs, raw counts, report hashes and trusted baseline
+run/artifact/digest. Hosted acceptance is required before calling replacement
+complete; local synthetic checks do not certify the GitHub wiring.
+
 ## Heavy/nightly gates
 
 Scheduled ordinary benchmarks use exact Rust 1.99.1:

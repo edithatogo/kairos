@@ -107,6 +107,7 @@ const hosted = {
   renovateRefreshEvidence: [{ kind: 'pull_request', number: 157, createdAt: '2026-09-29T00:00:00Z' }],
   renovateRefreshedAfterIntegration: true,
   mainChecks: [
+    { name: 'Rust project coverage', status: 'completed', conclusion: 'success', head_sha: 'abc123', started_at: '2026-09-29T00:00:00Z', app: { slug: 'github-actions' } },
     ...pushRequiredChecks.map((name) => ({ name, status: 'completed', conclusion: 'success', head_sha: 'abc123', started_at: '2026-09-29T00:00:00Z' })),
     { name: 'Codecov OIDC upload', status: 'completed', conclusion: 'success', head_sha: 'abc123', started_at: '2026-09-29T00:00:00Z', app: { slug: 'github-actions' } },
   ],
@@ -311,3 +312,17 @@ const dirtySource = evaluateDrift({ source: { ...source, dirty: true }, hosted }
 assert.equal(dirtySource.checks.find((check) => check.name === 'source_clean_checkout').status, 'pending');
 
 console.log('quality frontier drift receipt checks passed (pass, pending, drift, unavailable)');
+
+// An unavailable provider does not waive the independent coverage decision.
+const nativeCoverage = (checks, extra = {}) => evaluateDrift({ source, hosted: { ...hosted, mainChecks: checks, ...extra } });
+const withoutProject = hosted.mainChecks.filter(c => c.name !== 'Rust project coverage');
+assert.equal(nativeCoverage(withoutProject).checks.find(c => c.name === 'trusted_main_project_coverage').status, 'drift');
+for (const change of [{ conclusion: 'failure' }, { conclusion: 'skipped' }, { head_sha: 'stale' }, { app: { slug: 'other-app' } }]) {
+  const checks = hosted.mainChecks.map(c => c.name === 'Rust project coverage' ? { ...c, ...change } : c);
+  assert.equal(nativeCoverage(checks).checks.find(c => c.name === 'trusted_main_project_coverage').status, 'drift');
+}
+assert.equal(nativeCoverage(hosted.mainChecks, { integrationPending: true }).checks.find(c => c.name === 'trusted_main_project_coverage').status, 'pending');
+const providerAbsent = nativeCoverage(hosted.mainChecks.filter(c => !/codecov/i.test(c.name)), { mainStatuses: [] });
+assert.equal(providerAbsent.status, 'pass');
+assert.equal(providerAbsent.checks.find(c => c.name === 'trusted_main_codecov_upload_and_status').enforcement, 'diagnostic');
+console.log('Native project coverage enforcement cannot be replaced by provider status or skipped checks');
