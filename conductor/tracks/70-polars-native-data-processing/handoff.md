@@ -78,6 +78,23 @@ published version needs actual Arrow and Parquet dependency-tree, package,
 independent reader, security, platform and consumer qualification; the
 upstream commit or local workspace patch alone does not satisfy those gates.
 
+## Local workspace validation — 29 October 2026
+
+At `262e24300a5a5efabf52417781f3c5be37ace9eb` in the Arrow repair worktree,
+`CARGO_TARGET_DIR=/Volumes/PortableSSD/codex-builds/kairos-arrow-publication-20261029 just ci`
+passed formatting and workspace Clippy and ran 901 instrumented tests with
+901 passed and none skipped. It exited 1 when its Homebrew Rust 1.99.1
+(LLVM 23.1.3) toolchain could not locate `llvm-profdata`. Without rerunning
+tests, `cargo llvm-cov report --lcov` successfully merged the retained profiles
+with explicit Homebrew LLVM 23.1.4 tools, and the core coverage checker reported
+1003/1074 lines (93.39%, floor 90%) in
+`/Volumes/PortableSSD/codex-builds/kairos-arrow-publication-20261029/coverage.lcov`.
+The separately run warning-denying workspace rustdoc and cached cargo-deny
+advisory/source checks passed. `cargo audit --no-fetch --no-yanked` exited 1
+with three zstd/zstd-safe vulnerabilities; yanked packages were not checked.
+The original `just ci` did not pass, and these results do not establish Windows,
+hosted, independent review or downstream package acceptance.
+
 ## Summary
 All phases (Phase 0 through Phase 4) of Track 70 are complete and verified across all criteria:
 - **Phase 0 (Baseline & qualification)**: Data path inventory, failing baseline characterizations, Polars dependency pin ADR, and Schema v2 conformance fixtures.
