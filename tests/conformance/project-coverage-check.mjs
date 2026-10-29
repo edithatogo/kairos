@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { compareCoverage, coverageTotals, selectBaselineArtifact, selectBaselineRun } from '../../scripts/validation/check-project-coverage.mjs';
+import { compareCoverage, coverageTotals, requireNativeBaselineJobs, selectBaselineArtifact, selectBaselineRun } from '../../scripts/validation/check-project-coverage.mjs';
 
 function report(hits) {
   return `SF:crates/example/src/lib.rs\n${hits.map((hit, i) => `DA:${i + 1},${hit}`).join('\n')}\nLF:${hits.length}\nLH:${hits.filter((hit) => hit > 0).length}\nend_of_record\n`;
@@ -25,11 +25,25 @@ const run = { id: 123, head_sha: sha, event: 'push', head_branch: 'main', status
   conclusion: 'success', path: '.github/workflows/ci-core.yml', repository, head_repository: repository };
 assert.equal(selectBaselineRun([run], 'owner/repo', sha), run);
 for (const change of [{ head_sha: 'b'.repeat(40) }, { event: 'pull_request' }, { head_branch: 'other' },
-  { conclusion: 'failure' }, { status: 'in_progress' }, { path: '.github/workflows/other.yml' },
+  { conclusion: 'cancelled' }, { status: 'in_progress' }, { path: '.github/workflows/other.yml' },
   { head_repository: { full_name: 'attacker/repo' } }, { repository: { full_name: 'attacker/repo' } }]) {
   assert.throws(() => selectBaselineRun([{ ...run, ...change }], 'owner/repo', sha));
 }
 assert.throws(() => selectBaselineRun([], 'owner/repo', sha));
+assert.equal(selectBaselineRun([{ ...run, conclusion: 'failure' }], 'owner/repo', sha).id, run.id);
+const jobs = ['Classify Rust changes', 'Rust core quality', 'Rust 1.99.1 verification',
+  'Rust 1.99.1 workspace checks', 'Rust 1.99.1 WebAssembly check', 'Rust project coverage']
+  .map(name => ({ name, head_sha: sha, status: 'completed', conclusion: 'success' }));
+assert.equal(requireNativeBaselineJobs([...jobs, { name: 'Codecov OIDC upload', conclusion: 'failure' }], sha).length, 6);
+for (const name of jobs.map(job => job.name)) {
+  for (const change of [{ conclusion: 'failure' }, { conclusion: 'skipped' }, { status: 'in_progress' }, { head_sha: 'wrong' }]) {
+    assert.throws(() => requireNativeBaselineJobs(jobs.map(job => job.name === name ? { ...job, ...change } : job), sha));
+  }
+  assert.throws(() => requireNativeBaselineJobs(jobs.filter(job => job.name !== name), sha));
+}
+const bootstrap = 'd1ab2e5d0f5d79e29dc54dea89b8fa2a2ad61482';
+assert.equal(requireNativeBaselineJobs(jobs.filter(job => job.name !== 'Rust project coverage')
+  .map(job => ({ ...job, head_sha: bootstrap })), bootstrap).length, 5);
 const artifact = { id: 321, name: 'rust-coverage', expired: false, digest: `sha256:${'c'.repeat(64)}`,
   workflow_run: { id: 123, head_sha: sha, head_branch: 'main', repository_id: 42, head_repository_id: 42 } };
 assert.equal(selectBaselineArtifact([artifact], run, sha), artifact);

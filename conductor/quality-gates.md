@@ -38,7 +38,11 @@ base ratio; the comparator uses integer cross-products.
 
 PRs compare the tested merge candidate with the event's exact base SHA; main
 pushes compare with the event's `before` SHA. The baseline must come from a
-successful `ci-core.yml` push run on this repository's main branch at that SHA.
+completed `ci-core.yml` push run on this repository's main branch at that SHA,
+with every native Rust/coverage job successful. A diagnostic Codecov failure
+does not disqualify that native evidence. Only the accepted pre-replacement
+commit `d1ab2e5d0f5d79e29dc54dea89b8fa2a2ad61482` may bootstrap without
+the new project job; all subsequent bases require it.
 The helper binds the artifact's run/repository/head metadata, verifies its
 SHA-256 archive digest and reads only `lcov.info`. Missing/expired/ambiguous
 artifacts, wrong provenance, checksum mismatch, invalid LCOV or a regression

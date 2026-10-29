@@ -65,12 +65,31 @@ export function compareCoverage(baseText, candidateText) {
 
 export function selectBaselineRun(runs, repository, sha) {
   const eligible = runs.filter((run) => run.head_sha === sha && run.event === 'push'
-    && run.head_branch === 'main' && run.status === 'completed' && run.conclusion === 'success'
+    && run.head_branch === 'main' && run.status === 'completed'
+    && ['success', 'failure'].includes(run.conclusion)
     && run.path === '.github/workflows/ci-core.yml'
     && run.repository?.full_name === repository && run.head_repository?.full_name === repository);
   eligible.sort((a, b) => b.id - a.id);
-  if (!eligible.length) throw new Error('No successful trusted exact-base main coverage run');
+  if (!eligible.length) throw new Error('No completed trusted exact-base main coverage run');
   return eligible[0];
+}
+
+// Only the accepted pre-replacement commit may bootstrap without the new job.
+// No convenient older baseline, arbitrary missing gate or failed native run is
+// accepted. A diagnostic provider failure alone does not invalidate coverage.
+const BOOTSTRAP_SHA = 'd1ab2e5d0f5d79e29dc54dea89b8fa2a2ad61482';
+export function requireNativeBaselineJobs(jobs, sha) {
+  const required = ['Classify Rust changes', 'Rust core quality', 'Rust 1.99.1 verification',
+    'Rust 1.99.1 workspace checks', 'Rust 1.99.1 WebAssembly check'];
+  if (sha !== BOOTSTRAP_SHA) required.push('Rust project coverage');
+  return required.map((name) => {
+    const matching = jobs.filter((job) => job.name === name);
+    if (matching.length !== 1 || matching[0].head_sha !== sha
+        || matching[0].status !== 'completed' || matching[0].conclusion !== 'success') {
+      throw new Error(`Trusted baseline native job did not pass: ${name}`);
+    }
+    return { name, conclusion: matching[0].conclusion, headSha: sha };
+  });
 }
 
 export function selectBaselineArtifact(artifacts, run, sha) {
@@ -93,8 +112,10 @@ function gh(path, binary = false) {
 
 export function fetchBaseline(repository, sha) {
   if (!/^[\w.-]+\/[\w.-]+$/.test(repository) || !/^[a-f0-9]{40}$/.test(sha)) throw new Error('Invalid repository/base SHA');
-  const data = JSON.parse(gh(`repos/${repository}/actions/workflows/ci-core.yml/runs?event=push&branch=main&head_sha=${sha}&status=success&per_page=100`));
+  const data = JSON.parse(gh(`repos/${repository}/actions/workflows/ci-core.yml/runs?event=push&branch=main&head_sha=${sha}&status=completed&per_page=100`));
   const run = selectBaselineRun(data.workflow_runs, repository, sha);
+  const jobListing = JSON.parse(gh(`repos/${repository}/actions/runs/${run.id}/jobs?filter=latest&per_page=100`));
+  const nativeJobs = requireNativeBaselineJobs(jobListing.jobs, sha);
   const listing = JSON.parse(gh(`repos/${repository}/actions/runs/${run.id}/artifacts?per_page=100`));
   const artifact = selectBaselineArtifact(listing.artifacts, run, sha);
   const archive = gh(`repos/${repository}/actions/artifacts/${artifact.id}/zip`, true);
@@ -106,7 +127,7 @@ export function fetchBaseline(repository, sha) {
     const entries = execFileSync('unzip', ['-Z1', zip], { encoding: 'utf8', maxBuffer: MAX_BYTES }).trim().split(/\r?\n/);
     if (entries.length !== 1 || entries[0] !== 'lcov.info') throw new Error('Unexpected baseline archive contents');
     const text = execFileSync('unzip', ['-p', zip, 'lcov.info'], { encoding: 'utf8', maxBuffer: MAX_BYTES });
-    return { text, runId: run.id, artifactId: artifact.id, archiveDigest: artifact.digest };
+    return { text, runId: run.id, artifactId: artifact.id, archiveDigest: artifact.digest, nativeJobs };
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }
@@ -122,6 +143,7 @@ function main() {
   const receipt = { schemaVersion: 1, repository, baseSha, candidateSha,
     baselineRunId: baseline.runId, baselineArtifactId: baseline.artifactId,
     baselineArchiveDigest: baseline.archiveDigest,
+    baselineNativeJobs: baseline.nativeJobs,
     baseReportSha256: createHash('sha256').update(baseline.text).digest('hex'),
     candidateReportSha256: createHash('sha256').update(candidateText).digest('hex'),
     scope: 'complete workspace --all-features LCOV (rust-core upload flag)',
