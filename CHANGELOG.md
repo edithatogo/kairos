@@ -14,6 +14,8 @@ Format:
 
 ## Unreleased
 
+- Report coverage and required-check readback as pending while exact-head GitHub Actions are queued, including upstream jobs whose dependent checks do not exist yet; retain drift for completed failures.
+
 - Bind hosted commit-status evidence to the exact immutable GitHub request and validate its API URL; Codecov project status can now be recognized without relying on a nonexistent response SHA field.
 
 - `kairo-ecs-des` adds experimental `StagedResourceRuntime` for scheduler-backed staged allocation; CareOps migration remains separately gated.
