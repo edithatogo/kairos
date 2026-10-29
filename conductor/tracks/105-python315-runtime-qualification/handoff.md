@@ -1,5 +1,38 @@
 # Handoff
 
+## Qualified runtime pin repair — 29 October 2026
+
+Integration chat `01a18344-cfb8-7711-8c38-fef1052b9fcf` owns this bounded
+repair in `/Users/doughnut/.codex/worktrees/kairos-track107-reconcile/kairos`,
+branch `codex/pr332-runtime-pin-repair-20261029`, based on PR #332 head
+`51e4b1601baf728ef7ba5ca7c90ded891d666323`. Scope is the Python inputs in
+`.github/workflows/` and this note; no native objects, authentication, other
+environments or runtime promotion are involved. Earlier assignments remain
+history. Next operation is focused runtime/workflow validation and an ordinary
+source commit to the existing PR branch.
+
+Renovate's grouped action update also changed Python inputs to 3.15.2 without
+updating the repository's qualified 3.15.1 bootstrap, locks and consumers.
+Hosted archive inventory, Windows Conductor and macOS session-guard jobs failed
+at the explicit bootstrap version check. These inputs now retain the existing
+qualified 3.15.1 profile; action updates remain. Promoting the newer 3.15.2 patch
+requires isolated qualification and coordinated alignment of the active guards,
+locks and consumers. No environment was replaced and no gate was relaxed.
+
+The same packet aligns the two existing exact action-pin assertions in
+`scripts/validation/validate-track13-metadata.mjs` and
+`scripts/validation/validate-publication-readiness.mjs`. GitHub readback confirms
+taiki-e/install-action v2.88.0 resolves to `86f7a0ffb25f40114606501a311ebcfaf882ea32`,
+rust-cache v2.9.3 to `d1527c8f67ef9af357290475d4af4b0fab8f12e0`, and the PyPI
+publisher update `7245906fb61fa33a13554f9d5fb856fe61758086` is the upstream
+certifi/sigstore dependency update. Exact pins, the main-only publication job,
+protected publication environment and all other policy checks remain enforced.
+
+Focused local validation passed with repo-local Python 3.15.1: nine local runtime
+tests and three runtime-policy tests. Actionlint, Track 13 metadata validation,
+publication-readiness validation and Conductor phase gates passed; whitespace
+checks passed. Hosted checks must verify the corrected inputs before merge.
+
 ## Current policy and successor evidence — 24 October 2026
 
 The human's revised dependency policy prefers latest suitable versions and permits
