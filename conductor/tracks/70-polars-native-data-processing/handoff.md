@@ -31,6 +31,19 @@ path handling under a hostile concurrent filesystem actor remains unqualified.
 Independent security and compatibility review, cross-platform execution,
 security audit, `just ci`, hosted checks and consumer acceptance remain open.
 
+An independent synthetic readback of the separate zstd 0.14.3 workspace
+qualification candidate found an additional contract gap. On 29 October 2026,
+PyArrow 26.0.0 read its Parquet output with ZSTD columns and its Arrow IPC file
+output, with equal logical rows and full-width tick limbs. PyArrow's IPC stream
+reader rejected the output: `write_ipc_stream` currently uses Polars `IpcWriter`
+and emits the IPC file format. Parquet strings and IPC strings also had
+different physical Arrow types. Inputs, outputs, Rust producer and lock are in
+`/Volumes/PortableSSD/codex-builds/kairos-zstd-independent-reader`; parquet
+SHA-256 `17e474f2479b881860c2d1fe4c453dcac40b1ad080a08e0d86aff4b4fb5a64ad`,
+IPC SHA-256 `76fd7129f6f68d7c4a57b2599fdc74e71dd9eadbb21cbff26803f29578a8d538`.
+The apparent stream behavior and file/stream migration require contract and
+consumer review; no independent stream interoperability is claimed.
+
 ## Summary
 All phases (Phase 0 through Phase 4) of Track 70 are complete and verified across all criteria:
 - **Phase 0 (Baseline & qualification)**: Data path inventory, failing baseline characterizations, Polars dependency pin ADR, and Schema v2 conformance fixtures.
