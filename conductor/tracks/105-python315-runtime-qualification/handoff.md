@@ -33,6 +33,18 @@ tests and three runtime-policy tests. Actionlint, Track 13 metadata validation,
 publication-readiness validation and Conductor phase gates passed; whitespace
 checks passed. Hosted checks must verify the corrected inputs before merge.
 
+Hosted follow-through also found an outdated offline cloud CLI assertion and a
+missing changelog entry for the release-workflow updates. The cloud validator
+now recognizes the existing typed `Commands::Run`, `Checkpoint` and `Resume`
+dispatch instead of the removed string-match implementation. The CLI and
+provider behavior are unchanged. The required changelog records the CI/release
+maintenance; its policy remains enforced.
+
+Local follow-through passed `cloud/validate_cloud_hpc.py` on repo-local Python
+3.15.1 and all five `kairo-ecs-cli` process tests on Rust 1.99.1, including real
+run/checkpoint/resume JSON results with quoted paths. Cached build output is in
+`/Volumes/PortableSSD/codex-builds/kairos-arrow-publication-20261029`.
+
 ## Current policy and successor evidence — 24 October 2026
 
 The human's revised dependency policy prefers latest suitable versions and permits
