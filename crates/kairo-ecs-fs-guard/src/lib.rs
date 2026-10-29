@@ -17,9 +17,34 @@ mod windows_tests {
     use super::*;
     use std::os::windows::fs::OpenOptionsExt;
 
+    fn owned_temporary_directory() -> tempfile::TempDir {
+        let root = tempfile::tempdir().unwrap();
+        // Elevated Windows tokens can default new objects to Administrators.
+        // Prepare the fixture for the same current-user ownership contract.
+        let system =
+            std::path::PathBuf::from(std::env::var_os("SystemRoot").unwrap()).join("System32");
+        let identity = std::process::Command::new(system.join("whoami.exe"))
+            .args(["/user", "/fo", "csv", "/nh"])
+            .output()
+            .unwrap();
+        assert!(identity.status.success());
+        let identity = String::from_utf8(identity.stdout).unwrap();
+        let sid = identity
+            .split('"')
+            .find(|field| field.starts_with("S-1-"))
+            .unwrap();
+        let status = std::process::Command::new(system.join("icacls.exe"))
+            .arg(root.path())
+            .args(["/setowner", &format!("*{sid}")])
+            .status()
+            .unwrap();
+        assert!(status.success());
+        root
+    }
+
     #[test]
     fn user_temporary_directory_is_protected() {
-        let root = tempfile::tempdir().unwrap();
+        let root = owned_temporary_directory();
         let file = std::fs::OpenOptions::new()
             .read(true)
             .custom_flags(0x02000000) // FILE_FLAG_BACKUP_SEMANTICS for directories.
@@ -31,7 +56,7 @@ mod windows_tests {
 
     #[test]
     fn file_only_inherited_write_grant_is_rejected() {
-        let root = tempfile::tempdir().unwrap();
+        let root = owned_temporary_directory();
         let file = std::fs::OpenOptions::new()
             .read(true)
             .custom_flags(0x02000000)
