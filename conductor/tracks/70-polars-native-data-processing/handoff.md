@@ -11,7 +11,7 @@ Earlier assignments below remain history. Next operation is platform and package
 qualification of this frozen source, followed by hosted checks when safe.
 
 Local commit `f50e57a` introduced the guard and the first publisher integration.
-The next source checkpoint applies the same boundary to `RunOutput`, opens runs
+Commit `df964be` applies the same boundary to `RunOutput`, opens runs
 relative to held roots, uses no-clobber staged publication, holds reader handles,
 and preserves resume after abandoned staging files. The ADR in this track
 records the approved behavior change, accepted filesystem profiles and limits.
@@ -23,6 +23,15 @@ still required. macOS aarch64 Rust 1.99.1 focused verification passed 7 native
 table/IPC tests, 19 durability tests, 13 durable-publication tests and 2 native
 guard tests. Focused Clippy with warnings denied passed. These are local results,
 not hosted acceptance or a declaration that the security finding is closed.
+
+Draft PR `https://github.com/edithatogo/kairos/pull/338` carries the Arrow lane.
+Commit `94a8834` adds the Linux/macOS/Windows runtime qualification workflow.
+Read-only integration preflight against main `534c9bd` found clean source and
+target worktrees, no dirty-path overlaps, no staged deletions and no warnings.
+The first package-inventory validation identified the new helper missing from
+the release manifest; its registration is included in this follow-up. All three
+Rust source archives (types, guard, Arrow) were produced without verification;
+that establishes archive creation, not full consumer or security qualification.
 
 An isolated Linux aarch64 qualification VM now runs at
 `LIMA_HOME=/Volumes/PortableSSD/kairos-lima`, instance `kairos-guard`. Its fresh
