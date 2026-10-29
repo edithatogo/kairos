@@ -1,6 +1,26 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { ciSkipGuardContract, evaluateDrift, isAfterIntegration, dashboardEditEvidence } from '../../scripts/validation/quality-frontier-drift.mjs';
+import { ciSkipGuardContract, evaluateDrift, isAfterIntegration, dashboardEditEvidence, bindCommitStatuses } from '../../scripts/validation/quality-frontier-drift.mjs';
+
+
+// Real GET /commits/{sha}/statuses entries carry a commit-specific URL, not sha.
+const statusCommit = '8eafd77d6e337449658c6d6c5eed8331ef2dcc34';
+const statusUrl = `https://api.github.com/repos/edithatogo/kairos/statuses/${statusCommit}`;
+const rawStatus = { context: 'codecov/project', state: 'success', url: statusUrl };
+assert.deepEqual(bindCommitStatuses('edithatogo/kairos', statusCommit, [rawStatus]),
+  [{ ...rawStatus, sha: statusCommit }]);
+assert.deepEqual(bindCommitStatuses('edithatogo/kairos', statusCommit, [{ ...rawStatus, sha: null }]),
+  [{ ...rawStatus, sha: statusCommit }]);
+assert.deepEqual(bindCommitStatuses('edithatogo/kairos', statusCommit, []), []);
+for (const status of [
+  { ...rawStatus, url: statusUrl.replace(statusCommit, '0'.repeat(40)) },
+  { ...rawStatus, url: statusUrl.replace('/kairos/', '/other/') },
+  { ...rawStatus, url: statusUrl.replace('api.github.com', 'example.com') },
+  { ...rawStatus, sha: '0'.repeat(40) },
+  { ...rawStatus, url: undefined },
+]) assert.throws(() => bindCommitStatuses('edithatogo/kairos', statusCommit, [status]),
+  /requested repository and commit/);
+assert.throws(() => bindCommitStatuses('edithatogo/kairos', statusCommit, {}), /must be an array/);
 
 assert.deepEqual(ciSkipGuardContract(readFileSync('.github/workflows/ci-skip-guard.yml', 'utf8')),
   { pullRequestTrigger: true, jobName: true });
