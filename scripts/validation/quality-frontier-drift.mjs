@@ -257,9 +257,12 @@ function evaluateDrift({ source, hosted }) {
   const codecovStillRunning = ['queued', 'in_progress'].includes(latestUpload?.status) || latestProjectStatus?.state === 'pending';
   const codecovFailed = (latestUpload?.status === 'completed' && latestUpload.conclusion !== 'success')
     || ['failure', 'error'].includes(latestProjectStatus?.state);
-  const codecovStatus = checkStatus(hosted, 'mainChecks') ?? checkStatus(hosted, 'mainStatuses') ?? (codecovFailed
-    ? 'drift' : (hasSuccessfulUpload && hasCommitStatus ? 'pass'
-      : (hosted.integrationPending || codecovStillRunning || inFlightMainChecks.length > 0 ? 'pending' : 'drift')));
+  let codecovOutcome = 'drift';
+  if (codecovFailed) codecovOutcome = 'drift';
+  else if (hosted.integrationPending) codecovOutcome = 'pending';
+  else if (hasSuccessfulUpload && hasCommitStatus) codecovOutcome = 'pass';
+  else if (codecovStillRunning || inFlightMainChecks.length > 0) codecovOutcome = 'pending';
+  const codecovStatus = checkStatus(hosted, 'mainChecks') ?? checkStatus(hosted, 'mainStatuses') ?? codecovOutcome;
   addCheck(checks, 'trusted_main_codecov_upload_and_status', {
     successfulUploadCheck: 'Codecov OIDC upload completed successfully on default branch SHA',
     successfulProjectStatus: 'codecov/project success on default branch SHA',

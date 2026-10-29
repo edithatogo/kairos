@@ -239,6 +239,12 @@ const failedUploadWhileQueued = evaluateDrift({ source, hosted: { ...awaitingUpl
     status: 'completed', conclusion: 'failure', app: { slug: 'github-actions' } }],
   mainStatuses: [{ context: 'codecov/project', state: 'pending', sha: 'abc123' }] } });
 assert.equal(failedUploadWhileQueued.checks.find((check) => check.name === 'trusted_main_codecov_upload_and_status').status, 'drift');
+const unmergedCandidate = evaluateDrift({
+  source: { ...source, branch: 'codex/candidate', commit: 'candidate-head' },
+  hosted: { ...hosted, integrationPending: true },
+});
+assert.equal(unmergedCandidate.checks.find((check) => check.name === 'trusted_main_codecov_upload_and_status').status,
+  'pending', 'healthy old-main coverage cannot certify an unmerged candidate');
 const failedWhileQueued = evaluateDrift({ source, hosted: { ...awaitingUpload,
   mainStatuses: [{ context: 'codecov/project', state: 'failure', sha: 'abc123' }] } });
 assert.equal(failedWhileQueued.checks.find((check) => check.name === 'trusted_main_codecov_upload_and_status').status, 'drift');
