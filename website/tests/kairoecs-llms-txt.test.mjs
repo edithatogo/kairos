@@ -87,15 +87,15 @@ test("lock graph removes the vulnerable chain and retains the exact renderer gra
   const candidate = JSON.parse(readFileSync(path.join(root, "website/package-lock.json"), "utf8"));
   const forbidden = new Set(["starlight-llms-txt", "micromatch", "braces", "@types/micromatch", "@types/braces"]);
   const expectedDependencies = {
-    "@astrojs/mdx": "8.0.2",
-    "@astrojs/starlight": "^0.42.4",
-    "astro": "^7.3.5",
+    "@astrojs/mdx": "8.1.2",
+    "@astrojs/starlight": "0.42.7",
+    "astro": "7.4.4",
     "hast-util-select": "6.0.4",
     "rehype-parse": "9.0.1",
     "rehype-remark": "10.0.1",
     "remark-gfm": "4.0.1",
     "remark-stringify": "11.0.0",
-    "starlight-links-validator": "^0.26.0",
+    "starlight-links-validator": "0.27.0",
     "starlight-plugin-icons": "^1.1.6",
     "starlight-versions": "^0.10.1",
     "unified": "11.0.5",
@@ -112,8 +112,8 @@ test("lock graph removes the vulnerable chain and retains the exact renderer gra
     "node_modules/starlight-llms-txt",
     "node_modules/to-regex-range",
   ];
-  const expectedLockSha256 = "64e1a663a7df0f56a1ea0a5acfc7ff4cd99cc5e44c32a5516bc31c07981b10ed";
-  const expectedRetainedGraphSha256 = "b7a6e7cda5c90c30b5a819ed51ad1dc36d2cfbc58629782a57e7296e3fa67c9a";
+  const expectedLockSha256 = "de0d764841646b81e76f6e29761611fa3d3c3e9139c95d80a25f88fd4e0e418a";
+  const expectedRetainedGraphSha256 = "3482845314d37a878d10743cf6668bda094e04f0f1d1344514259982ab8f395c";
   assert.deepEqual(pkg.dependencies, expectedDependencies, "package.json direct dependency map changed");
   assert.deepEqual(candidate.packages[""].dependencies, expectedDependencies, "lock root direct dependency map changed");
   assert.equal(createHash("sha256").update(readFileSync(path.join(root, "website/package-lock.json"))).digest("hex"), expectedLockSha256, "package lock content changed");
@@ -135,7 +135,7 @@ test("lock graph removes the vulnerable chain and retains the exact renderer gra
     }
   }
   const fingerprints = {
-    "@astrojs/mdx": ["8.0.2", "https://registry.npmjs.org/@astrojs/mdx/-/mdx-8.0.2.tgz", "sha512-WedIVP2Bu8fXSzxb3ZYZ8xDrWWjf2SRKCneh52Llhoa+O3lcpHPhoZVP3FerlivUaH/0LJz2yVaCNvMdg0u8Bw=="],
+    "@astrojs/mdx": ["8.1.2", "https://registry.npmjs.org/@astrojs/mdx/-/mdx-8.1.2.tgz", "sha512-ZIUVfosVtK4SKcFrGOH+1+HwG0encjxQOxu76M9VuTqeQNZWQ//2eY2Iz+W1eq87AOT5JD4wOHyZ8xFwlcFteg=="],
     "hast-util-select": ["6.0.4", "https://registry.npmjs.org/hast-util-select/-/hast-util-select-6.0.4.tgz", "sha512-RqGS1ZgI0MwxLaKLDxjprynNzINEkRHY2i8ln4DDjgv9ZhcYVIHN9rlpiYsqtFwrgpYU361SyWDQcGNIBVu3lw=="],
     "rehype-parse": ["9.0.1", "https://registry.npmjs.org/rehype-parse/-/rehype-parse-9.0.1.tgz", "sha512-ksCzCD0Fgfh7trPDxr2rSylbwq9iYDkSn8TCDmEJ49ljEUBxDVCzCHv7QNzZOfODanX4+bWQ4WZqLCRWYLfhag=="],
     "rehype-remark": ["10.0.1", "https://registry.npmjs.org/rehype-remark/-/rehype-remark-10.0.1.tgz", "sha512-EmDndlb5NVwXGfUa4c9GPK+lXeItTilLhE6ADSaQuHr4JUlKw9MidzGzx4HpqZrNCt6vnHmEifXQiiA+CEnjYQ=="],
@@ -149,7 +149,7 @@ test("lock graph removes the vulnerable chain and retains the exact renderer gra
     const lock = candidatePackages[`node_modules/${name}`];
     assert.deepEqual([lock?.version, lock?.resolved, lock?.integrity], [version, resolved, integrity], name);
   }
-  // The reviewed website cache update changes exactly these three fields.
+  // The current frontier retains the reviewed cache identity; the complete lock is pinned above.
   assert.deepEqual(candidatePackages["node_modules/http-cache-semantics"], {
     version: "4.3.0",
     resolved: "https://registry.npmjs.org/http-cache-semantics/-/http-cache-semantics-4.3.0.tgz",
