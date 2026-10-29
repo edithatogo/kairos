@@ -26,6 +26,12 @@ gates, dependency DAG (zero errors/warnings), artifacts, metadata JSON parsing
 and whitespace checks. Runtime tests are reused only as explicitly labelled
 candidate history; none were run or claimed for this registration-only packet.
 
+Independent review at `0725a4ce693d937ca304dfd36a8eab87006ac53c` found one
+remaining human-table inconsistency: Track 106 still said In Progress and Track
+107 was missing. The follow-up aligns the table with the machine registry and
+archive link while keeping Tracks 107 and 108 Blocked. The reviewer otherwise
+confirmed the planning-only scope and retained acceptance boundaries.
+
 Planning only. Track 107 and the accepted CareOps baseline remain prerequisites. Issue: https://github.com/edithatogo/kairos/issues/336. No provider API, RNG fixture or consumer pin changed.
 
 ## Follow-up issues
