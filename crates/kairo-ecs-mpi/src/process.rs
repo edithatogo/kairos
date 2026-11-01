@@ -32,7 +32,7 @@ struct InboundConnection {
     buf: Vec<u8>,
 }
 
-/// Real multi-rank MPI transport communicating across distinct OS processes over sockets.
+/// Multi-rank TCP transport with rank discovery from MPI launcher metadata.
 pub struct MpiProcessTransport {
     session_id: String,
     rendezvous_dir: PathBuf,
@@ -264,8 +264,9 @@ impl MpiProcessTransport {
         self.bound_addr
     }
 
+    /// This backend uses custom TCP frames on the wire.
     pub fn real_mpi_runtime_claimed(&self) -> bool {
-        true
+        false
     }
 
     fn resolve_peer_addr(&self, target_rank: i32) -> Result<SocketAddr, TransportError> {
@@ -477,6 +478,17 @@ impl PdesTransport for MpiProcessTransport {
     }
 
     fn all_reduce_min(&mut self, timestamp: Tick) -> Tick {
+        let timestamp = self
+            .inboxes
+            .lock()
+            .unwrap()
+            .values()
+            .flatten()
+            .filter_map(|message| match message {
+                PdesMessage::Event(event) => Some(event.tick),
+                PdesMessage::Null(_) => None,
+            })
+            .fold(timestamp, Tick::min);
         if self.size <= 1 {
             return timestamp;
         }
@@ -504,16 +516,14 @@ impl PdesTransport for MpiProcessTransport {
             }
 
             let min_tick = {
-                let proposals = self.gvt_proposals.lock().unwrap();
-                let mut m = timestamp;
-                for r in 0..self.size {
-                    if let Some(&t) = proposals.get(&(round, r as i32)) {
-                        if t < m {
-                            m = t;
-                        }
-                    }
-                }
-                m
+                let mut proposals = self.gvt_proposals.lock().unwrap();
+                (0..self.size).fold(timestamp, |minimum, rank| {
+                    minimum.min(
+                        proposals
+                            .remove(&(round, rank as i32))
+                            .unwrap_or(Tick::ZERO),
+                    )
+                })
             };
 
             // Broadcast reduced min to all ranks
@@ -524,8 +534,6 @@ impl PdesTransport for MpiProcessTransport {
                 let _ = self.send_frame_to_rank(r as i32, MSG_TYPE_GVT_REDUCED, &payload);
             }
 
-            let mut results = self.gvt_results.lock().unwrap();
-            results.insert(round, min_tick);
             min_tick
         } else {
             let mut payload = Vec::new();
@@ -537,8 +545,8 @@ impl PdesTransport for MpiProcessTransport {
             let deadline = Instant::now() + Duration::from_secs(10);
             while Instant::now() < deadline {
                 let result = {
-                    let results = self.gvt_results.lock().unwrap();
-                    results.get(&round).copied()
+                    let mut results = self.gvt_results.lock().unwrap();
+                    results.remove(&round)
                 };
 
                 if let Some(min_t) = result {
@@ -547,7 +555,8 @@ impl PdesTransport for MpiProcessTransport {
                 thread::sleep(Duration::from_millis(1));
             }
 
-            timestamp
+            // Without the coordinator decision there is no proven positive floor.
+            Tick::ZERO
         }
     }
 }
