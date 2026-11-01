@@ -3,7 +3,7 @@
   "title": "Argmin calibration optimiser qualification",
   "library": "argmin",
   "type": "evaluation",
-  "status": "new",
+  "status": "deferred",
   "created_at": "2026-10-22",
   "updated_at": "2026-11-01",
   "spec_approved": true,
