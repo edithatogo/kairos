@@ -1,0 +1,165 @@
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -2194,6 +2194,7 @@
+  "tokio",
+  "tokio-stream",
+  "tonic",
++ "tracing",
+ ]
+
+ [[package]]
+--- a/crates/kairo-ecs-grpc/Cargo.toml
++++ b/crates/kairo-ecs-grpc/Cargo.toml
+@@ -6,6 +6,7 @@
+ repository = "https://github.com/edithatogo/kairos"
+ rust-version.workspace = true
+ [dependencies]
++tracing = { version = "=0.1.44", default-features = false, features = ["std"] }
+ kairo-ecs-pdes = { path = "../kairo-ecs-pdes", version = "0.0.0", features = ["time-warp", "pdes"] }
+ kairo-ecs-types = { path = "../kairo-ecs-types", version = "0.0.0" }
+ prost = { version = "0.14.4", default-features = false, features = ["std", "derive"] }
+--- a/crates/kairo-ecs-grpc/src/tonic_transport.rs
++++ b/crates/kairo-ecs-grpc/src/tonic_transport.rs
+@@ -688,11 +688,24 @@
+         }
+
+         // A missing participant may hold an earlier event than every known proposal.
++        let diagnose = tracing::enabled!(target: "kairos::gvt", tracing::Level::WARN);
+         let mut proposals = self.gvt_proposals.lock().unwrap();
+         proposals.remove(&(round, self.local_lp));
+-        peer_ids.iter().fold(timestamp, |minimum, peer| {
+-            minimum.min(proposals.remove(&(round, *peer)).unwrap_or(Tick::ZERO))
+-        })
++        let mut missing = Vec::new();
++        let minimum = peer_ids.iter().fold(timestamp, |minimum, peer| {
++            let proposed = proposals.remove(&(round, *peer)).unwrap_or_else(|| {
++                if diagnose {
++                    missing.push(peer.0);
++                }
++                Tick::ZERO
++            });
++            minimum.min(proposed)
++        });
++        drop(proposals);
++        for peer in missing {
++            tracing::warn!(target: "kairos::gvt", worker = self.local_lp.0, round, missing_peer = peer);
++        }
++        minimum
+     }
+ }
+
+--- /dev/null
++++ b/crates/kairo-ecs-grpc/tests/track97_probe.rs
+@@ -0,0 +1,112 @@
++use kairo_ecs_grpc::{GrpcPeer, GrpcTransportConfig, TonicTransport};
++use kairo_ecs_pdes::{LpId, PdesTransport, Tick};
++use std::{
++    collections::BTreeMap,
++    sync::{Arc, Mutex},
++    thread,
++    time::{Duration, Instant},
++};
++use tracing::{
++    field::{Field, Visit},
++    span::{Attributes, Id, Record},
++    Event, Metadata, Subscriber,
++};
++
++#[derive(Default)]
++struct Fields(BTreeMap<String, u64>);
++impl Visit for Fields {
++    fn record_u64(&mut self, field: &Field, value: u64) {
++        self.0.insert(field.name().to_owned(), value);
++    }
++    fn record_debug(&mut self, _: &Field, _: &dyn std::fmt::Debug) {
++        panic!("unexpected nonnumeric field");
++    }
++}
++struct Sink {
++    run: u64,
++    seen: Arc<Mutex<Vec<(u64, Fields)>>>,
++    caller: thread::ThreadId,
++}
++impl Subscriber for Sink {
++    fn enabled(&self, m: &Metadata<'_>) -> bool {
++        m.target() == "kairos::gvt"
++    }
++    fn new_span(&self, _: &Attributes<'_>) -> Id {
++        Id::from_u64(1)
++    }
++    fn record(&self, _: &Id, _: &Record<'_>) {}
++    fn record_follows_from(&self, _: &Id, _: &Id) {}
++    fn enter(&self, _: &Id) {}
++    fn exit(&self, _: &Id) {}
++    fn event(&self, e: &Event<'_>) {
++        assert_eq!(thread::current().id(), self.caller);
++        let mut fields = Fields::default();
++        e.record(&mut fields);
++        let start = Instant::now();
++        thread::sleep(Duration::from_millis(40));
++        assert!(start.elapsed() >= Duration::from_millis(40));
++        self.seen.lock().unwrap().push((self.run, fields));
++    }
++}
++
++fn run(complete: bool) -> Tick {
++    let addr = "127.0.0.1:0".parse().unwrap();
++    let mut peer =
++        TonicTransport::bind(LpId(2), addr, vec![], GrpcTransportConfig::default()).unwrap();
++    let config = GrpcTransportConfig {
++        request_timeout: Duration::from_millis(100),
++        ..Default::default()
++    };
++    let mut local = TonicTransport::bind(
++        LpId(1),
++        addr,
++        vec![GrpcPeer {
++            lp_id: LpId(2),
++            endpoint: format!("http://{}", peer.bound_addr()),
++        }],
++        config,
++    )
++    .unwrap();
++    if complete {
++        // Use a real Tonic sender configured to submit the peer's zero.
++        let source = TonicTransport::bind(
++            LpId(2),
++            addr,
++            vec![GrpcPeer {
++                lp_id: LpId(1),
++                endpoint: format!("http://{}", local.bound_addr()),
++            }],
++            GrpcTransportConfig::default(),
++        )
++        .unwrap();
++        source.propose_gvt(LpId(1), 0, Tick::ZERO).unwrap();
++    }
++    let result = local.all_reduce_min(Tick::from_ticks(500));
++    assert!(peer.recv(LpId(2)).unwrap().is_empty());
++    result
++}
++#[test]
++fn distinguish_silence_from_a_zero_proposal() {
++    assert_eq!([run(false), run(true)], [Tick::ZERO; 2]);
++    let seen = Arc::new(Mutex::new(Vec::new()));
++    let observed = tracing::subscriber::with_default(
++        Sink {
++            run: 97,
++            seen: seen.clone(),
++            caller: thread::current().id(),
++        },
++        || [run(false), run(true)],
++    );
++    assert_eq!(observed, [Tick::ZERO; 2]);
++    let rows = seen.lock().unwrap();
++    assert_eq!(rows.len(), 1);
++    assert_eq!(rows[0].0, 97);
++    assert_eq!(
++        rows[0].1 .0,
++        BTreeMap::from([
++            ("worker".into(), 1),
++            ("round".into(), 0),
++            ("missing_peer".into(), 2)
++        ])
++    );
++}
