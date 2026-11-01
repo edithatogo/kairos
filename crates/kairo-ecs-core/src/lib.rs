@@ -1,5 +1,8 @@
 #![forbid(unsafe_code)]
 
+#[cfg(all(feature = "numa", target_os = "linux"))]
+mod linux_numa;
+
 pub mod linked_entity;
 pub use linked_entity::*;
 
@@ -495,7 +498,7 @@ impl NumaTopology {
     pub fn discover() -> Self {
         if let Ok(val) = std::env::var("KAIRO_NUMA_NODES") {
             if let Ok(count) = val.parse::<u32>() {
-                if count > 0 {
+                if (1..=65536).contains(&count) {
                     let nodes = (0..count)
                         .map(|id| NumaNode {
                             id,
@@ -506,12 +509,18 @@ impl NumaTopology {
                     return Self {
                         support: NumaSupport::Supported,
                         nodes,
-                        source: "environment (KAIRO_NUMA_NODES)".to_string(),
+                        source: "synthetic (KAIRO_NUMA_NODES)".to_string(),
                     };
                 }
             }
         }
 
+        #[cfg(target_os = "linux")]
+        if let Some(topology) =
+            linux_numa::discover(std::path::Path::new("/sys/devices/system/node"))
+        {
+            return topology;
+        }
         Self::unsupported("NUMA discovery unavailable or unsupported on host")
     }
 }
@@ -559,8 +568,9 @@ impl AffinityBindingPlan {
         if !self.opt_in {
             return Err(NumaError::InvalidAffinity);
         }
-        // Direct OS affinity binding requires OS-specific FFI or external tooling;
-        // returns typed unsupported error when unavailable without unsafe code.
+        #[cfg(target_os = "linux")]
+        return linux_numa::affinity(self, self.action);
+        #[cfg(not(target_os = "linux"))]
         Err(NumaError::UnsupportedHost)
     }
 
@@ -568,6 +578,9 @@ impl AffinityBindingPlan {
         if !self.opt_in {
             return Err(NumaError::InvalidAffinity);
         }
+        #[cfg(target_os = "linux")]
+        return linux_numa::affinity(self, AffinityAction::RestorePrevious);
+        #[cfg(not(target_os = "linux"))]
         Err(NumaError::UnsupportedHost)
     }
 }
@@ -610,13 +623,12 @@ impl<T> EventArena<T> {
     }
 
     pub fn alloc(&mut self, item: T) {
-        let last_idx = self.chunks.len() - 1;
-        if self.chunks[last_idx].len() >= self.chunk_capacity {
+        let chunk = self.metrics.allocated_items / self.chunk_capacity;
+        if chunk == self.chunks.len() {
             self.chunks.push(Vec::with_capacity(self.chunk_capacity));
             self.metrics.chunk_count += 1;
         }
-        let cur_idx = self.chunks.len() - 1;
-        self.chunks[cur_idx].push(item);
+        self.chunks[chunk].push(item);
         self.metrics.allocated_items += 1;
     }
 
@@ -1083,6 +1095,7 @@ mod tests {
 
     #[cfg(feature = "numa")]
     #[test]
+    #[cfg(not(target_os = "linux"))]
     fn affinity_plan_apply_and_revert_report_typed_unsupported_host() {
         let plan = AffinityBindingPlan::new(1, 2, true).unwrap();
         assert_eq!(plan.apply(), Err(NumaError::UnsupportedHost));
@@ -1109,6 +1122,11 @@ mod tests {
         arena.reset();
         assert!(arena.is_empty());
         assert_eq!(arena.metrics().reset_count, 1);
+        for item in 0..4 {
+            arena.alloc(item);
+        }
+        assert_eq!(arena.len(), 4);
+        assert_eq!(arena.metrics().chunk_count, 2);
     }
 
     #[cfg(feature = "numa")]
