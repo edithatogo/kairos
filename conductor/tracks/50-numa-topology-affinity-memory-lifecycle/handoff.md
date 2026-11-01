@@ -93,3 +93,56 @@ Passing implementation gates:
 - pushed ref: `origin/codex/track49-distributed-synchronization`
 - `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: Enforced and verified after commit.
 - next-phase decision: Track 50 implementation complete; allocator and memory layout contracts ready for consumption by Track 52 (GPU Persistent Memory) and Track 55 (End-to-End Scaling Certification).
+
+## Linux topology, affinity and arena reuse — 1 November 2026
+
+Chat 01a19600-0a41-7ca2-9e4b-e27d7339c8e7 owns the bounded Track 50 packet in
+/Users/doughnut/.codex/worktrees/track48-rollback/kairos on codex/track50-linux-affinity,
+base 956d8399339b8589bbb5bbdea28f4cc5539588a9. Paths are the core library,
+Linux integration tests, NUMA guide and this track directory. Native scope was
+temporary unprivileged test processes on the host-key-verified Pleiades NAS.
+Next operation is protected PR integration.
+
+The baseline returned Unsupported on the NAS despite its populated Linux sysfs,
+and the old arena allocated a third chunk when two retained chunks could hold
+four items after reset. Both failures were reproduced. Discovery now reads
+per-node CPU lists and memory totals. Explicit opt-in binding saves the calling
+thread's allowed mask, verifies the target through procfs, and requires exact
+restoration. The synthetic environment override remains labelled. Independent
+review identified missing cross-thread error coverage, sparse/memory-only node
+fixtures and cleanup guidance; all three were addressed.
+
+The Mac used Rust/Cargo 1.99.1 to build a locked x86_64-unknown-linux-musl
+core test binary against an isolated target standard library. Its SHA-256
+was verified against the retained Rust toolchain manifest before use. On the
+Linux x86-64 NAS, node 0 exposed logical CPUs 0–7 and 33,391,509,504 bytes.
+The real calling thread bound to CPU 0 and restored mask 0–7. The negative
+controls covered invalid CPU, missing opt-in, nested bind, wrong reversal,
+foreign thread and double restore. No global affinity was changed.
+
+Commands from the worktree root included `cargo test --locked --offline
+-p kairo-ecs-core -p kairo-ecs-state -p kairo-ecs-ffi --features numa`
+(152 passed on macOS), the corresponding all-target Clippy gate, Linux-target
+core Clippy, and `cargo test --locked --offline --target
+x86_64-unknown-linux-musl -p kairo-ecs-core --features numa --lib --test
+linux_numa --no-run` (selectors built separately). The two Linux binaries ran
+on the NAS: 33 library cases and two kernel integration cases passed. All
+final commands exited zero. Fixed inputs were the actual kernel masks and
+node memory rows plus the sparse-node and arena reset fixtures.
+
+Raw receipts in /Volumes/PortableSSD/codex-builds/kairos-track50-linux:
+
+- `red.log` — 58f171fda399afa0d915303d7cfa8a8a85d4cc2deb76af474a7f86ddaa54b77f
+- `nas-final.log` — fa5aa485667966354a6b7ffc97b9f5c85ab9b68fce55030b64b9e406fae48311
+- `nas-integration.log` — ea97d4b7031b9662910257c76f79216c9153f1999dafdd6b901f7aed58bfd54b
+- `native-final.log` — 7632147699338a93397c01ac82cabff497715e59f800c5e11ae13df50384087a
+- `clippy.log` — 5dca387a3ce6033acc5f0b127912a41ab3acf34380df2426f91b5273f65f0203
+- `linux-clippy.log` — 9bfbdda71e4660ce02f72d05e13c05e1ff588b7fe3bdf03664dae7e04f02febd
+
+Multi-node locality and performance, broader cache/hwloc reporting and Track 55 scaling acceptance remain separate.
+
+Hosted review clarified diagnostics for malformed kernel memory records and
+empty affinity masks. Discovery deliberately rejects a failed directory
+enumeration: an unread entry could be a real node. Restoration deliberately
+retains the saved mask on an unconfirmed rollback so the owning thread can
+recover. A live thread cannot have its Linux TID simultaneously reassigned.
