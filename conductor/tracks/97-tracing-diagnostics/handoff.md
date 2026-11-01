@@ -37,3 +37,18 @@ See [programme](../../robust-dependencies.md). Worktree integration, local main,
 ## Phase closeout evidence
 
 Pending: `$conductor-review`, accepted fixes, rejected findings, command/cwd/commit SHA/toolchain/seed/input hashes, exit codes/artifacts, pushed ref or blocker and next-phase decision. Use `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` before advancement.
+
+## Phase 0 evaluation — 1 November 2026
+
+[Qualification and receipts](qualification.md) support deferring direct library
+instrumentation. The candidate event diagnosed the silent GVT participant, but
+application subscriber backpressure exceeded the budget. Review removed a
+callback from inside the proposal mutex; the scoped test and native oracles passed.
+Registry and closeout acceptance belong to the integrator. CareOps Sim's existing
+97-tracing-diagnostics handoff remains unresolved/pending. There is no pin migration.
+
+Chat 01a19600-0a41-7ca2-9e4b-e27d7339c8e7 owns only this track directory in
+/Users/doughnut/.codex/worktrees/track48-rollback/kairos on codex/track97-tracing-qualification.
+Main baseline 956d8399339b8589bbb5bbdea28f4cc5539588a9. Native scope was a local
+disposable export of the Track 49 candidate and read-only upstream/consumer
+readback. Next operation is protected integration of the evidence packet.
