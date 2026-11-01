@@ -1,4 +1,7 @@
 name: Devbox runtime
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 on:
   pull_request:
     paths: ['devbox.json', '.python-version', 'scripts/python_runtime.py', '.github/workflows/devbox-runtime.yml']
@@ -9,9 +12,12 @@ permissions:
   contents: read
 jobs:
   startup:
+    name: Native Devbox Python startup
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0
         with:
           python-version: "3.15.2"
