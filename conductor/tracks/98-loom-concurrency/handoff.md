@@ -105,3 +105,7 @@ Raw logs under /Volumes/PortableSSD/codex-builds/kairos-track98:
 - `native.log` — 5841a2c46167079b0365c8e89d7f3441e071f1d832c70016f8773f21a74783fb
 - `clippy.log` — 9885347c0adc58fdbb06fe85dc94afd6c541067c4212ebfed9c0033e4c82f39f
 - `deny.log` — 7e222cdec540776be54dcaec38b148690f2a73dee8782d223f9629882dfdb92d
+
+Hosted review hardened the source extraction boundary: the model now uses
+the following top-level test-module marker instead of searching for a closing
+brace. The locked rerun again found the mutant and passed seven CAS executions.

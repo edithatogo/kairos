@@ -9,7 +9,11 @@ fn main() {
         .find("\nfn allocate_instance_id(")
         .expect("allocator definition");
     let tail = &source[start + 1..];
-    let end = tail.find("\n}\n").expect("allocator closing brace");
+    // The following test module is a top-level item. Do not infer the
+    // allocator boundary from braces inside the function body.
+    let (allocator, _) = tail
+        .split_once("\n#[cfg(test)]\nmod tests {")
+        .expect("review allocator extraction after source layout changes");
     let output = PathBuf::from(env::var_os("OUT_DIR").unwrap()).join("allocator.rs");
-    fs::write(output, &tail[..end + 2]).unwrap();
+    fs::write(output, allocator).unwrap();
 }
