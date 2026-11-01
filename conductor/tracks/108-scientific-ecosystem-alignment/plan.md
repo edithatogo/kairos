@@ -1,8 +1,8 @@
 # Plan
 
-- [ ] Reconcile current source, active ownership and reusable evidence.
+- [x] Reconcile current source, active ownership and reusable evidence.
 - [ ] Reconcile Track 107 and accepted source baseline with integrator before pin changes.
-- [ ] Qualify minimal core and optional Arrow/Polars features without changing simulation semantics.
+- [x] Qualify minimal core and optional Arrow/Polars features without changing simulation semantics.
 - [ ] Verify RNG replay, schema and buffer ownership against CareOps and Innovate consumers.
 - [ ] Write failing regression cases before implementation changes.
 - [ ] Run focused native and installed-consumer checks with resource receipts.
