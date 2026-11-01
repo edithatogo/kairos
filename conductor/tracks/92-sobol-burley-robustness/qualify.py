@@ -10,6 +10,8 @@ from scipy.stats import qmc
 
 root = Path(__file__).resolve().parents[3]
 track = Path(__file__).resolve().parent
+if len(sys.argv) != 2:
+    sys.exit(f"usage: {sys.argv[0]} <empty-scratch-directory>")
 scratch = Path(sys.argv[1]).resolve()
 if not __debug__:
     raise RuntimeError("qualification requires enabled assertions")
@@ -18,9 +20,17 @@ if any(scratch.iterdir()):
     raise ValueError("use an empty scratch directory")
 src = scratch / "src"
 src.mkdir()
-source = subprocess.check_output(["git", "show", "41e58e0c012e3f2253559cbefb239db71ee7486c:crates/kairo-ecs-cli/src/ensemble.rs"], cwd=root, text=True)
-generator = source[source.index("#[derive(Clone, Debug)]\npub struct SobolSequence"):source.index("/// Deterministic seeded stratified Latin")]
-(src / "generator.rs").write_text(generator)
+# Pin the historical generator so later main commits cannot change this receipt.
+revision = "41e58e0c012e3f2253559cbefb239db71ee7486c"
+source_path = "crates/kairo-ecs-cli/src/ensemble.rs"
+source = subprocess.check_output(["git", "show", f"{revision}:{source_path}"], cwd=root, text=True)
+_, start, tail = source.partition("#[derive(Clone, Debug)]\npub struct SobolSequence")
+if not start:
+    sys.exit(f"SobolSequence start missing in {revision}:{source_path}")
+body, end, _ = tail.partition("/// Deterministic seeded stratified Latin")
+if not end:
+    sys.exit(f"SobolSequence end missing in {revision}:{source_path}")
+(src / "generator.rs").write_text(start + body)
 (src / "main.rs").write_bytes((track / "probe.rs").read_bytes())
 (scratch / "Cargo.toml").write_text('[workspace]\n[package]\nname="kairos-track92-probe"\nversion="0.0.0"\nedition="2021"\nlicense="Apache-2.0"\npublish=false\n[dependencies]\nsobol_burley={version="=0.5.0",default-features=false}\n')
 (scratch / "Cargo.lock").write_bytes((track / "probe.lock").read_bytes())
