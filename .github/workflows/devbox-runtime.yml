@@ -27,3 +27,5 @@ jobs:
           devbox run -- bash -c 'python scripts/python_runtime.py'
           test -x .venv/bin/python
           devbox run -- bash -c 'python scripts/python_runtime.py'
+      - name: Verify repository runtime for subsequent jobs
+        run: python scripts/python_runtime.py --github
