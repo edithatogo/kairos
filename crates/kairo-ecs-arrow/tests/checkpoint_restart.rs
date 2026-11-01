@@ -224,3 +224,84 @@ fn adios2_checkpoint_contract_records_format_and_checksum() {
     assert_eq!(restored.final_tick, 30);
     assert_ne!(checkpoint.checksum, 0);
 }
+
+#[test]
+fn invalid_replacement_preserves_the_last_restorable_checkpoint() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("restart");
+    let batch = ParallelIoRecordBatch::from_dispatched("recovery", [event(1, 17, 0)]).unwrap();
+    let checkpoint =
+        CheckpointManifest::from_batch("known-good", CheckpointFormat::LocalContract, &batch)
+            .unwrap();
+    checkpoint.write_contract_file(&path).unwrap();
+    let mut invalid = checkpoint.clone();
+    invalid.checksum ^= 1;
+    assert!(invalid.write_contract_file(&path).is_err());
+    assert_eq!(
+        CheckpointManifest::read_contract_file(&path).unwrap(),
+        checkpoint
+    );
+}
+
+#[cfg(unix)]
+#[test]
+fn replacement_keeps_group_read_mode_and_the_previous_inode_intact() {
+    use std::os::unix::fs::PermissionsExt;
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("restart");
+    let previous = dir.path().join("previous");
+    let batch = ParallelIoRecordBatch::from_dispatched("mode", [event(1, 1, 0)]).unwrap();
+    let first =
+        CheckpointManifest::from_batch("first", CheckpointFormat::LocalContract, &batch).unwrap();
+    first.write_contract_file(&path).unwrap();
+    fs::set_permissions(&path, fs::Permissions::from_mode(0o640)).unwrap();
+    fs::hard_link(&path, &previous).unwrap();
+    let second =
+        CheckpointManifest::from_batch("second", CheckpointFormat::LocalContract, &batch).unwrap();
+    second.write_contract_file(&path).unwrap();
+    assert_eq!(
+        CheckpointManifest::read_contract_file(previous).unwrap(),
+        first
+    );
+    assert_eq!(
+        fs::metadata(&path).unwrap().permissions().mode() & 0o777,
+        0o640
+    );
+    assert_eq!(
+        CheckpointManifest::read_contract_file(path).unwrap(),
+        second
+    );
+}
+
+#[test]
+fn lossy_v1_candidates_cannot_displace_a_valid_generation() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("restart");
+    let batch =
+        ParallelIoRecordBatch::from_dispatched("recovery", [event(1, 17, 0), event(2, 18, 1)])
+            .unwrap();
+    let good =
+        CheckpointManifest::from_batch("good", CheckpointFormat::LocalContract, &batch).unwrap();
+    good.write_contract_file(&path).unwrap();
+
+    let mut multi = good.clone();
+    let bytes = multi.blocks[0].byte_len;
+    multi.blocks[0].row_count = 1;
+    multi.blocks[0].byte_len = 1;
+    multi.blocks.push(kairo_ecs_arrow::ContiguousBlock {
+        offset_bytes: 1,
+        byte_len: bytes - 1,
+        row_count: 1,
+    });
+    assert!(multi.validate_for_restore().is_ok());
+    assert!(multi.write_contract_file(&path).is_err());
+
+    let mut record = kairo_ecs_arrow::EventLogRecord::dispatched("recovery", event(3, 19, 2));
+    record.payload_ref = Some("payload\r".into());
+    let batch = ParallelIoRecordBatch::from_records(vec![record]).unwrap();
+    let lossy =
+        CheckpointManifest::from_batch("lossy", CheckpointFormat::LocalContract, &batch).unwrap();
+    assert!(lossy.validate_for_restore().is_ok());
+    assert!(lossy.write_contract_file(&path).is_err());
+    assert_eq!(CheckpointManifest::read_contract_file(path).unwrap(), good);
+}

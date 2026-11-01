@@ -14,6 +14,8 @@ Format:
 
 ## Unreleased
 
+- `kairo-ecs-arrow` stages checkpoint manifests and contiguous-block files before replacing a generation. It rejects v1 manifests that cannot be restored exactly.
+
 - Add a native workspace coverage regression gate using exact-base trusted artifacts, preserving the core coverage floor and replacing blocked Codecov project delivery.
 
 - Report coverage and required-check readback as pending while exact-head GitHub Actions are queued, including upstream jobs whose dependent checks do not exist yet; retain drift for completed failures.
