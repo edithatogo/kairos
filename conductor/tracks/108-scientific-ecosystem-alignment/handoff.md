@@ -83,3 +83,34 @@ Metadata, inventory, DAG and phase-gate validators.
 ## Known risks
 
 Track 108 remains Blocked; no runtime acceptance is implied.
+
+## Provider qualification and consumer readback — 1 November 2026
+
+Chat `01a19600-0a41-7ca2-9e4b-e27d7339c8e7` owns the bounded Track 108
+qualification packet in `/Users/doughnut/.codex/worktrees/track105-qualification/kairos`,
+branch `codex/track108-provider-qualification`. Scope is this track directory.
+Native scope is local Cargo provider tests and read-only downstream evidence.
+The existing integrator owns shared records, promotion and merges.
+
+The provider revision is `339aba155cc5ea7d393a5bd78a7947eddae26e03`.
+[Track 107 closeout PR #345](https://github.com/edithatogo/kairos/pull/345)
+records bounded CareOps acceptance of the byte-identical staged allocator.
+It was open at readback. Two installed consumer gates remain.
+
+| Consumer | Revision and evidence | Outstanding oracle |
+|---|---|---|
+| CareOps Sim | At `c8ac4171c8e9ff48852ccbcf8e7b77f0cdbaccba`, the `libs/kairos` gitlink selects `07410266bf54b6f73c59db2f8cbfbc5697c53734`. [R10.3 acceptance](https://github.com/edithatogo/careops-sim/pull/189) covers the bridge. The existing Kairos integrator recorded five differing seeded vectors on mainline. | Consumer owner must qualify candidate RNG trajectories, schema and Arrow ownership using installed CareOps workloads before any new pin. [CareOps #187](https://github.com/edithatogo/careops-sim/issues/187) |
+| Innovate | At `83d556ba4995fd5f5238f4953e9a8af34976f464`, seven Rust dependencies select Kairos `fae901558f07b7b717a676adbafbe2cdc78dea1c`. The adapter selects `kairos_contract_reference` even when the caller requests the promoted bridge. [Binding manifest](https://github.com/edithatogo/innovate/blob/83d556ba4995fd5f5238f4953e9a8af34976f464/bindings/rust/Cargo.toml#L29-L36) · [Adapter test](https://github.com/edithatogo/innovate/blob/83d556ba4995fd5f5238f4953e9a8af34976f464/tests/unit/test_kairos_adapter_contract.py#L110-L129) | Consumer owner must implement native dispatch and exercise replay and Arrow ownership through the installed adapter. [Innovate #556](https://github.com/edithatogo/innovate/issues/556) |
+
+Independent review confirmed these consumer boundaries. It also identified two ways
+a closure check could pass incorrectly: an optional backend accidentally enabled
+by default, and a WASM-only dependency invisible on the build host. The revised
+check exercises both default and no-default dependency graphs, resolves the
+WASM graph for wasm32-unknown-unknown, and rejects unexpected Arrow schema or
+Polars imports. Isolated manifest controls verified that adding Arrow to the
+default graph and Polars only to the WASM target both make the check fail.
+Run it from the repository root with
+`bash conductor/tracks/108-scientific-ecosystem-alignment/check-feature-closures.sh`.
+
+Next operations are provider packet integration and separate downstream adapter
+qualification. The shared registry remains Blocked.
