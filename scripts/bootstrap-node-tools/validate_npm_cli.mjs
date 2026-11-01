@@ -25,9 +25,9 @@ const LICENSE_SHA256 = 'ab868ad5a2ef5068560d9cd3b2180ec63c140bb4c5cae1ba779d300a
 const ARCHIVE_SHA256 = 'fbd36545bda6d9cd7da805cff6967f96ca2f7f9c59b45e79f97a3e129eec7485';
 const ARCHIVE_SRI = 'sha512-MtoYfkkiGt+8PL2ax7Gb7IQuIXfKIiR4Wde5aoC9h6BupT33oitaV4I+4DXVJqk1JLTVAQisOJrp9BVbQ5Ipsw==';
 const NPM_ARCHIVE_SHA256 = '98d27165e01199bbfd911e0f816ea44acb92024bfed91f1e79a0d9a880e1bd61';
-const NPM_PACKAGE_SHA256 = '4a63368079bd0ee0e126dc7788f21cfa51482e77cea262ddaa8c4f8a9d77744e';
+const NPM_PACKAGE_SHA256 = '829e78924774ccb80c8147b771592ae85284a6e0c23e2d3d3db2ba33c4cca5e1';
 const NPM_CLI_SHA256 = '8e5f6f3429f8cdbe693cdc29904e9d5a7b127a494bd15c804bd54c7403bfcbe7';
-const LOCK_SHA256 = '82f3ccd32f5e61dab421905e0cbd4c906212315aaa3b2cac12ffbcf3f9e71d6e';
+const LOCK_SHA256 = 'bda387a665fc76114e7ea5388fbe9f14743cbdda5d8d41fd15f0d7d87103bc05';
 const POSTCSS_PARSER = 'postcss-selector-parser';
 const POSTCSS_PARSER_VERSION = '7.1.7';
 const POSTCSS_PARSER_SRI = 'sha512-wWBro/7hJ40ye6TPiXkUQoXKCw23xSsjriUvqd7Uls9Sso3oLiON1flc18cCdnjgCRXw4fBVqUJJeOdDTh3P3g==';
@@ -156,6 +156,13 @@ function validateConsumers(root, npmPackagePath, mfhPackagePath) {
   const toolsDirectory = resolve(root, 'scripts/bootstrap-node-tools');
   const requireFromNpm = createRequire(npmPackagePath);
   const requireFromMfh = createRequire(mfhPackagePath);
+  const glob = requireFromNpm('glob');
+  const { minimatch } = requireFromNpm('minimatch');
+  assert.equal(requireFromNpm('glob/package.json').version, '14.0.3');
+  assert.equal(requireFromNpm('minimatch/package.json').version, '11.0.3');
+  assert.deepEqual(glob.globSync('package.jso?', { cwd: dirname(npmPackagePath) }), ['package.json']);
+  assert.equal(minimatch('lib/cli.js', 'lib/*.js'), true);
+
   const expectedIndex = resolve(toolsDirectory, 'node_modules/http-cache-semantics/index.js');
   for (const [name, consumer] of [['npm', requireFromNpm], ['make-fetch-happen', requireFromMfh]]) {
     const resolvedIndex = consumer.resolve('http-cache-semantics');
