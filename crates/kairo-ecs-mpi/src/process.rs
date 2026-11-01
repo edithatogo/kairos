@@ -698,3 +698,42 @@ fn handle_inbound_mpi_frame(
         _ => {}
     }
 }
+
+#[cfg(test)]
+mod connection_regressions {
+    use super::*;
+    #[test]
+    fn eof_after_partial_frame_preserves_prior_complete_frame() {
+        let transport = MpiProcessTransport::new(
+            0,
+            1,
+            vec![MpiRankAssignment {
+                rank: 0,
+                lp_id: LpId(0),
+            }],
+            &format!("partial_eof_{}", std::process::id()),
+        )
+        .unwrap();
+        let mut stream = TcpStream::connect(transport.bound_addr).unwrap();
+        // A complete barrier followed by a truncated frame and orderly EOF.
+        let mut wire = 13u32.to_be_bytes().to_vec();
+        wire.push(MSG_TYPE_BARRIER);
+        wire.extend_from_slice(&7i32.to_be_bytes());
+        wire.extend_from_slice(&42u64.to_be_bytes());
+        wire.extend_from_slice(&20u32.to_be_bytes());
+        wire.push(MSG_TYPE_EVENT);
+        stream.write_all(&wire).unwrap();
+        stream.shutdown(std::net::Shutdown::Write).unwrap();
+        let deadline = Instant::now() + Duration::from_secs(5);
+        while !transport.barrier_signals.lock().unwrap().contains(&(42, 7)) {
+            assert!(Instant::now() < deadline, "complete frame lost at EOF");
+            thread::yield_now();
+        }
+        assert!(transport
+            .inboxes
+            .lock()
+            .unwrap()
+            .values()
+            .all(VecDeque::is_empty));
+    }
+}

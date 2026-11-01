@@ -18,7 +18,7 @@
     "init_hook": [
       "echo 'KairoECS devbox environment ready'",
       "rustup component add clippy rustfmt >/dev/null 2>&1 || true",
-      "test -d .venv || uv venv --python "$(cat .python-version)" .venv",
+      "test -d .venv || uv venv --python \"$(cat .python-version)\" .venv",
       "source .venv/bin/activate",
       "python scripts/python_runtime.py"
     ],
