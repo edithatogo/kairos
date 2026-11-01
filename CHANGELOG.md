@@ -14,6 +14,12 @@ Format:
 
 ## Unreleased
 
+- `kairo-ecs-arrow` stages checkpoint manifests and contiguous-block files before replacing a generation. It rejects v1 manifests that cannot be restored exactly.
+
+- With the `numa` feature, `kairo-ecs-core` reads Linux node CPU lists and memory totals from sysfs, supports opt-in binding and exact restoration of the calling thread’s CPU mask, and reuses allocated event-arena chunks after reset.
+
+- The Rust workspace coverage gate now checks the actual tested merge parent and verifies the recovered mainline LCOV artifact against the last trusted report. The bootstrap npm CLI excludes vulnerable bundled glob dependencies.
+
 - Add a native workspace coverage regression gate using exact-base trusted artifacts, preserving the core coverage floor and replacing blocked Codecov project delivery.
 
 - Report coverage and required-check readback as pending while exact-head GitHub Actions are queued, including upstream jobs whose dependent checks do not exist yet; retain drift for completed failures.

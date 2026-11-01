@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { compareCoverage, coverageTotals, requireNativeBaselineJobs, selectBaselineArtifact, selectBaselineRun } from '../../scripts/validation/check-project-coverage.mjs';
+import { compareCoverage, coverageTotals, recoveryJobs, requireNativeBaselineJobs, selectBaselineArtifact, selectBaselineRun } from '../../scripts/validation/check-project-coverage.mjs';
 
 function report(hits) {
   return `SF:crates/example/src/lib.rs\n${hits.map((hit, i) => `DA:${i + 1},${hit}`).join('\n')}\nLF:${hits.length}\nLH:${hits.filter((hit) => hit > 0).length}\nend_of_record\n`;
@@ -40,6 +40,17 @@ for (const name of jobs.map(job => job.name)) {
     assert.throws(() => requireNativeBaselineJobs(jobs.map(job => job.name === name ? { ...job, ...change } : job), sha));
   }
   assert.throws(() => requireNativeBaselineJobs(jobs.filter(job => job.name !== name), sha));
+}
+const pinnedRun = { id: 41295426677, run_attempt: 1 };
+const pinnedJobs = jobs.map(job => ({ ...job, head_sha: '615b2e17cf97f39d1090b591061f193b2faf4cb3',
+  conclusion: ['Rust core quality', 'Rust project coverage'].includes(job.name) ? 'failure' : 'success' }));
+assert.equal(recoveryJobs(pinnedRun, pinnedJobs).length, 6);
+assert.throws(() => recoveryJobs({ ...pinnedRun, run_attempt: 2 }, pinnedJobs));
+assert.throws(() => recoveryJobs({ ...pinnedRun, id: 1 }, pinnedJobs));
+for (const job of pinnedJobs) {
+  assert.throws(() => recoveryJobs(pinnedRun, pinnedJobs.filter(other => other !== job)));
+  assert.throws(() => recoveryJobs(pinnedRun, [...pinnedJobs, job]));
+  assert.throws(() => recoveryJobs(pinnedRun, pinnedJobs.map(other => other === job ? { ...job, conclusion: 'skipped' } : other)));
 }
 const bootstrap = 'd1ab2e5d0f5d79e29dc54dea89b8fa2a2ad61482';
 assert.equal(requireNativeBaselineJobs(jobs.filter(job => job.name !== 'Rust project coverage')

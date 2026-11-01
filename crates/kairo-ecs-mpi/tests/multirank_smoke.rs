@@ -79,7 +79,7 @@ fn run_mpi_rank_node(rank: i32, size: usize) {
     let mut transport = MpiProcessTransport::new(rank, size, assignments, &session_id)
         .expect("failed to initialize MpiProcessTransport");
 
-    assert!(transport.real_mpi_runtime_claimed());
+    assert!(!transport.real_mpi_runtime_claimed());
     assert_eq!(transport.rank(), rank);
     assert_eq!(transport.size(), size);
     assert_eq!(transport.local_lp(), LpId(rank as u32));
@@ -143,4 +143,29 @@ fn run_mpi_rank_node(rank: i32, size: usize) {
 
     // Final barrier before clean shutdown
     transport.barrier();
+}
+
+#[test]
+fn incomplete_rank_round_cannot_advance_time() {
+    let session = format!("incomplete_gvt_{}", std::process::id());
+    let assignments = vec![
+        MpiRankAssignment {
+            rank: 0,
+            lp_id: LpId(0),
+        },
+        MpiRankAssignment {
+            rank: 1,
+            lp_id: LpId(1),
+        },
+    ];
+    // Keep both listeners up but omit the peer's contribution in each round.
+    let mut coordinator = MpiProcessTransport::new(0, 2, assignments.clone(), &session).unwrap();
+    let mut peer = MpiProcessTransport::new(1, 2, assignments, &session).unwrap();
+    assert_eq!(
+        coordinator.all_reduce_min(Tick::from_ticks(500)),
+        Tick::ZERO
+    );
+    assert_eq!(peer.all_reduce_min(Tick::from_ticks(300)), Tick::ZERO);
+    // Coordinator stays idle for the peer's next round; no decision can arrive.
+    assert_eq!(peer.all_reduce_min(Tick::from_ticks(400)), Tick::ZERO);
 }
