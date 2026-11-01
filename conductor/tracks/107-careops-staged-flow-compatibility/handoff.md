@@ -55,3 +55,13 @@ Candidate base is `d3a6d831ddbe5886078541468e3fbf08b6f8c4c9`, a Track106/SplitMi
 ## Source integration qualification — 29 October 2026
 
 The integration candidate now includes PR #334 runtime, tests and fixture alongside the immutable dependency frontier from PR #340. The earlier registration-only statement describes that historical packet. No CareOps pin or consumer acceptance is promoted. Source checks are being rerun against this combined tree; historical 899-test and baseline audit results remain historical. Track 107 remains Blocked pending its source integration and separate CareOps acceptance. Crates.io Arrow publication remains disabled independently.
+
+## Bounded consumer closeout — 1 November 2026
+
+Kairos PR #334 merged the reviewed staged allocation runtime at `8eafd77`. CareOps Sim PR #188 adopted bridge `0741026`, #189 accepted R10.3, and #190 closed R10.4. The staged implementation, DES export, compatibility test and fixture match the merged provider byte for byte. Mainline RNG adoption and Track 108 installed-consumer qualification remain separate.
+
+[Provider merge](https://github.com/edithatogo/kairos/pull/334) · [Consumer migration](https://github.com/edithatogo/careops-sim/pull/188) · [Exact-head acceptance](https://github.com/edithatogo/careops-sim/pull/189) · [Phase closeout](https://github.com/edithatogo/careops-sim/pull/190).
+
+Independent reviewer verified the four paths with git diff between 07410266bf54b6f73c59db2f8cbfbc5697c53734 and 8eafd77d6e337449658c6d6c5eed8331ef2dcc34. CareOps main gitlink libs/kairos resolves to that bridge. The accepted consumer run included 26 seeded parity checks. Retain the bridge branch for that consumer.
+
+Chat 01a19600-0a41-7ca2-9e4b-e27d7339c8e7 owns this Conductor closeout in /Users/doughnut/.codex/worktrees/track105-qualification/kairos on codex/track107-consumer-closeout. Native scope was read-only PR and gitlink verification. Next operation is protected integration of the scoped records.

@@ -6,4 +6,4 @@
 | Scheduler-driven release/promotion diverges from CareOps contract | Shared deterministic fixture and consumer-shaped conformance test | Open |
 | Candidate changes seeded outputs | Base on Track106/SplitMix lineage; prohibit RNG changes | Controlled |
 | Parent pin advances before acceptance | No parent pin paths owned; require separate R10.3 gates | Controlled |
-| Existing workspace audit blocks hosted closeout | zstd 0.13.3 and zstd-safe 7.3.0 enter through Polars 0.45.1; lock is unchanged from base. Keep dependency remediation in a separate reviewed task and do not allowlist advisories | Open |
+| Prior zstd audit blocker | Dependency frontier PR #340 qualified the closure consumed by #334 | Resolved for source integration |

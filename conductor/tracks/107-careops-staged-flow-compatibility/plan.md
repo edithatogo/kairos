@@ -11,3 +11,7 @@ No phase may claim complete from planned checks. Parent pin remains unchanged un
 ## Phase closeout gate
 
 Before advancing, run `$conductor-review`, Auto-apply accepted review fixes, then run `validate_conductor_phase_gates.ps1` and the owned checks in `test-matrix.md`. Synchronize `conductor/tracks.yaml`, `conductor/tracks.md`, `conductor/phase-closeout.yaml`, and `conductor/status.md`. Commit and push the cleaned slice, record its SHA/ref, and run `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`. Until then the phase remains pending and the next-phase decision is hold.
+
+## Completion — 1 November 2026
+
+Steps 1–5 are complete for the bounded experimental contract. See the [review and consumer disposition](handoff.md#bounded-consumer-closeout--1-november-2026).

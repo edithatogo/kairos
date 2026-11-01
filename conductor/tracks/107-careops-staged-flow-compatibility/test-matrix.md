@@ -26,3 +26,7 @@ Record executed commands and exit codes in `evidence/`; a pending command is not
 ## Combined frontier candidate — 29 October 2026
 
 The historical table above records the original lock. Focused DES/core tests, conformance runner self-tests, fixtures, compatibility pack and phase gates pass against the combined PR #334 / #340 source. The dependency-frontier audit has zero vulnerabilities; full exact-head hosted checks remain pending. No parent pin or CareOps consumer acceptance is inferred. Logs: `/tmp/kairos-pr334-*.log` in the integration lane.
+
+## Final evidence
+
+Kairos PR #334 merged the reviewed staged allocation runtime at `8eafd77`. CareOps Sim PR #188 adopted bridge `0741026`, #189 accepted R10.3, and #190 closed R10.4. The staged implementation, DES export, compatibility test and fixture match the merged provider byte for byte. Mainline RNG adoption and Track 108 installed-consumer qualification remain separate. See the [handoff](handoff.md#bounded-consumer-closeout--1-november-2026) for the exact revisions and downstream oracles.
