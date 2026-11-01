@@ -12,6 +12,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0
+        with:
+          python-version: "3.15.2"
       - name: Install Devbox 0.19.0
         run: |
           curl --fail --location https://github.com/jetify-com/devbox/releases/download/0.19.0/devbox_0.19.0_linux_amd64.tar.gz -o /tmp/devbox.tgz
