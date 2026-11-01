@@ -14,7 +14,7 @@ Format:
 
 ## Unreleased
 
-- CI workflow inventory includes native Devbox Python startup qualification.
+- CI and workflow-security inventories include native Devbox Python startup qualification.
 
 - Devbox creates its Python environment from the selected runtime profile; Cloud/HPC smoke now qualifies profile changes with the current container.
 

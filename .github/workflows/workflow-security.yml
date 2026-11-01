@@ -43,6 +43,7 @@ jobs:
           test -f .github/workflows/arrow-platform.yml
           test -f .github/workflows/ci-skip-guard.yml
           test -f .github/workflows/cloud-smoke.yml
+          test -f .github/workflows/devbox-runtime.yml
           test -f .github/workflows/code-health.yml
           test -f .github/workflows/codeql.yml
           test -f .github/workflows/conductor-assessment-reminder.yml
@@ -101,6 +102,7 @@ jobs:
           test -f .github/workflows/archive-supply-chain-main.yml
           test -f .github/workflows/ci-skip-guard.yml
           test -f .github/workflows/cloud-smoke.yml
+          test -f .github/workflows/devbox-runtime.yml
           test -f .github/workflows/code-health.yml
           test -f .github/workflows/codeql.yml
           test -f .github/workflows/conductor-assessment-reminder.yml
