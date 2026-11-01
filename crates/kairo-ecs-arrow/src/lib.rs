@@ -2161,13 +2161,12 @@ fn publish_checkpoint<T>(
     write: impl FnOnce(&mut std::fs::File) -> Result<T, ArrowError>,
 ) -> Result<T, ArrowError> {
     let existing = match std::fs::symlink_metadata(dest) {
-        Ok(meta) if meta.is_file() => {
+        Ok(meta) if meta.is_file() => Some(
             std::fs::OpenOptions::new()
                 .write(true)
                 .open(dest)
-                .map_err(|e| ArrowError::Io(e.to_string()))?;
-            Some(meta)
-        }
+                .map_err(|e| ArrowError::Io(e.to_string()))?,
+        ),
         Ok(_) => {
             return Err(ArrowError::InvalidArgument(
                 "checkpoint target must be a regular file",
@@ -2179,8 +2178,18 @@ fn publish_checkpoint<T>(
     publish_staged(dest, true, |file| {
         let result = write(file)?;
         #[cfg(unix)]
-        if let Some(meta) = existing {
+        if let Some(original) = existing {
             use std::os::unix::fs::{MetadataExt, PermissionsExt};
+            let meta = original
+                .metadata()
+                .map_err(|e| ArrowError::Io(e.to_string()))?;
+            let current =
+                std::fs::symlink_metadata(dest).map_err(|e| ArrowError::Io(e.to_string()))?;
+            if (current.dev(), current.ino()) != (meta.dev(), meta.ino()) {
+                return Err(ArrowError::InvalidArgument(
+                    "checkpoint target changed while staging",
+                ));
+            }
             let stage = file.metadata().map_err(|e| ArrowError::Io(e.to_string()))?;
             if stage.uid() != meta.uid() || stage.gid() != meta.gid() {
                 return Err(ArrowError::InvalidArgument(

@@ -305,3 +305,23 @@ fn lossy_v1_candidates_cannot_displace_a_valid_generation() {
     assert!(lossy.write_contract_file(&path).is_err());
     assert_eq!(CheckpointManifest::read_contract_file(path).unwrap(), good);
 }
+
+#[test]
+fn trusted_digest_detects_upper_tick_corruption_in_legacy_v1() {
+    let batch = ParallelIoRecordBatch::from_dispatched("digest", [event(1, 17, 0)]).unwrap();
+    let checkpoint =
+        CheckpointManifest::from_batch("previous", CheckpointFormat::LocalContract, &batch)
+            .unwrap();
+    let bytes = checkpoint.to_contract_bytes();
+    let trusted = kairo_ecs_arrow::compute_sha256(&bytes);
+    let changed_tick = 17_u128 + (1_u128 << 64);
+    let tampered = String::from_utf8(bytes)
+        .unwrap()
+        .replace("\t17\t", &format!("\t{changed_tick}\t"))
+        .into_bytes();
+    // Existing v1 readers accept legacy checksums. Authenticate the same bytes
+    // that will be parsed when the storage contract requires full integrity.
+    let legacy = CheckpointManifest::from_contract_bytes(&tampered).unwrap();
+    assert_eq!(legacy.records[0].time_ticks, changed_tick);
+    assert_ne!(kairo_ecs_arrow::compute_sha256(&tampered), trusted);
+}

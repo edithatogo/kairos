@@ -44,3 +44,8 @@ Before Track 51 can support production parallel filesystem claims, replace `cond
 - expected and observed throughput or parity thresholds.
 
 Local fallback evidence can remain useful for regression detection, but it is not a substitute for live filesystem proof.
+
+For v1 archives with a trusted SHA-256 receipt, read the file once, compare
+`compute_sha256(&bytes)` against the separately accepted digest, and only on
+a match pass those same bytes to `CheckpointManifest::from_contract_bytes`.
+Reopening the path between verification and parsing can select a different generation.

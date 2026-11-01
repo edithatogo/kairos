@@ -182,3 +182,11 @@ Raw logs are under the recorded worktree .venv; independently read files are in 
 - `interop-reader.py` — d3d720d210f2c8e6cc8aaa4ac6a3fa23b4028c885821c7500f2f1d032f8d9c9d
 - `interop-producer.rs` — 2b4f4c06ce5d284b68552fc459a97c976145ddf6f6f515d07a6193fdf1d7fd5d
 - `Cargo.lock` — f8d792f02936075ed3ffedb0688d1bc26c149fe85d266a56f97c1358c9928c39
+
+Hosted review confirmed the legacy v1 high-tick checksum collision. Changing
+that algorithm in place would invalidate existing v1 archives. A regression
+reproduces the collision and verifies that the trusted full-byte SHA-256 oracle
+detects it. Unix replacement now retains the opened original file through
+staging, reads permissions from that descriptor and checks its device/inode
+against the current directory entry. This detects target replacement during
+staging; it is not a lock against an adversarial directory writer.
