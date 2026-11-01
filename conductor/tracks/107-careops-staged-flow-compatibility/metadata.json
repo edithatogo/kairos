@@ -2,14 +2,17 @@
   "id": 107,
   "slug": "careops-staged-flow-compatibility",
   "title": "CareOps staged allocation flow compatibility",
-  "status": "blocked",
-  "accepted_phases": [],
+  "status": "complete",
+  "accepted_phases": [
+    "1"
+  ],
   "source_pr": "https://github.com/edithatogo/kairos/pull/334",
-  "source_head": "56ac7691946d8cfc08f4d601e91ba4ea5547e886",
-  "blocker": "Separate CareOps consumer acceptance and parent pin migration remain pending. Combined runtime/dependency source is governed by PR #334 exact-head checks; Arrow crates.io publication remains separately disabled.",
+  "source_head": "cdbc8f2c43373d7ad930f600ccb2e08ffd3ba93b",
   "base": "797e969b4a3cd3605a617a32d0134d0a093aa06a",
   "parent_track": "CareOps R10.3",
   "release_stage": "alpha",
   "owner": "des-api-agent",
-  "review": "reviewer-agent"
+  "review": "reviewer-agent",
+  "source_merge": "8eafd77d6e337449658c6d6c5eed8331ef2dcc34",
+  "consumer_pin": "07410266bf54b6f73c59db2f8cbfbc5697c53734"
 }
