@@ -329,3 +329,34 @@ With Track 49's implementation of real socket-based gRPC transport and real mult
 3. **Downstream Handoff**:
    - Track 49 has consumed the optimistic message, ancestry frame, authority epoch, and anti-message contracts.
    - Track 55 consumes the combined optimistic-vs-conservative benchmark harness (`benches/pdes/time_warp.rs`) and scaling metrics for weak and strong scaling certification.
+
+## Cancellation retention review — 1 November 2026
+
+Chat `01a19600-0a41-7ca2-9e4b-e27d7339c8e7` owns this local runtime fix,
+regression and track handoff in `/Users/doughnut/.codex/worktrees/track48-rollback/kairos`,
+branch `codex/track48-gvt-retirement`, based on `339aba1`. The native scope
+is local PDES testing. Track 49 retains transport and cluster acceptance.
+
+The independent reviewer identified that canceled IDs accumulated below global
+virtual time even though both positive and anti-messages there are rejected.
+A regression failed on the original implementation. Fossil collection now retains
+cancellations at or above the floor. Review verified duplicate handling, the
+inclusive boundary, future IDs and side-effect-free rejection of GVT regression.
+
+On Darwin arm64 with Rust/Cargo 1.99.1, `cargo test --offline --locked -p
+kairo-ecs-pdes --all-features` passed 168 tests. `cargo fmt --all --check`
+and `cargo clippy --offline --locked -p kairo-ecs-pdes --all-targets --all-features
+-- -D warnings` exited zero. Deterministic regression input: anti-message ticks
+4, 5, 5, 6 followed by GVT 5 and rejected GVT 4. Raw worktree logs and SHA-256:
+
+- `.venv/red48` — cdfdfd4fbd8e1c9a30be67f14aa3f2319e3f906d6ac549759aa0322e7f897592
+- `.venv/green48` — 09346da03a18a4e247d720bd2913e8311fb729d3a29451c90a195e44347922ae
+- `.venv/clippy48` — 86abc0708d812547a7621a9e167ef3f26301aa4d627205c6312d33407ba8d347
+
+**CAP-48.1 remains open.** Local Open MPI 5.0.11 is present. The local qsub
+wrapper starts a Docker container, the repository has no registered self-hosted
+runner at readback, and the Track 49 live-HPC manifest is a template. Local
+multirank and loopback smoke cannot exercise distinct-host worker failure.
+The Track 49 host owner must supply a two-host allocation and run the delayed,
+duplicated and worker-restart workload against the deterministic single-host
+baseline before this capability can close.

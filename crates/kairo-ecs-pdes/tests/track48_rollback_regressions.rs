@@ -163,3 +163,50 @@ fn checkpoint_restore_does_not_revive_a_stale_initial_token() {
         "restoring an older cell must issue a new validity stamp"
     );
 }
+
+#[test]
+fn fossil_collection_retires_only_cancellations_strictly_before_gvt() {
+    let mut runtime = TimeWarpRuntime::new();
+    let anti = |tick| event(tick, 1, TimeWarpMessageKind::Anti, 0);
+    for tick in [4, 5, 5, 6] {
+        runtime.process_event(anti(tick)).unwrap();
+    }
+    assert_eq!(runtime.overhead_metrics().canceled_event_ids, 3);
+
+    let floor = SimTime::from_ticks(5);
+    runtime.fossil_collect(floor).unwrap();
+    assert!(!runtime.is_canceled(anti(4).id));
+    for kind in [TimeWarpMessageKind::Positive, TimeWarpMessageKind::Anti] {
+        let late = event(4, 1, kind, 1);
+        assert_eq!(
+            runtime.process_event(late.clone()),
+            Err(TimeWarpError::EventBeforeGvt {
+                event_id: late.id,
+                gvt: floor
+            })
+        );
+    }
+    assert!(matches!(
+        runtime.fossil_collect(SimTime::from_ticks(4)),
+        Err(TimeWarpError::GvtRegression { .. })
+    ));
+    assert_eq!(runtime.overhead_metrics().canceled_event_ids, 2);
+    assert_eq!(runtime.gvt(), floor);
+    for tick in [5, 6] {
+        let positive = event(tick, 1, TimeWarpMessageKind::Positive, 10);
+        let id = positive.id;
+        let report = runtime.process_event(positive).unwrap();
+        assert_eq!(report.canceled_events, vec![id]);
+        assert_eq!(report.cancellation_metadata.len(), 1);
+        assert_eq!(
+            report.cancellation_metadata[0].reason,
+            kairo_ecs_pdes::TimeWarpCancellationReason::PositiveArrivedAfterAntiMessage
+        );
+        assert!(runtime.is_canceled(id));
+    }
+    assert_eq!(runtime.executed_len(), 0);
+    assert_eq!(
+        runtime.component_value(LpId(1), EntityId::new(48, 0), 0),
+        None
+    );
+}
