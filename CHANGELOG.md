@@ -14,6 +14,8 @@ Format:
 
 ## Unreleased
 
+- CI workflow inventory includes native Devbox Python startup qualification.
+
 - Devbox creates its Python environment from the selected runtime profile; Cloud/HPC smoke now qualifies profile changes with the current container.
 
 - `kairo-ecs-arrow` stages checkpoint manifests and contiguous-block files before replacing a generation. It rejects v1 manifests that cannot be restored exactly.
