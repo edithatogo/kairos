@@ -141,7 +141,18 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           COVERAGE_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
-        run: node scripts/validation/check-project-coverage.mjs lcov.info
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_EVENT_NAME" == pull_request ]]; then
+            # Read the immutable commit headers even in a shallow checkout.
+            test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+            mapfile -t parents < <(git cat-file -p HEAD | sed -n '/^$/q; s/^parent //p')
+            test "${#parents[@]}" -eq 2
+            test "${parents[1]}" = "$PR_HEAD_SHA"
+            export COVERAGE_BASE_SHA="${parents[0]}"
+          fi
+          node scripts/validation/check-project-coverage.mjs lcov.info
       - name: Preserve project coverage decision
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
