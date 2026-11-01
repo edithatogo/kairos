@@ -61,6 +61,8 @@ phase begins:
 
 Repository scope: **kairos** and its **careops-sim** consumer (`/Users/doughnut/Documents/careops-sim`), not the separate **careops** repository. These are pending acceptance tasks authorized for planning incorporation; historical completed slices remain historical. Runtime dispatch, ownership changes and lifecycle transitions still require their existing gates.
 
-- [ ] CAP-50.1: Implement real Linux topology discovery and affinity with restoration/error tests on the NAS; synthetic environment-derived topology remains labelled. A one-NUMA-node host does not close multi-node locality/performance gates.
+- [x] CAP-50.1: Implement real Linux topology discovery and affinity with restoration/error tests on the NAS; synthetic environment-derived topology remains labelled. A one-NUMA-node host does not close multi-node locality/performance gates.
 
 Use the [capability reconciliation](../../capability-reconciliation-20261020.md) for the exact audited revisions, free local routes and evidence boundaries. Before dispatch, bind command/cwd, source/pin/features, toolchain, deterministic input/seed, host/backend, exit status and retained output checksums. A structural validator pass cannot close a runtime task.
+
+CAP-50.1 native evidence is recorded in the [Linux qualification handoff](handoff.md#linux-topology-affinity-and-arena-reuse--1-november-2026). Multi-node locality and scaling remain open.

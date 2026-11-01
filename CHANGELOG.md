@@ -14,6 +14,8 @@ Format:
 
 ## Unreleased
 
+- With the `numa` feature, `kairo-ecs-core` reads Linux node CPU lists and memory totals from sysfs, supports opt-in binding and exact restoration of the calling thread’s CPU mask, and reuses allocated event-arena chunks after reset.
+
 - The Rust workspace coverage gate now checks the actual tested merge parent and verifies the recovered mainline LCOV artifact against the last trusted report. The bootstrap npm CLI excludes vulnerable bundled glob dependencies.
 
 - Add a native workspace coverage regression gate using exact-base trusted artifacts, preserving the core coverage floor and replacing blocked Codecov project delivery.

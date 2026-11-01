@@ -26,29 +26,30 @@ match topology.support {
 ```
 
 ### Supported Discovery Modes
-1. **Linux sysfs (`/sys/devices/system/node`)**: When running on Linux hosts with NUMA hardware, the runtime scans nodes, active cores, and memory capacity directly from the kernel filesystem.
-2. **Environment Variable Override (`KAIRO_NUMA_NODES`)**: For HPC batch runners (Slurm/PBS) or containerized environments, setting `KAIRO_NUMA_NODES=<count>` provides synthetic NUMA domain definitions matching the job cgroup allocation.
-3. **Typed Fallback**: On platforms without NUMA support (such as macOS, development laptops, or non-NUMA VMs), the discovery function returns `NumaSupport::Unsupported` with typed `NumaError::UnsupportedHost`, preventing silent misconfiguration or panics.
+1. **Synthetic override.** An explicit `KAIRO_NUMA_NODES` count from 1 through 65536 takes precedence. The generated CPU IDs and memory sizes are synthetic.
+2. **Linux sysfs.** The runtime reads host node IDs, logical CPU lists and available node memory totals from `/sys/devices/system/node`. A node can have memory but no CPUs. A thread's permitted CPU set can be narrower than the host topology.
+3. **Fallback.** If the runtime cannot discover a topology, it returns `NumaSupport::Unsupported`.
 
-## CPU Core Affinity
+## CPU affinity
 
-CPU affinity is modeled via `AffinityBindingPlan`:
+On Linux, binding uses `/usr/bin/taskset` and verifies the result against
+`/proc/thread-self/status`. Thread ID zero selects the calling thread. An explicit
+ID must match that same thread. Select a CPU in the thread's current allowed mask.
 
 ```rust
-use kairo_ecs_core::{AffinityBindingPlan, AffinityAction, NumaError};
+use kairo_ecs_core::{AffinityBindingPlan, NumaError};
 
-// Affinity requires explicit opt_in = true
-let plan = AffinityBindingPlan::new(thread_id, core_id, true)?;
-
-// Plan provides an exact reversal plan for cleanup
-let reversal = plan.reversal();
-assert_eq!(reversal.action, AffinityAction::RestorePrevious);
-
-// Applying affinity is safe and returns typed unsupported status on non-supported platforms
-let result = plan.apply();
+fn run_on_cpu(cpu: u32, work: impl FnOnce() -> Result<(), NumaError>) -> Result<(), NumaError> {
+    let plan = AffinityBindingPlan::new(0, cpu, true)?;
+    plan.apply()?;
+    let result = work();
+    plan.revert()?;
+    result
+}
 ```
 
-Affinity bindings are:
-- **Opt-in**: Setting `opt_in = false` fails at creation time with `NumaError::InvalidAffinity`.
-- **Observable**: Plans expose target thread, target core, and scheduled action.
-- **Reversible**: Every plan generates a paired `reversal()` plan restoring previous thread state.
+Restore on the same thread before returning, including error paths. Callers whose
+work can unwind must arrange cleanup during unwinding. Dropping a plan does
+not restore the mask. A second bind is rejected while restoration is pending.
+If the kernel restricts the mask during a binding, exact restoration can fail;
+the original mask remains available for a subsequent restoration attempt.
