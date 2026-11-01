@@ -920,6 +920,7 @@ impl TimeWarpRuntime {
         let oldest_retained_tick = retained.iter().map(|entry| entry.event.id.tick).min();
         let retained_events = retained.len();
         self.executed = retained;
+        self.canceled.retain(|id| id.tick >= gvt);
         let collected_state_checkpoints = self.prune_checkpoints_before_gvt(gvt);
         self.metrics.fossil_collected_events_total = self
             .metrics
@@ -951,6 +952,7 @@ impl TimeWarpRuntime {
             .map(|cell| cell.value)
     }
 
+    /// Returns whether a cancellation is retained at or above the current GVT.
     pub fn is_canceled(&self, event_id: TimeWarpEventId) -> bool {
         self.canceled.contains(&event_id)
     }
