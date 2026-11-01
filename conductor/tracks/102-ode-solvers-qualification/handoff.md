@@ -98,8 +98,66 @@ Native scope: local numerical checks and read-only registry/consumer inspection.
 The integrator retains shared registry and phase acceptance. Next operation
 is protected integration.
 
-Local receipts in /Volumes/PortableSSD/codex-builds/kairos-track102-SPn7jj:
+Receipt SHA-256 values (the Rust caller and output are reproduced below):
 
 - `probe.rs` — e8cdd6c6f7225933b871ee38f680cb5c3d8e2fafd09bb7cb086dbc6b03cd2d88
 - `probe.log` — 8add28ea1862f1a385a2cc8809dfb2b35d0422cdac21edd880b097460b4f24af
 - `reference.log` — ca1f240b9fbaa9f76ccb247cd0c3202707ec6f6043fed203815909c7a7c068e2
+
+
+### Portable reproduction
+
+Save the following caller as `probe.rs` in a scratch directory. From an isolated checkout of the baseline revision, use the repository toolchain to build and run it:
+
+```sh
+cargo build --locked -p kairo-ecs-game-theory --lib --message-format=json > build.json
+lib=$(jq -r 'select(.reason=="compiler-artifact" and .target.name=="kairo_ecs_game_theory") | .filenames[] | select(endswith(".rlib"))' build.json)
+rustc --edition 2021 --extern "kairo_ecs_game_theory=$lib" -L "dependency=$(dirname "$lib")/deps" /path/to/probe.rs -o /path/to/probe
+/path/to/probe
+```
+
+
+```rust
+use kairo_ecs_game_theory::normal_form::ReplicatorDynamics as R;
+fn main() {
+    // Fitness [1,0] gives dx/dt = x(1-x); x(0)=1/4.
+    let exact = 1.0 / (1.0 + 3.0 * (-1.0_f64).exp());
+    let mut prev = None;
+    for n in [8,16,32,64,128] {
+        let mut state = vec![0.25, 0.75];
+        for _ in 0..n {
+            state = R::step_continuous_rk4(&state,&[1.0,0.0],1.0/f64::from(n));
+            assert!(state.iter().all(|&v| (0.0..=1.0).contains(&v)));
+            assert!((state.iter().sum::<f64>()-1.0).abs()<1e-14);
+        }
+        let err=(state[0]-exact).abs();
+        if let Some(previous) = prev {
+            let ratio: f64 = previous/err;
+            assert!((1.8..2.2).contains(&ratio), "observed order changed");
+            println!("{n} {err:.12} {ratio:.6}");
+        } else { println!("{n} {err:.12} -"); }
+        prev=Some(err);
+    }
+    let projected=R::step_continuous_rk4(&[0.25,0.75], &[1.0,0.0], 8.0);
+    assert_eq!(projected,[1.0,0.0]);
+    println!("oversized step {projected:?}; exact {:.12}",1.0/(1.0+3.0*(-8.0_f64).exp()));
+    let mut state=vec![0.25,0.75];
+    for fitness in [[1.0,0.0],[0.0,1.0]] {
+        for _ in 0..64 {state=R::step_continuous_rk4(&state,&fitness,1.0/128.0);}
+    }
+    println!("fitness switches at t=0.5, final {:.12}, exact 0.25",state[0]);
+    assert!((state[0]-0.25).abs()<0.001);
+}
+```
+
+Expected output:
+
+```text
+8 0.004536182918 -
+16 0.002246699108 2.019043
+32 0.001117592975 2.010302
+64 0.000557305770 2.005350
+128 0.000278273729 2.002725
+oversized step [1.0, 0.0]; exact 0.998994623915
+fitness switches at t=0.5, final 0.249707779377, exact 0.25
+```
