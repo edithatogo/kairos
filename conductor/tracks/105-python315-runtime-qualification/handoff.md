@@ -241,3 +241,43 @@ baseline evidence only. The toolchain qualification lane on
 Before accepting clean-shell startup, that lane must reconcile the hook with
 .python-version and demonstrate the selected interpreter and prefix from an
 absent environment. This evidence reconciliation closes neither open gate.
+
+## Devbox startup reconciliation — 1 November 2026
+
+The integrator compared the toolchain qualification worktree's uncommitted
+Devbox edit with main. Its uv selection is already integrated. Its 3.15.1
+literal is superseded by the selected .python-version profile. The isolated
+integration changes only the creation command to read that profile, retaining
+the existing environment and version/prefix guard.
+
+A clean env -i bash --noprofile --norc shell with an absent .venv created
+CPython 3.15.2 and scripts/python_runtime.py verified executable and prefix
+/private/tmp/kairos105.ActDH3/.venv. Devbox itself is unavailable locally,
+so this proves the Python initialization commands. Full Devbox/Nix startup
+still requires a suitable host. The toolchain worktree remains privately owned.
+
+Review checked quoting, profile consistency, existing-environment preservation
+and the actual runtime guard. Current container execution is pending hosted
+cloud-smoke. Local Docker is unavailable in PATH or the standard app locations.
+
+## Native Devbox and container qualification — 1 November 2026
+
+Devbox 0.19.0 on hosted Ubuntu passed native startup in run 41312008022:
+absent .venv creation, Python 3.15.2 with repository-local executable/prefix,
+then repeat startup preserving that environment. The host must provision
+the selected interpreter: Nix's uv could not download 3.15.2 by itself.
+The workflow uses setup-python 3.15.2 for that prerequisite. Review fixed
+JSON quoting, portable POSIX activation and the hosted guard requirement.
+The downloaded Devbox archive is pinned to its published SHA-256.
+
+Cloud/HPC run 41310735617 built the current Dockerfile, executed the actual
+container interpreter and verified Python 3.15.2 and /work/.venv, followed
+by CLI smoke. Subsequent current-head runs retain those gates.
+
+Coverage readback identified process.rs lines 161,162,195,214, all MPI TCP
+EOF/truncated-frame paths. The new complete-barrier-plus-truncated-frame
+regression passed locally with the locked all-feature MPI library selector.
+It asserts delivery of the preceding complete frame and absence of events.
+Hosted full-workspace coverage remains the acceptance oracle.
+Track-wide inventory and environment handover gates remain governed by the
+existing plan; these native startup receipts supersede their pending entries.
