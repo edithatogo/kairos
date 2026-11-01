@@ -110,12 +110,42 @@ function gh(path, binary = false) {
   return execFileSync('gh', ['api', path], { encoding: binary ? undefined : 'utf8', maxBuffer: MAX_BYTES });
 }
 
+const recoveryBase = {
+  sha: '615b2e17cf97f39d1090b591061f193b2faf4cb3', runId: 41295426677, artifactId: 13079485453,
+  archiveDigest: 'sha256:54862f05e2d647031e6c18c887e3c016b18d1e1251894704915d692c273e6dcf',
+};
+const recoveryAnchor = {
+  sha: '22087510588589a8823743f7736aaf328318e1d8', runId: 41287167761, artifactId: 13075733686,
+  archiveDigest: 'sha256:a1d6876274277f0338339366b0e004bd1b5434cb8949d373f0b5b7c140097ebc',
+};
+
+function requirePinnedReport(report, pin) {
+  if (report.runId !== pin.runId || report.artifactId !== pin.artifactId || report.archiveDigest !== pin.archiveDigest) {
+    throw new Error('Recovery coverage artifact identity mismatch');
+  }
+}
+
+export function recoveryJobs(run, jobs) {
+  // These two downstream jobs failed on missing parent evidence. All report
+  // producers must still have succeeded on the pinned protected-main attempt.
+  if (run.id !== recoveryBase.runId || run.run_attempt !== 1) throw new Error('Unexpected recovery run');
+  return ['Classify Rust changes', 'Rust 1.99.1 verification', 'Rust 1.99.1 workspace checks',
+    'Rust 1.99.1 WebAssembly check', 'Rust project coverage', 'Rust core quality'].map(name => {
+    const matches = jobs.filter(job => job.name === name);
+    const expected = ['Rust project coverage', 'Rust core quality'].includes(name) ? 'failure' : 'success';
+    if (matches.length !== 1 || matches[0].head_sha !== recoveryBase.sha || matches[0].status !== 'completed'
+        || matches[0].conclusion !== expected) throw new Error('Unexpected recovery job: ' + name);
+    return { name, conclusion: expected, headSha: recoveryBase.sha };
+  });
+}
+
 export function fetchBaseline(repository, sha) {
   if (!/^[\w.-]+\/[\w.-]+$/.test(repository) || !/^[a-f0-9]{40}$/.test(sha)) throw new Error('Invalid repository/base SHA');
   const data = JSON.parse(gh(`repos/${repository}/actions/workflows/ci-core.yml/runs?event=push&branch=main&head_sha=${sha}&status=completed&per_page=100`));
   const run = selectBaselineRun(data.workflow_runs, repository, sha);
   const jobListing = JSON.parse(gh(`repos/${repository}/actions/runs/${run.id}/jobs?filter=latest&per_page=100`));
-  const nativeJobs = requireNativeBaselineJobs(jobListing.jobs, sha);
+  const recovering = repository === 'edithatogo/kairos' && sha === recoveryBase.sha;
+  const nativeJobs = recovering ? recoveryJobs(run, jobListing.jobs) : requireNativeBaselineJobs(jobListing.jobs, sha);
   const listing = JSON.parse(gh(`repos/${repository}/actions/runs/${run.id}/artifacts?per_page=100`));
   const artifact = selectBaselineArtifact(listing.artifacts, run, sha);
   const archive = gh(`repos/${repository}/actions/artifacts/${artifact.id}/zip`, true);
@@ -127,7 +157,16 @@ export function fetchBaseline(repository, sha) {
     const entries = execFileSync('unzip', ['-Z1', zip], { encoding: 'utf8', maxBuffer: MAX_BYTES }).trim().split(/\r?\n/);
     if (entries.length !== 1 || entries[0] !== 'lcov.info') throw new Error('Unexpected baseline archive contents');
     const text = execFileSync('unzip', ['-p', zip, 'lcov.info'], { encoding: 'utf8', maxBuffer: MAX_BYTES });
-    return { text, runId: run.id, artifactId: artifact.id, archiveDigest: artifact.digest, nativeJobs };
+    const report = { text, runId: run.id, artifactId: artifact.id, archiveDigest: artifact.digest, nativeJobs };
+    if (recovering) {
+      requirePinnedReport(report, recoveryBase);
+      const anchor = fetchBaseline(repository, recoveryAnchor.sha);
+      requirePinnedReport(anchor, recoveryAnchor);
+      const comparison = compareCoverage(anchor.text, text);
+      if (comparison.status !== 'pass') throw new Error('Exact base regressed against trusted recovery anchor');
+      report.recovery = { anchor: recoveryAnchor, ...comparison };
+    }
+    return report;
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }
@@ -143,7 +182,7 @@ function main() {
   const receipt = { schemaVersion: 1, repository, baseSha, candidateSha,
     baselineRunId: baseline.runId, baselineArtifactId: baseline.artifactId,
     baselineArchiveDigest: baseline.archiveDigest,
-    baselineNativeJobs: baseline.nativeJobs,
+    baselineNativeJobs: baseline.nativeJobs, recovery: baseline.recovery,
     baseReportSha256: createHash('sha256').update(baseline.text).digest('hex'),
     candidateReportSha256: createHash('sha256').update(candidateText).digest('hex'),
     scope: 'complete workspace --all-features LCOV (rust-core upload flag)',
