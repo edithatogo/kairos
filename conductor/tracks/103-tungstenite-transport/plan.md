@@ -1,13 +1,13 @@
 # Plan: tungstenite conditional
 
-All implementation pending. Conditional/evaluation tracks may complete only a no-go report without dependency installation; do not mark adoption tasks done for that outcome.
+Phase 0 reached the live-consumer entry condition. See the [decision and baseline](handoff.md#phase-0-decision--1-november-2026). Conditional/evaluation tracks may complete only a no-go report without dependency installation; do not mark adoption tasks done for that outcome.
 
 ## Phase 0 — Evidence and value gate
 
-- [ ] Task 0.1: Verify local/external prerequisites, current ownership, actual consumer and source target; reconcile already replaced paths before starting.
-- [ ] Task 0.2: Qualify exact release/features, maintenance/security/licence/MSRV/targets; capture baseline code, failures, costs and independent behavioural fixtures.
-- [ ] Task 0.3: Record adopt/defer/reject against value policy, freeze numerical/performance budgets and exact test commands; add failing independent tests before any replacement. Stop on the specified no-go condition.
-- [ ] Task 0.4: Conductor — review and verify phase (workflow.md); record accepted fixes, no-go/remaining blockers and explicit next-phase decision.
+- [x] Task 0.1: Verify local/external prerequisites, current ownership, actual consumer and source target; reconcile already replaced paths before starting.
+- [ ] Task 0.2 (conditional on a demonstrated live consumer): Qualify exact release/features, maintenance/security/licence/MSRV/targets; capture baseline code, failures, costs and independent behavioural fixtures.
+- [x] Task 0.3 (no-go path): Defer the dependency before building a transport. Runtime, protocol, cost and security qualification remain mandatory if reopened.
+- [x] Task 0.4: Review distinguished the exported dashboard handler from an installed socket consumer and tested gap semantics separately from duplicate rejection. The linked receipt records the no-go decision.
 
 ## Phase 1 — Bounded replacement if justified
 
