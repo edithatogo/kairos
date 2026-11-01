@@ -14,6 +14,8 @@ Format:
 
 ## Unreleased
 
+- Devbox creates its Python environment from the selected runtime profile; Cloud/HPC smoke now qualifies profile changes with the current container.
+
 - `kairo-ecs-arrow` stages checkpoint manifests and contiguous-block files before replacing a generation. It rejects v1 manifests that cannot be restored exactly.
 
 - With the `numa` feature, `kairo-ecs-core` reads Linux node CPU lists and memory totals from sysfs, supports opt-in binding and exact restoration of the calling thread’s CPU mask, and reuses allocated event-arena chunks after reset.
