@@ -27,7 +27,7 @@ fn oracle_tokio_transport_clean_shutdown_and_cancellation() {
     let transport =
         GrpcSocketTransport::bind(LpId(1), addr, vec![], config).expect("bind transport");
     assert_eq!(transport.bound_addr().port(), port);
-    assert!(transport.real_grpc_runtime_claimed());
+    assert!(!transport.real_grpc_runtime_claimed());
 
     // Measure drop latency to ensure immediate Tokio watch cancellation without hang
     let start = Instant::now();
@@ -398,4 +398,21 @@ fn oracle_tokio_transport_deterministic_handoff_ordering_despite_io_jitter() {
             panic!("expected event message at index {i}");
         }
     }
+}
+
+#[test]
+fn incomplete_socket_round_cannot_advance_time() {
+    let addr = "127.0.0.1:0".parse().unwrap();
+    let silent =
+        GrpcSocketTransport::bind(LpId(2), addr, vec![], GrpcTransportConfig::default()).unwrap();
+    let peers = vec![GrpcPeer {
+        lp_id: LpId(2),
+        endpoint: format!("http://{}", silent.bound_addr()),
+    }];
+    let config = GrpcTransportConfig {
+        request_timeout: Duration::from_millis(100),
+        ..GrpcTransportConfig::default()
+    };
+    let mut local = GrpcSocketTransport::bind(LpId(1), addr, peers, config).unwrap();
+    assert_eq!(local.all_reduce_min(Tick::from_ticks(500)), Tick::ZERO);
 }

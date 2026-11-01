@@ -263,8 +263,9 @@ impl GrpcSocketTransport {
         MAX_CONCURRENT_INBOUND_CONNECTIONS
     }
 
+    /// This backend uses custom TCP frames on the wire.
     pub fn real_grpc_runtime_claimed(&self) -> bool {
-        true
+        false
     }
 
     pub fn barrier_count(&self) -> u64 {
@@ -489,6 +490,8 @@ impl PdesTransport for GrpcSocketTransport {
     }
 
     fn all_reduce_min(&mut self, timestamp: Tick) -> Tick {
+        let timestamp =
+            crate::socket::buffered_minimum(timestamp, &self.inboxes, &self.optimistic_inboxes);
         if self.peers.is_empty() {
             return timestamp;
         }
@@ -527,19 +530,37 @@ impl PdesTransport for GrpcSocketTransport {
         }
 
         // Compute minimum over current round proposals only and remove consumed round entries
-        let mut min_tick = timestamp;
+        // A missing participant may hold an earlier event than every known proposal.
         let mut proposals = self.gvt_proposals.lock().unwrap();
         proposals.remove(&(round, self.local_lp));
-        for peer in &peer_ids {
-            if let Some(peer_tick) = proposals.remove(&(round, *peer)) {
-                if peer_tick < min_tick {
-                    min_tick = peer_tick;
-                }
-            }
-        }
-
-        min_tick
+        peer_ids.iter().fold(timestamp, |minimum, peer| {
+            minimum.min(proposals.remove(&(round, *peer)).unwrap_or(Tick::ZERO))
+        })
     }
+}
+
+/// Bound this participant's proposal by work already admitted to either inbox.
+pub(crate) fn buffered_minimum(
+    local: Tick,
+    inboxes: &Mutex<BTreeMap<LpId, VecDeque<PdesMessage>>>,
+    optimistic: &Mutex<BTreeMap<LpId, VecDeque<OptimisticMessage>>>,
+) -> Tick {
+    let ordinary = inboxes.lock().unwrap();
+    let optimistic = optimistic.lock().unwrap();
+    ordinary
+        .values()
+        .flatten()
+        .filter_map(|message| match message {
+            PdesMessage::Event(event) => Some(event.tick),
+            PdesMessage::Null(_) => None,
+        })
+        .chain(
+            optimistic
+                .values()
+                .flatten()
+                .map(|message| message.event().tick),
+        )
+        .fold(local, Tick::min)
 }
 
 pub(crate) fn parse_endpoint_addr(endpoint: &str) -> Result<SocketAddr, String> {

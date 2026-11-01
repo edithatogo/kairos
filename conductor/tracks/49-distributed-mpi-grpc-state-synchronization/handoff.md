@@ -141,3 +141,15 @@ The human approved the narrow renewal after nativePR207 normally merged55fd635. 
 - pushed ref: `origin/codex/track49-distributed-synchronization`
 - `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: Enforced after each clean commit.
 - next-phase decision: Track 49 implementation complete and verified across all test matrix gates; ready for downstream consumption by Track 54 (HPC Batch Runners) and Track 55 (End-to-End Weak/Strong Scaling Certification).
+
+## Synchronization review — 1 November 2026
+
+Chat 01a19600-0a41-7ca2-9e4b-e27d7339c8e7 in /Users/doughnut/.codex/worktrees/track48-rollback/kairos,
+branch codex/track49-sync-safety, qualified base 956d839 with the scoped MPI and gRPC diff.
+The two-crate locked all-feature suite passed 76 top-level tests; Clippy and format passed.
+Missing proposals now bound reductions to zero, and accepted buffered work bounds complete reductions.
+Four local Open MPI ranks exercised the custom TCP backend. An independent Linux x86-64 NAS curl HTTP/2
+peer sent heartbeat frame 00000000060863102a180f over a host-key-verified SSH forward to the
+Mac Tonic endpoint built from nas-heartbeat-probe.rs. It returned HTTP 200, grpc-status 0 and
+LP 99 with elapsed 15 ms. MPI API adoption, consistent in-flight accounting and two-host
+failure/restart parity remain open. Next operation is protected integration.
