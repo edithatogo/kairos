@@ -140,3 +140,9 @@ Raw receipts in /Volumes/PortableSSD/codex-builds/kairos-track50-linux:
 - `linux-clippy.log` — 9bfbdda71e4660ce02f72d05e13c05e1ff588b7fe3bdf03664dae7e04f02febd
 
 Multi-node locality and performance, broader cache/hwloc reporting and Track 55 scaling acceptance remain separate.
+
+Hosted review clarified diagnostics for malformed kernel memory records and
+empty affinity masks. Discovery deliberately rejects a failed directory
+enumeration: an unread entry could be a real node. Restoration deliberately
+retains the saved mask on an unconfirmed rollback so the owning thread can
+recover. A live thread cannot have its Linux TID simultaneously reassigned.

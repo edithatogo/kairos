@@ -33,10 +33,13 @@ fn kernel_topology_agrees_with_node_memory() {
             .find(|line| line.contains(" MemTotal:"))
             .unwrap();
         let fields: Vec<_> = row.split_whitespace().collect();
-        assert_eq!(fields[4], "kB");
+        let ["Node", id, "MemTotal:", kb, "kB"] = fields.as_slice() else {
+            panic!("unexpected node memory record: {row}");
+        };
+        assert_eq!(id.parse::<u32>().expect("numeric node ID"), node.id);
         assert_eq!(
             node.memory_bytes,
-            Some(fields[3].parse::<u64>().unwrap() * 1024)
+            Some(kb.parse::<u64>().expect("numeric node memory total") * 1024)
         );
         println!(
             "node {} logical CPUs {:?}, memory {:?}",
@@ -54,7 +57,16 @@ fn current_thread_binding_is_reversible_and_isolated() {
         return;
     }
     let original = allowed();
-    let cpu = original.split([',', '-']).next().unwrap().parse().unwrap();
+    assert!(
+        !original.is_empty(),
+        "running thread reported an empty CPU mask"
+    );
+    let cpu = original
+        .split([',', '-'])
+        .next()
+        .unwrap()
+        .parse()
+        .expect("numeric CPU at start of allowed mask");
     assert_eq!(
         AffinityBindingPlan::new(0, cpu, false),
         Err(NumaError::InvalidAffinity)
