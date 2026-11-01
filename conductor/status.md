@@ -964,3 +964,7 @@ User-authorized CI integration owned by chat `01a18344-cfb8-7711-8c38-fef1052b9f
 The candidate replaces the blocked external project-status requirement with an exact-base, complete-workspace, zero-regression Actions decision required by `Rust core quality`. Existing core90% remains mandatory; Codecov stays diagnostic. Both genuine status and artifact provenance failures remain failures. Next operation: independent review, hosted positive/negative wiring proof, then normal protected integration. The local Polars patch and separate CareOps acceptance history remain preserved.
 
 Hosted review correction: baseline eligibility checks the exact run’s latest native job results instead of whole-workflow success, so a diagnostic Codecov upload failure cannot indirectly block later coverage comparisons. Failed/missing/skipped native jobs still reject; the sole pre-replacement bootstrap SHA is explicit.
+
+## Track 107 bounded compatibility acceptance — 1 November 2026
+
+Kairos PR #334 merged the reviewed staged allocation runtime at `8eafd77`. CareOps Sim PR #188 adopted bridge `0741026`, #189 accepted R10.3, and #190 closed R10.4. The staged implementation, DES export, compatibility test and fixture match the merged provider byte for byte. Mainline RNG adoption and Track 108 installed-consumer qualification remain separate. [Evidence](tracks/107-careops-staged-flow-compatibility/handoff.md#bounded-consumer-closeout--1-november-2026).

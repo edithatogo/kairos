@@ -455,7 +455,7 @@ tracks:
 
   - id: 107
     name: CareOps staged allocation flow compatibility
-    status: Blocked
+    status: Done
     owner: des-api-agent + conformance-agent + api-governance-agent
     depends_on: ["03", "12", "25", "106"]
     owned_paths:
