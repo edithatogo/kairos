@@ -16,7 +16,7 @@
   "codeRepository": "https://github.com/<org>/kairo-ecs",
   "runtimePlatform": [
     "Rust",
-    "CPython 3.15.1",
+    "CPython 3.15.2",
     ".NET 10-11",
     "WebAssembly"
   ],

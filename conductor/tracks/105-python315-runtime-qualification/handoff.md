@@ -201,3 +201,43 @@ Runtime/prefix negative controls, packaging and workflow contracts.
 ## Known risks
 
 Hosted/platform acceptance remains distinct from local qualification.
+
+## Runtime review — 1 November 2026
+
+Chat `01a19600-0a41-7ca2-9e4b-e27d7339c8e7`, managed worktree
+`/Users/doughnut/.codex/worktrees/track105-qualification/kairos`, branch
+`codex/track105-qualification-review`, reviewed main `339aba1`. Scope is
+the track documents, current website Python version labels and CodeMeta
+template. Native scope was read-only hosted job inspection.
+
+- [Binding CI](https://github.com/edithatogo/kairos/actions/runs/40931375480)
+  verified the local prefix and executed binding, archive and Gymnasium checks.
+- [Inventory](https://github.com/edithatogo/kairos/actions/runs/40931375522)
+  qualified all four locked profiles, submitted them on trusted main and
+  verified native package presence. Dependency edges and extras are outside its oracle.
+- [Conductor](https://github.com/edithatogo/kairos/actions/runs/40931375510)
+  verified the repo-local runtime on Ubuntu and Windows.
+- [Cloud smoke](https://github.com/edithatogo/kairos/actions/runs/40862174452)
+  built the image and verified its actual interpreter/prefix at merged
+  `4134a37`. That run predates the reviewed main revision.
+- Devbox still requests 3.15.1 before invoking the 3.15.2 guard.
+  The toolchain qualification worktree has overlapping uncommitted Devbox,
+  supply-chain and workflow edits. Its owner should reconcile the hook against
+  the repo's selected .python-version and qualify clean-shell startup with the
+  actual runtime and prefix. Preserve existing consumers through handover.
+  The historical Syft qualification instructions also need an owner review
+  before use as current execution instructions.
+
+Next operation is integrator review of the scoped commit and owner resolution
+of the bootstrap overlap. Track 105 remains in progress.
+
+### Open gates after review
+
+The platform gate stays open for current-revision container execution. The
+Docker directory, .dockerignore, .python-version and cloud-smoke workflow had
+identical tracked contents at 4134a37 and 339aba1. The earlier run supplies
+baseline evidence only. The toolchain qualification lane on
+`codex/toolchain-qualification-20261023` owns the overlapping Devbox edit.
+Before accepting clean-shell startup, that lane must reconcile the hook with
+.python-version and demonstrate the selected interpreter and prefix from an
+absent environment. This evidence reconciliation closes neither open gate.
