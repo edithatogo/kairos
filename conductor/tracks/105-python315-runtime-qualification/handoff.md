@@ -230,3 +230,14 @@ template. Native scope was read-only hosted job inspection.
 
 Next operation is integrator review of the scoped commit and owner resolution
 of the bootstrap overlap. Track 105 remains in progress.
+
+### Open gates after review
+
+The platform gate stays open for current-revision container execution. The
+Docker directory, .dockerignore, .python-version and cloud-smoke workflow had
+identical tracked contents at 4134a37 and 339aba1. The earlier run supplies
+baseline evidence only. The toolchain qualification lane on
+`codex/toolchain-qualification-20261023` owns the overlapping Devbox edit.
+Before accepting clean-shell startup, that lane must reconcile the hook with
+.python-version and demonstrate the selected interpreter and prefix from an
+absent environment. This evidence reconciliation closes neither open gate.
