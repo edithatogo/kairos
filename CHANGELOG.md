@@ -14,6 +14,8 @@ Format:
 
 ## Unreleased
 
+- With the `numa` feature, `kairo-ecs-core` reads Linux node CPU lists and memory totals from sysfs, supports opt-in binding and exact restoration of the calling thread’s CPU mask, and reuses allocated event-arena chunks after reset.
+
 - Add a native workspace coverage regression gate using exact-base trusted artifacts, preserving the core coverage floor and replacing blocked Codecov project delivery.
 
 - Report coverage and required-check readback as pending while exact-head GitHub Actions are queued, including upstream jobs whose dependent checks do not exist yet; retain drift for completed failures.
