@@ -191,7 +191,22 @@ fn fossil_collection_retires_only_cancellations_strictly_before_gvt() {
         Err(TimeWarpError::GvtRegression { .. })
     ));
     assert_eq!(runtime.overhead_metrics().canceled_event_ids, 2);
+    assert_eq!(runtime.gvt(), floor);
     for tick in [5, 6] {
-        assert!(runtime.is_canceled(anti(tick).id));
+        let positive = event(tick, 1, TimeWarpMessageKind::Positive, 10);
+        let id = positive.id;
+        let report = runtime.process_event(positive).unwrap();
+        assert_eq!(report.canceled_events, vec![id]);
+        assert_eq!(report.cancellation_metadata.len(), 1);
+        assert_eq!(
+            report.cancellation_metadata[0].reason,
+            kairo_ecs_pdes::TimeWarpCancellationReason::PositiveArrivedAfterAntiMessage
+        );
+        assert!(runtime.is_canceled(id));
     }
+    assert_eq!(runtime.executed_len(), 0);
+    assert_eq!(
+        runtime.component_value(LpId(1), EntityId::new(48, 0), 0),
+        None
+    );
 }
