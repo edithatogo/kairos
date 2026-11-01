@@ -7,6 +7,9 @@ concurrency:
 on:
   pull_request:
     paths:
+      - "devbox.json"
+      - ".python-version"
+      - "scripts/python_runtime.py"
       - "docker/**"
       - "k8s/**"
       - "cloud/**"
@@ -24,6 +27,9 @@ on:
   push:
     branches: [main]
     paths:
+      - "devbox.json"
+      - ".python-version"
+      - "scripts/python_runtime.py"
       - "docker/**"
       - "k8s/**"
       - "cloud/**"
