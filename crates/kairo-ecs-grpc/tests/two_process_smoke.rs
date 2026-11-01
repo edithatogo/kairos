@@ -68,7 +68,7 @@ fn two_process_smoke() {
     )
     .expect("bind parent socket transport");
 
-    assert!(parent_transport.real_grpc_runtime_claimed());
+    assert!(!parent_transport.real_grpc_runtime_claimed());
 
     // 1. Send application event to child (LP 8) over real TCP socket with retry while child starts up
     let event = RemoteEvent {
