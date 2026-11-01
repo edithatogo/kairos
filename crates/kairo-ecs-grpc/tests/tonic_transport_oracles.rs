@@ -388,9 +388,16 @@ fn oracle_tonic_transport_migration_and_gvt_consensus_round() {
         endpoint: format!("http://127.0.0.1:{port1}"),
     }];
 
-    let mut transport1 =
-        TonicTransport::bind(LpId(1), addr1, peer1, GrpcTransportConfig::default())
-            .expect("bind transport 1");
+    let mut transport1 = TonicTransport::bind(
+        LpId(1),
+        addr1,
+        peer1,
+        GrpcTransportConfig {
+            request_timeout: Duration::from_millis(500),
+            ..Default::default()
+        },
+    )
+    .expect("bind transport 1");
     let mut transport2 =
         TonicTransport::bind(LpId(2), addr2, peer2, GrpcTransportConfig::default())
             .expect("bind transport 2");
@@ -468,7 +475,20 @@ fn oracle_tonic_transport_migration_and_gvt_consensus_round() {
     }
 
     // 4. Multiple consecutive Mattern GVT Consensus Rounds over gRPC (Finding 3)
-    // Round 0: LP 1 has timestamp 500, LP 2 has timestamp 300 -> min(500, 300) = 300
+    // Withhold LP 2's round-zero proposal until LP 1 returns. A local zero
+    // cannot advance GVT, even when the peer is silent. LP 2 then consumes
+    // the already delivered zero, exercising the immediate consensus path.
+    assert_eq!(transport1.all_reduce_min(Tick::ZERO), Tick::ZERO);
+    assert_eq!(transport2.all_reduce_min(Tick::from_ticks(700)), Tick::ZERO);
+
+    // LP 2 has received an earlier event but has not delivered it to the model.
+    let buffered = PdesMessage::Event(RemoteEvent {
+        source_lp: LpId(1),
+        dest_lp: LpId(2),
+        tick: Tick::from_ticks(3),
+        event_payload: vec![49],
+    });
+    transport1.send(LpId(2), buffered.clone()).unwrap();
     let t1_round0 = thread::spawn(move || {
         let r0 = transport1.all_reduce_min(Tick::from_ticks(500));
         let r1 = transport1.all_reduce_min(Tick::from_ticks(600));
@@ -476,13 +496,31 @@ fn oracle_tonic_transport_migration_and_gvt_consensus_round() {
     });
 
     let t2_r0 = transport2.all_reduce_min(Tick::from_ticks(300));
+    assert_eq!(transport2.recv(LpId(2)).unwrap(), vec![buffered]);
     let t2_r1 = transport2.all_reduce_min(Tick::from_ticks(400));
     let (t1_r0, t1_r1) = t1_round0.join().expect("join t1");
 
-    assert_eq!(t1_r0, Tick::from_ticks(300));
-    assert_eq!(t2_r0, Tick::from_ticks(300));
+    assert_eq!(t1_r0, Tick::from_ticks(3));
+    assert_eq!(t2_r0, Tick::from_ticks(3));
 
-    // Round 1 must use round 1 proposals rather than being confused by round 0
+    // The final round must use fresh proposals
     assert_eq!(t1_r1, Tick::from_ticks(400));
     assert_eq!(t2_r1, Tick::from_ticks(400));
+}
+
+#[test]
+fn incomplete_gvt_round_cannot_advance_time() {
+    let addr: SocketAddr = "127.0.0.1:0".parse().unwrap();
+    let silent_peer =
+        TonicTransport::bind(LpId(2), addr, vec![], GrpcTransportConfig::default()).unwrap();
+    let config = GrpcTransportConfig {
+        request_timeout: Duration::from_millis(100),
+        ..GrpcTransportConfig::default()
+    };
+    let peers = vec![GrpcPeer {
+        lp_id: LpId(2),
+        endpoint: format!("http://{}", silent_peer.bound_addr()),
+    }];
+    let mut local = TonicTransport::bind(LpId(1), addr, peers, config).unwrap();
+    assert_eq!(local.all_reduce_min(Tick::from_ticks(500)), Tick::ZERO);
 }

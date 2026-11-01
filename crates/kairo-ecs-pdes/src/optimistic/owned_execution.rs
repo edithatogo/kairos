@@ -3412,6 +3412,26 @@ mod private_tests {
             .is_empty());
     }
     #[test]
+    fn invalidated_authority_rejects_publication_while_issuer_is_still_allocated() {
+        let mut runtime = runtime(0);
+        let issuer = runtime.owned.as_mut().unwrap();
+        let authority = issuer.own_authority();
+        issuer.invalidate_before_runtime_drop();
+        let failure =
+            with_live_authorities(std::slice::from_ref(&authority), || -> Result<(), _> {
+                panic!("invalidated authority admitted a publication")
+            })
+            .unwrap_err();
+        assert_eq!(
+            failure,
+            OptimisticError::StaleNativeAccountingAuthority {
+                runtime_id: authority.runtime_id(),
+                recovery_generation: authority.recovery_generation(),
+            }
+        );
+    }
+
+    #[test]
     fn revision_exhaustion_rejects_before_callbacks_and_group_floor() {
         let mut runtime = runtime(1);
         runtime.owned.as_mut().unwrap().exhaust_revision_for_test();

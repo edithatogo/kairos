@@ -527,9 +527,7 @@ impl ParallelIoRecordBatch {
         &self,
         path: impl AsRef<std::path::Path>,
     ) -> Result<ContiguousWriteManifest, ArrowError> {
-        let file = std::fs::File::create(path.as_ref())
-            .map_err(|error| ArrowError::Io(error.to_string()))?;
-        self.write_contiguous_blocks(file)
+        publish_checkpoint(path.as_ref(), |file| self.write_contiguous_blocks(file))
     }
 
     pub fn row_count(&self) -> usize {
@@ -843,8 +841,17 @@ impl CheckpointManifest {
     }
 
     pub fn write_contract_file(&self, path: impl AsRef<std::path::Path>) -> Result<(), ArrowError> {
-        std::fs::write(path.as_ref(), self.to_contract_bytes())
-            .map_err(|error| ArrowError::Io(error.to_string()))
+        self.validate_for_restore()?;
+        let bytes = self.to_contract_bytes();
+        if Self::from_contract_bytes(&bytes)? != *self {
+            return Err(ArrowError::InvalidArgument(
+                "checkpoint cannot round-trip through v1",
+            ));
+        }
+        publish_checkpoint(path.as_ref(), |file| {
+            std::io::Write::write_all(file, &bytes)
+                .map_err(|error| ArrowError::Io(error.to_string()))
+        })
     }
 
     pub fn read_contract_file(path: impl AsRef<std::path::Path>) -> Result<Self, ArrowError> {
@@ -2135,17 +2142,78 @@ pub fn atomic_write_file(
 ) -> Result<(), ArrowError> {
     use std::io::Write;
     let dest = destination.as_ref();
-    let parent = dest
-        .parent()
-        .filter(|parent| !parent.as_os_str().is_empty())
-        .unwrap_or_else(|| std::path::Path::new("."));
-    std::fs::create_dir_all(parent).map_err(|e| ArrowError::Io(e.to_string()))?;
+    std::fs::create_dir_all(publication_parent(dest)).map_err(|e| ArrowError::Io(e.to_string()))?;
+    publish_staged(dest, allow_overwrite, |file| {
+        file.write_all(data)
+            .map_err(|e| ArrowError::Io(format!("Failed to write to staging file: {e}")))
+    })
+}
 
+fn publication_parent(dest: &std::path::Path) -> &std::path::Path {
+    dest.parent()
+        .filter(|parent| !parent.as_os_str().is_empty())
+        .unwrap_or_else(|| std::path::Path::new("."))
+}
+
+#[cfg(feature = "parallel-io")]
+fn publish_checkpoint<T>(
+    dest: &std::path::Path,
+    write: impl FnOnce(&mut std::fs::File) -> Result<T, ArrowError>,
+) -> Result<T, ArrowError> {
+    let existing = match std::fs::symlink_metadata(dest) {
+        Ok(meta) if meta.is_file() => Some(
+            std::fs::OpenOptions::new()
+                .write(true)
+                .open(dest)
+                .map_err(|e| ArrowError::Io(e.to_string()))?,
+        ),
+        Ok(_) => {
+            return Err(ArrowError::InvalidArgument(
+                "checkpoint target must be a regular file",
+            ))
+        }
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => None,
+        Err(e) => return Err(ArrowError::Io(e.to_string())),
+    };
+    publish_staged(dest, true, |file| {
+        let result = write(file)?;
+        #[cfg(unix)]
+        if let Some(original) = existing {
+            use std::os::unix::fs::{MetadataExt, PermissionsExt};
+            let meta = original
+                .metadata()
+                .map_err(|e| ArrowError::Io(e.to_string()))?;
+            let current =
+                std::fs::symlink_metadata(dest).map_err(|e| ArrowError::Io(e.to_string()))?;
+            if (current.dev(), current.ino()) != (meta.dev(), meta.ino()) {
+                return Err(ArrowError::InvalidArgument(
+                    "checkpoint target changed while staging",
+                ));
+            }
+            let stage = file.metadata().map_err(|e| ArrowError::Io(e.to_string()))?;
+            if stage.uid() != meta.uid() || stage.gid() != meta.gid() {
+                return Err(ArrowError::InvalidArgument(
+                    "checkpoint owner or group would change",
+                ));
+            }
+            file.set_permissions(std::fs::Permissions::from_mode(meta.mode() & 0o777))
+                .map_err(|e| ArrowError::Io(e.to_string()))?;
+        }
+        #[cfg(not(unix))]
+        let _ = existing;
+        Ok(result)
+    })
+}
+
+fn publish_staged<T>(
+    dest: &std::path::Path,
+    allow_overwrite: bool,
+    write: impl FnOnce(&mut std::fs::File) -> Result<T, ArrowError>,
+) -> Result<T, ArrowError> {
+    let parent = publication_parent(dest);
     let mut staged = tempfile::NamedTempFile::new_in(parent)
         .map_err(|e| ArrowError::Io(format!("Failed to create temporary staging file: {e}")))?;
-    staged
-        .write_all(data)
-        .map_err(|e| ArrowError::Io(format!("Failed to write to staging file: {e}")))?;
+    let result = write(staged.as_file_mut())?;
     staged
         .as_file()
         .sync_all()
@@ -2171,7 +2239,56 @@ pub fn atomic_write_file(
     std::fs::File::open(parent)
         .and_then(|dir| dir.sync_all())
         .map_err(|e| ArrowError::Io(format!("Failed to sync parent directory: {e}")))?;
-    Ok(())
+    Ok(result)
+}
+
+#[cfg(all(test, feature = "parallel-io"))]
+mod checkpoint_publication_tests {
+    use super::*;
+    use std::io::Write;
+
+    #[test]
+    fn interrupted_staging_keeps_the_previous_checkpoint_restorable() {
+        const CHILD_PATH: &str = "KAIRO_TRACK51_INTERRUPT_CHECKPOINT";
+        if let Some(path) = std::env::var_os(CHILD_PATH) {
+            let _: Result<(), ArrowError> = publish_checkpoint(path.as_ref(), |file| {
+                file.write_all(b"partial replacement").unwrap();
+                file.sync_all().unwrap();
+                std::process::exit(73);
+            });
+            panic!("child returned from the interruption point");
+        }
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("restart");
+        let batch = ParallelIoRecordBatch::from_dispatched(
+            "interrupt",
+            [DispatchedEvent::new(
+                EventId::new(1, 0),
+                kairo_ecs_types::SimTime::from_ticks(9),
+                0,
+                1,
+                None,
+                kairo_ecs_types::EventKind::custom(1),
+            )],
+        )
+        .unwrap();
+        let checkpoint =
+            CheckpointManifest::from_batch("previous", CheckpointFormat::LocalContract, &batch)
+                .unwrap();
+        checkpoint.write_contract_file(&path).unwrap();
+        let status = std::process::Command::new(std::env::current_exe().unwrap())
+            .args(["--exact", "checkpoint_publication_tests::interrupted_staging_keeps_the_previous_checkpoint_restorable"])
+            .env(CHILD_PATH, &path).status().unwrap();
+        assert_eq!(status.code(), Some(73));
+        assert_eq!(
+            CheckpointManifest::read_contract_file(&path).unwrap(),
+            checkpoint
+        );
+        let next = CheckpointManifest::from_batch("next", CheckpointFormat::LocalContract, &batch)
+            .unwrap();
+        next.write_contract_file(&path).unwrap();
+        assert_eq!(CheckpointManifest::read_contract_file(&path).unwrap(), next);
+    }
 }
 
 #[cfg(test)]

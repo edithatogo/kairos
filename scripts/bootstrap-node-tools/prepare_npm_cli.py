@@ -40,7 +40,7 @@ POSTCSS_PARSER_SRI = (
 POSTCSS_PARSER_URL = (
     "https://registry.npmjs.org/postcss-selector-parser/-/postcss-selector-parser-7.1.7.tgz"
 )
-LOCK_SHA256 = "82f3ccd32f5e61dab421905e0cbd4c906212315aaa3b2cac12ffbcf3f9e71d6e"
+LOCK_SHA256 = "bda387a665fc76114e7ea5388fbe9f14743cbdda5d8d41fd15f0d7d87103bc05"
 REMOVED_BUNDLES = (
     *PATCHED_DEPENDENCIES,
     "ip-address",
@@ -48,8 +48,12 @@ REMOVED_BUNDLES = (
     "brace-expansion",
     "http-cache-semantics",
     POSTCSS_PARSER,
+    "glob",
+    "minimatch",
 )
 FIXED_DEPENDENCIES = {
+    "glob": "14.0.3",
+    "minimatch": "11.0.3",
     "ip-address": "10.7.5",
     "brace-expansion": "5.0.12",
 }

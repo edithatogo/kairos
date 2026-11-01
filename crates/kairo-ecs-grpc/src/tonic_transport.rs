@@ -654,6 +654,8 @@ impl PdesTransport for TonicTransport {
     }
 
     fn all_reduce_min(&mut self, timestamp: Tick) -> Tick {
+        let timestamp =
+            crate::socket::buffered_minimum(timestamp, &self.inboxes, &self.optimistic_inboxes);
         if self.peers.is_empty() {
             return timestamp;
         }
@@ -685,17 +687,12 @@ impl PdesTransport for TonicTransport {
             thread::sleep(Duration::from_millis(5));
         }
 
-        let mut min_tick = timestamp;
-        let proposals = self.gvt_proposals.lock().unwrap();
-        for dest in &peer_ids {
-            if let Some(&prop) = proposals.get(&(round, *dest)) {
-                if prop < min_tick {
-                    min_tick = prop;
-                }
-            }
-        }
-
-        min_tick
+        // A missing participant may hold an earlier event than every known proposal.
+        let mut proposals = self.gvt_proposals.lock().unwrap();
+        proposals.remove(&(round, self.local_lp));
+        peer_ids.iter().fold(timestamp, |minimum, peer| {
+            minimum.min(proposals.remove(&(round, *peer)).unwrap_or(Tick::ZERO))
+        })
     }
 }
 

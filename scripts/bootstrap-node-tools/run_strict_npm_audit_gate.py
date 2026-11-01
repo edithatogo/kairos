@@ -19,10 +19,10 @@ ROOT = Path(__file__).resolve().parents[2]
 # The receipt records the actual execution commit separately.
 # 29 October frontier: ip-address 10.7.5 and selector parser 7.1.7; no audit exceptions.
 EXPECTED_SOURCE_SHA256 = {
-    "scripts/bootstrap-node-tools/package.json": "150691f728a1922e9f2306b4ac69b1ce30f7fa4da76a342bf66376b6945629e6",
-    "scripts/bootstrap-node-tools/package-lock.json": "82f3ccd32f5e61dab421905e0cbd4c906212315aaa3b2cac12ffbcf3f9e71d6e",
-    "scripts/bootstrap-node-tools/prepare_npm_cli.py": "b2bd01531d0883972f17b44bb155c635782910f7e188356a00ef1f1f5d93c723",
-    "scripts/bootstrap-node-tools/validate_npm_cli.mjs": "68f9e028966b711579fa64788c252dc0897fd56d4e10046d7d626090c831d3d2",
+    "scripts/bootstrap-node-tools/package.json": "efca2e4b65e6f56a60770190d3b1881852bd1b516fb5190e85b3a718cefb5aa4",
+    "scripts/bootstrap-node-tools/package-lock.json": "bda387a665fc76114e7ea5388fbe9f14743cbdda5d8d41fd15f0d7d87103bc05",
+    "scripts/bootstrap-node-tools/prepare_npm_cli.py": "8933ba3441b7f1a1ac4a5096642ae3fce3f81c685e555893d854f43dbb6287da",
+    "scripts/bootstrap-node-tools/validate_npm_cli.mjs": "4d9128fac152b8fea8b523889542a0cdafca174cfa5ec4fd68606ab7e632b3e4",
 }
 EXPECTED_NPM_CLI_SHA256 = "8e5f6f3429f8cdbe693cdc29904e9d5a7b127a494bd15c804bd54c7403bfcbe7"
 SOURCE_COMMIT = "ad3379dade50ece748eec3f47e85aa56605beec7"
