@@ -83,7 +83,7 @@ duplicate command suppression before promotion. Runtime configuration and
 healthcare session policy remain with the application owner.
 
 Chat 01a19600-0a41-7ca2-9e4b-e27d7339c8e7 owns the track directory in
-/Users/doughnut/.codex/worktrees/track48-rollback/kairos on codex/track104-async-adapter-decision.
+`~/.codex/worktrees/track48-rollback/kairos` on codex/track104-async-adapter-decision.
 Native scope was local testing and read-only repository, consumer and package
 readback. Shared registry and phase acceptance remain with the integrator.
 Next operation is protected integration of the decision.
