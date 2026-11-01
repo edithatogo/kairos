@@ -1,0 +1,73 @@
+{
+  "provider_commit": "339aba155cc5ea7d393a5bd78a7947eddae26e03",
+  "cwd": "/Users/doughnut/.codex/worktrees/track105-qualification/kairos",
+  "host": "arm64 Darwin",
+  "rustc": "1.99.1 (58cf8f9c3 2026-10-13)",
+  "cargo": "1.99.1 (5f94df478 2026-08-27)",
+  "cargo_target_dir": "/Volumes/PortableSSD/codex-builds/kairos-track108-339aba1",
+  "log_directory": "/Volumes/PortableSSD/codex-builds/kairos-track108-339aba1/receipts",
+  "measurement": "/usr/bin/time -l; wall times include compilation, reuse and waiting for the shared target lock. Resource values describe these invocations only.",
+  "build_profile": "CARGO_PROFILE_TEST_DEBUG=0 and CARGO_PROFILE_DEV_DEBUG=0. CARGO_BUILD_JOBS=4 for Polars, ownership and native_schema.",
+  "inputs": {
+    "Cargo.lock": "f8d792f02936075ed3ffedb0688d1bc26c149fe85d266a56f97c1358c9928c39",
+    "conformance/fixtures/rng_replay.json": "788b83467705488c8c8a629f1d607c4a39566a4ad2f7f9332a21bdc6722babb7",
+    "conductor/tracks/108-scientific-ecosystem-alignment/check-feature-closures.sh": "2a5a22b95ae5bc31abc61808f7510f967798a827f10113e4d63193af5c762404"
+  },
+  "rng_fixture_seed": 7,
+  "results": [
+    {
+      "command": "bash conductor/tracks/108-scientific-ecosystem-alignment/check-feature-closures.sh",
+      "exit_code": 0,
+      "tests_passed": 0,
+      "elapsed_s": 5.83,
+      "maximum_rss_bytes": 119701504,
+      "log": "closure108.log",
+      "sha256": "0efc2de61934909363480b8c4ed5129b72fb3cec130d7c643fdae1aea6aaaefd"
+    },
+    {
+      "command": "cargo test --locked --offline --no-default-features -p kairo-ecs-core --test conformance_fixtures",
+      "exit_code": 0,
+      "tests_passed": 4,
+      "elapsed_s": 33.36,
+      "maximum_rss_bytes": 396886016,
+      "log": "core108.log",
+      "sha256": "7ae56996b9e4aca3511a6e5aac30d3bb1efc693007d130257649f21c094f1981"
+    },
+    {
+      "command": "cargo test --locked --offline --no-default-features -p kairo-ecs-arrow --features arrow-native --test schema_compatibility",
+      "exit_code": 0,
+      "tests_passed": 4,
+      "elapsed_s": 310.33,
+      "maximum_rss_bytes": 452362240,
+      "log": "arrow108.log",
+      "sha256": "27c89f5e381961e077fc668ec9d995c935e4ea0785e2d0cfa43ab8018a365fb0"
+    },
+    {
+      "command": "cargo test --locked --offline -p kairo-ecs-arrow --features arrow-native --lib native_schema::tests",
+      "exit_code": 0,
+      "tests_passed": 6,
+      "elapsed_s": 239.52,
+      "maximum_rss_bytes": 176996352,
+      "log": "schema108.log",
+      "sha256": "a3bf746b288720cf5eef079bfb44bc854e1704e003d744c94f6af27e98f88b85"
+    },
+    {
+      "command": "cargo test --locked --offline -p kairo-ecs-arrow --features polars-native --test track70_phase1_native_tables --test schema_v2_contract",
+      "exit_code": 0,
+      "tests_passed": 9,
+      "elapsed_s": 310.07,
+      "maximum_rss_bytes": 1642905600,
+      "log": "polars108.log",
+      "sha256": "9768ff07e62b8a38c83333fe3e46ccde9a05f4bfad41ba8c4ff7be275f1b003a"
+    },
+    {
+      "command": "cargo test --locked --offline -p kairo-ecs-arrow --features polars-native --lib arrow_c_data::tests",
+      "exit_code": 0,
+      "tests_passed": 7,
+      "elapsed_s": 301.69,
+      "maximum_rss_bytes": 1205190656,
+      "log": "ownership108.log",
+      "sha256": "c88e95d02b40fcb0f0e6b19dd53de22ab5adc312ea88f4acdd9546310d0912f0"
+    }
+  ]
+}
