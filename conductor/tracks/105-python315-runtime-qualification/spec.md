@@ -4,8 +4,8 @@ Maturity: Python 3.15.1 baseline integrated and handed over through PRs #297/#30
 
 ## Objective
 
-Prefer the newest suitable qualified dependencies and runtimes. Python 3.15.1
-remains the accepted default; the human clarification of 24 October 2026 permits
+Prefer the newest suitable qualified dependencies and runtimes. Python 3.15.2
+is the selected default; the human clarification of 24 October 2026 permits
 necessary alternate versions for actual consumer/provider compatibility without
 additional permission. Record the concrete reason and scope, qualify the actual
 repo-local interpreter/dependencies, and preserve simulation contracts, working
@@ -25,11 +25,11 @@ repository; a track is not a substitute for that goal.
   bootstrap, package/build backends, native binding tools and helper scripts.
   Classify historical evidence and synthetic version-negative fixtures separately.
 - Use the explicitly selected repo-local profile, including subprocesses. The
-  current profile is 3.15.1 and its guards/locks/CI stay intact. A necessary
+  current profile is 3.15.2 and its guards/locks/CI stay intact. A necessary
   alternate needs a concrete consumer, reason, newest suitable target and
   equivalent runtime/prefix, constraint/lock, package/native and hosted evidence.
   Remove unexplained stale defaults; do not remove a justified qualified
-  compatibility lane simply because it differs from 3.15.1. Preview and
+  compatibility lane simply because it differs from the selected default. Preview and
   out-of-profile candidates still require deliberate qualification.
 - Qualify current supported dependency candidates in isolated environments;
   preserve trusted hashes/signature/identity checks and native binding contracts.
@@ -77,7 +77,7 @@ Environment replacement waits for terminal process evidence, never lease age.
 ## Acceptance criteria
 
 The [test matrix](test-matrix.md) must prove a complete active-use inventory,
-actual selected-profile execution (default 3.15.1), coherent constraints/locks,
+actual selected-profile execution (default 3.15.2), coherent constraints/locks,
 meaningful binding/package/helper tests, supported CI/container evidence and
 no unexplained stale runners,
 required PR checks, current-main readback and safe environment handover. Any
