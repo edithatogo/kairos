@@ -241,3 +241,21 @@ baseline evidence only. The toolchain qualification lane on
 Before accepting clean-shell startup, that lane must reconcile the hook with
 .python-version and demonstrate the selected interpreter and prefix from an
 absent environment. This evidence reconciliation closes neither open gate.
+
+## Devbox startup reconciliation — 1 November 2026
+
+The integrator compared the toolchain qualification worktree's uncommitted
+Devbox edit with main. Its uv selection is already integrated. Its 3.15.1
+literal is superseded by the selected .python-version profile. The isolated
+integration changes only the creation command to read that profile, retaining
+the existing environment and version/prefix guard.
+
+A clean env -i bash --noprofile --norc shell with an absent .venv created
+CPython 3.15.2 and scripts/python_runtime.py verified executable and prefix
+/private/tmp/kairos105.ActDH3/.venv. Devbox itself is unavailable locally,
+so this proves the Python initialization commands. Full Devbox/Nix startup
+still requires a suitable host. The toolchain worktree remains privately owned.
+
+Review checked quoting, profile consistency, existing-environment preservation
+and the actual runtime guard. Current container execution is pending hosted
+cloud-smoke. Local Docker is unavailable in PATH or the standard app locations.
