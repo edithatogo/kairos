@@ -175,3 +175,34 @@ activation/dry-run controls are unchanged. Reviewed ci-core SHA-256:
 Actionlint, Track13 metadata and publication readiness validators passed. Next:
 normal source commit/push, draft PR, exact-head hosted checks. All CAP tasks remain
 open. No runtime/phase/status or registry publication promotion.
+
+### Current source packet and remote gate
+
+Draft PR [#366](https://github.com/edithatogo/kairos/pull/366) contains source
+`4dbbbb2` and CI prerequisites `131039d`. Normal hooks remained enabled; pushed
+refs and strict clean git-closeout passed. The local all-feature MPI suite ran
+23 top-level tests (20 unit, two custom-TCP process cases, one singleton native
+case); final expanded native tests separately passed at two/four MPI ranks, and
+both thread-safety doctests passed. Strict Clippy and dependency/phase checks
+passed. The precursor suite's source boundary is explicit in the receipt.
+
+The existing NAS SSH alias was checked read-only with BatchMode,
+StrictHostKeyChecking and ConnectTimeout. It timed out before any remote output;
+no host/toolchain/runtime identity was qualified and no remote mutation occurred.
+CAP-49.2/CAP-48.1 two-host work is blocked on that existing route becoming
+available, plus the outstanding protocol/accounting implementation. No new
+client, credentials, host-key bypass or alternate authentication was attempted.
+
+Next source leaf: a scheduler-facing adapter for the reviewed native exchange,
+with a full epoch/cut protocol and explicit transport error propagation. Current
+PdesTransport barrier cannot report MPI failure, and raw scalar minima cannot
+certify model queues, positive/anti obligations or channels. Do not turn the
+preview minimum into fossil-collection authority. Require reviewed PDES/Track49
+contract ownership before touching that interface. Then qualify same-build
+Mac/NAS execution, injected delay/duplication/failure, restart and serial parity
+with exact source/input/toolchain and output hashes. Native remote execution is
+not replaced by local MPI or the historical HTTP/2 heartbeat.
+
+This is a terminal scoped source handoff, not a Track 48/49 phase closeout.
+Hosted results remain separately inspectable on the exact PR head; no source,
+main, consumer pin, release or operational acceptance is promoted automatically.
