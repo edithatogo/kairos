@@ -447,3 +447,47 @@ in the prior hosted Linux run. See [repair receipt](evidence/unproven-cut-202611
 Next: fresh exact-head hosted setup/fixture readback; no broad quality, security,
 coverage or release gate is relaxed. CAP-48.1 remains open and NAS/two-host and
 complete cut/retirement/restart implementation remain separate blockers.
+
+## Colab alternate-host qualification — 3 November 2026
+
+Same chat/worktree owns the bounded alternate-host route packet on this track,
+`docs/distributed/cap48-colab-qualification.md` and ignored
+`artifacts/cap48-colab/`. User explicitly requested completion of CAP-48.1
+blockers and evaluation of google-colab-cli. Current source `0718b9c` now has
+49 successful hosted checks and three conditional skips; no failing checks.
+
+The NAS purpose was an independent Linux worker for cross-host rollback,
+positive/anti delivery, delay/duplicate/failure injection, restart and serial
+parity. Only read-only SSH host/toolchain discovery was attempted; it timed out.
+The Colab lane will use a separate CPU session `kairos-cap48-20261103`, isolated
+CLI session metadata, controlled networking and bounded qualification, stopping
+only that new session at terminal completion/failure. Existing sessions,
+authentication clients, runtimes, Drive, purchases and shared configuration are
+not taken over. No GPU or entitlement change. Existing cached client-owned OAuth
+refresh may run; new login/consent remains human in the internal browser.
+
+Installed colab0.7.5 advertises SSH over WebSocket and remote execution. Its
+external tool-owned interpreter is actually CPython3.14.8; repository Python
+remains verified3.15.2 and is not replaced. Remote Python/repository commands
+need their own explicit selected-profile qualification. This is route discovery,
+not distributed-runtime acceptance. Complete accounting/retirement, durable
+restart and session fencing remain code prerequisites beyond host substitution.
+
+### Alternate host checkpoint
+
+Colab CPU allocation, strict pinned-host-key SSH, reverse forwarding and actual
+Linux-curl-to-Mac-Tonic HTTP/2 heartbeat all succeeded. Repo-local Python3.15.2
+and Rust1.99.1 are actually verified on the0718b9c remote checkout. See
+[route qualification](../../../docs/distributed/cap48-colab-qualification.md).
+A bounded native Rust suite is still running there at this checkpoint; its
+result and runtime release remain owned by this chat, not another lane.
+
+Independent reviewer-agent accepted dispatch of a test-only private fixed-store
+backend/schema/process-crash qualification packet: rusqlite0.41.1 with bundled
+SQLite, sha2 0.11.1, retained owner-file lock before DB open, DELETE/EXTRA/exclusive
+pragma readback, atomic complete-image/fact/outbox commits, exact retry/conflict
+rules and uncertain-commit fencing. Backend qualification does not issue runtime
+or accounting capabilities. The same chat will claim that bounded source packet
+separately while retaining the existing Colab controller and private session
+metadata in place. Complete portable state, authenticated driver and actual
+cross-host owned-runtime acceptance remain open; no CAP/phase advance here.
