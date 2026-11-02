@@ -202,6 +202,11 @@ jobs:
         uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           dotnet-version: '10.0.403'
+      - name: Install native MPI build prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y libopenmpi-dev openmpi-bin libclang-dev
+          mpiexec --version
       - name: Validate release checklist
         env:
           DRY_RUN: ${{ github.event.inputs.dry_run }}

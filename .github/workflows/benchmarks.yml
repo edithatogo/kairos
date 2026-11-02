@@ -34,6 +34,11 @@ jobs:
           "$task_rustc" -V | grep -E '^rustc 1\.99\.1 '
           "$task_rustdoc" -V | grep -E '^rustdoc 1\.99\.1 '
           printf '%s\n' "PATH=$task_bin:$PATH" 'RUSTUP_TOOLCHAIN=1.99.1' "RUSTC=$task_rustc" "RUSTDOC=$task_rustdoc" >> "$GITHUB_ENV"
+      - name: Install native MPI build prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y libopenmpi-dev openmpi-bin libclang-dev
+          mpiexec --version
       - name: Run benchmarks
         shell: bash
         run: |

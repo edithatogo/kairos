@@ -160,3 +160,18 @@ The [current ownership/evidence reconciliation](native-mpi-reconciliation-202611
 supersedes broad historical completion wording for this packet. This chat owns
 only the isolated native MPI preview and its qualification, with the earlier
 source and acceptance receipts preserved. CAP-49.1/49.2 and CAP-48.1 remain open.
+
+### Source handoff and CI prerequisites
+
+Preview source commit: `4dbbbb2bc920135f12cb953bf41ee7917a0d407a`.
+Same chat/worktree now owns a separately claimed prerequisite packet restricted to
+ci-core/benchmarks/release workflows, changelog and this track's receipts. No
+main, parent pin, PDES source, authentication or remote native object is owned.
+Independent reviewer-agent accepted the source and then the CI diff: prerequisites
+cover every existing all-feature Ubuntu consumer, 2/4-rank failures propagate
+through required Rust verification, coverage provenance/gates and all release
+activation/dry-run controls are unchanged. Reviewed ci-core SHA-256:
+`1e69e2713e89460a6115dd2e5b34fde93937f5cfe5c27749da4c053598b3ca28`.
+Actionlint, Track13 metadata and publication readiness validators passed. Next:
+normal source commit/push, draft PR, exact-head hosted checks. All CAP tasks remain
+open. No runtime/phase/status or registry publication promotion.

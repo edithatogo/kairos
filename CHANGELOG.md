@@ -14,6 +14,8 @@ Format:
 
 ## Unreleased
 
+- `kairo-ecs-mpi` adds an optional native MPI collective exchange preview with bounded event/null batches, full-width scalar minima and real 2/4-rank checks. Distributed GVT and two-host recovery remain gated. All-feature CI, benchmark and release validation install MPI development prerequisites.
+
 - CI and workflow-security inventories include native Devbox Python startup qualification.
 
 - Devbox creates its Python environment from the selected runtime profile; Cloud/HPC smoke now qualifies profile changes with the current container.

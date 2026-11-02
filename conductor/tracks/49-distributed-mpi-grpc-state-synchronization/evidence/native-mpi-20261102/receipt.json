@@ -82,5 +82,10 @@
     "two-host failure/restart",
     "CAP-48.1",
     "hosted/main/release acceptance"
-  ]
+  ],
+  "historical_precursor_logs": [
+    "mpi-suite.log",
+    "clippy.log"
+  ],
+  "historical_note": "mpi-suite.log predates expanded native test and thread-affinity marker; unchanged legacy process tests reused. Final native source is qualified by unit-final/doctests/clippy-final/mpi2-final/mpi4-final."
 }

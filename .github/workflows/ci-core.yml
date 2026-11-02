@@ -60,6 +60,11 @@ jobs:
             cargo-audit@0.22.2
             cargo-llvm-cov@0.9.1
           fallback: none
+      - name: Install native MPI build prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y libopenmpi-dev openmpi-bin libclang-dev
+          mpiexec --version
       - name: Verify workspace readiness
         run: |
           test -f Cargo.toml
@@ -72,6 +77,16 @@ jobs:
         run: |
           cargo llvm-cov nextest --workspace --all-features --lcov --output-path lcov.info
           node scripts/validation/check-core-coverage.mjs lcov.info
+      - name: Native MPI API exchange on two and four ranks
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo test --locked -p kairo-ecs-mpi --all-features --test native_mpi_smoke --no-run --message-format=json > native-mpi-build.jsonl
+          native_mpi_test="$(jq -r 'select(.reason == "compiler-artifact" and .target.name == "native_mpi_smoke" and .executable != null) | .executable' native-mpi-build.jsonl)"
+          test -x "$native_mpi_test"
+          for ranks in 2 4; do
+            timeout 60s mpiexec --oversubscribe -n "$ranks" "$native_mpi_test" --test-threads=1 --nocapture
+          done
       - name: Preserve coverage report
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
@@ -102,6 +117,11 @@ jobs:
       - name: Install Rust 1.99.1
         run: rustup toolchain install 1.99.1 --profile minimal
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
+      - name: Install native MPI build prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y libopenmpi-dev openmpi-bin libclang-dev
+          mpiexec --version
       - name: Check workspace on Rust 1.99.1
         run: cargo +1.99.1 check --workspace --exclude kairo-ecs-wasm --exclude kairo-ecs-arrow --lib --bins --all-features --locked
       - name: Check default Arrow telemetry on Rust 1.99.1
