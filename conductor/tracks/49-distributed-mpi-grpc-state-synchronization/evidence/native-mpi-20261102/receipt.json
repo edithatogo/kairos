@@ -1,0 +1,86 @@
+{
+  "base": "c2bb5bbcc3539b158c892278da2f977da6cc89be",
+  "cwd": "/Users/doughnut/.codex/worktrees/kairos-track49-runtime/kairos",
+  "branch": "codex/track49-runtime-20261102",
+  "host": "Darwin arm64",
+  "seed": "deterministic rank-derived inputs, no RNG",
+  "scope": "local collective exchange preview only",
+  "source_sha256": {
+    "Cargo.lock": "4a20493c7801dec641cc6cebb8683c249112548856faa6fe08482d921dca06c7",
+    "crates/kairo-ecs-mpi/Cargo.toml": "b2fadca8379a9068e857ad48fd85c577fd2457bb7dd661daaec96595652d670b",
+    "crates/kairo-ecs-mpi/src/lib.rs": "988915af2b7265354bb302676164de6bfe0a6db30e88df1782135f983f66573f",
+    "crates/kairo-ecs-mpi/src/native.rs": "fedd7a87598920068e65d4d6e5ecbae4274377a6d12b51bdd692699f3c410b47",
+    "crates/kairo-ecs-mpi/tests/native_mpi_smoke.rs": "e5dfadaaec44cc3862b1231c5bbe824f06919feac8f752c1118247ed1183256e",
+    "docs/distributed/native-mpi-preview.md": "6cfbe557973a113e7cda318bce571b036f4d5d01fc95738ccefbdd2337154501"
+  },
+  "logs_sha256": {
+    "mpi2-final.log": "036563e868dd71a8899ca98b7c3b000691249b09b13f95af57ca30b67015e720",
+    "mpi4-final.log": "fef5ab60cd7a5c9c13e0284d081e87305f38bfafb7a93e05dc35b628a1c5dc57",
+    "unit-final.log": "7faf83d7bb2f7d87e5850a75d9ae68d58994f9910e8954e5df69b75ab045d0e2",
+    "doctests.log": "f049893b583b4486f287351c541a34a3fa87279274cf789abd1e565ff01631a1",
+    "clippy.log": "dd2f430c3aa1dce80006e35f319aecc3ea0dee95ba475267e9ca48b34131b9ef",
+    "clippy-final.log": "52f693cb9a70da520b95e956d51d3982c05499fc3109a2e04b711f99e3cbd296",
+    "dependencies.log": "a70d49275794565cc253426d27acbaceff75e3d3858422b81746c3897e40b787",
+    "toolchain.log": "ef3d0e04ad6aa759989692b99739a339a1ad4fade970e8ce1de007c3448f55ba",
+    "audit.json": "b65cbc0bdee7c0384b2ffe76d0dc018ba5306a99fcd2441154774c2f40977730",
+    "deny.log": "fe52d22bfbaf85919f6809bb411ddb1217b4783cf98ebd988de9b223af9439ac",
+    "phase.log": "adfb3a1b1335bcc0c11862ff3968bad10d42656554bdd2007bd29739e4d883c2",
+    "mpi-suite.log": "341b1f511c898619ea156b4d290edb97eb7fdf3041554141d752faca72fa0188"
+  },
+  "commands": [
+    {
+      "command": "mpiexec -n 2 <native_mpi_smoke executable from Cargo compiler-artifact> --test-threads=1 --nocapture",
+      "exit": 0,
+      "log": "mpi2-final.log"
+    },
+    {
+      "command": "mpiexec -n 4 <native_mpi_smoke executable from Cargo compiler-artifact> --test-threads=1 --nocapture",
+      "exit": 0,
+      "log": "mpi4-final.log"
+    },
+    {
+      "command": "cargo test --locked -p kairo-ecs-mpi --all-features --lib",
+      "exit": 0,
+      "log": "unit-final.log"
+    },
+    {
+      "command": "cargo test --locked -p kairo-ecs-mpi --features native-mpi --doc",
+      "exit": 0,
+      "log": "doctests.log"
+    },
+    {
+      "command": "cargo clippy --locked -p kairo-ecs-mpi --all-targets --all-features -- -D warnings",
+      "exit": 101,
+      "log": "clippy.log"
+    },
+    {
+      "command": "cargo clippy --locked -p kairo-ecs-mpi --all-targets --all-features -- -D warnings",
+      "exit": 0,
+      "log": "clippy-final.log"
+    },
+    {
+      "command": "cargo audit --json",
+      "exit": 0,
+      "log": "audit.json"
+    },
+    {
+      "command": "cargo deny check advisories sources licenses",
+      "exit": 0,
+      "log": "deny.log"
+    },
+    {
+      "command": "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1",
+      "exit": 0,
+      "log": "phase.log"
+    }
+  ],
+  "build_target": "/Volumes/PortableSSD/codex-builds/kairos-track48-339aba1",
+  "not_accepted": [
+    "scheduler adapter",
+    "optimistic positive/anti transport",
+    "consistent cut accounting/GVT",
+    "two-host failure/restart",
+    "CAP-48.1",
+    "hosted/main/release acceptance"
+  ]
+}

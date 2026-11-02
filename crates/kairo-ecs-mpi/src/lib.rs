@@ -5,6 +5,9 @@ use std::collections::{BTreeMap, VecDeque};
 use kairo_ecs_pdes::{LpId, PdesMessage, PdesTransport, Tick, TransportError};
 use kairo_ecs_types::EntityId;
 
+#[cfg(feature = "native-mpi")]
+pub mod native;
+
 pub mod process;
 pub use process::*;
 

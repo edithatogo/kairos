@@ -9,9 +9,12 @@ rust-version.workspace = true
 kairo-ecs-pdes = { path = "../kairo-ecs-pdes", version = "0.0.0", features = ["time-warp", "pdes"] }
 kairo-ecs-types = { path = "../kairo-ecs-types", version = "0.0.0" }
 
+mpi = { version = "0.8.2", optional = true, default-features = false }
+
 [features]
 default = []
 mpi = []
+native-mpi = ["dep:mpi"]
 
 [lib]
 path = "src/lib.rs"

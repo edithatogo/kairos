@@ -1,0 +1,112 @@
+ Downloading crates ...
+  Downloaded cfg-if v1.0.5
+  Downloaded glob v0.3.4
+  Downloaded mpi-sys v0.2.4
+  Downloaded custom_derive v0.1.7
+  Downloaded build-probe-mpi v0.1.6
+  Downloaded shell-words v1.1.1
+  Downloaded rustc-hash v2.1.3
+  Downloaded conv v0.3.3
+  Downloaded cexpr v0.6.0
+  Downloaded find-msvc-tools v0.1.15
+  Downloaded libloading v0.8.9
+  Downloaded shlex v1.3.0
+  Downloaded quote v1.0.47
+  Downloaded either v1.19.0
+  Downloaded thiserror-impl v2.0.21
+  Downloaded shlex v2.0.1
+  Downloaded pkg-config v0.3.34
+  Downloaded clang-sys v1.9.1
+  Downloaded thiserror v2.0.21
+  Downloaded smallvec v1.16.4
+  Downloaded unicode-ident v1.0.27
+  Downloaded bitflags v2.13.2
+  Downloaded once_cell v1.21.4
+  Downloaded mpi v0.8.2
+  Downloaded proc-macro2 v1.0.107
+  Downloaded memchr v2.8.3
+  Downloaded minimal-lexical v0.2.1
+  Downloaded nom v7.1.3
+  Downloaded cc v1.10.0
+  Downloaded itertools v0.13.0
+  Downloaded aho-corasick v1.1.5
+  Downloaded regex v1.13.1
+  Downloaded bindgen v0.72.1
+  Downloaded syn v2.0.119
+  Downloaded syn v3.0.9
+  Downloaded regex-syntax v0.8.11
+  Downloaded regex-automata v0.4.18
+  Downloaded libc v0.2.191
+   Compiling kairo-ecs-mpi v0.0.0 (/Users/doughnut/.codex/worktrees/kairos-track49-runtime/kairos/crates/kairo-ecs-mpi)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.58s
+     Running unittests src/lib.rs (/Volumes/PortableSSD/codex-builds/kairos-track48-339aba1/debug/deps/kairo_ecs_mpi-9d266f5dfe982fcd)
+
+running 20 tests
+test tests::message_tags_are_stable ... ok
+test tests::entity_migration_snapshot_preserves_generation_and_pending_events ... ok
+test tests::local_smoke_validates_rank_mapping_and_protocol_tags ... ok
+test tests::migration_validator_rejects_self_migration ... ok
+test native::tests::codec_rejects_truncation_spoofed_rank_and_unknown_tag ... ok
+test tests::local_two_rank_contract_proof_covers_event_migration_and_telemetry ... ok
+test tests::mpi_multirank_launch_contract_requires_real_rank_count ... ok
+test tests::migration_validator_accepts_component_payloads ... ok
+test tests::mpi_contract_reserves_antimessage_tag_for_time_warp_rollbacks ... ok
+test tests::protocol_emulator_includes_pending_event_timestamps_in_gvt_round ... ok
+test tests::protocol_emulator_round_trips_event_messages ... ok
+test tests::protocol_emulator_uses_current_gvt_candidate_round ... ok
+test tests::rank_assignment_preserves_lp_mapping ... ok
+test tests::rank_validator_rejects_duplicate_lps ... ok
+test tests::telemetry_batch_validator_requires_ordered_non_empty_payload ... ok
+test tests::transport_contract_rejects_migration_without_payload_or_id ... ok
+test tests::transport_contracts_use_stable_mpi_protocol_metadata ... ok
+test tests::transport_send_rejects_unknown_lp ... ok
+test tests::transport_send_rejects_unknown_source_and_destination_mismatch ... ok
+test process::connection_regressions::eof_after_partial_frame_preserves_prior_complete_frame ... ok
+
+test result: ok. 20 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/multirank_smoke.rs (/Volumes/PortableSSD/codex-builds/kairos-track48-339aba1/debug/deps/multirank_smoke-3464a9e73c184855)
+
+running 2 tests
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+test multirank_smoke_4ranks ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.02s
+
+test multirank_smoke_4ranks ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.03s
+
+test multirank_smoke_4ranks ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.03s
+
+test multirank_smoke_4ranks ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 1.03s
+
+test multirank_smoke_4ranks ... ok
+test incomplete_rank_round_cannot_advance_time ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 20.01s
+
+     Running tests/native_mpi_smoke.rs (/Volumes/PortableSSD/codex-builds/kairos-track48-339aba1/debug/deps/native_mpi_smoke-022319e80aaa5065)
+
+running 1 test
+test native_mpi_exchange ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.16s
+
+   Doc-tests kairo_ecs_mpi
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

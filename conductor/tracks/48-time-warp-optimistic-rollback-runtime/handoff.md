@@ -360,3 +360,15 @@ multirank and loopback smoke cannot exercise distinct-host worker failure.
 The Track 49 host owner must supply a two-host allocation and run the delayed,
 duplicated and worker-restart workload against the deterministic single-host
 baseline before this capability can close.
+
+## CAP-48.1 dependency reconciliation — 2 November 2026
+
+Chat `01a19bed-7060-7910-af22-38cb31f51446` owns an isolated Track 49 native
+MPI exchange preview, not PDES implementation or distributed acceptance. See
+[Track 49 ownership/evidence](../49-distributed-mpi-grpc-state-synchronization/native-mpi-reconciliation-20261102.md).
+Current main already contains the reviewed Tonic/Prost and local synchronization
+safety work. Local custom TCP under mpiexec and the NAS HTTP/2 heartbeat remain
+bounded evidence. CAP-48.1 is still open for consistent channel accounting,
+two-host positive/anti-message rollback, injected delay/duplication/failure,
+restart and serial parity. Scalar collective minima alone cannot close GVT or
+fossil-collection acceptance. No Track 48 source/phase is advanced by this leaf.

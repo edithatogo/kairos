@@ -153,3 +153,10 @@ peer sent heartbeat frame 00000000060863102a180f over a host-key-verified SSH fo
 Mac Tonic endpoint built from nas-heartbeat-probe.rs. It returned HTTP 200, grpc-status 0 and
 LP 99 with elapsed 15 ms. MPI API adoption, consistent in-flight accounting and two-host
 failure/restart parity remain open. Next operation is protected integration.
+
+## Current scoped MPI API lane — 2 November 2026
+
+The [current ownership/evidence reconciliation](native-mpi-reconciliation-20261102.md)
+supersedes broad historical completion wording for this packet. This chat owns
+only the isolated native MPI preview and its qualification, with the earlier
+source and acceptance receipts preserved. CAP-49.1/49.2 and CAP-48.1 remain open.

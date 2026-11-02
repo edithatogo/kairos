@@ -71,3 +71,13 @@ Repository scope: **kairos** and its **careops-sim** consumer (`/Users/doughnut/
 - [ ] CAP-49.2: Qualify Mac/NAS host identities and runtime/wire compatibility, then retain two-host failure/restart and serial-parity receipts; use exact source/input/toolchain and raw-output hashes.
 
 Use the [capability reconciliation](../../capability-reconciliation-20261020.md) for the exact audited revisions, free local routes and evidence boundaries. Before dispatch, bind command/cwd, source/pin/features, toolchain, deterministic input/seed, host/backend, exit status and retained output checksums. A structural validator pass cannot close a runtime task.
+
+## Native MPI preview follow-through — 2 November 2026
+
+The historical Phase 1.1 and production-readiness wording above does not prove
+rsmpi adoption: that backend uses TCP. The additive `native-mpi` preview and its
+[API decision](adr-native-mpi-preview-20261102.md) implement a bounded first MPI
+API slice only. CAP-49.1 remains unchecked for scheduler integration/optimistic
+traffic/complete accounting; CAP-49.2 and CAP-48.1 remain unchecked for two-host
+failure/restart and serial parity. The [current reconciliation](native-mpi-reconciliation-20261102.md)
+records exact ownership and reusable evidence. No phase/status advances here.

@@ -1,0 +1,33 @@
+    Checking custom_derive v0.1.7
+    Checking smallvec v1.16.4
+    Checking once_cell v1.21.4
+    Checking kairo-ecs-types v0.0.0 (/Users/doughnut/.codex/worktrees/kairos-track49-runtime/kairos/crates/kairo-ecs-types)
+    Checking thiserror v2.0.21
+    Checking mpi-sys v0.2.4
+    Checking conv v0.3.3
+    Checking kairo-ecs-pdes v0.0.0 (/Users/doughnut/.codex/worktrees/kairos-track49-runtime/kairos/crates/kairo-ecs-pdes)
+    Checking mpi v0.8.2
+    Checking kairo-ecs-mpi v0.0.0 (/Users/doughnut/.codex/worktrees/kairos-track49-runtime/kairos/crates/kairo-ecs-mpi)
+error: using `chunks_exact` with a constant chunk size
+   --> crates/kairo-ecs-mpi/src/native.rs:114:14
+    |
+114 |             .chunks_exact(2)
+    |              ^^^^^^^^^^^^^^^ help: consider using `as_chunks` instead: `as_chunks::<2>().0.iter()`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#chunks_exact_to_as_chunks
+    = note: `-D clippy::chunks-exact-to-as-chunks` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(clippy::chunks_exact_to_as_chunks)]`
+
+error: could not compile `kairo-ecs-mpi` (lib) due to 1 previous error
+warning: build failed, waiting for other jobs to finish...
+error: unnecessary use of `clone` to create a slice from a reference
+   --> crates/kairo-ecs-mpi/src/native.rs:211:28
+    |
+211 |         let bytes = encode(&[message.clone()], 0, 2).unwrap();
+    |                            ^^^^^^^^^^^^^^^^^^ help: try: `std::slice::from_ref(&message)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#cloned_ref_to_slice_refs
+    = note: `-D clippy::cloned-ref-to-slice-refs` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(clippy::cloned_ref_to_slice_refs)]`
+
+error: could not compile `kairo-ecs-mpi` (lib test) due to 2 previous errors
