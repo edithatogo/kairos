@@ -21,7 +21,7 @@
       "exit": 0,
       "passed": 182,
       "ignored": 0,
-      "log": "mac-pdes.log"
+      "log": "mac-pdes.log.gz"
     },
     {
       "command": "cargo test --locked -p kairo-ecs-pdes --all-features -- --nocapture",
@@ -30,23 +30,23 @@
       "exit": 0,
       "passed": 182,
       "ignored": 0,
-      "log": "linux-pdes.log"
+      "log": "linux-pdes.log.gz"
     },
     {
       "command": "cargo clippy --locked -p kairo-ecs-pdes --all-targets --all-features -- -D warnings",
       "exit": 0,
-      "log": "mac-clippy.log"
+      "log": "mac-clippy.log.gz"
     },
     {
       "command": "cargo deny check",
       "exit": 0,
-      "log": "deny.log",
+      "log": "deny.log.gz",
       "warnings": "existing duplicate versions visible; no added waiver"
     },
     {
       "command": "cargo audit",
       "exit": 0,
-      "log": "audit.log",
+      "log": "audit.log.gz",
       "warnings": "existing bincode/custom_derive unmaintained warnings retained"
     },
     {
@@ -56,21 +56,21 @@
     {
       "command": "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1",
       "exit": 0,
-      "log": "phase.log"
+      "log": "phase.log.gz"
     },
     {
       "command": "cargo test --locked -p kairo-ecs-pdes -p kairo-ecs-grpc -p kairo-ecs-mpi --all-features",
       "source": "0718b9c",
       "host": "Colab Linux x86_64",
       "exit": 0,
-      "log": "linux-frozen-0718-three-crate.log"
+      "log": "linux-frozen-0718-three-crate.log.gz"
     },
     {
       "command": "mpiexec --oversubscribe -n {2,4} <Cargo JSON native_mpi_smoke executable> --test-threads=1 --nocapture",
       "source": "0718b9c",
       "host": "Colab Linux x86_64",
       "exit": 0,
-      "log": "linux-frozen-0718-mpi.log",
+      "log": "linux-frozen-0718-mpi.log.gz",
       "environment": "OMPI_ALLOW_RUN_AS_ROOT=1 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1; owned test VM only"
     }
   ],
@@ -127,21 +127,90 @@
     "CAP-48.1 complete"
   ],
   "logs_sha256": {
-    "mac-pdes.log": "fd1b3a26b3f9bd0cf98cd9d8c15709761a975ce0841192836fb20a08192d7e51",
-    "mac-clippy.log": "44c5df57563904e87b1138ae69129b8dff0ae82c2874098c08aba3bee10ccb37",
-    "deny.log": "f2cd2acf6a749733235370da4734bf8d6e9bd70d2dcdc584d1480dac551f2b42",
-    "audit.log": "18b0db139e2f56ec047928c35cc5bcfc098a0cee6337a71e188769a029cc2dbd",
-    "phase.log": "adfb3a1b1335bcc0c11862ff3968bad10d42656554bdd2007bd29739e4d883c2",
-    "linux-pdes.log": "929a25d23762fc9aeabbddee60c9a0116d0e8b347ca215929a04404c28a5d28f",
-    "linux-source-toolchain.log": "8eef491d329dfaed1a25c7f6fd68a5f77a33f9da8e711d0484c3a7fbf5fa0743",
-    "linux-frozen-0718-three-crate.log": "8f5649b7cb37352497af9369f5df9c3ccb7a197fb69beb85a42da77d1db737c2",
-    "linux-frozen-0718-mpi.log": "f92e27a7f33d518bb000037086fd217cd8b8db8ddc847405b940cd8fd364524f",
-    "colab-stop.log": "deb877b6374510df37912621b5c283547e7678c4384a20a730e9c57911d5dec3",
-    "colab-sessions-readback.log": "dec807c11992d9001acb723d969c49727402fe62c5e6cbd3899944bfdd03c140",
-    "failed-initial-compile.log": "8700df8adc910101be5d6e531e38c89c5b8c368acf1314a8d405b9536fd4ca96",
-    "failed-lifetime-compile.log": "ee533e08689af3dbd9d342b1eaab9a00b131aa36a7614eec5b5332d5356d308a",
-    "failed-nofollow-alias.log": "70264df3c4775accac397f86676d67ed633305ebb9d556410ae0ef5c2b0c01ed",
-    "failed-fixture-concurrency.log": "5efb3f593cecc6c893a64e71053ba0f861ac45e6394ed71570546f1c577c7557",
-    "failed-child-owner-compile.log": "d353c761dfb6701f79a727ed4728e107c624e29441c1b30a03ef8d7f08a68300"
+    "phase.log.gz": "c30648eb99aa8b25b88db9ed0c08dae1f357e70f3d4c0c8ee66457d0d41da47e",
+    "colab-stop.log.gz": "58011d40bbb03c5b68124cd25ef9a53a76ed975be87e67080e0f6f7b7f403334",
+    "mac-pdes.log.gz": "1cdd71d3e3fa7b6d1288bc640bde9c1700fa40cbcb25bdd08a6528776a8ff554",
+    "failed-initial-compile.log.gz": "b265790148e1bda7790dfa6bdee956a69c58344db2f1a21404d50411f9b2f43d",
+    "deny.log.gz": "119e7665c6298046394344b95dd15cd3f73be90f2d911c9f014494143e310ad3",
+    "linux-pdes.log.gz": "c9b20732097aa39bfe698df1a226c3e989692f801584adfad14ebda7e6bc5195",
+    "failed-lifetime-compile.log.gz": "56f8df7dd00cf8d59dfce5c58a38751d48f3e509b104fc919cf2fbfaaa2173d7",
+    "failed-child-owner-compile.log.gz": "b574d094cd57fa42f5999b3efbe952cbab3a05799224a6ebbe6c0b3ecface0ab",
+    "audit.log.gz": "b023617a4a55faf3d99ddf4bce1b494d7f22f20fa3c14d3f54d77b46514fcf54",
+    "mac-clippy.log.gz": "be932bef002e7bf93247c428080411582bbf9e87619687e0ab4fbafe6835467a",
+    "failed-fixture-concurrency.log.gz": "49fe7e3581d3fb8ad4394cbf3b3bbdc6553c27cf606fee5954c875d49bac695f",
+    "colab-sessions-readback.log.gz": "8889316ce9f612b1735ff4f26269e6e2375930b04ecc887bf4e74ba3d39c6d45",
+    "failed-nofollow-alias.log.gz": "5f4edf9c268bfb3f7efeec1efe381e19f8277c470acf55a2c085e23126549715",
+    "linux-source-toolchain.log.gz": "71215d8466112eb865dca2b4e39a52b540c1e454ce688728021d04bff91c4c9d",
+    "linux-frozen-0718-three-crate.log.gz": "5c94a1aceabf40e37a646990fe087d9afe167d35dd02a855099db01b2a8b6ffd",
+    "linux-frozen-0718-mpi.log.gz": "3018863f80d4892703c4c4bec81219f96aa0ff0872867bcc299f8420792f90d4"
+  },
+  "log_encoding": {
+    "format": "deterministic gzip, mtime0; decompress to original raw stdout/stderr, including native trailing spaces",
+    "hashes": {
+      "phase.log.gz": {
+        "raw_sha256": "adfb3a1b1335bcc0c11862ff3968bad10d42656554bdd2007bd29739e4d883c2",
+        "gzip_sha256": "c30648eb99aa8b25b88db9ed0c08dae1f357e70f3d4c0c8ee66457d0d41da47e"
+      },
+      "colab-stop.log.gz": {
+        "raw_sha256": "deb877b6374510df37912621b5c283547e7678c4384a20a730e9c57911d5dec3",
+        "gzip_sha256": "58011d40bbb03c5b68124cd25ef9a53a76ed975be87e67080e0f6f7b7f403334"
+      },
+      "mac-pdes.log.gz": {
+        "raw_sha256": "fd1b3a26b3f9bd0cf98cd9d8c15709761a975ce0841192836fb20a08192d7e51",
+        "gzip_sha256": "1cdd71d3e3fa7b6d1288bc640bde9c1700fa40cbcb25bdd08a6528776a8ff554"
+      },
+      "failed-initial-compile.log.gz": {
+        "raw_sha256": "8700df8adc910101be5d6e531e38c89c5b8c368acf1314a8d405b9536fd4ca96",
+        "gzip_sha256": "b265790148e1bda7790dfa6bdee956a69c58344db2f1a21404d50411f9b2f43d"
+      },
+      "deny.log.gz": {
+        "raw_sha256": "f2cd2acf6a749733235370da4734bf8d6e9bd70d2dcdc584d1480dac551f2b42",
+        "gzip_sha256": "119e7665c6298046394344b95dd15cd3f73be90f2d911c9f014494143e310ad3"
+      },
+      "linux-pdes.log.gz": {
+        "raw_sha256": "929a25d23762fc9aeabbddee60c9a0116d0e8b347ca215929a04404c28a5d28f",
+        "gzip_sha256": "c9b20732097aa39bfe698df1a226c3e989692f801584adfad14ebda7e6bc5195"
+      },
+      "failed-lifetime-compile.log.gz": {
+        "raw_sha256": "ee533e08689af3dbd9d342b1eaab9a00b131aa36a7614eec5b5332d5356d308a",
+        "gzip_sha256": "56f8df7dd00cf8d59dfce5c58a38751d48f3e509b104fc919cf2fbfaaa2173d7"
+      },
+      "failed-child-owner-compile.log.gz": {
+        "raw_sha256": "d353c761dfb6701f79a727ed4728e107c624e29441c1b30a03ef8d7f08a68300",
+        "gzip_sha256": "b574d094cd57fa42f5999b3efbe952cbab3a05799224a6ebbe6c0b3ecface0ab"
+      },
+      "audit.log.gz": {
+        "raw_sha256": "18b0db139e2f56ec047928c35cc5bcfc098a0cee6337a71e188769a029cc2dbd",
+        "gzip_sha256": "b023617a4a55faf3d99ddf4bce1b494d7f22f20fa3c14d3f54d77b46514fcf54"
+      },
+      "mac-clippy.log.gz": {
+        "raw_sha256": "44c5df57563904e87b1138ae69129b8dff0ae82c2874098c08aba3bee10ccb37",
+        "gzip_sha256": "be932bef002e7bf93247c428080411582bbf9e87619687e0ab4fbafe6835467a"
+      },
+      "failed-fixture-concurrency.log.gz": {
+        "raw_sha256": "5efb3f593cecc6c893a64e71053ba0f861ac45e6394ed71570546f1c577c7557",
+        "gzip_sha256": "49fe7e3581d3fb8ad4394cbf3b3bbdc6553c27cf606fee5954c875d49bac695f"
+      },
+      "colab-sessions-readback.log.gz": {
+        "raw_sha256": "dec807c11992d9001acb723d969c49727402fe62c5e6cbd3899944bfdd03c140",
+        "gzip_sha256": "8889316ce9f612b1735ff4f26269e6e2375930b04ecc887bf4e74ba3d39c6d45"
+      },
+      "failed-nofollow-alias.log.gz": {
+        "raw_sha256": "70264df3c4775accac397f86676d67ed633305ebb9d556410ae0ef5c2b0c01ed",
+        "gzip_sha256": "5f4edf9c268bfb3f7efeec1efe381e19f8277c470acf55a2c085e23126549715"
+      },
+      "linux-source-toolchain.log.gz": {
+        "raw_sha256": "8eef491d329dfaed1a25c7f6fd68a5f77a33f9da8e711d0484c3a7fbf5fa0743",
+        "gzip_sha256": "71215d8466112eb865dca2b4e39a52b540c1e454ce688728021d04bff91c4c9d"
+      },
+      "linux-frozen-0718-three-crate.log.gz": {
+        "raw_sha256": "8f5649b7cb37352497af9369f5df9c3ccb7a197fb69beb85a42da77d1db737c2",
+        "gzip_sha256": "5c94a1aceabf40e37a646990fe087d9afe167d35dd02a855099db01b2a8b6ffd"
+      },
+      "linux-frozen-0718-mpi.log.gz": {
+        "raw_sha256": "f92e27a7f33d518bb000037086fd217cd8b8db8ddc847405b940cd8fd364524f",
+        "gzip_sha256": "3018863f80d4892703c4c4bec81219f96aa0ff0872867bcc299f8420792f90d4"
+      }
+    }
   }
 }
