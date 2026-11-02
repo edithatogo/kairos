@@ -13,6 +13,9 @@ use kairo_ecs_types::SimDuration;
 
 use super::{LpId, PartitionPlan, RemoteEvent, Tick};
 
+#[cfg(all(test, unix, feature = "external-store-qualification"))]
+mod external_store;
+
 mod owned;
 mod owned_execution;
 mod owned_routing;

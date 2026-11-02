@@ -1,0 +1,144 @@
+. ok
+test root_identity_is_explicit_and_initial_scheduling_closes_on_execution ... ok
+test stale_tokens_budget_resumption_and_equal_gvt_are_checked ... ok
+test structural_output_order_uses_full_parent_key_after_straggler_replay ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/optimistic_runtime_heldout.rs (target/debug/deps/optimistic_runtime_heldout-b68cc0882c7e0b37)
+
+running 13 tests
+test anti_before_positive_does_not_apply_and_duplicate_delivery_is_unchanged ... ok
+test canceled_queued_replays_do_not_accumulate_across_fossil_cycles ... ok
+test conflicting_exact_delivery_across_destination_lps_is_rejected_unchanged ... ok
+test canceling_earlier_parent_retracts_descendants_and_replays_surviving_inputs ... ok
+test equal_tick_reverse_source_and_sequence_arrival_matches_core_scheduler ... ok
+test invalid_complete_batch_and_handler_fault_publish_no_partial_outputs ... ok
+test late_parent_children_same_tick_keep_structural_order_and_rng_state ... ok
+test lp_state_tokens_are_runtime_bound_and_invalidated_by_mutation_and_restore ... ok
+test replayed_output_slot_can_change_payload_route_and_tick_without_identity_conflict ... ok
+test replacement_before_old_anti_survives_and_cascades_to_correct_final_state ... ok
+test same_opaque_child_identity_from_distinct_emitters_cancels_independently ... ok
+test work_at_gvt_remains_reversible_and_pre_floor_inputs_fail_unchanged ... ok
+test snapshot_and_restore_faults_poison_without_publishing_replacement_outputs ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/production_parity.rs (target/debug/deps/production_parity-122bd822371eb98d)
+
+running 1 test
+test production_runtime_matches_core_scheduler_for_des_abm_and_mixed_models ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.40s
+
+     Running tests/production_protocol.rs (target/debug/deps/production_protocol-2de1ecbc82a4fdc9)
+
+running 14 tests
+test bounded_same_tick_chain_can_resume_without_corrupting_runtime ... ok
+test eligible_process_batches_run_concurrently_across_logical_processes ... ok
+test emitting_event_lookahead_overflow_is_typed_and_poisoning ... ok
+test empty_cyclic_topology_advances_without_per_tick_rounds ... ok
+test handler_panic_fails_closed_and_poisons_runtime ... ok
+test invalid_outbound_batch_is_rejected_and_runtime_is_poisoned ... ok
+test mixed_valid_and_invalid_outputs_commit_none_of_the_round ... ok
+test null_bounds_are_exclusive_and_event_at_the_bound_waits ... ok
+test outbound_metadata_and_overflow_fail_with_typed_errors ... ok
+test partition_process_sets_and_directed_routes_are_validated_before_execution ... ok
+test randomized_positive_lookahead_ring_progresses_through_ten_thousand_ticks ... ok
+test same_lp_followups_are_ordered_by_timestamp_before_existing_events ... ok
+test sparse_future_input_resumes_after_partial_horizon ... ok
+test adversarial_minimum_lookahead_cycle_executes_every_tick_on_eight_lps ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.80s
+
+     Running tests/track47_conservative_runtime.rs (target/debug/deps/track47_conservative_runtime-f623063cd5333f90)
+
+running 4 tests
+test conservative_lookahead_rejects_early_remote_events_and_allows_boundary_events ... ok
+test partition_plan_and_null_messages_preserve_safe_time_progression ... ok
+test sequential_partitioned_parity_covers_des_abm_and_mixed_workloads ... ok
+test deadlock_stress_and_scaling_smoke_have_progress_without_speedup_claims ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.04s
+
+     Running tests/track48_rollback_regressions.rs (target/debug/deps/track48_rollback_regressions-74df8b2f49101d1b)
+
+running 6 tests
+test checkpoint_restore_does_not_revive_a_stale_initial_token ... ok
+test anti_cancellation_rebuild_preserves_initial_component_seed ... ok
+test component_token_from_another_runtime_is_stale ... ok
+test fossil_collection_retires_only_cancellations_strictly_before_gvt ... ok
+test rollback_before_first_checkpoint_preserves_initial_component_seed ... ok
+test rollback_recreation_does_not_resurrect_an_initial_generation_token ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_grpc
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_mpi
+
+running 2 tests
+test crates/kairo-ecs-mpi/src/native.rs - native::NativeMpiExchange (line 42) - compile fail ... ok
+test crates/kairo-ecs-mpi/src/native.rs - native::NativeMpiExchange (line 37) - compile fail ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
+
+   Doc-tests kairo_ecs_pdes
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+CAP48_REMOTE_RUST_FIXED={"source": "0718b9c", "exit": 0, "log": "/content/kairos-cap48/rust-suite-fixed.log"}
+
+running 1 test
+test native_mpi_exchange ... 
+running 1 test
+test native_mpi_exchange ... native MPI API rank=0 size=2: ring, full-width minimum, rejection and recovery passed
+native MPI API rank=1 size=2: ring, full-width minimum, rejection and recovery passed
+ok
+
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.29s
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.29s
+
+
+
+
+running 1 test
+test native_mpi_exchange ... 
+running 1 test
+test native_mpi_exchange ... 
+running 1 test
+test native_mpi_exchange ... 
+running 1 test
+test native_mpi_exchange ... native MPI API rank=0 size=4: ring, full-width minimum, rejection and recovery passed
+native MPI API rank=1 size=4: ring, full-width minimum, rejection and recovery passed
+native MPI API rank=2 size=4: ring, full-width minimum, rejection and recovery passed
+native MPI API rank=3 size=4: ring, full-width minimum, rejection and recovery passed
+okok
+
+test result: ok
+. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.32s
+
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.33s
+
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.33s
+
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.34s
+
+
+
+CAP48_COLAB_NATIVE_MPI_2_4_OK

@@ -491,3 +491,50 @@ or accounting capabilities. The same chat will claim that bounded source packet
 separately while retaining the existing Colab controller and private session
 metadata in place. Complete portable state, authenticated driver and actual
 cross-host owned-runtime acceptance remain open; no CAP/phase advance here.
+
+## Durable-store prerequisite packet — 3 November 2026
+
+Same chat `01a19bed-7060-7910-af22-38cb31f51446`, isolated worktree
+`/Users/doughnut/.codex/worktrees/kairos-cap48-gvt/kairos`, branch
+`codex/cap48-durable-store-20261103`, owns PDES's private store qualification,
+its optional dependency/lock additions and these Track48 records. No other
+worktree, global registry, main, runtime promotion or native binding changed.
+Colab CPU/SSH state remains with this sole controller until recorded teardown.
+
+The [backend packet](durable-store-qualification-20261103.md) implements and
+qualifies the fixed transaction-storage prerequisite with real process crashes,
+exact durable retry and fail-closed reopen. Review caught and fixed historical
+chain, mutable receipt position, truncated database and missing-component
+integrity gaps. Independent source review accepted the final hashes with no
+remaining actionable findings. The first broad Mac run's inherited-flock fixture
+interference remains retained; explicit fixture isolation fixed it with no retry
+or production lock-semantic change. Final Mac all-feature PDES:182 tests passed,
+zero failed/ignored. Strict Clippy, fmt, dependency advisories/bans/licences/sources
+and phase validator pass; existing dependency warnings remain visible.
+
+Frozen0718b9c Colab three-crate all-feature tests and actual native MPI2/4-rank
+smoke have passed. The Linux backend packet is separately source-hash bound;
+its first pre-final-coherent-component run passed181 PDES tests. A final run
+includes the missing-component fix. These are local/remote execution receipts,
+not new exact-head hosted evidence. PR366's prior0718b9c head remains49 success,
+three conditional skips until this packet is pushed and requalified.
+
+CAP-48.1 stays pending. The current plan explicitly supersedes the historical
+claim that socket smoke completed distributed acceptance. Next owned work is
+the complete portable engine image, fixed authenticated driver, actual
+admission/retirement, safe cut and restart fencing/join, followed by the full
+injected-failure two-host deterministic parity oracle. A test-only durable byte
+store and successful two-host heartbeat do not implement those engine semantics.
+
+### Final native store/host checkpoint
+
+Final source hashes match across Mac and the independent Colab checkout. Each
+passed182 all-feature PDES tests, including13 store scenarios, zero failed or
+ignored. The final reviewed hashes include the missing-component fix.
+[Command/source/log receipt](evidence/store-20261103/receipt.json) retains full
+Linux/macOS logs and failed attempts. Source acceptance covers this bounded
+backend only. Full logs were retrieved, no native Rust worker remained, named
+Colab stop succeeded and server readback found no active sessions. No NAS
+mutation, GPU, Drive mount, purchase or credential/cache transfer occurred.
+The packet is ready for normal scoped commit and draft PR qualification; no
+CAP, phase, production or release status is advanced.

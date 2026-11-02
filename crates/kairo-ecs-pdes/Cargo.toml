@@ -8,10 +8,14 @@ rust-version.workspace = true
 [dependencies]
 kairo-ecs-types = { path = "../kairo-ecs-types", version = "0.0.0" }
 
+rusqlite = { version = "0.41.1", optional = true, default-features = false, features = ["bundled"] }
+sha2 = { version = "0.11.1", optional = true, default-features = false }
+
 [features]
 default = []
 pdes = []
 time-warp = []
+external-store-qualification = ["time-warp", "dep:rusqlite", "dep:sha2"]
 
 [lib]
 path = "src/lib.rs"

@@ -34,14 +34,20 @@ ran in that attempt. The corrected private short socket path succeeded. Native
 session/credential metadata stay ignored and private under the lane's artifact
 directory; only sanitized facts and hashes may enter source receipts.
 
-At this checkpoint a bounded affected-three-crate Rust suite is running on the
-frozen0718b9c Colab checkout. It is not a pass until its native exit/result is
-collected. The same chat owns this runtime and must stop only its named CPU
-session at terminal completion/failure. The existing Mac probe/SSH forwarding
-are similarly bounded and cleaned by their controller.
+The frozen0718b9c affected-three-crate locked all-feature suite passed on Colab,
+followed by actual native MPI smoke with two and four ranks. Missing libclang
+initially blocked bindgen; installing libclang-dev on the owned VM resolved that
+prerequisite. A separately hashed final store packet passed182 all-feature PDES
+tests on each of Mac and Colab, including real process-death recovery. See
+[store evidence](../../conductor/tracks/48-time-warp-optimistic-rollback-runtime/evidence/store-20261103/receipt.json).
 
-The next code prerequisite is the fixed participant transaction store and
-process-crash/readback qualification, then the complete portable engine image,
+Full native logs were retrieved before teardown. CLI stop succeeded for only
+`kairos-cap48-20261103`; fresh server readback reported no active sessions. The
+Mac probe and forwarding were already stopped/reaped. The VM's overlay filesystem
+qualifies the recorded process-kill scenarios, not physical power-loss durability.
+
+The fixed participant transaction-store candidate is qualified privately; the
+next implementation is the complete portable engine image,
 fixed verifier/driver, admission/retirement and authenticated cut/restart join.
 Process-local native authority witnesses must not be sent over this route as
 remote proof. Colab's ephemeral VM is not a durable production deployment or a

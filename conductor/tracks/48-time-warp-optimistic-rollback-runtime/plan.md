@@ -1,6 +1,19 @@
 # Track 48 Plan: Time Warp Optimistic Rollback Runtime
 
-## Current delivery boundary
+## Current CAP-48.1 boundary — 3 November 2026
+
+CAP-48.1 remains pending. Colab supplies an actually qualified alternate Linux
+host and two-host protocol route; the NAS timeout is no longer the only host
+option. Native MPI smoke is a bounded preview, not distributed Time Warp
+acceptance. The private [durable-store qualification](durable-store-qualification-20261103.md)
+is a prerequisite, not the complete portable engine/driver. Authenticated
+admission/retirement, a proved distributed cut, session fencing/restart join and
+injected-failure two-host parity remain implementation and qualification work.
+This current boundary supersedes the historical claims below that Track 49's
+socket smoke resolved distributed acceptance or that no local implementation
+remains. Track/CAP status does not advance.
+
+## Historical native delivery boundary
 
 The native implementation is merged on `main`: `786f50b` (#199 preview
 event-owned runtime), `1afe522` (#204 codec bridge) and `55fd635` (#207

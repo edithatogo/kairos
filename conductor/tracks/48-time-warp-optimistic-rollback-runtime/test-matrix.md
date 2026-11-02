@@ -43,3 +43,17 @@ At c87df47, pinned1.98 benchmark compilation,12 collector tests, local manifest,
 ## Accepted owned native leaf — 4 October 2026
 
 The [current acceptance record](owned-native-acceptance-20261004.md) supersedes earlier pending local/compiler snapshots: source9bf478e passes166 PDES tests on each explicitly bound1.98.1/1.76.0 compiler; fullCI530/530,coverage92.59%,locked doctests,benchmark smoke/12 collector tests,manifest and local phase/clean gates pass. Original failed receipts remain historical. Track48 stays In Progress pending hosted native delivery and live distributed acceptance. Changed interface semantics expire the previous conditional Track49 entry disposition; fresh specific human disposition and reviewed production packet are required. Global status/phase files and parent pin remain with their current parallel owners.
+
+## CAP-48.1 fixed-store prerequisite — 3 November 2026
+
+Current qualification uses actual Rust1.99.1, with explicit native compiler and
+SQLite-amalgamation binding in the store receipt. Historical MSRV labels above
+remain historical. Run `cargo test --locked -p kairo-ecs-pdes --all-features`
+and strict all-target/all-feature PDES Clippy for this private Unix test module.
+The selected tests include real before/after-commit process death, competing
+process ownership, uncertain SQL fencing, exact receipt retry, whole retained
+chain/position/sequence corruption and missing/truncated components. No test
+ignore, retry or public accounting constructor is introduced. Mac and Colab
+Linux results must be distinguished from hosted Actions and from the still-open
+full two-host optimistic-runtime acceptance gate. See
+[backend qualification](durable-store-qualification-20261103.md).

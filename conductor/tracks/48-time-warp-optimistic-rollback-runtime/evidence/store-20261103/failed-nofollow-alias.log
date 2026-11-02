@@ -1,0 +1,45 @@
+   Compiling kairo-ecs-pdes v0.0.0 (/Users/doughnut/.codex/worktrees/kairos-cap48-gvt/kairos/crates/kairo-ecs-pdes)
+warning: unused import: `OptionalExtension`
+ --> crates/kairo-ecs-pdes/src/optimistic/external_store.rs:3:47
+  |
+3 | use rusqlite::{params, Connection, OpenFlags, OptionalExtension, Transaction};
+  |                                               ^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `kairo-ecs-pdes` (lib test) generated 1 warning (run `cargo fix --lib -p kairo-ecs-pdes --tests` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 4.25s
+     Running unittests src/lib.rs (/Volumes/PortableSSD/codex-builds/kairos-track48-339aba1/debug/deps/kairo_ecs_pdes-816343e8feb60719)
+
+running 3 tests
+test optimistic::external_store::tests::lifetime_owner_and_provisioning_binding_fail_closed ... FAILED
+test optimistic::external_store::tests::stale_conflicting_incomplete_and_oversize_units_fail_unchanged ... FAILED
+test optimistic::external_store::tests::atomic_image_and_exact_retry_survive_reopen ... FAILED
+
+failures:
+
+---- optimistic::external_store::tests::lifetime_owner_and_provisioning_binding_fail_closed stdout ----
+
+thread 'optimistic::external_store::tests::lifetime_owner_and_provisioning_binding_fail_closed' (4424078) panicked at crates/kairo-ecs-pdes/src/optimistic/external_store/tests.rs:109:30:
+called `Result::unwrap()` on an `Err` value: Sql(SqliteFailure(Error { code: CannotOpen, extended_code: 1550 }, Some("unable to open database file: /var/folders/m9/_g3wndrn04d80ys2382r700r0000gn/T/kairo-store-11756-1793662391639543000-2/participant.sqlite")))
+
+---- optimistic::external_store::tests::stale_conflicting_incomplete_and_oversize_units_fail_unchanged stdout ----
+
+thread 'optimistic::external_store::tests::stale_conflicting_incomplete_and_oversize_units_fail_unchanged' (4424079) panicked at crates/kairo-ecs-pdes/src/optimistic/external_store/tests.rs:76:34:
+called `Result::unwrap()` on an `Err` value: Sql(SqliteFailure(Error { code: CannotOpen, extended_code: 1550 }, Some("unable to open database file: /var/folders/m9/_g3wndrn04d80ys2382r700r0000gn/T/kairo-store-11756-1793662391639542000-1/participant.sqlite")))
+
+---- optimistic::external_store::tests::atomic_image_and_exact_retry_survive_reopen stdout ----
+
+thread 'optimistic::external_store::tests::atomic_image_and_exact_retry_survive_reopen' (4424077) panicked at crates/kairo-ecs-pdes/src/optimistic/external_store/tests.rs:54:34:
+called `Result::unwrap()` on an `Err` value: Sql(SqliteFailure(Error { code: CannotOpen, extended_code: 1550 }, Some("unable to open database file: /var/folders/m9/_g3wndrn04d80ys2382r700r0000gn/T/kairo-store-11756-1793662391639542000-0/participant.sqlite")))
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    optimistic::external_store::tests::atomic_image_and_exact_retry_survive_reopen
+    optimistic::external_store::tests::lifetime_owner_and_provisioning_binding_fail_closed
+    optimistic::external_store::tests::stale_conflicting_incomplete_and_oversize_units_fail_unchanged
+
+test result: FAILED. 0 passed; 3 failed; 0 ignored; 0 measured; 55 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p kairo-ecs-pdes --lib`
