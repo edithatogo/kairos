@@ -489,53 +489,11 @@ impl PdesTransport for GrpcSocketTransport {
         }
     }
 
-    fn all_reduce_min(&mut self, timestamp: Tick) -> Tick {
-        let timestamp =
-            crate::socket::buffered_minimum(timestamp, &self.inboxes, &self.optimistic_inboxes);
-        if self.peers.is_empty() {
-            return timestamp;
-        }
-
-        let round = self.gvt_round;
-        self.gvt_round += 1;
-
-        {
-            let mut proposals = self.gvt_proposals.lock().unwrap();
-            proposals.insert((round, self.local_lp), timestamp);
-        }
-
-        // Broadcast local GVT proposal with round identifier to all configured peers
-        let peer_ids: Vec<LpId> = self.peers.keys().copied().collect();
-        for dest in &peer_ids {
-            let mut payload = Vec::with_capacity(28);
-            payload.extend_from_slice(&self.local_lp.0.to_be_bytes());
-            payload.extend_from_slice(&round.to_be_bytes());
-            payload.extend_from_slice(&timestamp.ticks().to_be_bytes());
-            let _ = self.send_frame(*dest, MSG_TYPE_GVT_PROPOSAL, &payload);
-        }
-
-        // Wait until every configured peer has proposed for the current round (bounded by request_timeout)
-        let deadline = Instant::now() + self.config.request_timeout;
-        while Instant::now() < deadline {
-            let all_arrived = {
-                let proposals = self.gvt_proposals.lock().unwrap();
-                peer_ids
-                    .iter()
-                    .all(|peer| proposals.contains_key(&(round, *peer)))
-            };
-            if all_arrived {
-                break;
-            }
-            thread::sleep(Duration::from_millis(1));
-        }
-
-        // Compute minimum over current round proposals only and remove consumed round entries
-        // A missing participant may hold an earlier event than every known proposal.
-        let mut proposals = self.gvt_proposals.lock().unwrap();
-        proposals.remove(&(round, self.local_lp));
-        peer_ids.iter().fold(timestamp, |minimum, peer| {
-            minimum.min(proposals.remove(&(round, *peer)).unwrap_or(Tick::ZERO))
-        })
+    fn all_reduce_min(&mut self, _timestamp: Tick) -> Tick {
+        // Inbox samples and responsive contribution RPCs do not account for
+        // messages in flight, retirement obligations or restart fencing.
+        // A listener with no configured peers is still open to remote ingress.
+        Tick::ZERO
     }
 }
 
@@ -873,4 +831,61 @@ fn decode_telemetry_payload(payload: &[u8]) -> Option<GrpcTelemetryBatch> {
         tick_end: Tick::from_ticks(tick_end),
         arrow_ipc_payload,
     })
+}
+
+impl GrpcSocketTransport {
+    /// Diagnostic minimum of reported contributions and current local buffers.
+    ///
+    /// This is not a consistent distributed cut or a safe reclamation floor.
+    /// Traffic can arrive after a sample; retirement and restart obligations are
+    /// not included. Never pass this value to fossil collection. The scheduler
+    /// trait deliberately returns ZERO until those obligations are proved.
+    pub fn reduce_reported_minimum(&mut self, timestamp: Tick) -> Tick {
+        let timestamp =
+            crate::socket::buffered_minimum(timestamp, &self.inboxes, &self.optimistic_inboxes);
+        if self.peers.is_empty() {
+            return timestamp;
+        }
+
+        let round = self.gvt_round;
+        self.gvt_round += 1;
+
+        {
+            let mut proposals = self.gvt_proposals.lock().unwrap();
+            proposals.insert((round, self.local_lp), timestamp);
+        }
+
+        // Broadcast local GVT proposal with round identifier to all configured peers
+        let peer_ids: Vec<LpId> = self.peers.keys().copied().collect();
+        for dest in &peer_ids {
+            let mut payload = Vec::with_capacity(28);
+            payload.extend_from_slice(&self.local_lp.0.to_be_bytes());
+            payload.extend_from_slice(&round.to_be_bytes());
+            payload.extend_from_slice(&timestamp.ticks().to_be_bytes());
+            let _ = self.send_frame(*dest, MSG_TYPE_GVT_PROPOSAL, &payload);
+        }
+
+        // Wait until every configured peer has proposed for the current round (bounded by request_timeout)
+        let deadline = Instant::now() + self.config.request_timeout;
+        while Instant::now() < deadline {
+            let all_arrived = {
+                let proposals = self.gvt_proposals.lock().unwrap();
+                peer_ids
+                    .iter()
+                    .all(|peer| proposals.contains_key(&(round, *peer)))
+            };
+            if all_arrived {
+                break;
+            }
+            thread::sleep(Duration::from_millis(1));
+        }
+
+        // Compute minimum over current round proposals only and remove consumed round entries
+        // A missing participant may hold an earlier event than every known proposal.
+        let mut proposals = self.gvt_proposals.lock().unwrap();
+        proposals.remove(&(round, self.local_lp));
+        peer_ids.iter().fold(timestamp, |minimum, peer| {
+            minimum.min(proposals.remove(&(round, *peer)).unwrap_or(Tick::ZERO))
+        })
+    }
 }

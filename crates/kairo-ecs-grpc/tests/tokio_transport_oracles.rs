@@ -414,5 +414,8 @@ fn incomplete_socket_round_cannot_advance_time() {
         ..GrpcTransportConfig::default()
     };
     let mut local = GrpcSocketTransport::bind(LpId(1), addr, peers, config).unwrap();
-    assert_eq!(local.all_reduce_min(Tick::from_ticks(500)), Tick::ZERO);
+    assert_eq!(
+        local.reduce_reported_minimum(Tick::from_ticks(500)),
+        Tick::ZERO
+    );
 }

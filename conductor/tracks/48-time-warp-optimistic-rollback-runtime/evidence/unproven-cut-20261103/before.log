@@ -1,0 +1,97 @@
+   Compiling bytes v1.12.1
+   Compiling libc v0.2.191
+   Compiling pin-project-lite v0.2.17
+   Compiling futures-core v0.3.34
+   Compiling itoa v1.0.18
+   Compiling futures-sink v0.3.34
+   Compiling tracing-core v0.1.36
+   Compiling hashbrown v0.17.1 (https://github.com/pola-rs/hashbrown?rev=d76a6f81abd8f388676aff15068236a8d21c7e1a#d76a6f81)
+   Compiling equivalent v1.0.3
+   Compiling syn v3.0.9
+   Compiling tracing-attributes v0.1.31
+   Compiling slab v0.4.12
+   Compiling httparse v1.10.1
+   Compiling serde_core v1.0.229
+   Compiling futures-task v0.3.34
+   Compiling tower-service v0.3.3
+   Compiling futures-util v0.3.34
+   Compiling fnv v1.0.7
+   Compiling atomic-waker v1.1.2
+   Compiling try-lock v0.2.5
+   Compiling want v0.3.2
+   Compiling futures-channel v0.3.34
+   Compiling tower-layer v0.3.3
+   Compiling sync_wrapper v1.0.2
+   Compiling http v1.5.0
+   Compiling indexmap v2.14.2
+   Compiling smallvec v1.16.4
+   Compiling httpdate v1.0.3
+   Compiling anyhow v1.0.104
+   Compiling tracing v0.1.44
+   Compiling mime v0.3.17
+   Compiling memchr v2.8.3
+   Compiling either v1.19.0
+   Compiling pin-project-internal v1.1.13
+   Compiling itertools v0.14.0
+   Compiling zmij v1.0.23
+   Compiling mio v1.2.4
+   Compiling socket2 v0.6.5
+   Compiling percent-encoding v2.3.2
+   Compiling http-body v1.1.0
+   Compiling matchit v0.8.4
+   Compiling http-body-util v0.1.5
+   Compiling kairo-ecs-types v0.0.0 (/Users/doughnut/.codex/worktrees/kairos-cap48-gvt/kairos/crates/kairo-ecs-types)
+   Compiling axum-core v0.5.6
+   Compiling base64 v0.22.1
+   Compiling serde_json v1.0.154
+   Compiling pin-project v1.1.13
+   Compiling serde v1.0.229
+   Compiling kairo-ecs-pdes v0.0.0 (/Users/doughnut/.codex/worktrees/kairos-cap48-gvt/kairos/crates/kairo-ecs-pdes)
+   Compiling prost-derive v0.14.4
+   Compiling tokio-macros v2.7.2
+   Compiling async-trait v0.1.92
+   Compiling serde_derive v1.0.229
+   Compiling prost v0.14.4
+   Compiling tokio v1.54.1
+   Compiling tokio-util v0.7.20
+   Compiling tokio-stream v0.1.19
+   Compiling h2 v0.4.20
+   Compiling tower v0.5.3
+   Compiling axum v0.8.9
+   Compiling hyper v1.12.0
+   Compiling hyper-util v0.1.21
+   Compiling hyper-timeout v0.5.2
+   Compiling tonic v0.14.8
+   Compiling kairo-ecs-grpc v0.0.0 (/Users/doughnut/.codex/worktrees/kairos-cap48-gvt/kairos/crates/kairo-ecs-grpc)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 45.73s
+     Running tests/unproven_cut_safety.rs (/Volumes/PortableSSD/codex-builds/kairos-track48-339aba1/debug/deps/unproven_cut_safety-eab71789becf381e)
+
+running 2 tests
+test responsive_custom_tcp_peers_do_not_certify_a_distributed_cut ... FAILED
+test responsive_tonic_peers_do_not_certify_a_distributed_cut ... FAILED
+
+failures:
+
+---- responsive_custom_tcp_peers_do_not_certify_a_distributed_cut stdout ----
+
+thread 'responsive_custom_tcp_peers_do_not_certify_a_distributed_cut' (3601292) panicked at crates/kairo-ecs-grpc/tests/unproven_cut_safety.rs:74:5:
+assertion `left == right` failed
+  left: SimTime { ticks: 300 }
+ right: SimTime { ticks: 0 }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- responsive_tonic_peers_do_not_certify_a_distributed_cut stdout ----
+
+thread 'responsive_tonic_peers_do_not_certify_a_distributed_cut' (3601293) panicked at crates/kairo-ecs-grpc/tests/unproven_cut_safety.rs:42:5:
+assertion `left == right` failed: responsive proposals do not prove in-flight/retirement accounting
+  left: SimTime { ticks: 300 }
+ right: SimTime { ticks: 0 }
+
+
+failures:
+    responsive_custom_tcp_peers_do_not_certify_a_distributed_cut
+    responsive_tonic_peers_do_not_certify_a_distributed_cut
+
+test result: FAILED. 0 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p kairo-ecs-grpc --test unproven_cut_safety`

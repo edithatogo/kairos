@@ -1,0 +1,9 @@
+   Compiling kairo-ecs-grpc v0.0.0 (/Users/doughnut/.codex/worktrees/kairos-cap48-gvt/kairos/crates/kairo-ecs-grpc)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.98s
+     Running unittests src/lib.rs (/Volumes/PortableSSD/codex-builds/kairos-track48-339aba1/debug/deps/kairo_ecs_grpc-9350d50d6e4424ab)
+
+running 1 test
+test tonic_transport::cut_safety_regressions::post_sample_work_is_not_covered_by_a_raw_contribution_round ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 25 filtered out; finished in 0.03s
+

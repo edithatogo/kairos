@@ -372,3 +372,52 @@ bounded evidence. CAP-48.1 is still open for consistent channel accounting,
 two-host positive/anti-message rollback, injected delay/duplication/failure,
 restart and serial parity. Scalar collective minima alone cannot close GVT or
 fossil-collection acceptance. No Track 48 source/phase is advanced by this leaf.
+
+## CAP-48.1 safety prerequisite — 3 November 2026
+
+Chat `01a19bed-7060-7910-af22-38cb31f51446` owns this bounded Track48/49
+safety packet in managed worktree
+`/Users/doughnut/.codex/worktrees/kairos-cap48-gvt/kairos`, branch
+`codex/cap48-gvt-safety-20261103`, based on frozen native preview source
+`4c5c0a340157902f46ca5532a2fdac145fa817da`. Its original PR #366 has passed
+hosted Rust/MPI verification, project coverage and all other executed checks;
+it remains separate and unmerged. The original worktree is preserved unchanged.
+No other harness claims or distributed test processes were active at intake.
+
+Owned paths: grpc crate, MPI process backend/tests, PDES transport trait docs,
+this Track48 directory, Track49 handoff cross-reference, safety documentation
+and changelog. Native scope: controlled local test processes only. No remote
+mutation, tenant object, credentials, parent pin or repository-wide promotion.
+The existing NAS route was read back with BatchMode, StrictHostKeyChecking and
+bounded timeout; connection timed out with no remote identity/runtime output.
+
+The responsive-Tonic and custom-TCP regressions failed on the unchanged source:
+returned 300 rather than the safe zero floor despite no complete channel cut.
+The [safety decision](adr-unproven-network-cut-20261103.md) makes network
+scheduler floors fail closed, preserving raw contribution diagnostics and the
+local owned rollback/cut proof boundary. Independent design review also removed
+a no-peer exception, since a listener can still receive remote traffic.
+Next operation: focused/adversarial and affected-crate qualification, independent
+implementation review, source handoff/hosted checks. CAP-48.1 remains open;
+no phase/status advance or two-host acceptance follows from this safety patch.
+
+### Reviewed safety source handoff
+
+Independent reviewer-agent `review_native_mpi` accepted the final safety
+containment source. Applied both findings: successful diagnostic network rounds
+on the same participants precede scheduler ZERO assertions, and MPI diagnostic
+implementation now precedes its test module. Strict Clippy passed after retaining
+the original lint failure. Final three-crate locked all-feature suite, adversarial
+ordinary/positive/anti test, formatting and phase validation passed. Exact source,
+command/cwd/toolchain/input/log hashes are retained in
+[evidence](evidence/unproven-cut-20261103/receipt.json). No dependency change;
+#366's unchanged lock/advisory/source/licence receipts remain reusable.
+
+The adversarial test observes the actual first proposal before admitting tick-3
+work and then releasing the tick-300 peer proposal. It proves the raw sample
+omission and verifies the scheduler still returns ZERO. Successful live scalar
+rounds remain tested independently; none is relabelled distributed acceptance.
+The safety packet will fast-forward this chat's existing draft PR #366 source
+branch after read-only integration preflight; the prior worktree stays unchanged.
+Next: exact-head hosted qualification and integrator review. CAP-48.1 remains
+open for the real cut/retirement/restart implementation and two-host acceptance.

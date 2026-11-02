@@ -653,7 +653,33 @@ impl PdesTransport for TonicTransport {
         }
     }
 
-    fn all_reduce_min(&mut self, timestamp: Tick) -> Tick {
+    fn all_reduce_min(&mut self, _timestamp: Tick) -> Tick {
+        // Inbox samples and responsive contribution RPCs do not account for
+        // messages in flight, retirement obligations or restart fencing.
+        // A listener with no configured peers is still open to remote ingress.
+        Tick::ZERO
+    }
+}
+
+impl Drop for TonicTransport {
+    fn drop(&mut self) {
+        if let Some(tx) = self.shutdown_tx.take() {
+            let _ = tx.send(true);
+        }
+        if let Some(handle) = self.server_handle.take() {
+            let _ = handle.join();
+        }
+    }
+}
+
+impl TonicTransport {
+    /// Diagnostic minimum of reported contributions and current local buffers.
+    ///
+    /// This is not a consistent distributed cut or a safe reclamation floor.
+    /// Traffic can arrive after a sample; retirement and restart obligations are
+    /// not included. Never pass this value to fossil collection. The scheduler
+    /// trait deliberately returns ZERO until those obligations are proved.
+    pub fn reduce_reported_minimum(&mut self, timestamp: Tick) -> Tick {
         let timestamp =
             crate::socket::buffered_minimum(timestamp, &self.inboxes, &self.optimistic_inboxes);
         if self.peers.is_empty() {
@@ -696,13 +722,113 @@ impl PdesTransport for TonicTransport {
     }
 }
 
-impl Drop for TonicTransport {
-    fn drop(&mut self) {
-        if let Some(tx) = self.shutdown_tx.take() {
-            let _ = tx.send(true);
-        }
-        if let Some(handle) = self.server_handle.take() {
-            let _ = handle.join();
+#[cfg(test)]
+mod cut_safety_regressions {
+    use super::*;
+    use kairo_ecs_pdes::{LogicalEventId, OptimisticAuthority, OptimisticMessageKind};
+
+    #[test]
+    fn post_sample_work_is_not_covered_by_a_raw_contribution_round() {
+        for optimistic_kind in [
+            None,
+            Some(OptimisticMessageKind::Positive),
+            Some(OptimisticMessageKind::Anti),
+        ] {
+            let port = || {
+                std::net::TcpListener::bind("127.0.0.1:0")
+                    .unwrap()
+                    .local_addr()
+                    .unwrap()
+                    .port()
+            };
+            let (first_port, second_port) = (port(), port());
+            let mut first = TonicTransport::bind(
+                LpId(1),
+                format!("127.0.0.1:{first_port}").parse().unwrap(),
+                vec![GrpcPeer {
+                    lp_id: LpId(2),
+                    endpoint: format!("http://127.0.0.1:{second_port}"),
+                }],
+                GrpcTransportConfig::default(),
+            )
+            .unwrap();
+            let mut second = TonicTransport::bind(
+                LpId(2),
+                format!("127.0.0.1:{second_port}").parse().unwrap(),
+                vec![GrpcPeer {
+                    lp_id: LpId(1),
+                    endpoint: format!("http://127.0.0.1:{first_port}"),
+                }],
+                GrpcTransportConfig::default(),
+            )
+            .unwrap();
+            let worker = thread::spawn(move || {
+                let diagnostic = first.reduce_reported_minimum(Tick::from_ticks(500));
+                (diagnostic, first)
+            });
+            // Observe the actual received proposal: A's inbox sample has happened.
+            // No sleep or thread scheduling assumption determines delivery order.
+            let deadline = Instant::now() + Duration::from_secs(5);
+            while !second
+                .gvt_proposals
+                .lock()
+                .unwrap()
+                .contains_key(&(0, LpId(1)))
+            {
+                assert!(
+                    Instant::now() < deadline,
+                    "first contribution never arrived"
+                );
+                thread::yield_now();
+            }
+            let event = RemoteEvent {
+                source_lp: LpId(2),
+                dest_lp: LpId(1),
+                tick: Tick::from_ticks(3),
+                event_payload: vec![48],
+            };
+            if let Some(kind) = optimistic_kind {
+                let message = OptimisticMessage::try_from_authority_parts(
+                    event,
+                    LogicalEventId::root(LpId(2), 48),
+                    OptimisticAuthority::Scoped {
+                        simulation_namespace: 48,
+                        ownership_epoch: 1,
+                    },
+                    0,
+                    kind,
+                )
+                .unwrap();
+                assert!(second.send_optimistic(LpId(1), &message).unwrap().accepted);
+            } else {
+                second.send(LpId(1), PdesMessage::Event(event)).unwrap();
+            }
+            // Only now release B's contribution, after tick-3 admission was ACKed.
+            second
+                .propose_gvt(LpId(1), 0, Tick::from_ticks(300))
+                .unwrap();
+            let (diagnostic, mut first) = worker.join().unwrap();
+            assert_eq!(
+                diagnostic,
+                Tick::from_ticks(300),
+                "the raw sample omitted admitted tick-3 work"
+            );
+            assert_eq!(
+                first.all_reduce_min(Tick::from_ticks(500)),
+                Tick::ZERO,
+                "the raw contribution cannot authorize a scheduler floor"
+            );
+            if let Some(kind) = optimistic_kind {
+                let accepted = first.poll_optimistic(LpId(1)).unwrap();
+                assert_eq!(accepted.len(), 1);
+                assert_eq!(accepted[0].event().tick, Tick::from_ticks(3));
+                assert_eq!(accepted[0].kind(), kind);
+            } else {
+                let accepted = first.recv(LpId(1)).unwrap();
+                assert!(
+                    matches!(&accepted[..], [PdesMessage::Event(event)] if event.tick == Tick::from_ticks(3))
+                );
+            }
         }
     }
 }

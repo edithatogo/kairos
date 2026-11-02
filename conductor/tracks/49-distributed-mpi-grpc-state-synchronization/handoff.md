@@ -206,3 +206,13 @@ not replaced by local MPI or the historical HTTP/2 heartbeat.
 This is a terminal scoped source handoff, not a Track 48/49 phase closeout.
 Hosted results remain separately inspectable on the exact PR head; no source,
 main, consumer pin, release or operational acceptance is promoted automatically.
+
+## CAP-48.1 network floor safety lane — 3 November 2026
+
+The same chat owns a bounded cross-track correction in managed worktree
+`/Users/doughnut/.codex/worktrees/kairos-cap48-gvt/kairos`, branch
+`codex/cap48-gvt-safety-20261103`. The [Track48 record](../48-time-warp-optimistic-rollback-runtime/adr-unproven-network-cut-20261103.md)
+explains why network scalar reductions cannot advance scheduler GVT. This lane
+preserves those algorithms as diagnostics and leaves MPI preview #366 frozen.
+Native scope remains local controlled tests; NAS SSH still times out. All CAP
+and distributed-cut/restart acceptance gates remain open.
