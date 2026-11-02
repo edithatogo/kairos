@@ -68,6 +68,7 @@ jobs:
       - name: Install Rust 1.99.1
         run: |
           rustup toolchain install 1.99.1 --profile minimal
+          rustup component add --toolchain 1.99.1 rustc cargo rust-std
       - name: Bind Rust 1.99.1 tools
         shell: bash
         run: |

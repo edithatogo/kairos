@@ -421,3 +421,29 @@ The safety packet will fast-forward this chat's existing draft PR #366 source
 branch after read-only integration preflight; the prior worktree stays unchanged.
 Next: exact-head hosted qualification and integrator review. CAP-48.1 remains
 open for the real cut/retirement/restart implementation and two-host acceptance.
+
+### Hosted qualification follow-through
+
+Both source branches and PR #366 were read back at `7aace5a` after the
+interrupted push. Hosted Rust verification, project coverage and core aggregate
+passed. The remaining failures were Archive Python validation (its Binding CI
+aggregate) and rust-package setup. Rustup reported the toolchain unchanged while
+rustc was missing; explicit rustc/cargo/rust-std installation now precedes the
+unchanged actual-version checks. The pip-audit fixture now creates the real
+fresh verifier venv/ensurepip used by production, rather than borrowing ambient
+pip through a bare symlink, and verifies both prefix and pip-module ownership.
+Production installer, locks, signature checks and isolation gates are unchanged.
+
+Same chat/worktree owns this bounded follow-through claim on package-dry-run.yml,
+test_verified_syft_installer.py and these records. Independent reviewer-agent
+accepted both fixes: workflow hash `dbc93ba8e783b5a5795251edc2f409e5fbef666f5c0d5bc218defce40e12dbd0`,
+test hash `52b2ff1c2d6ae19b25e51e2f05707561bc3252fd03eb1a3fb9e8e81ef94da093`.
+The focused corrected fixture, actionlint and publication validator passed.
+The full local 32-case Syft suite recorded 31 passes and one unchanged native
+output-cap cleanup failure (EPERM), with its first failure retained and no
+retry, skip or production cleanup modification. The same cleanup case passed
+in the prior hosted Linux run. See [repair receipt](evidence/unproven-cut-20261103/hosted-repair-receipt.json).
+
+Next: fresh exact-head hosted setup/fixture readback; no broad quality, security,
+coverage or release gate is relaxed. CAP-48.1 remains open and NAS/two-host and
+complete cut/retirement/restart implementation remain separate blockers.

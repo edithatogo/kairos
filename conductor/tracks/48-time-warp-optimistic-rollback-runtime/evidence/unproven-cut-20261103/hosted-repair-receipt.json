@@ -1,0 +1,40 @@
+{
+  "base": "7aace5afa83a10555c5f65430a15d2b91ab6601a",
+  "cwd": "/Users/doughnut/.codex/worktrees/kairos-cap48-gvt/kairos",
+  "python": "repo-local CPython 3.15.2",
+  "source_sha256": {
+    "tests/test_verified_syft_installer.py": "52b2ff1c2d6ae19b25e51e2f05707561bc3252fd03eb1a3fb9e8e81ef94da093",
+    ".github/workflows/package-dry-run.yml": "dbc93ba8e783b5a5795251edc2f409e5fbef666f5c0d5bc218defce40e12dbd0",
+    "scripts/supply_chain/install_verified_syft.py": "560312f36eea2b7270f04a2ec64f85ae43bf0305fa4b89fb5ad4edaac9e18efa"
+  },
+  "hosted_failure_runs": [
+    "https://github.com/edithatogo/kairos/actions/runs/41535650317",
+    "https://github.com/edithatogo/kairos/actions/runs/41535650308"
+  ],
+  "commands": [
+    {
+      "command": "PYTHONPATH=tests .venv/bin/python -m unittest test_verified_syft_installer.VerifiedSyftInstallerTests.test_pip_configuration_audit_precedes_hash_locked_install -v",
+      "exit": 0,
+      "log": "pip-focused-fixed.log"
+    },
+    {
+      "command": "PYTHONPATH=tests .venv/bin/python -m unittest test_verified_syft_installer -v",
+      "exit": 1,
+      "log": "syft-suite-local.log",
+      "result": "31 passed; unchanged output-cap process-group cleanup test failed with EPERM; first failure retained, no retry/skip or production cleanup change"
+    },
+    {
+      "command": "actionlint .github/workflows/package-dry-run.yml",
+      "exit": 0
+    },
+    {
+      "command": "node scripts/validation/validate-publication-readiness.mjs",
+      "exit": 0
+    }
+  ],
+  "logs_sha256": {
+    "pip-focused-fixed.log": "4e227061416b1681b85ef0371b1a9df1516038af03d1f0231952997f883750ef",
+    "syft-suite-local.log": "165c474cf6e25d5f4a818f25e34b8ee8d202b55c598fa7fbe513433e45aecd7a"
+  },
+  "acceptance": "bounded fixture/setup source reviewed; hosted verification pending; no CAP-48.1 closure"
+}
