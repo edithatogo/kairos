@@ -143,6 +143,49 @@ pub mod simulation_transport_client {
             self.inner = self.inner.max_encoding_message_size(limit);
             self
         }
+        pub async fn migrate_snapshot(
+            &mut self,
+            request: impl tonic::IntoRequest<crate::envelope::WireMigrationSnapshotRequest>,
+        ) -> Result<tonic::Response<crate::envelope::WireMigrationAck>, tonic::Status> {
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::unavailable(format!("Service was not ready: {}", e.into()))
+            })?;
+            let codec = crate::service::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/kairo.ecs.simulation.v1.SimulationTransport/MigrateSnapshot",
+            );
+            self.inner.unary(request.into_request(), path, codec).await
+        }
+        pub async fn stream_telemetry(
+            &mut self,
+            request: impl tonic::IntoStreamingRequest<Message = crate::envelope::WireTelemetryBatch>,
+        ) -> Result<tonic::Response<crate::envelope::WireMigrationAck>, tonic::Status> {
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::unavailable(format!("Service was not ready: {}", e.into()))
+            })?;
+            let codec = crate::service::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/kairo.ecs.simulation.v1.SimulationTransport/StreamTelemetry",
+            );
+            self.inner
+                .client_streaming(request.into_streaming_request(), path, codec)
+                .await
+        }
+        pub async fn stream_telemetry_v2(
+            &mut self,
+            request: impl tonic::IntoStreamingRequest<Message = crate::envelope::WireTelemetryBatchV2>,
+        ) -> Result<tonic::Response<crate::envelope::WireTelemetryAck>, tonic::Status> {
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::unavailable(format!("Service was not ready: {}", e.into()))
+            })?;
+            let codec = crate::service::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/kairo.ecs.simulation.v1.SimulationTransport/StreamTelemetryV2",
+            );
+            self.inner
+                .client_streaming(request.into_streaming_request(), path, codec)
+                .await
+        }
         pub async fn exchange_events(
             &mut self,
             request: impl tonic::IntoRequest<crate::envelope::WireRemoteEvent>,
@@ -272,6 +315,30 @@ pub mod simulation_transport_server {
     /// Generated trait containing gRPC methods that should be implemented for use with SimulationTransportServer.
     #[async_trait]
     pub trait SimulationTransport: std::marker::Send + std::marker::Sync + 'static {
+        async fn migrate_snapshot(
+            &self,
+            _request: tonic::Request<crate::envelope::WireMigrationSnapshotRequest>,
+        ) -> Result<tonic::Response<crate::envelope::WireMigrationAck>, tonic::Status> {
+            Err(tonic::Status::unimplemented(
+                "migrate_snapshot is not implemented by this service",
+            ))
+        }
+        async fn stream_telemetry(
+            &self,
+            _request: tonic::Request<tonic::Streaming<crate::envelope::WireTelemetryBatch>>,
+        ) -> Result<tonic::Response<crate::envelope::WireMigrationAck>, tonic::Status> {
+            Err(tonic::Status::unimplemented(
+                "stream_telemetry is not implemented by this service",
+            ))
+        }
+        async fn stream_telemetry_v2(
+            &self,
+            _request: tonic::Request<tonic::Streaming<crate::envelope::WireTelemetryBatchV2>>,
+        ) -> Result<tonic::Response<crate::envelope::WireTelemetryAck>, tonic::Status> {
+            Err(tonic::Status::unimplemented(
+                "stream_telemetry_v2 is not implemented by this service",
+            ))
+        }
         async fn exchange_events(
             &self,
             request: tonic::Request<crate::envelope::WireRemoteEvent>,
@@ -624,6 +691,95 @@ pub mod simulation_transport_server {
                         Ok(res)
                     };
                     Box::pin(fut)
+                }
+                "/kairo.ecs.simulation.v1.SimulationTransport/MigrateSnapshot" => {
+                    struct Method<T: SimulationTransport>(Arc<T>);
+                    impl<T: SimulationTransport>
+                        tonic::server::UnaryService<crate::envelope::WireMigrationSnapshotRequest>
+                        for Method<T>
+                    {
+                        type Response = crate::envelope::WireMigrationAck;
+                        type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<crate::envelope::WireMigrationSnapshotRequest>,
+                        ) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            Box::pin(async move {
+                                <T as SimulationTransport>::migrate_snapshot(&inner, request).await
+                            })
+                        }
+                    }
+                    let inner = self.inner.clone();
+                    let decode = self.max_decoding_message_size;
+                    let encode = self.max_encoding_message_size;
+                    Box::pin(async move {
+                        let codec = crate::service::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_max_message_size_config(decode, encode);
+                        Ok(grpc.unary(Method(inner), req).await)
+                    })
+                }
+                "/kairo.ecs.simulation.v1.SimulationTransport/StreamTelemetry" => {
+                    struct Method<T: SimulationTransport>(Arc<T>);
+                    impl<T: SimulationTransport>
+                        tonic::server::ClientStreamingService<crate::envelope::WireTelemetryBatch>
+                        for Method<T>
+                    {
+                        type Response = crate::envelope::WireMigrationAck;
+                        type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<
+                                tonic::Streaming<crate::envelope::WireTelemetryBatch>,
+                            >,
+                        ) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            Box::pin(async move {
+                                <T as SimulationTransport>::stream_telemetry(&inner, request).await
+                            })
+                        }
+                    }
+                    let inner = self.inner.clone();
+                    let decode = self.max_decoding_message_size;
+                    let encode = self.max_encoding_message_size;
+                    Box::pin(async move {
+                        let codec = crate::service::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_max_message_size_config(decode, encode);
+                        Ok(grpc.client_streaming(Method(inner), req).await)
+                    })
+                }
+                "/kairo.ecs.simulation.v1.SimulationTransport/StreamTelemetryV2" => {
+                    struct Method<T: SimulationTransport>(Arc<T>);
+                    impl<T: SimulationTransport>
+                        tonic::server::ClientStreamingService<crate::envelope::WireTelemetryBatchV2>
+                        for Method<T>
+                    {
+                        type Response = crate::envelope::WireTelemetryAck;
+                        type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<
+                                tonic::Streaming<crate::envelope::WireTelemetryBatchV2>,
+                            >,
+                        ) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            Box::pin(async move {
+                                <T as SimulationTransport>::stream_telemetry_v2(&inner, request)
+                                    .await
+                            })
+                        }
+                    }
+                    let inner = self.inner.clone();
+                    let decode = self.max_decoding_message_size;
+                    let encode = self.max_encoding_message_size;
+                    Box::pin(async move {
+                        let codec = crate::service::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_max_message_size_config(decode, encode);
+                        Ok(grpc.client_streaming(Method(inner), req).await)
+                    })
                 }
                 _ => Box::pin(async move {
                     let mut response = http::Response::new(tonic::body::Body::default());

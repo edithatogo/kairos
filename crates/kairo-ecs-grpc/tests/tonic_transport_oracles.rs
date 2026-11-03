@@ -417,7 +417,7 @@ fn oracle_tonic_transport_migration_and_gvt_consensus_round() {
     let ack = transport1
         .send_migration(LpId(2), &migration_req)
         .expect("send migration");
-    assert!(ack.applied);
+    assert!(!ack.applied, "queue acceptance is not model application");
 
     let received_migrations = transport2.drain_migrations();
     assert_eq!(received_migrations.len(), 1);
