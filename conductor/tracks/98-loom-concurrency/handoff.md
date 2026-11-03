@@ -36,6 +36,10 @@ See [programme](../../robust-dependencies.md). Worktree integration, local main,
 
 ## Phase closeout evidence
 
+Historical `$conductor-review` and accepted fixes are recorded in PR #353,
+merge commit SHA `6920b813d23d75132fd5c28927782679101e3dd5` on main.
+The historical pushed ref was `codex/track98-loom-qualification`.
+
 The qualification packet and its review fixes were integrated in PR #353; its
 bounded model receipts are recorded below. Formal phase and shared-registry
 acceptance remain pending, including the explicit next-phase decision and
