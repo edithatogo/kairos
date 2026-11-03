@@ -211,12 +211,14 @@ fn durable_receipts_attest_actual_metadata_and_explicit_independent_fixture() {
     let supplied = std::env::var_os("KAIROS_METADATA_FIXTURE_ROOT").map(std::path::PathBuf::from);
     let root = supplied.as_deref().unwrap_or(owned.path());
     if supplied.is_some() {
-        let mut builder = std::fs::DirBuilder::new();
+        let builder = std::fs::DirBuilder::new();
         #[cfg(unix)]
-        {
+        let builder = {
             use std::os::unix::fs::DirBuilderExt;
+            let mut builder = builder;
             builder.mode(0o700);
-        }
+            builder
+        };
         builder
             .create(root)
             .expect("fresh explicit owned fixture directory");

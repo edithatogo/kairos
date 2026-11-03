@@ -302,3 +302,12 @@ Independent security/test-fidelity review is ready; actual repaired Linux hosted
 acceptance remains pending. Windows Arrow job125730516402 separately reports
 new-test unused_mut on its cfg(unix)-only directory-builder mutation; retain the
 failure and repair under a fresh scoped claim before publishing the checkpoint.
+
+Windows fixture repair moves mutable DirBuilder binding into cfg(unix), retaining
+mode0700 and an immutable binding elsewhere. Actual hosted Windows lint failure
+is retained; no allowance or warnings flag change. Nine affected local native
+controls, all-target warnings-denied Clippy and fmt/diff pass. Independent review
+is ready. Actual Windows rerun remains pending. Inspection also confirms the
+existing Arrow platform lane selects only older targets: new domain/metadata
+and FFI consumer tests need explicit selectors under a fresh CI-scoped packet;
+compilation by all-target Clippy is not execution proof.
