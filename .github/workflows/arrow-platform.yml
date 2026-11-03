@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'crates/kairo-ecs-arrow/**'
+      - 'crates/kairo-ecs-arrow-ffi/**'
       - 'crates/kairo-ecs-fs-guard/**'
       - 'crates/kairo-ecs-ffi/**'
       - 'crates/kairo-ecs-types/**'
@@ -11,15 +12,20 @@ on:
       - 'Cargo.lock'
       - 'rust-toolchain.toml'
       - '.github/workflows/arrow-platform.yml'
+      - 'scripts/validation/validate-trusted-domain-import-boundary.mjs'
+      - 'tests/conformance/trusted-domain-import-boundary-check.mjs'
   push:
     branches: [main]
     paths:
       - 'crates/kairo-ecs-arrow/**'
+      - 'crates/kairo-ecs-arrow-ffi/**'
       - 'crates/kairo-ecs-fs-guard/**'
       - 'crates/kairo-ecs-ffi/**'
       - 'Cargo.toml'
       - 'Cargo.lock'
       - '.github/workflows/arrow-platform.yml'
+      - 'scripts/validation/validate-trusted-domain-import-boundary.mjs'
+      - 'tests/conformance/trusted-domain-import-boundary-check.mjs'
   workflow_dispatch:
 
 permissions:
@@ -54,6 +60,13 @@ jobs:
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
         with:
           key: arrow-platform
+      - name: Shared trusted import boundary and normal graphs
+        run: |
+          node --version
+          node scripts/validation/validate-trusted-domain-import-boundary.mjs --graph
+          node tests/conformance/trusted-domain-import-boundary-check.mjs
+      - name: Shared domain C Data imports
+        run: cargo test --locked -p kairo-ecs-arrow-ffi --features native-data
       - name: Native directory permission checks
         run: cargo test --locked -p kairo-ecs-fs-guard
       - name: Arrow publication, recovery and IPC checks
@@ -71,8 +84,8 @@ jobs:
         run: cargo test --locked -p kairo-ecs-arrow --features polars-native --lib
       - name: Focused lint checks
         run: >-
-          cargo clippy --locked -p kairo-ecs-arrow -p kairo-ecs-fs-guard -p kairo-ecs-ffi
-          --features kairo-ecs-arrow/polars-native,kairo-ecs-ffi/native-data --all-targets -- -D warnings
+          cargo clippy --locked -p kairo-ecs-arrow -p kairo-ecs-arrow-ffi -p kairo-ecs-fs-guard -p kairo-ecs-ffi
+          --features kairo-ecs-arrow/polars-native,kairo-ecs-arrow-ffi/native-data,kairo-ecs-ffi/native-data --all-targets -- -D warnings
       - name: Create source packages
         run: >-
           cargo package --locked --no-verify
@@ -85,5 +98,5 @@ jobs:
           git archive --format=tar HEAD | tar -xf - -C "$source_root"
           CARGO_TARGET_DIR="$GITHUB_WORKSPACE/target" cargo check --locked \
             --manifest-path "$source_root/Cargo.toml" \
-            -p kairo-ecs-arrow -p kairo-ecs-ffi \
-            --features kairo-ecs-arrow/polars-native,kairo-ecs-ffi/native-data
+            -p kairo-ecs-arrow -p kairo-ecs-arrow-ffi -p kairo-ecs-ffi \
+            --features kairo-ecs-arrow/polars-native,kairo-ecs-arrow-ffi/native-data,kairo-ecs-ffi/native-data

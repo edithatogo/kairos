@@ -1090,6 +1090,7 @@ tracks:
     owned_paths:
       - conductor/tracks/70-polars-native-data-processing/
       - crates/kairo-ecs-arrow/
+      - crates/kairo-ecs-arrow-ffi/
       - schemas/arrow/
     required_gates:
       - phase-closeout-check

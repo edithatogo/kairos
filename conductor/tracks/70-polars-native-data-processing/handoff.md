@@ -361,3 +361,33 @@ is byte-identical to the owned file. No other main/runtime/dependency source is
 copied, no worktree/index/owner is replaced, and no history is rewritten. Code
 receipts remain scoped as before; require actual newly eligible head checks
 before accepting upstream promotion.
+
+
+## Shared trusted-domain import boundary followup — 4 November 2026
+
+Same coordinator chat01a19b9f-69e7-7353-9b75-445d5653feb4 owns the bounded
+shared-import source packet in standard Git worktree
+kairos-polars-domain-ffi-20261103, branchcodex/polars-domain-ffi-20261103,
+basef34750533c07e9e868481606e5fe5c89ec9b76be. Prior assignments and accepted
+receipts remain history. Actual clean source, terminal prior upstream operation
+and empty advisory leases were checked before this fresh exact-path reservation.
+The reviewed packet extends this same Arrow/FFI owner to the one shared importer
+crate, workspace registration/lock and necessary API/security/conformance/CI
+records. No scheduler, RNG, runtime, binding, header, native service, publication
+or parent pin ownership is added. See [bounded packet](shared-domain-import-followup.md).
+The actual parent populated private probe passed3tests, but its old engine-FFI
+closure fails unchanged bans on duplicated core/RNG sources. This followup fixes
+that dependency coupling without an exemption or weakening Arrow's unsafe ban.
+Implementation, exact source review and actual acceptance remain pending.
+
+
+Shared-import local qualification now has2new direct native plus42existing FFI
+native passes and29default FFI passes,0ignored/filtered. Original raw release,
+event-log and trusted domain controls remain. The exact canonical importer hash
+is unchanged; owning-crate native graph excludes engine/core/state/RNG/DES.
+Reviewed actual-default graph fix passes five normal graphs and eleven negative
+controls. Strict affected Clippy/docs and all four canonical policy groups pass,
+with old duplicate warnings retained. No dependency exemption or Arrow unsafe
+policy change. See the bounded packet for exact profile/reuse/failure distinctions.
+Final frozen review/commit, clean Git/current-head hosted proof and parent source
+promotion remain pending; historical Track70 phase status is not relabelled.
