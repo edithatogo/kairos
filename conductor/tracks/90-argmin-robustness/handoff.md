@@ -94,3 +94,9 @@ Worktree-local raw receipt SHA-256 values:
 - `.venv/parity90.log` — a9000aef48f970aceedd63d4fa2c00d023501aee6bf50b3eb48052ba33086a34
 - `.venv/track90_probe.rs` — ee89ab657e616238d3b7a9ca7b78f3890254cd87decd65c31353ec8151ea6122
 - `.venv/probe90.log` — f8648a40bdc3e38f9c6ae7315842d13088b7d4d5c01734b73a8a2a7211e8dcf0
+
+## Current readback — 3 November 2026
+
+Chat `01a19bed-7060-7910-af22-38cb31f51446` owns this bounded handoff readback in `/Users/doughnut/.codex/worktrees/kairos-track98-review/kairos`, branch `codex/conditional-tracks-reconcile-20261103`, based on `d7bdcd3`. Shared registry and runtime changes remain with their owners.
+
+The earlier instruction to integrate the evidence is historical: [PR #357](https://github.com/edithatogo/kairos/pull/357) merged as `2137475571423f2efbec4ffdddcb52da3136a619`. The recorded entry decision remains a deferral, not an adopted solver or completed runtime gate.

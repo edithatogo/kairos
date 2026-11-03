@@ -36,7 +36,15 @@ See [programme](../../robust-dependencies.md). Worktree integration, local main,
 
 ## Phase closeout evidence
 
-Pending: `$conductor-review`, accepted fixes, rejected findings, command/cwd/commit SHA/toolchain/seed/input hashes, exit codes/artifacts, pushed ref or blocker and next-phase decision. Use `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` before advancement.
+Historical `$conductor-review` and accepted fixes are recorded in PR #353,
+merge commit SHA `6920b813d23d75132fd5c28927782679101e3dd5` on main.
+The historical pushed ref was `codex/track98-loom-qualification`.
+
+The qualification packet and its review fixes were integrated in PR #353; its
+bounded model receipts are recorded below. Formal phase and shared-registry
+acceptance remain pending, including the explicit next-phase decision and
+`pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`.
+The merged defer evaluation does not mark production adoption complete.
 
 ## Phase 0 qualification — 1 November 2026
 
@@ -109,3 +117,9 @@ Raw logs under /Volumes/PortableSSD/codex-builds/kairos-track98:
 Hosted review hardened the source extraction boundary: the model now uses
 the following top-level test-module marker instead of searching for a closing
 brace. The locked rerun again found the mutant and passed seven CAS executions.
+
+## Current readback — 3 November 2026
+
+Chat `01a19bed-7060-7910-af22-38cb31f51446` owns this bounded handoff readback in `/Users/doughnut/.codex/worktrees/kairos-track98-review/kairos`, branch `codex/conditional-tracks-reconcile-20261103`, based on `d7bdcd3`. Shared registry and runtime changes remain with their owners.
+
+The earlier integration instruction is historical: [PR #353](https://github.com/edithatogo/kairos/pull/353) merged as `6920b813d23d75132fd5c28927782679101e3dd5`. From this worktree at `d7bdcd3`, Homebrew Rust/Cargo 1.99.1 on macOS arm64 ran `cargo test --locked --offline --manifest-path conductor/tracks/98-loom-concurrency/model/Cargo.toml -- --nocapture`, with `CARGO_TARGET_DIR=/Volumes/PortableSSD/codex-builds/kairos-track98-current-20261103`, `CARGO_BUILD_JOBS=2` and `CARGO_PROFILE_TEST_DEBUG=0`. Exit 0: three tests passed; the expected mutant panic was detected and the CAS model reported seven executions. The first offline attempt lacked `generator 0.8.11`; a locked online run populated the cache before the retained offline rerun. Log `/Volumes/PortableSSD/codex-builds/kairos-track98-current-20261103/model-current.log` SHA-256: `235a5c9ee784dd0b9698d655aad7af02d1683c9357a6c32ff82ee558e6e0b926`. Model lock SHA-256: `97795e3b0ee98086e297289e5bf8de31f1c2da8dfe466e5750724f8754ad337e`; `crates/kairo-ecs-pdes/src/generation_bitset.rs` SHA-256: `eb8a15153ac95666a3962e895ea6bfbbeb738191fc4b7a83c763ed00ae725a90`. This bounded model does not certify the whole engine or establish a production consumer; the prior defer decision and remaining review gates stand.

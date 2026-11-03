@@ -81,3 +81,9 @@ Chat 01a19600-0a41-7ca2-9e4b-e27d7339c8e7 owns the Track 100 directory
 in /Users/doughnut/.codex/worktrees/track48-rollback/kairos on
 codex/track100-subscriber-decision. Native scope: read-only source, registry
 and PR readback. The integrator retains shared registry/phase ownership.
+
+## Current readback — 3 November 2026
+
+Chat `01a19bed-7060-7910-af22-38cb31f51446` owns this bounded handoff readback in `/Users/doughnut/.codex/worktrees/kairos-track98-review/kairos`, branch `codex/conditional-tracks-reconcile-20261103`, based on `d7bdcd3`. Shared registry and runtime changes remain with their owners.
+
+The entry decision was integrated by [PR #355](https://github.com/edithatogo/kairos/pull/355), merged as `41e58e0c012e3f2253559cbefb239db71ee7486c`. The decision remains a deferral; no production subscriber or host consumer is accepted.

@@ -52,3 +52,9 @@ Chat 01a19600-0a41-7ca2-9e4b-e27d7339c8e7 owns only this track directory in
 Main baseline 956d8399339b8589bbb5bbdea28f4cc5539588a9. Native scope was a local
 disposable export of the Track 49 candidate and read-only upstream/consumer
 readback. Next operation is protected integration of the evidence packet.
+
+## Current readback — 3 November 2026
+
+Chat `01a19bed-7060-7910-af22-38cb31f51446` owns this bounded handoff readback in `/Users/doughnut/.codex/worktrees/kairos-track98-review/kairos`, branch `codex/conditional-tracks-reconcile-20261103`, based on `d7bdcd3`. Shared registry and runtime changes remain with their owners.
+
+The earlier integration instruction is historical: [PR #354](https://github.com/edithatogo/kairos/pull/354) merged as `085d132ac45203a2dd5aaf4dcff20f1b25e75c5c`. The measured slow-sink failure and direct-instrumentation deferral remain; integration did not accept a production tracing emitter.
