@@ -14,6 +14,8 @@ Format:
 
 ## Unreleased
 
+- Devbox runtime qualification can be run manually on a selected revision while retaining its existing Python startup checks.
+
 - The Rust CI coverage lane reclaims its preceding build artifacts, bounds build concurrency, and reports runner resources to diagnose linker failures while retaining workspace coverage checks.
 
 - The Python dependency inventory workflow uses a dedicated read-only deploy key to fetch its pinned shared adapter without retaining checkout credentials.
