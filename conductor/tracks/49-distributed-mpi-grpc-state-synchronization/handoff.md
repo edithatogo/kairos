@@ -216,3 +216,15 @@ explains why network scalar reductions cannot advance scheduler GVT. This lane
 preserves those algorithms as diagnostics and leaves MPI preview #366 frozen.
 Native scope remains local controlled tests; NAS SSH still times out. All CAP
 and distributed-cut/restart acceptance gates remain open.
+
+## CAP-48.1 complete native engine packet — 3 November 2026
+
+Root chat01a19bed-7060-7910-af22-38cb31f51446 integrated the scoped protocol
+and bidirectionally pinned mTLS workers in its isolated cap48-gvt worktree.
+The [Track48 source/native qualification](../48-time-warp-optimistic-rollback-runtime/external-engine-qualification-20261103.md)
+now contains16 unique real two-host rollback/failure/restart cases with native
+single-host parity. This supersedes earlier missing-engine prerequisite notes
+for this bounded gRPC path. Worker claims are released; both owned CPU VMs are
+terminated. Root next owns repaired-head hosted readback after a test-only
+provider selection fix. General MPI optimistic transport, migration and whole
+Track49 completion remain separate outstanding work; no track-wide status advance.

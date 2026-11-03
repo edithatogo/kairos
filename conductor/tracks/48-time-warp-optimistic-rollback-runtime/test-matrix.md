@@ -57,3 +57,19 @@ ignore, retry or public accounting constructor is introduced. Mac and Colab
 Linux results must be distinguished from hosted Actions and from the still-open
 full two-host optimistic-runtime acceptance gate. See
 [backend qualification](durable-store-qualification-20261103.md).
+
+## External engine native matrix — 3 November 2026
+
+See [qualification and exact receipts](external-engine-qualification-20261103.md).
+202 PDES all-feature tests, four mTLS tests, strict Clippy, native single-host
+parity and16 unique two-host cases passed. Native controller command:
+`.venv/bin/python docs/distributed/qualify_cap48.py --ssh-args PRIVATE_JSON --cases all --output PRIVATE_OUTPUT`.
+The accepted union preserves the original13 completed cases plus a fresh-host
+reference/activation pair and the unchanged anti-first function; all original
+failures remain visible. Each attempt binds source, configuration and measured
+binary hashes; distinct Mac binaries are not described as one executable.
+
+Dual-provider regression: `cargo test --locked -p kairo-ecs-grpc --test external_tls --features external-time-warp,rustls/aws_lc_rs`.
+RED exit101 before the test-only Once repair; GREEN4/4 afterward. No retry, skip,
+weakened assertion or dependency waiver. The fixture-only delta is outside native
+worker code. Full repaired-head hosted gates remain required.

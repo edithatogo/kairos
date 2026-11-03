@@ -560,3 +560,23 @@ quiescent-cut design is independently accepted as a safe bounded subset, with
 its liveness limits retained. Two-process/two-host native kill, transport join,
 differential replay and final hosted evidence remain unfinished work under this
 same task. No CAP/phase/track status advances at this checkpoint.
+
+## Complete external native packet — 3 November 2026
+
+The same root chat and isolated worktree own source3cda053 and the
+[16-case two-host qualification](external-engine-qualification-20261103.md).
+Protocol and bidirectional pinned mTLS transport source are integrated. Complete
+model/RNG/generation/identity replay, signed physical durable receipts, descendant
+retirement barriers, fixed-membership restart joins and common quiescent cuts
+passed before/after native SIGKILL scenarios and anti-before-positive parity.
+Independent review accepts the bounded source/native evidence. Both owned Colab
+CPU sessions are stopped; terminal server readback has zero active sessions.
+Native scope is terminal; no native operation remains in flight.
+
+The first hosted workspace run exposed Rustls provider ambiguity in the separate
+mTLS integration-test executable. A Once-based ring fixture selection preserves
+all assertions; dual-provider RED then four-test GREEN are retained. This is the
+only post-native source delta and does not enter the worker executable dependency
+closure. Exact-head hosted rerun remains the next root-owned operation before
+CAP checkbox advancement. No Track48/49 Done, main merge, release or production
+deployment is claimed. Earlier owner assignments remain historical.

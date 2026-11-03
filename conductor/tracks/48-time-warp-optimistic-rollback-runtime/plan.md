@@ -2,16 +2,15 @@
 
 ## Current CAP-48.1 boundary — 3 November 2026
 
-CAP-48.1 remains pending. Colab supplies an actually qualified alternate Linux
-host and two-host protocol route; the NAS timeout is no longer the only host
-option. Native MPI smoke is a bounded preview, not distributed Time Warp
-acceptance. The private [durable-store qualification](durable-store-qualification-20261103.md)
-is a prerequisite, not the complete portable engine/driver. Authenticated
-admission/retirement, a proved distributed cut, session fencing/restart join and
-injected-failure two-host parity remain implementation and qualification work.
-This current boundary supersedes the historical claims below that Track 49's
-socket smoke resolved distributed acceptance or that no local implementation
-remains. Track/CAP status does not advance.
+The complete opt-in external engine and16 unique two-host failure/restart
+scenarios are implemented and independently accepted at source3cda053, using
+Mac ARM64 and Colab Linux x86-64. See [native qualification](external-engine-qualification-20261103.md).
+The current remaining gate is exact-head hosted validation after a fixture-only
+Rustls dual-provider test repair; no native engine work remains for this bounded
+CAP packet. CAP-48.1 stays unchecked until that gate passes. Historical claims
+below about missing external implementation or impossible two-host acceptance
+are superseded by this current boundary. Track48/49 remain In Progress for their
+other separately owned acceptance work.
 
 ## Historical native delivery boundary
 

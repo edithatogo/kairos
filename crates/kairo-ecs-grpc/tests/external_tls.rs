@@ -11,7 +11,7 @@ use std::{
     process::Command,
     sync::{
         atomic::{AtomicUsize, Ordering},
-        Arc,
+        Arc, Once,
     },
 };
 use tokio::sync::oneshot;
@@ -193,6 +193,15 @@ impl Drop for Running {
     }
 }
 fn fixture() -> Fixture {
+    // Workspace feature unification can enable both Rustls providers. This
+    // integration-test executable owns its provider selection, just as an
+    // application must when more than one provider is compiled in.
+    static PROVIDER: Once = Once::new();
+    PROVIDER.call_once(|| {
+        rustls::crypto::ring::default_provider()
+            .install_default()
+            .expect("TLS fixture must select its ring provider before TLS construction");
+    });
     let f = Fixture::new();
     f.ca("ca-a");
     f.ca("ca-b");
