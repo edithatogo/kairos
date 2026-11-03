@@ -1,5 +1,10 @@
 # Track 51 Test Matrix
 
+The legacy Windows commands below test the contract baseline, not physical
+HDF5 or ADIOS2 backends. A green labelled-feature test does not satisfy the
+native format or live-filesystem acceptance gates. Current acceptance also
+requires independent native readers and a resumed-engine final-state oracle.
+
 | Gate | Command | Required for |
 |---|---|---|
 | Arrow tests | `rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-arrow --features parallel-io` | Implementation |

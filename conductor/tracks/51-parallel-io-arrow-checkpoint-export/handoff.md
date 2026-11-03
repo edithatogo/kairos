@@ -190,3 +190,31 @@ detects it. Unix replacement now retains the opened original file through
 staging, reads permissions from that descriptor and checks its device/inode
 against the current directory entry. This detects target replacement during
 staging; it is not a lock against an adversarial directory writer.
+
+## Current reconciliation — 3 November 2026
+
+Chat `01a19bed-7060-7910-af22-38cb31f51446` owns the bounded track-record
+correction in `/Users/doughnut/.codex/worktrees/kairos-track51-qualification/kairos`,
+branch `codex/track51-qualification-20261103`, based on `d7bdcd3`. Its scope
+is the Track 51 plan, handoff, historical review and test matrix; no native
+backend, runtime, filesystem or shared registry is changed. The previous
+checkpoint packet was integrated by [PR #352](https://github.com/edithatogo/kairos/pull/352)
+as `dd46250d68c5c8ba4736ff4981e91f6b1eba63ff`; the earlier instruction to
+integrate that packet is historical.
+
+The historical closeout and review overstate what the contract tests prove.
+`hdf5` and `adios2` currently select v1 contract-byte adapters, not native
+libraries; `ParallelIoRecordBatch` emits smoke bytes; and the restore result
+does not run an engine to final state. The checked-in parallel-filesystem
+manifest is still a template. The plan now explicitly records the remaining
+native, resumed-engine, benchmark and live-filesystem work. Track 51 stays
+In Progress. Draft [PR #367](https://github.com/edithatogo/kairos/pull/367)
+owns overlapping Arrow implementation paths and is not consumer acceptance.
+
+On this host, `pkg-config` did not find HDF5 or ADIOS2, no `h5cc` or
+`adios2-config` was found on PATH, and the bounded mount listing showed no
+Lustre, GPFS, BeeGFS or NFS entry. These observations do not prove those
+backends unavailable on other hosts. No physical backend or live-filesystem
+execution is claimed. Independent read-only reviewer `track51_review`
+identified the false-completion language and the stale PR #352 handoff; this
+packet records their disposition.
