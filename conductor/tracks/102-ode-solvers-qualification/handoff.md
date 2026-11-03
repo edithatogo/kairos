@@ -1,6 +1,6 @@
 # Handoff
 
-Updated: 2026-10-22. Maturity: planned; adoption decision pending.
+Updated: 3 November 2026. Maturity: Phase 0 deferral integrated; solver adoption and formal phase acceptance remain pending.
 
 ## Summary
 
@@ -28,7 +28,7 @@ Value and behavioural gates remain unresolved. Preserve published contracts and 
 
 ## Follow-up issues
 
-Record exact existing consumer, baseline and adopt/no-go decision in Phase 0. Parent adoption requires verified upstream receipts and its own claim.
+Reopen the recorded Phase 0 deferral only with an accepted consumer and numerical contract. Parent adoption requires verified upstream receipts and its own claim.
 
 ## Integration notes
 
@@ -36,7 +36,15 @@ See [programme](../../robust-dependencies.md). Worktree integration, local main,
 
 ## Phase closeout evidence
 
-Pending: `$conductor-review`, accepted fixes, rejected findings, command/cwd/commit SHA/toolchain/seed/input hashes, exit codes/artifacts, pushed ref or blocker and next-phase decision. Use `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` before advancement.
+The bounded Phase 0 evaluation and review fixes were integrated by PR #358;
+its numerical receipt and decision follow below. Formal phase and shared-registry
+acceptance remain pending. Use `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` before advancement.
+
+Historical `$conductor-review` and accepted fixes cover the numerical baseline;
+merge commit SHA `a4506b65243fc4687556444ee366c0e6911fa663` is retained on
+main. The historical pushed ref was `codex/track102-ode-decision`. The
+next-phase decision is to defer adoption until the named consumer and numerical
+contract exist; this is not a formal phase or registry acceptance claim.
 
 ## Phase 0 decision — 1 November 2026
 
@@ -161,3 +169,51 @@ Expected output:
 oversized step [1.0, 0.0]; exact 0.998994623915
 fitness switches at t=0.5, final 0.249707779377, exact 0.25
 ```
+
+## Current readback — 3 November 2026
+
+Absolute paths below identify the original owner's retained receipts and are
+not portable execution instructions. To reproduce on another host, check out
+`d7bdcd3`, save the complete caller in the **Portable reproduction** section
+above as `<scratch>/probe.rs`, and use that section's build/link/run commands
+with your own `<CARGO_TARGET_DIR>` and `<scratch>/probe.log`. The checked-in
+caller and expected output make this reproduction independent of access to the
+owner's filesystem. Redirect the final execution with
+`/path/to/probe > <scratch>/probe.log`. Check the caller's numerical assertions
+and compare with the expected output above; cross-platform floating-point
+formatting and line endings may differ. The recorded log hash below
+authenticates the original retained receipt rather than every host's output.
+
+Chat `01a19bed-7060-7910-af22-38cb31f51446` owns this bounded track-record
+and numerical readback in `/Users/doughnut/.codex/worktrees/kairos-track102-review/kairos`,
+branch `codex/track102-qualification-20261103`, based on `d7bdcd3`. The
+integrator retains shared registry and phase acceptance; no native runtime,
+dependency, downstream pin or clinical equation was changed. The earlier
+instruction to integrate is historical: [PR #358](https://github.com/edithatogo/kairos/pull/358)
+merged as `a4506b65243fc4687556444ee366c0e6911fa663`.
+
+The current source inventory still finds the game-theory `run_trajectory` call
+of `step_continuous_rk4`, and the separate DES trajectory API; it does not
+establish an accepted generic ODE consumer. Track 65's correctness task remains
+open. CareOps' independent impact review remains unresolved. These findings do
+not authorize a solver dependency or a change to historical trajectories.
+
+At `d7bdcd3`, from this worktree on macOS arm64 with Homebrew Rust/Cargo
+1.99.1, `cargo build --locked -p kairo-ecs-game-theory --lib --message-format=json`
+used `CARGO_TARGET_DIR=/Volumes/PortableSSD/codex-builds/kairos-track102-current-20261103`,
+`CARGO_BUILD_JOBS=3`, and `CARGO_PROFILE_DEV_DEBUG=0`. The retained portable
+caller in `/Volumes/PortableSSD/codex-builds/kairos-track102-SPn7jj/probe.rs`
+was compiled with `rustc --edition 2021`, linked to the resulting rlib and
+run against that current build; build and probe exited zero. Its first-order
+convergence, clipping and switched-fitness outputs matched the prior receipt.
+This repeats the analytical native baseline; it does not rerun the independent
+SciPy comparison or qualify `ode_solvers`.
+
+The current probe log at `/Volumes/PortableSSD/codex-builds/kairos-track102-current-20261103/probe.log`
+has SHA-256 `8add28ea1862f1a385a2cc8809dfb2b35d0422cdac21edd880b097460b4f24af`;
+the caller SHA-256 is `e8cdd6c6f7225933b871ee38f680cb5c3d8e2fafd09bb7cb086dbc6b03cd2d88`,
+`Cargo.lock` is `6f0517d02ffb3555b410ff2ae97892b8c639341785c65b5ae3864dbb6374bde7`,
+and `crates/kairo-ecs-game-theory/src/normal_form.rs` is
+`a809c8112e2f63665405a93211ddd2214350ad5d607de648e5990e105b284820`.
+The pre-existing Track 65 owner retains the separate correction and versioning
+work. Track 102 remains Planned pending its conditional consumer and acceptance.
