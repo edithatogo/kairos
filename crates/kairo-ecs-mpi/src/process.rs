@@ -717,6 +717,38 @@ impl MpiProcessTransport {
 #[cfg(test)]
 mod connection_regressions {
     use super::*;
+
+    #[test]
+    fn missing_rendezvous_peer_times_out_without_inventing_an_address() {
+        let session = format!(
+            "missing_peer_{}_{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        );
+        let transport = MpiProcessTransport::new(
+            0,
+            1,
+            vec![MpiRankAssignment {
+                rank: 0,
+                lp_id: LpId(0),
+            }],
+            &session,
+        )
+        .unwrap();
+        let missing_rank = i32::MIN;
+        assert!(resolve_peer_addr_from_env(missing_rank).is_none());
+        assert!(!rendezvous_file_path(&transport.rendezvous_dir, &session, missing_rank).exists());
+        let started = Instant::now();
+        assert!(matches!(
+            transport.resolve_peer_addr(missing_rank),
+            Err(TransportError::UnknownLogicalProcess(LpId(0)))
+        ));
+        assert!(started.elapsed() >= Duration::from_secs(4));
+    }
+
     #[test]
     fn eof_after_partial_frame_preserves_prior_complete_frame() {
         let transport = MpiProcessTransport::new(

@@ -248,11 +248,16 @@ function evaluateDrift({ source, hosted }) {
   const inFlightMainChecks = [...currentCheckContexts.values()]
     .filter((check) => check.app?.slug === 'github-actions' && ['queued', 'in_progress'].includes(check.status))
     .map((check) => ({ name: check.name, status: check.status, headSha: check.head_sha }));
+  // A workflow may be pending before any of its jobs have check runs.
+  const inFlightRustWorkflows = (hosted.mainRustWorkflowRuns ?? []).filter((run) =>
+    run.head_sha === hosted.defaultBranchCommit && run.head_branch === hosted.defaultBranch
+    && run.event === 'push' && ['pending', 'queued', 'waiting', 'requested', 'in_progress'].includes(run.status));
+  const mainWorkInFlight = inFlightMainChecks.length > 0 || inFlightRustWorkflows.length > 0;
   const requiredCheckFailed = requiredChecks.some((check) => check.status === 'completed' && check.conclusion !== 'success');
   const allRequiredChecksPassed = requiredChecks.every((check) => check.status === 'completed' && check.conclusion === 'success');
   const requiredCheckStatus = checkStatus(hosted, 'mainChecks') ?? (requiredCheckFailed
     ? 'drift' : (allRequiredChecksPassed ? 'pass'
-      : (hosted.integrationPending || inFlightMainChecks.length > 0 ? 'pending' : 'drift')));
+      : (hosted.integrationPending || mainWorkInFlight ? 'pending' : 'drift')));
   addCheck(checks, 'current_required_check_runs', EXPECTED_PUSH_CHECKS.map((name) => ({ name, status: 'completed', conclusion: 'success', headSha: hosted.defaultBranchCommit })),
     requiredChecks, requiredCheckStatus, hosted.integrationPending ? 'Current default-branch checks are recorded after the candidate is integrated.' : undefined);
   const codecovStillRunning = ['queued', 'in_progress'].includes(latestUpload?.status) || latestProjectStatus?.state === 'pending';
@@ -262,7 +267,7 @@ function evaluateDrift({ source, hosted }) {
   if (codecovFailed) codecovOutcome = 'drift';
   else if (hosted.integrationPending) codecovOutcome = 'pending';
   else if (hasSuccessfulUpload && hasCommitStatus) codecovOutcome = 'pass';
-  else if (codecovStillRunning || inFlightMainChecks.length > 0) codecovOutcome = 'pending';
+  else if (codecovStillRunning || mainWorkInFlight) codecovOutcome = 'pending';
   const codecovStatus = checkStatus(hosted, 'mainChecks') ?? checkStatus(hosted, 'mainStatuses') ?? codecovOutcome;
   addCheck(checks, 'trusted_main_codecov_upload_and_status', {
     successfulUploadCheck: 'Codecov OIDC upload completed successfully on default branch SHA',
@@ -273,6 +278,7 @@ function evaluateDrift({ source, hosted }) {
     latestUpload,
     latestProjectStatus,
     inFlightMainChecks,
+    inFlightRustWorkflows,
     checks: codecovChecks,
     statuses: codecovStatuses,
   }, codecovStatus, hosted.integrationPending
@@ -291,7 +297,7 @@ function evaluateDrift({ source, hosted }) {
   const projectStatus = checkStatus(hosted, 'mainChecks') ?? (projectFailed ? 'drift'
     : hosted.integrationPending ? 'pending'
       : projectCheck?.status === 'completed' && projectCheck.conclusion === 'success' ? 'pass'
-        : inFlightMainChecks.length > 0 ? 'pending' : 'drift');
+        : mainWorkInFlight ? 'pending' : 'drift');
   addCheck(checks, 'trusted_main_project_coverage', {
     name: 'Rust project coverage', app: 'github-actions', status: 'completed', conclusion: 'success',
     scope: 'full workspace LCOV; zero regression against exact trusted base; core floor remains 90%',
@@ -430,6 +436,9 @@ function collectHosted(repository, source) {
   const checkNames = [...EXPECTED_CHECKS, 'Rust project coverage'].map((name) => `.name == ${JSON.stringify(name)}`).join(' or ');
   const checkRunFilter = `.check_runs[] | select(.head_sha == ${JSON.stringify(defaultBranchCommit)} and (${checkNames} or (.name | ascii_downcase | contains("codecov")) or (.app.slug | ascii_downcase | contains("codecov")) or (.status != "completed" and .app.slug == "github-actions"))) | {name, status, conclusion, head_sha, started_at, details_url, app: {slug: .app.slug}}`;
   const mainChecks = ghJsonLinesPaginated(`repos/${repository}/commits/${defaultBranchCommit}/check-runs?per_page=100`, checkRunFilter);
+  const mainRustWorkflowRuns = ghJsonLinesPaginated(
+    `repos/${repository}/actions/workflows/ci-core.yml/runs?head_sha=${encodeURIComponent(defaultBranchCommit)}&per_page=100`,
+    '.workflow_runs[] | {id, head_sha, head_branch, event, status, html_url}');
   const mainStatuses = bindCommitStatuses(repository, defaultBranchCommit,
     ghJsonLinesPaginated(`repos/${repository}/commits/${defaultBranchCommit}/statuses?per_page=100`,
       '.[] | {context, state, sha, url, created_at, target_url}'));
@@ -506,6 +515,7 @@ function collectHosted(repository, source) {
       mainStatuses: Array.isArray(mainStatuses),
     },
     mainChecks,
+    mainRustWorkflowRuns,
     mainStatuses,
     renovateOpenPullRequestCount: openPulls.filter((pull) => pull.author === 'renovate[bot]').length,
     integrationPending: candidatePullOpen,
