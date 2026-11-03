@@ -538,3 +538,25 @@ Colab stop succeeded and server readback found no active sessions. No NAS
 mutation, GPU, Drive mount, purchase or credential/cache transfer occurred.
 The packet is ready for normal scoped commit and draft PR qualification; no
 CAP, phase, production or release status is advanced.
+
+## Continuing complete CAP-48.1 — 3 November 2026
+
+User explicitly directed implementation through full two-host failure/restart,
+not prerequisite-only completion. Same root chat and isolated worktree own the
+[external engine packet](adr-external-engine-20261103.md). The scoped protocol
+commits are integrated as974b3db/7f0f514; transport commits b1816b3/425e9da are
+ready for source integration after independent pin review. Workers used separate
+standard Git worktrees, not shared dirty checkout copies. Root remains sole
+manifest/lock/engine writer and Colab controller. Native session
+`kairos-cap48-full-20261103` is fresh CPU-only, with strict SSH public host key
+pin retained privately in ignored artifacts/cap48-external; no credential/cache
+transfer or shared authentication reset. Native fixture operations and next
+qualification remain owned here across source checkpoints.
+
+Seven external engine scenarios and nine canonical protocol cases pass on actual
+Rust1.99.1. Full PDES all-feature tests, strict Clippy and fresh dependency policy
+checks pass; existing advisory/duplicate warnings remain visible. The amended
+quiescent-cut design is independently accepted as a safe bounded subset, with
+its liveness limits retained. Two-process/two-host native kill, transport join,
+differential replay and final hosted evidence remain unfinished work under this
+same task. No CAP/phase/track status advances at this checkpoint.

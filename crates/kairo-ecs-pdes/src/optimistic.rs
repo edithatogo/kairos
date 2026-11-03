@@ -13,8 +13,17 @@ use kairo_ecs_types::SimDuration;
 
 use super::{LpId, PartitionPlan, RemoteEvent, Tick};
 
-#[cfg(all(test, unix, feature = "external-store-qualification"))]
+#[cfg(all(
+    unix,
+    any(
+        feature = "external-time-warp",
+        all(test, feature = "external-store-qualification")
+    )
+))]
 mod external_store;
+
+#[cfg(all(unix, feature = "external-time-warp"))]
+pub mod external;
 
 mod owned;
 mod owned_execution;

@@ -3,7 +3,6 @@ use super::*;
 use std::sync::atomic::{AtomicU64, Ordering};
 // Serialize fixtures around fork/exec so a different fixture cannot transiently inherit
 // a dropped flock descriptor before exec. This is isolation, not a retry.
-static SERIAL: std::sync::Mutex<()> = std::sync::Mutex::new(());
 static NEXT: AtomicU64 = AtomicU64::new(0);
 struct Temp(PathBuf);
 impl Temp {
@@ -53,7 +52,7 @@ fn unit(previous: &State, id: u8) -> Unit {
 }
 #[test]
 fn atomic_image_and_exact_retry_survive_reopen() {
-    let _serial = SERIAL.lock().unwrap();
+    let _serial = FIXTURE_SERIAL.lock().unwrap();
     let dir = Temp::new();
     let mut store = open(&dir.0).unwrap();
     let old = store.load().unwrap();
@@ -76,7 +75,7 @@ fn atomic_image_and_exact_retry_survive_reopen() {
 }
 #[test]
 fn stale_conflicting_incomplete_and_oversize_units_fail_unchanged() {
-    let _serial = SERIAL.lock().unwrap();
+    let _serial = FIXTURE_SERIAL.lock().unwrap();
     let dir = Temp::new();
     let mut store = open(&dir.0).unwrap();
     let old = store.load().unwrap();
@@ -110,7 +109,7 @@ fn stale_conflicting_incomplete_and_oversize_units_fail_unchanged() {
 }
 #[test]
 fn lifetime_owner_and_provisioning_binding_fail_closed() {
-    let _serial = SERIAL.lock().unwrap();
+    let _serial = FIXTURE_SERIAL.lock().unwrap();
     let dir = Temp::new();
     let first = open(&dir.0).unwrap();
     assert!(matches!(open(&dir.0), Err(Error::OwnerUnavailable)));
@@ -127,7 +126,7 @@ fn lifetime_owner_and_provisioning_binding_fail_closed() {
 
 #[test]
 fn canonical_section_order_and_genesis_binding_are_checked() {
-    let _serial = SERIAL.lock().unwrap();
+    let _serial = FIXTURE_SERIAL.lock().unwrap();
     let dir = Temp::new();
     let mut store = open(&dir.0).unwrap();
     let request = unit(&store.load().unwrap(), 1);
@@ -147,7 +146,7 @@ fn canonical_section_order_and_genesis_binding_are_checked() {
 
 #[test]
 fn corrupt_committed_sections_facts_and_headers_fail_closed() {
-    let _serial = SERIAL.lock().unwrap();
+    let _serial = FIXTURE_SERIAL.lock().unwrap();
     for corruption in 0..3 {
         let dir = Temp::new();
         let mut store = open(&dir.0).unwrap();
@@ -171,7 +170,7 @@ fn corrupt_committed_sections_facts_and_headers_fail_closed() {
 
 #[test]
 fn sql_failure_fences_mutations_until_reopen_and_readback() {
-    let _serial = SERIAL.lock().unwrap();
+    let _serial = FIXTURE_SERIAL.lock().unwrap();
     let dir = Temp::new();
     let mut store = open(&dir.0).unwrap();
     let old = store.load().unwrap();
@@ -202,7 +201,7 @@ fn sql_failure_fences_mutations_until_reopen_and_readback() {
 
 #[test]
 fn sqlite_exclusive_lock_blocks_noncooperating_connection() {
-    let _serial = SERIAL.lock().unwrap();
+    let _serial = FIXTURE_SERIAL.lock().unwrap();
     let dir = Temp::new();
     let store = open(&dir.0).unwrap();
     let other = Connection::open(dir.0.join("participant.sqlite")).unwrap();
@@ -221,7 +220,7 @@ fn sqlite_exclusive_lock_blocks_noncooperating_connection() {
 
 #[test]
 fn crash_worker() {
-    let _serial = SERIAL.lock().unwrap();
+    let _serial = FIXTURE_SERIAL.lock().unwrap();
     let Ok(mode) = std::env::var("KAIRO_STORE_MODE") else {
         let dir = Temp::new();
         let store = open(&dir.0).unwrap();
@@ -302,7 +301,7 @@ fn paused_child(dir: &Path, mode: &str) -> ChildOwner {
 }
 #[test]
 fn real_process_crashes_preserve_atomic_before_and_after_images() {
-    let _serial = SERIAL.lock().unwrap();
+    let _serial = FIXTURE_SERIAL.lock().unwrap();
     for mode in ["before", "after"] {
         let dir = Temp::new();
         let initial = open(&dir.0).unwrap();
@@ -332,7 +331,7 @@ fn real_process_crashes_preserve_atomic_before_and_after_images() {
 }
 #[test]
 fn competing_process_is_rejected_and_owner_inode_survives_death() {
-    let _serial = SERIAL.lock().unwrap();
+    let _serial = FIXTURE_SERIAL.lock().unwrap();
     let dir = Temp::new();
     drop(open(&dir.0).unwrap());
     let before = identity(&std::fs::metadata(dir.0.join("owner.lock")).unwrap());
@@ -351,7 +350,7 @@ fn competing_process_is_rejected_and_owner_inode_survives_death() {
 
 #[test]
 fn historical_rows_receipt_positions_and_sequence_are_validated() {
-    let _serial = SERIAL.lock().unwrap();
+    let _serial = FIXTURE_SERIAL.lock().unwrap();
     for sql in [
         "DELETE FROM sections WHERE revision=1",
         "DELETE FROM facts WHERE ordinal=0 AND unit_id=x'01010101010101010101010101010101'",
@@ -376,7 +375,7 @@ fn historical_rows_receipt_positions_and_sequence_are_validated() {
 }
 #[test]
 fn truncated_committed_database_never_reinitializes_as_genesis() {
-    let _serial = SERIAL.lock().unwrap();
+    let _serial = FIXTURE_SERIAL.lock().unwrap();
     let dir = Temp::new();
     let mut store = open(&dir.0).unwrap();
     let request = unit(&store.load().unwrap(), 1);
@@ -392,7 +391,7 @@ fn truncated_committed_database_never_reinitializes_as_genesis() {
 
 #[test]
 fn missing_retained_database_or_owner_file_never_creates_fresh_identity() {
-    let _serial = SERIAL.lock().unwrap();
+    let _serial = FIXTURE_SERIAL.lock().unwrap();
     for missing in ["participant.sqlite", "owner.lock"] {
         let dir = Temp::new();
         let mut store = open(&dir.0).unwrap();

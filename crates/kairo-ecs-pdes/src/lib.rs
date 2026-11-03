@@ -1584,6 +1584,9 @@ fn is_monotonic(times: &[Tick]) -> bool {
     times.windows(2).all(|pair| pair[0] <= pair[1])
 }
 
+#[cfg(all(unix, feature = "external-time-warp"))]
+pub use optimistic::external;
+
 #[cfg(test)]
 mod tests {
     use super::*;

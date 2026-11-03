@@ -4,9 +4,14 @@ use rusqlite::{params, Connection, OpenFlags, Transaction};
 use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs::{File, OpenOptions};
-use std::io::{self, Write};
+use std::io;
+#[cfg(any(test, feature = "external-fault-injection"))]
+use std::io::Write;
 use std::os::unix::fs::{MetadataExt, OpenOptionsExt};
 use std::path::{Path, PathBuf};
+
+#[cfg(test)]
+pub(super) static FIXTURE_SERIAL: std::sync::Mutex<()> = std::sync::Mutex::new(());
 
 const MAX_SECTION: usize = 1024 * 1024;
 const MAX_IMAGE: usize = 4 * 1024 * 1024;
@@ -22,7 +27,7 @@ CREATE TABLE facts(position INTEGER PRIMARY KEY AUTOINCREMENT,unit_id BLOB NOT N
 CREATE TABLE outbox(unit_id BLOB NOT NULL REFERENCES units(id),ordinal INTEGER NOT NULL,bytes BLOB NOT NULL,PRIMARY KEY(unit_id,ordinal)) STRICT;
 PRAGMA user_version=1;";
 #[derive(Debug)]
-enum Error {
+pub(super) enum Error {
     Io(io::Error),
     Sql(rusqlite::Error),
     OwnerUnavailable,
@@ -58,38 +63,40 @@ impl std::fmt::Display for Error {
     }
 }
 #[derive(Clone, Debug, Eq, PartialEq)]
-struct State {
-    revision: u64,
-    digest: Hash,
-    sections: Vec<(String, Vec<u8>)>,
+pub(super) struct State {
+    pub(super) revision: u64,
+    pub(super) digest: Hash,
+    pub(super) sections: Vec<(String, Vec<u8>)>,
 }
 #[derive(Clone, Debug, Eq, PartialEq)]
-struct Unit {
-    id: [u8; 16],
-    previous_revision: u64,
-    previous_digest: Hash,
-    sections: Vec<(String, Vec<u8>)>,
-    facts: Vec<Vec<u8>>,
-    outbox: Vec<Vec<u8>>,
+pub(super) struct Unit {
+    pub(super) id: [u8; 16],
+    pub(super) previous_revision: u64,
+    pub(super) previous_digest: Hash,
+    pub(super) sections: Vec<(String, Vec<u8>)>,
+    pub(super) facts: Vec<Vec<u8>>,
+    pub(super) outbox: Vec<Vec<u8>>,
 }
 #[derive(Clone, Debug, Eq, PartialEq)]
-struct Receipt {
-    revision: u64,
-    digest: Hash,
-    positions: Vec<i64>,
+pub(super) struct Receipt {
+    pub(super) revision: u64,
+    pub(super) digest: Hash,
+    pub(super) positions: Vec<i64>,
 }
 #[derive(Debug)]
-struct Retained {
-    unit: Unit,
-    receipt: Receipt,
+pub(super) struct Retained {
+    pub(super) unit: Unit,
+    pub(super) receipt: Receipt,
 }
 #[derive(Clone, Copy)]
-enum CrashPoint {
+pub(super) enum CrashPoint {
     None,
+    #[cfg(any(test, feature = "external-fault-injection"))]
     BeforeCommit,
+    #[cfg(any(test, feature = "external-fault-injection"))]
     AfterCommit,
 }
-struct Store {
+pub(super) struct Store {
     connection: Connection,
     _owner: File,
     dir: PathBuf,
@@ -177,6 +184,7 @@ fn request_hash(binding: &Hash, manifest: &[String], unit: &Unit) -> Result<Hash
     }
     Ok(h.finalize().into())
 }
+#[cfg(any(test, feature = "external-fault-injection"))]
 fn pause(point: CrashPoint, wanted: CrashPoint) {
     if std::mem::discriminant(&point) == std::mem::discriminant(&wanted) {
         println!("STORE_BOUNDARY");
@@ -187,7 +195,7 @@ fn pause(point: CrashPoint, wanted: CrashPoint) {
     }
 }
 impl Store {
-    fn open(
+    pub(super) fn open(
         dir: &Path,
         binding: Hash,
         mut manifest: Vec<String>,
@@ -420,7 +428,7 @@ impl Store {
         }
         Ok(())
     }
-    fn load(&self) -> Result<State, Error> {
+    pub(super) fn load(&self) -> Result<State, Error> {
         if self.fenced {
             return Err(Error::Fenced);
         }
@@ -534,7 +542,7 @@ impl Store {
             sections,
         })
     }
-    fn readback(&self, id: &[u8; 16]) -> Result<Option<Retained>, Error> {
+    pub(super) fn readback(&self, id: &[u8; 16]) -> Result<Option<Retained>, Error> {
         self.load()?;
         self.read_unit(id)
     }
@@ -590,7 +598,9 @@ impl Store {
             },
         }))
     }
-    fn commit(&mut self, unit: &Unit, crash: CrashPoint) -> Result<Receipt, Error> {
+    pub(super) fn commit(&mut self, unit: &Unit, crash: CrashPoint) -> Result<Receipt, Error> {
+        #[cfg(not(any(test, feature = "external-fault-injection")))]
+        let _ = crash;
         if self.fenced {
             return Err(Error::Fenced);
         }
@@ -645,8 +655,10 @@ impl Store {
                 "UPDATE meta SET revision=?1,digest=?2 WHERE id=1",
                 params![next as i64, digest.as_slice()],
             )?;
+            #[cfg(any(test, feature = "external-fault-injection"))]
             pause(crash, CrashPoint::BeforeCommit);
             tx.commit()?;
+            #[cfg(any(test, feature = "external-fault-injection"))]
             pause(crash, CrashPoint::AfterCommit);
             Ok::<_, Error>(Receipt {
                 revision: next,
