@@ -493,7 +493,13 @@ p=base/'settings.json';p.write_text({json.dumps(settings)!r});p.chmod(0o600)
         event_conflict = self.failure(a.call("sync_telemetry_merge", batches=[batch0, event_conflict_batch], expected_sources=[0, 1], expect=False), "Permanent", "AlreadyExists")
         assert [oracle.model(a), oracle.model(b)] == before, "queue admission is not model application"
         b.stop()
-        transient = self.failure(a.call("sync_snapshot_send", destination=1, wire_snapshot=new, expect=False), "Transient", "Unavailable")
+        stopped_peer = a.call("sync_snapshot_send", destination=1, wire_snapshot=new, expect=False)
+        # A pinned SSH forward may accept TCP before its absent destination
+        # closes the connection. Preserve Tonic's actual transport status;
+        # the SDK must independently recognize its concrete error source.
+        stopped_code = stopped_peer.get("error", {}).get("code")
+        assert stopped_code in {"Unavailable", "Unknown"}, stopped_peer
+        transient = self.failure(stopped_peer, "Transient", stopped_code)
         sentinel = pathlib.Path(group.settings[1]).parent / "blackhole.settings"
         code = """import json,os,socket,time,sys
 role='track49-blackhole';s=socket.socket();s.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1);s.bind(('127.0.0.1',43151));s.listen(4)
