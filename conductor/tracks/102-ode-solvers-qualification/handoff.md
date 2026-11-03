@@ -178,7 +178,11 @@ not portable execution instructions. To reproduce on another host, check out
 above as `<scratch>/probe.rs`, and use that section's build/link/run commands
 with your own `<CARGO_TARGET_DIR>` and `<scratch>/probe.log`. The checked-in
 caller and expected output make this reproduction independent of access to the
-owner's filesystem. Verify the output against the recorded log hash below.
+owner's filesystem. Redirect the final execution with
+`/path/to/probe > <scratch>/probe.log`. Check the caller's numerical assertions
+and compare with the expected output above; cross-platform floating-point
+formatting and line endings may differ. The recorded log hash below
+authenticates the original retained receipt rather than every host's output.
 
 Chat `01a19bed-7060-7910-af22-38cb31f51446` owns this bounded track-record
 and numerical readback in `/Users/doughnut/.codex/worktrees/kairos-track102-review/kairos`,
