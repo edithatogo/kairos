@@ -221,6 +221,34 @@ const awaitingUpload = { ...hosted,
 const awaitingReceipt = evaluateDrift({ source, hosted: awaitingUpload });
 assert.equal(awaitingReceipt.checks.find((check) => check.name === 'current_required_check_runs').status, 'pending');
 assert.equal(awaitingReceipt.checks.find((check) => check.name === 'trusted_main_codecov_upload_and_status').status, 'pending');
+// A workflow can be pending before GitHub creates any check runs for its jobs.
+const joblessRun = { head_sha: 'abc123', head_branch: 'main', event: 'push', status: 'pending' };
+const awaitingWorkflow = { ...awaitingUpload, mainChecks: awaitingUpload.mainChecks.filter((check) => check !== upstreamAction && check.name !== 'Rust project coverage'),
+  mainRustWorkflowRuns: [joblessRun] };
+for (const name of ['current_required_check_runs', 'trusted_main_codecov_upload_and_status', 'trusted_main_project_coverage']) {
+  assert.equal(evaluateDrift({ source, hosted: awaitingWorkflow }).checks.find((check) => check.name === name).status, 'pending');
+}
+for (const status of ['pending', 'queued', 'waiting', 'requested', 'in_progress']) {
+  assert.equal(evaluateDrift({ source, hosted: { ...awaitingWorkflow, mainRustWorkflowRuns: [{ ...joblessRun, status }] } })
+    .checks.find((check) => check.name === 'current_required_check_runs').status, 'pending');
+}
+for (const run of [{ ...joblessRun, head_sha: 'old' }, { ...joblessRun, head_branch: 'other' },
+  { ...joblessRun, event: 'pull_request' }, { ...joblessRun, status: 'completed' }]) {
+  assert.equal(evaluateDrift({ source, hosted: { ...awaitingWorkflow, mainRustWorkflowRuns: [run] } })
+    .checks.find((check) => check.name === 'current_required_check_runs').status, 'drift');
+}
+assert.equal(evaluateDrift({ source, hosted: { ...awaitingWorkflow, mainChecks: [...awaitingWorkflow.mainChecks,
+  { name: 'Rust core quality', head_sha: 'abc123', status: 'completed', conclusion: 'failure', app: { slug: 'github-actions' } }] } })
+  .checks.find((check) => check.name === 'current_required_check_runs').status, 'drift');
+assert.equal(evaluateDrift({ source, hosted: { ...awaitingWorkflow, mainChecks: [...awaitingWorkflow.mainChecks,
+  { name: 'Rust project coverage', head_sha: 'abc123', status: 'completed', conclusion: 'failure', app: { slug: 'github-actions' } }] } })
+  .checks.find((check) => check.name === 'trusted_main_project_coverage').status, 'drift');
+assert.equal(evaluateDrift({ source, hosted: { ...awaitingWorkflow,
+  mainStatuses: [{ context: 'codecov/project', state: 'failure', sha: 'abc123' }] } })
+  .checks.find((check) => check.name === 'trusted_main_codecov_upload_and_status').status, 'drift');
+assert.equal(evaluateDrift({ source, hosted: { ...awaitingWorkflow, mainChecks: [...awaitingWorkflow.mainChecks,
+  { name: 'Codecov OIDC upload', head_sha: 'abc123', status: 'completed', conclusion: 'failure', app: { slug: 'github-actions' } }] } })
+  .checks.find((check) => check.name === 'trusted_main_codecov_upload_and_status').status, 'drift');
 for (const action of [
   { ...upstreamAction, head_sha: 'another-head' },
   { ...upstreamAction, app: { slug: 'other-app' } },

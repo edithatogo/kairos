@@ -1,5 +1,21 @@
 # Track 50 Plan: NUMA Topology, Affinity & HPC Memory Lifecycle
 
+## Current acceptance correction — 3 November 2026
+
+The historical checks below describe contract slices and the later single-node
+Linux qualification, not full acceptance of this specification. Remaining work:
+
+- [ ] CAP-50.2: Qualify the specified hwloc-backed node, core, cache and locality model.
+- [ ] CAP-50.3: Integrate and qualify lifecycle allocation on the real scheduler path;
+      measure shared allocation and contention against an explicit budget.
+- [ ] CAP-50.4: Verify actual FFI allocation provenance, ownership and lifetimes on the
+      intended binding paths; metadata validation alone cannot prove them.
+- [ ] CAP-50.5: Prove multi-node locality and performance, then complete independent
+      review and applicable exact-source hosted gates.
+
+The sysfs discovery, opt-in affinity and restoration on one Linux node remain
+valid bounded evidence. Their receipt is not a multi-node or hwloc result.
+
 ## Phase 0 - TDD baseline
 
 - [x] Task 0.1: Add failing topology detection tests with supported and unsupported
