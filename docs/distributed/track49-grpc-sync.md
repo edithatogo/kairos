@@ -90,13 +90,15 @@ a queue acknowledgement for an external admission/retirement proof.
 The additive full snapshot/telemetry calls retain actual `tonic::Status` codes,
 metadata and details in `GrpcCallFailure`. Unavailable/resource exhaustion is
 transient; explicit connect/RPC deadline expiry is partition **suspicion**; other
-statuses are permanent for this caller policy. No timeout proves peer death or
+statuses are permanent for this caller policy, except Unknown with a concrete
+typed Tonic transport source and recognized connectivity I/O, which is transient
+while retaining the actual Unknown status. Message text alone never changes kind. No timeout proves peer death or
 authorizes GVT, ownership takeover or retry. Calls make one attempt. Legacy APIs
 retain their existing coarser `TransportError` compatibility surface.
 
 ## Qualification and compatibility
 
-Six focused tests exercise actual loopback gRPC: full snapshot metadata and
+Nine all-feature tests exercise actual loopback gRPC: full snapshot metadata and
 canonical codec, independent protoc36.2 wire bytes, exact/conflicting retry,
 real blackhole deadline vs closed-peer unavailability, standard IPC streaming and
 serial merge order, missing participants, invalid-tail atomicity, legacy stream

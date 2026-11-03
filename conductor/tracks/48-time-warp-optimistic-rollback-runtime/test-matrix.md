@@ -1,3 +1,12 @@
+## Current selected runtime and amendment — 3 November 2026
+
+Use actual repo-local Python3.15.2 and Rust1.99.1. Historical1.98/1.76 commands
+below describe their dated receipts, not current dispatch. The validated-read
+amendment passes208 all-feature PDES tests, corruption/proof/CAS/crash regression
+and strict Clippy. Track49's fresh MPI2/4 and two-host3-case matrices bind its
+new source; original CAP48 sixteen-case receipts remain immutable baseline.
+See [current qualification](../49-distributed-mpi-grpc-state-synchronization/native-runtime-qualification-20261103.md).
+
 # Track 48 Test Matrix
 
 | Gate | Command | Required for |

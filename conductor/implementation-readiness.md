@@ -1,6 +1,30 @@
+## Current Track48/49 acceptance — 3 November 2026
+
+Track48 and49 are **Done for the documented bounded native scope**. Root chat
+01a19bed-7060-7910-af22-38cb31f51446 is the source integrator in isolated standard
+worktree /Users/doughnut/.codex/worktrees/kairos-cap48-gvt/kairos, branch
+codex/cap48-durable-store-20261103, delivering through PR366 branch
+codex/track49-runtime-20261102. Worker source claims and native operations are
+terminal; the named owned Colab CPU session is terminated. Prior assignments
+below remain history; this does not take over main or another worktree.
+
+Actual MPI2/4 six-case and Mac/Colab three-case qualification,208 PDES and9
+all-feature synchronization tests are independently accepted. All19 hosted
+workflows pass at source5026d926. The original CAP48 sixteen-case matrix is
+baseline evidence; the read-snapshot amendment has separate regression/native
+proof. See [qualification](tracks/49-distributed-mpi-grpc-state-synchronization/native-runtime-qualification-20261103.md).
+
+Current registry:109 tracks,97 Done,3 In Progress (50,51,55),8 Planned and1
+Blocked. Other track states are unchanged. API scope remains experimental;
+fixed-LP entity migration does not qualify whole-LP relocation. NAS, cross-host
+MPI, cluster/Slurm, GPU, scaling, release/publication and downstream pin promotion
+are unclaimed. PR366 remains draft/unmerged. Final documentation hosted readback
+is a separate pre-merge gate; default-branch Codecov project-status diagnostic
+drift remains visible without a settings change.
+
 # KairoECS Implementation Readiness
 
-> **Integrated planning registry — 21 October 2026:** 70 tracks: 60 recorded Done,
+> **Historical integrated planning registry — 21 October 2026:** 70 tracks: 60 recorded Done,
 > 7 In Progress (48–53, 55) and 3 Planned (67–69). The 20 October audit's 67-track
 > count is a historical snapshot before those registrations. Tracks62–66 have
 > disputed full-completion claims; recorded status is not exercised capability.
@@ -81,8 +105,8 @@ The Conductor setup is complete, but implementation should move through explicit
 | Astro/Starlight Docs Platform and Polyglot Experience (Track 45) | R2 | Archived as `Done` for the active Astro/Starlight docs platform: versioning, local polyglot metadata, link validation, llms.txt, icons, Pagefind output, docs workflow smoke, and the SOTA validator pass locally. TypeDoc, OpenAPI, and hosted DocSearch remain deferred activation-condition work, not current claims. |
 | HPC Parity Charter (Track 46) | R2 | Archived as `Done` for the governance-only HPC parity charter: evidence contract schema, scaffold/live-HPC template manifests, baseline claim boundaries, and executable claim-boundary validator are validated. No runtime HPC capability, live hardware proof, or production parity claim is made by this archive; those remain owned by Tracks 47-55. |
 | PDES Conservative Production Runtime (Track 47) | R2 | Done for the event-owned single-host runtime: 18 core Scheduler parity cases, 14 protocol regressions, 8-LP 10,000-tick stress, full native CI and immutable five-repeat CPU profiles accepted. All 19 hosted workflow runs pass at 8a6bf66, including Package Dry Runs under human-approved EXC-193 with raw exit 1 retained. Final metadata-head checks/merge remain required; no speedup or distributed certification, RC/1.0 or publication acceptance is claimed. |
-| Time Warp Optimistic Runtime (Track 48) | R2 | Preview event-owned `OptimisticRuntime` and `GenerationBitset` implement replay, exact-incarnation downstream cancellation, bounded execution, typed failure, full-key ordering and GVT safety. Explicitly bound Rust1.98.1 workspace CI passed 458 tests at7a432ab; prior pinned-toolchain labels were withdrawn after actual1.99 compiler verification. Actual1.76 PDES94 tests and compiler-bound68b8d7a benchmark accepted; hosted/security gates and live Track49 distributed acceptance remain pending; Track48 stays In Progress and does not authorize Track49 production dispatch. |
-| Distributed MPI/gRPC State Sync (Track 49) | R2 | Implemented `MpiProcessTransport` (`crates/kairo-ecs-mpi/src/process.rs`), `GrpcSocketTransport` (`crates/kairo-ecs-grpc/src/socket.rs`), `KairoOptimisticEnvelopeV1` (`envelope.rs`), `multirank_smoke` (verified across 4 ranks via `mpiexec -n 4`), and `two_process_smoke` (real child OS process TCP socket exchange). Multi-node `live-hpc` cluster evidence and upstream `rsmpi`/`tonic` integration remain gated by Tracks 54/55. |
+| Time Warp Optimistic Runtime (Track 48) | R3 | Accepted fixed-membership durable optimistic engine: original16-case Mac/Colab baseline, reviewed operation-scoped read amendment,208 PDES regression and fresh MPI6/two-host3 cases. Source5026d926 hosted green; no release claim. |
+| Distributed MPI/gRPC State Sync (Track 49) | R3 | Actual native-mpi signed records across2/4 ranks; Tonic/Prost full snapshots and real Arrow IPC; Mac/Colab SIGKILL/restart, serial parity, retirement/cut and typed failures accepted. Legacy TCP routes retain their names. NAS/cluster/scaling remain outside acceptance. |
 | NUMA and Memory Lifecycle (Track 50) | R2 | Implemented `NumaTopology::discover()` (sysfs/env discovery with typed fallback), `EventArena` chunked bump allocation, lock-free `EventPool` reuse, multithreaded contention tests, and FFI zero-copy layout validation in `kairo-ecs-core`/`kairo-ecs-state`/`kairo-ecs-ffi`. Multi-socket hardware affinity proof remains gated by Track 55. |
 | Parallel I/O and Checkpoint Export (Track 51) | R2 | Implemented `parallel-io`, `hdf5`, and `adios2` feature-gated checkpoint/restart writers, readers, contiguous block manifests, and SHA-256 checksum verification in `kairo-ecs-arrow`. Official upstream `arrow-*`/`parquet` crate integration is scheduled in Track 62 and live Lustre/GPFS evidence remains gated by Track 55. |
 | Native GPU Persistent Device Runtime (Track 52) | R2 | Implemented `PersistentGpuSession` (`run_abm_tick_parallel`), Apple Silicon `MetalBackend` (`metal-backend` feature with unified-memory zero-copy borrow, MSL `abm_step` compute kernel source, and multi-core OS thread workgroup execution), `WgpuBackend`, and `CudaBackend` in `kairo-ecs-gpu`. Dedicated multi-GPU NVIDIA CUDA hardware cluster benchmarks remain gated by Track 55. |
@@ -117,9 +141,9 @@ Tracks cannot move to `In Review` or `Done` from planning text alone. A closeout
 
 Track 00 is closed as `Done` after maintainer approval of the foundation naming evidence on 2026-05-07. Later release tracks still own production publishing, package dry-runs, SBOM, provenance, and registry-specific publish gates.
 
-## Approved conditional Track49 entry — 4 October2026
+## Historical conditional Track49 entry — 4 October2026
 
-The human sole maintainer explicitly approved Track49 production scheduling after scope clarification. See conductor/tracks/29-wave-manager-execution-gatekeeper/adr-track49-phase-entry-20261004.md. Dispatch remains conditional on normal PR199 merge, exact-head gates/security evidence, accepted local/interface proof and a separately reviewed reserved transport packet. Track48 remains In Progress; dependencies, full distributed acceptance and release gates are unchanged. The raw Track49 gate result is preserved, not rewritten as a pass.
+Historical snapshot, superseded by the3November2026 accepted source/native packet; the expired conditional gate is not reused. The human sole maintainer explicitly approved Track49 production scheduling after scope clarification. See conductor/tracks/29-wave-manager-execution-gatekeeper/adr-track49-phase-entry-20261004.md. Dispatch remains conditional on normal PR199 merge, exact-head gates/security evidence, accepted local/interface proof and a separately reviewed reserved transport packet. Track48 remains In Progress; dependencies, full distributed acceptance and release gates are unchanged. The raw Track49 gate result is preserved, not rewritten as a pass.
 
 ## Track 70 readiness
 

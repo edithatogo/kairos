@@ -1,3 +1,12 @@
+## Track49 native amendment accepted — 3 November 2026
+
+[Track49 qualification](../49-distributed-mpi-grpc-state-synchronization/native-runtime-qualification-20261103.md)
+adds actual MPI2/4 and Mac/Colab entity/rollback/restart acceptance. The private
+operation-scoped validated-read amendment passes208 PDES tests and fresh9 native
+cases. The original CAP48 sixteen-case acceptance remains baseline evidence;
+it is not relabelled as execution on the amended source. Root alone owns final
+hosted/global closeout; other historical assignments below remain history.
+
 # Track 48 Handoff
 
 Last updated: 2026-10-03

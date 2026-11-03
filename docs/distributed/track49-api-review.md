@@ -103,3 +103,13 @@ and truthful ACK/failure behavior. Review findings corrected source-slot binding
 pre-decode Arrow schema bounds, loopback listener enforcement and native-controller
 cleanup. Final runtime/hosted acceptance is recorded separately; release and
 main integration remain outside this decision.
+
+## Native amendment review — 3 November 2026
+
+The independently reviewed private SQLite read snapshot changes no API/wire,
+CAS, schema, locking, bounds or durable commit behavior. Every new guard performs
+full retained-history validation; every proof still checks exact linkage and
+historical digest. A typed connectivity cause may classify an actual Unknown
+Tonic status as transient without rewriting its code/details/metadata. Arbitrary
+application Unknown remains permanent. Fresh source-bound MPI2/4 and Mac/Colab
+matrices qualify these changes; see the Track49 native acceptance record.

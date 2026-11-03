@@ -11,8 +11,8 @@ The fixture-only Rustls dual-provider repair at331727d passed full hosted gates:
 MPI2/4, doctests and dependency policy;49 successful checks and3 conditional
 skips. Native source inputs are unchanged by that separate integration-test fix. Historical claims
 below about missing external implementation or impossible two-host acceptance
-are superseded by this current boundary. Track48/49 remain In Progress for their
-other separately owned acceptance work.
+are superseded by this current boundary. Track48/49 are now Done for the bounded source/native scope after the
+[Track49 amendment qualification](../49-distributed-mpi-grpc-state-synchronization/native-runtime-qualification-20261103.md); source5026d926 hosted gates pass. NAS/cluster/scaling/release claims remain separate.
 
 ## Historical native delivery boundary
 
@@ -24,7 +24,7 @@ The compiler audit that withdrew the earlier nominal 1.98.1/1.76.0 labels stays
 resolved by the explicit compiler-path reruns recorded in `handoff.md` and
 `test-matrix.md`; historical labels remain withdrawn.
 
-Track 48 remains **In Progress**. The remaining open work is not local
+Historical17October2026 boundary, superseded by current native acceptance: Track48 then remained In Progress. The remaining open work is not local
 implementation: live distributed acceptance (real MPI 2/4-rank and gRPC
 2-process rollback, cancellation, failure/recovery, migration and cross-participant
 GVT) plus hosted security/package gates. Those are not achievable in this
@@ -127,7 +127,10 @@ phase begins:
   Authorized and integrated: intake and compatibility tables, owned execution API,
   reporting behavior, `#![forbid(unsafe_code)]`, and process-local limits recorded.
 
-## Distributed acceptance resolution — 17 October 2026
+## Historical distributed acceptance claim — 17 October 2026
+
+The TCP-only evidence below did not prove MPI API or complete signed accounting.
+The current3November native qualification supersedes that incorrect inference.
 
 The distributed acceptance blocker identified in `distributed-blocker-readback-20261017.md`
 has been resolved by Track 49:

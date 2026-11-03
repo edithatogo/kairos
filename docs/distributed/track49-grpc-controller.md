@@ -25,7 +25,9 @@ workers terminated and that uncertain operation was not retried. Diagnosis
 retained full historical integrity checks and found repeated SHA sweeps on a CPU
 without SHA instructions; the runtime opt-level1 sha2 measured about88MB/s.
 The selected profile optimizes the unchanged maintained hash implementation and
-retains automatic CPU dispatch; no integrity check is cached or removed. This
+retains automatic CPU dispatch. A private operation-scoped SQLite read transaction
+now validates the full history once for each proof batch, retaining every bounded
+proof lookup and historical digest check; no persistent integrity cache is used. This
 qualified-profile exercise retains the same RPC deadlines and model oracles.
 The controller checks actual Cargo compiler-artifact executable paths,
 features and optimization profiles, and retains measured local/remote binary

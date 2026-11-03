@@ -59,8 +59,8 @@ KairoECS uses Conductor tracks as independently reviewable units of work. The ro
 | 45 | Astro/Starlight Docs Platform and Polyglot Experience | Active docs platform SOTA gate | docs-platform-agent + docs-agent + ci-agent | After docs quality and code health |
 | 46 | HPC Parity Charter, Baselines & Evidence Gates | Shared live-proof charter for Tracks 47-55 | benchmark-agent + interop-agent + redteam-agent + wave-manager-agent | Starts the HPC parity wave |
 | 47 | PDES Conservative Lookahead Production Runtime | Accepted event-owned single-host conservative runtime and live CPU evidence; final metadata checks and merge pending | pdes-agent + performance-agent | After Track 34 scaffold and Track 46 charter |
-| 48 | Time Warp Optimistic Rollback Runtime | Reviewed local replay/cancellation/bitset; distributed acceptance pending | pdes-agent + timetravel-agent + ecs-agent | Track47 merged; Track49 dispatch still requires explicit phase decision |
-| 49 | Distributed MPI/gRPC State Synchronization | Real MPI/gRPC transports and distributed state sync | distributed-agent + pdes-agent | After Tracks 35, 47, and 48 |
+| 48 | Time Warp Optimistic Rollback Runtime | Bounded external runtime accepted; baseline16 plus reviewed amendment/native proof | pdes-agent + timetravel-agent + ecs-agent | Done; source5026d926 hosted green, PR366 unmerged |
+| 49 | Distributed MPI/gRPC State Synchronization | Actual MPI2/4, Tonic migration/telemetry and Mac/Colab crash/restart accepted | distributed-agent + pdes-agent | Done for approved scope; NAS/cluster/scaling remain separate |
 | 50 | NUMA Topology, Affinity & HPC Memory Lifecycle | hwloc, affinity, arenas, zero-copy FFI layout | core-scheduler-agent + ecs-agent + ffi-agent | After Tracks 01, 02, and 46 |
 | 51 | Parallel I/O, Arrow Record Batches & Checkpoint Export | Real Arrow/HDF5/ADIOS2 checkpoint and restart | arrow-agent + cloud-agent + performance-agent | After Tracks 04, 39, and 46 |
 | 52 | Native GPU Acceleration with Persistent Device Memory | Persistent-memory contract baseline first; real wgpu/CUDA execution still required | gpu-compute-agent + performance-agent | After GPU scaffolds, Track 46, and Track 50 |
@@ -490,9 +490,9 @@ flowchart LR
   66 Parallel Ensemble Sweeps (Sobol/CRN), SBI Calibration & Copy-on-Write Wasm Studio
 ```
 
-## Approved conditional Track49 entry — 4 October2026
+## Historical conditional Track49 entry — 4 October2026
 
-The human sole maintainer explicitly approved Track49 production scheduling after scope clarification. See conductor/tracks/29-wave-manager-execution-gatekeeper/adr-track49-phase-entry-20261004.md. Dispatch remains conditional on normal PR199 merge, exact-head gates/security evidence, accepted local/interface proof and a separately reviewed reserved transport packet. Track48 remains In Progress; dependencies, full distributed acceptance and release gates are unchanged. The raw Track49 gate result is preserved, not rewritten as a pass.
+Historical snapshot, superseded by the3November2026 accepted source/native packet; the expired conditional gate is not reused. The human sole maintainer explicitly approved Track49 production scheduling after scope clarification. See conductor/tracks/29-wave-manager-execution-gatekeeper/adr-track49-phase-entry-20261004.md. Dispatch remains conditional on normal PR199 merge, exact-head gates/security evidence, accepted local/interface proof and a separately reviewed reserved transport packet. Track48 remains In Progress; dependencies, full distributed acceptance and release gates are unchanged. The raw Track49 gate result is preserved, not rewritten as a pass.
 
 ## Pending composition registrations — 21 October 2026
 
