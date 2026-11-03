@@ -29,8 +29,8 @@ profiles remain subject to the recorded consumer-specific qualification policy.
   guard and workflow inputs were unchanged through the baseline main commit.
   Docker also builds the Rust source tree and `Cargo.lock`, which did change;
   the old container run is baseline evidence, not current-tree proof.
-- Historical planning, prior release receipts, changelog history, synthetic
-  wrong-version tests and the Colab notebook control-kernel metadata are not
+- Historical planning, prior release receipts, changelog history and synthetic
+  wrong-version tests are not
   active supported-runtime declarations. They must not be rewritten as if their
   original runs used 3.15.2. The active Syft runbook instructions were corrected
   separately while retaining their dated historical receipts.
@@ -38,6 +38,22 @@ profiles remain subject to the recorded consumer-specific qualification policy.
   native owners. An unrelated dirty toolchain checkout has overlapping files;
   its Syft runbook working bytes matched main before the independent runbook
   correction. No files or environments in that checkout were changed.
+- The five executable root notebooks remain active documentation assets. The
+  scheduler and benchmark tutorials use the selected Jupyter kernel without a
+  verified local-prefix guard; three accelerator notebooks execute on a
+  Colab-managed kernel and may install JAX. Their `3.12` metadata does not prove
+  the actual kernel version or qualify an alternate profile. The docs-quality
+  validator checks structure and AST, not cell execution. Runtime selection,
+  dependencies and actual notebook execution remain open for these consumers.
+- `cloud/gcp/submit-experiment.sh` renders GCP array jobs with ambient `python`
+  and does not verify the repo-local interpreter before its submission command.
+  This is an active-use gap; it has not been executed against GCP in this audit.
+- `scripts/release/publish-registry.mjs` and `scripts/release/publish-hpc.mjs`
+  spawn ambient `python` when called directly as documented. Hosted workflows
+  select the local runtime before invoking them, but direct entry points do
+  not prove that contract. The registry helper also requests unpinned upgrades
+  of build tools. These release-owned paths require a scoped handoff and review;
+  neither publishing path was executed.
 
 ## Verified evidence and remaining gates
 

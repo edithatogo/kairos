@@ -304,7 +304,14 @@ The local phase/DAG/no-skip validators passed. The selected `.venv` was newly
 created in this worktree, verified at 3.15.2 and has not replaced another owner’s
 environment. Other consumers have not been declared terminal or handed over.
 
+Independent inventory review found additional open entry points: the GCP array
+submitter and release scripts use ambient Python when called directly, and five
+executable notebooks lack actual selected-kernel qualification. Their owner
+handoffs and execution profiles remain open; no GCP submission or publishing
+command was run. The notebook documentation also overstates cell execution by
+the current structural validator. The detailed inventory records these gaps.
+
 Next: require actual PR-head Cloud/HPC and Devbox runs, full applicable checks,
-review and protected merge; then inspect exact-main runs and reconcile remaining
-consumer/environment handover before any track completion or archival claim.
+review and protected merge; then inspect exact-main runs and resolve the named
+entry points, notebook and consumer/environment handover before completion.
 Track 105 remains In Progress.
