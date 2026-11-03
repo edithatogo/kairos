@@ -1,5 +1,11 @@
 # Review Report: Track 51 Parallel I/O, Arrow Record Batches & Checkpoint Export
 
+> **Current qualification correction, 3 November 2026:** This historical review
+> describes the contract-baseline slice. Its claims of production readiness and
+> complete plan compliance do not establish native Arrow RecordBatch, HDF5,
+> ADIOS2, resumed-engine parity or live parallel-filesystem acceptance. See the
+> current plan and handoff for outstanding gates and later evidence.
+
 ## Summary
 
 Track 51 delivers production-ready Arrow record batch serialization, contiguous memory block layouts, and checkpoint export/restore adapters:
