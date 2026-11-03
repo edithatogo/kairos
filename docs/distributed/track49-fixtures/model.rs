@@ -193,6 +193,9 @@ impl Model {
         Ok(())
     }
     fn effect(&mut self, event: &RemoteEvent, op: Operation) -> Result<Vec<RemoteEvent>, String> {
+        if event.dest_lp.0 != self.lp {
+            return Err("model destination binding".into());
+        }
         let at = event.tick.ticks();
         let emit = |destination: u32, when: u128, op: Operation| -> Result<RemoteEvent, String> {
             Ok(RemoteEvent {
@@ -235,6 +238,13 @@ impl Model {
                 vec![emit(1, when, Operation::Transfer { data })?]
             }
             Operation::Transfer { data } => {
+                if data.source != event.source_lp.0
+                    || event.dest_lp.0 != self.lp
+                    || data.source != 0
+                    || data.destination != 1
+                {
+                    return Err("transfer source/event ownership binding".into());
+                }
                 self.validate_transfer(&data, at)?;
                 if self.transfers.contains_key(&data.identity) {
                     return Ok(vec![]);
@@ -591,6 +601,24 @@ pub fn local(v: &Value, r: &mut Runtime, participant: u32, size: u32) -> Result<
             let m: Model = serde_json::from_slice(r.model_bytes(participant).ok_or("model")?)
                 .map_err(|e| e.to_string())?;
             m.validate_transfer(&field(v, "data")?, number(v, "tick")?)?;
+            json!({})
+        }
+        "validate_event" => {
+            let mut model: Model =
+                serde_json::from_slice(r.model_bytes(participant).ok_or("model")?)
+                    .map_err(|e| e.to_string())?;
+            let payload: Vec<u8> = field(v, "payload")?;
+            let operation: Operation =
+                serde_json::from_slice(&payload).map_err(|e| e.to_string())?;
+            model.effect(
+                &RemoteEvent {
+                    source_lp: LpId(field(v, "source")?),
+                    dest_lp: LpId(participant),
+                    tick: Tick::from_ticks(number(v, "tick")?),
+                    event_payload: payload,
+                },
+                operation,
+            )?;
             json!({})
         }
         "sign_fixture" => {
