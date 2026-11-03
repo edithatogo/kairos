@@ -83,6 +83,12 @@ class InventoryWorkflowTests(unittest.TestCase):
         self.assertIn('retries: 0', submit)
         self.assertIn('retries: 0', verify)
         self.assertIn('cb62ad8666a4c6282f0e4c3dacca5cf4226ed2c4', prepare)
+        checkout = prepare.split('repository: edithatogo/careops', 1)[1].split('      - uses:', 1)[0]
+        self.assertIn('ssh-key: ${{ secrets.CAREOPS_INVENTORY_READONLY_SSH }}', checkout)
+        self.assertIn('persist-credentials: false', checkout)
+        self.assertNotIn('sparse-checkout:', checkout)
+        self.assertNotIn('filter:', checkout)
+        self.assertEqual(text.count('secrets.CAREOPS_INVENTORY_READONLY_SSH'), 1)
         self.assertIn('--only-binary=:all: --require-hashes', prepare)
         self.assertIn('sbom/generate-report', verify)
         self.assertNotIn('exportSbom', verify)

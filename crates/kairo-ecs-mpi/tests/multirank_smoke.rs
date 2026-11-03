@@ -2,7 +2,7 @@
 
 use std::env;
 use std::process::Command;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use kairo_ecs_mpi::{MpiProcessTransport, MpiRankAssignment};
 use kairo_ecs_pdes::{LpId, PdesMessage, PdesTransport, RemoteEvent, Tick};
@@ -103,12 +103,19 @@ fn run_mpi_rank_node(rank: i32, size: usize) {
         .send(target_lp, PdesMessage::Event(sent_event))
         .expect("send event must succeed");
 
-    // Barrier to ensure all sends completed and delivered to inboxes
+    // The barrier orders sends, but listener delivery is asynchronous.
     transport.barrier();
 
     // 2. Receive and verify inbound event from predecessor in ring
     let expected_src_rank = ((rank + (size as i32) - 1) % (size as i32)) as u32;
-    let messages = transport.recv(my_lp).expect("recv must succeed");
+    let deadline = Instant::now() + Duration::from_secs(10);
+    let messages = loop {
+        let messages = transport.recv(my_lp).expect("recv must succeed");
+        if !messages.is_empty() || Instant::now() >= deadline {
+            break messages;
+        }
+        std::thread::sleep(Duration::from_millis(1));
+    };
     assert_eq!(messages.len(), 1, "rank {rank} expected 1 message");
 
     match &messages[0] {

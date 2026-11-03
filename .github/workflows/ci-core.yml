@@ -73,10 +73,24 @@ jobs:
         run: cargo fmt --all --check
       - name: Clippy
         run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+      - name: Reclaim non-coverage build artifacts
+        run: |
+          df -h "$GITHUB_WORKSPACE"
+          cargo clean
+          df -h "$GITHUB_WORKSPACE"
       - name: Workspace tests and core coverage
+        env:
+          CARGO_BUILD_JOBS: '2'
         run: |
           cargo llvm-cov nextest --workspace --all-features --lcov --output-path lcov.info
           node scripts/validation/check-core-coverage.mjs lcov.info
+      - name: Capture runner resources after coverage
+        if: always()
+        run: |
+          df -h "$GITHUB_WORKSPACE"
+          free -h
+          if [ -d target ]; then du -sh target; fi
+          if [ -d target/llvm-cov-target ]; then du -sh target/llvm-cov-target; fi
       - name: Native MPI API exchange on two and four ranks
         shell: bash
         run: |
