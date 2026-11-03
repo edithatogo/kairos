@@ -4,7 +4,7 @@ Current selected runtime: actual repository Python3.15.2 and Rust1.99.1.
 
 | Gate | Command or retained execution | Acceptance |
 |---|---|---|
-| Native MPI API | Build native_mpi_smoke with native-mpi; run exact emitted executable under mpiexec -n 2 and -n 4, --test-threads=1 --nocapture | Real MPI API, bounds/rejection/subsequent valid exchange |
+| Native MPI interface | Build native_mpi_smoke with native-mpi; run exact emitted executable under mpiexec -n 2 and -n 4, --test-threads=1 --nocapture | Real MPI interface, bounds/rejection/subsequent valid exchange |
 | Native optimistic MPI2/4 | `.venv/bin/python docs/distributed/qualify_track49.py --binary ABSOLUTE_BINARY --ranks 2 --output PRIVATE_ATTEMPT` and separately --ranks 4 | Reference plus before/after SQL SIGKILL, full-allocation rejoin and serial parity;6 cases |
 | Real Mac/Colab gRPC | `.venv/bin/python docs/distributed/qualify_track49_grpc.py --binary ABSOLUTE_BINARY --ssh-args PRIVATE_JSON --remote-repo /content/kairos-track49-full/kairos --output PRIVATE_ATTEMPT --cases all` | Three full real two-host cases, typed migration/IPC and actual failures |
 | PDES amendment | `cargo test --locked -p kairo-ecs-pdes --all-features` | 208 pass; corruption/proof/CAS/crash regressions |
