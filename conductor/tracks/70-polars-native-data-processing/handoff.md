@@ -277,3 +277,28 @@ Metadata addition now has local engineering review and100native Arrow passes,
 warnings-denied Clippy/docs and fmt. No pin/lock change. Publish the coherent
 upstream draft next; actual hosted/package acceptance and exact parent readers/
 manifest/source promotion remain pending. Historical phase status is preserved.
+
+## First hosted gate repair — 3 November 2026
+
+At0f981f72, draft PR367 changelog policy41579426698 refused the missing public
+surface entry. Add the actual Arrow/FFI/metadata alpha changes to Unreleased.
+ci-bindings41579426571 failed the existing archive pip-configuration audit test.
+Its verifier venv was faked with a bare interpreter symlink, without pyvenv.cfg,
+so the subprocess could depend on a host pip instead of a real verifier env.
+Original local symlink reproduction passed; it did not reproduce Linux's exact
+failure. A new fixture-fidelity assertion was actually red locally. The repair
+uses bounded real stdlib venv/ensurepip plus the actual audit and verifies the
+subprocess prefix/version. Network hash-locked installation stays simulated;
+audit-before-install, isolated/hash flags, fixed env and canary checks remain.
+No production security function or workflow gate is changed.
+
+User-selected local3.15.1 passes the affected audit but correctly fails4other
+cases at upstream's existing3.15.2 guard. Preserve that failed run. A separately
+created repo-local isolated3.15.2 profile actually reports3.15.2 and passes the
+whole32-case file in6.636s, including all failure/security controls. Existing
+CareOps3.15.1 and upstream environments/policy are untouched. This is scoped
+profile qualification, not a runtime-policy bypass or repository migration.
+Independent security/test-fidelity review is ready; actual repaired Linux hosted
+acceptance remains pending. Windows Arrow job125730516402 separately reports
+new-test unused_mut on its cfg(unix)-only directory-builder mutation; retain the
+failure and repair under a fresh scoped claim before publishing the checkpoint.

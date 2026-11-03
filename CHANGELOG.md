@@ -14,6 +14,13 @@ Format:
 
 ## Unreleased
 
+- `crates/kairo-ecs-arrow` and `crates/kairo-ecs-ffi`: add declared-schema owned
+  domain C Data exports and trusted-only safe imports, with lazy bounded stream
+  windows and source-drop/release controls. Add metadata-aware Parquet/Zstd, IPC
+  and durable batch/sink publication; receipts hash the metadata-bearing bytes.
+  Existing event-log C symbols, manifests and plain empty-metadata output remain
+  unchanged. These APIs are alpha; parent adoption and release remain gated.
+
 - Upgrade active Rust, Python, Node documentation/binding and .NET test dependencies to the 29 October registry frontier; qualify Python 3.15.2 and Node 26.13.0 in isolated environments. Update rstar spatial queries and Prost's derive feature for their new APIs.
 - `kairo-ecs-arrow` source integration pins Polars development revision `96439685eb2f95108f51087d2b76091917f2593c` and its required hashbrown revision. This resolves the zstd and object_store/XML vulnerability closure. Git consumers must retain the documented workspace patch; crates.io publication is disabled until a separately qualified published Polars closure is available.
 

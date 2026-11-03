@@ -348,19 +348,32 @@ class VerifiedSyftInstallerTests(unittest.TestCase):
             captured = []
             def execute(argv, **kwargs):
                 captured.append((argv, kwargs["env"]))
-                if "-m" in argv and "venv" in argv:
-                    venv_python = Path(argv[-1]) / "bin" / "python"
-                    venv_python.parent.mkdir(parents=True)
-                    venv_python.symlink_to(sys.executable)
-                if len(argv) > 1 and Path(argv[1]).name == "pip-config-audit.py":
-                    return syft.run_bounded_command(argv, cwd=kwargs["cwd"], env=kwargs["env"],
-                                                    timeout=kwargs["timeout"], log_path=kwargs["log_path"])
+                if ("-m" in argv and "venv" in argv) or (
+                    len(argv) > 1 and Path(argv[1]).name == "pip-config-audit.py"
+                ):
+                    # Exercise the actual venv/ensurepip bootstrap and audit.
+                    # A bare interpreter symlink has no pyvenv.cfg and may
+                    # import a different host pip (or none) across runners.
+                    # The hash-locked network installation stays simulated.
+                    return syft.run_bounded_command(argv, **kwargs)
                 syft.safe_write(kwargs["log_path"], b"fixture output\n")
                 return 0, "", ""
             installer.execute_process = execute
             lock = root / "retained.lock"
             lock.write_bytes(b"locked requirements\n")
             installer._install_verifier(lock)
+            self.assertTrue((output / "verifier" / "pyvenv.cfg").is_file(),
+                            "configuration audit must use a real isolated verifier environment")
+            identity_log = output / "logs" / "verifier-identity.log"
+            status, stdout, _stderr = syft.run_bounded_command(
+                [str(output / "verifier" / "bin" / "python"), "-I", "-c",
+                 "import json,sys; print(json.dumps(dict(prefix=sys.prefix,version=list(sys.version_info[:3]))))"],
+                cwd=output, env=installer._minimal_env(), timeout=30, log_path=identity_log,
+            )
+            self.assertEqual(status, 0)
+            identity = json.loads(stdout)
+            self.assertEqual(Path(identity["prefix"]), output / "verifier")
+            self.assertEqual(tuple(identity["version"]), sys.version_info[:3])
             audit_index = next(i for i, pair in enumerate(captured) if Path(pair[0][1]).name == "pip-config-audit.py")
             install_index = next(i for i, pair in enumerate(captured) if "install" in pair[0])
             self.assertLess(audit_index, install_index)
