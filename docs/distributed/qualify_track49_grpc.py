@@ -501,11 +501,12 @@ p=base/'settings.json';p.write_text({json.dumps(settings)!r});p.chmod(0o600)
         assert stopped_code in {"Unavailable", "Unknown"}, stopped_peer
         transient = self.failure(stopped_peer, "Transient", stopped_code)
         sentinel = pathlib.Path(group.settings[1]).parent / "blackhole.settings"
-        code = """import json,os,socket,time,sys
-role='track49-blackhole';s=socket.socket();s.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1);s.bind(('127.0.0.1',43151));s.listen(4)
-print(json.dumps({'ready':True,'pid':os.getpid(),'role':role}),flush=True)
-c,_=s.accept();time.sleep(20)
-"""
+        code = ("import json,os,socket,time,sys;"
+                "role='track49-blackhole';s=socket.socket();"
+                "s.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1);"
+                "s.bind(('127.0.0.1',43151));s.listen(4);"
+                "print(json.dumps({'ready':True,'pid':os.getpid(),'role':role}),flush=True);"
+                "c,_=s.accept();time.sleep(20)")
         error_log = (self.output / (group.name + "-blackhole.stderr.log")).open("w")
         pidfile = "blackhole-" + uuid.uuid4().hex + ".pid"
         proc = self.host.popen_owned([str(self.remote_repo / ".venv/bin/python"), "-c", code, str(sentinel)],
