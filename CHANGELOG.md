@@ -14,6 +14,8 @@ Format:
 
 ## Unreleased
 
+- The Rust CI coverage lane reclaims its preceding build artifacts, bounds build concurrency, and reports runner resources to diagnose linker failures while retaining workspace coverage checks.
+
 - The Python dependency inventory workflow uses a dedicated read-only deploy key to fetch its pinned shared adapter without retaining checkout credentials.
 
 - Live gRPC and launcher-TCP transports now refuse unproved positive scheduler GVT floors. Their scalar reductions remain available as diagnostics; distributed progress waits for complete channel/retirement/restart accounting.
