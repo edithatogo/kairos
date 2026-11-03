@@ -178,6 +178,62 @@ fn bytes<T: Serialize>(v: &T) -> Result<Vec<u8>> {
     Ok(out.0)
 }
 
+fn image_unit_digest(revision: u64, raw: &[u8]) -> Result<Hash> {
+    use sha2::{Digest, Sha256};
+
+    if raw.len() > MAX_IMAGE {
+        return Err(reject("image bound"));
+    }
+    // The unchanged flat JSON tuple is bounded by 4 * MAX_IMAGE + 24 bytes.
+    // Its byte-array encoding is a hash preimage, not another retained image.
+    // Count first to preserve protocol::digest's explicit length prefix, then
+    // stream the same tuple without a second retained-image allocation.
+    struct LengthWriter(usize);
+    impl std::io::Write for LengthWriter {
+        fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+            if bytes.len() > (4 * MAX_IMAGE + 24).saturating_sub(self.0) {
+                return Err(std::io::Error::other("unit digest preimage bound"));
+            }
+            self.0 += bytes.len();
+            Ok(bytes.len())
+        }
+        fn flush(&mut self) -> std::io::Result<()> {
+            Ok(())
+        }
+    }
+    let mut length = LengthWriter(0);
+    serde_json::to_writer(&mut length, &(revision, raw)).map_err(|e| reject(e.to_string()))?;
+    struct DigestWriter {
+        hash: Sha256,
+        remaining: usize,
+    }
+    impl std::io::Write for DigestWriter {
+        fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+            if bytes.len() > self.remaining {
+                return Err(std::io::Error::other("unit digest length mismatch"));
+            }
+            self.hash.update(bytes);
+            self.remaining -= bytes.len();
+            Ok(bytes.len())
+        }
+        fn flush(&mut self) -> std::io::Result<()> {
+            Ok(())
+        }
+    }
+    let mut hash = Sha256::new();
+    hash.update(b"KAIROS-EXTERNAL-DIGEST-V1\0");
+    hash.update((length.0 as u64).to_be_bytes());
+    let mut writer = DigestWriter {
+        hash,
+        remaining: length.0,
+    };
+    serde_json::to_writer(&mut writer, &(revision, raw)).map_err(|e| reject(e.to_string()))?;
+    if writer.remaining != 0 {
+        return Err(reject("unit digest length mismatch"));
+    }
+    Ok(writer.hash.finalize().into())
+}
+
 fn identity(m: &Message) -> Hash {
     digest(
         &serde_json::to_vec(&(
@@ -830,7 +886,7 @@ impl<P: OptimisticProcess, C: PortableModelCodec<P>> ExternalOptimisticRuntime<P
             .store
             .load()
             .map_err(|e| ExternalError::Storage(e.to_string()))?;
-        let h = digest(&bytes(&(old.revision, &raw))?);
+        let h = image_unit_digest(old.revision, &raw)?;
         let unit = Unit {
             id: h[..16].try_into().unwrap(),
             previous_revision: old.revision,

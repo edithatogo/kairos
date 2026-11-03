@@ -2,6 +2,31 @@
 use super::*;
 use std::sync::atomic::{AtomicU64, Ordering};
 static NEXT: AtomicU64 = AtomicU64::new(0);
+
+#[test]
+fn image_unit_digest_matches_legacy_json_tuple_bytes() {
+    for revision in [0, 1, u64::MAX] {
+        for length in [0, 1, 256, 4096, MAX_IMAGE / 2] {
+            let raw = (0..length).map(|i| (i % 256) as u8).collect::<Vec<_>>();
+            let legacy = serde_json::to_vec(&(revision, &raw)).unwrap();
+            assert_eq!(image_unit_digest(revision, &raw).unwrap(), digest(&legacy));
+        }
+    }
+}
+
+#[test]
+fn image_unit_digest_preserves_raw_image_limit() {
+    let mut raw = vec![255; MAX_IMAGE];
+    let legacy = serde_json::to_vec(&(u64::MAX, &raw)).unwrap();
+    assert_eq!(legacy.len(), 4 * MAX_IMAGE + 24);
+    assert_eq!(image_unit_digest(u64::MAX, &raw).unwrap(), digest(&legacy));
+    raw.push(255);
+    assert_eq!(
+        image_unit_digest(u64::MAX, &raw),
+        Err(reject("image bound"))
+    );
+}
+
 struct Temp(std::path::PathBuf);
 impl Temp {
     fn new() -> Self {
