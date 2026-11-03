@@ -180,6 +180,7 @@ fn bytes<T: Serialize>(v: &T) -> Result<Vec<u8>> {
 
 fn image_unit_digest(revision: u64, raw: &[u8]) -> Result<Hash> {
     use sha2::{Digest, Sha256};
+    use std::io::Write;
 
     if raw.len() > MAX_IMAGE {
         return Err(reject("image bound"));
@@ -227,7 +228,12 @@ fn image_unit_digest(revision: u64, raw: &[u8]) -> Result<Hash> {
         hash,
         remaining: length.0,
     };
-    serde_json::to_writer(&mut writer, &(revision, raw)).map_err(|e| reject(e.to_string()))?;
+    // Serde emits many small numeric fragments. Keep SHA updates in bounded
+    // chunks while preserving the exact preimage and checking the final flush.
+    let mut buffered = std::io::BufWriter::with_capacity(8 * 1024, &mut writer);
+    serde_json::to_writer(&mut buffered, &(revision, raw)).map_err(|e| reject(e.to_string()))?;
+    buffered.flush().map_err(|e| reject(e.to_string()))?;
+    drop(buffered);
     if writer.remaining != 0 {
         return Err(reject("unit digest length mismatch"));
     }
