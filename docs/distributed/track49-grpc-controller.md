@@ -16,11 +16,16 @@ stays with root. The controller allocates or stops no Colab VM.
 The private SSH route is already qualified and strictly pinned. `RemoteHost`
 owns one muxed connection and loopback forwarding for actual mTLS43148/43149
 and typed Tonic43150/43151. The controller builds dependencies with dev
-opt-level1/debug0 and overrides the PDES engine and gRPC worker packages to
+opt-level1/debug0 and overrides the PDES engine, gRPC worker and sha2 packages to
 opt-level3. Debug assertions and overflow checks remain enabled and are asserted
-from both hosts' actual engine/worker compiler artifacts. The first opt-level1
-two-host attempt timed out adopting the common cut on the CPU-limited peer;
-both workers terminated and that uncertain operation was not retried. This
+from both hosts' actual engine/worker/hash compiler artifacts. The initial
+profiles timed out adopting the common cut on the CPU-limited peer; a read-only
+store check confirmed the cut had committed despite the client timeout. Both
+workers terminated and that uncertain operation was not retried. Diagnosis
+retained full historical integrity checks and found repeated SHA sweeps on a CPU
+without SHA instructions; the runtime opt-level1 sha2 measured about88MB/s.
+The selected profile optimizes the unchanged maintained hash implementation and
+retains automatic CPU dispatch; no integrity check is cached or removed. This
 qualified-profile exercise retains the same RPC deadlines and model oracles.
 The controller checks actual Cargo compiler-artifact executable paths,
 features and optimization profiles, and retains measured local/remote binary

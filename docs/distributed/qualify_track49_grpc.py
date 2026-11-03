@@ -334,6 +334,9 @@ print('TRACK49_GRPC_REMOTE_FROZEN')
                    "--config=profile.dev.debug-assertions=true", "--config=profile.dev.overflow-checks=true",
                    "--config=profile.dev.package.kairo-ecs-pdes.opt-level=3",
                    "--config=profile.dev.package.kairo-ecs-grpc.opt-level=3",
+                   "--config=profile.dev.package.sha2.opt-level=3",
+                   "--config=profile.dev.package.sha2.debug-assertions=true",
+                   "--config=profile.dev.package.sha2.overflow-checks=true",
                    "-p", "kairo-ecs-grpc", "--example", "track49_node", "--features", "external-fault-injection,telemetry-ipc"]
         build = subprocess.run(command, cwd=ROOT, env=environment, capture_output=True, text=True, timeout=900)
         (self.output / "local-build.jsonl").write_text(build.stdout)
@@ -344,6 +347,9 @@ print('TRACK49_GRPC_REMOTE_FROZEN')
         assert artifacts and pathlib.Path(artifacts[-1]["executable"]).resolve() == self.binary
         engines = [r for r in rows if r.get("reason") == "compiler-artifact" and r.get("target", {}).get("name") == "kairo_ecs_pdes"]
         self.profiles = {"local_worker": artifacts[-1]["profile"], "local_engine": engines[-1]["profile"]}
+        hashes = [r for r in rows if r.get("reason") == "compiler-artifact" and r.get("target", {}).get("name") == "sha2"]
+        assert hashes and all(r["profile"]["opt_level"] == "3" for r in hashes)
+        self.profiles["local_sha2"] = hashes[-1]["profile"]
         assert all(p["opt_level"] == "3" and p["debug_assertions"] and p["overflow_checks"] for p in self.profiles.values())
         assert {"external-fault-injection", "telemetry-ipc"} <= set(artifacts[-1]["features"])
         self.binary_hash = hashlib.sha256(self.binary.read_bytes()).hexdigest()
@@ -364,6 +370,9 @@ print('TRACK49_GRPC_REMOTE_FROZEN')
         remote_engines = [r for r in remote_rows if r.get("reason") == "compiler-artifact" and r.get("target", {}).get("name") == "kairo_ecs_pdes"]
         assert remote_artifacts and remote_engines
         self.profiles.update(remote_worker=remote_artifacts[-1]["profile"], remote_engine=remote_engines[-1]["profile"])
+        remote_hashes = [r for r in remote_rows if r.get("reason") == "compiler-artifact" and r.get("target", {}).get("name") == "sha2"]
+        assert remote_hashes and all(r["profile"]["opt_level"] == "3" for r in remote_hashes)
+        self.profiles["remote_sha2"] = remote_hashes[-1]["profile"]
         assert all(p["opt_level"] == "3" and p["debug_assertions"] and p["overflow_checks"] for p in self.profiles.values())
         assert set(remote_artifacts[-1]["features"]) == set(artifacts[-1]["features"])
         self.remote_binary, self.remote_binary_hash = artifact["path"], artifact["sha256"]
