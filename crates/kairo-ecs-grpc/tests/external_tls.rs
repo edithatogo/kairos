@@ -71,6 +71,9 @@ impl Fixture {
         ]);
     }
     fn leaf(&self, name: &str, ca: &str) {
+        self.leaf_domain(name, ca, name);
+    }
+    fn leaf_domain(&self, name: &str, ca: &str, domain: &str) {
         self.openssl(&[
             "req",
             "-new",
@@ -93,7 +96,7 @@ impl Fixture {
             "-out",
             &format!("{name}.pk8"),
         ]);
-        std::fs::write(self.0.join("leaf.ext"),format!("basicConstraints=critical,CA:FALSE\nkeyUsage=critical,digitalSignature\nextendedKeyUsage=serverAuth,clientAuth\nsubjectAltName=DNS:{name}\n")).unwrap();
+        std::fs::write(self.0.join("leaf.ext"),format!("basicConstraints=critical,CA:FALSE\nkeyUsage=critical,digitalSignature\nextendedKeyUsage=serverAuth,clientAuth\nsubjectAltName=DNS:{domain}\n")).unwrap();
         self.openssl(&[
             "x509",
             "-req",
@@ -147,10 +150,18 @@ struct Running {
 }
 impl Running {
     async fn start(f: &Fixture, allowed: BTreeSet<[u8; 32]>, dispatch: ExternalDispatcher) -> Self {
+        Self::start_leaf(f, allowed, dispatch, "node-b").await
+    }
+    async fn start_leaf(
+        f: &Fixture,
+        allowed: BTreeSet<[u8; 32]>,
+        dispatch: ExternalDispatcher,
+        leaf: &str,
+    ) -> Self {
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
         let addr = listener.local_addr().unwrap();
         let (tx, rx) = oneshot::channel();
-        let identity = f.identity("node-b", "ca-a");
+        let identity = f.identity(leaf, "ca-a");
         let task = tokio::spawn(serve_external_tls(
             listener, identity, allowed, dispatch, rx,
         ));
@@ -159,6 +170,7 @@ impl Running {
                 endpoint: format!("https://{addr}"),
                 domain: "node-b".into(),
                 ca_pem: f.read("ca-b.pem"),
+                certificate_hash: f.hash("node-b"),
             },
             stop: Some(tx),
             task: Some(task),
@@ -354,4 +366,47 @@ mod probe_codec {
                 .map_err(|_| tonic::Status::invalid_argument("decode"))
         }
     }
+}
+
+#[tokio::test]
+async fn same_ca_and_dns_alternate_server_leaf_is_rejected_before_dispatch() {
+    let f = fixture();
+    f.leaf_domain("node-b-alternate", "ca-b", "node-b");
+    let calls = Arc::new(AtomicUsize::new(0));
+    let observed = Arc::clone(&calls);
+    let server = Running::start_leaf(
+        &f,
+        BTreeSet::from([f.hash("node-a")]),
+        Arc::new(move |_, p| {
+            observed.fetch_add(1, Ordering::SeqCst);
+            Ok(vec![p])
+        }),
+        "node-b-alternate",
+    )
+    .await;
+    assert_ne!(f.hash("node-b-alternate"), server.peer.certificate_hash);
+    assert!(external_exchange(
+        &f.identity("node-a", "ca-b"),
+        &server.peer,
+        b"record".to_vec()
+    )
+    .await
+    .is_err());
+    assert_eq!(calls.load(Ordering::SeqCst), 0);
+    // A positive control proves the alternate certificate still passes the same
+    // CA, SAN and mutual-authentication checks when explicitly provisioned.
+    let mut alternate_peer = server.peer.clone();
+    alternate_peer.certificate_hash = f.hash("node-b-alternate");
+    assert_eq!(
+        external_exchange(
+            &f.identity("node-a", "ca-b"),
+            &alternate_peer,
+            b"record".to_vec()
+        )
+        .await
+        .unwrap(),
+        vec![b"record".to_vec()]
+    );
+    assert_eq!(calls.load(Ordering::SeqCst), 1);
+    server.close().await;
 }

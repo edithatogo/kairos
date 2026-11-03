@@ -9,6 +9,11 @@ use std::marker::PhantomData;
 use std::sync::Arc;
 use std::time::Duration;
 
+use rustls::client::{
+    danger::{HandshakeSignatureValid, ServerCertVerified, ServerCertVerifier},
+    WebPkiServerVerifier,
+};
+use rustls::pki_types::{pem::PemObject, CertificateDer, ServerName, UnixTime};
 use sha2::{Digest, Sha256};
 use tokio::net::TcpListener;
 use tokio::sync::oneshot;
@@ -55,13 +60,15 @@ impl ExternalTlsIdentity {
     }
 }
 
-/// One provisioned peer. Its CA and DNS identity are mandatory, with no public
-/// root fallback. Each participant must have its own constrained private CA.
+/// One provisioned peer. Its exact leaf hash, CA and DNS identity are all
+/// mandatory. No public-root or CA-only fallback is enabled.
 #[derive(Clone, Debug)]
 pub struct ExternalTlsPeer {
     pub endpoint: String,
     pub domain: String,
     pub ca_pem: Vec<u8>,
+    /// Raw SHA256 of the exact provisioned server leaf certificate DER.
+    pub certificate_hash: [u8; 32],
 }
 impl ExternalTlsPeer {
     fn validate(&self) -> Result<(), Status> {
@@ -71,11 +78,90 @@ impl ExternalTlsPeer {
             || self.domain.len() > 253
             || self.ca_pem.is_empty()
             || self.ca_pem.len() > MAX_PEM
+            || self.certificate_hash == [0; 32]
         {
             return Err(Status::invalid_argument("invalid TLS peer configuration"));
         }
         Ok(())
     }
+}
+
+// This wrapper adds an exact public-certificate pin to the maintained WebPKI
+// verifier. It never asserts successful validation itself or replaces signature,
+// chain, hostname, usage, expiry or protocol-version checks with a hash check.
+#[derive(Debug)]
+struct PinnedServerVerifier {
+    delegate: Arc<WebPkiServerVerifier>,
+    expected_leaf: [u8; 32],
+}
+impl ServerCertVerifier for PinnedServerVerifier {
+    fn verify_server_cert(
+        &self,
+        end_entity: &CertificateDer<'_>,
+        intermediates: &[CertificateDer<'_>],
+        name: &ServerName<'_>,
+        ocsp: &[u8],
+        now: UnixTime,
+    ) -> Result<ServerCertVerified, rustls::Error> {
+        let verified =
+            self.delegate
+                .verify_server_cert(end_entity, intermediates, name, ocsp, now)?;
+        let observed: [u8; 32] = Sha256::digest(end_entity.as_ref()).into();
+        if observed != self.expected_leaf {
+            return Err(rustls::Error::InvalidCertificate(
+                rustls::CertificateError::ApplicationVerificationFailure,
+            ));
+        }
+        Ok(verified)
+    }
+    fn verify_tls12_signature(
+        &self,
+        message: &[u8],
+        cert: &CertificateDer<'_>,
+        signed: &rustls::DigitallySignedStruct,
+    ) -> Result<HandshakeSignatureValid, rustls::Error> {
+        self.delegate.verify_tls12_signature(message, cert, signed)
+    }
+    fn verify_tls13_signature(
+        &self,
+        message: &[u8],
+        cert: &CertificateDer<'_>,
+        signed: &rustls::DigitallySignedStruct,
+    ) -> Result<HandshakeSignatureValid, rustls::Error> {
+        self.delegate.verify_tls13_signature(message, cert, signed)
+    }
+    fn supported_verify_schemes(&self) -> Vec<rustls::SignatureScheme> {
+        self.delegate.supported_verify_schemes()
+    }
+    fn root_hint_subjects(&self) -> Option<&[rustls::DistinguishedName]> {
+        self.delegate.root_hint_subjects()
+    }
+}
+fn pinned_verifier(peer: &ExternalTlsPeer) -> Result<Arc<dyn ServerCertVerifier>, Status> {
+    let mut roots = rustls::RootCertStore::empty();
+    for certificate in CertificateDer::pem_slice_iter(&peer.ca_pem) {
+        if roots.len() >= 64 {
+            return Err(Status::invalid_argument("too many private CA certificates"));
+        }
+        let certificate =
+            certificate.map_err(|_| Status::invalid_argument("invalid private CA PEM"))?;
+        roots
+            .add(certificate)
+            .map_err(|_| Status::invalid_argument("invalid private CA certificate"))?;
+    }
+    if roots.is_empty() {
+        return Err(Status::invalid_argument("private CA certificate required"));
+    }
+    let delegate = WebPkiServerVerifier::builder_with_provider(
+        Arc::new(roots),
+        Arc::new(rustls::crypto::ring::default_provider()),
+    )
+    .build()
+    .map_err(|_| Status::invalid_argument("invalid private CA verifier"))?;
+    Ok(Arc::new(PinnedServerVerifier {
+        delegate,
+        expected_leaf: peer.certificate_hash,
+    }))
 }
 
 /// The authenticated client leaf hash and exact bytes enter the fixed engine
@@ -286,12 +372,11 @@ pub async fn external_exchange(
     }
     let tls = ClientTlsConfig::new()
         .domain_name(&peer.domain)
-        .ca_certificate(Certificate::from_pem(&peer.ca_pem))
         .identity(identity.identity())
         .timeout(Duration::from_secs(5));
     let endpoint = Endpoint::from_shared(peer.endpoint.clone())
         .map_err(|_| Status::invalid_argument("invalid endpoint URI"))?
-        .tls_config(tls)
+        .tls_config_with_verifier(tls, pinned_verifier(peer)?)
         .map_err(|_| Status::invalid_argument("invalid TLS configuration"))?
         .connect_timeout(Duration::from_secs(5))
         .timeout(RPC_TIMEOUT);
