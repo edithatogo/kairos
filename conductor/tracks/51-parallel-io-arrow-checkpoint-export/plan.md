@@ -1,5 +1,23 @@
 # Track 51 Plan: Parallel I/O, Arrow Record Batches & Checkpoint Export
 
+## Current acceptance correction — 3 November 2026
+
+The checked historical tasks below record the contract-baseline work and its
+then-reported review; they do not establish this track's native acceptance.
+The HDF5 and ADIOS2 adapters write labelled v1 contract bytes, the existing
+restart restores records and a maximum tick rather than a resumed engine, and
+the filesystem manifest is a template. The following acceptance work remains:
+
+- [ ] CAP-51.2: Implement and independently read native HDF5 and ADIOS2 checkpoints.
+- [ ] CAP-51.3: Qualify real Arrow record batches for the track's specified outputs.
+- [ ] CAP-51.4: Prove representative engine restart and final-state parity.
+- [ ] CAP-51.5: Execute and retain contiguous-write benchmarks and live parallel-filesystem evidence.
+- [ ] CAP-51.6: Complete independent review, exact-source hosted gates and integrator closeout.
+
+The local Polars IPC/Parquet interchange and checkpoint replacement evidence in
+the handoff remain useful but do not substitute for those gates. The track stays
+In Progress; no historical checklist is evidence of native backend execution.
+
 ## Phase 0 - TDD baseline
 
 - [x] Task 0.1: Add failing Arrow record batch schema tests.
