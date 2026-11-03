@@ -262,6 +262,9 @@ mod sync_control {
                 return Err("sync timeout/peer bound".into());
             }
             let listen: SocketAddr = listen.parse().map_err(|e| format!("{e}"))?;
+            if !listen.ip().is_loopback() {
+                return Err("sync fixture listener must use loopback".into());
+            }
             let mut seen = std::collections::BTreeSet::new();
             let peers = peers
                 .into_iter()
