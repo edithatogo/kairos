@@ -14,6 +14,8 @@ Format:
 
 ## Unreleased
 
+- Quality readback recognizes an exact-main Rust workflow pending before its job checks appear, while retaining failure and coverage gates.
+
 - Devbox runtime qualification can be run manually on a selected revision while retaining its existing Python startup checks.
 
 - The Rust CI coverage lane reclaims its preceding build artifacts, bounds build concurrency, and reports runner resources to diagnose linker failures while retaining workspace coverage checks.

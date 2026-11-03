@@ -2,13 +2,16 @@
 
 ## Overview
 
-High-throughput discrete-event simulation (DES) and agent-based modeling (ABM) workloads generate massive allocations and deallocations during the simulation lifecycle. To avoid memory fragmentation and lock contention on global allocators, KairoECS provides dedicated cache-local allocation primitives under the `numa` feature:
+KairoECS provides experimental reusable allocation primitives under the `numa` feature:
 1. `EventPool<T>`: Reusable object pool for event instances.
 2. `EventArena<T>`: Chunked lifecycle arena for bulk event creation and epoch reset.
 
-## Zero Global Lock Contention
+## Ownership and contention boundary
 
-Both `EventPool` and `EventArena` operate within thread-local or LP-local memory boundaries without acquiring global mutexes or synchronizing across distinct CPU cores.
+The primitives use owned vectors and do not introduce their own global mutex.
+The caller owns placement and synchronization. These implementations do not
+establish NUMA placement, cache locality or absence of system allocator
+contention; scheduler use and a measured contention budget remain to be qualified.
 
 ```rust
 use kairo_ecs_core::{EventPool, EventArena};
@@ -32,10 +35,10 @@ assert!(!arena.metrics().uses_global_lock);
 
 Both allocators export structured telemetry for weak and strong scaling validation:
 - `EventPoolMetrics`:
-  - `created`: Total object allocations when pool capacity was exceeded.
-  - `reused`: Fast reuse hits from preallocated pool slots.
+  - `created`: New pooled event wrappers when the recycled free list is empty.
+  - `reused`: Checkouts served from the recycled free list.
   - `recycled`: Objects successfully returned to the free list.
-  - `uses_global_lock`: Constant `false`, verifying lock-free execution.
+  - `uses_global_lock`: Constant `false`; this is not a contention measurement.
 - `EventArenaMetrics`:
   - `allocated_items`: Total active items in the current epoch.
   - `chunk_count`: Number of memory chunks allocated.
