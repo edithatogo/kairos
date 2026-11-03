@@ -166,6 +166,13 @@ Format:
 
 ### Added
 
+- `crates/kairo-ecs-arrow` and `crates/kairo-ecs-ffi`: add declared-schema owned
+  domain C Data exports and trusted-only safe imports, with lazy bounded stream
+  windows and source-drop/release controls. Add metadata-aware Parquet/Zstd, IPC
+  and durable batch/sink publication; receipts hash the metadata-bearing bytes.
+  Existing event-log C symbols, manifests and plain empty-metadata output remain
+  unchanged. These APIs are alpha; parent adoption and release remain gated.
+
 - TypeScript binding development installs now declare the same Vitest 4.1.11 minimum already used by the reviewed lockfile and template.
 
 - Bootstrap package dry runs use an integrity-pinned private cache fork and strict zero-finding npm audit, with retained source, license and regression evidence. Dependency review verifies private alias identity before applying the existing high-severity gate.

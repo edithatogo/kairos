@@ -51,10 +51,14 @@
 //! table produces a length-0 struct array that still carries all 14 typed
 //! children, so independent readers stay schema-valid.
 
+/// Declared native domain-table exports using the same pinned C Data boundary.
+#[path = "domain_c_data.rs"]
+pub mod domain;
+
 use crate::{ArrowError, EVENT_LOG_FIELDS_V2, EVENT_LOG_STREAM_V2};
 use polars::prelude::*;
 pub use polars_arrow::array::StructArray;
-pub use polars_arrow::array::{Array, PrimitiveArray, Utf8Array};
+pub use polars_arrow::array::{Array, BooleanArray, PrimitiveArray, Utf8Array};
 pub use polars_arrow::datatypes::{ArrowDataType, Field as ArrowField};
 pub use polars_arrow::ffi::{
     export_array_to_c, export_field_to_c, export_iterator, ArrowArray, ArrowArrayStream,

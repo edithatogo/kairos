@@ -1,5 +1,9 @@
 #![allow(unsafe_code)]
 
+/// Trusted owned native domain C Data imports; no arbitrary safe raw import.
+#[cfg(feature = "native-data")]
+pub mod native_tables;
+
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::ffi::CString;

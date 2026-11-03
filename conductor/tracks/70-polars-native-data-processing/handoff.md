@@ -242,3 +242,122 @@ Native table/IPC, durability, protected publication, source/Git consumers and pl
 ## Known risks
 
 Crates.io publication stays disabled; final CI and package qualification remain required.
+
+## Bounded domain C Data followup — 3 November 2026
+
+Chat01a19b9f-69e7-7353-9b75-445d5653feb4 owns the additive source packet in
+standard Git worktree kairos-polars-domain-ffi-20261103 at4134a373. Actual path is
+recorded in the local advisory lease; branchcodex/polars-domain-ffi-20261103.
+No Arrow/FFI active writer was found in live worktree/lease readback. Unrelated
+Track49 claims and prior assignments are preserved. See
+[bounded packet](domain-c-data-followup.md) and proposed ADR7/API review. This
+followup addresses the demonstrated event-log-only generic export gap required
+by CareOps R13/R14; no old phase, release or arbitrary-table evidence is relabelled.
+Next: review contract, actual baseline/control, implementation and focused proof.
+No native service/authentication scope or dependency/runtime promotion is owned.
+
+Local prototype is now reviewed:133native package and29default FFI tests pass,
+0ignored, with populated exact-domain values, metadata, lifetime/release controls.
+Final warnings-denied Clippy/docs and fmt pass; actual red/compile/lint failures
+remain recorded in the bounded packet. No pin/lock/runtime/header change.
+Next: immutable source handoff and actual hosted/package acceptance; CareOps
+producer adoption and isolated safe-import proof require a separate reservation.
+
+## Native file metadata followup — 3 November 2026
+
+Same sole chat/worktree owns the bounded source packet at d835c525. See
+[file metadata followup](file-metadata-followup.md) and ADR8/API review. Existing
+RunOutput publication must encode provenance before hashing; no byte-rewriting
+sink or duplicate publisher. No manifest/lock/runtime/C header/native service
+ownership is added. Next: reviewed baseline, implementation and focused proof,
+then publish a coherent upstream draft and retain hosted/package adoption gates.
+
+Metadata addition now has local engineering review and100native Arrow passes,
+0ignored,9focused controls, independent PyArrow26 file/part/data/metadata proof,
+warnings-denied Clippy/docs and fmt. No pin/lock change. Publish the coherent
+upstream draft next; actual hosted/package acceptance and exact parent readers/
+manifest/source promotion remain pending. Historical phase status is preserved.
+
+## First hosted gate repair — 3 November 2026
+
+At0f981f72, draft PR367 changelog policy41579426698 refused the missing public
+surface entry. Add the actual Arrow/FFI/metadata alpha changes to Unreleased.
+ci-bindings41579426571 failed the existing archive pip-configuration audit test.
+Its verifier venv was faked with a bare interpreter symlink, without pyvenv.cfg,
+so the subprocess could depend on a host pip instead of a real verifier env.
+Original local symlink reproduction passed; it did not reproduce Linux's exact
+failure. A new fixture-fidelity assertion was actually red locally. The repair
+uses bounded real stdlib venv/ensurepip plus the actual audit and verifies the
+subprocess prefix/version. Network hash-locked installation stays simulated;
+audit-before-install, isolated/hash flags, fixed env and canary checks remain.
+No production security function or workflow gate is changed.
+
+User-selected local3.15.1 passes the affected audit but correctly fails4other
+cases at upstream's existing3.15.2 guard. Preserve that failed run. A separately
+created repo-local isolated3.15.2 profile actually reports3.15.2 and passes the
+whole32-case file in6.636s, including all failure/security controls. Existing
+CareOps3.15.1 and upstream environments/policy are untouched. This is scoped
+profile qualification, not a runtime-policy bypass or repository migration.
+Independent security/test-fidelity review is ready; actual repaired Linux hosted
+acceptance remains pending. Windows Arrow job125730516402 separately reports
+new-test unused_mut on its cfg(unix)-only directory-builder mutation; retain the
+failure and repair under a fresh scoped claim before publishing the checkpoint.
+
+Windows fixture repair moves mutable DirBuilder binding into cfg(unix), retaining
+mode0700 and an immutable binding elsewhere. Actual hosted Windows lint failure
+is retained; no allowance or warnings flag change. Nine affected local native
+controls, all-target warnings-denied Clippy and fmt/diff pass. Independent review
+is ready. Actual Windows rerun remains pending. Inspection also confirms the
+existing Arrow platform lane selects only older targets: new domain/metadata
+and FFI consumer tests need explicit selectors under a fresh CI-scoped packet;
+compilation by all-target Clippy is not execution proof.
+
+## Hosted native target binding — 3 November 2026
+
+A fresh CI-scoped claim extends the existing three-platform Arrow lane with
+explicit domain C Data and file-metadata targets and the full native FFI package.
+All four older Arrow targets, unit/FS checks, matrix, selected toolchain, job/time
+budgets, action pins, permissions and warnings-as-errors remain. FFI path changes
+trigger the same lane; its actual pinned package/feature also enters all-target
+Clippy. The existing source-only --no-verify package list now includes FFI; that
+step does not prove a published-dependency build. No new workflow/backend or
+skipped gate. Independent dispatch review approved this bounded wiring. Actual
+hosted execution remains pending; compilation alone is not test acceptance.
+
+Actionlint1.7.12 (actual Homebrew binary) validates the changed workflow, exit0;
+diff checks pass. The command/target sources already have the scoped native
+receipts above; those remain local and do not substitute for this new hosted
+selector execution. Next: commit, verify source-package check, then publish all
+three bounded gate repairs together and inspect actual final-head results.
+
+## Source-only distribution gate correction
+
+The first proposed FFI --no-verify package addition actually fails because its
+Arrow dependency is not published on crates.io. Existing three source packages
+completed before that failure; the failure log remains. No registry publication
+or workaround is authorized. Restore the original three-package step unchanged,
+and add a mandatory clean committed Git-source extraction/locked native Arrow+
+FFI compile on every existing platform. Record checkout HEAD/tree, fail on
+extraction/Cargo errors, use only extracted source/build scripts and preserve
+all tests/lints. Shared dependency target caching does not turn this into a cold
+build or registry-package qualification. This is the relevant Git-source
+consumer closure gate; it replaces a newly introduced inapplicable registry
+requirement, with independent review, and removes no existing acceptance gate.
+Actual fe48d93 committed clean archive builds both native libraries, exit0 in
+3.65s; revisions/source paths/logs are retained. Actionlint initially required
+quoting the literal tree revision; corrected workflow passes without suppression.
+Actual hosted source extraction, platform tests and parent promotion stay open.
+
+## Committed changelog conflict reconciliation
+
+After7c2328b push, PR367 reports CONFLICTING/DIRTY and no head checks. Exact
+basec2bb5bb and source7c2328b diverge from4134a373 only on CHANGELOG.md among
+this packet's paths. Read-only integration preflight has clean source/target,
+no warnings, staged deletions or dirty overlaps. Preserve the complete committed
+main changelog and insert the existing alpha API entry under its Added section.
+A first combined insertion at Unreleased still conflicts as a three-way insertion;
+relocating only this entry resolves it. Standard merge-file exits0 and its result
+is byte-identical to the owned file. No other main/runtime/dependency source is
+copied, no worktree/index/owner is replaced, and no history is rewritten. Code
+receipts remain scoped as before; require actual newly eligible head checks
+before accepting upstream promotion.
