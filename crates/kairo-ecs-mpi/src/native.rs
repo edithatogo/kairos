@@ -16,6 +16,34 @@ use mpi::traits::*;
 
 const MAX_BATCH_BYTES: usize = 64 * 1024;
 const MAX_RANKS: usize = 128;
+/// Largest opaque canonical signed record accepted by the native MPI lane.
+pub const MAX_NATIVE_RECORD_BYTES: usize = 128 * 1024;
+/// Maximum encoded opaque-record batch contributed by one rank.
+pub const MAX_NATIVE_RECORD_BATCH_BYTES: usize = 512 * 1024;
+/// Maximum records contributed by one rank in a round.
+pub const MAX_NATIVE_RECORDS: usize = 64;
+const RECORD_BATCH_VERSION: u8 = 1;
+
+/// One opaque record addressed to a fixed communicator rank.
+///
+/// The transport supplies the source from the actual MPI rank. The bytes must
+/// still be authenticated and bound to that rank by the external driver.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct NativeMpiRecord {
+    pub destination: u32,
+    pub bytes: Vec<u8>,
+}
+
+/// Byte-exact record received from an actual fixed-communicator MPI rank.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct NativeMpiInbound {
+    /// Actual MPI source slot, never a value supplied by record bytes.
+    pub source_rank: u32,
+    /// Fixed destination rank; equals the receiving exchange's rank.
+    pub destination: u32,
+    /// Opaque record bytes, unchanged by framing or collective exchange.
+    pub bytes: Vec<u8>,
+}
 
 fn invalid() -> io::Error {
     io::Error::new(
@@ -113,6 +141,100 @@ impl<'a> NativeMpiExchange<'a> {
                     .into_iter()
                     .filter(|message| destination(message) == self.rank()),
             );
+        }
+        Ok(delivered)
+    }
+
+    /// Exchanges bounded opaque records in deterministic source-rank/FIFO order.
+    ///
+    /// This validates framing, destinations and allocation bounds only. It does
+    /// not authenticate record contents or admit them to a durable engine. Use
+    /// [`Self::exchange_records_validated`] to collectively enforce a pure
+    /// protocol/signature/rank policy before any rank receives returned records.
+    pub fn exchange_records(
+        &self,
+        records: &[NativeMpiRecord],
+    ) -> io::Result<Vec<NativeMpiInbound>> {
+        self.exchange_records_validated(records, |_, _, _| Ok(()))
+    }
+
+    /// Exchanges complete external-driver records using native MPI collectives.
+    ///
+    /// Every rank, including empty ranks, must call rounds in identical order.
+    /// Invalid local input rejects the round at all ranks before payload
+    /// exchange. After payload exchange, every rank validates every record in
+    /// source-rank/FIFO order; a rejection at any rank rejects the round for all
+    /// ranks before any result is returned. A subsequent valid round is usable.
+    ///
+    /// `validate(source_rank, destination_rank, bytes)` must be a pure local
+    /// check: no engine mutations, I/O, MPI calls or publication. A signed
+    /// external protocol should verify its immutable configuration, canonical
+    /// frame, signature and issuer-to-source-rank binding here, then pass the
+    /// returned records to the fallible durable engine. This API is a transport
+    /// boundary, not an all-rank model transaction, receipt or GVT proof.
+    ///
+    /// Limits:128 ranks,64 records/rank,128 KiB/record,512 KiB encoded/rank.
+    /// MPI_Allgather exposes all records to every rank (no confidentiality).
+    /// Native MPI errors retain the communicator's error-handler semantics;
+    /// rank loss can abort/block the job. Rust errors here represent bounded
+    /// framing/policy rejection, not recoverable native MPI process failure.
+    pub fn exchange_records_validated<F>(
+        &self,
+        records: &[NativeMpiRecord],
+        mut validate: F,
+    ) -> io::Result<Vec<NativeMpiInbound>>
+    where
+        F: FnMut(u32, u32, &[u8]) -> io::Result<()>,
+    {
+        let encoded = encode_records(records, self.size());
+        let length = encoded
+            .as_ref()
+            .map_or(u32::MAX, |bytes| bytes.len() as u32);
+        let mut lengths = vec![0u32; self.size() as usize];
+        self.communicator.all_gather_into(&length, &mut lengths[..]);
+        if lengths
+            .iter()
+            .any(|&length| length as usize > MAX_NATIVE_RECORD_BATCH_BYTES)
+        {
+            return Err(invalid());
+        }
+        let encoded = encoded?;
+        let width = lengths.iter().copied().max().unwrap_or(0).max(1) as usize;
+        let mut send = vec![0u8; width];
+        send[..encoded.len()].copy_from_slice(&encoded);
+        let mut received = vec![0u8; width * self.size() as usize];
+        self.communicator
+            .all_gather_into(&send[..], &mut received[..]);
+        let mut delivered = Vec::new();
+        let mut accepted = 1u8;
+        'ranks: for (source_rank, &length) in lengths.iter().enumerate() {
+            let start = source_rank * width;
+            let Ok(batch) = decode_records(&received[start..start + length as usize], self.size())
+            else {
+                accepted = 0;
+                break;
+            };
+            for record in batch {
+                if validate(source_rank as u32, record.destination, &record.bytes).is_err() {
+                    accepted = 0;
+                    break 'ranks;
+                }
+                if record.destination == self.rank() {
+                    delivered.push(NativeMpiInbound {
+                        source_rank: source_rank as u32,
+                        destination: record.destination,
+                        bytes: record.bytes,
+                    });
+                }
+            }
+        }
+        // Always enter this collective after payload exchange, even after a
+        // local decoder/policy rejection. No rank publishes a partial result.
+        let mut acceptance = vec![0u8; self.size() as usize];
+        self.communicator
+            .all_gather_into(&accepted, &mut acceptance[..]);
+        if acceptance.iter().any(|&value| value != 1) {
+            return Err(invalid());
         }
         Ok(delivered)
     }
@@ -215,9 +337,150 @@ fn decode(mut bytes: &[u8], rank: u32, size: u32) -> io::Result<Vec<PdesMessage>
     Ok(messages)
 }
 
+fn encode_records(records: &[NativeMpiRecord], size: u32) -> io::Result<Vec<u8>> {
+    if records.len() > MAX_NATIVE_RECORDS || size == 0 || size as usize > MAX_RANKS {
+        return Err(invalid());
+    }
+    let mut bytes = vec![RECORD_BATCH_VERSION];
+    bytes.extend_from_slice(&(records.len() as u16).to_be_bytes());
+    for record in records {
+        if record.destination >= size
+            || record.bytes.is_empty()
+            || record.bytes.len() > MAX_NATIVE_RECORD_BYTES
+            || bytes.len() + 8 + record.bytes.len() > MAX_NATIVE_RECORD_BATCH_BYTES
+        {
+            return Err(invalid());
+        }
+        bytes.extend_from_slice(&record.destination.to_be_bytes());
+        bytes.extend_from_slice(&(record.bytes.len() as u32).to_be_bytes());
+        bytes.extend_from_slice(&record.bytes);
+    }
+    Ok(bytes)
+}
+
+fn decode_records(mut bytes: &[u8], size: u32) -> io::Result<Vec<NativeMpiRecord>> {
+    if bytes.len() < 3
+        || bytes.len() > MAX_NATIVE_RECORD_BATCH_BYTES
+        || bytes[0] != RECORD_BATCH_VERSION
+        || size == 0
+        || size as usize > MAX_RANKS
+    {
+        return Err(invalid());
+    }
+    let count = u16::from_be_bytes(bytes[1..3].try_into().unwrap()) as usize;
+    if count > MAX_NATIVE_RECORDS {
+        return Err(invalid());
+    }
+    bytes = &bytes[3..];
+    let mut records = Vec::with_capacity(count);
+    for _ in 0..count {
+        if bytes.len() < 8 {
+            return Err(invalid());
+        }
+        let destination = u32::from_be_bytes(bytes[..4].try_into().unwrap());
+        let length = u32::from_be_bytes(bytes[4..8].try_into().unwrap()) as usize;
+        bytes = &bytes[8..];
+        if destination >= size
+            || length == 0
+            || length > MAX_NATIVE_RECORD_BYTES
+            || length > bytes.len()
+        {
+            return Err(invalid());
+        }
+        records.push(NativeMpiRecord {
+            destination,
+            bytes: bytes[..length].to_vec(),
+        });
+        bytes = &bytes[length..];
+    }
+    if !bytes.is_empty() {
+        return Err(invalid());
+    }
+    Ok(records)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn opaque_codec_rejects_noncanonical_and_out_of_bound_batches() {
+        let records = vec![NativeMpiRecord {
+            destination: 1,
+            bytes: vec![0, 255, 42],
+        }];
+        let encoded = encode_records(&records, 2).unwrap();
+        assert_eq!(decode_records(&encoded, 2).unwrap(), records);
+        for length in 0..encoded.len() {
+            assert!(decode_records(&encoded[..length], 2).is_err());
+        }
+        let mut trailing = encoded.clone();
+        trailing.push(0);
+        assert!(decode_records(&trailing, 2).is_err());
+        let mut version = encoded.clone();
+        version[0] += 1;
+        assert!(decode_records(&version, 2).is_err());
+        let mut excess_count = encoded.clone();
+        excess_count[1..3].copy_from_slice(&65u16.to_be_bytes());
+        assert!(decode_records(&excess_count, 2).is_err());
+        assert!(decode_records(&encoded, 1).is_err());
+        assert!(encode_records(&records, 1).is_err());
+        assert!(encode_records(&[], 0).is_err());
+        assert!(decode_records(&encode_records(&[], 2).unwrap(), 0).is_err());
+        assert!(encode_records(&vec![records[0].clone(); 65], 2).is_err());
+        assert!(encode_records(
+            &[NativeMpiRecord {
+                destination: 0,
+                bytes: vec![]
+            }],
+            2
+        )
+        .is_err());
+        let mut empty_payload = encoded.clone();
+        empty_payload[7..11].copy_from_slice(&0u32.to_be_bytes());
+        assert!(decode_records(&empty_payload, 2).is_err());
+        let mut oversized_payload = encoded.clone();
+        oversized_payload[7..11]
+            .copy_from_slice(&((MAX_NATIVE_RECORD_BYTES + 1) as u32).to_be_bytes());
+        assert!(decode_records(&oversized_payload, 2).is_err());
+    }
+
+    #[test]
+    fn opaque_codec_exact_packet_batch_and_count_boundaries() {
+        let record = NativeMpiRecord {
+            destination: 0,
+            bytes: vec![0x5a; MAX_NATIVE_RECORD_BYTES],
+        };
+        assert_eq!(
+            decode_records(
+                &encode_records(std::slice::from_ref(&record), 1).unwrap(),
+                1
+            )
+            .unwrap(),
+            vec![record.clone()]
+        );
+        let mut oversized = record.clone();
+        oversized.bytes.push(0);
+        assert!(encode_records(&[oversized], 1).is_err());
+        let mut batch = vec![record; 4];
+        batch[3].bytes.truncate(MAX_NATIVE_RECORD_BYTES - 35);
+        let encoded = encode_records(&batch, 1).unwrap();
+        assert_eq!(encoded.len(), MAX_NATIVE_RECORD_BATCH_BYTES);
+        assert_eq!(decode_records(&encoded, 1).unwrap(), batch);
+        batch[3].bytes.push(0);
+        assert!(encode_records(&batch, 1).is_err());
+        let count_boundary = vec![
+            NativeMpiRecord {
+                destination: 0,
+                bytes: vec![1]
+            };
+            MAX_NATIVE_RECORDS
+        ];
+        assert_eq!(
+            decode_records(&encode_records(&count_boundary, 1).unwrap(), 1).unwrap(),
+            count_boundary
+        );
+    }
 
     #[test]
     fn codec_rejects_truncation_spoofed_rank_and_unknown_tag() {
