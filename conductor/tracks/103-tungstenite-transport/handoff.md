@@ -1,6 +1,6 @@
 # Handoff
 
-Updated: 2026-10-22. Maturity: planned; adoption decision pending.
+Updated: 3 November 2026. Maturity: Phase 0 deferral integrated; adoption and formal phase acceptance remain pending.
 
 ## Summary
 
@@ -28,7 +28,7 @@ Value and behavioural gates remain unresolved. Preserve published contracts and 
 
 ## Follow-up issues
 
-Record exact existing consumer, baseline and adopt/no-go decision in Phase 0. Parent adoption requires verified upstream receipts and its own claim.
+Reopen the recorded deferral only with an accepted consumer and transport contract. Parent adoption requires verified upstream receipts and its own claim.
 
 ## Integration notes
 
@@ -36,7 +36,7 @@ See [programme](../../robust-dependencies.md). Worktree integration, local main,
 
 ## Phase closeout evidence
 
-Pending: `$conductor-review`, accepted fixes, rejected findings, command/cwd/commit SHA/toolchain/seed/input hashes, exit codes/artifacts, pushed ref or blocker and next-phase decision. Use `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` before advancement.
+The bounded `$conductor-review` and accepted fixes were integrated by PR #359, merge commit SHA `c22172ccbf2d155a28f481a656ff3f7b6d9592ba`; the historical pushed ref was `codex/track103-websocket-decision`. The next-phase decision is deferral. Formal phase and shared-registry acceptance remain pending. Use `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` before advancement.
 
 ## Phase 0 decision — 1 November 2026
 
@@ -106,3 +106,33 @@ Chat 01a19600-0a41-7ca2-9e4b-e27d7339c8e7 owns the track directory in
 Native scope was local stream execution and read-only repository/package
 inspection. The integrator retains shared phase and registry ownership.
 Next operation is protected integration of this decision.
+
+## Current readback — 3 November 2026
+
+Chat `01a19bed-7060-7910-af22-38cb31f51446` owns this bounded handoff and
+baseline readback in `/Users/doughnut/.codex/worktrees/kairos-track103-104-review/kairos`,
+branch `codex/track103-104-qualification-20261103`, based on `d7bdcd3`.
+The integrator retains shared registry and phase acceptance; no production
+transport, native service, dependency or downstream pin was changed. The
+preceding instruction to integrate is historical: [PR #359](https://github.com/edithatogo/kairos/pull/359)
+merged as `c22172ccbf2d155a28f481a656ff3f7b6d9592ba`.
+
+At CareOps Sim main `672d3e8f78f5e502a760b9d41200fdbaf4d9d144`, the dashboard
+client still exposes a URL constructor, command-envelope builder and supplied
+message handler. A bounded read of that file found no WebSocket construction
+or socket send. This does not establish the absence of every possible consumer;
+no accepted live endpoint or completed downstream impact review is claimed.
+The current Kairos `WebSocketBridge` remains an `InMemoryStream` alias.
+
+From this worktree at `d7bdcd3`, `cargo test --locked -p kairo-ecs-streaming
+--features websocket --lib --test feature_matrix` completed 10 library and 8
+integration tests without failures on macOS arm64, Homebrew Rust/Cargo 1.99.1.
+Build settings were `CARGO_TARGET_DIR=/Volumes/PortableSSD/codex-builds/kairos-track103-104-20261103`,
+`CARGO_BUILD_JOBS=3` and `CARGO_PROFILE_TEST_DEBUG=0`. Log
+`/Volumes/PortableSSD/codex-builds/kairos-track103-104-20261103/stream.log`
+has SHA-256 `2a8ff737a2c9fb736477aa8b3f54ca316231bb499e67fb6e58b9a3fa74097da4`;
+`Cargo.lock` has `6f0517d02ffb3555b410ff2ae97892b8c639341785c65b5ae3864dbb6374bde7`
+and `crates/kairo-ecs-streaming/src/lib.rs` has
+`2f6bc977ea2bf31bf2f9d05e008c72df64458e6e05a5af004af81827cd5bfdb3`.
+The log records both successful test summaries; this is not a socket or browser
+interoperability test. The deferral and outstanding protocol/security gates stand.

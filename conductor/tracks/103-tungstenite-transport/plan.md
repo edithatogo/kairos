@@ -2,6 +2,8 @@
 
 Phase 0 reached the live-consumer entry condition. See the [decision and baseline](handoff.md#phase-0-decision--1-november-2026). Conditional/evaluation tracks may complete only a no-go report without dependency installation; do not mark adoption tasks done for that outcome.
 
+The bounded Phase 0 review and deferral were merged in PR #359. Formal phase and shared-registry acceptance remain pending; the checked review task is not a runtime adoption or track closeout claim.
+
 ## Phase 0 — Evidence and value gate
 
 - [x] Task 0.1: Verify local/external prerequisites, current ownership, actual consumer and source target; reconcile already replaced paths before starting.
