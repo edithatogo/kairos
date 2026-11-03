@@ -18,8 +18,17 @@ if [[ "${config}" == *"batch-array.json" ]]; then
     exit 1
   fi
 
-  rendered_config="$(mktemp "${TMPDIR:-/tmp}/kairo-gcp-batch-array.XXXXXX.json")"
-  python - "$config" "$rendered_config" "$sweep_size" "$parallelism" <<'PY'
+  repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd -P)"
+  local_python="$repo_root/.venv/bin/python"
+  if [[ ! -x "$local_python" ]]; then
+    echo "A qualified repository-local .venv is required for GCP array rendering" >&2
+    exit 1
+  fi
+  "$local_python" "$repo_root/scripts/python_runtime.py" --root "$repo_root" >/dev/null
+  render_dir="$(mktemp -d "${TMPDIR:-/tmp}/kairo-gcp-batch-array.XXXXXX")"
+  rendered_config="$render_dir/config.json"
+  trap 'rm -f "$rendered_config"; rmdir "$render_dir"' EXIT
+  "$local_python" - "$config" "$rendered_config" "$sweep_size" "$parallelism" <<'PY'
 import json
 import sys
 from pathlib import Path
@@ -36,7 +45,6 @@ task_group["parallelism"] = min(parallelism, sweep_size)
 target.write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
 PY
   config="$rendered_config"
-  trap 'rm -f "$rendered_config"' EXIT
 fi
 
 gcloud batch jobs submit "$job_name" \

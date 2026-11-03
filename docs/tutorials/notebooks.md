@@ -2,9 +2,10 @@
 
 KairoECS keeps runnable notebook assets in `notebooks/` for users who want a
 guided, executable path through the scheduler and reproducibility controls.
-The notebooks are documentation artifacts, not benchmark producers: they are
-designed to run from a repository checkout without network access, package
-installation, or native FFI wheels.
+The two local tutorials are documentation artifacts, not benchmark producers;
+their examples are designed for a repository checkout without network access,
+package installation, or native FFI wheels. The Colab accelerator notebooks
+instead use provider-managed runtimes and can install JAX dependencies.
 
 ## Available notebooks
 
@@ -36,9 +37,15 @@ installation, or native FFI wheels.
 Run this from the repository root:
 
 ```powershell
-python notebooks\validate_notebooks.py
+.venv\Scripts\python.exe scripts\python_runtime.py
+.venv\Scripts\python.exe notebooks\validate_notebooks.py
 ```
 
-The validator parses all checked-in notebooks, confirms that referenced local
-figures exist, rejects network/package-install shell patterns in code cells, and
-executes each Python code cell in order.
+The validator parses the notebooks under `notebooks/`, checks their metadata
+and referenced local figures, and syntax-checks non-Colab Python cells. It
+rejects network/package-install patterns except permitted Colab smoke magics.
+It does not execute notebook cells or qualify a Jupyter kernel, provider runtime,
+accelerator or package installation. For local use, select and verify a kernel
+running the qualified repository-local Python 3.15.2 environment; the `python3`
+kernelspec alone does not prove its version or prefix. Colab-managed kernel and
+dependency compatibility remains a separate qualification.

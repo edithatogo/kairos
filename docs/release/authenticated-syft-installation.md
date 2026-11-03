@@ -109,11 +109,12 @@ native receipt must validate the updated source after merge.
 
 ## Use and retained evidence
 
-Run with Python **3.15.1** on a supported native host and choose a new output
+Run with the verified repository-local Python **3.15.2** on a supported native host and choose a new output
 directory whose parent already exists:
 
 ```sh
-python3 scripts/supply_chain/install_verified_syft.py \
+.venv/bin/python scripts/python_runtime.py
+.venv/bin/python scripts/supply_chain/install_verified_syft.py \
   --output-dir .artifacts/verified-syft-installer/run-name
 ```
 
@@ -136,4 +137,4 @@ represented here.
 
 ## Python 3.15.1 update — 23 October 2026
 
-Current execution requires Python 3.15.1 and Sigstore 4.5.1, with freshly qualified platform wheel hashes. The earlier Linux receipt above remains historical evidence for its original toolchain; it is not Python 3.15 qualification. Current macOS qualification and outstanding Linux/container gates are recorded in `conductor/toolchain-qualification-20261023/README.md`.
+This historical qualification used Python 3.15.1 and Sigstore 4.5.1. The current selected runtime is Python 3.15.2; verify the repository-local interpreter with `scripts/python_runtime.py` before following the commands above. Earlier receipts retain their original toolchains and do not by themselves qualify a new platform or release. The earlier macOS candidate and its then-outstanding Linux/container gates are recorded in `conductor/toolchain-qualification-20261023/README.md` as historical evidence.

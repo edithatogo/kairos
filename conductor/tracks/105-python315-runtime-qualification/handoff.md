@@ -281,3 +281,75 @@ It asserts delivery of the preceding complete frame and absence of events.
 Hosted full-workspace coverage remains the acceptance oracle.
 Track-wide inventory and environment handover gates remain governed by the
 existing plan; these native startup receipts supersede their pending entries.
+
+## Runtime reconciliation and qualification candidate — 3 November 2026
+
+The current integrator chat `01a19bed-7060-7910-af22-38cb31f51446` owns the
+initially clean isolated worktree
+`/Users/doughnut/.codex/worktrees/kairos-track105-closeout/kairos`, branch
+`codex/track105-closeout-20261103`, starting at main `0f5da40`. Scope is Track 105
+records and narrowly reviewed runtime guidance/qualification triggers; no native
+service, credential, other checkout, existing environment or downstream pin is
+changed. The [bounded inventory](runtime-inventory-20261103.md) distinguishes
+current-main proof from older Devbox/container evidence and records the 68-test
+local receipt. The other toolchain checkout has no observed open process and is
+preserved, including all uncommitted work.
+
+Independent runtime review identified stale current Python 3.15.1 instructions
+in the Syft runbook. The reviewed fix uses the verified repo-local 3.15.2
+interpreter and preserves historical evidence; review found no remaining issue
+in that bounded correction. Review also accepted the Cloud/HPC evidence note
+and the read-only manual Devbox trigger without weakening their runtime checks.
+The local phase/DAG/no-skip validators passed. The selected `.venv` was newly
+created in this worktree, verified at 3.15.2 and has not replaced another owner’s
+environment. Other consumers have not been declared terminal or handed over.
+
+Independent inventory review found additional open entry points: the GCP array
+submitter and release scripts use ambient Python when called directly, and five
+executable notebooks lack actual selected-kernel qualification. Their owner
+handoffs and execution profiles remain open; no GCP submission or publishing
+command was run. The notebook documentation also overstates cell execution by
+the current structural validator. The detailed inventory records these gaps.
+
+Next: require actual PR-head Cloud/HPC and Devbox runs, full applicable checks,
+review and protected merge; then inspect exact-main runs and resolve the named
+entry points, notebook and consumer/environment handover before completion.
+Track 105 remains In Progress.
+
+### GCP array renderer bounded ownership
+
+The integrator chat above claims `cloud/gcp/submit-experiment.sh` and
+`tests/test_local_python_runtime.py` in this worktree for local-runtime selection
+and fictional subprocess tests. A worktree-wide status scan found no dirty
+copies of the submitter and the shared lease store had no competing claim. No
+live provider object, credential, job or submission is in scope. Next operation
+is a fail-closed local interpreter guard and local tests with an isolated fake
+`gcloud` executable; no live submit is authorized.
+
+The GCP array renderer correction is bounded to interpreter selection and
+private temporary-file lifecycle. It verifies the existing repo-local profile
+before rendering, installs cleanup before parsing, and never falls back to an
+ambient interpreter. Focused tests use only a fake `gcloud` executable and cover
+missing and symlinked environments, successful rendering, malformed input and
+temporary-file cleanup. The initial failing run exposed an additional portability
+problem: the old `mktemp` template placed a suffix after the random characters;
+the revised private-directory template works on the tested macOS host while
+retaining a JSON extension. These tests cover POSIX `.venv/bin/python` hosts;
+Windows Git Bash submission is not qualified. Actual GCP submission remains
+unexecuted and unclaimed.
+
+The integrator also claims `docs/tutorials/notebooks.md` in this worktree to
+correct its validator and runtime-scope description. No other checkout reported
+a dirty copy. The scope is documentation only; it neither executes notebooks
+nor installs or promotes a Jupyter kernel or provider dependency.
+
+An isolated follow-up executed the two local tutorials with a repo-local 3.15.2
+Jupyter kernel, preserving the executed notebooks and tool-version receipt.
+This is exploratory source/runtime evidence, not a locked Jupyter dependency
+profile, a handover of the user's existing kernel, or Colab accelerator proof.
+See the runtime inventory for its warnings, hashes and exact source revision.
+
+The [runtime inventory](runtime-inventory-20261103.md#colab-runtime-attempts--3-november-2026)
+records exploratory Colab attempts, private log hashes and the distinction
+between a successful isolated CPU kernel probe and the unqualified accelerator
+notebooks. No GPU/TPU acceptance follows from those attempts.
