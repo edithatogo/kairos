@@ -11,6 +11,12 @@ record a pushed commit, raw artifact checksum, reviewer, no active waiver, and
 the real hardware, scheduler, filesystem, toolchain, and runtime command under
 test.
 
+For Python runtime qualification, also run the image's interpreter and record
+its actual version, executable and prefix. The `Cloud/HPC Smoke` workflow builds
+the image from the tested commit and checks Python 3.15.2 at `/work/.venv`;
+the CLI help command alone does not establish that runtime. A hosted container
+smoke is scaffold evidence, not a live Slurm or parallel-filesystem result.
+
 Example scaffold capture on a free GitHub-hosted runner:
 
 ```bash
