@@ -19,6 +19,8 @@ const MAX_RECORD: usize = 64 * 1024;
 const MAX_RECORDS: usize = 64;
 const MAX_UNITS: u64 = 128;
 type Hash = [u8; 32];
+#[cfg(feature = "external-time-warp")]
+type FactReadback = (u64, Vec<u8>, Vec<(String, Vec<u8>)>);
 const SCHEMA:&str="CREATE TABLE meta(id INTEGER PRIMARY KEY CHECK(id=1),binding BLOB NOT NULL,revision INTEGER NOT NULL,digest BLOB NOT NULL) STRICT;
 CREATE TABLE manifest(ordinal INTEGER PRIMARY KEY,name TEXT UNIQUE NOT NULL) STRICT;
 CREATE TABLE units(id BLOB PRIMARY KEY,revision INTEGER UNIQUE NOT NULL,previous_revision INTEGER NOT NULL,previous_digest BLOB NOT NULL,request_digest BLOB NOT NULL,state_digest BLOB NOT NULL) STRICT;
@@ -597,6 +599,24 @@ impl Store {
                 positions,
             },
         }))
+    }
+    #[cfg(feature = "external-time-warp")]
+    pub(super) fn next_fact_position(&self) -> Result<u64, Error> {
+        self.load()?;
+        let n: i64 = self.connection.query_row(
+            "SELECT coalesce(max(position),0)+1 FROM facts",
+            [],
+            |r| r.get(0),
+        )?;
+        u64::try_from(n).map_err(|_| Error::Invalid)
+    }
+    #[cfg(feature = "external-time-warp")]
+    pub(super) fn fact_at(&self, position: u64) -> Result<FactReadback, Error> {
+        self.load()?;
+        let (id,raw):(Vec<u8>,Vec<u8>)=self.connection.query_row("SELECT unit_id,bytes FROM facts WHERE position=?1 AND length(unit_id)=16 AND length(bytes)<=?2",params![i64::try_from(position).map_err(|_|Error::Invalid)?,MAX_RECORD as i64],|r|Ok((r.get(0)?,r.get(1)?)))?;
+        let id: [u8; 16] = id.try_into().map_err(|_| Error::Invalid)?;
+        let unit = self.readback(&id)?.ok_or(Error::Invalid)?;
+        Ok((unit.receipt.revision, raw, unit.unit.sections))
     }
     pub(super) fn commit(&mut self, unit: &Unit, crash: CrashPoint) -> Result<Receipt, Error> {
         #[cfg(not(any(test, feature = "external-fault-injection")))]

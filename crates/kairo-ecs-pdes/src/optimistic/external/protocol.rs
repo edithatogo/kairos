@@ -135,11 +135,13 @@ impl Message {
         if self.ancestry.len() > MAX_ANCESTRY || self.payload.len() > MAX_PAYLOAD {
             return Err("external message bound".into());
         }
-        let source = self
+        let invalid_root = self
             .ancestry
-            .last()
-            .map_or(self.root_source, |frame| frame.source);
-        if source != self.source
+            .first()
+            .map_or(self.root_source != self.source, |frame| {
+                frame.source != self.root_source
+            });
+        if invalid_root
             || self
                 .ancestry
                 .windows(2)
@@ -155,6 +157,34 @@ impl Message {
     }
 }
 
+/// Data binding to the issuer's atomically committed participant journal.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]
+pub enum FactEffect {
+    QueuedPositive,
+    QueuedAnti,
+    AlreadyExecuted,
+    ProtectedTombstone,
+    RetiredRollback,
+    RetiredTombstone,
+}
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct DurableBinding {
+    pub revision: u64,
+    pub position: u64,
+    pub state: Hash,
+    pub effect: FactEffect,
+}
+impl DurableBinding {
+    pub fn pending(effect: FactEffect) -> Self {
+        Self {
+            revision: 0,
+            position: 0,
+            state: [0; 32],
+            effect,
+        }
+    }
+}
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", deny_unknown_fields)]
 pub enum Body {
@@ -163,10 +193,12 @@ pub enum Body {
     },
     Admission {
         delivery: Hash,
+        binding: DurableBinding,
     },
     Retirement {
         delivery: Hash,
         dependencies: Vec<Hash>,
+        binding: DurableBinding,
     },
     Activation {
         generation: u64,
@@ -216,10 +248,40 @@ pub struct Record {
     pub sequence: u64,
     pub body: Body,
 }
+impl Body {
+    pub fn durable(&self) -> Option<&DurableBinding> {
+        match self {
+            Self::Admission { binding, .. } | Self::Retirement { binding, .. } => Some(binding),
+            _ => None,
+        }
+    }
+    pub fn durable_mut(&mut self) -> Option<&mut DurableBinding> {
+        match self {
+            Self::Admission { binding, .. } | Self::Retirement { binding, .. } => Some(binding),
+            _ => None,
+        }
+    }
+}
 impl Record {
     fn validate(&self) -> Result<(), String> {
         if self.version != 1 || self.generation == 0 {
             return Err("external record version/generation".into());
+        }
+        if self
+            .body
+            .durable()
+            .is_some_and(|b| b.revision == 0 || b.position == 0 || b.state == [0; 32])
+        {
+            return Err("uncommitted durable fact binding".into());
+        }
+        if let Some(binding) = self.body.durable() {
+            let retired = matches!(
+                binding.effect,
+                FactEffect::RetiredRollback | FactEffect::RetiredTombstone
+            );
+            if retired != matches!(self.body, Body::Retirement { .. }) {
+                return Err("durable effect classification".into());
+            }
         }
         match &self.body {
             Body::Delivery { message } => message.validate()?,
@@ -566,6 +628,12 @@ mod tests {
         let mut r = record();
         for body in [
             Body::Retirement {
+                binding: DurableBinding {
+                    revision: 1,
+                    position: 1,
+                    state: [1; 32],
+                    effect: FactEffect::RetiredTombstone,
+                },
                 delivery: [1; 32],
                 dependencies: vec![[2; 32]; 2],
             },
@@ -682,5 +750,35 @@ mod tests {
             verify(&sign(&r, &key()).unwrap(), [48; 32], &keys()).unwrap(),
             r
         );
+    }
+    #[test]
+    fn durable_binding_requires_revision_position_state_and_correct_effect() {
+        let valid = DurableBinding {
+            revision: 1,
+            position: 1,
+            state: [3; 32],
+            effect: FactEffect::QueuedPositive,
+        };
+        let mut r = record();
+        r.body = Body::Admission {
+            delivery: [9; 32],
+            binding: valid.clone(),
+        };
+        let raw = sign(&r, &key()).unwrap();
+        assert_eq!(verify(&raw, [48; 32], &keys()).unwrap(), r);
+        for invalid in 0..4 {
+            let mut b = valid.clone();
+            match invalid {
+                0 => b.revision = 0,
+                1 => b.position = 0,
+                2 => b.state = [0; 32],
+                _ => b.effect = FactEffect::RetiredRollback,
+            };
+            r.body = Body::Admission {
+                delivery: [9; 32],
+                binding: b,
+            };
+            assert!(sign(&r, &key()).is_err());
+        }
     }
 }

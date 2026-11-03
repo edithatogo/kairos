@@ -74,3 +74,45 @@ serial-model/RNG/trace parity and exact-head hosted acceptance remain required.
 The fresh CPU session `kairos-cap48-full-20261103` is owned only by this chat;
 actual Rust1.99.1 and repo-local Python3.15.2 were verified there. It must be
 stopped and read back at terminal completion/failure.
+
+## Reviewed receipt and identity refinements
+
+Final receipt statements additionally bind their logical fact ID (outer
+configuration/issuer/generation/sequence), actual participant journal revision
+and position, effect/classification and a domain-separated accounted-state
+digest. The canonical signed-frame digest is the fact hash. Under the exclusive
+owner, the driver reserves the next revision and contiguous native fact positions,
+seals the complete staged decision, stores the exact signed statements in those
+positions together with the after-image, and checks actual allocation before
+publication. Reopen verifies exact native fact bytes/revision and recomputes the
+state digest from that historical after-image. Committed-image validation never
+accepts a candidate's future reservation. Proof indexes and references are
+bidirectional; missing/orphan proof data rejects.
+
+The state-digest preimage excludes newly issued signatures, receipt bookkeeping
+and the signing sequence; the enclosing native transaction digest covers the
+entire signed after-image. This avoids self-reference without omitting model,
+queue, history, identity, outbox, dependency, membership or cut decisions.
+
+Independent review accepted precomputed private signatures as a transactional
+outbox refinement of the earlier after-commit-signing design. They are private
+staged bytes, atomically retained, and unavailable to every public reply/readback
+path until commit succeeds. No signature is presented as physical disk proof.
+An uncertain result fences publication until exact retained-state readback. This
+refinement avoids a fallible post-effect signing step; it does not claim literal
+`CommittedReceiptPending` implementation. Actual before/after SQL kill tests and
+exact lost-ACK byte comparisons remain the qualification oracle.
+
+Complete ancestry now records each *input event's source* in the parent frame.
+The external engine reconstructs native `LogicalEventId` and
+`OptimisticEventOrderKey` and reuses their derived ordering, including the native
+Root/Output ordering at equal ticks. A differential fixture compares actual
+published multi-hop output keys with native execution; a retained failing test
+captured the earlier handler-source error before correction. The final host
+runner compares complete logical frames as well as model/RNG/generation/trace.
+
+The runner builds the exact local and remote Cargo example, identifies its actual
+compiler-artifact executable, freezes source/runner/workspace/toolchain hashes,
+and verifies stability through completion. Each isolated case gets a distinct
+simulation UUID. Complete native checkpoints and public configuration receipts
+are retained; fixture private TLS keys remain on their generating host.

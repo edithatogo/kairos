@@ -308,9 +308,27 @@ fn actual_old30_new25_waits_for_descendant_retirement_and_survives_restart() {
             )
             .unwrap();
     }
-    serial
+    let published = serial
         .run_until_with_budget(Tick::from_ticks(100), 64)
-        .unwrap();
+        .unwrap()
+        .published_messages;
+    for native in published {
+        let actual = a
+            .image
+            .outgoing
+            .iter()
+            .chain(&b.image.outgoing)
+            .find(|o| {
+                !o.message.anti
+                    && o.message.tick == native.event().tick.ticks()
+                    && o.message.source == native.event().source_lp.0
+                    && o.message.destination == native.event().dest_lp.0
+                    && o.message.payload == native.event().event_payload
+            })
+            .unwrap();
+        assert_eq!(logical_key(&actual.message), native.order_key());
+    }
+
     assert_eq!(&ma, serial.process_at(LpId(0)).unwrap());
     assert_eq!(&mb, serial.process_at(LpId(1)).unwrap());
 }
@@ -455,4 +473,187 @@ fn structurally_corrupt_but_store_hashed_images_reject() {
         )
         .is_err());
     }
+}
+#[test]
+fn structural_ancestry_and_same_tick_order_match_native_contract() {
+    let mut root = Message {
+        source: 0,
+        destination: 1,
+        tick: 20,
+        root_source: 0,
+        root_sequence: 7,
+        ancestry: vec![],
+        incarnation: 0,
+        anti: false,
+        payload: vec![],
+    };
+    let native_root = super::super::OptimisticMessage::try_from_parts(
+        RemoteEvent {
+            source_lp: LpId(0),
+            dest_lp: LpId(1),
+            tick: Tick::from_ticks(20),
+            event_payload: vec![],
+        },
+        super::super::LogicalEventId::root(LpId(0), 7),
+        0,
+        super::super::OptimisticMessageKind::Positive,
+    )
+    .unwrap();
+    assert_eq!(logical_key(&root), native_root.order_key());
+    root.source = 1;
+    root.destination = 0;
+    root.tick = 30;
+    root.ancestry.push(Frame {
+        tick: 20,
+        source: 0,
+        ordinal: 0,
+    });
+    root.validate().unwrap();
+    let native_child_id = super::super::LogicalEventId::child(&native_root.order_key(), 0).unwrap();
+    let native_child = super::super::OptimisticMessage::try_from_parts(
+        RemoteEvent {
+            source_lp: LpId(1),
+            dest_lp: LpId(0),
+            tick: Tick::from_ticks(30),
+            event_payload: vec![],
+        },
+        native_child_id,
+        0,
+        super::super::OptimisticMessageKind::Positive,
+    )
+    .unwrap();
+    assert_eq!(logical_key(&root), native_child.order_key());
+    let same_tick_root = Message {
+        source: 1,
+        destination: 0,
+        tick: 30,
+        root_source: 1,
+        root_sequence: 100,
+        ancestry: vec![],
+        incarnation: 1,
+        anti: false,
+        payload: vec![],
+    };
+    assert!(logical_key(&same_tick_root) < logical_key(&root)); // Native Root variant precedes Output.
+    root.source = 0;
+    root.tick = 40;
+    root.ancestry.push(Frame {
+        tick: 30,
+        source: 1,
+        ordinal: 2,
+    });
+    root.validate().unwrap();
+    let grandchild_id = super::super::LogicalEventId::child(&native_child.order_key(), 2).unwrap();
+    let native_grandchild = super::super::OptimisticEventOrderKey::try_from_parts(
+        Tick::from_ticks(40),
+        LpId(0),
+        grandchild_id,
+    )
+    .unwrap();
+    assert_eq!(logical_key(&root), native_grandchild);
+}
+#[test]
+fn signed_receipt_binds_actual_fact_position_revision_and_complete_accounted_state() {
+    let _serial = super::super::external_store::FIXTURE_SERIAL.lock().unwrap();
+    let da = Temp::new();
+    let db = Temp::new();
+    let mut a = open(&da, 0);
+    let mut b = open(&db, 1);
+    activate(&mut a, &mut b);
+    let packet = root(&mut a, 0, 20, 1);
+    let replies = a.receive_packet(&packet).unwrap();
+    let statement = a.auth(&replies[0]).unwrap();
+    let binding = statement.body.durable().unwrap();
+    let (revision, raw, sections) = a.store.fact_at(binding.position).unwrap();
+    assert_eq!(binding.revision, revision);
+    assert_eq!(raw, replies[0]);
+    let historical: Image = serde_json::from_slice(&sections[0].1).unwrap();
+    assert_eq!(binding.state, Runtime::core_digest(&historical).unwrap());
+    assert_eq!(binding.effect, FactEffect::QueuedPositive);
+    let before = a.revision().unwrap();
+    assert_eq!(a.receive_packet(&packet).unwrap(), replies);
+    assert_eq!(a.revision().unwrap(), before);
+    let mut forged = statement;
+    forged.body.durable_mut().unwrap().position += 1;
+    let forged = protocol::sign(&forged, &a.key).unwrap();
+    let mut corrupt = a.image.clone();
+    corrupt.proofs[0] = forged.clone();
+    corrupt
+        .facts
+        .iter_mut()
+        .find(|f| f.packet == packet)
+        .unwrap()
+        .responses[0] = forged;
+    let state = a.store.load().unwrap();
+    a.store
+        .commit(
+            &Unit {
+                id: [77; 16],
+                previous_revision: state.revision,
+                previous_digest: state.digest,
+                sections: vec![("engine".into(), bytes(&corrupt).unwrap())],
+                facts: vec![],
+                outbox: vec![],
+            },
+            CrashPoint::None,
+        )
+        .unwrap();
+    drop(a);
+    assert!(Runtime::open(
+        &da.0,
+        config(),
+        0,
+        SigningKey::from_bytes(&[1; 32]),
+        Codec,
+        BTreeMap::from([(0, Model::new())])
+    )
+    .is_err());
+}
+#[test]
+fn committed_image_cannot_use_candidate_future_receipt_reservations() {
+    let _serial = super::super::external_store::FIXTURE_SERIAL.lock().unwrap();
+    let da = Temp::new();
+    let db = Temp::new();
+    let mut a = open(&da, 0);
+    let mut b = open(&db, 1);
+    activate(&mut a, &mut b);
+    let p = root(&mut a, 0, 20, 1);
+    let responses = a.receive_packet(&p).unwrap();
+    let prior = a.store.load().unwrap();
+    let mut record = a.auth(&responses[0]).unwrap();
+    let binding = record.body.durable_mut().unwrap();
+    binding.revision = prior.revision + 2;
+    binding.position = a.store.next_fact_position().unwrap();
+    let forged = protocol::sign(&record, &a.key).unwrap();
+    let mut image = a.image.clone();
+    image.proofs[0] = forged.clone();
+    image
+        .facts
+        .iter_mut()
+        .find(|f| f.packet == p)
+        .unwrap()
+        .responses[0] = forged;
+    a.store
+        .commit(
+            &Unit {
+                id: [88; 16],
+                previous_revision: prior.revision,
+                previous_digest: prior.digest,
+                sections: vec![("engine".into(), bytes(&image).unwrap())],
+                facts: vec![],
+                outbox: vec![],
+            },
+            CrashPoint::None,
+        )
+        .unwrap();
+    drop(a);
+    assert!(Runtime::open(
+        &da.0,
+        config(),
+        0,
+        SigningKey::from_bytes(&[1; 32]),
+        Codec,
+        BTreeMap::from([(0, Model::new())])
+    )
+    .is_err());
 }

@@ -5,7 +5,7 @@ pub mod protocol;
 use super::external_store::{CrashPoint, Store, Unit};
 use super::{LpId, OptimisticProcess, RemoteEvent, Tick};
 use ed25519_dalek::SigningKey;
-use protocol::{digest, Body, Frame, Hash, Message, Record};
+use protocol::{digest, Body, DurableBinding, FactEffect, Frame, Hash, Message, Record};
 use serde::{Deserialize, Serialize};
 use std::{
     collections::{BTreeMap, BTreeSet},
@@ -13,6 +13,11 @@ use std::{
     panic::{catch_unwind, AssertUnwindSafe},
     path::Path,
 };
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum ImageValidation {
+    Committed,
+    Candidate,
+}
 const MAX_ITEMS: usize = 64;
 const MAX_IMAGE: usize = 1024 * 1024;
 type Result<T> = std::result::Result<T, ExternalError>;
@@ -103,6 +108,7 @@ struct Reversal {
     dependencies: Vec<Hash>,
     applied: bool,
     receipt: Option<Vec<u8>>,
+    effect: FactEffect,
 }
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(deny_unknown_fields)]
@@ -122,6 +128,7 @@ struct Image {
     known: Vec<Message>,
     outgoing: Vec<Outgoing>,
     facts: Vec<Fact>,
+    proofs: Vec<Vec<u8>>,
     reversals: Vec<Reversal>,
     barriers: Vec<Hash>,
     sequence: Option<u64>,
@@ -313,6 +320,7 @@ impl<P: OptimisticProcess, C: PortableModelCodec<P>> ExternalOptimisticRuntime<P
             known: vec![],
             outgoing: vec![],
             facts: vec![],
+            proofs: vec![],
             reversals: vec![],
             barriers: vec![],
             sequence: Some(0),
@@ -365,7 +373,7 @@ impl<P: OptimisticProcess, C: PortableModelCodec<P>> ExternalOptimisticRuntime<P
             fault: CrashPoint::None,
             marker: PhantomData,
         };
-        result.validate(&result.image)?;
+        result.validate(&result.image, ImageValidation::Committed)?;
         Ok(result)
     }
     fn keys(&self) -> BTreeMap<u32, Vec<u8>> {
@@ -386,10 +394,29 @@ impl<P: OptimisticProcess, C: PortableModelCodec<P>> ExternalOptimisticRuntime<P
     fn auth(&self, p: &[u8]) -> Result<Record> {
         protocol::verify(p, self.context, &self.keys()).map_err(reject)
     }
-    fn sign(&self, image: &mut Image, body: Body) -> Result<Vec<u8>> {
+    fn sign(&self, image: &mut Image, mut body: Body) -> Result<Vec<u8>> {
         let sequence = image.sequence.ok_or_else(|| reject("sequence exhausted"))?;
         image.sequence = sequence.checked_add(1);
-        protocol::sign(
+        if let Some(binding) = body.durable_mut() {
+            binding.revision = self
+                .revision()?
+                .checked_add(1)
+                .ok_or_else(|| reject("revision exhausted"))?;
+            let pending = image
+                .proofs
+                .iter()
+                .filter(|p| !self.image.proofs.contains(p))
+                .count() as u64;
+            binding.position = self
+                .store
+                .next_fact_position()
+                .map_err(|e| ExternalError::Storage(e.to_string()))?
+                .checked_add(pending)
+                .ok_or_else(|| reject("fact position exhausted"))?;
+            binding.state = [1; 32];
+        }
+        let durable = body.durable().is_some();
+        let packet = protocol::sign(
             &Record {
                 version: 1,
                 context: self.context,
@@ -400,9 +427,29 @@ impl<P: OptimisticProcess, C: PortableModelCodec<P>> ExternalOptimisticRuntime<P
             },
             &self.key,
         )
-        .map_err(reject)
+        .map_err(reject)?;
+        if durable {
+            image.proofs.push(packet.clone());
+        }
+        Ok(packet)
     }
-    fn validate(&self, image: &Image) -> Result<()> {
+    fn core_digest(image: &Image) -> Result<Hash> {
+        let mut core = image.clone();
+        core.proofs.clear();
+        core.sequence = None;
+        for f in &mut core.facts {
+            f.responses.clear();
+        }
+        for r in &mut core.reversals {
+            r.receipt = None;
+        }
+        Ok(digest(&bytes(&core)?))
+    }
+
+    fn validate(&self, image: &Image, mode: ImageValidation) -> Result<()> {
+        if image.proofs.len() > MAX_ITEMS {
+            return Err(reject("durable proof bound"));
+        }
         if image.poisoned
             || image.processes.len() > MAX_ITEMS
             || image.known.len() > MAX_ITEMS
@@ -580,11 +627,91 @@ impl<P: OptimisticProcess, C: PortableModelCodec<P>> ExternalOptimisticRuntime<P
                 let receipt = self.auth(receipt)?;
                 if receipt.issuer != self.participant
                     || !r.applied
-                    || !matches!(receipt.body,Body::Retirement{delivery,dependencies} if delivery==r.delivery&&dependencies==r.dependencies)
+                    || !matches!(receipt.body,Body::Retirement{delivery,dependencies,..} if delivery==r.delivery&&dependencies==r.dependencies)
                     || r.dependencies.iter().any(|d| !finished(image, d))
                 {
                     return Err(reject("retirement closure"));
                 }
+            }
+        }
+        for packet in &image.proofs {
+            if !image.facts.iter().any(|f| f.responses.contains(packet))
+                && !image
+                    .reversals
+                    .iter()
+                    .any(|r| r.receipt.as_ref() == Some(packet))
+            {
+                return Err(reject("orphan durable proof"));
+            }
+        }
+        for f in &image.facts {
+            for response in &f.responses {
+                if self.auth(response)?.body.durable().is_some() && !image.proofs.contains(response)
+                {
+                    return Err(reject("missing durable proof index"));
+                }
+            }
+        }
+        for reversal in &image.reversals {
+            if reversal
+                .receipt
+                .as_ref()
+                .is_some_and(|p| !image.proofs.contains(p))
+            {
+                return Err(reject("missing retirement proof index"));
+            }
+        }
+        let current = self.revision()?;
+        let mut proof_positions = BTreeSet::new();
+        for packet in &image.proofs {
+            let record = self.auth(packet)?;
+            let binding = record
+                .body
+                .durable()
+                .ok_or_else(|| reject("proof record kind"))?;
+            if record.issuer != self.participant
+                || !proof_positions.insert(binding.position)
+                || binding.revision > current + 1
+                || (binding.revision > current
+                    && (mode == ImageValidation::Committed || self.image.proofs.contains(packet)))
+            {
+                return Err(reject("proof issuer/revision/position"));
+            }
+            if binding.revision <= current {
+                let (revision, raw, sections) = self
+                    .store
+                    .fact_at(binding.position)
+                    .map_err(|e| ExternalError::Storage(e.to_string()))?;
+                if revision != binding.revision || raw != *packet {
+                    return Err(reject("durable fact linkage"));
+                }
+                let historical: Image =
+                    serde_json::from_slice(&sections[0].1).map_err(|e| reject(e.to_string()))?;
+                if Self::core_digest(&historical)? != binding.state {
+                    return Err(reject("durable accounted-state digest"));
+                }
+            }
+        }
+        if mode == ImageValidation::Candidate {
+            let first = self
+                .store
+                .next_fact_position()
+                .map_err(|e| ExternalError::Storage(e.to_string()))?;
+            let mut reserved = image
+                .proofs
+                .iter()
+                .filter_map(|p| self.auth(p).ok())
+                .filter_map(|r| r.body.durable().cloned())
+                .filter(|b| b.revision > current)
+                .map(|b| b.position)
+                .collect::<Vec<_>>();
+            reserved.sort();
+            if reserved
+                .iter()
+                .enumerate()
+                .any(|(index, p)| *p != first + index as u64)
+            {
+                return Err(reject("durable position reservation"));
             }
         }
         let mut packets = BTreeSet::new();
@@ -640,11 +767,56 @@ impl<P: OptimisticProcess, C: PortableModelCodec<P>> ExternalOptimisticRuntime<P
         }
         Ok(())
     }
-    fn commit(&mut self, next: Image, records: Vec<Vec<u8>>) -> Result<()> {
+    fn commit(&mut self, mut next: Image, records: Vec<Vec<u8>>) -> Result<()> {
         if self.fenced {
             return Err(ExternalError::Fenced);
         }
-        match catch_unwind(AssertUnwindSafe(|| self.validate(&next))) {
+        let state = Self::core_digest(&next)?;
+        let mut new_proofs = Vec::new();
+        for index in 0..next.proofs.len() {
+            let old = next.proofs[index].clone();
+            if self.image.proofs.contains(&old) {
+                continue;
+            }
+            let mut record = self.auth(&old)?;
+            record
+                .body
+                .durable_mut()
+                .ok_or_else(|| reject("proof kind"))?
+                .state = state;
+            let sealed = protocol::sign(&record, &self.key).map_err(reject)?;
+            for f in &mut next.facts {
+                for response in &mut f.responses {
+                    if *response == old {
+                        *response = sealed.clone();
+                    }
+                }
+            }
+            for r in &mut next.reversals {
+                if r.receipt.as_ref() == Some(&old) {
+                    r.receipt = Some(sealed.clone());
+                }
+            }
+            next.proofs[index] = sealed.clone();
+            new_proofs.push((record.body.durable().unwrap().position, sealed));
+        }
+        if state != Self::core_digest(&next)? {
+            return Err(reject("noncircular accounted-state binding"));
+        }
+        new_proofs.sort_by_key(|(position, _)| *position);
+        let expected_positions = new_proofs
+            .iter()
+            .map(|(p, _)| *p as i64)
+            .collect::<Vec<_>>();
+        let mut facts = new_proofs.into_iter().map(|(_, p)| p).collect::<Vec<_>>();
+        for p in records {
+            if self.auth(&p)?.body.durable().is_none() {
+                facts.push(p);
+            }
+        }
+        match catch_unwind(AssertUnwindSafe(|| {
+            self.validate(&next, ImageValidation::Candidate)
+        })) {
             Ok(r) => r?,
             Err(_) => {
                 self.fenced = true;
@@ -664,15 +836,21 @@ impl<P: OptimisticProcess, C: PortableModelCodec<P>> ExternalOptimisticRuntime<P
             previous_revision: old.revision,
             previous_digest: old.digest,
             sections: vec![("engine".into(), raw)],
-            facts: records,
+            facts,
             outbox: vec![],
         };
         let fault = self.fault;
         self.fault = CrashPoint::None;
-        self.store.commit(&unit, fault).map_err(|e| {
+        let receipt = self.store.commit(&unit, fault).map_err(|e| {
             self.fenced = true;
             ExternalError::Storage(e.to_string())
         })?;
+        if !receipt.positions.starts_with(&expected_positions) {
+            self.fenced = true;
+            return Err(ExternalError::Storage(
+                "journal allocation differs from durable reservation".into(),
+            ));
+        }
         self.image = next;
         Ok(())
     }
@@ -954,6 +1132,21 @@ impl<P: OptimisticProcess, C: PortableModelCodec<P>> ExternalOptimisticRuntime<P
         {
             return Err(reject("TLS/signing member mismatch"));
         }
+        // The fresh complete membership explicitly authorizes these exact
+        // historical packets; this is recovery ingress, not a stale live bypass.
+        if matches!(r.body, Body::Activation { .. }) {
+            return self.join_activation(packet).map(|p| vec![p]);
+        }
+        if matches!(r.body, Body::Delivery { .. })
+            && r.generation < self.image.generation
+            && self
+                .image
+                .recovery
+                .iter()
+                .any(|(issuer, ids)| *issuer == r.issuer && ids.contains(&packet_id(packet)))
+        {
+            return self.recover_delivery(packet);
+        }
         self.receive_packet(packet)
     }
     pub fn receive_packet(&mut self, packet: &[u8]) -> Result<Vec<Vec<u8>>> {
@@ -990,7 +1183,7 @@ impl<P: OptimisticProcess, C: PortableModelCodec<P>> ExternalOptimisticRuntime<P
             return Err(ExternalError::Paused);
         }
         let retained_receipt = match &record.body {
-            Body::Admission { delivery } | Body::Retirement { delivery, .. } => {
+            Body::Admission { delivery, .. } | Body::Retirement { delivery, .. } => {
                 self.image.outgoing.iter().any(|o| {
                     packet_id(&o.packet) == *delivery
                         && self.owner(o.message.destination).ok() == Some(record.issuer)
@@ -1058,9 +1251,35 @@ impl<P: OptimisticProcess, C: PortableModelCodec<P>> ExternalOptimisticRuntime<P
                     .epoch
                     .checked_add(1)
                     .ok_or_else(|| reject("epoch exhausted"))?;
+                let effect = if next
+                    .processes
+                    .iter()
+                    .find(|p| p.lp == message.destination)
+                    .unwrap()
+                    .tombstones
+                    .iter()
+                    .any(|m| identity(m) == key)
+                {
+                    FactEffect::ProtectedTombstone
+                } else if message.anti {
+                    FactEffect::QueuedAnti
+                } else if next
+                    .processes
+                    .iter()
+                    .find(|p| p.lp == message.destination)
+                    .unwrap()
+                    .history
+                    .iter()
+                    .any(|e| identity(&e.message) == key)
+                {
+                    FactEffect::AlreadyExecuted
+                } else {
+                    FactEffect::QueuedPositive
+                };
                 let ack = self.sign(
                     &mut next,
                     Body::Admission {
+                        binding: DurableBinding::pending(effect),
                         delivery: packet_id(packet),
                     },
                 )?;
@@ -1072,10 +1291,11 @@ impl<P: OptimisticProcess, C: PortableModelCodec<P>> ExternalOptimisticRuntime<P
                         dependencies: vec![],
                         applied: false,
                         receipt: None,
+                        effect: FactEffect::RetiredTombstone,
                     });
                 }
             }
-            Body::Admission { delivery } => {
+            Body::Admission { delivery, .. } => {
                 let o = next
                     .outgoing
                     .iter_mut()
@@ -1086,10 +1306,7 @@ impl<P: OptimisticProcess, C: PortableModelCodec<P>> ExternalOptimisticRuntime<P
                 }
                 o.admitted = true;
             }
-            Body::Retirement {
-                delivery,
-                dependencies: _,
-            } => {
+            Body::Retirement { delivery, .. } => {
                 let o = next
                     .outgoing
                     .iter_mut()
@@ -1131,7 +1348,14 @@ impl<P: OptimisticProcess, C: PortableModelCodec<P>> ExternalOptimisticRuntime<P
             responses: replies.clone(),
         });
         self.commit(next, replies.clone())?;
-        Ok(replies)
+        Ok(self
+            .image
+            .facts
+            .iter()
+            .find(|f| f.packet == packet)
+            .ok_or_else(|| reject("committed fact missing"))?
+            .responses
+            .clone())
     }
     fn complete_retirements(&self, image: &mut Image) -> Result<()> {
         let ready = image
@@ -1150,6 +1374,7 @@ impl<P: OptimisticProcess, C: PortableModelCodec<P>> ExternalOptimisticRuntime<P
             let p = self.sign(
                 image,
                 Body::Retirement {
+                    binding: DurableBinding::pending(r.effect),
                     delivery: r.delivery,
                     dependencies: r.dependencies.clone(),
                 },
@@ -1210,6 +1435,10 @@ impl<P: OptimisticProcess, C: PortableModelCodec<P>> ExternalOptimisticRuntime<P
                 image.processes[p].pending.remove(q);
                 let key = identity(&m);
                 let mut dependencies = vec![];
+                let removed_history = image.processes[p]
+                    .history
+                    .iter()
+                    .any(|e| identity(&e.message) == key);
                 if let Some(index) = image.processes[p]
                     .history
                     .iter()
@@ -1230,6 +1459,11 @@ impl<P: OptimisticProcess, C: PortableModelCodec<P>> ExternalOptimisticRuntime<P
                     if matches!(self.auth(&r.packet)?.body,Body::Delivery{ref message} if identity(message)==key)
                     {
                         r.applied = true;
+                        r.effect = if !removed_history {
+                            FactEffect::RetiredTombstone
+                        } else {
+                            FactEffect::RetiredRollback
+                        };
                         r.dependencies = dependencies.clone();
                     }
                 }
@@ -1286,7 +1520,7 @@ impl<P: OptimisticProcess, C: PortableModelCodec<P>> ExternalOptimisticRuntime<P
                     let mut ancestry = m.ancestry.clone();
                     ancestry.push(Frame {
                         tick: m.tick,
-                        source: m.destination,
+                        source: m.source,
                         ordinal: ordinal as u32,
                     });
                     let incarnation = allocate(&mut image, m.destination)?;
@@ -1695,15 +1929,27 @@ fn allocate(image: &mut Image, source: u32) -> Result<u64> {
     *next = value.checked_add(1);
     Ok(value)
 }
-fn order(m: &Message) -> (u128, u32, u32, u64, Vec<Frame>, u64) {
-    (
-        m.tick,
-        m.source,
-        m.root_source,
-        m.root_sequence,
-        m.ancestry.clone(),
-        m.incarnation,
+fn logical_key(m: &Message) -> super::OptimisticEventOrderKey {
+    let mut logical = super::LogicalEventId::root(LpId(m.root_source), m.root_sequence);
+    for frame in &m.ancestry {
+        let parent = super::OptimisticEventOrderKey::try_from_parts(
+            Tick::from_ticks(frame.tick),
+            LpId(frame.source),
+            logical,
+        )
+        .expect("validated complete parent ancestry");
+        logical = super::LogicalEventId::child(&parent, frame.ordinal)
+            .expect("bounded complete ancestry");
+    }
+    super::OptimisticEventOrderKey::try_from_parts(
+        Tick::from_ticks(m.tick),
+        LpId(m.source),
+        logical,
     )
+    .expect("validated complete message ancestry")
+}
+fn order(m: &Message) -> (super::OptimisticEventOrderKey, u64) {
+    (logical_key(m), m.incarnation)
 }
 
 #[cfg(test)]
