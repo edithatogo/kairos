@@ -1,3 +1,12 @@
+## Current selected runtime and amendment — 3 November 2026
+
+Use actual repo-local Python3.15.2 and Rust1.99.1. Historical1.98/1.76 commands
+below describe their dated receipts, not current dispatch. The validated-read
+amendment passes208 all-feature PDES tests, corruption/proof/CAS/crash regression
+and strict Clippy. Track49's fresh MPI2/4 and two-host3-case matrices bind its
+new source; original CAP48 sixteen-case receipts remain immutable baseline.
+See [current qualification](../49-distributed-mpi-grpc-state-synchronization/native-runtime-qualification-20261103.md).
+
 # Track 48 Test Matrix
 
 | Gate | Command | Required for |
@@ -43,3 +52,39 @@ At c87df47, pinned1.98 benchmark compilation,12 collector tests, local manifest,
 ## Accepted owned native leaf — 4 October 2026
 
 The [current acceptance record](owned-native-acceptance-20261004.md) supersedes earlier pending local/compiler snapshots: source9bf478e passes166 PDES tests on each explicitly bound1.98.1/1.76.0 compiler; fullCI530/530,coverage92.59%,locked doctests,benchmark smoke/12 collector tests,manifest and local phase/clean gates pass. Original failed receipts remain historical. Track48 stays In Progress pending hosted native delivery and live distributed acceptance. Changed interface semantics expire the previous conditional Track49 entry disposition; fresh specific human disposition and reviewed production packet are required. Global status/phase files and parent pin remain with their current parallel owners.
+
+## CAP-48.1 fixed-store prerequisite — 3 November 2026
+
+Current qualification uses actual Rust1.99.1, with explicit native compiler and
+SQLite-amalgamation binding in the store receipt. Historical MSRV labels above
+remain historical. Run `cargo test --locked -p kairo-ecs-pdes --all-features`
+and strict all-target/all-feature PDES Clippy for this private Unix test module.
+The selected tests include real before/after-commit process death, competing
+process ownership, uncertain SQL fencing, exact receipt retry, whole retained
+chain/position/sequence corruption and missing/truncated components. No test
+ignore, retry or public accounting constructor is introduced. Mac and Colab
+Linux results must be distinguished from hosted Actions and from the still-open
+full two-host optimistic-runtime acceptance gate. See
+[backend qualification](durable-store-qualification-20261103.md).
+
+## External engine native matrix — 3 November 2026
+
+See [qualification and exact receipts](external-engine-qualification-20261103.md).
+202 PDES all-feature tests, four mTLS tests, strict Clippy, native single-host
+parity and16 unique two-host cases passed. Native controller command:
+`.venv/bin/python docs/distributed/qualify_cap48.py --ssh-args PRIVATE_JSON --cases all --output PRIVATE_OUTPUT`.
+The accepted union preserves the original13 completed cases plus a fresh-host
+reference/activation pair and the unchanged anti-first function; all original
+failures remain visible. Each attempt binds source, configuration and measured
+binary hashes; distinct Mac binaries are not described as one executable.
+
+Dual-provider regression: `cargo test --locked -p kairo-ecs-grpc --test external_tls --features external-time-warp,rustls/aws_lc_rs`.
+RED exit101 before the test-only Once repair; GREEN4/4 afterward. No retry, skip,
+weakened assertion or dependency waiver. The fixture-only delta is outside native
+worker code. Full repaired-head hosted gates remain required.
+
+Repaired-source hosted gate331727d is accepted:976 tests passed, zero skipped,
+core coverage1161/1239 (93.70%) against90%; native MPI2/4, doctests, dependency
+policy, project coverage, workspace/Wasm and Linux/Windows contract validation
+passed. Readback49 SUCCESS/3 conditional SKIPPED is archived in the qualification
+manifest. CAP-48.1 is complete within its documented scope.

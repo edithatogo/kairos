@@ -1,6 +1,20 @@
 # Track 48 Plan: Time Warp Optimistic Rollback Runtime
 
-## Current delivery boundary
+## Current CAP-48.1 boundary — 3 November 2026
+
+The complete opt-in external engine and16 unique two-host failure/restart
+scenarios are implemented and independently accepted at source3cda053, using
+Mac ARM64 and Colab Linux x86-64. See [native qualification](external-engine-qualification-20261103.md).
+CAP-48.1 is complete for the documented fixed-membership, quiescent-cut path.
+The fixture-only Rustls dual-provider repair at331727d passed full hosted gates:
+976/976 workspace tests (zero skipped),93.70% core coverage against90%, native
+MPI2/4, doctests and dependency policy;49 successful checks and3 conditional
+skips. Native source inputs are unchanged by that separate integration-test fix. Historical claims
+below about missing external implementation or impossible two-host acceptance
+are superseded by this current boundary. Track48/49 are now Done for the bounded source/native scope after the
+[Track49 amendment qualification](../49-distributed-mpi-grpc-state-synchronization/native-runtime-qualification-20261103.md); source5026d926 hosted gates pass. NAS/cluster/scaling/release claims remain separate.
+
+## Historical native delivery boundary
 
 The native implementation is merged on `main`: `786f50b` (#199 preview
 event-owned runtime), `1afe522` (#204 codec bridge) and `55fd635` (#207
@@ -10,7 +24,7 @@ The compiler audit that withdrew the earlier nominal 1.98.1/1.76.0 labels stays
 resolved by the explicit compiler-path reruns recorded in `handoff.md` and
 `test-matrix.md`; historical labels remain withdrawn.
 
-Track 48 remains **In Progress**. The remaining open work is not local
+Historical17October2026 boundary, superseded by current native acceptance: Track48 then remained In Progress. The remaining open work is not local
 implementation: live distributed acceptance (real MPI 2/4-rank and gRPC
 2-process rollback, cancellation, failure/recovery, migration and cross-participant
 GVT) plus hosted security/package gates. Those are not achievable in this
@@ -113,7 +127,10 @@ phase begins:
   Authorized and integrated: intake and compatibility tables, owned execution API,
   reporting behavior, `#![forbid(unsafe_code)]`, and process-local limits recorded.
 
-## Distributed acceptance resolution — 17 October 2026
+## Historical distributed acceptance claim — 17 October 2026
+
+The TCP-only evidence below did not prove MPI API or complete signed accounting.
+The current3November native qualification supersedes that incorrect inference.
 
 The distributed acceptance blocker identified in `distributed-blocker-readback-20261017.md`
 has been resolved by Track 49:
@@ -139,6 +156,6 @@ now solely for live distributed acceptance and the open gates listed above.
 
 Repository scope: **kairos** and its **careops-sim** consumer (`/Users/doughnut/Documents/careops-sim`), not the separate **careops** repository. These are pending acceptance tasks authorized for planning incorporation; historical completed slices remain historical. Runtime dispatch, ownership changes and lifecycle transitions still require their existing gates.
 
-- [ ] CAP-48.1: With Track 49, exercise real two-host rollback, anti-message/GVT behavior and restart under injected message delay, duplication and worker failure; compare deterministic observables with the qualified single-host baseline.
+- [x] CAP-48.1: With Track 49, exercise real two-host rollback, anti-message/GVT behavior and restart under injected message delay, duplication and worker failure; compare deterministic observables with the qualified single-host baseline. Accepted: [16-case source/native and hosted receipts](external-engine-qualification-20261103.md), source3cda053 plus fixture-only repair331727d.
 
 Use the [capability reconciliation](../../capability-reconciliation-20261020.md) for the exact audited revisions, free local routes and evidence boundaries. Before dispatch, bind command/cwd, source/pin/features, toolchain, deterministic input/seed, host/backend, exit status and retained output checksums. A structural validator pass cannot close a runtime task.

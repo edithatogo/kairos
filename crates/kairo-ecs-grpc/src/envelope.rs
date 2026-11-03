@@ -1402,3 +1402,38 @@ mod tests {
         ));
     }
 }
+
+/// Versioned full-state migration transport. Acceptance never means application.
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct WireMigrationSnapshotRequest {
+    #[prost(uint32, tag = "1")]
+    pub version: u32,
+    #[prost(message, optional, tag = "2")]
+    pub snapshot: Option<WireMigrationRequest>,
+}
+
+/// Versioned telemetry metadata; ticks are exact big-endian u128 bytes.
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct WireTelemetryBatchV2 {
+    #[prost(uint32, tag = "1")]
+    pub version: u32,
+    #[prost(string, tag = "2")]
+    pub batch_id: String,
+    #[prost(uint32, tag = "3")]
+    pub source_lp: u32,
+    #[prost(bytes = "vec", tag = "4")]
+    pub arrow_ipc_payload: Vec<u8>,
+    #[prost(bytes = "vec", tag = "5")]
+    pub tick_start: Vec<u8>,
+    #[prost(bytes = "vec", tag = "6")]
+    pub tick_end: Vec<u8>,
+    #[prost(string, tag = "7")]
+    pub run_id: String,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct WireTelemetryAck {
+    #[prost(uint32, tag = "1")]
+    pub accepted_batches: u32,
+    #[prost(string, tag = "2")]
+    pub message: String,
+}

@@ -1,0 +1,17 @@
+{
+  "parent": "3234813",
+  "failed_hosted_job": "https://github.com/edithatogo/kairos/actions/runs/41568386888/job/125695289414",
+  "path": "crates/kairo-ecs-grpc/tests/tokio_transport_oracles.rs",
+  "old_sha256": "094afd8224a5a19d17b4cd698a26d25ea148a8135d057e81e32d2ae05af342b4",
+  "new_sha256": "196179b5826ba35b05f5d9660c5732744d650cb0e90660169ffeb5007009f5b1",
+  "change": "Bind actual receiver B to port0 and retain it before binding sender A to port0 with actual B route. Remove unused B outbound route. All50 count/FIFO/tick/payload assertions and deadlines retained.",
+  "focused_tests": {
+    "passed": 7,
+    "failed": 0,
+    "ignored": 0,
+    "exit": 0
+  },
+  "format_exit": 0,
+  "clippy_exit": 0,
+  "native_reuse": "Independent read-only review accepts this integration-test-only change outside the native worker dependency closure. Production code, dependencies and qualified worker inputs unchanged. No failure rerun/retry or weakened gate."
+}

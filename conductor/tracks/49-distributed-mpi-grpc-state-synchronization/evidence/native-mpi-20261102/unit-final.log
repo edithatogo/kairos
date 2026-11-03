@@ -1,0 +1,27 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.21s
+     Running unittests src/lib.rs (/Volumes/PortableSSD/codex-builds/kairos-track48-339aba1/debug/deps/kairo_ecs_mpi-9d266f5dfe982fcd)
+
+running 20 tests
+test tests::message_tags_are_stable ... ok
+test tests::entity_migration_snapshot_preserves_generation_and_pending_events ... ok
+test tests::migration_validator_accepts_component_payloads ... ok
+test tests::migration_validator_rejects_self_migration ... ok
+test tests::mpi_contract_reserves_antimessage_tag_for_time_warp_rollbacks ... ok
+test tests::mpi_multirank_launch_contract_requires_real_rank_count ... ok
+test tests::local_two_rank_contract_proof_covers_event_migration_and_telemetry ... ok
+test tests::local_smoke_validates_rank_mapping_and_protocol_tags ... ok
+test native::tests::codec_rejects_truncation_spoofed_rank_and_unknown_tag ... ok
+test tests::protocol_emulator_includes_pending_event_timestamps_in_gvt_round ... ok
+test tests::protocol_emulator_round_trips_event_messages ... ok
+test tests::protocol_emulator_uses_current_gvt_candidate_round ... ok
+test tests::rank_assignment_preserves_lp_mapping ... ok
+test tests::rank_validator_rejects_duplicate_lps ... ok
+test tests::telemetry_batch_validator_requires_ordered_non_empty_payload ... ok
+test tests::transport_contract_rejects_migration_without_payload_or_id ... ok
+test tests::transport_contracts_use_stable_mpi_protocol_metadata ... ok
+test tests::transport_send_rejects_unknown_lp ... ok
+test tests::transport_send_rejects_unknown_source_and_destination_mismatch ... ok
+test process::connection_regressions::eof_after_partial_frame_preserves_prior_complete_frame ... ok
+
+test result: ok. 20 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+

@@ -1,0 +1,21 @@
+   Compiling kairo-ecs-pdes v0.0.0 (/Users/doughnut/.codex/worktrees/kairos-cap48-gvt/kairos/crates/kairo-ecs-pdes)
+   Compiling kairo-ecs-grpc v0.0.0 (/Users/doughnut/.codex/worktrees/kairos-cap48-gvt/kairos/crates/kairo-ecs-grpc)
+   Compiling kairo-ecs-mpi v0.0.0 (/Users/doughnut/.codex/worktrees/kairos-cap48-gvt/kairos/crates/kairo-ecs-mpi)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 6.06s
+     Running tests/unproven_cut_safety.rs (/Volumes/PortableSSD/codex-builds/kairos-track48-339aba1/debug/deps/unproven_cut_safety-eab71789becf381e)
+
+running 3 tests
+test responsive_custom_tcp_peers_do_not_certify_a_distributed_cut ... ok
+test unconfigured_network_listeners_are_not_closed_local_transports ... ok
+test responsive_tonic_peers_do_not_certify_a_distributed_cut ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/unproven_cut_safety.rs (/Volumes/PortableSSD/codex-builds/kairos-track48-339aba1/debug/deps/unproven_cut_safety-0587bc5fdc8883e4)
+
+running 2 tests
+test one_launcher_tcp_rank_is_still_an_open_network_listener ... ok
+test responsive_launcher_tcp_ranks_do_not_certify_a_distributed_cut ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

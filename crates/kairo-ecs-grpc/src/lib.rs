@@ -1,5 +1,10 @@
 #![forbid(unsafe_code)]
 
+#[cfg(feature = "external-time-warp")]
+pub mod external_transport;
+#[cfg(feature = "external-time-warp")]
+pub use external_transport::*;
+
 pub mod envelope;
 pub use envelope::*;
 pub mod service;
@@ -488,9 +493,8 @@ impl GrpcEntityMigrationSnapshot {
         )?;
 
         for event in &self.pending_events {
-            if event.source_lp == event.dest_lp {
-                return Err(ProtocolValidationError::SelfMigration(event.source_lp));
-            }
+            // Pending work may be local to an LP. Only the ownership transfer
+            // itself must change LP; metadata is not a remote-send authority.
             if event.payload_bytes == 0 && !event.anti_message {
                 return Err(ProtocolValidationError::EmptyComponentPayload(
                     "pending-event".to_string(),

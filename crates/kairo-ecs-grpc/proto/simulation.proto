@@ -149,6 +149,25 @@ message OptimisticAck {
   string message = 4;
 }
 
+// Full snapshot version2; fixed-LP entity data, not native runtime handles.
+message MigrationSnapshotRequest {
+  uint32 version = 1;
+  MigrationRequest snapshot = 2;
+}
+message TelemetryBatchV2 {
+  uint32 version = 1;
+  string batch_id = 2;
+  uint32 source_lp = 3;
+  bytes arrow_ipc_payload = 4;
+  bytes tick_start = 5;
+  bytes tick_end = 6;
+  string run_id = 7;
+}
+message TelemetryAck {
+  uint32 accepted_batches = 1;
+  string message = 2;
+}
+
 // Standards-compliant simulation transport service (Track 83).
 service SimulationTransport {
   rpc ExchangeEvents(RemoteEvent) returns (RemoteEvent);
@@ -156,7 +175,9 @@ service SimulationTransport {
   rpc SendNullMessage(NullMessage) returns (NullMessageAck);
   rpc SendOptimisticEnvelope(OptimisticEnvelope) returns (OptimisticAck);
   rpc MigrateEntity(MigrationRequest) returns (MigrationAck);
+  rpc MigrateSnapshot(MigrationSnapshotRequest) returns (MigrationAck);
+  rpc StreamTelemetryV2(stream TelemetryBatchV2) returns (TelemetryAck);
   rpc StreamTelemetry(stream TelemetryBatch) returns (MigrationAck);
   rpc GvtSync(GvtProposal) returns (GvtDecision);
-  rpc Heartbeat(Heartbeat) returns (HeartbeatAck);
+  rpc Heartbeat(.kairo.ecs.simulation.v1.Heartbeat) returns (HeartbeatAck);
 }

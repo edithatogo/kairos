@@ -1,3 +1,18 @@
+## Current native acceptance — 3 November 2026
+
+[Native runtime qualification](native-runtime-qualification-20261103.md) and
+[independent review](native-runtime-review-20261103.md) supersede historical
+MPI/TCP and production-readiness claims below. MpiProcessTransport and
+GrpcSocketTransport are legacy TCP routes; launching them with mpiexec does not
+prove MPI API use. Actual MPI is the separate native-mpi record adapter; actual
+gRPC is Tonic/Prost with signed external accounting. Project forbid(unsafe_code)
+does not imply upstream MPI/SQLite FFI contains no unsafe code.
+
+All6 amended MPI and3 two-host cases passed. Root remains the source integrator
+in the isolated cap48-gvt worktree; worker claims/native processes are terminal,
+and the named Colab session is terminated. All19 source hosted workflows pass at5026d926; final documentation
+phase/clean/readback follows before merge; historical assignments and failed evidence are retained below.
+
 # Track 49 Handoff
 
 Last updated: 2026-06-19
@@ -153,3 +168,95 @@ peer sent heartbeat frame 00000000060863102a180f over a host-key-verified SSH fo
 Mac Tonic endpoint built from nas-heartbeat-probe.rs. It returned HTTP 200, grpc-status 0 and
 LP 99 with elapsed 15 ms. MPI API adoption, consistent in-flight accounting and two-host
 failure/restart parity remain open. Next operation is protected integration.
+
+## Current scoped MPI API lane — 2 November 2026
+
+The [current ownership/evidence reconciliation](native-mpi-reconciliation-20261102.md)
+supersedes broad historical completion wording for this packet. This chat owns
+only the isolated native MPI preview and its qualification, with the earlier
+source and acceptance receipts preserved. CAP-49.1/49.2 and CAP-48.1 remain open.
+
+### Source handoff and CI prerequisites
+
+Preview source commit: `4dbbbb2bc920135f12cb953bf41ee7917a0d407a`.
+Same chat/worktree now owns a separately claimed prerequisite packet restricted to
+ci-core/benchmarks/release workflows, changelog and this track's receipts. No
+main, parent pin, PDES source, authentication or remote native object is owned.
+Independent reviewer-agent accepted the source and then the CI diff: prerequisites
+cover every existing all-feature Ubuntu consumer, 2/4-rank failures propagate
+through required Rust verification, coverage provenance/gates and all release
+activation/dry-run controls are unchanged. Reviewed ci-core SHA-256:
+`1e69e2713e89460a6115dd2e5b34fde93937f5cfe5c27749da4c053598b3ca28`.
+Actionlint, Track13 metadata and publication readiness validators passed. Next:
+normal source commit/push, draft PR, exact-head hosted checks. All CAP tasks remain
+open. No runtime/phase/status or registry publication promotion.
+
+### Current source packet and remote gate
+
+Draft PR [#366](https://github.com/edithatogo/kairos/pull/366) contains source
+`4dbbbb2` and CI prerequisites `131039d`. Normal hooks remained enabled; pushed
+refs and strict clean git-closeout passed. The local all-feature MPI suite ran
+23 top-level tests (20 unit, two custom-TCP process cases, one singleton native
+case); final expanded native tests separately passed at two/four MPI ranks, and
+both thread-safety doctests passed. Strict Clippy and dependency/phase checks
+passed. The precursor suite's source boundary is explicit in the receipt.
+
+The existing NAS SSH alias was checked read-only with BatchMode,
+StrictHostKeyChecking and ConnectTimeout. It timed out before any remote output;
+no host/toolchain/runtime identity was qualified and no remote mutation occurred.
+CAP-49.2/CAP-48.1 two-host work is blocked on that existing route becoming
+available, plus the outstanding protocol/accounting implementation. No new
+client, credentials, host-key bypass or alternate authentication was attempted.
+
+Next source leaf: a scheduler-facing adapter for the reviewed native exchange,
+with a full epoch/cut protocol and explicit transport error propagation. Current
+PdesTransport barrier cannot report MPI failure, and raw scalar minima cannot
+certify model queues, positive/anti obligations or channels. Do not turn the
+preview minimum into fossil-collection authority. Require reviewed PDES/Track49
+contract ownership before touching that interface. Then qualify same-build
+Mac/NAS execution, injected delay/duplication/failure, restart and serial parity
+with exact source/input/toolchain and output hashes. Native remote execution is
+not replaced by local MPI or the historical HTTP/2 heartbeat.
+
+This is a terminal scoped source handoff, not a Track 48/49 phase closeout.
+Hosted results remain separately inspectable on the exact PR head; no source,
+main, consumer pin, release or operational acceptance is promoted automatically.
+
+## CAP-48.1 network floor safety lane — 3 November 2026
+
+The same chat owns a bounded cross-track correction in managed worktree
+`/Users/doughnut/.codex/worktrees/kairos-cap48-gvt/kairos`, branch
+`codex/cap48-gvt-safety-20261103`. The [Track48 record](../48-time-warp-optimistic-rollback-runtime/adr-unproven-network-cut-20261103.md)
+explains why network scalar reductions cannot advance scheduler GVT. This lane
+preserves those algorithms as diagnostics and leaves MPI preview #366 frozen.
+Native scope remains local controlled tests; NAS SSH still times out. All CAP
+and distributed-cut/restart acceptance gates remain open.
+
+## CAP-48.1 complete native engine packet — 3 November 2026
+
+Root chat01a19bed-7060-7910-af22-38cb31f51446 integrated the scoped protocol
+and bidirectionally pinned mTLS workers in its isolated cap48-gvt worktree.
+The [Track48 source/native qualification](../48-time-warp-optimistic-rollback-runtime/external-engine-qualification-20261103.md)
+now contains16 unique real two-host rollback/failure/restart cases with native
+single-host parity. This supersedes earlier missing-engine prerequisite notes
+for this bounded gRPC path. Worker claims are released; both owned CPU VMs are
+terminated. Root next owns repaired-head hosted readback after a test-only
+provider selection fix. General MPI optimistic transport, migration and whole
+Track49 completion remain separate outstanding work; no track-wide status advance.
+
+CAP-48.1 is now accepted after331727d full hosted green (976/976 tests;49
+successful checks/3 conditional skips). The Track48 current plan/report supersede
+older pending statements. Native scope is terminal; root owns only PR366 final
+source-equivalent documentation readback. CAP49.1/49.2 and track lifecycle retain
+the separate boundaries recorded in the current plan.
+
+## Current Track49 completion owner — 3 November 2026
+
+User requested completion locally/Colab. Same root chat/isolated cap48-gvt
+checkout owns the [runtime packet](adr-runtime-completion-20261103.md), root
+manifests/lock and native qualification. MPI worker2485f11 is terminal/released;
+gRPC writer uses isolated kairos-track49-grpc-sync. Root alone owns fresh CPU
+session kairos-track49-full-20261103, no native/auth overlap. Next: integrate
+MPI record adapter, build application-owned entity/rollback/restart oracle,
+qualify real telemetry and source/hosted gates. Earlier assignments are history;
+no source/phase/track completion is claimed by this packet.

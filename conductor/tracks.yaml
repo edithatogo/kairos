@@ -750,8 +750,8 @@ tracks:
       - hpc-evidence-manifest
   - id: 48
     name: Time Warp Optimistic Rollback Runtime
-    status: In Progress
-    # Local implementation merged (#199/#204/#207); PR #255 merged 2026-10-17. Distributed acceptance resolved by Track 49. Hosted security/package gates remain recorded by maintainer.
+    status: Done
+    # Bounded native acceptance 2026-11-03: CAP48 baseline16 + reviewed amendment, Track49 MPI6/two-host3; source5026d926 hosted19 green. PR366 remains unmerged.
     owner: pdes-agent + timetravel-agent + ecs-agent
     depends_on: ["47"]
     owned_paths:
@@ -768,7 +768,7 @@ tracks:
       - hpc-evidence-manifest
   - id: 49
     name: Distributed MPI/gRPC State Synchronization
-    status: In Progress
+    status: Done
     owner: distributed-agent + pdes-agent
     depends_on: ["35", "47", "48"]
     owned_paths:

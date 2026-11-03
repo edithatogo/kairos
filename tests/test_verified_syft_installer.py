@@ -348,11 +348,12 @@ class VerifiedSyftInstallerTests(unittest.TestCase):
             captured = []
             def execute(argv, **kwargs):
                 captured.append((argv, kwargs["env"]))
-                if "-m" in argv and "venv" in argv:
-                    venv_python = Path(argv[-1]) / "bin" / "python"
-                    venv_python.parent.mkdir(parents=True)
-                    venv_python.symlink_to(sys.executable)
-                if len(argv) > 1 and Path(argv[1]).name == "pip-config-audit.py":
+                # Exercise the real fresh verifier environment used by the
+                # installer. A bare symlink borrows ambient pip and does not
+                # model venv/ensurepip behavior on the selected interpreter.
+                if ("-m" in argv and "venv" in argv) or (
+                    len(argv) > 1 and Path(argv[1]).name == "pip-config-audit.py"
+                ):
                     return syft.run_bounded_command(argv, cwd=kwargs["cwd"], env=kwargs["env"],
                                                     timeout=kwargs["timeout"], log_path=kwargs["log_path"])
                 syft.safe_write(kwargs["log_path"], b"fixture output\n")
@@ -360,7 +361,15 @@ class VerifiedSyftInstallerTests(unittest.TestCase):
             installer.execute_process = execute
             lock = root / "retained.lock"
             lock.write_bytes(b"locked requirements\n")
-            installer._install_verifier(lock)
+            verifier_python = installer._install_verifier(lock)
+            identity = subprocess.run(
+                [str(verifier_python), "-c", "import json, pip, sys; print(json.dumps({'prefix': sys.prefix, 'pip': pip.__file__}))"],
+                env=installer._minimal_env(), capture_output=True, text=True, check=True, timeout=30,
+            )
+            observed = json.loads(identity.stdout)
+            verifier = output / "verifier"
+            self.assertEqual(Path(observed["prefix"]).resolve(), verifier.resolve())
+            self.assertTrue(Path(observed["pip"]).resolve().is_relative_to(verifier.resolve()))
             audit_index = next(i for i, pair in enumerate(captured) if Path(pair[0][1]).name == "pip-config-audit.py")
             install_index = next(i for i, pair in enumerate(captured) if "install" in pair[0])
             self.assertLess(audit_index, install_index)

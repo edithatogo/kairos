@@ -124,7 +124,7 @@ fn run_mpi_rank_node(rank: i32, size: usize) {
         PdesMessage::Null(_) => panic!("expected Event message, got Null"),
     }
 
-    // 3. Collective all-reduce min for GVT
+    // 3. Diagnostic contribution minimum (not GVT)
     // Rank 0: 250, Rank 1: 150, Rank 2: 100 (min), Rank 3: 300
     let my_proposal = match rank {
         0 => Tick::from_ticks(250),
@@ -134,7 +134,7 @@ fn run_mpi_rank_node(rank: i32, size: usize) {
         _ => Tick::from_ticks(999),
     };
 
-    let global_min = transport.all_reduce_min(my_proposal);
+    let global_min = transport.reduce_reported_minimum(my_proposal);
     assert_eq!(
         global_min,
         Tick::from_ticks(100),
@@ -162,10 +162,16 @@ fn incomplete_rank_round_cannot_advance_time() {
     let mut coordinator = MpiProcessTransport::new(0, 2, assignments.clone(), &session).unwrap();
     let mut peer = MpiProcessTransport::new(1, 2, assignments, &session).unwrap();
     assert_eq!(
-        coordinator.all_reduce_min(Tick::from_ticks(500)),
+        coordinator.reduce_reported_minimum(Tick::from_ticks(500)),
         Tick::ZERO
     );
-    assert_eq!(peer.all_reduce_min(Tick::from_ticks(300)), Tick::ZERO);
+    assert_eq!(
+        peer.reduce_reported_minimum(Tick::from_ticks(300)),
+        Tick::ZERO
+    );
     // Coordinator stays idle for the peer's next round; no decision can arrive.
-    assert_eq!(peer.all_reduce_min(Tick::from_ticks(400)), Tick::ZERO);
+    assert_eq!(
+        peer.reduce_reported_minimum(Tick::from_ticks(400)),
+        Tick::ZERO
+    );
 }

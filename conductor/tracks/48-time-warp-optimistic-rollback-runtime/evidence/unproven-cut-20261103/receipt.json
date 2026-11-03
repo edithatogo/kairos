@@ -1,0 +1,81 @@
+{
+  "base": "4c5c0a340157902f46ca5532a2fdac145fa817da",
+  "cwd": "/Users/doughnut/.codex/worktrees/kairos-cap48-gvt/kairos",
+  "branch": "codex/cap48-gvt-safety-20261103",
+  "host": "Darwin arm64",
+  "seed": "deterministic fixed tick/identity inputs; observed network proposal controls adversarial ordering, no RNG",
+  "scope": "fail-closed scheduler floor; diagnostic algorithms retained; no distributed-cut authority",
+  "source_sha256": {
+    "crates/kairo-ecs-grpc/src/tonic_transport.rs": "8155316db56d4cb26af3cc3186b44684fba56b9cea17e9219a3bde5aea3054c0",
+    "crates/kairo-ecs-grpc/src/socket.rs": "15854719de031f4f41548df7a8abc8538667b78b99441e4a83dd3106df624edf",
+    "crates/kairo-ecs-mpi/src/process.rs": "121f30b255ebdd044538345485cca381a0a390753b05097385dc55feb8d46aca",
+    "crates/kairo-ecs-pdes/src/lib.rs": "7ce2f0d38d87d79d795366fcb93804e2632871cbe304be7857e544a0e2b02eea",
+    "crates/kairo-ecs-grpc/tests/unproven_cut_safety.rs": "d240290505fae2f331555b0b10a808825e582f044d721adfbf87aab9f5616b03",
+    "crates/kairo-ecs-mpi/tests/unproven_cut_safety.rs": "c0c6944b2cf0ea4c0225d80effdf810852c6d7964eb433596ae7faef817147ff",
+    "crates/kairo-ecs-grpc/tests/tonic_transport_oracles.rs": "4918e800b622774965b4a6902957cca2fb5ecd57f0abd9a2bbc9ca606300b64a",
+    "crates/kairo-ecs-grpc/tests/tokio_transport_oracles.rs": "094afd8224a5a19d17b4cd698a26d25ea148a8135d057e81e32d2ae05af342b4",
+    "crates/kairo-ecs-mpi/tests/multirank_smoke.rs": "48d9438e2eb182b6407debc6fee4e1b4d332617c8e13e9e8406c4b5fbd4195c8",
+    "Cargo.lock": "4a20493c7801dec641cc6cebb8683c249112548856faa6fe08482d921dca06c7"
+  },
+  "logs_sha256": {
+    "phase.log": "adfb3a1b1335bcc0c11862ff3968bad10d42656554bdd2007bd29739e4d883c2",
+    "clippy-final.log": "88f5bc2d4db1e44d32a9c9330b3618a0796393f06575864a2bcbe47d4f902319",
+    "after-focused.log": "c8e7b882818254173d6abcd565c18e7c573fda164b04e4dac206ce28f368692f",
+    "clippy-first.log": "e2b16b898a45f0b45812a7328e07ff97973cace953390fdd955c6f3211b4de5b",
+    "before.log": "a409d7a8cc340dc1007bcd55b16cf2e32ddb3eb5a3e4bffb78044d8e14932dd9",
+    "toolchain.log": "d87cef68404cfa7ab6b08df42283b0850030b2814eb4785bed64f2af183d63f0",
+    "adversarial.log": "99c89d1b3c2e234c751d8fb0469713958df93a0bf08bee00d5b665f29cdcc7f1",
+    "suite-final.log": "795c997692aad81b442581822cc4fac92d04ed012839f98155f84262fcd965a1"
+  },
+  "commands": [
+    {
+      "command": "cargo test --locked -p kairo-ecs-grpc --test unproven_cut_safety",
+      "exit": 101,
+      "log": "before.log"
+    },
+    {
+      "command": "cargo test --locked -p kairo-ecs-grpc -p kairo-ecs-mpi --test unproven_cut_safety",
+      "exit": 0,
+      "log": "after-focused.log"
+    },
+    {
+      "command": "cargo test --locked -p kairo-ecs-grpc --lib post_sample_work_is_not_covered_by_a_raw_contribution_round",
+      "exit": 0,
+      "log": "adversarial.log"
+    },
+    {
+      "command": "cargo test --locked -p kairo-ecs-pdes -p kairo-ecs-grpc -p kairo-ecs-mpi --all-features",
+      "exit": 0,
+      "log": "suite-final.log"
+    },
+    {
+      "command": "cargo clippy --locked -p kairo-ecs-pdes -p kairo-ecs-grpc -p kairo-ecs-mpi --all-targets --all-features -- -D warnings",
+      "exit": 101,
+      "log": "clippy-first.log"
+    },
+    {
+      "command": "cargo clippy --locked -p kairo-ecs-pdes -p kairo-ecs-grpc -p kairo-ecs-mpi --all-targets --all-features -- -D warnings",
+      "exit": 0,
+      "log": "clippy-final.log"
+    },
+    {
+      "command": "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1",
+      "exit": 0,
+      "log": "phase.log"
+    }
+  ],
+  "target_dir": "/Volumes/PortableSSD/codex-builds/kairos-track48-339aba1",
+  "precursor_logs": [
+    "before.log",
+    "after-focused.log",
+    "clippy-first.log"
+  ],
+  "qualification_boundary": "final complete source qualified by suite-final.log and clippy-final.log; focused logs preserve earlier implementation/reproduction snapshots",
+  "not_accepted": [
+    "complete consistent cut",
+    "two-host rollback/anti/GVT",
+    "durable restart/fencing",
+    "CAP-48.1 closure",
+    "hosted/main acceptance at new head"
+  ]
+}

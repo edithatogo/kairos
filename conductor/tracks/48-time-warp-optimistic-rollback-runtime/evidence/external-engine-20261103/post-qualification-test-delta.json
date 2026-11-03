@@ -1,0 +1,12 @@
+{
+  "qualified_source_commit": "3cda053a48faa72754db0ce466331f61f5a68a2e",
+  "changed_integration_test": "crates/kairo-ecs-grpc/tests/external_tls.rs",
+  "old_sha256": "b54a44d7347708ea6de638d75b93735bb1a972d10cef0811cdd793c4266ef8be",
+  "new_sha256": "10b30076269ebc3c26282fc9f51d6717ab957c638b0b9952027cf577101f20e4",
+  "native_executable_inputs_unchanged": true,
+  "reason": "Workspace feature unification enables ring and aws-lc simultaneously; this separate integration-test executable explicitly installs ring once before TLS construction. Production transport, engine, worker, runner, manifests, lock, build config and native fixture unchanged.",
+  "red_exit": 101,
+  "green_exit": 0,
+  "green_tests": 4,
+  "review": "Independent reviewer accepts native evidence reuse for unchanged executable dependency closure; whole-source identity is not claimed."
+}

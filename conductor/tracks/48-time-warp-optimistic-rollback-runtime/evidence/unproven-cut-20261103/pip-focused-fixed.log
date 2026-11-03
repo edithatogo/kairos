@@ -1,0 +1,6 @@
+test_pip_configuration_audit_precedes_hash_locked_install (test_verified_syft_installer.VerifiedSyftInstallerTests.test_pip_configuration_audit_precedes_hash_locked_install) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 2.270s
+
+OK

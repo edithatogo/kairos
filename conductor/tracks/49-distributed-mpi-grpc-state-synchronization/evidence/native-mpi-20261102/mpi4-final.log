@@ -1,0 +1,28 @@
+
+running 1 test
+test native_mpi_exchange ... 
+running 1 test
+test native_mpi_exchange ... 
+running 1 test
+test native_mpi_exchange ... 
+running 1 test
+test native_mpi_exchange ... native MPI API rank=2 size=4: ring, full-width minimum, rejection and recovery passed
+native MPI API rank=1 size=4: ring, full-width minimum, rejection and recovery passed
+native MPI API rank=3 size=4: ring, full-width minimum, rejection and recovery passed
+native MPI API rank=0 size=4: ring, full-width minimum, rejection and recovery passed
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+ok
+ok
+
+ok
+
+
+test result: oktest result: oktest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s; finished in 0.01s
+
+; finished in 0.02s
+
+
+

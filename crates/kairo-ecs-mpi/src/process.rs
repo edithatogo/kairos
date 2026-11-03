@@ -477,87 +477,11 @@ impl PdesTransport for MpiProcessTransport {
         }
     }
 
-    fn all_reduce_min(&mut self, timestamp: Tick) -> Tick {
-        let timestamp = self
-            .inboxes
-            .lock()
-            .unwrap()
-            .values()
-            .flatten()
-            .filter_map(|message| match message {
-                PdesMessage::Event(event) => Some(event.tick),
-                PdesMessage::Null(_) => None,
-            })
-            .fold(timestamp, Tick::min);
-        if self.size <= 1 {
-            return timestamp;
-        }
-
-        let round = self.gvt_round;
-        self.gvt_round += 1;
-
-        if self.rank == 0 {
-            {
-                let mut proposals = self.gvt_proposals.lock().unwrap();
-                proposals.insert((round, 0), timestamp);
-            }
-
-            let deadline = Instant::now() + Duration::from_secs(10);
-            while Instant::now() < deadline {
-                let all_proposed = {
-                    let proposals = self.gvt_proposals.lock().unwrap();
-                    (0..self.size).all(|r| proposals.contains_key(&(round, r as i32)))
-                };
-
-                if all_proposed {
-                    break;
-                }
-                thread::sleep(Duration::from_millis(1));
-            }
-
-            let min_tick = {
-                let mut proposals = self.gvt_proposals.lock().unwrap();
-                (0..self.size).fold(timestamp, |minimum, rank| {
-                    minimum.min(
-                        proposals
-                            .remove(&(round, rank as i32))
-                            .unwrap_or(Tick::ZERO),
-                    )
-                })
-            };
-
-            // Broadcast reduced min to all ranks
-            let mut payload = Vec::new();
-            payload.extend_from_slice(&round.to_be_bytes());
-            payload.extend_from_slice(&min_tick.ticks().to_be_bytes());
-            for r in 1..self.size {
-                let _ = self.send_frame_to_rank(r as i32, MSG_TYPE_GVT_REDUCED, &payload);
-            }
-
-            min_tick
-        } else {
-            let mut payload = Vec::new();
-            payload.extend_from_slice(&self.rank.to_be_bytes());
-            payload.extend_from_slice(&round.to_be_bytes());
-            payload.extend_from_slice(&timestamp.ticks().to_be_bytes());
-            let _ = self.send_frame_to_rank(0, MSG_TYPE_GVT, &payload);
-
-            let deadline = Instant::now() + Duration::from_secs(10);
-            while Instant::now() < deadline {
-                let result = {
-                    let mut results = self.gvt_results.lock().unwrap();
-                    results.remove(&round)
-                };
-
-                if let Some(min_t) = result {
-                    return min_t;
-                }
-                thread::sleep(Duration::from_millis(1));
-            }
-
-            // Without the coordinator decision there is no proven positive floor.
-            Tick::ZERO
-        }
+    fn all_reduce_min(&mut self, _timestamp: Tick) -> Tick {
+        // Inbox samples and responsive contribution RPCs do not account for
+        // messages in flight, retirement obligations or restart fencing.
+        // A listener with no configured peers is still open to remote ingress.
+        Tick::ZERO
     }
 }
 
@@ -696,6 +620,97 @@ fn handle_inbound_mpi_frame(
             res.insert(round, Tick::from_ticks(min_tick_raw));
         }
         _ => {}
+    }
+}
+
+impl MpiProcessTransport {
+    /// Diagnostic minimum of reported contributions and current local buffers.
+    ///
+    /// This is not a consistent distributed cut or a safe reclamation floor.
+    /// Traffic can arrive after a sample; retirement and restart obligations are
+    /// not included. Never pass this value to fossil collection. The scheduler
+    /// trait deliberately returns ZERO until those obligations are proved.
+    pub fn reduce_reported_minimum(&mut self, timestamp: Tick) -> Tick {
+        let timestamp = self
+            .inboxes
+            .lock()
+            .unwrap()
+            .values()
+            .flatten()
+            .filter_map(|message| match message {
+                PdesMessage::Event(event) => Some(event.tick),
+                PdesMessage::Null(_) => None,
+            })
+            .fold(timestamp, Tick::min);
+        if self.size <= 1 {
+            return timestamp;
+        }
+
+        let round = self.gvt_round;
+        self.gvt_round += 1;
+
+        if self.rank == 0 {
+            {
+                let mut proposals = self.gvt_proposals.lock().unwrap();
+                proposals.insert((round, 0), timestamp);
+            }
+
+            let deadline = Instant::now() + Duration::from_secs(10);
+            while Instant::now() < deadline {
+                let all_proposed = {
+                    let proposals = self.gvt_proposals.lock().unwrap();
+                    (0..self.size).all(|r| proposals.contains_key(&(round, r as i32)))
+                };
+
+                if all_proposed {
+                    break;
+                }
+                thread::sleep(Duration::from_millis(1));
+            }
+
+            let min_tick = {
+                let mut proposals = self.gvt_proposals.lock().unwrap();
+                (0..self.size).fold(timestamp, |minimum, rank| {
+                    minimum.min(
+                        proposals
+                            .remove(&(round, rank as i32))
+                            .unwrap_or(Tick::ZERO),
+                    )
+                })
+            };
+
+            // Broadcast reduced min to all ranks
+            let mut payload = Vec::new();
+            payload.extend_from_slice(&round.to_be_bytes());
+            payload.extend_from_slice(&min_tick.ticks().to_be_bytes());
+            for r in 1..self.size {
+                let _ = self.send_frame_to_rank(r as i32, MSG_TYPE_GVT_REDUCED, &payload);
+            }
+
+            min_tick
+        } else {
+            let mut payload = Vec::new();
+            payload.extend_from_slice(&self.rank.to_be_bytes());
+            payload.extend_from_slice(&round.to_be_bytes());
+            payload.extend_from_slice(&timestamp.ticks().to_be_bytes());
+            let _ = self.send_frame_to_rank(0, MSG_TYPE_GVT, &payload);
+
+            let deadline = Instant::now() + Duration::from_secs(10);
+            while Instant::now() < deadline {
+                let result = {
+                    let mut results = self.gvt_results.lock().unwrap();
+                    results.remove(&round)
+                };
+
+                if let Some(min_t) = result {
+                    return min_t;
+                }
+                thread::sleep(Duration::from_millis(1));
+            }
+
+            // Without the coordinator decision there is no proven positive floor.
+            Tick::ZERO
+        }
     }
 }
 

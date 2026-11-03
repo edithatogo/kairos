@@ -1,0 +1,61 @@
+warning[unmatched-source]: allowed source was not encountered
+   ┌─ /Users/doughnut/.codex/worktrees/kairos-track49-runtime/kairos/deny.toml:31:15
+   │
+31 │ allow-git = ["https://github.com/pola-rs/polars", "https://github.com/pola-rs/hashbrown"]
+   │               ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ no crate source matched these criteria
+
+warning[license-exception-not-encountered]: license exception was not encountered
+  ┌─ /Users/doughnut/.codex/worktrees/kairos-track49-runtime/kairos/deny.toml:7:13
+  │
+7 │   { name = "foldhash", version = "=0.2.0", allow = ["Zlib"] },
+  │             ━━━━━━━━ unmatched license exception
+
+warning[license-exception-not-encountered]: license exception was not encountered
+  ┌─ /Users/doughnut/.codex/worktrees/kairos-track49-runtime/kairos/deny.toml:8:13
+  │
+8 │   { name = "slotmap", version = "=1.1.1", allow = ["Zlib"] },
+  │             ━━━━━━━ unmatched license exception
+
+warning[license-exception-not-encountered]: license exception was not encountered
+  ┌─ /Users/doughnut/.codex/worktrees/kairos-track49-runtime/kairos/deny.toml:9:13
+  │
+9 │   { name = "zlib-rs", version = "=0.6.8", allow = ["Zlib"] },
+  │             ━━━━━━━ unmatched license exception
+
+warning[license-exception-not-encountered]: license exception was not encountered
+   ┌─ /Users/doughnut/.codex/worktrees/kairos-track49-runtime/kairos/deny.toml:10:13
+   │
+10 │   { name = "ar_archive_writer", version = "=0.5.3", allow = ["Apache-2.0 WITH LLVM-exception"] },
+   │             ━━━━━━━━━━━━━━━━━ unmatched license exception
+
+warning[license-exception-not-encountered]: license exception was not encountered
+   ┌─ /Users/doughnut/.codex/worktrees/kairos-track49-runtime/kairos/deny.toml:11:13
+   │
+11 │   { name = "winx", version = "=0.36.4", allow = ["Apache-2.0 WITH LLVM-exception"] },
+   │             ━━━━ unmatched license exception
+
+warning[license-exception-not-encountered]: license exception was not encountered
+   ┌─ /Users/doughnut/.codex/worktrees/kairos-track49-runtime/kairos/deny.toml:12:13
+   │
+12 │   { name = "xxhash-rust", version = "=0.8.19", allow = ["BSL-1.0"] },
+   │             ━━━━━━━━━━━ unmatched license exception
+
+warning[license-exception-not-encountered]: license exception was not encountered
+   ┌─ /Users/doughnut/.codex/worktrees/kairos-track49-runtime/kairos/deny.toml:13:13
+   │
+13 │   { name = "webpki-root-certs", version = "=1.0.11", allow = ["CDLA-Permissive-2.0"] },
+   │             ━━━━━━━━━━━━━━━━━ unmatched license exception
+
+warning[license-not-encountered]: license was not encountered
+  ┌─ /Users/doughnut/.codex/worktrees/kairos-track49-runtime/kairos/deny.toml:2:64
+  │
+2 │ allow = ["MIT", "Apache-2.0", "BSD-2-Clause", "BSD-3-Clause", "ISC", "Unicode-DFS-2016", "Unicode-3.0"]
+  │                                                                ━━━ unmatched license allowance
+
+warning[license-not-encountered]: license was not encountered
+  ┌─ /Users/doughnut/.codex/worktrees/kairos-track49-runtime/kairos/deny.toml:2:71
+  │
+2 │ allow = ["MIT", "Apache-2.0", "BSD-2-Clause", "BSD-3-Clause", "ISC", "Unicode-DFS-2016", "Unicode-3.0"]
+  │                                                                       ━━━━━━━━━━━━━━━━ unmatched license allowance
+
+advisories ok, licenses ok, sources ok

@@ -52,8 +52,8 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 45 | Astro/Starlight Docs Platform and Polyglot Experience | Done | `docs-platform-agent + docs-agent + ci-agent` | See `conductor/tracks/45-*/spec.md` |
 | 46 | HPC Parity Charter, Baselines & Evidence Gates | Done | `benchmark-agent + interop-agent + redteam-agent + wave-manager-agent` | See `conductor/tracks/46-*/spec.md` |
 | 47 | PDES Conservative Lookahead Production Runtime | Done | `pdes-agent + performance-agent` | See `conductor/tracks/47-*/spec.md` |
-| 48 | Time Warp Optimistic Rollback Runtime | In Progress | `pdes-agent + timetravel-agent + ecs-agent` | Local runtime reviewed; compiler-bound evidence accepted; hosted/distributed gates pending. See `conductor/tracks/48-*/handoff.md`. |
-| 49 | Distributed MPI/gRPC State Synchronization | In Progress | `distributed-agent + pdes-agent` | See `conductor/tracks/49-*/spec.md` |
+| 48 | Time Warp Optimistic Rollback Runtime | Done | `pdes-agent + timetravel-agent + ecs-agent` | CAP48 sixteen-case baseline plus reviewed208-test amendment and fresh Track49 native acceptance; source5026d926 hosted green. |
+| 49 | Distributed MPI/gRPC State Synchronization | Done | `distributed-agent + pdes-agent` | Actual MPI2/4 six cases and Mac/Colab three cases accepted; see native-runtime-qualification-20261103.md. NAS/cluster/scaling remain unqualified. |
 | 50 | NUMA Topology, Affinity & HPC Memory Lifecycle | In Progress | `core-scheduler-agent + ecs-agent + ffi-agent` | See `conductor/tracks/50-*/spec.md` |
 | 51 | Parallel I/O, Arrow Record Batches & Checkpoint Export | In Progress | `arrow-agent + cloud-agent + performance-agent` | See `conductor/tracks/51-*/spec.md` |
 | 52 | Native GPU Acceleration with Persistent Device Memory | Done | `gpu-compute-agent + performance-agent` | See `conductor/tracks/52-*/spec.md` |
@@ -139,9 +139,9 @@ Machine-readable track metadata is maintained in `conductor/tracks.yaml`.
 - Tracks 56-61 are release-gating for any public open-game-theory ontology, graph-relational ECS, or multi-game solver claim. They require task-level commits, phase review/push closeouts, and GitHub Actions review before any track can move beyond `In Review`.
 - Tracks 62-66 define Wave 9 (Native Spine, Ergonomics & Bleeding-Edge Competitor Parity): official Apache Arrow/Parquet/FFI zero-copy integration, compiled native polyglot extensions (`PyO3`, `wasm-bindgen`, C ABI), SoA ECS + SimPy-grade DES resources + Agents.jl-grade ABM spatial topologies, vectorized MARL (`VecEnv`) + CFR+/Mixed-Nash game solvers, and Sobol/CRN ensemble calibration + CoW Wasm time-travel studio.
 
-## Approved conditional Track49 entry — 4 October2026
+## Historical conditional Track49 entry — 4 October2026
 
-The human sole maintainer explicitly approved Track49 production scheduling after scope clarification. See conductor/tracks/29-wave-manager-execution-gatekeeper/adr-track49-phase-entry-20261004.md. Dispatch remains conditional on normal PR199 merge, exact-head gates/security evidence, accepted local/interface proof and a separately reviewed reserved transport packet. Track48 remains In Progress; dependencies, full distributed acceptance and release gates are unchanged. The raw Track49 gate result is preserved, not rewritten as a pass.
+Historical snapshot, superseded by the3November2026 accepted source/native packet; the expired conditional gate is not reused. The human sole maintainer explicitly approved Track49 production scheduling after scope clarification. See conductor/tracks/29-wave-manager-execution-gatekeeper/adr-track49-phase-entry-20261004.md. Dispatch remains conditional on normal PR199 merge, exact-head gates/security evidence, accepted local/interface proof and a separately reviewed reserved transport packet. Track48 remains In Progress; dependencies, full distributed acceptance and release gates are unchanged. The raw Track49 gate result is preserved, not rewritten as a pass.
 
 ---
 - [x] **Track 70: Polars-native data processing and standard interchange** — Completed. [Track](tracks/70-polars-native-data-processing/index.md). CareOps follows accepted upstream delivery.

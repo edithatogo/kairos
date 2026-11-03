@@ -1,0 +1,10 @@
+   Compiling kairo-ecs-mpi v0.0.0 (/Users/doughnut/.codex/worktrees/kairos-track49-runtime/kairos/crates/kairo-ecs-mpi)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.73s
+   Doc-tests kairo_ecs_mpi
+
+running 2 tests
+test crates/kairo-ecs-mpi/src/native.rs - native::NativeMpiExchange (line 37) - compile fail ... ok
+test crates/kairo-ecs-mpi/src/native.rs - native::NativeMpiExchange (line 42) - compile fail ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
+

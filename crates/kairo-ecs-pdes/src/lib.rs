@@ -165,6 +165,10 @@ pub trait PdesTransport {
 
     fn barrier(&mut self);
 
+    /// Conservative scheduler floor, including all work and delivery obligations.
+    /// Implementations must return ZERO when no safe positive floor is proved.
+    /// A raw minimum of reported timestamps alone is not sufficient for an open
+    /// network transport; callers must not substitute diagnostic reductions.
     fn all_reduce_min(&mut self, timestamp: Tick) -> Tick;
 }
 
@@ -1579,6 +1583,9 @@ fn apply_deltas(
 fn is_monotonic(times: &[Tick]) -> bool {
     times.windows(2).all(|pair| pair[0] <= pair[1])
 }
+
+#[cfg(all(unix, feature = "external-time-warp"))]
+pub use optimistic::external;
 
 #[cfg(test)]
 mod tests {

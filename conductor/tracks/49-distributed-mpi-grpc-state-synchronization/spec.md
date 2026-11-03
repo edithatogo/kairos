@@ -8,8 +8,8 @@ classification, telemetry merge, and rollback-aware message handling.
 
 ## Maturity
 
-Spec Approved planning track. The current implementation remains the Track 35
-placeholder transport surface until this track closes with live runtime proof.
+Done for the bounded experimental native scope: actual MPI2/4 and Mac/Colab
+gRPC failure/restart qualification accepted3November2026. See native-runtime-qualification-20261103.md. NAS/cluster/scaling/release behavior remains unqualified.
 
 ## Inputs
 
@@ -21,8 +21,8 @@ placeholder transport surface until this track closes with live runtime proof.
 
 ## Outputs
 
-- Real `rsmpi` transport behind `mpi`.
-- Real `tonic`/`prost` service and client behind `grpc`.
+- Real `rsmpi` signed-record transport behind `native-mpi`; legacy `mpi` TCP remains distinct.
+- Real `tonic`/`prost` service/client; opt-in external-time-warp and telemetry-ipc qualify signed runtime and standard IPC.
 - Multi-rank and two-node runtime tests.
 - Entity migration serialization and restore tests.
 - Distributed telemetry merge and failure evidence.

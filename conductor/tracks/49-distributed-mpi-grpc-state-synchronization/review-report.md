@@ -1,3 +1,18 @@
+## Current native acceptance — 3 November 2026
+
+[Native runtime qualification](native-runtime-qualification-20261103.md) and
+[independent review](native-runtime-review-20261103.md) supersede historical
+MPI/TCP and production-readiness claims below. MpiProcessTransport and
+GrpcSocketTransport are legacy TCP routes; launching them with mpiexec does not
+prove MPI API use. Actual MPI is the separate native-mpi record adapter; actual
+gRPC is Tonic/Prost with signed external accounting. Project forbid(unsafe_code)
+does not imply upstream MPI/SQLite FFI contains no unsafe code.
+
+All6 amended MPI and3 two-host cases passed. Root remains the source integrator
+in the isolated cap48-gvt worktree; worker claims/native processes are terminal,
+and the named Colab session is terminated. All19 source hosted workflows pass at5026d926; final documentation
+phase/clean/readback follows before merge; historical assignments and failed evidence are retained below.
+
 # Review Report: Track 49 Distributed MPI/gRPC State Synchronization
 
 ## Summary

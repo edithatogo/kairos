@@ -1,3 +1,12 @@
+## Track49 native amendment accepted — 3 November 2026
+
+[Track49 qualification](../49-distributed-mpi-grpc-state-synchronization/native-runtime-qualification-20261103.md)
+adds actual MPI2/4 and Mac/Colab entity/rollback/restart acceptance. The private
+operation-scoped validated-read amendment passes208 PDES tests and fresh9 native
+cases. The original CAP48 sixteen-case acceptance remains baseline evidence;
+it is not relabelled as execution on the amended source. Root alone owns final
+hosted/global closeout; other historical assignments below remain history.
+
 # Track 48 Handoff
 
 Last updated: 2026-10-03
@@ -360,3 +369,245 @@ multirank and loopback smoke cannot exercise distinct-host worker failure.
 The Track 49 host owner must supply a two-host allocation and run the delayed,
 duplicated and worker-restart workload against the deterministic single-host
 baseline before this capability can close.
+
+## CAP-48.1 dependency reconciliation — 2 November 2026
+
+Chat `01a19bed-7060-7910-af22-38cb31f51446` owns an isolated Track 49 native
+MPI exchange preview, not PDES implementation or distributed acceptance. See
+[Track 49 ownership/evidence](../49-distributed-mpi-grpc-state-synchronization/native-mpi-reconciliation-20261102.md).
+Current main already contains the reviewed Tonic/Prost and local synchronization
+safety work. Local custom TCP under mpiexec and the NAS HTTP/2 heartbeat remain
+bounded evidence. CAP-48.1 is still open for consistent channel accounting,
+two-host positive/anti-message rollback, injected delay/duplication/failure,
+restart and serial parity. Scalar collective minima alone cannot close GVT or
+fossil-collection acceptance. No Track 48 source/phase is advanced by this leaf.
+
+## CAP-48.1 safety prerequisite — 3 November 2026
+
+Chat `01a19bed-7060-7910-af22-38cb31f51446` owns this bounded Track48/49
+safety packet in managed worktree
+`/Users/doughnut/.codex/worktrees/kairos-cap48-gvt/kairos`, branch
+`codex/cap48-gvt-safety-20261103`, based on frozen native preview source
+`4c5c0a340157902f46ca5532a2fdac145fa817da`. Its original PR #366 has passed
+hosted Rust/MPI verification, project coverage and all other executed checks;
+it remains separate and unmerged. The original worktree is preserved unchanged.
+No other harness claims or distributed test processes were active at intake.
+
+Owned paths: grpc crate, MPI process backend/tests, PDES transport trait docs,
+this Track48 directory, Track49 handoff cross-reference, safety documentation
+and changelog. Native scope: controlled local test processes only. No remote
+mutation, tenant object, credentials, parent pin or repository-wide promotion.
+The existing NAS route was read back with BatchMode, StrictHostKeyChecking and
+bounded timeout; connection timed out with no remote identity/runtime output.
+
+The responsive-Tonic and custom-TCP regressions failed on the unchanged source:
+returned 300 rather than the safe zero floor despite no complete channel cut.
+The [safety decision](adr-unproven-network-cut-20261103.md) makes network
+scheduler floors fail closed, preserving raw contribution diagnostics and the
+local owned rollback/cut proof boundary. Independent design review also removed
+a no-peer exception, since a listener can still receive remote traffic.
+Next operation: focused/adversarial and affected-crate qualification, independent
+implementation review, source handoff/hosted checks. CAP-48.1 remains open;
+no phase/status advance or two-host acceptance follows from this safety patch.
+
+### Reviewed safety source handoff
+
+Independent reviewer-agent `review_native_mpi` accepted the final safety
+containment source. Applied both findings: successful diagnostic network rounds
+on the same participants precede scheduler ZERO assertions, and MPI diagnostic
+implementation now precedes its test module. Strict Clippy passed after retaining
+the original lint failure. Final three-crate locked all-feature suite, adversarial
+ordinary/positive/anti test, formatting and phase validation passed. Exact source,
+command/cwd/toolchain/input/log hashes are retained in
+[evidence](evidence/unproven-cut-20261103/receipt.json). No dependency change;
+#366's unchanged lock/advisory/source/licence receipts remain reusable.
+
+The adversarial test observes the actual first proposal before admitting tick-3
+work and then releasing the tick-300 peer proposal. It proves the raw sample
+omission and verifies the scheduler still returns ZERO. Successful live scalar
+rounds remain tested independently; none is relabelled distributed acceptance.
+The safety packet will fast-forward this chat's existing draft PR #366 source
+branch after read-only integration preflight; the prior worktree stays unchanged.
+Next: exact-head hosted qualification and integrator review. CAP-48.1 remains
+open for the real cut/retirement/restart implementation and two-host acceptance.
+
+### Hosted qualification follow-through
+
+Both source branches and PR #366 were read back at `7aace5a` after the
+interrupted push. Hosted Rust verification, project coverage and core aggregate
+passed. The remaining failures were Archive Python validation (its Binding CI
+aggregate) and rust-package setup. Rustup reported the toolchain unchanged while
+rustc was missing; explicit rustc/cargo/rust-std installation now precedes the
+unchanged actual-version checks. The pip-audit fixture now creates the real
+fresh verifier venv/ensurepip used by production, rather than borrowing ambient
+pip through a bare symlink, and verifies both prefix and pip-module ownership.
+Production installer, locks, signature checks and isolation gates are unchanged.
+
+Same chat/worktree owns this bounded follow-through claim on package-dry-run.yml,
+test_verified_syft_installer.py and these records. Independent reviewer-agent
+accepted both fixes: workflow hash `dbc93ba8e783b5a5795251edc2f409e5fbef666f5c0d5bc218defce40e12dbd0`,
+test hash `52b2ff1c2d6ae19b25e51e2f05707561bc3252fd03eb1a3fb9e8e81ef94da093`.
+The focused corrected fixture, actionlint and publication validator passed.
+The full local 32-case Syft suite recorded 31 passes and one unchanged native
+output-cap cleanup failure (EPERM), with its first failure retained and no
+retry, skip or production cleanup modification. The same cleanup case passed
+in the prior hosted Linux run. See [repair receipt](evidence/unproven-cut-20261103/hosted-repair-receipt.json).
+
+Next: fresh exact-head hosted setup/fixture readback; no broad quality, security,
+coverage or release gate is relaxed. CAP-48.1 remains open and NAS/two-host and
+complete cut/retirement/restart implementation remain separate blockers.
+
+## Colab alternate-host qualification — 3 November 2026
+
+Same chat/worktree owns the bounded alternate-host route packet on this track,
+`docs/distributed/cap48-colab-qualification.md` and ignored
+`artifacts/cap48-colab/`. User explicitly requested completion of CAP-48.1
+blockers and evaluation of google-colab-cli. Current source `0718b9c` now has
+49 successful hosted checks and three conditional skips; no failing checks.
+
+The NAS purpose was an independent Linux worker for cross-host rollback,
+positive/anti delivery, delay/duplicate/failure injection, restart and serial
+parity. Only read-only SSH host/toolchain discovery was attempted; it timed out.
+The Colab lane will use a separate CPU session `kairos-cap48-20261103`, isolated
+CLI session metadata, controlled networking and bounded qualification, stopping
+only that new session at terminal completion/failure. Existing sessions,
+authentication clients, runtimes, Drive, purchases and shared configuration are
+not taken over. No GPU or entitlement change. Existing cached client-owned OAuth
+refresh may run; new login/consent remains human in the internal browser.
+
+Installed colab0.7.5 advertises SSH over WebSocket and remote execution. Its
+external tool-owned interpreter is actually CPython3.14.8; repository Python
+remains verified3.15.2 and is not replaced. Remote Python/repository commands
+need their own explicit selected-profile qualification. This is route discovery,
+not distributed-runtime acceptance. Complete accounting/retirement, durable
+restart and session fencing remain code prerequisites beyond host substitution.
+
+### Alternate host checkpoint
+
+Colab CPU allocation, strict pinned-host-key SSH, reverse forwarding and actual
+Linux-curl-to-Mac-Tonic HTTP/2 heartbeat all succeeded. Repo-local Python3.15.2
+and Rust1.99.1 are actually verified on the0718b9c remote checkout. See
+[route qualification](../../../docs/distributed/cap48-colab-qualification.md).
+A bounded native Rust suite is still running there at this checkpoint; its
+result and runtime release remain owned by this chat, not another lane.
+
+Independent reviewer-agent accepted dispatch of a test-only private fixed-store
+backend/schema/process-crash qualification packet: rusqlite0.41.1 with bundled
+SQLite, sha2 0.11.1, retained owner-file lock before DB open, DELETE/EXTRA/exclusive
+pragma readback, atomic complete-image/fact/outbox commits, exact retry/conflict
+rules and uncertain-commit fencing. Backend qualification does not issue runtime
+or accounting capabilities. The same chat will claim that bounded source packet
+separately while retaining the existing Colab controller and private session
+metadata in place. Complete portable state, authenticated driver and actual
+cross-host owned-runtime acceptance remain open; no CAP/phase advance here.
+
+## Durable-store prerequisite packet — 3 November 2026
+
+Same chat `01a19bed-7060-7910-af22-38cb31f51446`, isolated worktree
+`/Users/doughnut/.codex/worktrees/kairos-cap48-gvt/kairos`, branch
+`codex/cap48-durable-store-20261103`, owns PDES's private store qualification,
+its optional dependency/lock additions and these Track48 records. No other
+worktree, global registry, main, runtime promotion or native binding changed.
+Colab CPU/SSH state remains with this sole controller until recorded teardown.
+
+The [backend packet](durable-store-qualification-20261103.md) implements and
+qualifies the fixed transaction-storage prerequisite with real process crashes,
+exact durable retry and fail-closed reopen. Review caught and fixed historical
+chain, mutable receipt position, truncated database and missing-component
+integrity gaps. Independent source review accepted the final hashes with no
+remaining actionable findings. The first broad Mac run's inherited-flock fixture
+interference remains retained; explicit fixture isolation fixed it with no retry
+or production lock-semantic change. Final Mac all-feature PDES:182 tests passed,
+zero failed/ignored. Strict Clippy, fmt, dependency advisories/bans/licences/sources
+and phase validator pass; existing dependency warnings remain visible.
+
+Frozen0718b9c Colab three-crate all-feature tests and actual native MPI2/4-rank
+smoke have passed. The Linux backend packet is separately source-hash bound;
+its first pre-final-coherent-component run passed181 PDES tests. A final run
+includes the missing-component fix. These are local/remote execution receipts,
+not new exact-head hosted evidence. PR366's prior0718b9c head remains49 success,
+three conditional skips until this packet is pushed and requalified.
+
+CAP-48.1 stays pending. The current plan explicitly supersedes the historical
+claim that socket smoke completed distributed acceptance. Next owned work is
+the complete portable engine image, fixed authenticated driver, actual
+admission/retirement, safe cut and restart fencing/join, followed by the full
+injected-failure two-host deterministic parity oracle. A test-only durable byte
+store and successful two-host heartbeat do not implement those engine semantics.
+
+### Final native store/host checkpoint
+
+Final source hashes match across Mac and the independent Colab checkout. Each
+passed182 all-feature PDES tests, including13 store scenarios, zero failed or
+ignored. The final reviewed hashes include the missing-component fix.
+[Command/source/log receipt](evidence/store-20261103/receipt.json) retains full
+Linux/macOS logs and failed attempts. Source acceptance covers this bounded
+backend only. Full logs were retrieved, no native Rust worker remained, named
+Colab stop succeeded and server readback found no active sessions. No NAS
+mutation, GPU, Drive mount, purchase or credential/cache transfer occurred.
+The packet is ready for normal scoped commit and draft PR qualification; no
+CAP, phase, production or release status is advanced.
+
+## Continuing complete CAP-48.1 — 3 November 2026
+
+User explicitly directed implementation through full two-host failure/restart,
+not prerequisite-only completion. Same root chat and isolated worktree own the
+[external engine packet](adr-external-engine-20261103.md). The scoped protocol
+commits are integrated as974b3db/7f0f514; transport commits b1816b3/425e9da are
+ready for source integration after independent pin review. Workers used separate
+standard Git worktrees, not shared dirty checkout copies. Root remains sole
+manifest/lock/engine writer and Colab controller. Native session
+`kairos-cap48-full-20261103` is fresh CPU-only, with strict SSH public host key
+pin retained privately in ignored artifacts/cap48-external; no credential/cache
+transfer or shared authentication reset. Native fixture operations and next
+qualification remain owned here across source checkpoints.
+
+Seven external engine scenarios and nine canonical protocol cases pass on actual
+Rust1.99.1. Full PDES all-feature tests, strict Clippy and fresh dependency policy
+checks pass; existing advisory/duplicate warnings remain visible. The amended
+quiescent-cut design is independently accepted as a safe bounded subset, with
+its liveness limits retained. Two-process/two-host native kill, transport join,
+differential replay and final hosted evidence remain unfinished work under this
+same task. No CAP/phase/track status advances at this checkpoint.
+
+## Complete external native packet — 3 November 2026
+
+The same root chat and isolated worktree own source3cda053 and the
+[16-case two-host qualification](external-engine-qualification-20261103.md).
+Protocol and bidirectional pinned mTLS transport source are integrated. Complete
+model/RNG/generation/identity replay, signed physical durable receipts, descendant
+retirement barriers, fixed-membership restart joins and common quiescent cuts
+passed before/after native SIGKILL scenarios and anti-before-positive parity.
+Independent review accepts the bounded source/native evidence. Both owned Colab
+CPU sessions are stopped; terminal server readback has zero active sessions.
+Native scope is terminal; no native operation remains in flight.
+
+The first hosted workspace run exposed Rustls provider ambiguity in the separate
+mTLS integration-test executable. A Once-based ring fixture selection preserves
+all assertions; dual-provider RED then four-test GREEN are retained. This is the
+only post-native source delta and does not enter the worker executable dependency
+closure. Exact-head hosted rerun remains the next root-owned operation before
+CAP checkbox advancement. No Track48/49 Done, main merge, release or production
+deployment is claimed. Earlier owner assignments remain historical.
+
+## CAP-48.1 accepted — 3 November 2026
+
+The prior pending-hosted gate is resolved at331727d:49 successful checks,3
+conditional skips, zero failures or pending;976/976 workspace tests, zero test
+skips; core coverage93.70% against90%. Full Rust/workspace/Wasm, native MPI2/4,
+doctest, dependency, project coverage and platform contract gates pass. Together
+with the reviewed16-case native receipt, CAP-48.1 is checked complete for fixed
+membership, quiescent exact-channel cuts and process-crash recovery.
+
+Root chat01a19bed-7060-7910-af22-38cb31f51446 remains sole PR366 integrator;
+isolated worktree kairos-cap48-gvt, no native scope/in-flight operations. Final
+documentation is source-equivalent to accepted331727d. Native MPI optimistic
+accounting, named NAS compatibility and other Track49/CAP work are not closed
+by this receipt. No main merge or track-wide lifecycle advance.
+
+Final follow-up:3234813 hosted Ubuntu encountered an existing free-port race in
+the legacy socket ordering integration test. The test now retains B's bound
+port-zero listener while starting A; all50 assertions/deadlines stay. Seven
+affected tests and strict Clippy pass. Independent review accepts unchanged
+production/native evidence. Root owns final-head hosted readback only; no native
+operation or Colab session is active. The failure and focused success are archived.

@@ -1,0 +1,56 @@
+kairo-ecs-mpi v0.0.0 (/Users/doughnut/.codex/worktrees/kairos-track49-runtime/kairos/crates/kairo-ecs-mpi)
+├── kairo-ecs-pdes v0.0.0 (/Users/doughnut/.codex/worktrees/kairos-track49-runtime/kairos/crates/kairo-ecs-pdes)
+│   └── kairo-ecs-types v0.0.0 (/Users/doughnut/.codex/worktrees/kairos-track49-runtime/kairos/crates/kairo-ecs-types)
+├── kairo-ecs-types v0.0.0 (/Users/doughnut/.codex/worktrees/kairos-track49-runtime/kairos/crates/kairo-ecs-types)
+└── mpi v0.8.2
+    ├── conv v0.3.3
+    │   └── custom_derive v0.1.7
+    ├── mpi-sys v0.2.4
+    │   [build-dependencies]
+    │   ├── bindgen v0.72.1
+    │   │   ├── bitflags v2.13.2
+    │   │   ├── cexpr v0.6.0
+    │   │   │   └── nom v7.1.3
+    │   │   │       ├── memchr v2.8.3
+    │   │   │       └── minimal-lexical v0.2.1
+    │   │   ├── clang-sys v1.9.1
+    │   │   │   ├── glob v0.3.4
+    │   │   │   ├── libc v0.2.191
+    │   │   │   └── libloading v0.8.9
+    │   │   │       └── cfg-if v1.0.5
+    │   │   │   [build-dependencies]
+    │   │   │   └── glob v0.3.4
+    │   │   ├── itertools v0.13.0
+    │   │   │   └── either v1.19.0
+    │   │   ├── proc-macro2 v1.0.107
+    │   │   │   └── unicode-ident v1.0.27
+    │   │   ├── quote v1.0.47
+    │   │   │   └── proc-macro2 v1.0.107 (*)
+    │   │   ├── regex v1.13.1
+    │   │   │   ├── regex-automata v0.4.18
+    │   │   │   │   └── regex-syntax v0.8.11
+    │   │   │   └── regex-syntax v0.8.11
+    │   │   ├── rustc-hash v2.1.3
+    │   │   ├── shlex v1.3.0
+    │   │   └── syn v2.0.119
+    │   │       ├── proc-macro2 v1.0.107 (*)
+    │   │       ├── quote v1.0.47 (*)
+    │   │       └── unicode-ident v1.0.27
+    │   ├── build-probe-mpi v0.1.6
+    │   │   ├── pkg-config v0.3.34
+    │   │   └── shell-words v1.1.1
+    │   └── cc v1.10.0
+    │       ├── find-msvc-tools v0.1.15
+    │       └── shlex v2.0.1
+    ├── once_cell v1.21.4
+    ├── smallvec v1.16.4
+    └── thiserror v2.0.21
+        └── thiserror-impl v2.0.21 (proc-macro)
+            ├── proc-macro2 v1.0.107 (*)
+            ├── quote v1.0.47 (*)
+            └── syn v3.0.9
+                ├── proc-macro2 v1.0.107 (*)
+                ├── quote v1.0.47 (*)
+                └── unicode-ident v1.0.27
+    [build-dependencies]
+    └── build-probe-mpi v0.1.6 (*)

@@ -1,3 +1,27 @@
+## Current Track48/49 acceptance — 3 November 2026
+
+Track48 and49 are **Done for the documented bounded native scope**. Root chat
+01a19bed-7060-7910-af22-38cb31f51446 is the source integrator in isolated standard
+worktree /Users/doughnut/.codex/worktrees/kairos-cap48-gvt/kairos, branch
+codex/cap48-durable-store-20261103, delivering through PR366 branch
+codex/track49-runtime-20261102. Worker source claims and native operations are
+terminal; the named owned Colab CPU session is terminated. Prior assignments
+below remain history; this does not take over main or another worktree.
+
+Actual MPI2/4 six-case and Mac/Colab three-case qualification,208 PDES and9
+all-feature synchronization tests are independently accepted. All19 hosted
+workflows pass at source5026d926. The original CAP48 sixteen-case matrix is
+baseline evidence; the read-snapshot amendment has separate regression/native
+proof. See [qualification](tracks/49-distributed-mpi-grpc-state-synchronization/native-runtime-qualification-20261103.md).
+
+Current registry:109 tracks,97 Done,3 In Progress (50,51,55),8 Planned and1
+Blocked. Other track states are unchanged. API scope remains experimental;
+fixed-LP entity migration does not qualify whole-LP relocation. NAS, cross-host
+MPI, cluster/Slurm, GPU, scaling, release/publication and downstream pin promotion
+are unclaimed. PR366 remains draft/unmerged. Final documentation hosted readback
+is a separate pre-merge gate; default-branch Codecov project-status diagnostic
+drift remains visible without a settings change.
+
 ## 29 October 2026: active checkout recovery
 
 Chat `01a18344-cfb8-7711-8c38-fef1052b9fcf` remains the sole Kairos integrator.
