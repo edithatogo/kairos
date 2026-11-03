@@ -315,3 +315,25 @@ Next: require actual PR-head Cloud/HPC and Devbox runs, full applicable checks,
 review and protected merge; then inspect exact-main runs and resolve the named
 entry points, notebook and consumer/environment handover before completion.
 Track 105 remains In Progress.
+
+### GCP array renderer bounded ownership
+
+The integrator chat above claims `cloud/gcp/submit-experiment.sh` and
+`tests/test_local_python_runtime.py` in this worktree for local-runtime selection
+and fictional subprocess tests. A worktree-wide status scan found no dirty
+copies of the submitter and the shared lease store had no competing claim. No
+live provider object, credential, job or submission is in scope. Next operation
+is a fail-closed local interpreter guard and local tests with an isolated fake
+`gcloud` executable; no live submit is authorized.
+
+The GCP array renderer correction is bounded to interpreter selection and
+private temporary-file lifecycle. It verifies the existing repo-local profile
+before rendering, installs cleanup before parsing, and never falls back to an
+ambient interpreter. Focused tests use only a fake `gcloud` executable and cover
+missing and symlinked environments, successful rendering, malformed input and
+temporary-file cleanup. The initial failing run exposed an additional portability
+problem: the old `mktemp` template placed a suffix after the random characters;
+the revised private-directory template works on the tested macOS host while
+retaining a JSON extension. These tests cover POSIX `.venv/bin/python` hosts;
+Windows Git Bash submission is not qualified. Actual GCP submission remains
+unexecuted and unclaimed.
