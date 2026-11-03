@@ -337,3 +337,8 @@ the revised private-directory template works on the tested macOS host while
 retaining a JSON extension. These tests cover POSIX `.venv/bin/python` hosts;
 Windows Git Bash submission is not qualified. Actual GCP submission remains
 unexecuted and unclaimed.
+
+The integrator also claims `docs/tutorials/notebooks.md` in this worktree to
+correct its validator and runtime-scope description. No other checkout reported
+a dirty copy. The scope is documentation only; it neither executes notebooks
+nor installs or promotes a Jupyter kernel or provider dependency.
