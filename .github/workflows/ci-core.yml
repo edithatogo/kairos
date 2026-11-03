@@ -89,7 +89,8 @@ jobs:
         run: |
           df -h "$GITHUB_WORKSPACE"
           free -h
-          du -sh target target/llvm-cov-target 2>/dev/null || true
+          if [ -d target ]; then du -sh target; fi
+          if [ -d target/llvm-cov-target ]; then du -sh target/llvm-cov-target; fi
       - name: Native MPI API exchange on two and four ranks
         shell: bash
         run: |
