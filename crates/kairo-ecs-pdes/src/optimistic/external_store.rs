@@ -110,6 +110,33 @@ pub(super) struct Store {
     manifest: Vec<String>,
     fenced: bool,
 }
+/// One fully validated, immutable database view for a bounded proof batch.
+/// The transaction and its validation never outlive this guard.
+#[cfg(feature = "external-time-warp")]
+pub(super) struct ValidatedRead<'a> {
+    store: &'a Store,
+    _transaction: Transaction<'a>,
+    state: State,
+    next_fact_position: u64,
+}
+#[cfg(feature = "external-time-warp")]
+impl ValidatedRead<'_> {
+    pub(super) fn revision(&self) -> u64 {
+        self.state.revision
+    }
+    pub(super) fn next_fact_position(&self) -> u64 {
+        self.next_fact_position
+    }
+    pub(super) fn fact_at(&self, position: u64) -> Result<FactReadback, Error> {
+        self.store.paths()?;
+        let (id,raw):(Vec<u8>,Vec<u8>)=self.store.connection.query_row("SELECT unit_id,bytes FROM facts WHERE position=?1 AND length(unit_id)=16 AND length(bytes)<=?2",params![i64::try_from(position).map_err(|_|Error::Invalid)?,MAX_RECORD as i64],|r|Ok((r.get(0)?,r.get(1)?)))?;
+        let id: [u8; 16] = id.try_into().map_err(|_| Error::Invalid)?;
+        // load() already validated the entire history in this same read
+        // transaction. Retain the individual unit checks for every lookup.
+        let unit = self.store.read_unit(&id)?.ok_or(Error::Invalid)?;
+        Ok((unit.receipt.revision, raw, unit.unit.sections))
+    }
+}
 fn identity(m: &std::fs::Metadata) -> (u64, u64) {
     (m.dev(), m.ino())
 }
@@ -430,6 +457,29 @@ impl Store {
         }
         Ok(())
     }
+    #[cfg(feature = "external-time-warp")]
+    pub(super) fn validated_read(&self) -> Result<ValidatedRead<'_>, Error> {
+        if self.fenced {
+            return Err(Error::Fenced);
+        }
+        self.paths()?;
+        // The first SELECT in load() pins the snapshot. Nested transactions
+        // fail closed; no snapshot or validation result is cached on Store.
+        let transaction =
+            Transaction::new_unchecked(&self.connection, rusqlite::TransactionBehavior::Deferred)?;
+        let state = self.load()?;
+        let n: i64 = self.connection.query_row(
+            "SELECT coalesce(max(position),0)+1 FROM facts",
+            [],
+            |r| r.get(0),
+        )?;
+        Ok(ValidatedRead {
+            store: self,
+            _transaction: transaction,
+            state,
+            next_fact_position: u64::try_from(n).map_err(|_| Error::Invalid)?,
+        })
+    }
     pub(super) fn load(&self) -> Result<State, Error> {
         if self.fenced {
             return Err(Error::Fenced);
@@ -610,7 +660,7 @@ impl Store {
         )?;
         u64::try_from(n).map_err(|_| Error::Invalid)
     }
-    #[cfg(feature = "external-time-warp")]
+    #[cfg(all(test, feature = "external-time-warp"))]
     pub(super) fn fact_at(&self, position: u64) -> Result<FactReadback, Error> {
         self.load()?;
         let (id,raw):(Vec<u8>,Vec<u8>)=self.connection.query_row("SELECT unit_id,bytes FROM facts WHERE position=?1 AND length(unit_id)=16 AND length(bytes)<=?2",params![i64::try_from(position).map_err(|_|Error::Invalid)?,MAX_RECORD as i64],|r|Ok((r.get(0)?,r.get(1)?)))?;

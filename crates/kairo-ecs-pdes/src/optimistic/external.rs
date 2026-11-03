@@ -723,7 +723,11 @@ impl<P: OptimisticProcess, C: PortableModelCodec<P>> ExternalOptimisticRuntime<P
                 return Err(reject("missing retirement proof index"));
             }
         }
-        let current = self.revision()?;
+        let read = self
+            .store
+            .validated_read()
+            .map_err(|e| ExternalError::Storage(e.to_string()))?;
+        let current = read.revision();
         let mut proof_positions = BTreeSet::new();
         for packet in &image.proofs {
             let record = self.auth(packet)?;
@@ -740,8 +744,7 @@ impl<P: OptimisticProcess, C: PortableModelCodec<P>> ExternalOptimisticRuntime<P
                 return Err(reject("proof issuer/revision/position"));
             }
             if binding.revision <= current {
-                let (revision, raw, sections) = self
-                    .store
+                let (revision, raw, sections) = read
                     .fact_at(binding.position)
                     .map_err(|e| ExternalError::Storage(e.to_string()))?;
                 if revision != binding.revision || raw != *packet {
@@ -755,10 +758,7 @@ impl<P: OptimisticProcess, C: PortableModelCodec<P>> ExternalOptimisticRuntime<P
             }
         }
         if mode == ImageValidation::Candidate {
-            let first = self
-                .store
-                .next_fact_position()
-                .map_err(|e| ExternalError::Storage(e.to_string()))?;
+            let first = read.next_fact_position();
             let mut reserved = image
                 .proofs
                 .iter()

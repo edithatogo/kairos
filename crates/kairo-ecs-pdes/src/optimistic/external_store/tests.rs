@@ -403,3 +403,108 @@ fn missing_retained_database_or_owner_file_never_creates_fresh_identity() {
         assert!(!dir.0.join(missing).exists(), "must not recreate {missing}");
     }
 }
+
+#[cfg(feature = "external-time-warp")]
+#[test]
+fn validated_read_batches_exact_historical_facts_and_releases_transaction() {
+    let _serial = FIXTURE_SERIAL.lock().unwrap();
+    let dir = Temp::new();
+    let mut store = open(&dir.0).unwrap();
+    for id in 1..=3 {
+        let mut request = unit(&store.load().unwrap(), id);
+        request.sections = sections(&[id; 16]);
+        request.facts = vec![vec![id; 8]];
+        store.commit(&request, CrashPoint::None).unwrap();
+    }
+    let expected = (1..=3)
+        .map(|p| store.fact_at(p).unwrap())
+        .collect::<Vec<_>>();
+    let read = store.validated_read().unwrap();
+    assert_eq!(read.revision(), 3);
+    assert_eq!(read.next_fact_position(), 4);
+    assert!(!store.connection.is_autocommit());
+    assert!(
+        store.validated_read().is_err(),
+        "nested snapshots must fail"
+    );
+    for (index, expected) in expected.iter().enumerate() {
+        assert_eq!(&read.fact_at(index as u64 + 1).unwrap(), expected);
+    }
+    for position in [0, 4, u64::MAX] {
+        assert!(read.fact_at(position).is_err());
+    }
+    drop(read);
+    assert!(store.connection.is_autocommit());
+    let request = unit(&store.load().unwrap(), 4);
+    store.commit(&request, CrashPoint::None).unwrap();
+    assert_eq!(store.validated_read().unwrap().revision(), 4);
+}
+
+#[cfg(feature = "external-time-warp")]
+#[test]
+fn validated_read_checks_unrelated_history_orphans_and_sequence_every_time() {
+    let _serial = FIXTURE_SERIAL.lock().unwrap();
+    for sql in [
+        "DELETE FROM sections WHERE revision=1",
+        "UPDATE sections SET bytes=x'ff' WHERE revision=1 AND name='model'",
+        "DELETE FROM facts WHERE ordinal=0 AND unit_id=x'01010101010101010101010101010101'",
+        "UPDATE units SET previous_digest=zeroblob(32) WHERE revision=1",
+        "UPDATE facts SET position=position+100",
+        "UPDATE sqlite_sequence SET seq=100 WHERE name='facts'",
+        "INSERT INTO sections VALUES(99,'model',x'00',zeroblob(32))",
+        "INSERT INTO outbox VALUES(zeroblob(16),0,x'00')",
+    ] {
+        let dir = Temp::new();
+        let mut store = open(&dir.0).unwrap();
+        for id in [1, 2] {
+            let request = unit(&store.load().unwrap(), id);
+            store.commit(&request, CrashPoint::None).unwrap();
+        }
+        // A successful prior operation cannot cache away later corruption.
+        assert_eq!(store.validated_read().unwrap().fact_at(2).unwrap().0, 2);
+        assert!(store.connection.is_autocommit());
+        store.connection.execute(sql, []).unwrap();
+        assert!(store.validated_read().is_err(), "must reject {sql}");
+        assert!(
+            store.connection.is_autocommit(),
+            "failed validation must release read"
+        );
+    }
+}
+
+#[cfg(feature = "external-time-warp")]
+#[test]
+fn validated_read_unwind_and_error_leave_commit_and_fencing_intact() {
+    let _serial = FIXTURE_SERIAL.lock().unwrap();
+    let dir = Temp::new();
+    let mut store = open(&dir.0).unwrap();
+    let unwound = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        let _read = store.validated_read().unwrap();
+        panic!("fictional proof-validation panic");
+    }));
+    assert!(unwound.is_err());
+    assert!(store.connection.is_autocommit());
+    {
+        let read = store.validated_read().unwrap();
+        assert!(read.fact_at(1).is_err());
+    }
+    assert!(store.connection.is_autocommit());
+    let request = unit(&store.load().unwrap(), 1);
+    let receipt = store.commit(&request, CrashPoint::None).unwrap();
+    assert_eq!(store.commit(&request, CrashPoint::None).unwrap(), receipt);
+    let stale = unit(
+        &State {
+            revision: 0,
+            digest: [0; 32],
+            sections: sections(b"initial"),
+        },
+        2,
+    );
+    assert!(matches!(
+        store.commit(&stale, CrashPoint::None),
+        Err(Error::Stale)
+    ));
+    store.fenced = true;
+    assert!(matches!(store.validated_read(), Err(Error::Fenced)));
+    assert!(store.connection.is_autocommit());
+}

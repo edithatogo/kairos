@@ -682,3 +682,41 @@ fn committed_image_cannot_use_candidate_future_receipt_reservations() {
     )
     .is_err());
 }
+
+#[test]
+fn validation_batches_multiple_proofs_and_rejects_resigned_fact_mismatch() {
+    let _serial = super::super::external_store::FIXTURE_SERIAL.lock().unwrap();
+    let da = Temp::new();
+    let db = Temp::new();
+    let mut a = open(&da, 0);
+    let mut b = open(&db, 1);
+    activate(&mut a, &mut b);
+    for seq in 0..3 {
+        let packet = root(&mut a, seq, 20 + seq as u128, 2);
+        a.receive_packet(&packet).unwrap();
+    }
+    assert!(a.image.proofs.len() >= 3);
+    a.validate(&a.image, ImageValidation::Committed).unwrap();
+    a.validate(&a.image, ImageValidation::Candidate).unwrap();
+    let packet = a.image.proofs[0].clone();
+    let mut record = a.auth(&packet).unwrap();
+    record.body.durable_mut().unwrap().state = [9; 32];
+    let forged = protocol::sign(&record, &a.key).unwrap();
+    let mut image = a.image.clone();
+    image.proofs[0] = forged.clone();
+    for fact in &mut image.facts {
+        for response in &mut fact.responses {
+            if *response == packet {
+                *response = forged.clone();
+            }
+        }
+    }
+    assert_eq!(
+        a.validate(&image, ImageValidation::Committed),
+        Err(reject("durable fact linkage"))
+    );
+    // A failed batch releases its read transaction; another operation can commit.
+    let packet = root(&mut a, 4, 30, 2);
+    a.receive_packet(&packet).unwrap();
+    a.validate(&a.image, ImageValidation::Committed).unwrap();
+}
