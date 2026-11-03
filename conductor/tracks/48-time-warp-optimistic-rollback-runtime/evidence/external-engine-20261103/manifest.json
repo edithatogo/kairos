@@ -932,6 +932,18 @@
       "raw_sha256": "c86d4dfe42606ebe7dee7dd99b96559ec9044ef5008b388b9c9d9106bf54c6e3",
       "gzip_sha256": "79846a39d2d8f41e992f00a3e4bff7be3d572588340d2d0d5bd7abf193b1e464",
       "raw_bytes": 34
+    },
+    {
+      "path": "logs/hosted-331727d-rust-verification.log.gz",
+      "raw_sha256": "3bd8bf28deb2bda035c214116b0c6f0374ebb6d12bf4e4913ec74b4cb9c0cd55",
+      "gzip_sha256": "7bdade06b40f6627a69aafe343531f45404c2000c48e8600eb262e3e5607faaa",
+      "raw_bytes": 401750
+    },
+    {
+      "path": "hosted-331727d-readback.json.gz",
+      "raw_sha256": "6d147c39b36f3f9a5ddce01a6562555144716aa0204085d04276971c0f6e4d24",
+      "gzip_sha256": "e0a147353846424cdff3469e65bb273832176582aa186fb8041df3b7cc1d9052",
+      "raw_bytes": 15406
     }
   ]
 }

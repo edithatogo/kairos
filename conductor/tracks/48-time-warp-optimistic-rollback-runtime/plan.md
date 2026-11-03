@@ -5,9 +5,11 @@
 The complete opt-in external engine and16 unique two-host failure/restart
 scenarios are implemented and independently accepted at source3cda053, using
 Mac ARM64 and Colab Linux x86-64. See [native qualification](external-engine-qualification-20261103.md).
-The current remaining gate is exact-head hosted validation after a fixture-only
-Rustls dual-provider test repair; no native engine work remains for this bounded
-CAP packet. CAP-48.1 stays unchecked until that gate passes. Historical claims
+CAP-48.1 is complete for the documented fixed-membership, quiescent-cut path.
+The fixture-only Rustls dual-provider repair at331727d passed full hosted gates:
+976/976 workspace tests (zero skipped),93.70% core coverage against90%, native
+MPI2/4, doctests and dependency policy;49 successful checks and3 conditional
+skips. Native source inputs are unchanged by that separate integration-test fix. Historical claims
 below about missing external implementation or impossible two-host acceptance
 are superseded by this current boundary. Track48/49 remain In Progress for their
 other separately owned acceptance work.
@@ -151,6 +153,6 @@ now solely for live distributed acceptance and the open gates listed above.
 
 Repository scope: **kairos** and its **careops-sim** consumer (`/Users/doughnut/Documents/careops-sim`), not the separate **careops** repository. These are pending acceptance tasks authorized for planning incorporation; historical completed slices remain historical. Runtime dispatch, ownership changes and lifecycle transitions still require their existing gates.
 
-- [ ] CAP-48.1: With Track 49, exercise real two-host rollback, anti-message/GVT behavior and restart under injected message delay, duplication and worker failure; compare deterministic observables with the qualified single-host baseline.
+- [x] CAP-48.1: With Track 49, exercise real two-host rollback, anti-message/GVT behavior and restart under injected message delay, duplication and worker failure; compare deterministic observables with the qualified single-host baseline. Accepted: [16-case source/native and hosted receipts](external-engine-qualification-20261103.md), source3cda053 plus fixture-only repair331727d.
 
 Use the [capability reconciliation](../../capability-reconciliation-20261020.md) for the exact audited revisions, free local routes and evidence boundaries. Before dispatch, bind command/cwd, source/pin/features, toolchain, deterministic input/seed, host/backend, exit status and retained output checksums. A structural validator pass cannot close a runtime task.

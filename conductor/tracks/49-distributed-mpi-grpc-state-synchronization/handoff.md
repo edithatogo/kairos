@@ -228,3 +228,9 @@ for this bounded gRPC path. Worker claims are released; both owned CPU VMs are
 terminated. Root next owns repaired-head hosted readback after a test-only
 provider selection fix. General MPI optimistic transport, migration and whole
 Track49 completion remain separate outstanding work; no track-wide status advance.
+
+CAP-48.1 is now accepted after331727d full hosted green (976/976 tests;49
+successful checks/3 conditional skips). The Track48 current plan/report supersede
+older pending statements. Native scope is terminal; root owns only PR366 final
+source-equivalent documentation readback. CAP49.1/49.2 and track lifecycle retain
+the separate boundaries recorded in the current plan.

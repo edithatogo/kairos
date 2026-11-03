@@ -73,3 +73,9 @@ Dual-provider regression: `cargo test --locked -p kairo-ecs-grpc --test external
 RED exit101 before the test-only Once repair; GREEN4/4 afterward. No retry, skip,
 weakened assertion or dependency waiver. The fixture-only delta is outside native
 worker code. Full repaired-head hosted gates remain required.
+
+Repaired-source hosted gate331727d is accepted:976 tests passed, zero skipped,
+core coverage1161/1239 (93.70%) against90%; native MPI2/4, doctests, dependency
+policy, project coverage, workspace/Wasm and Linux/Windows contract validation
+passed. Readback49 SUCCESS/3 conditional SKIPPED is archived in the qualification
+manifest. CAP-48.1 is complete within its documented scope.

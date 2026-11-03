@@ -1,7 +1,7 @@
 # CAP-48.1 external engine qualification — 3 November 2026
 
-All16 required native two-host scenarios passed. Exact-head hosted closeout
-checks are tracked separately below. This record describes source `3cda053a48faa72754db0ce466331f61f5a68a2e`;
+CAP-48.1 is complete for the bounded path below: all16 required native two-host
+scenarios passed, followed by full repaired-source hosted acceptance. This record describes source `3cda053a48faa72754db0ce466331f61f5a68a2e`;
 its Rust file bytes match the frozen native builds, despite the first run having
 started from base `5ea8703` with the exact owned working changes.
 
@@ -96,9 +96,25 @@ only integration-test code, outside the native worker dependency closure. The
 preserves the original17 source hashes and explicitly records the one changed
 test hash. Engine, transport, example, runner, dependency/build configuration and
 native fixtures are unchanged; the independent reviewer accepts native reuse.
-Full hosted checks must pass on the repaired head before CAP status advances.
+Full hosted gates passed at repaired source331727d:976/976 workspace tests,
+zero skipped, core coverage1161/1239 (93.70%) against90%, native MPI2/4 exchanges,
+doctests, dependency policy, workspace and WebAssembly checks, project coverage
+and core quality. Exact-head readback has49 SUCCESS and3 conditional SKIPPED,
+zero failures/pending. The [hosted workflow](https://github.com/edithatogo/kairos/actions/runs/41567043554)
+and archived byte-exact log/readback bind that source. This closes the CAP leaf;
+whole Track48/49 lifecycle and other CAP leaves remain unchanged.
 
 Acceptance is limited to fixed membership, bounded retained images and quiescent
 exact-channel cuts. It does not establish general post-Pause draining, hardware
 power-loss durability, automatic coordinator failover, production credentials,
 performance/scaling, external MPI parity or whole Track48/49 completion.
+
+## Terminal ownership
+
+All scoped worker source is integrated; their isolated worktrees are clean and
+claims released. Root retains the review PR and final documentation handoff.
+The four owned checkpoint stashes were disposed only after confirming their
+paths were preserved in committed source/evidence. Main and the native-preview
+checkout remain unchanged. No native process, tunnel or owned Colab session
+remains active. Public [host provenance](evidence/external-engine-20261103/host-provenance.json)
+retains distinct SSH host fingerprints without private keys or provider tokens.

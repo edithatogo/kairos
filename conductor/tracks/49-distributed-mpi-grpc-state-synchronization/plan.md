@@ -1,5 +1,15 @@
 # Track 49 Plan: Distributed MPI/gRPC State Synchronization
 
+## Current CAP-48.1 integration boundary — 3 November 2026
+
+The [complete Mac/Colab external-engine qualification](../48-time-warp-optimistic-rollback-runtime/external-engine-qualification-20261103.md)
+now closes CAP-48.1 with16 unique two-host cases and full hosted acceptance at
+331727d. Earlier unchecked-CAP48 statements below describe historical snapshots.
+CAP-49.1 remains open for complete MPI optimistic scheduling/accounting; CAP-49.2
+retains its named NAS compatibility scope, which the approved Colab alternative
+does not establish. Track49 remains In Progress. No phase, dependency or release
+waiver follows from the bounded gRPC acceptance.
+
 ## Phase 0 - TDD baseline
 
 - [x] Task 0.1: Add failing MPI multi-rank smoke tests.

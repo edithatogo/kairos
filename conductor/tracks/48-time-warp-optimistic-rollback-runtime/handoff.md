@@ -580,3 +580,18 @@ only post-native source delta and does not enter the worker executable dependenc
 closure. Exact-head hosted rerun remains the next root-owned operation before
 CAP checkbox advancement. No Track48/49 Done, main merge, release or production
 deployment is claimed. Earlier owner assignments remain historical.
+
+## CAP-48.1 accepted — 3 November 2026
+
+The prior pending-hosted gate is resolved at331727d:49 successful checks,3
+conditional skips, zero failures or pending;976/976 workspace tests, zero test
+skips; core coverage93.70% against90%. Full Rust/workspace/Wasm, native MPI2/4,
+doctest, dependency, project coverage and platform contract gates pass. Together
+with the reviewed16-case native receipt, CAP-48.1 is checked complete for fixed
+membership, quiescent exact-channel cuts and process-crash recovery.
+
+Root chat01a19bed-7060-7910-af22-38cb31f51446 remains sole PR366 integrator;
+isolated worktree kairos-cap48-gvt, no native scope/in-flight operations. Final
+documentation is source-equivalent to accepted331727d. Native MPI optimistic
+accounting, named NAS compatibility and other Track49/CAP work are not closed
+by this receipt. No main merge or track-wide lifecycle advance.
