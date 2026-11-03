@@ -15,9 +15,15 @@ stays with root. The controller allocates or stops no Colab VM.
 
 The private SSH route is already qualified and strictly pinned. `RemoteHost`
 owns one muxed connection and loopback forwarding for actual mTLS43148/43149
-and typed Tonic43150/43151. The controller builds both real examples with
-opt-level1/debug0, checks actual Cargo compiler-artifact executable paths,
-features and optimization profile, and retains measured local/remote binary
+and typed Tonic43150/43151. The controller builds dependencies with dev
+opt-level1/debug0 and overrides the PDES engine and gRPC worker packages to
+opt-level3. Debug assertions and overflow checks remain enabled and are asserted
+from both hosts' actual engine/worker compiler artifacts. The first opt-level1
+two-host attempt timed out adopting the common cut on the CPU-limited peer;
+both workers terminated and that uncertain operation was not retried. This
+qualified-profile exercise retains the same RPC deadlines and model oracles.
+The controller checks actual Cargo compiler-artifact executable paths,
+features and optimization profiles, and retains measured local/remote binary
 hashes and exact logs. An explicit public-source packet includes the native
 model, runtime, transport, Arrow dependencies, controller and helper inputs;
 source/binary hashes are checked after build and after qualification. No stale

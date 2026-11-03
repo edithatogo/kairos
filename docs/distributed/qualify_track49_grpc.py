@@ -331,6 +331,9 @@ print('TRACK49_GRPC_REMOTE_FROZEN')
             CARGO_PROFILE_DEV_OPT_LEVEL="1", CARGO_BUILD_JOBS="2", RUSTUP_TOOLCHAIN="1.99.1",
             RUSTC=checked(["which", "rustc"]).stdout.strip(), RUSTDOC=checked(["which", "rustdoc"]).stdout.strip())
         command = ["cargo", "build", "--locked", "--message-format=json", "--config=profile.dev.opt-level=1",
+                   "--config=profile.dev.debug-assertions=true", "--config=profile.dev.overflow-checks=true",
+                   "--config=profile.dev.package.kairo-ecs-pdes.opt-level=3",
+                   "--config=profile.dev.package.kairo-ecs-grpc.opt-level=3",
                    "-p", "kairo-ecs-grpc", "--example", "track49_node", "--features", "external-fault-injection,telemetry-ipc"]
         build = subprocess.run(command, cwd=ROOT, env=environment, capture_output=True, text=True, timeout=900)
         (self.output / "local-build.jsonl").write_text(build.stdout)
@@ -339,7 +342,9 @@ print('TRACK49_GRPC_REMOTE_FROZEN')
         rows = [json.loads(line) for line in build.stdout.splitlines() if line.startswith("{")]
         artifacts = [r for r in rows if r.get("reason") == "compiler-artifact" and r.get("target", {}).get("name") == "track49_node" and r.get("executable")]
         assert artifacts and pathlib.Path(artifacts[-1]["executable"]).resolve() == self.binary
-        assert artifacts[-1]["profile"]["opt_level"] == "1"
+        engines = [r for r in rows if r.get("reason") == "compiler-artifact" and r.get("target", {}).get("name") == "kairo_ecs_pdes"]
+        self.profiles = {"local_worker": artifacts[-1]["profile"], "local_engine": engines[-1]["profile"]}
+        assert all(p["opt_level"] == "3" and p["debug_assertions"] and p["overflow_checks"] for p in self.profiles.values())
         assert {"external-fault-injection", "telemetry-ipc"} <= set(artifacts[-1]["features"])
         self.binary_hash = hashlib.sha256(self.binary.read_bytes()).hexdigest()
         self.description = json.loads(checked([str(self.binary), "--describe"]).stdout)
@@ -349,14 +354,17 @@ print('TRACK49_GRPC_REMOTE_FROZEN')
         self.host_started = True
         packet = make_source_packet(ROOT, self.source)
         self.host.upload_source(packet, self.source)
-        result = self.host.cargo(command[1:], ["track49_node"], log_name="grpc-opt1-build-" + self.run_id + ".log", source_hashes=self.source, timeout=900)
+        result = self.host.cargo(command[1:], ["track49_node"], log_name="grpc-checked-build-" + self.run_id + ".log", source_hashes=self.source, timeout=900)
         assert result["exit"] == 0 and not result["timed_out"], result
         artifact = result["executables"]["track49_node"]
         assert artifact["target_kind"] == ["example"]
-        raw_remote_log = (self.host.output / ("grpc-opt1-build-" + self.run_id + ".log")).read_text()
+        raw_remote_log = (self.host.output / ("grpc-checked-build-" + self.run_id + ".log")).read_text()
         remote_rows = [json.loads(line) for line in raw_remote_log.splitlines() if line.startswith("{")]
         remote_artifacts = [r for r in remote_rows if r.get("reason") == "compiler-artifact" and r.get("target", {}).get("name") == "track49_node" and r.get("executable")]
-        assert remote_artifacts and remote_artifacts[-1]["profile"]["opt_level"] == "1"
+        remote_engines = [r for r in remote_rows if r.get("reason") == "compiler-artifact" and r.get("target", {}).get("name") == "kairo_ecs_pdes"]
+        assert remote_artifacts and remote_engines
+        self.profiles.update(remote_worker=remote_artifacts[-1]["profile"], remote_engine=remote_engines[-1]["profile"])
+        assert all(p["opt_level"] == "3" and p["debug_assertions"] and p["overflow_checks"] for p in self.profiles.values())
         assert set(remote_artifacts[-1]["features"]) == set(artifacts[-1]["features"])
         self.remote_binary, self.remote_binary_hash = artifact["path"], artifact["sha256"]
         (self.output / "remote-build.json").write_text(json.dumps(result, indent=2))
@@ -584,6 +592,7 @@ def main():
             "binary_sha256": owner.binary_hash, "remote_binary_sha256": owner.remote_binary_hash,
             "cases": [{k: v for k, v in r.items() if k != "semantics"} for r in results],
             "typed_sync": owner.sync_results, "runtime": "real mTLS external engine, two-host SQL SIGKILL/reopen joins, typed Tonic full snapshots and maintained Polars Arrow IPC",
+            "profiles": owner.profiles,
             "python": {"version": sys.version, "executable": sys.executable, "prefix": sys.prefix}}
     finally:
         owner.close()
