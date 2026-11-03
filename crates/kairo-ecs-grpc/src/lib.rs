@@ -1,5 +1,10 @@
 #![forbid(unsafe_code)]
 
+#[cfg(feature = "external-time-warp")]
+pub mod external_transport;
+#[cfg(feature = "external-time-warp")]
+pub use external_transport::*;
+
 pub mod envelope;
 pub use envelope::*;
 pub mod service;
