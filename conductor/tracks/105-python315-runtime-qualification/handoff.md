@@ -342,3 +342,9 @@ The integrator also claims `docs/tutorials/notebooks.md` in this worktree to
 correct its validator and runtime-scope description. No other checkout reported
 a dirty copy. The scope is documentation only; it neither executes notebooks
 nor installs or promotes a Jupyter kernel or provider dependency.
+
+An isolated follow-up executed the two local tutorials with a repo-local 3.15.2
+Jupyter kernel, preserving the executed notebooks and tool-version receipt.
+This is exploratory source/runtime evidence, not a locked Jupyter dependency
+profile, a handover of the user's existing kernel, or Colab accelerator proof.
+See the runtime inventory for its warnings, hashes and exact source revision.

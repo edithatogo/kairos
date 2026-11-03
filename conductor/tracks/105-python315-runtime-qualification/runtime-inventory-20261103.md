@@ -43,8 +43,10 @@ profiles remain subject to the recorded consumer-specific qualification policy.
   verified local-prefix guard; three accelerator notebooks execute on a
   Colab-managed kernel and may install JAX. Their `3.12` metadata does not prove
   the actual kernel version or qualify an alternate profile. The docs-quality
-  validator checks structure and AST, not cell execution. Runtime selection,
-  dependencies and actual notebook execution remain open for these consumers.
+  validator checks structure and AST, not cell execution. Qualified runtime
+  selection, dependencies and consumer handover remain open for these paths.
+  A later isolated experiment executed the two local tutorials through actual
+  Jupyter kernels on Python 3.15.2; details and limits are recorded below.
 - `cloud/gcp/submit-experiment.sh` previously rendered GCP array jobs with
   ambient `python`. Candidate `6bb072665c3fd5b43c8d28928734895b4163e30c`
   verifies the local interpreter before rendering; four POSIX tests use a fake
@@ -79,3 +81,33 @@ via its own trigger change. Actual final-head runs, normal protected merge,
 exact-main hosted runtime readback, remaining external/owner inventory and safe
 handover review must be recorded before closure. No environment or consumer pin
 is promoted by this document.
+
+## Local Jupyter experiment — 3 November 2026
+
+A disposable detached worktree at `b135ab85b54a2b753de6de85cf68932760ece2e6`
+created a repo-local Python 3.15.2 environment and installed exploratory
+`ipykernel==7.4.0` and `nbclient==0.11.0` with their resolved dependencies.
+An environment-local kernelspec was registered under that worktree's `.venv`.
+`NotebookClient` executed the four scheduler and three benchmark cells with
+prepended kernel-side assertions of version and local prefix, and recorded the executable;
+both notebooks passed. The environment is not a hash-locked or adopted project
+dependency profile. The kernel warned about unencrypted TCP, and nbformat
+warned that legacy cells lack IDs. The test does not qualify Colab accelerators,
+the user's existing Jupyter environment, or notebook runtime handover.
+
+The command used `.venv/bin/python -m ipykernel install --prefix "$PWD/.venv"
+--name kairos105-qualification`, then invoked `NotebookClient` with
+`JUPYTER_PATH="$PWD/.venv/share/jupyter"` and the worktree as notebook cwd.
+The private execution log SHA-256 is
+`b6ef42c423658d20d43c17f5cfd2f0327678cba2005119fcb5d4943dda872af5`, and the
+resolved package list SHA-256 is
+`27220a1a9cf2fabc9435d84eaf1a4e0b78d34529200d5c1facffb1c4398a0ab6` under
+`~/.codex/private-artifacts/kairos-track105-closeout-20261103/`; both executed
+notebooks are retained there. The disposable worktree was removed after its
+kernel processes terminated.
+
+An isolated Colab CPU probe reported provider kernel Python 3.13.18 at
+`/usr/bin/python3`, prefix `/usr`, JAX 0.11.1 and one CPU device; its session
+terminated. This is not a qualified 3.15.2 environment, a justified alternate
+profile, or GPU/TPU notebook execution evidence. Colab runtime selection and
+accelerator qualification therefore remain open.
