@@ -113,12 +113,110 @@ fn actual_snapshot_rpc_preserves_all_generations_pending_and_u128_without_applic
     );
     assert!(b.drain_migration_snapshots().is_empty());
 }
+// An independent live gRPC peer returns an explicit application status. A closed
+// Windows TCP port may remain pending until the client deadline, so it cannot
+// deterministically stand in for an observed Unavailable response.
+#[derive(Clone)]
+struct ExplicitUnavailable(std::sync::Arc<std::sync::atomic::AtomicUsize>);
+impl tonic::server::NamedService for ExplicitUnavailable {
+    const NAME: &'static str = "kairo.ecs.simulation.v1.SimulationTransport";
+}
+impl tonic::codegen::Service<tonic::codegen::http::Request<tonic::body::Body>>
+    for ExplicitUnavailable
+{
+    type Response = tonic::codegen::http::Response<tonic::body::Body>;
+    type Error = std::convert::Infallible;
+    type Future = std::future::Ready<Result<Self::Response, Self::Error>>;
+    fn poll_ready(
+        &mut self,
+        _: &mut std::task::Context<'_>,
+    ) -> std::task::Poll<Result<(), Self::Error>> {
+        std::task::Poll::Ready(Ok(()))
+    }
+    fn call(&mut self, request: tonic::codegen::http::Request<tonic::body::Body>) -> Self::Future {
+        assert_eq!(
+            request.uri().path(),
+            "/kairo.ecs.simulation.v1.SimulationTransport/MigrateSnapshot"
+        );
+        self.0.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        let mut status = tonic::Status::with_details(
+            tonic::Code::Unavailable,
+            "qualification peer explicitly unavailable",
+            tonic::codegen::Bytes::from_static(b"qualification-unavailable-details"),
+        );
+        status
+            .metadata_mut()
+            .insert("x-qualification", "explicit-unavailable".parse().unwrap());
+        std::future::ready(Ok(status.into_http()))
+    }
+}
 #[test]
 fn real_unavailable_and_blackhole_deadline_are_distinct_without_takeover_authority() {
-    let config = GrpcTransportConfig {
-        request_timeout: Duration::from_millis(120),
-        ..GrpcTransportConfig::default()
-    };
+    let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+    listener.set_nonblocking(true).unwrap();
+    let address = listener.local_addr().unwrap();
+    let calls = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
+    let service = ExplicitUnavailable(std::sync::Arc::clone(&calls));
+    let (ready_tx, ready_rx) = std::sync::mpsc::channel();
+    let (shutdown_tx, shutdown_rx) = tokio::sync::oneshot::channel();
+    let server = std::thread::spawn(move || {
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        rt.block_on(async move {
+            let listener = tokio::net::TcpListener::from_std(listener).unwrap();
+            ready_tx.send(()).unwrap();
+            tonic::transport::Server::builder()
+                .add_service(service)
+                .serve_with_incoming_shutdown(
+                    tokio_stream::wrappers::TcpListenerStream::new(listener),
+                    async {
+                        let _ = shutdown_rx.await;
+                    },
+                )
+                .await
+                .unwrap();
+        });
+    });
+    ready_rx.recv().unwrap();
+    let sender = TonicTransport::bind(
+        LpId(1),
+        "127.0.0.1:0".parse().unwrap(),
+        vec![GrpcPeer {
+            lp_id: LpId(2),
+            endpoint: format!("http://{address}"),
+        }],
+        GrpcTransportConfig::default(),
+    )
+    .unwrap();
+    let error = sender
+        .send_migration_snapshot(LpId(2), &snapshot())
+        .unwrap_err();
+    assert_eq!(error.kind, GrpcFailureKind::Transient);
+    assert_eq!(error.status.code(), tonic::Code::Unavailable);
+    assert_eq!(
+        error.status.message(),
+        "qualification peer explicitly unavailable"
+    );
+    assert_eq!(error.status.details(), b"qualification-unavailable-details");
+    assert_eq!(
+        error.status.metadata().get("x-qualification").unwrap(),
+        "explicit-unavailable"
+    );
+    assert_eq!(calls.load(std::sync::atomic::Ordering::SeqCst), 1);
+    let error = sender
+        .send_migration_snapshot(LpId(99), &snapshot())
+        .unwrap_err();
+    assert_eq!(error.kind, GrpcFailureKind::Permanent);
+    assert_eq!(error.status.code(), tonic::Code::InvalidArgument);
+    assert_eq!(calls.load(std::sync::atomic::Ordering::SeqCst), 1);
+    drop(sender);
+    shutdown_tx.send(()).unwrap();
+    server.join().unwrap();
+
+    // Keep the listener held without an application handler. This is a real
+    // connection/HTTP2 blackhole and must expire at the existing short deadline.
     let blackhole = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
     let sender = TonicTransport::bind(
         LpId(1),
@@ -127,7 +225,10 @@ fn real_unavailable_and_blackhole_deadline_are_distinct_without_takeover_authori
             lp_id: LpId(2),
             endpoint: format!("http://{}", blackhole.local_addr().unwrap()),
         }],
-        config,
+        GrpcTransportConfig {
+            request_timeout: Duration::from_millis(120),
+            ..Default::default()
+        },
     )
     .unwrap();
     let error = sender
@@ -135,17 +236,8 @@ fn real_unavailable_and_blackhole_deadline_are_distinct_without_takeover_authori
         .unwrap_err();
     assert_eq!(error.kind, GrpcFailureKind::PartitionSuspected);
     assert_eq!(error.status.code(), tonic::Code::DeadlineExceeded);
+    drop(sender);
     drop(blackhole);
-    let error = sender
-        .send_migration_snapshot(LpId(2), &snapshot())
-        .unwrap_err();
-    assert_eq!(error.kind, GrpcFailureKind::Transient);
-    assert_eq!(error.status.code(), tonic::Code::Unavailable);
-    let error = sender
-        .send_migration_snapshot(LpId(99), &snapshot())
-        .unwrap_err();
-    assert_eq!(error.kind, GrpcFailureKind::Permanent);
-    assert_eq!(error.status.code(), tonic::Code::InvalidArgument);
 }
 #[test]
 fn independent_protoc_canonical_wire_matches_versioned_prost_schema() {
