@@ -6,13 +6,11 @@ death terminates the allocation; every store reopens standby before a new join.
 No application retries, native capability deserialization or scalar GVT proof.
 """
 from __future__ import annotations
-import argparse, hashlib, importlib.util, json, os, pathlib, queue, shlex
+import argparse, hashlib, json, os, pathlib, queue, shlex
 import signal, subprocess, sys, tempfile, threading, time, uuid
 if sys.version_info[:3] != (3, 15, 2):
     raise SystemExit("Use the verified repo-local Python3.15.2")
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-spec = importlib.util.spec_from_file_location("cap48_receipt_helpers", ROOT / "docs/distributed/qualify_cap48.py")
-old = importlib.util.module_from_spec(spec); spec.loader.exec_module(old)
 
 def checked(args, **kw):
     return subprocess.run(args, check=True, capture_output=True, text=True,
@@ -79,17 +77,22 @@ class Owner:
         assert self.binary_hash==hashlib.sha256(self.binary.read_bytes()).hexdigest()
         assert self.source=={n:hashlib.sha256((ROOT/n).read_bytes()).hexdigest() for n in self.source}
     def close(self):
+        active_error=sys.exc_info()[0] is not None;errors=[]
         for g in self.groups:
-            g.stop()
+            try:g.stop()
+            except Exception as e:
+                self.event('cleanup_error',error=str(e));errors.append(e)
         self.events.close()
+        if errors and not active_error:raise errors[0]
 
 class MpiGroup:
     def __init__(self,owner,name,n,settings):
         self.owner=owner;self.name=name;self.n=n;self.settings=settings
+        self.expected_failure=False
         self.responses=queue.Queue();self.boundaries=queue.Queue();self.lock=threading.Lock()
         self.raw=(owner.output/f'{name}-{uuid.uuid4().hex[:8]}-stdout.log').open('w')
         self.stderr=(owner.output/f'{name}-{uuid.uuid4().hex[:8]}-stderr.log').open('w')
-        args=['mpiexec','--timeout','180','-n',str(n),str(owner.binary),str(settings)]
+        args=['mpiexec','--timeout',str(owner.args.allocation_timeout),'-n',str(n),str(owner.binary),str(settings)]
         self.proc=subprocess.Popen(args,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=self.stderr,text=True,bufsize=1,start_new_session=True)
         self.reader=threading.Thread(target=self._read,daemon=True);self.reader.start()
         self.ready=self.responses.get(timeout=40);assert self.ready.get('ready'),self.ready
@@ -119,6 +122,7 @@ class MpiGroup:
         pid=self.pids[rank]
         cmd=checked(['ps','-p',str(pid),'-o','command=']).stdout
         assert 'track49_mpi_node' in cmd and str(self.settings) in cmd
+        self.expected_failure=True
         os.kill(pid,signal.SIGKILL)
         rc=self.proc.wait(timeout=20);assert rc!=0
         self.owner.event('mpi_rank_sigkill',name=self.name,rank=rank,pid=pid,manager_exit=rc)
@@ -129,8 +133,18 @@ class MpiGroup:
             assert not ('track49_mpi_node' in p.stdout and str(self.settings) in p.stdout),'owned rank remains alive'
     def stop(self):
         if self.proc.poll() is None:
-            self.proc.stdin.write('{"op":"stop"}\n');self.proc.stdin.flush();self.proc.wait(timeout=20)
-        self._check_terminal();self.stderr.close();self.raw.close()
+            try:
+                self.proc.stdin.write('{"op":"stop"}\n');self.proc.stdin.flush();self.proc.wait(timeout=20)
+            except (BrokenPipeError,subprocess.TimeoutExpired):
+                if self.proc.poll() is None:
+                    assert os.getpgid(self.proc.pid)==self.proc.pid
+                    os.killpg(self.proc.pid,signal.SIGTERM)
+                    try:self.proc.wait(timeout=10)
+                    except subprocess.TimeoutExpired:
+                        os.killpg(self.proc.pid,signal.SIGKILL);self.proc.wait(timeout=10)
+        self.reader.join(timeout=2);self._check_terminal();self.stderr.close();self.raw.close()
+        self.owner.event('allocation_terminal',name=self.name,exit=self.proc.returncode,expected_failure=self.expected_failure)
+        if not self.expected_failure:assert self.proc.returncode==0,'unexpected allocation failure is not acceptance'
 
 class MpiNode:
     def __init__(self,group,rank):self.group=group;self.participant=rank
@@ -210,8 +224,9 @@ def scenario(owner,name,n,after=None):
     assert not model(nodes[0])['entities'] and len(model(nodes[0])['acknowledgements'])==3
     all_messages=[o['message'] for node in nodes for o in image(node)['outgoing'] if not o['message']['anti']]
     for expected in reference['messages']:
-        found=next(m for m in all_messages if all(m[k]==expected[k] for k in ['source','destination','tick','payload']))
-        assert all(found[k]==expected[k] for k in ['root_source','root_sequence','ancestry'])
+        matches=[m for m in all_messages if all(m[k]==expected[k] for k in
+            ['source','destination','tick','payload','root_source','root_sequence','ancestry'])]
+        assert len(matches)==1,'expected exactly one complete native logical output key'
     semantics=[semantic(x) for x in nodes];record_nodes(owner,name,nodes)
     for node in nodes:node.call('close')
     pause=nodes[0].call('pause')['packet']
@@ -237,6 +252,7 @@ def scenario(owner,name,n,after=None):
 def main():
     p=argparse.ArgumentParser();p.add_argument('--binary',default=str(ROOT/'artifacts/track49/build/debug/examples/track49_mpi_node'))
     p.add_argument('--output',required=True);p.add_argument('--ranks',type=int,choices=[2,4],default=2);p.add_argument('--cases',choices=['reference','all'],default='all')
+    p.add_argument('--allocation-timeout',type=int,default=600,help='outer owned-allocation safety watchdog; does not change RPC deadlines')
     args=p.parse_args();owner=Owner(args)
     try:
         results=[scenario(owner,'reference',args.ranks)]
