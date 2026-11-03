@@ -595,3 +595,10 @@ isolated worktree kairos-cap48-gvt, no native scope/in-flight operations. Final
 documentation is source-equivalent to accepted331727d. Native MPI optimistic
 accounting, named NAS compatibility and other Track49/CAP work are not closed
 by this receipt. No main merge or track-wide lifecycle advance.
+
+Final follow-up:3234813 hosted Ubuntu encountered an existing free-port race in
+the legacy socket ordering integration test. The test now retains B's bound
+port-zero listener while starting A; all50 assertions/deadlines stay. Seven
+affected tests and strict Clippy pass. Independent review accepts unchanged
+production/native evidence. Root owns final-head hosted readback only; no native
+operation or Colab session is active. The failure and focused success are archived.

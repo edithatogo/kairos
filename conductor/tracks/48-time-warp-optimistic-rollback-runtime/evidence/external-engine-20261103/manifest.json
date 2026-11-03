@@ -944,6 +944,36 @@
       "raw_sha256": "6d147c39b36f3f9a5ddce01a6562555144716aa0204085d04276971c0f6e4d24",
       "gzip_sha256": "e0a147353846424cdff3469e65bb273832176582aa186fb8041df3b7cc1d9052",
       "raw_bytes": 15406
+    },
+    {
+      "path": "logs/cap48-final-doc-failure-raw.log.gz",
+      "raw_sha256": "427c6530b7d217dbda0209554856419389c7ddb7056b8c62b07b81d746970a3a",
+      "gzip_sha256": "88acfb9625a89327405b280c2a6c821907a29fec08e28a193db1c9cd94947764",
+      "raw_bytes": 139016
+    },
+    {
+      "path": "logs/cap48-owned-port-green.log.gz",
+      "raw_sha256": "89252a706fbbca849c5e028c0b603e338b81950a7089d0ebe35989b94798d8d8",
+      "gzip_sha256": "70a03e249d1272e05fb6333119c99e3d77ae1957396d06f5e858bdf192fabaa5",
+      "raw_bytes": 1116
+    },
+    {
+      "path": "logs/cap48-owned-port-format.log.gz",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzip_sha256": "ac73670af3abed54ac6fb4695131f4099be9fbe39d6076c5d0264a6bbdae9d83",
+      "raw_bytes": 0
+    },
+    {
+      "path": "logs/cap48-owned-port-clippy.log.gz",
+      "raw_sha256": "b177a54945efb1accbebfd4aee41112cbe87823ee04dc6cbc104584a45ee50f1",
+      "gzip_sha256": "a184634ce77c357aaa7a266161ad7fffbe9b66b8e58f6f18df3c5e64b70fd2ef",
+      "raw_bytes": 338
+    },
+    {
+      "path": "logs/cap48-final-local-setup.log.gz",
+      "raw_sha256": "7ce999ed2c4d12227c8b1cd60496f66c9d40cc216dc98149ad9265cd9f67a125",
+      "gzip_sha256": "8961e302142014216b48469021ee210bceb260a916df3f6987f06aee265923be",
+      "raw_bytes": 97333
     }
   ]
 }

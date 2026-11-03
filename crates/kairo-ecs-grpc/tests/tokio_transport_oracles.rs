@@ -330,33 +330,29 @@ fn oracle_tokio_transport_reconnect_and_transient_failure_recovery() {
 
 #[test]
 fn oracle_tokio_transport_deterministic_handoff_ordering_despite_io_jitter() {
-    let port_a = get_available_port();
-    let port_b = get_available_port();
-    let addr_a: SocketAddr = format!("127.0.0.1:{port_a}").parse().unwrap();
-    let addr_b: SocketAddr = format!("127.0.0.1:{port_b}").parse().unwrap();
     let config = GrpcTransportConfig::default();
+
+    // Keep the receiver's OS-assigned port owned throughout sender setup;
+    // probing and releasing an "available" port permits duplicate allocation.
+    // This oracle only sends A -> B, so B needs no outbound peer route.
+    let mut transport_b = GrpcSocketTransport::bind(
+        LpId(2),
+        "127.0.0.1:0".parse().unwrap(),
+        vec![],
+        config.clone(),
+    )
+    .expect("bind transport B");
 
     let mut transport_a = GrpcSocketTransport::bind(
         LpId(1),
-        addr_a,
+        "127.0.0.1:0".parse().unwrap(),
         vec![GrpcPeer {
             lp_id: LpId(2),
-            endpoint: format!("http://127.0.0.1:{port_b}"),
-        }],
-        config.clone(),
-    )
-    .expect("bind transport A");
-
-    let mut transport_b = GrpcSocketTransport::bind(
-        LpId(2),
-        addr_b,
-        vec![GrpcPeer {
-            lp_id: LpId(1),
-            endpoint: format!("http://127.0.0.1:{port_a}"),
+            endpoint: format!("http://{}", transport_b.bound_addr()),
         }],
         config,
     )
-    .expect("bind transport B");
+    .expect("bind transport A");
 
     // Send 50 sequenced events
     const EVENT_COUNT: usize = 50;

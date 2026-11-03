@@ -118,3 +118,21 @@ paths were preserved in committed source/evidence. Main and the native-preview
 checkout remain unchanged. No native process, tunnel or owned Colab session
 remains active. Public [host provenance](evidence/external-engine-20261103/host-provenance.json)
 retains distinct SSH host fingerprints without private keys or provider tokens.
+
+## Subsequent socket-oracle fixture repair
+
+The3234813 documentation rerun exposed an existing free-port reservation race
+in the separate legacy socket ordering integration test (Ubuntu job125695289414):
+B bind returned AddrInUse after the fixture probed and released ephemeral ports.
+The failure is archived, not retried. The fixture now starts actual receiver B
+on port zero and retains that listener before starting A on port zero with B's
+actual address. B sends nothing, so its unused outbound route is unnecessary.
+All50 message count/FIFO/tick/payload assertions and deadlines remain unchanged.
+Seven affected tests, formatting and strict Clippy pass. The pre-fix local full
+Conductor setup/workspace run also passed; it does not erase the hosted race.
+
+Independent read-only review accepts the finite test-only fix and native evidence
+reuse. Production engine/transport/worker/controller, dependencies and native
+fixtures remain unchanged. [The exact delta](evidence/external-engine-20261103/socket-fixture-delta.json)
+binds the failed job, source hashes and focused result. Final-head hosted results
+remain available on PR366; no new documentation commit is needed to restate them.
