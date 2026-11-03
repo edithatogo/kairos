@@ -117,13 +117,11 @@ fn actual_snapshot_rpc_preserves_all_generations_pending_and_u128_without_applic
 // Windows TCP port may remain pending until the client deadline, so it cannot
 // deterministically stand in for an observed Unavailable response.
 #[derive(Clone)]
-struct ExplicitUnavailable(std::sync::Arc<std::sync::atomic::AtomicUsize>);
-impl tonic::server::NamedService for ExplicitUnavailable {
+struct ExplicitStatus(std::sync::Arc<std::sync::atomic::AtomicUsize>, tonic::Code);
+impl tonic::server::NamedService for ExplicitStatus {
     const NAME: &'static str = "kairo.ecs.simulation.v1.SimulationTransport";
 }
-impl tonic::codegen::Service<tonic::codegen::http::Request<tonic::body::Body>>
-    for ExplicitUnavailable
-{
+impl tonic::codegen::Service<tonic::codegen::http::Request<tonic::body::Body>> for ExplicitStatus {
     type Response = tonic::codegen::http::Response<tonic::body::Body>;
     type Error = std::convert::Infallible;
     type Future = std::future::Ready<Result<Self::Response, Self::Error>>;
@@ -140,8 +138,12 @@ impl tonic::codegen::Service<tonic::codegen::http::Request<tonic::body::Body>>
         );
         self.0.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
         let mut status = tonic::Status::with_details(
-            tonic::Code::Unavailable,
-            "qualification peer explicitly unavailable",
+            self.1,
+            if self.1 == tonic::Code::Unknown {
+                "transport error"
+            } else {
+                "qualification peer explicitly unavailable"
+            },
             tonic::codegen::Bytes::from_static(b"qualification-unavailable-details"),
         );
         status
@@ -152,69 +154,83 @@ impl tonic::codegen::Service<tonic::codegen::http::Request<tonic::body::Body>>
 }
 #[test]
 fn real_unavailable_and_blackhole_deadline_are_distinct_without_takeover_authority() {
-    let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
-    listener.set_nonblocking(true).unwrap();
-    let address = listener.local_addr().unwrap();
-    let calls = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
-    let service = ExplicitUnavailable(std::sync::Arc::clone(&calls));
-    let (ready_tx, ready_rx) = std::sync::mpsc::channel();
-    let (shutdown_tx, shutdown_rx) = tokio::sync::oneshot::channel();
-    let server = std::thread::spawn(move || {
-        let rt = tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()
-            .unwrap();
-        rt.block_on(async move {
-            let listener = tokio::net::TcpListener::from_std(listener).unwrap();
-            ready_tx.send(()).unwrap();
-            tonic::transport::Server::builder()
-                .add_service(service)
-                .serve_with_incoming_shutdown(
-                    tokio_stream::wrappers::TcpListenerStream::new(listener),
-                    async {
-                        let _ = shutdown_rx.await;
-                    },
-                )
-                .await
+    // Wire application statuses cannot carry a local transport source chain.
+    // A server Unknown with the same misleading text must remain permanent.
+    for code in [tonic::Code::Unavailable, tonic::Code::Unknown] {
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        listener.set_nonblocking(true).unwrap();
+        let address = listener.local_addr().unwrap();
+        let calls = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
+        let service = ExplicitStatus(std::sync::Arc::clone(&calls), code);
+        let (ready_tx, ready_rx) = std::sync::mpsc::channel();
+        let (shutdown_tx, shutdown_rx) = tokio::sync::oneshot::channel();
+        let server = std::thread::spawn(move || {
+            let rt = tokio::runtime::Builder::new_current_thread()
+                .enable_all()
+                .build()
                 .unwrap();
+            rt.block_on(async move {
+                let listener = tokio::net::TcpListener::from_std(listener).unwrap();
+                ready_tx.send(()).unwrap();
+                tonic::transport::Server::builder()
+                    .add_service(service)
+                    .serve_with_incoming_shutdown(
+                        tokio_stream::wrappers::TcpListenerStream::new(listener),
+                        async {
+                            let _ = shutdown_rx.await;
+                        },
+                    )
+                    .await
+                    .unwrap();
+            });
         });
-    });
-    ready_rx.recv().unwrap();
-    let sender = TonicTransport::bind(
-        LpId(1),
-        "127.0.0.1:0".parse().unwrap(),
-        vec![GrpcPeer {
-            lp_id: LpId(2),
-            endpoint: format!("http://{address}"),
-        }],
-        GrpcTransportConfig::default(),
-    )
-    .unwrap();
-    let error = sender
-        .send_migration_snapshot(LpId(2), &snapshot())
-        .unwrap_err();
-    assert_eq!(error.kind, GrpcFailureKind::Transient);
-    assert_eq!(error.status.code(), tonic::Code::Unavailable);
-    assert_eq!(
-        error.status.message(),
-        "qualification peer explicitly unavailable"
-    );
-    assert_eq!(error.status.details(), b"qualification-unavailable-details");
-    assert_eq!(
-        error.status.metadata().get("x-qualification").unwrap(),
-        "explicit-unavailable"
-    );
-    assert_eq!(calls.load(std::sync::atomic::Ordering::SeqCst), 1);
-    let error = sender
-        .send_migration_snapshot(LpId(99), &snapshot())
-        .unwrap_err();
-    assert_eq!(error.kind, GrpcFailureKind::Permanent);
-    assert_eq!(error.status.code(), tonic::Code::InvalidArgument);
-    assert_eq!(calls.load(std::sync::atomic::Ordering::SeqCst), 1);
-    drop(sender);
-    shutdown_tx.send(()).unwrap();
-    server.join().unwrap();
-
+        ready_rx.recv().unwrap();
+        let sender = TonicTransport::bind(
+            LpId(1),
+            "127.0.0.1:0".parse().unwrap(),
+            vec![GrpcPeer {
+                lp_id: LpId(2),
+                endpoint: format!("http://{address}"),
+            }],
+            GrpcTransportConfig::default(),
+        )
+        .unwrap();
+        let error = sender
+            .send_migration_snapshot(LpId(2), &snapshot())
+            .unwrap_err();
+        assert_eq!(
+            error.kind,
+            if code == tonic::Code::Unavailable {
+                GrpcFailureKind::Transient
+            } else {
+                GrpcFailureKind::Permanent
+            }
+        );
+        assert_eq!(error.status.code(), code);
+        assert_eq!(
+            error.status.message(),
+            if code == tonic::Code::Unknown {
+                "transport error"
+            } else {
+                "qualification peer explicitly unavailable"
+            }
+        );
+        assert_eq!(error.status.details(), b"qualification-unavailable-details");
+        assert_eq!(
+            error.status.metadata().get("x-qualification").unwrap(),
+            "explicit-unavailable"
+        );
+        assert_eq!(calls.load(std::sync::atomic::Ordering::SeqCst), 1);
+        let error = sender
+            .send_migration_snapshot(LpId(99), &snapshot())
+            .unwrap_err();
+        assert_eq!(error.kind, GrpcFailureKind::Permanent);
+        assert_eq!(error.status.code(), tonic::Code::InvalidArgument);
+        assert_eq!(calls.load(std::sync::atomic::Ordering::SeqCst), 1);
+        drop(sender);
+        shutdown_tx.send(()).unwrap();
+        server.join().unwrap();
+    }
     // Keep the listener held without an application handler. This is a real
     // connection/HTTP2 blackhole and must expire at the existing short deadline.
     let blackhole = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
@@ -238,6 +254,111 @@ fn real_unavailable_and_blackhole_deadline_are_distinct_without_takeover_authori
     assert_eq!(error.status.code(), tonic::Code::DeadlineExceeded);
     drop(sender);
     drop(blackhole);
+}
+#[test]
+fn accepted_connection_closed_during_rpc_is_transient_without_rewriting_status() {
+    use std::io::{Read, Write};
+    let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+    let address = listener.local_addr().unwrap();
+    let peer = std::thread::spawn(move || {
+        let (mut socket, _) = listener.accept().unwrap();
+        socket
+            .set_read_timeout(Some(Duration::from_secs(5)))
+            .unwrap();
+        let mut preface = [0; 24];
+        socket.read_exact(&mut preface).unwrap();
+        assert_eq!(&preface, b"PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n");
+        socket.write_all(&[0, 0, 0, 4, 0, 0, 0, 0, 0]).unwrap();
+        loop {
+            let mut header = [0; 9];
+            socket.read_exact(&mut header).unwrap();
+            let len = (usize::from(header[0]) << 16)
+                | (usize::from(header[1]) << 8)
+                | usize::from(header[2]);
+            assert!(len <= 65536);
+            let mut payload = vec![0; len];
+            socket.read_exact(&mut payload).unwrap();
+            if header[3] == 4 && header[4] & 1 == 0 {
+                socket.write_all(&[0, 0, 0, 4, 1, 0, 0, 0, 0]).unwrap();
+            }
+            if header[3] == 1 {
+                assert_ne!(&header[5..9], &[0, 0, 0, 0]);
+                socket.shutdown(std::net::Shutdown::Both).unwrap();
+                return;
+            }
+        }
+    });
+    let sender = TonicTransport::bind(
+        LpId(1),
+        "127.0.0.1:0".parse().unwrap(),
+        vec![GrpcPeer {
+            lp_id: LpId(2),
+            endpoint: format!("http://{address}"),
+        }],
+        GrpcTransportConfig::default(),
+    )
+    .unwrap();
+    let error = sender
+        .send_migration_snapshot(LpId(2), &snapshot())
+        .unwrap_err();
+    peer.join().unwrap();
+    assert_eq!(error.status.code(), tonic::Code::Unknown);
+    assert_eq!(error.status.message(), "transport error");
+    assert!(error.status.details().is_empty());
+    assert!(error.status.metadata().is_empty());
+    assert!(std::error::Error::source(&error.status)
+        .unwrap()
+        .is::<tonic::transport::Error>());
+    assert_eq!(error.kind, GrpcFailureKind::Transient);
+}
+#[test]
+fn unknown_text_and_unrelated_io_are_not_connectivity_evidence() {
+    for io in [
+        None,
+        Some(std::io::ErrorKind::BrokenPipe),
+        Some(std::io::ErrorKind::PermissionDenied),
+    ] {
+        let mut status = tonic::Status::with_details(
+            tonic::Code::Unknown,
+            "transport error",
+            tonic::codegen::Bytes::from_static(b"original-unknown-details"),
+        );
+        status
+            .metadata_mut()
+            .insert("x-original", "retained".parse().unwrap());
+        if let Some(kind) = io {
+            status.set_source(std::sync::Arc::new(std::io::Error::new(
+                kind,
+                "transport error",
+            )));
+        }
+        let error = GrpcCallFailure::from(status);
+        assert_eq!(error.kind, GrpcFailureKind::Permanent);
+        assert_eq!(error.status.code(), tonic::Code::Unknown);
+        assert_eq!(error.status.message(), "transport error");
+        assert_eq!(error.status.details(), b"original-unknown-details");
+        assert_eq!(
+            error.status.metadata().get("x-original").unwrap(),
+            "retained"
+        );
+        assert_eq!(
+            std::error::Error::source(&error.status).is_some(),
+            io.is_some()
+        );
+    }
+}
+#[test]
+fn unknown_with_typed_tonic_configuration_error_remains_permanent() {
+    let configuration_error =
+        tonic::transport::Endpoint::from_shared("http://[".to_owned()).unwrap_err();
+    let mut status = tonic::Status::unknown("transport error");
+    status.set_source(std::sync::Arc::new(configuration_error));
+    let failure = GrpcCallFailure::from(status);
+    assert_eq!(failure.kind, GrpcFailureKind::Permanent);
+    assert_eq!(failure.status.code(), tonic::Code::Unknown);
+    assert!(std::error::Error::source(&failure.status)
+        .unwrap()
+        .is::<tonic::transport::Error>());
 }
 #[test]
 fn independent_protoc_canonical_wire_matches_versioned_prost_schema() {

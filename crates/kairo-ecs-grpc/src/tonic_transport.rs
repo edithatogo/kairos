@@ -1164,10 +1164,45 @@ impl From<Status> for GrpcCallFailure {
         let kind = match status.code() {
             tonic::Code::Unavailable | tonic::Code::ResourceExhausted => GrpcFailureKind::Transient,
             tonic::Code::DeadlineExceeded => GrpcFailureKind::PartitionSuspected,
+            tonic::Code::Unknown if has_transport_connectivity_source(&status) => {
+                GrpcFailureKind::Transient
+            }
             _ => GrpcFailureKind::Permanent,
         };
         Self { status, kind }
     }
+}
+// Tonic preserves some mid-RPC socket failures as Unknown with a typed
+// transport -> hyper -> io source chain. Preserve that original Status, while
+// recognizing only concrete connectivity IO beneath a maintained transport error.
+// Server Unknown statuses, message text and unrelated IO sources are insufficient.
+fn has_transport_connectivity_source(status: &Status) -> bool {
+    let mut source = std::error::Error::source(status);
+    let mut transport = false;
+    // Error sources are user-extensible; bound work even for a cyclic chain.
+    for _ in 0..32 {
+        let Some(error) = source else {
+            return false;
+        };
+        transport |= error.is::<tonic::transport::Error>();
+        if transport
+            && error.downcast_ref::<std::io::Error>().is_some_and(|io| {
+                matches!(
+                    io.kind(),
+                    std::io::ErrorKind::ConnectionRefused
+                        | std::io::ErrorKind::ConnectionReset
+                        | std::io::ErrorKind::ConnectionAborted
+                        | std::io::ErrorKind::NotConnected
+                        | std::io::ErrorKind::BrokenPipe
+                        | std::io::ErrorKind::UnexpectedEof
+                )
+            })
+        {
+            return true;
+        }
+        source = error.source();
+    }
+    false
 }
 impl std::fmt::Display for GrpcCallFailure {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
