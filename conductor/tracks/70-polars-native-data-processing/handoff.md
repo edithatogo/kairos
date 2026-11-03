@@ -242,3 +242,23 @@ Native table/IPC, durability, protected publication, source/Git consumers and pl
 ## Known risks
 
 Crates.io publication stays disabled; final CI and package qualification remain required.
+
+## Bounded domain C Data followup — 3 November 2026
+
+Chat01a19b9f-69e7-7353-9b75-445d5653feb4 owns the additive source packet in
+standard Git worktree kairos-polars-domain-ffi-20261103 at4134a373. Actual path is
+recorded in the local advisory lease; branchcodex/polars-domain-ffi-20261103.
+No Arrow/FFI active writer was found in live worktree/lease readback. Unrelated
+Track49 claims and prior assignments are preserved. See
+[bounded packet](domain-c-data-followup.md) and proposed ADR7/API review. This
+followup addresses the demonstrated event-log-only generic export gap required
+by CareOps R13/R14; no old phase, release or arbitrary-table evidence is relabelled.
+Next: review contract, actual baseline/control, implementation and focused proof.
+No native service/authentication scope or dependency/runtime promotion is owned.
+
+Local prototype is now reviewed:133native package and29default FFI tests pass,
+0ignored, with populated exact-domain values, metadata, lifetime/release controls.
+Final warnings-denied Clippy/docs and fmt pass; actual red/compile/lint failures
+remain recorded in the bounded packet. No pin/lock/runtime/header change.
+Next: immutable source handoff and actual hosted/package acceptance; CareOps
+producer adoption and isolated safe-import proof require a separate reservation.
