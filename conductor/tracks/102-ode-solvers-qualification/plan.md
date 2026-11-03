@@ -2,6 +2,10 @@
 
 Phase 0 reached the conditional entry stop; see the [qualification decision](handoff.md#phase-0-decision--1-november-2026). Conditional/evaluation tracks may complete only a no-go report without dependency installation; do not mark adoption tasks done for that outcome.
 
+The local Phase 0 review and no-go packet merged in PR #358. Formal phase and
+shared-registry acceptance remain pending; the checked review task records the
+bounded review, not solver adoption or track closeout.
+
 ## Phase 0 — Evidence and value gate
 
 - [x] Task 0.1: Verify local/external prerequisites, current ownership, actual consumer and source target; reconcile already replaced paths before starting.
