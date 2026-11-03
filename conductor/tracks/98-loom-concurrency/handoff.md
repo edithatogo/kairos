@@ -36,7 +36,11 @@ See [programme](../../robust-dependencies.md). Worktree integration, local main,
 
 ## Phase closeout evidence
 
-Pending: `$conductor-review`, accepted fixes, rejected findings, command/cwd/commit SHA/toolchain/seed/input hashes, exit codes/artifacts, pushed ref or blocker and next-phase decision. Use `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` before advancement.
+The qualification packet and its review fixes were integrated in PR #353; its
+bounded model receipts are recorded below. Formal phase and shared-registry
+acceptance remain pending, including the explicit next-phase decision and
+`pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`.
+The merged defer evaluation does not mark production adoption complete.
 
 ## Phase 0 qualification — 1 November 2026
 
