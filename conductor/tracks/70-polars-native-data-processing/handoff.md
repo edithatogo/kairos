@@ -311,3 +311,21 @@ is ready. Actual Windows rerun remains pending. Inspection also confirms the
 existing Arrow platform lane selects only older targets: new domain/metadata
 and FFI consumer tests need explicit selectors under a fresh CI-scoped packet;
 compilation by all-target Clippy is not execution proof.
+
+## Hosted native target binding — 3 November 2026
+
+A fresh CI-scoped claim extends the existing three-platform Arrow lane with
+explicit domain C Data and file-metadata targets and the full native FFI package.
+All four older Arrow targets, unit/FS checks, matrix, selected toolchain, job/time
+budgets, action pins, permissions and warnings-as-errors remain. FFI path changes
+trigger the same lane; its actual pinned package/feature also enters all-target
+Clippy. The existing source-only --no-verify package list now includes FFI; that
+step does not prove a published-dependency build. No new workflow/backend or
+skipped gate. Independent dispatch review approved this bounded wiring. Actual
+hosted execution remains pending; compilation alone is not test acceptance.
+
+Actionlint1.7.12 (actual Homebrew binary) validates the changed workflow, exit0;
+diff checks pass. The command/target sources already have the scoped native
+receipts above; those remain local and do not substitute for this new hosted
+selector execution. Next: commit, verify source-package check, then publish all
+three bounded gate repairs together and inspect actual final-head results.

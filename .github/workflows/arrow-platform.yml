@@ -5,6 +5,7 @@ on:
     paths:
       - 'crates/kairo-ecs-arrow/**'
       - 'crates/kairo-ecs-fs-guard/**'
+      - 'crates/kairo-ecs-ffi/**'
       - 'crates/kairo-ecs-types/**'
       - 'Cargo.toml'
       - 'Cargo.lock'
@@ -15,6 +16,7 @@ on:
     paths:
       - 'crates/kairo-ecs-arrow/**'
       - 'crates/kairo-ecs-fs-guard/**'
+      - 'crates/kairo-ecs-ffi/**'
       - 'Cargo.toml'
       - 'Cargo.lock'
       - '.github/workflows/arrow-platform.yml'
@@ -61,13 +63,17 @@ jobs:
           --test track70_phase3_durable_publication
           --test track70_phase3_durability
           --test track70_phase1_native_tables
+          --test track70_domain_c_data
+          --test track70_file_metadata
+      - name: Trusted domain C Data and event-log FFI consumers
+        run: cargo test --locked -p kairo-ecs-ffi --features native-data
       - name: Arrow unit checks
         run: cargo test --locked -p kairo-ecs-arrow --features polars-native --lib
       - name: Focused lint checks
         run: >-
-          cargo clippy --locked -p kairo-ecs-arrow -p kairo-ecs-fs-guard
-          --features kairo-ecs-arrow/polars-native --all-targets -- -D warnings
+          cargo clippy --locked -p kairo-ecs-arrow -p kairo-ecs-fs-guard -p kairo-ecs-ffi
+          --features kairo-ecs-arrow/polars-native,kairo-ecs-ffi/native-data --all-targets -- -D warnings
       - name: Create source packages
         run: >-
           cargo package --locked --no-verify
-          -p kairo-ecs-types -p kairo-ecs-fs-guard -p kairo-ecs-arrow
+          -p kairo-ecs-types -p kairo-ecs-fs-guard -p kairo-ecs-arrow -p kairo-ecs-ffi
