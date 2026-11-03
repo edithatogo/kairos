@@ -2311,6 +2311,7 @@ name = "kairo-ecs-grpc"
 version = "0.0.0"
 dependencies = [
  "ed25519-dalek",
+ "kairo-ecs-arrow",
  "kairo-ecs-pdes",
  "kairo-ecs-types",
  "prost",
@@ -2331,9 +2332,12 @@ version = "0.1.0"
 name = "kairo-ecs-mpi"
 version = "0.0.0"
 dependencies = [
+ "ed25519-dalek",
  "kairo-ecs-pdes",
  "kairo-ecs-types",
  "mpi",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

@@ -8,6 +8,7 @@ rust-version.workspace = true
 [dependencies]
 kairo-ecs-pdes = { path = "../kairo-ecs-pdes", version = "0.0.0", features = ["time-warp", "pdes"] }
 kairo-ecs-types = { path = "../kairo-ecs-types", version = "0.0.0" }
+kairo-ecs-arrow = { path = "../kairo-ecs-arrow", version = "0.1.0", optional = true, features = ["polars-native"] }
 prost = { version = "0.14.4", default-features = false, features = ["std", "derive"] }
 tokio = { version = "1.54.1", default-features = false, features = ["rt", "rt-multi-thread", "net", "io-util", "sync", "macros", "time"] }
 tokio-stream = { version = "0.1.19", default-features = false, features = ["net"] }
@@ -24,6 +25,7 @@ serde_json = "1"
 [features]
 default = []
 grpc = []
+telemetry-ipc = ["dep:kairo-ecs-arrow"]
 external-fault-injection = ["external-time-warp", "kairo-ecs-pdes/external-fault-injection"]
 external-time-warp = ["kairo-ecs-pdes/external-time-warp", "tonic/tls-ring", "dep:sha2", "dep:rustls"]
 
