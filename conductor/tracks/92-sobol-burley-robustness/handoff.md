@@ -116,3 +116,9 @@ Raw experiment directory: /Volumes/PortableSSD/codex-builds/kairos-track92-eSoVw
 - `alt.csv` — 014a2171aac721fea0b27b3db49f62257da24edc3536ba037f618b7fc0eedf4f
 - `alt-deny.log` — d1a110ba0b2752f074d2ada75dc878b5f68aedcd83d5573f9e77ee5ae983f845
 - `estimator.log` — 3176c39cef86a231aefd770e8f4577a5b91d2efd0ba30be4423f42a1c155631e
+
+## Current readback — 3 November 2026
+
+Chat `01a19bed-7060-7910-af22-38cb31f51446` owns this bounded handoff readback in `/Users/doughnut/.codex/worktrees/kairos-track98-review/kairos`, branch `codex/conditional-tracks-reconcile-20261103`, based on `d7bdcd3`. Shared registry and runtime changes remain with their owners.
+
+The earlier instruction to integrate the evidence is historical: [PR #356](https://github.com/edithatogo/kairos/pull/356) merged as `b5763f3c12c8b1fc8bbf0d1c25ec19c1d0ab6282`. This integrates the recorded no-go evaluation, not acceptance of a production replacement. Numerical, consumer and phase-review gates remain open.
