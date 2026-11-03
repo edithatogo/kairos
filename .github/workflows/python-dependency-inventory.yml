@@ -48,6 +48,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: edithatogo/careops
+          ssh-key: ${{ secrets.CAREOPS_INVENTORY_READONLY_SSH }}
           ref: cb62ad8666a4c6282f0e4c3dacca5cf4226ed2c4
           path: artifacts/python-inventory-policy
           sparse-checkout: portfolio-scripts/dependency_snapshot.py
