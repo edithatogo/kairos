@@ -281,3 +281,30 @@ It asserts delivery of the preceding complete frame and absence of events.
 Hosted full-workspace coverage remains the acceptance oracle.
 Track-wide inventory and environment handover gates remain governed by the
 existing plan; these native startup receipts supersede their pending entries.
+
+## Runtime reconciliation and qualification candidate — 3 November 2026
+
+The current integrator chat `01a19bed-7060-7910-af22-38cb31f51446` owns the
+initially clean isolated worktree
+`/Users/doughnut/.codex/worktrees/kairos-track105-closeout/kairos`, branch
+`codex/track105-closeout-20261103`, starting at main `0f5da40`. Scope is Track 105
+records and narrowly reviewed runtime guidance/qualification triggers; no native
+service, credential, other checkout, existing environment or downstream pin is
+changed. The [bounded inventory](runtime-inventory-20261103.md) distinguishes
+current-main proof from older Devbox/container evidence and records the 68-test
+local receipt. The other toolchain checkout has no observed open process and is
+preserved, including all uncommitted work.
+
+Independent runtime review identified stale current Python 3.15.1 instructions
+in the Syft runbook. The reviewed fix uses the verified repo-local 3.15.2
+interpreter and preserves historical evidence; review found no remaining issue
+in that bounded correction. Review also accepted the Cloud/HPC evidence note
+and the read-only manual Devbox trigger without weakening their runtime checks.
+The local phase/DAG/no-skip validators passed. The selected `.venv` was newly
+created in this worktree, verified at 3.15.2 and has not replaced another owner’s
+environment. Other consumers have not been declared terminal or handed over.
+
+Next: require actual PR-head Cloud/HPC and Devbox runs, full applicable checks,
+review and protected merge; then inspect exact-main runs and reconcile remaining
+consumer/environment handover before any track completion or archival claim.
+Track 105 remains In Progress.
