@@ -146,3 +146,30 @@ empty affinity masks. Discovery deliberately rejects a failed directory
 enumeration: an unread entry could be a real node. Restoration deliberately
 retains the saved mask on an unconfirmed rollback so the owning thread can
 recover. A live thread cannot have its Linux TID simultaneously reassigned.
+
+## Current acceptance reconciliation — 3 November 2026
+
+Chat `01a19bed-7060-7910-af22-38cb31f51446` owns this bounded record and
+performance-documentation correction in
+`/Users/doughnut/.codex/worktrees/kairos-track50-qualification/kairos`, branch
+`codex/track50-qualification-20261103`, based on `d7bdcd3`. No runtime, native
+object or shared registry is changed. The previous Linux packet merged as
+`855e918` in PR #351; its instruction to integrate is historical.
+
+Independent reviewer `runtime_review` verified the earlier single-node receipt
+and found that sysfs node/CPU/memory data does not implement the specified
+hwloc/core/cache model. The allocator primitives are not wired into the
+scheduler, their thread tests use separate instances, and their constant metric
+does not measure contention or locality. The FFI layout validator checks
+declared metadata, not actual allocation ownership or lifetime. The current
+plan, historical review and performance guidance now state these boundaries.
+Multi-node locality and performance, actual binding lifetimes and the remaining
+acceptance gates are open; Track 50 remains In Progress.
+
+At `d7bdcd3`, a macOS arm64 run of `cargo test --locked -p kairo-ecs-core
+-p kairo-ecs-state -p kairo-ecs-ffi --features numa` exited zero using
+Homebrew Rust 1.99.1 and a separate external target directory. Linux-only tests
+executed zero cases on this host. A subsequent attempt to retain a fresh log
+failed with `No space left on device`; no success is claimed for that repeat.
+This host run does not replace the separately retained NAS receipt or establish
+multi-node acceptance.
