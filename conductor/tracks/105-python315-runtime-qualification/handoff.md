@@ -348,3 +348,8 @@ Jupyter kernel, preserving the executed notebooks and tool-version receipt.
 This is exploratory source/runtime evidence, not a locked Jupyter dependency
 profile, a handover of the user's existing kernel, or Colab accelerator proof.
 See the runtime inventory for its warnings, hashes and exact source revision.
+
+The [runtime inventory](runtime-inventory-20261103.md#colab-runtime-attempts--3-november-2026)
+records exploratory Colab attempts, private log hashes and the distinction
+between a successful isolated CPU kernel probe and the unqualified accelerator
+notebooks. No GPU/TPU acceptance follows from those attempts.

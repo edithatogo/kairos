@@ -111,3 +111,30 @@ An isolated Colab CPU probe reported provider kernel Python 3.13.18 at
 terminated. This is not a qualified 3.15.2 environment, a justified alternate
 profile, or GPU/TPU notebook execution evidence. Colab runtime selection and
 accelerator qualification therefore remain open.
+
+## Colab runtime attempts — 3 November 2026
+
+A T4 session at source `e33fc90d06318d089192eb15e8de3acc3552033a` could not
+create the selected interpreter with the provider's `uv` 0.13.5. A separate
+CPU diagnostic provisioned `uv` 0.13.7 in an isolated directory and created
+Python 3.15.2. With that isolated bootstrap, a later T4 attempt created and
+verified the local 3.15.2 environment and installed JAX CUDA tooling, but its
+Jupyter kernel failed during startup because the provider's system IPython
+configuration required the Colab kernel class. No GPU notebook cell completed.
+
+A separate CPU experiment started a 3.15.2 Jupyter kernel by overriding the
+provider-only class and extensions in its disposable kernelspec. Its TCP
+transport warning remains unqualified. A later T4 attempt using that approach
+lost its connection before producing a notebook or device result. The CLI
+reported session termination and a subsequent session listing found none active;
+there is no retained result proving the remote cell outcome. GPU and TPU
+notebooks, device execution, package lock/security qualification and supported
+provider-kernel handover remain open. No workaround was promoted into the project.
+
+Private logs are retained under
+`~/.codex/private-artifacts/kairos-track105-closeout-20261103/`. SHA-256 values:
+initial GPU provisioning failure `18349a63946acb21e05b8c2740967819c5d2600086d68e4761b6780535337d67`;
+GPU kernel-start failure `e8e743f3ea17402f0323dd14c60b5e44cc5f7d7dca4fe551c5cb337d099b1280`;
+CPU kernel probe `7267857b8736759964f61f01349298c370c043045b8887223d0363ed3466dc5b`;
+lost GPU connection `6de7701d4a7af9204c6a8eeb9eb950de5127dfb2cfcc3a820c9de7c1065c98f5`.
+The environments were exploratory and not hash-locked project dependencies.
