@@ -172,6 +172,14 @@ fitness switches at t=0.5, final 0.249707779377, exact 0.25
 
 ## Current readback — 3 November 2026
 
+Absolute paths below identify the original owner's retained receipts and are
+not portable execution instructions. To reproduce on another host, check out
+`d7bdcd3`, save the complete caller in the **Portable reproduction** section
+above as `<scratch>/probe.rs`, and use that section's build/link/run commands
+with your own `<CARGO_TARGET_DIR>` and `<scratch>/probe.log`. The checked-in
+caller and expected output make this reproduction independent of access to the
+owner's filesystem. Verify the output against the recorded log hash below.
+
 Chat `01a19bed-7060-7910-af22-38cb31f51446` owns this bounded track-record
 and numerical readback in `/Users/doughnut/.codex/worktrees/kairos-track102-review/kairos`,
 branch `codex/track102-qualification-20261103`, based on `d7bdcd3`. The
