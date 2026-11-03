@@ -117,7 +117,7 @@ impl Transfer {
     }
     fn restored_entity(&self) -> Result<Entity, String> {
         if self.wire_snapshot.len() > 16384
-            || self.wire_snapshot.len() % 2 != 0
+            || !self.wire_snapshot.len().is_multiple_of(2)
             || !self
                 .wire_snapshot
                 .bytes()
@@ -128,7 +128,9 @@ impl Transfer {
         let bytes = self
             .wire_snapshot
             .as_bytes()
-            .chunks_exact(2)
+            .as_chunks::<2>()
+            .0
+            .iter()
             .map(|p| {
                 u8::from_str_radix(std::str::from_utf8(p).map_err(|e| e.to_string())?, 16)
                     .map_err(|e| e.to_string())
