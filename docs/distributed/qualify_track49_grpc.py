@@ -472,6 +472,8 @@ p=base/'settings.json';p.write_text({json.dumps(settings)!r});p.chmod(0o600)
         assert reverse["row_sources"] == merged["row_sources"]
         assert reverse["arrow_ipc_payload"] == merged["arrow_ipc_payload"]
         merge_conflict = self.failure(a.call("sync_telemetry_merge", batches=[batch0, conflict], expected_sources=[0, 1], expect=False), "Permanent", "AlreadyExists")
+        event_conflict_batch = make(a, 0, changed, "source0-event-conflict")
+        event_conflict = self.failure(a.call("sync_telemetry_merge", batches=[batch0, event_conflict_batch], expected_sources=[0, 1], expect=False), "Permanent", "AlreadyExists")
         assert [oracle.model(a), oracle.model(b)] == before, "queue admission is not model application"
         b.stop()
         transient = self.failure(a.call("sync_snapshot_send", destination=1, wire_snapshot=new, expect=False), "Transient", "Unavailable")
@@ -502,7 +504,8 @@ c,_=s.accept();time.sleep(20)
             "telemetry_rows": expected, "row_sources": merged["row_sources"], "missing_sources": [2],
             "merged_ipc_sha256": hashlib.sha256(bytes(merged["arrow_ipc_payload"])).hexdigest(),
             "failures": {"snapshot_conflict": permanent_snapshot, "telemetry_conflict": permanent_telemetry,
-                         "merge_conflict": merge_conflict, "unavailable": transient, "partition_suspected": partition}}
+                         "merge_conflict": merge_conflict, "event_conflict": event_conflict,
+                         "unavailable": transient, "partition_suspected": partition}}
         (self.output / (group.name + "-typed-sync.json")).write_text(json.dumps(result, indent=2))
         (self.output / (group.name + "-typed-telemetry.json")).write_text(json.dumps({"source0": batch0, "source1": batch1, "merged": merged}, indent=2))
         self.sync_results.append(result)

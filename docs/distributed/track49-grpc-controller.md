@@ -86,5 +86,6 @@ SSH master closes. VM termination remains root's separate provider operation.
 The implementation lane runs repo-local Python3.15.2 `py_compile` and synthetic
 adapter checks for exact JSON envelopes, typed failure shape, byte-preserving ACK
 results, explicit historical self-recovery, idempotent stop and source-set bounds.
-These perform no subprocess/native/SSH/Colab operations and cannot establish any
+These perform no native worker/SSH/Colab operations (source selection uses
+read-only Git) and cannot establish any
 runtime, network, durable replay, telemetry or provider acceptance.
