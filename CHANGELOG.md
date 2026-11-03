@@ -14,12 +14,23 @@ Format:
 
 ## Unreleased
 
-- `crates/kairo-ecs-arrow` and `crates/kairo-ecs-ffi`: add declared-schema owned
-  domain C Data exports and trusted-only safe imports, with lazy bounded stream
-  windows and source-drop/release controls. Add metadata-aware Parquet/Zstd, IPC
-  and durable batch/sink publication; receipts hash the metadata-bearing bytes.
-  Existing event-log C symbols, manifests and plain empty-metadata output remain
-  unchanged. These APIs are alpha; parent adoption and release remain gated.
+- CI and workflow-security inventories include native Devbox Python startup qualification.
+
+- Devbox creates its Python environment from the selected runtime profile; Cloud/HPC smoke now qualifies profile changes with the current container.
+
+- `kairo-ecs-arrow` stages checkpoint manifests and contiguous-block files before replacing a generation. It rejects v1 manifests that cannot be restored exactly.
+
+- With the `numa` feature, `kairo-ecs-core` reads Linux node CPU lists and memory totals from sysfs, supports opt-in binding and exact restoration of the calling thread’s CPU mask, and reuses allocated event-arena chunks after reset.
+
+- The Rust workspace coverage gate now checks the actual tested merge parent and verifies the recovered mainline LCOV artifact against the last trusted report. The bootstrap npm CLI excludes vulnerable bundled glob dependencies.
+
+- Add a native workspace coverage regression gate using exact-base trusted artifacts, preserving the core coverage floor and replacing blocked Codecov project delivery.
+
+- Report coverage and required-check readback as pending while exact-head GitHub Actions are queued, including upstream jobs whose dependent checks do not exist yet; retain drift for completed failures.
+
+- Bind hosted commit-status evidence to the exact immutable GitHub request and validate its API URL; Codecov project status can now be recognized without relying on a nonexistent response SHA field.
+
+- `kairo-ecs-des` adds experimental `StagedResourceRuntime` for scheduler-backed staged allocation; CareOps migration remains separately gated.
 
 - Upgrade active Rust, Python, Node documentation/binding and .NET test dependencies to the 29 October registry frontier; qualify Python 3.15.2 and Node 26.13.0 in isolated environments. Update rstar spatial queries and Prost's derive feature for their new APIs.
 - `kairo-ecs-arrow` source integration pins Polars development revision `96439685eb2f95108f51087d2b76091917f2593c` and its required hashbrown revision. This resolves the zstd and object_store/XML vulnerability closure. Git consumers must retain the documented workspace patch; crates.io publication is disabled until a separately qualified published Polars closure is available.
@@ -154,6 +165,13 @@ Format:
 - Bootstrap npm tooling now locks ip-address 10.7.1 and brace-expansion 5.0.12 outside npm’s embedded bundle, rejecting vulnerable bundled copies.
 
 ### Added
+
+- `crates/kairo-ecs-arrow` and `crates/kairo-ecs-ffi`: add declared-schema owned
+  domain C Data exports and trusted-only safe imports, with lazy bounded stream
+  windows and source-drop/release controls. Add metadata-aware Parquet/Zstd, IPC
+  and durable batch/sink publication; receipts hash the metadata-bearing bytes.
+  Existing event-log C symbols, manifests and plain empty-metadata output remain
+  unchanged. These APIs are alpha; parent adoption and release remain gated.
 
 - TypeScript binding development installs now declare the same Vitest 4.1.11 minimum already used by the reviewed lockfile and template.
 

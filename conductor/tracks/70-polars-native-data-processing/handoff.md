@@ -347,3 +347,17 @@ Actual fe48d93 committed clean archive builds both native libraries, exit0 in
 3.65s; revisions/source paths/logs are retained. Actionlint initially required
 quoting the literal tree revision; corrected workflow passes without suppression.
 Actual hosted source extraction, platform tests and parent promotion stay open.
+
+## Committed changelog conflict reconciliation
+
+After7c2328b push, PR367 reports CONFLICTING/DIRTY and no head checks. Exact
+basec2bb5bb and source7c2328b diverge from4134a373 only on CHANGELOG.md among
+this packet's paths. Read-only integration preflight has clean source/target,
+no warnings, staged deletions or dirty overlaps. Preserve the complete committed
+main changelog and insert the existing alpha API entry under its Added section.
+A first combined insertion at Unreleased still conflicts as a three-way insertion;
+relocating only this entry resolves it. Standard merge-file exits0 and its result
+is byte-identical to the owned file. No other main/runtime/dependency source is
+copied, no worktree/index/owner is replaced, and no history is rewritten. Code
+receipts remain scoped as before; require actual newly eligible head checks
+before accepting upstream promotion.
