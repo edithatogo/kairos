@@ -34,6 +34,7 @@ class Owner:
         self.base=pathlib.Path(tempfile.mkdtemp(prefix="track49-owned-"))
         self.source={n:hashlib.sha256((ROOT/n).read_bytes()).hexdigest() for n in self.source_paths()}
         env=dict(os.environ,CARGO_TARGET_DIR=str(self.binary.parents[2]),CARGO_PROFILE_DEV_DEBUG='0',CARGO_BUILD_JOBS='2',
+                 CARGO_PROFILE_DEV_OPT_LEVEL='1',CARGO_PROFILE_DEV_DEBUG_ASSERTIONS='true',CARGO_PROFILE_DEV_OVERFLOW_CHECKS='true',
                  RUSTC=checked(['which','rustc']).stdout.strip(),RUSTDOC=checked(['which','rustdoc']).stdout.strip(),RUSTUP_TOOLCHAIN='1.99.1')
         build=subprocess.run(['cargo','build','--locked','--message-format=json','-p','kairo-ecs-mpi','--example','track49_mpi_node','--features','external-fault-injection'],
             cwd=ROOT,env=env,capture_output=True,text=True,timeout=600)
@@ -42,6 +43,9 @@ class Owner:
         artifacts=[json.loads(s) for s in build.stdout.splitlines() if s.startswith('{')]
         produced=[x['executable'] for x in artifacts if x.get('reason')=='compiler-artifact' and x.get('target',{}).get('name')=='track49_mpi_node' and x.get('executable')]
         assert produced and pathlib.Path(produced[-1]).resolve()==self.binary
+        profile=next(x['profile'] for x in reversed(artifacts) if x.get('executable')==produced[-1])
+        assert profile['opt_level']=='1' and profile['debug_assertions'] and profile['overflow_checks'],profile
+        self.build_profile=profile
         assert self.source=={n:hashlib.sha256((ROOT/n).read_bytes()).hexdigest() for n in self.source}
         (self.output/'rust-version.txt').write_text(checked([env['RUSTC'],'-vV']).stdout)
         self.description=json.loads(checked([str(self.binary),'--describe']).stdout)
@@ -250,7 +254,7 @@ def scenario(owner,name,n,after=None):
     group.stop();return result
 
 def main():
-    p=argparse.ArgumentParser();p.add_argument('--binary',default=str(ROOT/'artifacts/track49/build/debug/examples/track49_mpi_node'))
+    p=argparse.ArgumentParser();p.add_argument('--binary',default=str(ROOT/'artifacts/track49/native-opt1/debug/examples/track49_mpi_node'))
     p.add_argument('--output',required=True);p.add_argument('--ranks',type=int,choices=[2,4],default=2);p.add_argument('--cases',choices=['reference','all'],default='all')
     p.add_argument('--allocation-timeout',type=int,default=600,help='outer owned-allocation safety watchdog; does not change RPC deadlines')
     args=p.parse_args();owner=Owner(args)
@@ -264,6 +268,7 @@ def main():
         owner.freeze_check();receipt={'passed':len(results),'failed':0,'ranks':args.ranks,'source':owner.source,'binary_sha256':owner.binary_hash,
             'cases':[{k:v for k,v in x.items() if k!='semantics'} for x in results],
             'runtime':'actual native MPI records, strict signed driver and real SQL process death; whole-allocation restart',
+            'build_profile':owner.build_profile,
             'python':{'version':sys.version,'executable':sys.executable,'prefix':sys.prefix}}
         (owner.output/'receipt.json').write_text(json.dumps(receipt,indent=2));print(json.dumps({'TRACK49_MPI_PASSED':len(results),'ranks':args.ranks}),flush=True)
     finally:owner.close()
