@@ -185,11 +185,14 @@ pub enum Body {
     },
     Prepare {
         cut: u64,
+        pause: Hash,
         revision: u64,
         checkpoint: Hash,
         #[serde(with = "tick")]
         minimum: u128,
         frontiers: Vec<(u32, u64)>,
+        sent: Vec<(u32, Hash)>,
+        received: Vec<(u32, Hash)>,
         #[serde(with = "tick")]
         floor: u128,
     },
@@ -243,9 +246,17 @@ impl Record {
                     return Err("external join bound/duplicate/generation".into());
                 }
             }
-            Body::Prepare { frontiers, .. } => {
-                if !valid_frontiers(frontiers) {
-                    return Err("external frontier bound/duplicate".into());
+            Body::Prepare {
+                frontiers,
+                sent,
+                received,
+                ..
+            } => {
+                if !valid_frontiers(frontiers)
+                    || !valid_deliveries(sent)
+                    || !valid_deliveries(received)
+                {
+                    return Err("external prepare frontier/delivery bound/order/duplicate".into());
                 }
             }
             Body::Cut { prepares, .. } => {
@@ -262,6 +273,11 @@ impl Record {
         }
         Ok(())
     }
+}
+// Exact channel reconciliation uses canonical, unique (peer, packet digest)
+// sets. Scalar frontiers are retained as diagnostics, never cut authority.
+fn valid_deliveries(deliveries: &[(u32, Hash)]) -> bool {
+    deliveries.len() <= MAX_MEMBERS && deliveries.windows(2).all(|pair| pair[0] < pair[1])
 }
 fn valid_frontiers(frontiers: &[(u32, u64)]) -> bool {
     frontiers.len() <= MAX_MEMBERS
@@ -552,10 +568,13 @@ mod tests {
             },
             Body::Prepare {
                 cut: 1,
+                pause: [0; 32],
                 revision: 0,
                 checkpoint: [0; 32],
                 minimum: 1,
                 frontiers: vec![(1, 1), (1, 2)],
+                sent: vec![],
+                received: vec![],
                 floor: 0,
             },
             Body::Cut {
@@ -575,5 +594,86 @@ mod tests {
             r.body = body;
             assert!(sign(&r, &key()).is_err());
         }
+    }
+    fn prepare() -> Record {
+        let mut r = record();
+        r.body = Body::Prepare {
+            cut: 3,
+            pause: [1; 32],
+            revision: 4,
+            checkpoint: [2; 32],
+            minimum: (1u128 << 100) + 25,
+            frontiers: vec![(9, 4)],
+            sent: vec![(9, [3; 32])],
+            received: vec![(9, [4; 32])],
+            floor: 1,
+        };
+        r
+    }
+    #[test]
+    fn prepare_binds_pause_checkpoint_and_exact_delivery_sets() {
+        let r = prepare();
+        let frame = sign(&r, &key()).unwrap();
+        assert_eq!(verify(&frame, [48; 32], &keys()).unwrap(), r);
+        let hash: String = digest(&frame).iter().map(|b| format!("{b:02x}")).collect();
+        assert_eq!(
+            hash,
+            "f39dd7f18d02f1890fce5ed179509134de6c71bcbe93828f7e83d927025fee1b"
+        );
+        for field in ["pause", "sent", "received"] {
+            let mut value = serde_json::to_value(&r).unwrap();
+            value["body"].as_object_mut().unwrap().remove(field);
+            let error = serde_json::from_value::<Record>(value)
+                .unwrap_err()
+                .to_string();
+            assert!(
+                error.contains(&format!("missing field `{field}`")),
+                "{error}"
+            );
+        }
+        let mut altered: Signed = decode(&frame).unwrap();
+        if let Body::Prepare { sent, .. } = &mut altered.record.body {
+            sent[0].1 = [5; 32];
+        }
+        assert!(verify(&encode(&altered).unwrap(), [48; 32], &keys()).is_err());
+    }
+    #[test]
+    fn prepare_delivery_sets_require_bounded_unique_canonical_order() {
+        for invalid in [
+            vec![(9, [1; 32]), (9, [1; 32])],
+            vec![(9, [2; 32]), (9, [1; 32])],
+            vec![(9, [1; 32]), (8, [2; 32])],
+            (0..=MAX_MEMBERS).map(|n| (n as u32, [1; 32])).collect(),
+        ] {
+            for received in [false, true] {
+                let mut r = prepare();
+                if let Body::Prepare {
+                    sent,
+                    received: incoming,
+                    ..
+                } = &mut r.body
+                {
+                    if received {
+                        *incoming = invalid.clone();
+                    } else {
+                        *sent = invalid.clone();
+                    }
+                }
+                assert!(sign(&r, &key()).is_err());
+            }
+        }
+        let mut r = record();
+        r.body = Body::Join {
+            participant: 7,
+            generation: 3,
+            activation: [1; 32],
+            checkpoint: [2; 32],
+            frontiers: vec![(9, 4)],
+            retained: vec![[3; 32]],
+        };
+        assert_eq!(
+            verify(&sign(&r, &key()).unwrap(), [48; 32], &keys()).unwrap(),
+            r
+        );
     }
 }
