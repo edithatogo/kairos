@@ -86,6 +86,8 @@ class InventoryWorkflowTests(unittest.TestCase):
         checkout = prepare.split('repository: edithatogo/careops', 1)[1].split('      - uses:', 1)[0]
         self.assertIn('ssh-key: ${{ secrets.CAREOPS_INVENTORY_READONLY_SSH }}', checkout)
         self.assertIn('persist-credentials: false', checkout)
+        self.assertNotIn('sparse-checkout:', checkout)
+        self.assertNotIn('filter:', checkout)
         self.assertEqual(text.count('secrets.CAREOPS_INVENTORY_READONLY_SSH'), 1)
         self.assertIn('--only-binary=:all: --require-hashes', prepare)
         self.assertIn('sbom/generate-report', verify)
