@@ -76,4 +76,14 @@ jobs:
       - name: Create source packages
         run: >-
           cargo package --locked --no-verify
-          -p kairo-ecs-types -p kairo-ecs-fs-guard -p kairo-ecs-arrow -p kairo-ecs-ffi
+          -p kairo-ecs-types -p kairo-ecs-fs-guard -p kairo-ecs-arrow
+      - name: Compile clean committed Git source with native consumers
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD 'HEAD^{tree}'
+          source_root="$(mktemp -d)"
+          git archive --format=tar HEAD | tar -xf - -C "$source_root"
+          CARGO_TARGET_DIR="$GITHUB_WORKSPACE/target" cargo check --locked \
+            --manifest-path "$source_root/Cargo.toml" \
+            -p kairo-ecs-arrow -p kairo-ecs-ffi \
+            --features kairo-ecs-arrow/polars-native,kairo-ecs-ffi/native-data

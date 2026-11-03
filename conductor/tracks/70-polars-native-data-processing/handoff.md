@@ -329,3 +329,21 @@ diff checks pass. The command/target sources already have the scoped native
 receipts above; those remain local and do not substitute for this new hosted
 selector execution. Next: commit, verify source-package check, then publish all
 three bounded gate repairs together and inspect actual final-head results.
+
+## Source-only distribution gate correction
+
+The first proposed FFI --no-verify package addition actually fails because its
+Arrow dependency is not published on crates.io. Existing three source packages
+completed before that failure; the failure log remains. No registry publication
+or workaround is authorized. Restore the original three-package step unchanged,
+and add a mandatory clean committed Git-source extraction/locked native Arrow+
+FFI compile on every existing platform. Record checkout HEAD/tree, fail on
+extraction/Cargo errors, use only extracted source/build scripts and preserve
+all tests/lints. Shared dependency target caching does not turn this into a cold
+build or registry-package qualification. This is the relevant Git-source
+consumer closure gate; it replaces a newly introduced inapplicable registry
+requirement, with independent review, and removes no existing acceptance gate.
+Actual fe48d93 committed clean archive builds both native libraries, exit0 in
+3.65s; revisions/source paths/logs are retained. Actionlint initially required
+quoting the literal tree revision; corrected workflow passes without suppression.
+Actual hosted source extraction, platform tests and parent promotion stay open.
