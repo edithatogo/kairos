@@ -1,5 +1,11 @@
 # Review Report: Track 50 NUMA Topology, Affinity & HPC Memory Lifecycle
 
+> **Current qualification correction, 3 November 2026:** This historical
+> review covers contract slices. Its complete-plan, cache locality, zero
+> contention and FFI lifetime claims are not established by those tests. The
+> environment override is synthetic, not an observed cgroup topology. See the
+> current plan and handoff for the outstanding native acceptance work.
+
 ## Summary
 
 Track 50 implements NUMA topology discovery, CPU core affinity management, lifecycle event arenas and pools, and FFI zero-copy buffer validation contracts for KairoECS:
