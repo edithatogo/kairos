@@ -45,9 +45,18 @@ profiles remain subject to the recorded consumer-specific qualification policy.
   the actual kernel version or qualify an alternate profile. The docs-quality
   validator checks structure and AST, not cell execution. Runtime selection,
   dependencies and actual notebook execution remain open for these consumers.
-- `cloud/gcp/submit-experiment.sh` renders GCP array jobs with ambient `python`
-  and does not verify the repo-local interpreter before its submission command.
-  This is an active-use gap; it has not been executed against GCP in this audit.
+- `cloud/gcp/submit-experiment.sh` previously rendered GCP array jobs with
+  ambient `python`. Candidate `6bb072665c3fd5b43c8d28928734895b4163e30c`
+  verifies the local interpreter before rendering; four POSIX tests use a fake
+  `gcloud` to check success and fail-closed behavior. Hosted and real provider
+  qualification remain separate, and no GCP job was submitted in this audit.
+- Thirty-seven tracked helper shebangs name `python3`. Many rely on the caller's
+  documented activation or an already-guarded workflow rather than enforcing
+  a prefix themselves; each standalone consumer needs an explicit disposition
+  before a complete active-use inventory can be accepted. The distributed
+  qualification controllers check the version but rely on their documented
+  local-venv invocation for the prefix; the remote helper independently checks
+  both. Prior native qualification was not rerun by this documentation audit.
 - `scripts/release/publish-registry.mjs` and `scripts/release/publish-hpc.mjs`
   spawn ambient `python` when called directly as documented. Hosted workflows
   select the local runtime before invoking them, but direct entry points do
