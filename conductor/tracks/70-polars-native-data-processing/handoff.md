@@ -262,3 +262,18 @@ Final warnings-denied Clippy/docs and fmt pass; actual red/compile/lint failures
 remain recorded in the bounded packet. No pin/lock/runtime/header change.
 Next: immutable source handoff and actual hosted/package acceptance; CareOps
 producer adoption and isolated safe-import proof require a separate reservation.
+
+## Native file metadata followup — 3 November 2026
+
+Same sole chat/worktree owns the bounded source packet at d835c525. See
+[file metadata followup](file-metadata-followup.md) and ADR8/API review. Existing
+RunOutput publication must encode provenance before hashing; no byte-rewriting
+sink or duplicate publisher. No manifest/lock/runtime/C header/native service
+ownership is added. Next: reviewed baseline, implementation and focused proof,
+then publish a coherent upstream draft and retain hosted/package adoption gates.
+
+Metadata addition now has local engineering review and100native Arrow passes,
+0ignored,9focused controls, independent PyArrow26 file/part/data/metadata proof,
+warnings-denied Clippy/docs and fmt. No pin/lock change. Publish the coherent
+upstream draft next; actual hosted/package acceptance and exact parent readers/
+manifest/source promotion remain pending. Historical phase status is preserved.
