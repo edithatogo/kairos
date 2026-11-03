@@ -2,6 +2,7 @@
 import json
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -9,6 +10,78 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / 'scripts/python_runtime.py'
+
+
+@unittest.skipUnless(os.name == 'posix' and shutil.which('bash'), 'GCP array submitter requires a POSIX shell and local venv layout')
+class GcpArrayRuntimeTests(unittest.TestCase):
+    def fixture(self, root):
+        (root / 'cloud/gcp').mkdir(parents=True)
+        (root / 'scripts').mkdir()
+        shutil.copy(ROOT / 'cloud/gcp/submit-experiment.sh', root / 'cloud/gcp/submit-experiment.sh')
+        shutil.copy(SCRIPT, root / 'scripts/python_runtime.py')
+        (root / 'cloud/gcp/batch-array.json').write_text('{"taskGroups":[{}]}')
+        fake_bin = root / 'fake-bin'
+        fake_bin.mkdir()
+        fake = fake_bin / 'gcloud'
+        fake.write_text('#!/bin/sh\nwhile [ "$#" -gt 0 ]; do if [ "$1" = --config ]; then case "$2" in *.json) ;; *) exit 9;; esac; cp "$2" "$CAPTURE"; fi; shift; done\nprintf called > "$MARKER"\n')
+        fake.chmod(0o755)
+        env = os.environ.copy()
+        env.update(PATH=str(fake_bin) + os.pathsep + '/usr/bin:/bin',
+                   GCP_BATCH_CONFIG='cloud/gcp/batch-array.json', KAIRO_SWEEP_SIZE='4',
+                   KAIRO_PARALLELISM='7', TMPDIR=str(root), MARKER=str(root / 'submitted'),
+                   CAPTURE=str(root / 'rendered.json'))
+        return env
+
+    def test_missing_local_runtime_does_not_submit_or_leave_temporary_file(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            env = self.fixture(root)
+            result = subprocess.run(['bash', 'cloud/gcp/submit-experiment.sh', 'fictional'], cwd=root, env=env, capture_output=True, text=True)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertFalse((root / 'submitted').exists())
+            self.assertEqual(list(root.glob('kairo-gcp-batch-array.*')), [])
+
+    def test_verified_local_runtime_renders_and_cleans_up_before_return(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            env = self.fixture(root)
+            subprocess.run([sys.executable, '-m', 'venv', str(root / '.venv')], check=True)
+            result = subprocess.run(['bash', 'cloud/gcp/submit-experiment.sh', 'fictional'], cwd=root, env=env, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertTrue((root / 'submitted').exists())
+            group = json.loads((root / 'rendered.json').read_text())['taskGroups'][0]
+            self.assertEqual((group['taskCount'], group['parallelism']), (4, 4))
+            self.assertEqual(list(root.glob('kairo-gcp-batch-array.*')), [])
+            (root / 'submitted').unlink()
+            (root / 'cloud/gcp/batch-array.json').write_text('{broken')
+            failed = subprocess.run(['bash', 'cloud/gcp/submit-experiment.sh', 'fictional'], cwd=root, env=env, capture_output=True, text=True)
+            self.assertNotEqual(failed.returncode, 0)
+            self.assertFalse((root / 'submitted').exists())
+            self.assertEqual(list(root.glob('kairo-gcp-batch-array.*')), [])
+
+    def test_symlinked_environment_is_rejected_before_submission(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            env = self.fixture(root)
+            (root / '.venv').symlink_to(Path(sys.prefix), target_is_directory=True)
+            result = subprocess.run(['bash', 'cloud/gcp/submit-experiment.sh', 'fictional'], cwd=root, env=env, capture_output=True, text=True)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertFalse((root / 'submitted').exists())
+            self.assertEqual(list(root.glob('kairo-gcp-batch-array.*')), [])
+
+    def test_wrong_interpreter_version_is_rejected_before_submission(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            env = self.fixture(root)
+            executable = root / '.venv/bin/python'
+            executable.parent.mkdir(parents=True)
+            executable.write_text('#!/bin/sh\nif [ "$1" = "-I" ]; then printf \'{"version":"3.14.0","prefix":"%s"}\\n\' "$FAKE_PREFIX"; else exec "$REAL_PYTHON" "$@"; fi\n')
+            executable.chmod(0o755)
+            env.update(REAL_PYTHON=sys.executable, FAKE_PREFIX=str(root / '.venv'))
+            result = subprocess.run(['bash', 'cloud/gcp/submit-experiment.sh', 'fictional'], cwd=root, env=env, capture_output=True, text=True)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertFalse((root / 'submitted').exists())
+            self.assertEqual(list(root.glob('kairo-gcp-batch-array.*')), [])
 
 
 class LocalPythonTests(unittest.TestCase):
