@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 //! Public synthetic entity model shared by the real MPI and mTLS qualification workers.
 use ed25519_dalek::SigningKey;
+use kairo_ecs_grpc::{
+    decode_migration_snapshot, encode_migration_snapshot, GrpcEntityMigrationSnapshot,
+    GrpcPendingEventMetadata, GrpcVersionedComponentBlob,
+};
 use kairo_ecs_pdes::external::protocol::{digest, Hash};
 use kairo_ecs_pdes::external::{
     ExternalConfiguration, ExternalOptimisticRuntime, PortableModelCodec,
@@ -42,29 +46,126 @@ pub struct Transfer {
     pub source: u32,
     pub destination: u32,
     pub at: String,
-    pub entity: Entity,
+    pub wire_snapshot: String,
 }
 impl Transfer {
+    fn snapshot(
+        identity: &str,
+        source: u32,
+        destination: u32,
+        entity: &Entity,
+    ) -> Result<GrpcEntityMigrationSnapshot, String> {
+        Ok(GrpcEntityMigrationSnapshot {
+            entity: kairo_ecs_types::EntityId::new(entity.index, entity.generation),
+            source_lp: LpId(source),
+            dest_lp: LpId(destination),
+            migration_id: identity.into(),
+            components: vec![GrpcVersionedComponentBlob {
+                component_type_id: "track49.entity.v1".into(),
+                generation: entity.component_generation,
+                payload: serde_json::to_vec(entity).map_err(|e| e.to_string())?,
+            }],
+            pending_events: entity
+                .pending
+                .iter()
+                .map(|p| {
+                    Ok(GrpcPendingEventMetadata {
+                        source_lp: LpId(source),
+                        dest_lp: LpId(source),
+                        tick: Tick::from_ticks(parse_tick(&p.tick)?),
+                        sequence: p.sequence,
+                        anti_message: p.anti,
+                        payload_bytes: if p.anti {
+                            0
+                        } else {
+                            serde_json::to_vec(&Operation::Work {
+                                entity: entity.index,
+                                generation: entity.generation,
+                                ownership: entity
+                                    .ownership
+                                    .checked_sub(1)
+                                    .ok_or("ownership predecessor")?,
+                                sequence: p.sequence,
+                                delta: p.delta,
+                            })
+                            .map_err(|e| e.to_string())?
+                            .len()
+                        },
+                    })
+                })
+                .collect::<Result<Vec<_>, String>>()?,
+        })
+    }
+    fn from_entity(
+        identity: &str,
+        source: u32,
+        destination: u32,
+        at: u128,
+        entity: &Entity,
+    ) -> Result<Self, String> {
+        let bytes =
+            encode_migration_snapshot(&Self::snapshot(identity, source, destination, entity)?)
+                .map_err(|e| format!("{e:?}"))?;
+        Ok(Self {
+            version: 1,
+            identity: identity.into(),
+            source,
+            destination,
+            at: tick(at),
+            wire_snapshot: bytes.iter().map(|b| format!("{b:02x}")).collect(),
+        })
+    }
+    fn restored_entity(&self) -> Result<Entity, String> {
+        if self.wire_snapshot.len() > 16384
+            || self.wire_snapshot.len() % 2 != 0
+            || !self
+                .wire_snapshot
+                .bytes()
+                .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+        {
+            return Err("canonical bounded snapshot hex".into());
+        }
+        let bytes = self
+            .wire_snapshot
+            .as_bytes()
+            .chunks_exact(2)
+            .map(|p| {
+                u8::from_str_radix(std::str::from_utf8(p).map_err(|e| e.to_string())?, 16)
+                    .map_err(|e| e.to_string())
+            })
+            .collect::<Result<Vec<_>, String>>()?;
+        let snapshot = decode_migration_snapshot(&bytes).map_err(|e| format!("{e:?}"))?;
+        if snapshot.components.len() != 1 {
+            return Err("entity component set".into());
+        }
+        let entity: Entity =
+            serde_json::from_slice(&snapshot.components[0].payload).map_err(|e| e.to_string())?;
+        if snapshot != Self::snapshot(&self.identity, self.source, self.destination, &entity)? {
+            return Err("canonical migration component/metadata mismatch".into());
+        }
+        Ok(entity)
+    }
     pub fn validate(&self, destination: u32, at: u128) -> Result<(), String> {
+        let entity = self.restored_entity()?;
         if self.version != 1
             || self.identity.is_empty()
             || self.identity.len() > 64
             || self.source == self.destination
             || self.destination != destination
             || parse_tick(&self.at)? != at
-            || self.entity.index == 0
-            || self.entity.generation == 0
-            || self.entity.component_generation == 0
-            || self.entity.ownership == 0
-            || self.entity.pending.len() > 8
-            || self.entity.effects.len() > 8
+            || entity.index == 0
+            || entity.generation == 0
+            || entity.component_generation == 0
+            || entity.ownership == 0
+            || entity.pending.len() > 8
+            || entity.effects.len() > 8
             || serde_json::to_vec(self).map_err(|e| e.to_string())?.len() > 8192
         {
             return Err("invalid entity transfer".into());
         }
         let mut identities = BTreeSet::new();
         let mut previous = None;
-        for p in &self.entity.pending {
+        for p in &entity.pending {
             let tick = parse_tick(&p.tick)?;
             let key = (tick, p.sequence, p.anti);
             if tick <= at
@@ -75,8 +176,8 @@ impl Transfer {
             }
             previous = Some(key);
         }
-        for p in self.entity.pending.iter().filter(|p| p.anti) {
-            if !self.entity.pending.iter().any(|q| {
+        for p in entity.pending.iter().filter(|p| p.anti) {
+            if !entity.pending.iter().any(|q| {
                 !q.anti && q.sequence == p.sequence && q.tick == p.tick && q.delta == p.delta
             }) {
                 return Err("unmatched pending cancellation".into());
@@ -114,7 +215,7 @@ pub struct Model {
     pub generation: u64,
     pub rng: u64,
     pub entities: BTreeMap<u64, Entity>,
-    pub transfers: BTreeMap<String, Vec<u8>>,
+    pub transfers: BTreeMap<String, String>,
     pub departures: BTreeMap<u64, u64>,
     pub acknowledgements: Vec<(u64, i64, u64)>,
     pub trace: Vec<(String, String)>,
@@ -179,7 +280,7 @@ impl Model {
     }
     pub fn validate_transfer(&self, data: &Transfer, at: u128) -> Result<(), String> {
         data.validate(self.lp, at)?;
-        let raw = serde_json::to_vec(data).map_err(|e| e.to_string())?;
+        let raw = serde_json::to_string(data).map_err(|e| e.to_string())?;
         if let Some(old) = self.transfers.get(&data.identity) {
             return if *old == raw {
                 Ok(())
@@ -187,7 +288,7 @@ impl Model {
                 Err("conflicting migration identity".into())
             };
         }
-        if self.entities.contains_key(&data.entity.index) {
+        if self.entities.contains_key(&data.restored_entity()?.index) {
             return Err("entity already owned".into());
         }
         Ok(())
@@ -224,16 +325,10 @@ impl Model {
                     .checked_add(1)
                     .ok_or("ownership overflow")?;
                 let when = if entity.value >= 100 { 25 } else { 30 };
-                let data = Transfer {
-                    version: 1,
-                    identity: "entity11-root20-transfer0".into(),
-                    source: self.lp,
-                    destination: 1,
-                    at: tick(when),
-                    entity,
-                };
+                let data =
+                    Transfer::from_entity("entity11-root20-transfer0", self.lp, 1, when, &entity)?;
                 data.validate(1, when)?;
-                self.departures.insert(11, data.entity.ownership);
+                self.departures.insert(11, entity.ownership);
                 label = "departure";
                 vec![emit(1, when, Operation::Transfer { data })?]
             }
@@ -249,8 +344,8 @@ impl Model {
                 if self.transfers.contains_key(&data.identity) {
                     return Ok(vec![]);
                 }
-                let raw = serde_json::to_vec(&data).map_err(|e| e.to_string())?;
-                let mut entity = data.entity;
+                let raw = serde_json::to_string(&data).map_err(|e| e.to_string())?;
+                let mut entity = data.restored_entity()?;
                 let cancelled = entity
                     .pending
                     .iter()
@@ -364,7 +459,7 @@ impl OptimisticProcess for Model {
 pub struct Codec;
 impl PortableModelCodec<Model> for Codec {
     fn identity(&self) -> Hash {
-        digest(b"track49-entity-v1-complete-rng-generations-pending-cancellation-fixed-lps")
+        digest(b"track49-entity-v1-canonical-prost-v2-hex-complete-rng-generations-pending-cancellation-fixed-lps")
     }
     fn encode_process(&self, p: &Model) -> Result<Vec<u8>, String> {
         serde_json::to_vec(p).map_err(|e| e.to_string())

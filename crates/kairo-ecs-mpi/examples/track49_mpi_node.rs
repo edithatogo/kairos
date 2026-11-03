@@ -23,7 +23,7 @@ mod worker {
         let length = u32::try_from(raw.len()).map_err(|e| e.to_string())?;
         let mut lengths = vec![0u32; world.size() as usize];
         world.all_gather_into(&length, &mut lengths[..]);
-        if lengths.iter().any(|n| *n > 2 * 1024 * 1024) {
+        if lengths.iter().any(|n| *n > 8 * 1024 * 1024) {
             return Err("owned result bound".into());
         }
         let width = lengths.iter().copied().max().unwrap_or(0).max(1) as usize;
