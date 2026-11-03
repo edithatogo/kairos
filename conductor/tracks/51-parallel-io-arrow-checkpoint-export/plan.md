@@ -8,11 +8,11 @@ The HDF5 and ADIOS2 adapters write labelled v1 contract bytes, the existing
 restart restores records and a maximum tick rather than a resumed engine, and
 the filesystem manifest is a template. The following acceptance work remains:
 
-- [ ] Implement and independently read native HDF5 and ADIOS2 checkpoints.
-- [ ] Qualify real Arrow record batches for the track's specified outputs.
-- [ ] Prove representative engine restart and final-state parity.
-- [ ] Execute and retain contiguous-write benchmarks and live parallel-filesystem evidence.
-- [ ] Complete independent review, exact-source hosted gates and integrator closeout.
+- [ ] CAP-51.2: Implement and independently read native HDF5 and ADIOS2 checkpoints.
+- [ ] CAP-51.3: Qualify real Arrow record batches for the track's specified outputs.
+- [ ] CAP-51.4: Prove representative engine restart and final-state parity.
+- [ ] CAP-51.5: Execute and retain contiguous-write benchmarks and live parallel-filesystem evidence.
+- [ ] CAP-51.6: Complete independent review, exact-source hosted gates and integrator closeout.
 
 The local Polars IPC/Parquet interchange and checkpoint replacement evidence in
 the handoff remain useful but do not substitute for those gates. The track stays
