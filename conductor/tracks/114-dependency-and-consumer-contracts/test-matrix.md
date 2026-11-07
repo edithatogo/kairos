@@ -2,6 +2,9 @@
 
 | Gate | Required evidence | Current acceptance |
 |---|---|---|
+| Bounded task integrity | `python scripts/maturity_tasks.py check`; `python -m unittest discover -s tests -p test_maturity_tasks.py -v` | Structural task/path/dependency/target checks only; no runtime or scientific promotion |
+| Movement and usage | Actual Rust arrival/cancel/admission/quantity/window/replay fixtures from K02 | Pending |
+| Ecosystem direction | Pure game packages independent of Kairos; optional adapter imports both; HEOR and domains stay outside kernel | Accepted direction; package/consumer execution pending |
 | Dependency direction | Kairos production manifest/source cannot require CareOps; minimal consumer fixture runs without the CareOps repository. | Pending for this track |
 | Consumer behaviour | Installed CareOps uses native provider capability and explicit immutable version; unsupported provider fails, no reference fallback. | Pending for this track |
 | Feature closure | Minimal core excludes optional data/GPU/MPI/HTTP/binding stacks; optional profiles compile and function. | Pending for this track |

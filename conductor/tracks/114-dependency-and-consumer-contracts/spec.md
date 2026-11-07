@@ -12,9 +12,20 @@ Reviewed baseline d56863505d938feb069af88a737eb7668113d14b; existing contracts a
 
 ## Outputs
 
+Accepted architectural direction is in ADR 0011. The source inventory and
+movement/resource-usage contract define the consumer interfaces. The executable
+workpack provides bounded leaves and a structural checker; none of these is a
+runtime or scientific acceptance claim. No new repository or pin is created as
+part of the planning decision. Package boundaries precede repository extraction.
+
 Reviewed implementation/qualification packets and versioned evidence for the phase outcomes below. Plans do not assert runtime implementation or beta/release acceptance.
 
 ## Owned paths and interfaces
+
+The approved ecosystem amendment additionally owns `docs/ecosystem.md`, ADR 0011,
+`conductor/ecosystem-consumers.md`, the movement/usage contract, bounded workpack
+and its checker/tests, and the associated documentation/workflow navigation and
+CI validation. Runtime source remains a separately claimed original-owner slice.
 
 This track owns its planning/evidence directory. Source scopes are coordinated with the original owners before implementation: Cargo.toml, Cargo.lock, conductor/dependency-and-consumer-contracts.md. Public API/ABI, RNG/schema, native lifetime or result changes require the existing ADR/conformance/versioning process. Immediate host-core retirement is explicitly authorised and has no migration grace period.
 

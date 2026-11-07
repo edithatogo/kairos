@@ -12,4 +12,8 @@ Status: Spec Approved. Created 7 November 2026 from the maintainer's approved re
 - [Handoff](handoff.md)
 - [Metadata](metadata.json)
 - [Detailed programme](../../dependency-and-consumer-contracts.md)
+- [Ecosystem decision](../../../docs/adr/0011-ecosystem-boundaries.md)
+- [Actual consumer inventory](../../ecosystem-consumers.md)
+- [Movement and usage contract](../../contracts/movement-resource-usage.md)
+- [Bounded implementation workpack](../../execution/README.md)
 

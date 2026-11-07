@@ -13,6 +13,14 @@ Rust contributors work in the kairo-ecs-* crate ecosystem.
 
 ## Core architecture
 
+The [ecosystem boundary decision](../docs/adr/0011-ecosystem-boundaries.md)
+supersedes any implication that game solvers, ontology reasoning or economic
+valuation belong in the minimal core. Existing game crates are experimental
+extraction sources. Pure game packages have no required Kairos dependency;
+only their optional execution adapter imports Kairos. See the
+[movement/usage contract](contracts/movement-resource-usage.md) before extending
+spatial or resource semantics. Host packages remain Rust adapters under ADR 0010.
+
 ```mermaid
 flowchart LR
     Host[Python / R / Julia / TypeScript / C# / Go]

@@ -1,5 +1,11 @@
 # Kairos: Rust-only maturity and frontier programme
 
+The [ecosystem amendment](../docs/adr/0011-ecosystem-boundaries.md) keeps the
+kernel bounded, separates generic games and HEOR from domain models, and adds
+consumer-owned workstreams. Track 114 coordinates these interfaces. Use the
+[bounded workpack](execution/README.md) for implementation; its tasks refine,
+not replace or certify, the scientific and release obligations below.
+
 Approved scope: maintainer request of 7 November 2026. Baseline: d56863505d938feb069af88a737eb7668113d14b. This programme implements immediate native-only support and truthful documentation, and registers the remaining engineering and research work. It does not claim beta, 1.0, universal speed leadership or newly validated scientific methods.
 
 ## Outcome and architecture

@@ -3,6 +3,11 @@
 KairoECS is a Rust simulation engine for reproducible discrete-event and
 agent-based models, with modular state, resource, data and execution APIs.
 
+The [ecosystem guide](../../docs/ecosystem.md) explains what belongs in Kairos,
+the separate game-library direction, UOGTO semantics, domain applications and
+HEOR valuation. [Bounded maturity tasks](../../conductor/execution/README.md)
+turn the delivery programme into small implementation steps.
+
 **Current release: alpha.** [v0.4.0-alpha.1](https://github.com/edithatogo/kairos/releases/tag/v0.4.0-alpha.1)
 was published on 18 October 2026. Default-branch work is experimental. See
 [current capabilities and evidence](../../docs/current-state.md) and the

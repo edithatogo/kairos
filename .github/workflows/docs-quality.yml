@@ -24,6 +24,8 @@ on:
       - '**/*.mmd'
       - 'conductor/**'
       - 'tests/conformance/frontier-evidence-check.mjs'
+      - 'scripts/maturity_tasks.py'
+      - 'tests/test_maturity_tasks.py'
       - 'docs/**'
       - 'website/**'
       - 'bindings/**'
@@ -58,6 +60,10 @@ jobs:
         run: |
           node --test tests/conformance/frontier-evidence-check.mjs
           node scripts/validation/validate-frontier-evidence.mjs
+      - name: Verify bounded maturity task contracts
+        run: |
+          python scripts/maturity_tasks.py check
+          python -m unittest discover -s tests -p test_maturity_tasks.py -v
       - name: Install website dependencies
         env:
           PYTHONDONTWRITEBYTECODE: '1'

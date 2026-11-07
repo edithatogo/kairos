@@ -4,6 +4,15 @@ Owner: [Track 114](tracks/114-dependency-and-consumer-contracts/index.md), consu
 
 ## Kairos is an independent dependency
 
+The [ecosystem decision](../docs/adr/0011-ecosystem-boundaries.md) and
+[actual consumer inventory](ecosystem-consumers.md) refine this scope. UOGTO
+defines game semantics, existing `uogto-game-core`/`uogto-game-solve` provide the
+game incubator, and a separate optional adapter uses Kairos. Do not add game
+solvers or HEOR valuation to the minimal engine. Generic movement/allocation/use
+contracts belong here; domain movement policy and economic valuation belong
+above them. [Bounded implementation tasks](execution/README.md) cover this
+work without another coordinator or approval process.
+
 Dependency direction: CareOps Sim -> Kairos public crate/ABI/schema contracts. Kairos has no dependency on CareOps implementation, private data, repository layout or deployment. Keep healthcare pathways, staffing policies, costs, FHIR/OMOP mappings, operational calibration and local scenarios in CareOps/domain packages.
 
 Publish a small coherent crate family and/or stable Rust facade only after package qualification. Start with the existing core/types/state/RNG/DES/ABM APIs and explicit optional telemetry features; add a facade only if measured caller friction justifies it. Minimal builds must not pull in Arrow/Polars, Python, GPU, MPI, HTTP or CareOps. Expensive integrations are named optional capabilities.

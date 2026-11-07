@@ -1,5 +1,11 @@
 # Current programme — 7 November 2026
 
+Ecosystem scope is refined by [ADR 0011](../docs/adr/0011-ecosystem-boundaries.md),
+[consumer inventory](ecosystem-consumers.md) and the [bounded workpack](execution/README.md).
+Track 114 now coordinates game-library extraction, movement/usage contracts and
+consumer-owned adapters. These are accepted directions with implementation
+pending; no runtime method, downstream pin, track phase or release is promoted.
+
 Reviewed source: `d56863505d938feb069af88a737eb7668113d14b`. Tracks 109 and 112 are In Progress; 110, 111, 113, 114 and 115 are Spec Approved. The programme immediately retires host simulation cores, corrects documentation and introduces explicit capability evidence. Scientific fixes, performance improvements, installed-platform qualification, beta/stable acceptance and frontier results remain open in their plans. No new phase is closed by this planning packet.
 
 Kairos is an independent Rust simulation dependency consumed by careops-sim through versioned public interfaces. Consumer-owned models and validation remain downstream; no consumer pin or release is promoted here. See [programme](frontier-programme-20261107.md), [capabilities](capabilities.md) and [release gates](release-gates.md).

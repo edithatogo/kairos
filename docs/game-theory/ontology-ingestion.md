@@ -2,7 +2,19 @@
 
 ## Overview
 
-KairoECS integrates with the Open Game Theory Ontology through a dedicated subrepository (`open-game-theory-ontology/`) and ingestion parser (`crates/kairo-ecs-game-ontology`). This enables deterministic serialization and ingestion of normal-form and extensive-form game descriptions formatted in standard semantic web formats (W3C Turtle `.ttl` and JSON-LD `.jsonld`).
+KairoECS currently contains ontology fixtures/generated artefacts in
+`open-game-theory-ontology/` and an ingestion parser in
+`crates/kairo-ecs-game-ontology`. That directory is not a Git submodule or a
+separately pinned ontology repository. The canonical semantic provider is
+[UOGTO](https://github.com/edithatogo/UOGTO). The existing parser handles its
+documented Turtle/JSON-LD subset; successful parsing does not validate every
+ontology construct or establish solver correctness.
+
+[ADR 0011](../adr/0011-ecosystem-boundaries.md) places reusable semantic mappings
+and game solvers in the separate game-library layer, with an optional Kairos
+execution adapter. Existing experimental crates remain labelled until their
+Rust replacement and consumer compatibility are qualified. Specific games and
+payoff assumptions remain in domain applications.
 
 ## Ingestion Architecture
 
