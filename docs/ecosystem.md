@@ -14,7 +14,7 @@ not evidence of it.
 | UOGTO | Game vocabulary, stable identifiers, executable-subset mappings, SHACL and semantic examples | Domain extension proposals |
 | Rust game library | Game representations, solution concepts, solvers, residuals and traces | UOGTO mappings; optional Kairos execution adapter |
 | CareOps Sim | Healthcare flow, patient/staff movement, service and transport policies, model calibration | Kairos; optional game and economic models |
-| Innovate | Adoption/diffusion, incentives, forecasts and empirical model assumptions | Optional Kairos/game adapters; Voiage outcome exchange |
+| Innovate | Innovation/policy diffusion, adoption, competition, substitution, complements, hype effects, forecasts and innovation-specific games | Optional Kairos/game adapters; Voiage outcome exchange |
 | Reimbursement game | Reimbursement institutions, particular strategic games and their economic assumptions | Generic game library, UOGTO, optional Kairos, Voiage and evidence providers |
 | HEOR model/package | Resource valuation, health outcomes/utilities, perspectives, horizon, discounting and economic evaluation | Neutral usage/outcome records and reviewed data |
 | Voiage | VOI estimators and decision uncertainty on paired strategy/draw outcomes | Domain-produced values and uncertainty contracts |
@@ -23,6 +23,13 @@ The HEOR package is a **proposed boundary**, not a newly released provider.
 The game library already has an incubator: `uogto-game-core` and
 `uogto-game-solve` in `new-drug-reimbursement-game`. Do not build a second generic
 solver library before evaluating those crates.
+
+The [extraction map](../conductor/contracts/game-extraction-map.md) now identifies
+the actual source to reconcile. Pure representations/solvers move to the game
+library; ECS storage and event execution meet it through a small optional
+[execution port](../conductor/contracts/game-execution-port.md). The receiving
+work is [issue 100](https://github.com/edithatogo/new-drug-reimbursement-game/issues/100)
+and its existing T17 track. No new library name or repository is assumed here.
 
 ```mermaid
 flowchart TD
@@ -59,6 +66,14 @@ unsupported result. Do not import all OWL reasoning into the simulation hot path
 Generate/validate mappings at input boundaries and carry stable identifiers into
 traces. Domain-specific ontology extensions should use UOGTO's extension process
 rather than incompatible local meanings for the same identifier.
+
+A solver may inspect hypothetical alternatives without executing them. Its
+diagnostic trace and expected payoff are different records from a simulated
+causal trace and realized outcome. The dynamic adapter executes a chosen policy
+with lawful observations, legal actions and an explicit chance process; it
+preserves Kairos's clock/state/RNG ownership. Solver exploration has a separate
+random-stream purpose so changing the search budget cannot perturb unrelated
+model randomness.
 
 ## Movement, allocation and valuation
 
@@ -122,6 +137,13 @@ replay fixtures. Stable release adds the compatibility, upgrade, documentation
 and reproducibility guarantees in the [release gates](../conductor/release-gates.md).
 Experimental GPU/HPC or advanced game methods need not block a bounded core
 release when excluded clearly, but their unfinished obligations remain tracked.
+
+Treat core simulation, static game solving and dynamic game integration as
+separate release scopes. CareOps/Innovate can qualify native runtime use without
+waiting for their optional game profiles. Static game consumers can qualify
+without a Kairos adapter. An adapter claim needs both accepted providers and
+actual replay/identity/observation fixtures. The optional work stays open; it
+does not become a hidden prerequisite for every consumer or release.
 
 The long-term advantage is reliable composition: one simulation kernel, reusable
 qualified analytical methods, domain assumptions visible in their own packages,
