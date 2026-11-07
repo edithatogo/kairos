@@ -17,3 +17,8 @@ Status: Spec Approved. Created 7 November 2026 from the maintainer's approved re
 - [Movement and usage contract](../../contracts/movement-resource-usage.md)
 - [Bounded implementation workpack](../../execution/README.md)
 
+
+## Strategic information integration — 8 November 2026
+
+- [Owner-scoped roadmap and acceptance cases](strategic-information-integration.md).
+  Planning only; existing implementation statuses, pins and release gates remain unchanged.
