@@ -11,8 +11,8 @@ columnar data exchange, parallel execution, distributed synchronization and
 GPU kernels. Applications such as CareOps own their domain models and consume
 Kairos through a versioned dependency boundary.
 
-Kairos owns simulation mechanisms. UOGTO supplies game semantics; a separate
-Rust game library owns solvers; CareOps, Innovate and reimbursement applications
+Kairos owns simulation mechanisms. UOGTO supplies game semantics; [**Paignia**](https://github.com/edithatogo/paignia) is
+the separate Rust game library for representations and solvers; CareOps, Innovate and reimbursement applications
 own their models. Economic valuation belongs above neutral resource-use records.
 See [scope and ecosystem](docs/ecosystem.md) for the accepted boundaries and
 the distinction between implemented packages and planned extraction.

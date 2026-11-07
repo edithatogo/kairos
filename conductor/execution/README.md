@@ -79,6 +79,16 @@ catalogue is the next executable tranche, not a false claim to have decomposed
 every possible frontier experiment. A specialist must add bounded follow-on
 leaves for unresolved advanced methods before implementation starts.
 
+Use [K01.games' extraction map](../contracts/game-extraction-map.md) and the
+[optional execution port](../contracts/game-execution-port.md) with receiving
+issue 100 / T17. K01.port is a bounded contract/fixture-design leaf, not
+permission to add game algorithms to Kairos. T17 owns implementation of the
+generic solvers and adapter; Kairos owns missing generic runtime capabilities
+only when the port demonstrates a real gap. The game source checks enable
+graph/codegen features so default-only runs cannot hide the extraction surface.
+Core beta and runtime-only consumer leaves do not depend on optional game
+completion. Static and dynamic game qualification have distinct receipts.
+
 Consumer-owned tracks in CareOps, Innovate, UOGTO, the game incubator and Voiage
 consume these interfaces. Reuse CareOps' existing `tools/tasks.py`/packet system
 there; do not introduce a second dispatcher. Apply the same one-behaviour,

@@ -1,5 +1,13 @@
 # Track 110 implementation plan
 
+Game-library refinement, 8 November 2026: S01–S04 implementation is coordinated
+through receiving [issue 100](https://github.com/edithatogo/new-drug-reimbursement-game/issues/100)
+and T17.04–T17.07 using the [extraction map](../../contracts/game-extraction-map.md).
+The phase items below retain the scientific obligations and source API/caller
+disposition. They do not authorize a second authoritative Kairos solver.
+Core release acceptance follows the included capabilities in Track 113, not
+completion of every optional method. No phase status changes in this amendment.
+
 Close every stated scientific/advanced method with a correct implementation and independent evidence, preserving explicit unsupported boundaries until qualification.
 
 ## Phase 0: Contract and defect inventory

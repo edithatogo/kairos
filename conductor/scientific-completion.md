@@ -37,6 +37,17 @@ because source moved to another repository. The remaining IDs stay with their
 existing capability owners; S17 additionally consumes the neutral
 [movement/resource-usage contract](contracts/movement-resource-usage.md).
 
+The [source extraction map](contracts/game-extraction-map.md) binds the receiving
+work to [game-runtime issue 100](https://github.com/edithatogo/new-drug-reimbursement-game/issues/100)
+and T17.04 (S01), T17.05 (S02), T17.06 (S03), T17.07 (S04).
+Implement each corrected generic method once in that receiving layer. Source-side
+Kairos regressions characterize the old API and its replacement/withdrawal; they
+are not instructions to build another permanent solver. Preserve the original
+S01–S04 oracle requirements and record the accepted receiving artifact plus the
+old caller/API disposition before closing a transfer. A library may release a
+smaller explicitly supported static capability while other methods remain open.
+Neither that release nor a runtime-only Kairos beta closes those methods.
+
 The [bounded workpack](execution/README.md) provides a distinguishing regression
 task for every S01–S17 obligation and decomposes immediate fixes and contracts.
 An advanced algorithm requiring unresolved design is assigned to a specialist;

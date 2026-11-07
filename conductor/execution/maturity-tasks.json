@@ -121,7 +121,7 @@
           ]
         }
       ],
-      "acceptance": "The future guard inspects resolved normal/build dependencies for the selected profile and rejects a deliberately introduced heavy/domain dependency; a textual manifest search alone is insufficient.",
+      "acceptance": "The future guard inspects resolved normal/build dependencies for the selected profile and rejects a deliberately introduced heavy/domain dependency; a textual manifest search alone is insufficient. Include game/ontology and generated-code build dependencies in the forbidden minimal closure; qualify supported optional profiles separately.",
       "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed."
     },
     {
@@ -135,7 +135,11 @@
         "docs/adr/0011-ecosystem-boundaries.md",
         "conductor/scientific-completion.md",
         "crates/kairo-ecs-game-theory/src/lib.rs",
-        "crates/kairo-ecs-game-ontology/src/lib.rs"
+        "crates/kairo-ecs-game-ontology/src/lib.rs",
+        "crates/kairo-ecs-game-theory/src/normal_form.rs",
+        "crates/kairo-ecs-game-theory/src/extensive_form.rs",
+        "crates/kairo-ecs-game-theory/Cargo.toml",
+        "conductor/contracts/game-extraction-map.md"
       ],
       "write": [
         "conductor/contracts/game-extraction-map.md"
@@ -148,7 +152,9 @@
             "test",
             "--locked",
             "-p",
-            "kairo-ecs-game-theory"
+            "kairo-ecs-game-theory",
+            "--features",
+            "graph-relations,generated-components"
           ]
         },
         {
@@ -158,11 +164,57 @@
             "test",
             "--locked",
             "-p",
-            "kairo-ecs-game-ontology"
+            "kairo-ecs-game-ontology",
+            "--features",
+            "codegen"
           ]
         }
       ],
-      "acceptance": "List each public API, consumer, receiving package, S01-S04 obligation and retain/replace/withdraw decision. No new solver code or pin change. Pure core/solve remain Kairos-independent; optional adapter imports both.",
+      "acceptance": "List each public API, consumer, receiving package, S01-S04 obligation and retain/replace/withdraw decision. No new solver code or pin change. Pure core/solve remain Kairos-independent; optional adapter imports both. Complete the dated source map with actual feature-aware baseline results and API-by-API caller/disposition decisions; resolve string versus generational IDs, chance probabilities, omitted payoffs, tie selection, generated artifact closure and diagnostic versus causal trace. Coordinate issue 100/T17; fixes have one receiving owner, and static solving cannot depend on adapter qualification. A documentation inventory alone does not close the leaf.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed."
+    },
+    {
+      "id": "K01.port",
+      "title": "Bind the optional game execution port to public native APIs",
+      "parent": "114.1.10",
+      "kind": "design",
+      "executor": "specialist",
+      "requires": [
+        "K01.contract",
+        "K01.games"
+      ],
+      "read": [
+        "conductor/contracts/game-extraction-map.md",
+        "conductor/contracts/game-execution-port.md",
+        "conductor/contracts/movement-resource-usage.md",
+        "crates/kairo-ecs-core/src/lib.rs",
+        "crates/kairo-ecs-types/src/lib.rs",
+        "crates/kairo-ecs-rng/src/lib.rs",
+        "crates/kairo-ecs-des/src/staged_runtime.rs"
+      ],
+      "write": [
+        "conductor/contracts/game-port-acceptance.md",
+        "conductor/execution/maturity-tasks.json"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-core",
+            "-p",
+            "kairo-ecs-types",
+            "-p",
+            "kairo-ecs-rng",
+            "-p",
+            "kairo-ecs-des"
+          ]
+        }
+      ],
+      "acceptance": "Produce the exact public symbols, supported operation/error matrix, identity mapping, policy/chance causal trace, lawful observation, solver-versus-simulation RNG purpose and checkpoint contracts. Bind tiny positive and negative fixtures to exact owning-package commands. Existing package tests are a baseline, not adapter acceptance. Reuse receiving T17.08 leaves; add <=5-file Kairos implementation leaves only for demonstrated generic runtime gaps, with distinguishing tests. Static game and runtime-only core release paths remain independent of this optional adapter.",
       "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed."
     },
     {
@@ -770,7 +822,7 @@
           ]
         }
       ],
-      "acceptance": "Enumerate exact packages/APIs/platforms and their missing acceptance tasks; unsupported extensions remain explicit with completion owners. No new release or tag.",
+      "acceptance": "Enumerate exact packages/APIs/platforms and their missing acceptance tasks; unsupported extensions remain explicit with completion owners. No new release or tag. Resolve cross-track prerequisites by included capabilities. A runtime-only candidate and its installed CareOps case exclude optional game profiles without marking their obligations complete; static game and dynamic adapter receipts remain separate.",
       "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed."
     },
     {
@@ -847,7 +899,8 @@
       ],
       "read": [
         "conductor/scientific-completion.md",
-        "crates/kairo-ecs-game-theory/src/normal_form.rs"
+        "crates/kairo-ecs-game-theory/src/normal_form.rs",
+        "conductor/contracts/game-extraction-map.md"
       ],
       "write": [
         "crates/kairo-ecs-game-theory/tests/maturity_rk4_order.rs"
@@ -866,7 +919,7 @@
           ]
         }
       ],
-      "acceptance": "First produce a distinguishing regression after its oracle/contract is settled. Verify the expected baseline failure; integrate the target with its paired implementation or explicit unsupported error before merging. Final oracle: On an analytic two-strategy replicator with declared fitness and interval, step refinement demonstrates the expected order and conserves mass without using clipping as the accuracy oracle.",
+      "acceptance": "First produce a distinguishing regression after its oracle/contract is settled. Verify the expected baseline failure; integrate the target with its paired implementation or explicit unsupported error before merging. Final oracle: On an analytic two-strategy replicator with declared fitness and interval, step refinement demonstrates the expected order and conserves mass without using clipping as the accuracy oracle. Receiving generic implementation owner: issue 100/T17.04 in new-drug-reimbursement-game. Keep this Kairos task for source characterization and API replacement/withdrawal; do not build a second authoritative solver. Record receiving numerical acceptance and caller disposition before closing the scientific transfer.",
       "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed.",
       "obligation": "S01"
     },
@@ -880,7 +933,8 @@
       "read": [
         "conductor/scientific-completion.md",
         "crates/kairo-ecs-game-theory/src/normal_form.rs",
-        "conductor/validation-datasets.md"
+        "conductor/validation-datasets.md",
+        "conductor/contracts/game-extraction-map.md"
       ],
       "write": [
         "conductor/execution/scientific/s01-completion.md",
@@ -898,7 +952,7 @@
           ]
         }
       ],
-      "acceptance": "Record algorithm/API/version, exact receiving package and independent oracle for S01. Decompose every remaining requirement in scientific-completion.md into one-behaviour <=5-file leaves with concrete commands, residual/tolerance and acceptance; add them to this catalogue before implementation. A current test pass is baseline only. No method is closed by this design note. This design may proceed from the source counterexample before its regression target passes; do not wait for the future algorithm to be implemented.",
+      "acceptance": "Record algorithm/API/version, exact receiving package and independent oracle for S01. Decompose every remaining requirement in scientific-completion.md into one-behaviour <=5-file leaves with concrete commands, residual/tolerance and acceptance; add them to this catalogue before implementation. A current test pass is baseline only. No method is closed by this design note. This design may proceed from the source counterexample before its regression target passes; do not wait for the future algorithm to be implemented. Receiving generic implementation owner: issue 100/T17.04 in new-drug-reimbursement-game. Keep this Kairos task for source characterization and API replacement/withdrawal; do not build a second authoritative solver. Record receiving numerical acceptance and caller disposition before closing the scientific transfer.",
       "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed.",
       "obligation": "S01"
     },
@@ -913,7 +967,8 @@
       ],
       "read": [
         "conductor/scientific-completion.md",
-        "crates/kairo-ecs-game-theory/src/normal_form.rs"
+        "crates/kairo-ecs-game-theory/src/normal_form.rs",
+        "conductor/contracts/game-extraction-map.md"
       ],
       "write": [
         "crates/kairo-ecs-game-theory/tests/maturity_nash_dominance.rs"
@@ -932,7 +987,7 @@
           ]
         }
       ],
-      "acceptance": "First produce a distinguishing regression after its oracle/contract is settled. Verify the expected baseline failure; integrate the target with its paired implementation or explicit unsupported error before merging. Final oracle: Use an independently solved strictly dominant-action counterexample; report best-response residual and reject an alleged equilibrium with positive unilateral gain.",
+      "acceptance": "First produce a distinguishing regression after its oracle/contract is settled. Verify the expected baseline failure; integrate the target with its paired implementation or explicit unsupported error before merging. Final oracle: Use an independently solved strictly dominant-action counterexample; report best-response residual and reject an alleged equilibrium with positive unilateral gain. Receiving generic implementation owner: issue 100/T17.05 in new-drug-reimbursement-game. Keep this Kairos task for source characterization and API replacement/withdrawal; do not build a second authoritative solver. Record receiving numerical acceptance and caller disposition before closing the scientific transfer.",
       "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed.",
       "obligation": "S02"
     },
@@ -946,7 +1001,8 @@
       "read": [
         "conductor/scientific-completion.md",
         "crates/kairo-ecs-game-theory/src/normal_form.rs",
-        "conductor/validation-datasets.md"
+        "conductor/validation-datasets.md",
+        "conductor/contracts/game-extraction-map.md"
       ],
       "write": [
         "conductor/execution/scientific/s02-completion.md",
@@ -964,7 +1020,7 @@
           ]
         }
       ],
-      "acceptance": "Record algorithm/API/version, exact receiving package and independent oracle for S02. Decompose every remaining requirement in scientific-completion.md into one-behaviour <=5-file leaves with concrete commands, residual/tolerance and acceptance; add them to this catalogue before implementation. A current test pass is baseline only. No method is closed by this design note. This design may proceed from the source counterexample before its regression target passes; do not wait for the future algorithm to be implemented.",
+      "acceptance": "Record algorithm/API/version, exact receiving package and independent oracle for S02. Decompose every remaining requirement in scientific-completion.md into one-behaviour <=5-file leaves with concrete commands, residual/tolerance and acceptance; add them to this catalogue before implementation. A current test pass is baseline only. No method is closed by this design note. This design may proceed from the source counterexample before its regression target passes; do not wait for the future algorithm to be implemented. Receiving generic implementation owner: issue 100/T17.05 in new-drug-reimbursement-game. Keep this Kairos task for source characterization and API replacement/withdrawal; do not build a second authoritative solver. Record receiving numerical acceptance and caller disposition before closing the scientific transfer.",
       "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed.",
       "obligation": "S02"
     },
@@ -979,7 +1035,8 @@
       ],
       "read": [
         "conductor/scientific-completion.md",
-        "crates/kairo-ecs-game-theory/src/normal_form.rs"
+        "crates/kairo-ecs-game-theory/src/normal_form.rs",
+        "conductor/contracts/game-extraction-map.md"
       ],
       "write": [
         "crates/kairo-ecs-game-theory/tests/maturity_ce_incentives.rs"
@@ -998,7 +1055,7 @@
           ]
         }
       ],
-      "acceptance": "First produce a distinguishing regression after its oracle/contract is settled. Verify the expected baseline failure; integrate the target with its paired implementation or explicit unsupported error before merging. Final oracle: Check every conditional unilateral-deviation inequality on an independently solved small game, including a distribution that violates one constraint.",
+      "acceptance": "First produce a distinguishing regression after its oracle/contract is settled. Verify the expected baseline failure; integrate the target with its paired implementation or explicit unsupported error before merging. Final oracle: Check every conditional unilateral-deviation inequality on an independently solved small game, including a distribution that violates one constraint. Receiving generic implementation owner: issue 100/T17.06 in new-drug-reimbursement-game. Keep this Kairos task for source characterization and API replacement/withdrawal; do not build a second authoritative solver. Record receiving numerical acceptance and caller disposition before closing the scientific transfer.",
       "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed.",
       "obligation": "S03"
     },
@@ -1012,7 +1069,8 @@
       "read": [
         "conductor/scientific-completion.md",
         "crates/kairo-ecs-game-theory/src/normal_form.rs",
-        "conductor/validation-datasets.md"
+        "conductor/validation-datasets.md",
+        "conductor/contracts/game-extraction-map.md"
       ],
       "write": [
         "conductor/execution/scientific/s03-completion.md",
@@ -1030,7 +1088,7 @@
           ]
         }
       ],
-      "acceptance": "Record algorithm/API/version, exact receiving package and independent oracle for S03. Decompose every remaining requirement in scientific-completion.md into one-behaviour <=5-file leaves with concrete commands, residual/tolerance and acceptance; add them to this catalogue before implementation. A current test pass is baseline only. No method is closed by this design note. This design may proceed from the source counterexample before its regression target passes; do not wait for the future algorithm to be implemented.",
+      "acceptance": "Record algorithm/API/version, exact receiving package and independent oracle for S03. Decompose every remaining requirement in scientific-completion.md into one-behaviour <=5-file leaves with concrete commands, residual/tolerance and acceptance; add them to this catalogue before implementation. A current test pass is baseline only. No method is closed by this design note. This design may proceed from the source counterexample before its regression target passes; do not wait for the future algorithm to be implemented. Receiving generic implementation owner: issue 100/T17.06 in new-drug-reimbursement-game. Keep this Kairos task for source characterization and API replacement/withdrawal; do not build a second authoritative solver. Record receiving numerical acceptance and caller disposition before closing the scientific transfer.",
       "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed.",
       "obligation": "S03"
     },
@@ -1045,7 +1103,8 @@
       ],
       "read": [
         "conductor/scientific-completion.md",
-        "crates/kairo-ecs-game-theory/src/extensive_form.rs"
+        "crates/kairo-ecs-game-theory/src/extensive_form.rs",
+        "conductor/contracts/game-extraction-map.md"
       ],
       "write": [
         "crates/kairo-ecs-game-theory/tests/maturity_cfr_information.rs"
@@ -1060,11 +1119,13 @@
             "-p",
             "kairo-ecs-game-theory",
             "--test",
-            "maturity_cfr_information"
+            "maturity_cfr_information",
+            "--features",
+            "graph-relations"
           ]
         }
       ],
-      "acceptance": "First produce a distinguishing regression after its oracle/contract is settled. Verify the expected baseline failure; integrate the target with its paired implementation or explicit unsupported error before merging. Final oracle: Choose a supported imperfect-information fixture and an explicit information-set mismatch; solver result/unsupported error must reflect the real game, not a hard-coded Kuhn response.",
+      "acceptance": "First produce a distinguishing regression after its oracle/contract is settled. Verify the expected baseline failure; integrate the target with its paired implementation or explicit unsupported error before merging. Final oracle: Choose a supported imperfect-information fixture and an explicit information-set mismatch; solver result/unsupported error must reflect the real game, not a hard-coded Kuhn response. Receiving generic implementation owner: issue 100/T17.07 in new-drug-reimbursement-game. Keep this Kairos task for source characterization and API replacement/withdrawal; do not build a second authoritative solver. Record receiving numerical acceptance and caller disposition before closing the scientific transfer.",
       "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed.",
       "obligation": "S04"
     },
@@ -1078,7 +1139,8 @@
       "read": [
         "conductor/scientific-completion.md",
         "crates/kairo-ecs-game-theory/src/extensive_form.rs",
-        "conductor/validation-datasets.md"
+        "conductor/validation-datasets.md",
+        "conductor/contracts/game-extraction-map.md"
       ],
       "write": [
         "conductor/execution/scientific/s04-completion.md",
@@ -1092,11 +1154,13 @@
             "test",
             "--locked",
             "-p",
-            "kairo-ecs-game-theory"
+            "kairo-ecs-game-theory",
+            "--features",
+            "graph-relations"
           ]
         }
       ],
-      "acceptance": "Record algorithm/API/version, exact receiving package and independent oracle for S04. Decompose every remaining requirement in scientific-completion.md into one-behaviour <=5-file leaves with concrete commands, residual/tolerance and acceptance; add them to this catalogue before implementation. A current test pass is baseline only. No method is closed by this design note. This design may proceed from the source counterexample before its regression target passes; do not wait for the future algorithm to be implemented.",
+      "acceptance": "Record algorithm/API/version, exact receiving package and independent oracle for S04. Decompose every remaining requirement in scientific-completion.md into one-behaviour <=5-file leaves with concrete commands, residual/tolerance and acceptance; add them to this catalogue before implementation. A current test pass is baseline only. No method is closed by this design note. This design may proceed from the source counterexample before its regression target passes; do not wait for the future algorithm to be implemented. Receiving generic implementation owner: issue 100/T17.07 in new-drug-reimbursement-game. Keep this Kairos task for source characterization and API replacement/withdrawal; do not build a second authoritative solver. Record receiving numerical acceptance and caller disposition before closing the scientific transfer.",
       "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed.",
       "obligation": "S04"
     },

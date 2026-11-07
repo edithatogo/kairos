@@ -8,6 +8,28 @@ Freeze an explicit capability manifest before preparing a candidate. The initial
 
 PDES, GPU, distributed execution, FMI, game theory, ML/RL and advanced calibration are separately versioned experimental features until their own gates close. Every advertised method still has a completion task; excluding it from the first stable scope does not cancel that work. Unsupported methods must be unavailable or explicitly experimental, and cannot silently masquerade as qualified methods.
 
+### Separate game-library release paths
+
+The game library consolidates the existing incubator under
+[issue 100](https://github.com/edithatogo/new-drug-reimbursement-game/issues/100)
+and T17. It has an independent capability/version decision. Track-level
+dependencies identify contract owners; they do not require every experimental
+phase in those tracks to finish before a bounded core candidate.
+
+| Candidate scope | Must qualify | Does not wait for |
+| --- | --- | --- |
+| Kairos native core | All gates below for included native APIs, minimal feature closure, standalone fixture and installed CareOps runtime case | Static game solvers, ontology tooling, game adapter or an optional consumer game profile |
+| Static game library | Supported representation/solver methods, independent oracles, resolved package closure and actual installed consumers; two distinct consumers for reusable extraction qualification | Kairos execution, movement, a native game trace or every future S01–S04 method when explicitly excluded |
+| Optional dynamic game adapter | Accepted game/Kairos capability versions plus lawful observation, policy/chance execution, identity, timing, RNG, cancellation and supported replay fixtures | Unrelated solvers, domain scenarios and advanced backends |
+| Domain game application | Its actual game assumptions, payoff/valuation mapping, chosen solver and any execution features it uses | Every other application's game or a universal HEOR model |
+
+Keep separate static-semantic and dynamic-execution receipts. A static profile
+can close without a simulation trace; dynamic support cannot. Likewise,
+CareOps/Innovate runtime acceptance does not wait for their optional game
+integration receipt. Excluded capabilities remain pending in their owning
+tracks with explicit unsupported/experimental surfaces. This is dependency
+scoping, not a waiver of scientific, compatibility or required core gates.
+
 ## Alpha to beta: all required
 
 1. Rust-only execution enforced in every distributed package and public entry point; missing native support fails.

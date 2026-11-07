@@ -6,8 +6,9 @@ Owner: [Track 114](tracks/114-dependency-and-consumer-contracts/index.md), consu
 
 The [ecosystem decision](../docs/adr/0011-ecosystem-boundaries.md) and
 [actual consumer inventory](ecosystem-consumers.md) refine this scope. UOGTO
-defines game semantics, existing `uogto-game-core`/`uogto-game-solve` provide the
-game incubator, and a separate optional adapter uses Kairos. Do not add game
+defines game semantics; [Paignia](https://github.com/edithatogo/paignia) receives
+the existing game seed as `paignia-core`/`paignia-solve`, and its separate optional
+adapter uses Kairos. The old incubator becomes a consumer. Do not add game
 solvers or HEOR valuation to the minimal engine. Generic movement/allocation/use
 contracts belong here; domain movement policy and economic valuation belong
 above them. [Bounded implementation tasks](execution/README.md) cover this
@@ -20,6 +21,14 @@ Publish a small coherent crate family and/or stable Rust facade only after packa
 CareOps owns a thin adapter mapping domain inputs to public Kairos types and outputs to domain metrics. It pins an immutable released version or reviewed Git commit; an unqualified reference fallback is forbidden. A pin update must run installed-consumer replay, error, schema and buffer-lifetime oracles and record both source IDs. Do not copy engine code, depend on a developer's workspace path or import private Kairos internals.
 
 Existing submodule/source layout is historical consumer machinery, not the interface contract. Replace it through a consumer-owned dependency change only after the candidate package is accepted. This Kairos packet does not silently advance CareOps/Innovate pins. Add a standalone minimal downstream Cargo fixture in Kairos, then let the real consumer exercise its own model; CI for Kairos never requires access to CareOps.
+
+CareOps's existing `careops-core` is the shared healthcare layer; do not create a
+second healthcare library merely to remove its ED-specific helpers. The
+[8 November source review](design/careops-composition-plan-20261020.md#paignia-and-careops-boundary-review)
+maps concrete scheduler/RNG/hazard/allocation duplication and generic experiment
+lifecycle reuse to existing owners K-C02/K-C04/K-C05. First qualify the narrow
+experiment API with actual ED/logistics cancellation and recovery fixtures;
+reuse a library layer, not CLI internals or an entire calibration stack.
 
 ## Reuse decisions
 

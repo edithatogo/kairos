@@ -10,6 +10,24 @@ source relationships. Use the [bounded workpack](../../execution/README.md),
 especially K01/K02, for the next implementation leaves. It does not maintain
 separate completion status. Every implementation item below remains pending.
 
+The 8 November refinement adds the [actual extraction map](../../contracts/game-extraction-map.md)
+and [execution-port constraints](../../contracts/game-execution-port.md).
+Receiving issue 100 / T17 owns generic game implementation; K01.games completes
+the source/API disposition and K01.port binds the optional adapter to public
+native contracts. Coordinate Innovate G01–G04 instead of creating another solver
+or integration programme. Static game solving, Kairos core and dynamic adapter
+acceptance run on separate capability paths. A pending optional game profile
+must not block a runtime-only CareOps/Innovate receipt. These are pending
+implementation/qualification obligations, not runtime acceptance from this plan.
+
+Paignia is now the chosen game-library identity. The
+[provider supplement](paignia-innovate-handoff.md) maps KP01–KP05 into existing
+K01/114 tasks; those labels are acceptance refinements, not a second backlog.
+The [CareOps source review](../../design/careops-composition-plan-20261020.md#paignia-and-careops-boundary-review)
+routes shared healthcare cleanup downstream and generic experiment/RNG/resource
+reuse to existing K-C02/K-C04/K-C05 owners. It creates no duplicate track and
+does not change the 60-leaf workpack's pending statuses.
+
 ## Phase 0: Existing-state decisions
 
 - [ ] 114.0.1: Reconcile Tracks70–104 adoption/defer/no-go evidence; do not re-propose already adopted dependencies.
@@ -23,12 +41,12 @@ separate completion status. Every implementation item below remains pending.
 - [ ] 114.1.2: Add a standalone installed downstream fixture that builds without CareOps or private paths/data.
 - [ ] 114.1.3: Define the CareOps-owned domain adapter and immutable dependency selection; preserve current accepted pins until qualification.
 - [ ] 114.1.4: Connect existing Track108 installed-consumer gates to candidate native dispatch/replay/schema/lifetime acceptance.
-- [ ] 114.1.5: Map existing game/ontology APIs into the independent Rust game packages and optional Kairos adapter; retain S01–S04 ownership and numerical acceptance through extraction.
+- [ ] 114.1.5: Complete the source/API extraction map into existing game core/solve and optional adapter; resolve identity/chance/payoff/tie differences, feature-enabled package closure and S01–S04 receiving acceptance. Keep solver diagnostics distinct from causal execution traces.
 - [ ] 114.1.6: Implement scheduled movement arrival, cancellation and topology-revision handling behind the reviewed neutral contract; keep route queries pure and domain policies downstream.
 - [ ] 114.1.7: Implement admission/release usage intervals, explicit quantities, window integration and committed/retracted replay semantics without costs or utilities in the engine.
 - [ ] 114.1.8: Qualify movement/allocation composition through public APIs and downstream CareOps physical movement; keep HEOR valuation a separate model.
 - [ ] 114.1.9: Qualify Innovate's actual native event/state/RNG dispatch and optional data features; printed imports and source metadata cannot close this item.
-- [ ] 114.1.10: Hand off versioned game semantic and paired outcome contracts to UOGTO, the game library and Voiage; domain consumers own game/economic assumptions and provider pin changes.
+- [ ] 114.1.10: Hand off versioned game semantic and paired outcome contracts to UOGTO, the game library and Voiage; qualify lawful observation, stale-action/lifetime handling and separate solver/simulation RNG purposes through K01.port. Domain consumers own game/economic assumptions and provider pin changes.
 - [ ] 114.1.review: Independently review this phase, apply accepted fixes, execute the named oracles and record the next-phase decision.
 
 ## Phase 2: Qualified reuse

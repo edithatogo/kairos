@@ -13,12 +13,15 @@ Generic spatial topology and route primitives may be optional Kairos modules.
 No entity is required to have a physical location.
 
 UOGTO owns game terminology, identifiers, ontology constraints and mappings to a
-versioned executable subset. A separate Rust game library owns representation,
+versioned executable subset. **Paignia**, the chosen name recorded on 8 November
+2026, is the separate Rust game library that owns representation,
 solution concepts, algorithms and solver diagnostics. Domain applications own
 the particular games, empirical assumptions, payoffs and interpretation.
 
-Reuse `uogto-game-core` and `uogto-game-solve`, already incubated in
-`edithatogo/new-drug-reimbursement-game`. Pure game representation and static
+Reuse the existing independent core/solve seed in
+`edithatogo/new-drug-reimbursement-game`, transferring it as `paignia-core` and
+`paignia-solve` to the maintainer-provided [Paignia repository](https://github.com/edithatogo/paignia)
+through the existing T17 programme. Pure game representation and static
 solvers do **not** require Kairos. An optional game execution adapter depends on
 both the game library and Kairos for dynamic execution. Kairos never imports the
 game solver or a domain application into its minimal kernel. UOGTO validation
@@ -40,10 +43,26 @@ useful when release cadence or maintenance ownership warrants it, not a
 prerequisite for sound architecture. Use two concrete consumers to test reusable
 design, while allowing the first useful adapter to ship earlier.
 
+The maintainer has now created Paignia's standalone repository. Use it as the
+single provider home and turn the former incubator into a version-pinned consumer;
+do not retain duplicate generic source there. Preserve T17 IDs and provenance in
+the handoff, with provider work in Paignia and application-specific tasks in their
+consumers. This repository decision does not waive artifact, mathematical or
+two-consumer qualification and does not require more repository splits elsewhere.
+
 The same rule applies to HEOR. Start with an explicit Rust valuation module and
 one worked model. Extract a reusable package when a second model demonstrates
 the shared semantics. Reuse existing cost data providers through adapters;
 operational costing data does not by itself specify economic opportunity cost.
+
+CareOps already has a reusable `careops-core` package. Strengthen that boundary
+within careops-sim now: shared healthcare identity, handover and eligibility stay
+there; specialty policies belong in `careops-ed` or other domain packages.
+Reconcile generic execution/RNG/resource and experiment-lifecycle mechanics with
+Kairos's existing owners. Preserve clinical and stochastic model semantics through
+versioned adapters. A separate healthcare repository needs an independently
+installed package and a second real healthcare consumer; it is not a prerequisite
+for the current cleanup. See the [source-based handoff](../../conductor/design/careops-composition-plan-20261020.md#paignia-and-careops-boundary-review).
 
 ## Existing code and scientific obligations
 
