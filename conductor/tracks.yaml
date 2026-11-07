@@ -1,5 +1,5 @@
 schema_version: 1
-last_verified: 2026-10-27
+last_verified: 2026-11-07
 status_vocabulary:
   - Planned
   - Spec Approved
@@ -1609,3 +1609,80 @@ tracks:
       - conductor/tracks/108-scientific-ecosystem-alignment/
     required_gates:
       - phase-closeout-check
+
+  - id: 109
+    name: Rust-only runtime and native binding enforcement
+    status: In Progress
+    owner: ffi-agent + api-governance-agent
+    depends_on: ["02", "12", "25", "63"]
+    owned_paths:
+      - conductor/tracks/109-rust-only-runtime/
+    required_gates:
+      - phase-closeout-check
+      - frontier-evidence-check
+
+  - id: 110
+    name: Scientific method and advanced capability completion
+    status: Spec Approved
+    owner: vv-uq-agent + game-theory-agent + ml-integration-agent
+    depends_on: ["01", "12", "21", "65", "66"]
+    owned_paths:
+      - conductor/tracks/110-scientific-method-completion/
+    required_gates:
+      - phase-closeout-check
+      - frontier-evidence-check
+
+  - id: 111
+    name: Measured performance and parallel execution improvement
+    status: Spec Approved
+    owner: performance-agent + pdes-agent
+    depends_on: ["18", "31", "47", "48", "78", "101"]
+    owned_paths:
+      - conductor/tracks/111-measured-performance/
+    required_gates:
+      - phase-closeout-check
+      - frontier-evidence-check
+
+  - id: 112
+    name: Capability evidence and claim automation
+    status: In Progress
+    owner: conformance-agent + docs-agent + ci-agent
+    depends_on: ["12", "13", "14", "18", "21"]
+    owned_paths:
+      - conductor/tracks/112-evidence-and-claim-automation/
+    required_gates:
+      - phase-closeout-check
+      - frontier-evidence-check
+
+  - id: 113
+    name: Beta and stable release qualification
+    status: Spec Approved
+    owner: release-agent + api-governance-agent + security-agent
+    depends_on: ["15", "16", "20", "25", "109", "110", "111", "112", "114"]
+    owned_paths:
+      - conductor/tracks/113-beta-and-stable-release/
+    required_gates:
+      - phase-closeout-check
+      - frontier-evidence-check
+
+  - id: 114
+    name: Maintained dependencies and independent consumer contracts
+    status: Spec Approved
+    owner: api-governance-agent + core-scheduler-agent
+    depends_on: ["01", "02", "04", "25", "70", "108"]
+    owned_paths:
+      - conductor/tracks/114-dependency-and-consumer-contracts/
+    required_gates:
+      - phase-closeout-check
+      - frontier-evidence-check
+
+  - id: 115
+    name: Frontier research experiments and reproducible evidence
+    status: Spec Approved
+    owner: research-agent + vv-uq-agent + performance-agent
+    depends_on: ["110", "111", "112", "114"]
+    owned_paths:
+      - conductor/tracks/115-frontier-experiments/
+    required_gates:
+      - phase-closeout-check
+      - frontier-evidence-check

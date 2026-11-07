@@ -101,7 +101,7 @@ export interface ArrowEventLogPayload {
 }
 
 export interface NativeWasmStatus {
-  readonly status: typeof NOT_CONFIGURED_STATUS | "ready";
+  readonly status: typeof NOT_CONFIGURED_STATUS | "configured-unverified";
   readonly reason?: string;
 }
 
@@ -163,178 +163,83 @@ export class NativeWasmNotConfiguredError extends Error {
   }
 }
 
+/** An explicitly unavailable capability; never an implicit host core. */
+export class UnsupportedCoreError extends Error {
+  constructor(message = "The host-language scheduler is retired. Load the Rust-compiled WasmEngine explicitly.") {
+    super(message);
+    this.name = "UnsupportedCoreError";
+  }
+}
+
+export interface NativeWasmEngine {
+  ffi_version(): number;
+  free(): unknown;
+  reset(): string;
+  current_time_ticks(): bigint;
+  schedule_at(ticks: bigint, priority: number, kind: number): bigint;
+  step(): string;
+  run_for(maxEvents: bigint): bigint;
+  stats_json(): string;
+}
+
+export interface NativeWasmModule {
+  readonly WasmEngine: new () => NativeWasmEngine;
+  readonly default?: () => Promise<unknown> | unknown;
+}
+
 export function nativeWasmStatus(loader?: Partial<NativeWasmLoader>): NativeWasmStatus {
   if (typeof loader?.load === "function") {
-    return { status: "ready" };
+    return {
+      status: "configured-unverified",
+      reason: "A loader is configured; no Rust Wasm artifact has been loaded or checked.",
+    };
   }
-
   return {
     status: NOT_CONFIGURED_STATUS,
-    reason: "No wasm artifact loader was provided. Use a generated wasm-pack loader when Track 09 wires native artifacts.",
+    reason: "A generated Rust Wasm module is required. No JavaScript scheduler fallback is supported.",
   };
 }
 
-export async function loadNativeWasm(loader?: Partial<NativeWasmLoader>): Promise<unknown> {
+/** Load an explicitly supplied generated Rust module and check its ABI. */
+export async function loadNativeWasm(loader?: Partial<NativeWasmLoader>): Promise<NativeWasmEngine> {
   if (typeof loader?.load !== "function") {
     throw new NativeWasmNotConfiguredError(nativeWasmStatus(loader).reason);
   }
-
-  return loader.load();
+  let engine: NativeWasmEngine | undefined;
+  try {
+    const module = await loader.load() as Partial<NativeWasmModule> | null;
+    if (module === null || typeof module !== "object" || typeof module.WasmEngine !== "function") {
+      throw new Error("The loaded module does not export the generated WasmEngine constructor.");
+    }
+    if (typeof module.default === "function") {
+      await module.default();
+    }
+    engine = new module.WasmEngine();
+    const required = ["ffi_version", "free", "reset", "current_time_ticks", "schedule_at", "step", "run_for", "stats_json"] as const;
+    if (required.some((method) => typeof engine?.[method] !== "function")) {
+      throw new Error("The Rust Wasm engine does not implement the required ABI v1 surface.");
+    }
+    if (engine.ffi_version() !== 1) {
+      throw new Error("The Rust Wasm engine ABI is incompatible; expected ABI v1.");
+    }
+    return engine;
+  } catch (error) {
+    try { engine?.free(); } catch { /* Preserve the original loading error. */ }
+    throw new NativeWasmNotConfiguredError(`Rust Wasm engine could not be loaded: ${String(error)}`);
+  }
 }
 
+/** Retired API retained to explain the breaking change at its call site. */
 export class SchedulerFacade {
-  #currentTimeTicks = 0n;
-  #nextEventId = 1n;
-  #nextSequence = 0n;
-  #queue: ScheduledEvent[] = [];
-  #queueHead = 0;
-  #queuedEvents = new Map<bigint, ScheduledEvent>();
-  #dispatched: DispatchedEvent[] = [];
-  #cancelled: CancelledEvent[] = [];
-  #cancelledIsSorted = true;
-
-  get currentTimeTicks(): bigint {
-    return this.#currentTimeTicks;
-  }
-
-  scheduleAt(input: ScheduledEventInput): ScheduledEvent {
-    const event: ScheduledEvent = {
-      eventId: this.#nextEventId,
-      entityId: input.entityId === undefined || input.entityId === null ? null : normalizeUnsignedBigInt(input.entityId, "entityId"),
-      timeTicks: normalizeUnsignedBigInt(input.timeTicks, "timeTicks"),
-      timeScale: "ticks",
-      priority: normalizePriority(input.priority ?? 0),
-      sequence: this.#nextSequence,
-      eventKind: normalizeEventKind(input.eventKind ?? "custom"),
-      status: "scheduled",
-      payloadRef: input.payloadRef ?? null,
-    };
-
-    this.#nextEventId += 1n;
-    this.#nextSequence += 1n;
-
-    let low = this.#queueHead;
-    let high = this.#queue.length;
-    while (low < high) {
-      const mid = (low + high) >>> 1;
-      if (compareScheduledEvents(this.#queue[mid], event) < 0) {
-        low = mid + 1;
-      } else {
-        high = mid;
-      }
-    }
-    this.#queue.splice(low, 0, event);
-    this.#queuedEvents.set(event.eventId, event);
-
-    return event;
-  }
-
-  scheduleAfter(delayTicks: bigint | number | string, input: Omit<ScheduledEventInput, "timeTicks"> = {}): ScheduledEvent {
-    return this.scheduleAt({
-      ...input,
-      timeTicks: this.#currentTimeTicks + normalizeUnsignedBigInt(delayTicks, "delayTicks"),
-    });
-  }
-
-  cancel(eventId: bigint | number | string): boolean {
-    const normalizedEventId = normalizeUnsignedBigInt(eventId, "eventId");
-    const event = this.#queuedEvents.get(normalizedEventId);
-
-    if (event === undefined) {
-      return false;
-    }
-
-    this.#queuedEvents.delete(normalizedEventId);
-    this.#cancelled.push({ ...event, status: "cancelled" });
-    this.#cancelledIsSorted = false;
-    return true;
-  }
-
-  step(): DispatchedEvent | null {
-    let next: ScheduledEvent | undefined;
-    while (this.#queueHead < this.#queue.length) {
-      const candidate = this.#queue[this.#queueHead++]!;
-      if (this.#queuedEvents.has(candidate.eventId)) {
-        this.#queuedEvents.delete(candidate.eventId);
-        next = candidate;
-        break;
-      }
-    }
-
-    this.#compactQueuePrefix();
-
-    if (next === undefined) {
-      return null;
-    }
-
-    this.#currentTimeTicks = next.timeTicks;
-    const dispatched: DispatchedEvent = {
-      ...next,
-      status: "dispatched",
-    };
-    this.#dispatched.push(dispatched);
-    return dispatched;
-  }
-
-  runFor(maxEvents: number): readonly DispatchedEvent[] {
-    const limit = normalizeMaxEvents(maxEvents);
-    const dispatched: DispatchedEvent[] = [];
-
-    for (let index = 0; index < limit; index += 1) {
-      const event = this.step();
-      if (event === null) {
-        break;
-      }
-      dispatched.push(event);
-    }
-
-    return dispatched;
-  }
-
-  snapshot(): SchedulerSnapshot {
-    if (!this.#cancelledIsSorted) {
-      this.#cancelled.sort(compareScheduledEvents);
-      this.#cancelledIsSorted = true;
-    }
-
-    return {
-      currentTimeTicks: this.#currentTimeTicks,
-      queuedEvents: this.#queue.slice(this.#queueHead).filter((ev) => this.#queuedEvents.has(ev.eventId)),
-      dispatchedEvents: [...this.#dispatched],
-      cancelledEvents: [...this.#cancelled],
-    };
-  }
-
-  eventLog(runId: string): ArrowEventLogPayload {
-    if (!this.#cancelledIsSorted) {
-      this.#cancelled.sort(compareScheduledEvents);
-      this.#cancelledIsSorted = true;
-    }
-
-    const rows = [...this.#dispatched, ...this.#cancelled]
-      .sort(compareScheduledEvents)
-      .map((event) => toArrowEventLogRow(runId, event));
-
-    return {
-      schema: EVENT_LOG_SCHEMA_NAME,
-      schemaVersion: EVENT_LOG_SCHEMA_VERSION,
-      fields: EVENT_LOG_FIELDS,
-      rows,
-    };
-  }
-
-  #compactQueuePrefix(): void {
-    if (this.#queueHead === this.#queue.length) {
-      this.#queue = [];
-      this.#queueHead = 0;
-      return;
-    }
-
-    if (this.#queueHead >= 1_024 && this.#queueHead * 2 >= this.#queue.length) {
-      this.#queue = this.#queue.slice(this.#queueHead);
-      this.#queueHead = 0;
-    }
-  }
+  constructor() { throw new UnsupportedCoreError(); }
+  get currentTimeTicks(): bigint { throw new UnsupportedCoreError(); }
+  scheduleAt(_input: ScheduledEventInput): ScheduledEvent { throw new UnsupportedCoreError(); }
+  scheduleAfter(_delayTicks: bigint | number | string, _input: Omit<ScheduledEventInput, "timeTicks"> = {}): ScheduledEvent { throw new UnsupportedCoreError(); }
+  cancel(_eventId: bigint | number | string): boolean { throw new UnsupportedCoreError(); }
+  step(): DispatchedEvent | null { throw new UnsupportedCoreError(); }
+  runFor(_maxEvents: number): readonly DispatchedEvent[] { throw new UnsupportedCoreError(); }
+  snapshot(): SchedulerSnapshot { throw new UnsupportedCoreError(); }
+  eventLog(_runId: string): ArrowEventLogPayload { throw new UnsupportedCoreError(); }
 }
 
 export function createSchedulerFacade(): SchedulerFacade {
@@ -358,92 +263,6 @@ export function compareScheduledEvents(left: SchedulerEvent, right: SchedulerEve
     || compareBigInt(left.sequence, right.sequence);
 }
 
-// Track 70 Phase 2 (Task 2.3): the pure-TypeScript facade has no engine
-// behind it, so it cannot observe engine-side ID recycling; single-generation
-// handles are therefore projected with generation 0, explicitly (documented
-// in binding README). Entity projections are null-together per the v2
-// contract: both generation columns are set together or both are null.
-function toArrowEventLogRow(runId: string, event: DispatchedEvent | CancelledEvent): ArrowEventLogRow {
-  const normalizedRunId = runId.trim();
-  if (normalizedRunId.length === 0) {
-    throw new Error("runId must not be empty");
-  }
-
-  const eventIdIndex = normalizeBoundedUnsignedBigInt(
-    event.eventId,
-    "eventId",
-    2n ** 64n - 1n,
-  );
-  const entityIdIndex =
-    event.entityId === null
-      ? null
-      : normalizeBoundedUnsignedBigInt(event.entityId, "entityId", 2n ** 64n - 1n);
-
-  return {
-    schemaVersion: EVENT_LOG_SCHEMA_VERSION,
-    runId: normalizedRunId,
-    eventIdIndex: eventIdIndex.toString(),
-    eventIdGen: 0,
-    entityIdIndex: entityIdIndex?.toString() ?? null,
-    entityIdGen: entityIdIndex === null ? null : 0,
-    timeTicksHi: (event.timeTicks >> 64n).toString(),
-    timeTicksLo: (event.timeTicks & 0xffff_ffff_ffff_ffffn).toString(),
-    timeScale: event.timeScale,
-    priority: event.priority,
-    sequence: event.sequence.toString(),
-    eventKind: event.eventKind,
-    status: event.status,
-    payloadRef: event.payloadRef,
-  };
-}
-
-function normalizeUnsignedBigInt(value: bigint | number | string, fieldName: string): bigint {
-  const normalized = BigInt(value);
-  if (normalized < 0n) {
-    throw new Error(`${fieldName} must be non-negative`);
-  }
-
-  return normalized;
-}
-
-function normalizeBoundedUnsignedBigInt(
-  value: bigint | number | string,
-  fieldName: string,
-  max: bigint,
-): bigint {
-  const normalized = normalizeUnsignedBigInt(value, fieldName);
-  if (normalized > max) {
-    throw new Error(`${fieldName} exceeds ${max.toString()}`);
-  }
-
-  return normalized;
-}
-
-function normalizePriority(value: number): number {
-  if (!Number.isInteger(value)) {
-    throw new Error("priority must be an integer");
-  }
-
-  return value;
-}
-
-function normalizeMaxEvents(value: number): number {
-  if (!Number.isInteger(value) || value < 0) {
-    throw new Error("maxEvents must be a non-negative integer");
-  }
-
-  return value;
-}
-
-function normalizeEventKind(value: string): string {
-  const normalized = value.trim();
-  if (normalized.length === 0) {
-    throw new Error("eventKind must not be empty");
-  }
-
-  return normalized;
-}
-
 function compareBigInt(left: bigint, right: bigint): number {
   if (left < right) {
     return -1;
@@ -456,53 +275,28 @@ function compareBigInt(left: bigint, right: bigint): number {
   return 0;
 }
 
-// Track 63: WasmBridgeLoader & TimeTravelInspectorClient
 export interface WasmBridgeLoaderOptions {
+  /** Explicit URL or module specifier for a Rust-generated wasm-bindgen module. */
   readonly wasmModulePath?: string;
 }
 
+/** Retired synthetic inspector. Rust history/provenance still needs qualification. */
 export class TimeTravelInspectorClient {
-  #tick = 0;
-  readonly engineState: { readonly currentTimeTicks: number };
-
-  constructor(engineState: { readonly currentTimeTicks: number } = { currentTimeTicks: 0 }) {
-    this.engineState = engineState;
+  constructor(_engineState?: { readonly currentTimeTicks: number }) {
+    throw new UnsupportedCoreError("The synthetic time-travel inspector is retired. A qualified Rust history/provenance adapter is required.");
   }
-
-  snapshotJson(): string {
-    return JSON.stringify({
-      tick: this.#tick,
-      stats: {
-        now: this.#tick,
-        scheduled: 0,
-        pending: 0,
-        dispatched: this.#tick,
-        cancelled: 0,
-      },
-      cow_delta_bytes: 64,
-    });
-  }
-
-  stepAndRecord(): boolean {
-    this.#tick += 1;
-    return true;
-  }
-
-  historyLen(): number {
-    return this.#tick + 1;
-  }
-
-  inspectTickJson(tick: number): string {
-    return JSON.stringify({
-      tick,
-      causal_provenance: `event-batch-${String(tick)}`,
-      delta_stats: { events_processed: 1 },
-    });
-  }
+  snapshotJson(): string { throw new UnsupportedCoreError(); }
+  stepAndRecord(): boolean { throw new UnsupportedCoreError(); }
+  historyLen(): number { throw new UnsupportedCoreError(); }
+  inspectTickJson(_tick: number): string { throw new UnsupportedCoreError(); }
 }
 
 export const WasmBridgeLoader = {
-  async loadWasmEngine(_options?: WasmBridgeLoaderOptions): Promise<TimeTravelInspectorClient> {
-    return new TimeTravelInspectorClient();
+  async loadWasmEngine(options: WasmBridgeLoaderOptions = {}): Promise<NativeWasmEngine> {
+    const modulePath = options.wasmModulePath?.trim();
+    if (!modulePath) {
+      throw new NativeWasmNotConfiguredError("wasmModulePath must identify a generated Rust Wasm module.");
+    }
+    return loadNativeWasm({ load: () => import(modulePath) });
   },
 };

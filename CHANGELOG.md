@@ -10,9 +10,20 @@ Format:
 - Call out release-impacting changes to the Rust workspace crates, binding package surfaces, release workflows, or public docs.
 - Link to the release notes or archive record when a release is archived or DOI-minted.
 - Public surface changes must name the affected crate, binding, ABI, schema, fixture, or release artifact root.
-- Deprecations must appear under `Deprecated` before any removal entry is accepted.
+- Deprecations normally appear under `Deprecated` before removal. An explicitly approved immediate breaking change must name its decision and migration instructions, as in ADR 0010.
 
 ## Unreleased
+
+### Removed
+
+- **Breaking — effective 7 November 2026:** support for independent host-language simulation cores in `bindings/python`, `bindings/r`, `bindings/typescript`, `bindings/csharp` and `bindings/go` ends immediately. The former scheduler facades and synthetic Python vector/RL execution must fail explicitly; there is no gradual migration or parallel support period. Rust native code or Rust-compiled WebAssembly is the only supported execution core. See [ADR 0010](docs/adr/0010-rust-only-execution.md), [compatibility](docs/release/compatibility.md) and [migration](docs/release/migration.md).
+
+### Changed
+
+- `bindings/python` exposes a bounded `NativeEngine` backed by the actual Rust C ABI; `bindings/typescript` requires a generated Rust/Wasm module. A missing library, incompatible ABI or unsupported operation produces an explicit error. `bindings/julia` metadata/DTO helpers and other package probes do not establish native engine availability.
+- `notebooks/python_scheduler_tutorial.ipynb` now requires an explicitly configured Rust library and exercises real native scheduling, cancellation and statistics. Stored outputs are cleared; notebook syntax validation is separate from native execution acceptance.
+- README, `website/`, `docs/` and the paper draft identify the alpha release and capability evidence boundaries. The HPC scaling report corrects generated placeholder figures; retained measured PDES results remain attributed to their original source and workload.
+
 
 - Quality readback recognizes an exact-main Rust workflow pending before its job checks appear, while retaining failure and coverage gates.
 

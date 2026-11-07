@@ -1,44 +1,26 @@
-# Julia Binding
+# Julia binding
 
-Track 08 owns this binding surface.
+Track 08 owns this package. Julia currently provides metadata and event-log data
+conversion; it has no qualified simulation runtime. Kairos execution must run
+in Rust. `ffi_status().configured` is false and `self_check()` reports
+`metadata_only`. File discovery does not claim a loaded engine or Arrow C Data
+support.
 
-This package currently provides a pure-Julia preview slice:
+The existing `EventLogRecord` / `EventLogBatch` types and `ordered_events`
+helper operate on data supplied by the caller. Sorting an existing log is data
+processing, not an alternative scheduler. The Schema v2 smoke-byte codec
+copies records into escaped tabular text with decimal integer limbs; it is not
+Arrow IPC, native Arrow buffer handoff, or evidence of Rust engine execution.
+Entity ID limbs must be null together and malformed records are rejected.
 
-- deterministic event ordering by `(time_ticks, priority, sequence)`;
-- a facade for the Track 70 Schema v2 `kairo_ecs.event_log.v2` Arrow schema
-  fields (generational-ID index/generation columns, `time_ticks_hi`/`lo`
-  limbs);
-- an event-log smoke-byte roundtrip gate that preserves the Track 70 v2 field
-  order (14 columns, decimal integer limbs, null-together entity columns)
-  without requiring Arrow.jl at package load time;
-- conformance fixture bridge helpers that distinguish Track 08 ready and
-  planned fixture coverage without running native FFI;
-- explicit native FFI status reporting.
+Fixture bridge helpers read ready/planned fixture metadata. A fixture marked
+ready upstream does not prove that Julia executed it. Native engine and
+populated Arrow support require a Rust FFI adapter, owned lifetimes, artifact
+packaging and actual native conformance tests before release qualification.
 
-**Documented copies and unsupported targets (Track 70 Phase 2, Task 2.3):**
-
-- The smoke-byte codec performs a **value copy** per record into an escaped
-  tab-separated projection of the Schema v2 columns; it is a deterministic
-  dev-roundtrip and conformance gate, not a zero-copy Arrow buffer hand-off.
-- Native Arrow.jl IPC reading/writing the populated FFI export is
-  **deferred** and reported as unsupported until the Julia tooling lane is
-  available; the binding does not consume `libkairo_ecs_ffi` yet
-  (`ffi_status().configured == false`), so populated Arrow C Data/Stream
-  exports are unsupported targets here.
-- Entity projections are null-together per the v2 contract; malformed
-  half-null rows are rejected explicitly on decode.
-
-Native FFI is intentionally reported as not configured until Track 02 provides
-a safe artifact layout for Julia package loading.
-
-Local validation from this directory:
+Validation from this directory:
 
 ```bash
 julia --project=. -e 'using Pkg; Pkg.test()'
 julia --project=. -e 'include("test/test_arrow.jl")'
 ```
-
-The fixture bridge accepts `ConformanceFixture` values, named tuples, or
-dictionary-like manifest rows and reports only the fixtures that list Track 08
-as a consumer. Planned fixtures stay visible as planned; they are not promoted
-to passing coverage by this package slice.

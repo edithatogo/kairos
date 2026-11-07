@@ -1,4 +1,4 @@
-"""Native FFI status for the dependency-light Python package slice."""
+"""Native configuration discovery; this function never loads executable code."""
 
 import os
 from dataclasses import dataclass
@@ -20,12 +20,12 @@ def ffi_status() -> dict[str, str | bool | None]:
         return {
             "configured": False,
             "status": "not_loaded",
-            "detail": "native FFI loading is not enabled in this pure Python slice",
+            "detail": "NativeEngine validates and loads this explicit path; execution is not yet verified",
             "library_path": library_path,
         }
     return {
         "configured": False,
         "status": "not_configured",
-        "detail": "set KAIRO_ECS_FFI_LIBRARY after native wheels are packaged",
+        "detail": "set an absolute KAIRO_ECS_FFI_LIBRARY path; no host-language fallback is supported",
         "library_path": None,
     }

@@ -5,8 +5,8 @@ Authors@R: c(person("KairoECS", "Maintainers", role = c("aut", "cre"), email = "
 Author: KairoECS Maintainers
 Maintainer: KairoECS Maintainers <maintainers@example.com>
 Description: R bindings for the KairoECS Rust simulation engine, currently
-    exposing a deterministic scheduler and event-log facade while native FFI is
-    intentionally not configured.
+    exposing metadata and event-log conversion. Engine execution requires a
+    qualified Rust FFI adapter; the former pure-R scheduler is retired.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Type: Package

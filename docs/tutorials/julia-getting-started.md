@@ -1,5 +1,9 @@
 # Julia Getting Started
 
+**Runtime support:** Version, DTO and event-log helpers remain available as data utilities. They do not execute a simulation. A file path or successful self-check cannot establish native engine availability.
+
+Rust is the only supported simulation core. Follow [ADR 0010](../adr/0010-rust-only-execution.md), [installation](../install.md) and the [migration guide](../release/migration.md). The package checks below establish only their stated package/data scope.
+
 ## Prerequisites
 - Julia >= 1.10 installed
 - The KairoECS repository cloned

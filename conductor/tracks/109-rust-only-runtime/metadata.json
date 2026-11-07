@@ -1,0 +1,22 @@
+{
+  "track_id": "109-rust-only-runtime",
+  "type": "refactor",
+  "status": "in_progress",
+  "approved": true,
+  "repository": "kairos",
+  "created_at": "2026-11-07T00:00:00+10:00",
+  "updated_at": "2026-11-07T00:00:00+10:00",
+  "title": "Rust-only runtime and native binding enforcement",
+  "spec_approved": true,
+  "implementation_started": true,
+  "accepted_phases": [],
+  "active_phase": "0",
+  "coordinating_programme": "frontier-programme-20261107",
+  "depends_on": [
+    "02",
+    "12",
+    "25",
+    "63"
+  ]
+}
+

@@ -375,7 +375,8 @@ function ffi_status()
     return (
         configured = false,
         library = nothing,
-        reason = "Native KairoECS FFI library artifact is not configured for the Julia binding yet.",
+        reason = "Native KairoECS FFI is not configured. A qualified Rust adapter is required for execution.",
+        fallback_supported = false,
     )
 end
 
@@ -385,7 +386,7 @@ function self_check()
     return Dict(
         :package => "KairoECS",
         :version => VERSION_STRING,
-        :status => "ok",
+        :status => "metadata_only",
         :ffi_configured => string(is_ffi_configured()),
     )
 end
@@ -393,16 +394,19 @@ end
 """
     native_library_loader()
 
-Helper checking/loading `libkairo_ecs_ffi` C ABI dynamic library and arrow C data interface descriptor metadata.
+Report artifact discovery only. File presence does not prove native execution or Arrow C Data Interface support.
 """
 function native_library_loader(lib_path::Union{Nothing, String} = nothing)
     ext = Sys.iswindows() ? ".dll" : (Sys.isapple() ? ".dylib" : ".so")
-    lib_name = something(lib_path, "libkairo_ecs_ffi" * ext)
+    prefix = Sys.iswindows() ? "" : "lib"
+    lib_name = something(lib_path, prefix * "kairo_ecs_ffi" * ext)
     found = isfile(lib_name)
     return Dict(
         "native_library" => lib_name,
-        "available" => found,
-        "arrow_c_data_interface_supported" => true,
+        "artifact_present" => found,
+        "available" => false,
+        "arrow_c_data_interface_supported" => false,
+        "reason" => "Rust library loading and ABI qualification are not implemented in this Julia binding.",
     )
 end
 

@@ -1,33 +1,12 @@
 # Kairo.ECS
 
-This project hosts the C# binding surface for Kairo ECS.
+This package is a host adapter for the Rust Kairos core. The managed scheduler
+has been retired and fails explicitly. Metadata and DTOs remain usable.
 
-The current preview slice is intentionally managed-only:
+`NativeMethods` exposes the Rust C ABI through P/Invoke;
+`KairoEcsEngineHandle` owns native handles. Set `KAIRO_ECS_FFI_LIBRARY` to the absolute Rust shared-library path, or
+provide the legacy native directory/runtime assets. File discovery alone does not qualify native execution.
 
-- `PackageInfo` exposes package metadata.
-- `DeterministicScheduler` provides a deterministic event scheduler facade for
-  binding and conformance tests.
-- `NativeBinding` reports whether native FFI is configured without loading
-  unmanaged code.
-
-Native FFI remains not configured until `KAIRO_ECS_NATIVE_LIB_DIR` points to a
-directory containing the platform library or future NuGet runtime assets are
-packaged under `runtimes/{rid}/native/`.
-
-Build:
-
-```powershell
-dotnet build ..\..\Kairo.ECS.sln
-```
-
-Test:
-
-```powershell
-dotnet test ..\..\Kairo.ECS.sln
-```
-
-Pack:
-
-```powershell
-dotnet pack .\Kairo.ECS.csproj -c Release
-```
+See the [binding guide](../../README.md) for artifact configuration, supported
+surfaces and required native tests. The NuGet package does not yet bundle a
+qualified platform runtime matrix.

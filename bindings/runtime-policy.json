@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "effective_date": "2026-11-07",
+  "execution_policy": "rust-core-only",
+  "allowed_core_artifacts": ["rust-native", "rust-compiled-wasm"],
+  "host_core_fallback_supported": false,
+  "metadata_is_native_evidence": false,
+  "missing_required_native_artifact": "fail",
+  "bindings": {
+    "python": {
+      "execution_api": "kairo_ecs.NativeEngine",
+      "artifact": "explicit absolute KAIRO_ECS_FFI_LIBRARY or lib_path; C ABI v1",
+      "retired": ["Scheduler", "ParallelVecEnv", "PettingZooParallelAdapter"],
+      "required_native_gate": "PYTHONPATH=bindings/python python -m unittest discover -s bindings/python/native_tests -v",
+      "qualification": "native execution suite required; packaged platform matrix pending"
+    },
+    "typescript": {
+      "execution_api": "WasmBridgeLoader.loadWasmEngine / loadNativeWasm",
+      "artifact": "explicit generated Rust Wasm module; ABI v1",
+      "retired": ["SchedulerFacade", "createSchedulerFacade", "TimeTravelInspectorClient"],
+      "required_native_gate": "KAIRO_ECS_WASM_MODULE=<generated-module-path> npm run test:native",
+      "qualification": "generated artifact execution suite required; packaged platform matrix pending"
+    },
+    "csharp": {
+      "execution_api": "NativeMethods with KairoEcsEngineHandle",
+      "artifact": "Rust kairo-ecs-ffi shared library via KAIRO_ECS_FFI_LIBRARY; legacy directory lookup supported",
+      "retired": ["DeterministicScheduler"],
+      "required_native_gate": "KAIRO_ECS_REQUIRE_NATIVE=1 dotnet test bindings/csharp/Kairo.ECS.sln --filter TestCategory=Native",
+      "qualification": "native execution suite required; packaged platform matrix pending"
+    },
+    "go": {
+      "execution_api": null,
+      "retired": ["pure-Go Engine"],
+      "unavailable_error": "ErrNativeNotConfigured",
+      "qualification": "runtime unavailable; DTO and header tests only"
+    },
+    "r": {
+      "execution_api": null,
+      "retired": ["pure-R kairoecs_scheduler"],
+      "unavailable_error": "kairoecs_native_required",
+      "qualification": "runtime unavailable; metadata and data conversion only"
+    },
+    "julia": {
+      "execution_api": null,
+      "retired": [],
+      "qualification": "runtime unavailable; metadata and data conversion only"
+    }
+  }
+}

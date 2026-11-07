@@ -1,67 +1,32 @@
-# R Binding
+# R binding
 
-This package root contains the Track 07 R binding surface.
+Track 07 owns this package. The pure-R scheduler is retired immediately.
+`kairoecs_new_scheduler`, `kairoecs_schedule_at`, `kairoecs_cancel_event`,
+`kairoecs_run_until` and `kairoecs_event_log` all raise the typed
+`kairoecs_native_required` condition. There is no R core or execution fallback.
 
-The current slice is intentionally small and deterministic:
+`kairoecs_ffi_status()` reports unconfigured, and `kairoecs_surface_ready()` is
+false until a qualified Rust runtime adapter exists. Artifact discovery reports
+file presence separately; it cannot claim a loaded ABI or Arrow support.
 
-The current slice is intentionally small and deterministic:
+Package metadata and `kairoecs_arrow_roundtrip` remain available. Conversion
+accepts an existing Schema v2 data frame, preserving u64 fields as decimal
+strings and u32 generations as numeric values. It copies values into base R or
+an optional `arrow::Table`. It does not schedule events, invent generation zero
+IDs, or consume populated Rust Arrow buffers.
 
-- `kairoecs_ffi_status()` reports native FFI as not configured.
-- `kairoecs_new_scheduler()` creates a pure-R scheduler facade.
-- `kairoecs_schedule_at()`, `kairoecs_cancel_event()`, and
-  `kairoecs_run_until()` update scheduler state without side effects.
-- `kairoecs_event_log()` returns an event-log data frame aligned to
-  the Track 70 Schema v2 `kairo_ecs.event_log.v2` contract (14 columns:
-  generational-ID `event_id_index`/`event_id_gen` and
-  `entity_id_index`/`entity_id_gen` pairs, `time_ticks_hi`/`time_ticks_lo`
-  limbs).
-- `kairoecs_arrow_roundtrip()` normalizes the event-log schema in base R, or
-  roundtrips through the optional `arrow` package when `use_arrow = TRUE`.
+Actual engine support requires a Rust FFI adapter, owned-handle lifetime
+management, full integer/error handling, artifact packaging, and native
+execution tests that fail without Rust. Fixture parsing and conversion tests
+are explicitly metadata/data evidence and cannot substitute for these gates.
 
-**Documented copies and unsupported targets (Track 70 Phase 2, Task 2.3):**
+Validation from this directory:
 
-- The facade performs a **row copy** into a plain base-R data frame; there is
-  no Arrow C Data Interface buffer hand-off in this slice. The optional
-  `arrow` roundtrip is a table-level copy through `arrow::Table`.
-- u64 columns (`event_id_index`, `entity_id_index`, `time_ticks_hi`,
-  `time_ticks_lo`, `sequence`) project as **exact decimal character strings**
-  (base-R doubles lose integer precision above 2^53); u32 generations stay
-  numeric.
-- Facade-local single-generation handles project **generation `0`**
-  explicitly; entity projections are **null-together** (both columns set or
-  both `NA`).
-- Facade-local single-generation handles project **generation `0`**
-  explicitly; entity projections are **null-together** (both columns set or
-  both `NA`).
-- Scheduler and entity inputs are exact-integer guarded: values beyond the
-  2^53 double precision limit **reject explicitly** (facade limit; full
-  u64/u128 interchange belongs to the native FFI surface). Populated Arrow
-  C Data/Stream export is an **unsupported target** here until the native
-  FFI artifact path is configured (`kairoecs_ffi_status()` stays
-  `configured = FALSE`).
+```bash
+Rscript tests/smoke-base.R
+Rscript -e "testthat::test_dir('tests/testthat', reporter = 'summary')"
+R CMD check --no-manual .
+```
 
-Current package files:
-
-- `DESCRIPTION`
-- `LICENSE`
-- `NAMESPACE`
-- `R/kairoecs.R`
-- `man/kairoECS-package.Rd`
-- `man/kairoecs-scheduler.Rd`
-- `tests/testthat.R`
-- `tests/helper-load.R`
-- `tests/smoke-base.R`
-- `tests/testthat/helper-load.R`
-- `tests/testthat/test-smoke.R`
-- `tests/testthat/test-conformance.R`
-
-Local validation from `bindings/r/`:
-
-- `Rscript tests/smoke-base.R`
-- `Rscript -e "testthat::test_dir('tests', reporter = 'summary')"`
-- `R CMD check --no-manual .`
-- `Rscript -e "devtools::check(document = FALSE)"`
-
-The testthat conformance tests use `jsonlite` to load the ready shared
-fixtures and then drive the exported pure-R scheduler facade. The base smoke
-script remains available for environments without optional R test packages.
+Optional Arrow conversion tests require the R `arrow` package. Their absence
+must not be interpreted as native runtime acceptance.

@@ -94,7 +94,7 @@ export interface ArrowEventLogPayload {
 }
 
 export interface NativeWasmStatus {
-  readonly status: typeof NOT_CONFIGURED_STATUS | "ready";
+  readonly status: typeof NOT_CONFIGURED_STATUS | "configured-unverified";
   readonly reason?: string;
 }
 
@@ -112,9 +112,27 @@ export declare class NativeWasmNotConfiguredError extends Error {
 }
 
 export declare function nativeWasmStatus(loader?: Partial<NativeWasmLoader>): NativeWasmStatus;
-export declare function loadNativeWasm(loader?: Partial<NativeWasmLoader>): Promise<unknown>;
+export interface NativeWasmEngine {
+  ffi_version(): number;
+  free(): unknown;
+  reset(): string;
+  current_time_ticks(): bigint;
+  schedule_at(ticks: bigint, priority: number, kind: number): bigint;
+  step(): string;
+  run_for(maxEvents: bigint): bigint;
+  stats_json(): string;
+}
+export interface NativeWasmModule {
+  readonly WasmEngine: new () => NativeWasmEngine;
+  readonly default?: () => Promise<unknown> | unknown;
+}
+export declare class UnsupportedCoreError extends Error {
+  constructor(message?: string);
+}
+export declare function loadNativeWasm(loader?: Partial<NativeWasmLoader>): Promise<NativeWasmEngine>;
 
 export declare class SchedulerFacade {
+  constructor();
   get currentTimeTicks(): bigint;
   scheduleAt(input: ScheduledEventInput): ScheduledEvent;
   scheduleAfter(delayTicks: bigint | number | string, input?: Omit<ScheduledEventInput, "timeTicks">): ScheduledEvent;
@@ -134,7 +152,6 @@ export interface WasmBridgeLoaderOptions {
 }
 
 export declare class TimeTravelInspectorClient {
-  readonly engineState: { readonly currentTimeTicks: number };
   constructor(engineState?: { readonly currentTimeTicks: number });
   snapshotJson(): string;
   stepAndRecord(): boolean;
@@ -143,5 +160,5 @@ export declare class TimeTravelInspectorClient {
 }
 
 export declare const WasmBridgeLoader: {
-  loadWasmEngine(options?: WasmBridgeLoaderOptions): Promise<TimeTravelInspectorClient>;
+  loadWasmEngine(options?: WasmBridgeLoaderOptions): Promise<NativeWasmEngine>;
 };

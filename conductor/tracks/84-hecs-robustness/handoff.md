@@ -57,3 +57,8 @@ Following the [Robustness-first dependency acceptance policy](../../dependency-v
 
 - Conductor review: `$conductor-review` completed in `review-report.md`.
 - Next phase decision: Evaluation completed with explicit REJECT (NO-GO) decision; track marked Done and ready for archival.
+
+
+## 7 November 2026 policy clarification
+
+The historical dependency decision remains recorded, but a crate-local `#![forbid(unsafe_code)]` lint does not prohibit a dependency from using audited unsafe internals. A future ECS comparison must assess stable entity identity, deterministic iteration, snapshot/rollback semantics, maintenance cost and measured workload performance. [Track 114](../114-dependency-and-consumer-contracts/plan.md) owns that qualification; this clarification neither adopts hecs nor changes the original source acceptance.

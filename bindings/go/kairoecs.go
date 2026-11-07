@@ -1,17 +1,15 @@
+// Package kairoecs provides binding metadata and data types for the Rust core.
+// Engine execution requires a qualified Rust bridge; no Go core is supported.
 package kairoecs
 
-import (
-	"container/heap"
-	"errors"
-	"fmt"
-)
+import "errors"
 
 const Version = "0.1.0"
 
 var (
 	ErrClosed              = errors.New("kairoecs: engine is closed")
 	ErrEventNotFound       = errors.New("kairoecs: event not found")
-	ErrNativeNotConfigured = errors.New("kairoecs: native cgo FFI is not configured")
+	ErrNativeNotConfigured = errors.New("kairoecs: a qualified Rust native bridge is required; the Go scheduler has been retired")
 )
 
 type EventID uint64
@@ -32,219 +30,52 @@ type Stats struct {
 	Cancelled  uint64
 }
 
-type Engine struct {
-	now        int64
-	nextID     EventID
-	nextSeq    uint64
-	closed     bool
-	cancelled  map[EventID]struct{}
-	events     eventHeap
-	scheduled  uint64
-	dispatched uint64
-	cancelledN uint64
-}
+// Engine is a retired host scheduler surface. Its zero value cannot execute.
+// A native engine adapter has not yet been qualified for this Go package.
+type Engine struct{ closed bool }
 
-func NewEngine() *Engine {
-	return &Engine{
-		nextID:    1,
-		cancelled: make(map[EventID]struct{}),
-	}
-}
+// NewEngine fails explicitly until this package has a qualified Rust bridge.
+// Breaking change: callers must handle the error result.
+func NewEngine() (*Engine, error) { return NewNativeEngine() }
 
 func SelfCheck() map[string]string {
-	nativeStatus := "not-configured"
-	if NativeAvailable() {
-		nativeStatus = "available"
-	}
-
 	return map[string]string{
-		"package": "kairoecs",
-		"version": Version,
-		"status":  "ok",
-		"native":  nativeStatus,
+		"package":            "kairoecs",
+		"version":            Version,
+		"status":             "metadata_only",
+		"native":             "not-configured",
+		"execution":          "rust_native_required",
+		"fallback_supported": "false",
 	}
 }
 
-func NativeAvailable() bool {
-	return false
-}
+// NativeAvailable does not infer runtime readiness from cgo or header presence.
+func NativeAvailable() bool { return false }
 
-func NewNativeEngine() (*Engine, error) {
-	return nil, ErrNativeNotConfigured
-}
+func NewNativeEngine() (*Engine, error) { return nil, ErrNativeNotConfigured }
 
 func (e *Engine) Close() error {
-	if e == nil || e.closed {
-		return nil
+	if e != nil {
+		e.closed = true
 	}
-	e.closed = true
-	e.cancelled = nil
-	e.events = nil
 	return nil
 }
 
-func (e *Engine) CurrentTimeTicks() (int64, error) {
-	if err := e.ensureOpen(); err != nil {
-		return 0, err
-	}
-	return e.now, nil
-}
-
-func (e *Engine) ScheduleAt(timeTicks int64, priority int32, kind string) (EventID, error) {
-	if err := e.ensureOpen(); err != nil {
-		return 0, err
-	}
-	if timeTicks < e.now {
-		return 0, fmt.Errorf("kairoecs: cannot schedule event at %d before current time %d", timeTicks, e.now)
-	}
-
-	id := e.nextID
-	e.nextID++
-	evt := Event{
-		ID:        id,
-		TimeTicks: timeTicks,
-		Priority:  priority,
-		Sequence:  e.nextSeq,
-		Kind:      kind,
-	}
-	e.nextSeq++
-	e.scheduled++
-	heap.Push(&e.events, evt)
-	return id, nil
-}
-
-func (e *Engine) ScheduleAfter(deltaTicks int64, priority int32, kind string) (EventID, error) {
-	if err := e.ensureOpen(); err != nil {
-		return 0, err
-	}
-	if deltaTicks < 0 {
-		return 0, fmt.Errorf("kairoecs: negative duration %d", deltaTicks)
-	}
-	return e.ScheduleAt(e.now+deltaTicks, priority, kind)
-}
-
-func (e *Engine) CancelEvent(id EventID) error {
-	if err := e.ensureOpen(); err != nil {
-		return err
-	}
-	if id == 0 || id >= e.nextID {
-		return ErrEventNotFound
-	}
-	if _, ok := e.cancelled[id]; ok {
-		return ErrEventNotFound
-	}
-	foundPending := false
-	for _, evt := range e.events {
-		if evt.ID == id {
-			foundPending = true
-			break
-		}
-	}
-	if !foundPending {
-		return ErrEventNotFound
-	}
-	e.cancelled[id] = struct{}{}
-	e.cancelledN++
-	return nil
-}
-
-func (e *Engine) Step() (Event, bool, error) {
-	if err := e.ensureOpen(); err != nil {
-		return Event{}, false, err
-	}
-	for e.events.Len() > 0 {
-		evt := heap.Pop(&e.events).(Event)
-		if _, ok := e.cancelled[evt.ID]; ok {
-			delete(e.cancelled, evt.ID)
-			continue
-		}
-		e.now = evt.TimeTicks
-		e.dispatched++
-		return evt, true, nil
-	}
-	return Event{}, false, nil
-}
-
-func (e *Engine) RunFor(maxEvents int) ([]Event, error) {
-	if err := e.ensureOpen(); err != nil {
-		return nil, err
-	}
-	if maxEvents < 0 {
-		return nil, fmt.Errorf("kairoecs: negative max events %d", maxEvents)
-	}
-
-	events := make([]Event, 0, maxEvents)
-	for len(events) < maxEvents {
-		evt, ok, err := e.Step()
-		if err != nil {
-			return nil, err
-		}
-		if !ok {
-			break
-		}
-		events = append(events, evt)
-	}
-	return events, nil
-}
-
-func (e *Engine) Stats() (Stats, error) {
-	if err := e.ensureOpen(); err != nil {
-		return Stats{}, err
-	}
-	return Stats{
-		Now:        e.now,
-		Scheduled:  e.scheduled,
-		Pending:    uint64(e.pendingEvents()),
-		Dispatched: e.dispatched,
-		Cancelled:  e.cancelledN,
-	}, nil
-}
-
-func (e *Engine) ensureOpen() error {
+func (e *Engine) unavailable() error {
 	if e == nil || e.closed {
 		return ErrClosed
 	}
-	return nil
+	return ErrNativeNotConfigured
 }
 
-func (e *Engine) pendingEvents() int {
-	pending := 0
-	for _, evt := range e.events {
-		if _, ok := e.cancelled[evt.ID]; !ok {
-			pending++
-		}
-	}
-	return pending
+func (e *Engine) CurrentTimeTicks() (int64, error) { return 0, e.unavailable() }
+func (e *Engine) ScheduleAt(timeTicks int64, priority int32, kind string) (EventID, error) {
+	return 0, e.unavailable()
 }
-
-type eventHeap []Event
-
-func (h eventHeap) Len() int {
-	return len(h)
+func (e *Engine) ScheduleAfter(deltaTicks int64, priority int32, kind string) (EventID, error) {
+	return 0, e.unavailable()
 }
-
-func (h eventHeap) Less(i, j int) bool {
-	if h[i].TimeTicks != h[j].TimeTicks {
-		return h[i].TimeTicks < h[j].TimeTicks
-	}
-	if h[i].Priority != h[j].Priority {
-		return h[i].Priority < h[j].Priority
-	}
-	return h[i].Sequence < h[j].Sequence
-}
-
-func (h eventHeap) Swap(i, j int) {
-	h[i], h[j] = h[j], h[i]
-}
-
-func (h *eventHeap) Push(x any) {
-	*h = append(*h, x.(Event))
-}
-
-func (h *eventHeap) Pop() any {
-	old := *h
-	n := len(old)
-	evt := old[n-1]
-	*h = old[:n-1]
-	return evt
-}
+func (e *Engine) CancelEvent(id EventID) error          { return e.unavailable() }
+func (e *Engine) Step() (Event, bool, error)            { return Event{}, false, e.unavailable() }
+func (e *Engine) RunFor(maxEvents int) ([]Event, error) { return nil, e.unavailable() }
+func (e *Engine) Stats() (Stats, error)                 { return Stats{}, e.unavailable() }

@@ -1,31 +1,26 @@
 ---
 title: Julia
-description: Julia 1.10+ ccall bindings and Tables.jl/Arrow.jl zero-copy integration.
+description: Julia data utilities and the pending native engine acceptance boundary.
 ---
 
-The Julia package (`bindings/julia/KairoECS.jl`) wraps `libkairo_ecs_ffi` via zero-overhead `ccall` declarations and integrates directly with `Arrow.jl` and `Tables.jl`.
+Julia provides DTO and event-log helpers. These utilities are not a simulation engine. A successful self-check, a version string or the existence of a native library file does not establish Rust execution. Use an installed-consumer acceptance receipt for any future runtime claim.
 
-## Julia Surface Overview
+## Rust-only execution
 
-| Symbol | Purpose |
-| --- | --- |
-| `KairoSimulation(seed::UInt64)` | Construct a managed simulation instance with finalizer cleanup |
-| `step!(sim::KairoSimulation, n::Integer)` | Advance simulation by `n` steps deterministically |
-| `snapshot(sim::KairoSimulation)` | Capture state digest and serialized checkpoint |
-| `export_arrow_batch(sim::KairoSimulation)` | Zero-copy export of SoA columns via `FFI_ArrowArray` |
+Rust is the only supported simulation core. Host languages may prepare inputs,
+orchestrate experiments and analyse results. They must fail explicitly for
+missing native simulation operations and never substitute a host-language core.
 
-## Example
+Use the [binding README](https://github.com/edithatogo/kairos/blob/main/bindings/julia/README.md) for the actual current
+surface and tooling. The [Julia tutorial](https://github.com/edithatogo/kairos/blob/main/docs/tutorials/julia-getting-started.md)
+describes package checks within that boundary. Use the
+[Rust quickstart](rust.md) when a required native adapter operation is unavailable.
 
-```julia
-using KairoECS
+## Support and migration
 
-sim = KairoSimulation(UInt64(42))
-step!(sim, 250)
-digest = snapshot(sim)
-println("Simulation time: ", sim.time, " digest: ", digest)
-```
+- [Installation](https://github.com/edithatogo/kairos/blob/main/docs/install.md).
+- [Immediate Rust-only decision](https://github.com/edithatogo/kairos/blob/main/docs/adr/0010-rust-only-execution.md) and [migration](https://github.com/edithatogo/kairos/blob/main/docs/release/migration.md).
+- [Capability register](https://github.com/edithatogo/kairos/blob/main/conductor/capabilities.json) and [release gates](https://github.com/edithatogo/kairos/blob/main/conductor/release-gates.md).
 
-Canonical sources:
-
-- `bindings/julia/README.md`
-- `docs/tutorials/julia-getting-started.md`
+The alpha support matrix must name tested operations and installed native
+artefacts. It must not infer full model support from metadata or schema helpers.

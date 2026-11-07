@@ -6,11 +6,12 @@
 \alias{kairoecs_run_until}
 \alias{kairoecs_event_log}
 \alias{kairoecs_arrow_roundtrip}
-\title{Deterministic scheduler facade}
+\title{Rust-required execution boundary and event-log conversion}
 \description{
-Minimal pure-R scheduler and event-log helpers for the Track 07 package slice.
-Native FFI is reported as not configured until the stable C ABI is available to
-the package.
+Legacy scheduler operations are retired and raise the typed
+\code{kairoecs_native_required} condition. Execution requires a qualified
+Rust native adapter, which is not implemented in this R package yet.
+Event-log conversion of caller-supplied data remains available.
 }
 \usage{
 kairoecs_ffi_status()
@@ -53,14 +54,12 @@ dispatched.}
 roundtrip through \code{arrow::Table}. If \code{FALSE}, normalize via base R.}
 }
 \value{
-\code{kairoecs_ffi_status()} returns a list. Scheduler mutators return an
-updated scheduler object. \code{kairoecs_event_log()} and
-\code{kairoecs_arrow_roundtrip()} return data frames with the
-\code{kairo_ecs.event_log.v2} field order.
+\code{kairoecs_ffi_status()} returns discovery metadata with native runtime
+unconfigured. Every scheduler operation raises \code{kairoecs_native_required}.
+\code{kairoecs_arrow_roundtrip()} returns a data frame with the
+\code{kairo_ecs.event_log.v2} field order; it does not execute a simulation.
 }
 \examples{
-scheduler <- kairoecs_new_scheduler("example")
-scheduler <- kairoecs_schedule_at(scheduler, 10, "arrive")
-scheduler <- kairoecs_run_until(scheduler, 10)
-kairoecs_event_log(scheduler)
+kairoecs_ffi_status()
+tryCatch(kairoecs_new_scheduler(), kairoecs_native_required = conditionMessage)
 }

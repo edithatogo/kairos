@@ -1,31 +1,26 @@
 ---
 title: R
-description: R 4.4+ package bindings via extendr and C ABI with Arrow data.frame integration.
+description: R package and data helpers with an explicit native-execution boundary.
 ---
 
-The R package (`bindings/r/`) exposes KairoECS to statistical and epidemiological workflows in R 4.4+ via `extendr` and the stable `kairo-ecs-ffi` C ABI.
+The R package exposes metadata and data helpers. The earlier R scheduler is unsupported; a native runtime must be implemented and qualified before scheduling is advertised. Package installation or `kairoecs_surface_ready()` does not establish Rust model execution.
 
-## R Package Capabilities
+## Rust-only execution
 
-| Function | Purpose | Return Type |
-| --- | --- | --- |
-| `kairo_sim_create(seed)` | Initialize a deterministic KairoECS simulation handle | External pointer (`SEXP`) |
-| `kairo_sim_step(handle, steps)` | Advance simulation by `steps` discrete events or ticks | Integer (`SimTime`) |
-| `kairo_sim_snapshot(handle)` | Capture a deterministic replay snapshot | Raw vector / snapshot ID |
-| `kairo_sim_export_arrow(handle)` | Export entity component columns via Arrow C Data Interface | `arrow::RecordBatch` / `data.frame` |
+Rust is the only supported simulation core. Host languages may prepare inputs,
+orchestrate experiments and analyse results. They must fail explicitly for
+missing native simulation operations and never substitute a host-language core.
 
-## Example
+Use the [binding README](https://github.com/edithatogo/kairos/blob/main/bindings/r/README.md) for the actual current
+surface and tooling. The [R tutorial](https://github.com/edithatogo/kairos/blob/main/docs/tutorials/r-getting-started.md)
+describes package checks within that boundary. Use the
+[Rust quickstart](rust.md) when a required native adapter operation is unavailable.
 
-```r
-library(kairoecs)
+## Support and migration
 
-sim <- kairo_sim_create(seed = 42L)
-current_time <- kairo_sim_step(sim, steps = 100L)
-df <- kairo_sim_export_arrow(sim)
-head(df)
-```
+- [Installation](https://github.com/edithatogo/kairos/blob/main/docs/install.md).
+- [Immediate Rust-only decision](https://github.com/edithatogo/kairos/blob/main/docs/adr/0010-rust-only-execution.md) and [migration](https://github.com/edithatogo/kairos/blob/main/docs/release/migration.md).
+- [Capability register](https://github.com/edithatogo/kairos/blob/main/conductor/capabilities.json) and [release gates](https://github.com/edithatogo/kairos/blob/main/conductor/release-gates.md).
 
-Canonical sources:
-
-- `bindings/r/README.md`
-- `docs/tutorials/r-getting-started.md`
+The alpha support matrix must name tested operations and installed native
+artefacts. It must not infer full model support from metadata or schema helpers.

@@ -467,7 +467,7 @@ Every gate listed in `conductor/tracks.yaml` must appear here as a bold gate ID.
 
 **onnx-inference-smoke**: `cargo test -p kairo-ecs-ml --features onnx` and `cargo check --manifest-path examples/ml-surrogate/de-surrogate/Cargo.toml --features onnx` - validates model metadata, tensor shape checks, deterministic passthrough inference, and the ONNX feature alias in the Track 37 R2 scaffold. It does not prove ONNX Runtime execution or model accuracy.
 
-**gymnasium-env-smoke**: `cargo test -p kairo-ecs-ml --features gymnasium` plus the local `python/kairo_gym` tests when Python test dependencies are available - validates Rust-side action/space contracts and the Python environment contract scaffold. It does not prove RL training-loop performance.
+**gymnasium-env-smoke**: `cargo test -p kairo-ecs-ml --features gymnasium` plus the local `python/kairo_gym` tests when Python test dependencies are available - validates Rust-side action/space contracts and explicit rejection of the retired Python host environment. Current `kairo_gym` is unavailable for simulation; these negative tests do not qualify a functional Gymnasium environment. Actual installed-Rust reset/step/close and Gymnasium check_env qualification are required by Tracks 109/110 before support is restored.
 
 **fmi-import-smoke**: `cargo check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --features fmi2 --tests` and `cargo check --manifest-path examples/fmi-co-simulation/basic-import/Cargo.toml` - validates unpacked FMU layout and FMI 2 import contract compilation for Track 38 R2. It does not prove shared-library FMU execution.
 
@@ -871,3 +871,11 @@ Cancellation-safe connection lifecycle, bounded queues/backpressure, shutdown/re
 **dependency-107-api-review**: keep `StagedResourceRuntime` experimental and purpose-named; do not claim broad `FlowRuntime` compatibility. Require an agent/subagent API and acceptance assessment on the exact candidate, an ADR, compatibility inventory and matrix alignment, and explicit beta/R10.3 holds in [the API review](tracks/107-careops-staged-flow-compatibility/api-review.md).
 
 **dependency-107-consumer-conformance**: migrate the CareOps R10.3 consumer and run its locked reference tests, ED compatibility suite, CLI, and seeded replay/RNG comparison against the retained parent pin. Update the parent pin only after these consumer acceptance checks pass; upstream Track107 tests and hosted CI alone do not satisfy this gate.
+
+## Current capability and release qualification — 7 November 2026
+
+**frontier-evidence-check**: `node --test tests/conformance/frontier-evidence-check.mjs` and `node scripts/validation/validate-frontier-evidence.mjs` validate the capability registry, evidence identity, generated documentation and rejection of synthetic/native and unsupported/qualified promotion. This is a structural claim-integrity gate; it does not execute or independently prove the algorithms.
+
+**native-binding-execution**: ci-bindings builds the Rust C ABI library and real Wasm module and runs the Python, C# and TypeScript native suites. Missing artefacts fail. Host retirement tests are separate negative evidence. New platform/package support requires installed artefact checks under [release gates](release-gates.md), not source builds alone.
+
+The [current release gates](release-gates.md) govern advertised capability scope. Legacy all-feature beta rows remain requirements for those capabilities when offered; they do not force experimental ML/GPU/FMI features into a minimal stable core. [Scientific completion](scientific-completion.md) defines the independent methods and acceptance obligations that remain open.

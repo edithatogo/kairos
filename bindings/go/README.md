@@ -1,27 +1,22 @@
-# Go Binding
+# Go binding
 
-Track 11 owns this binding. The current module is a preview facade that gives Go callers the deterministic scheduler semantics required by the core contract while the stable native C ABI is still being integrated.
+Track 11 owns this package. The pure-Go scheduler is retired immediately.
+`NewEngine()` now returns `(*Engine, error)`, matching `NewNativeEngine()`;
+both return `nil, ErrNativeNotConfigured` until a qualified Rust bridge exists.
+This is a breaking API change. An `Engine` zero value cannot bypass the native
+requirement, and all execution methods fail explicitly.
 
-## Supported toolchain
+Package metadata, Event/Stats DTOs and cgo header compatibility remain
+available. `NativeAvailable()` returns false; `SelfCheck()` reports
+`metadata_only`. Compiling `include/kairo_ecs.h` does not load a Rust engine.
+No alternate core or fallback is supported.
 
-- Go 1.23 or newer for the current scaffold.
-- cgo is used for a header compatibility smoke test when `CGO_ENABLED=1`.
-- Native FFI runtime calls are deliberately not enabled by default because no linkable local `kairo-ecs-ffi` library artifact is packaged for this module yet.
+Go runtime support requires a Rust C ABI adapter with owned handles, checked
+integer conversion, explicit status/error propagation, native artifact loading,
+and actual scheduling/lifetime/conformance tests. It must remain unavailable
+until that work is complete. Existing fixture tests only verify metadata.
 
-## Current API slice
-
-- `NewEngine()` creates a pure-Go preview scheduler.
-- `ScheduleAt()` and `ScheduleAfter()` enqueue events.
-- `Step()` dispatches one event using `(time_ticks ASC, priority ASC, sequence ASC)`.
-- `RunFor()` dispatches a bounded number of events.
-- `CancelEvent()` skips a scheduled event.
-- `Close()` explicitly closes an engine and is safe to call more than once.
-
-## Native FFI status
-
-`NativeHeaderSmoke()` compiles the stable C ABI header through cgo and checks the status-code and struct declarations. `NativeAvailable()` still returns `false` and `NewNativeEngine()` returns `ErrNativeNotConfigured` until a stable, locally discoverable `kairo-ecs-ffi` library is packaged for Go. This prevents accidental claims that native calls are active when the runtime dependency is absent.
-
-## Local validation
+Validation with Go 1.23 or newer:
 
 ```bash
 go test ./...
@@ -29,3 +24,6 @@ go vet ./...
 CGO_ENABLED=1 go test -run TestNativeHeaderSmokeCompilesStableCABI ./...
 CGO_ENABLED=0 go test ./...
 ```
+
+Passing these checks qualifies the current metadata and failure boundary, not
+simulation capability or a native runtime release.

@@ -1,20 +1,11 @@
-# NuGet Packaging
+# NuGet packaging
 
-Track 10 owns the local NuGet package shape for `Kairo.ECS`.
+The managed scheduler is retired. `NativeMethods` and the safe engine handle
+provide the Rust C ABI path, sharing the Python FFI artifact. The package does not yet bundle qualified
+native runtime assets.
 
-Current validation boundary:
-
-```powershell
-dotnet test bindings\csharp\Kairo.ECS.sln
-dotnet build bindings\csharp\Kairo.ECS.sln -c Release
-dotnet pack bindings\csharp\src\Kairo.ECS\Kairo.ECS.csproj -c Release
-```
-
-The package currently includes a managed deterministic scheduler facade and explicit native FFI configuration status. It does not ship native runtime assets yet.
-
-Native FFI remains not configured unless one of these is present:
-
-- `KAIRO_ECS_NATIVE_LIB_DIR` points to a directory containing the platform library.
-- The package includes `runtimes/{rid}/native/{library}` for the active runtime identifier.
-
-Track 42 owns future publish automation, signing, registry credentials, and release publication.
+Build/pack and metadata tests do not qualify the native runtime. Publication
+must include explicit platform assets, provenance/ABI evidence, and the
+`Native` test category with `KAIRO_ECS_REQUIRE_NATIVE=1`; missing artifacts must
+fail. See [the binding guide](../../bindings/csharp/README.md). Track 10 owns
+binding/package shape and Track 42 publication gates.

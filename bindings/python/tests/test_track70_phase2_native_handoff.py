@@ -23,10 +23,9 @@ from __future__ import annotations
 
 from typing import Any
 
-import pytest
-
 import kairo_ecs
 import kairo_ecs._arrow
+import pytest
 
 V2_EVENT_LOG_FIELDS = (
     ("schema_version", "UInt16", False),
@@ -47,15 +46,15 @@ V2_EVENT_LOG_FIELDS = (
 
 
 def _dispatched_batch(run_id: str, records: int) -> kairo_ecs.EventLogBatch:
-    """Build a deterministic batch of `records` dispatched custom events."""
+    """Build declared event DTOs for columnar interoperability, not simulation."""
 
-    scheduler = kairo_ecs.Scheduler()
     batch_records = []
     for tick in range(1, records + 1):
-        scheduler.schedule_at(tick * 10, priority=-3, kind=5)
-        outcome, event = scheduler.step()
-        assert outcome is kairo_ecs.StepOutcome.DISPATCHED
-        assert event is not None
+        event = kairo_ecs.DispatchedEvent(
+            id=kairo_ecs.EventId(tick - 1, tick - 1),
+            at=kairo_ecs.SimTime.from_ticks(tick * 10),
+            priority=-3, sequence=tick - 1, kind=5,
+        )
         batch_records.append(kairo_ecs.EventLogRecord.dispatched(run_id, event))
     return kairo_ecs.EventLogBatch(batch_records)
 

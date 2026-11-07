@@ -1,7 +1,7 @@
 namespace Kairo.ECS;
 
 /// <summary>
-/// Represents the lifecycle status for an event in the managed scheduler facade.
+/// Represents the lifecycle status for an event in event-log data.
 /// </summary>
 public enum EventStatus
 {

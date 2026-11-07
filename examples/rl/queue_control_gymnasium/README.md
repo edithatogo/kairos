@@ -1,11 +1,5 @@
-# Queue Control Gymnasium
+# Queue Control Gymnasium — unavailable
 
-Placeholder for a reproducible KairoECS model zoo example.
+This example is reserved for a Rust-owned queue-control environment. The former Python host environment is retired immediately under [the native-only policy](../../../conductor/native-only-policy.md). Constructing `KairoGymEnv` raises `NativeEnvironmentUnavailable`; installing Gymnasium does not enable an alternative simulation core.
 
-Required files before publication:
-
-- `model.md`
-- `scenario.toml`
-- `expected_trace.arrow` or equivalent conformance output where appropriate
-- `analysis.ipynb` or language-specific analysis script
-- `README.md` with assumptions and maturity label
+[Track 109](../../../conductor/tracks/109-rust-only-runtime/plan.md) owns native execution and [Track 110](../../../conductor/tracks/110-scientific-method-completion/plan.md) owns real environment semantics and qualification. Publication requires a versioned model/scenario, Rust action and transition contracts, native reset/step/close plus Gymnasium checker success, replay tests, reference observations/rewards and a reproducible training example. No runnable RL capability or performance is currently claimed.

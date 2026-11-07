@@ -1,54 +1,37 @@
 ---
 title: GPU and WebGPU
-description: Apple Silicon Metal unified-memory compute, persistent GPU sessions, WGPU/CUDA backends, and WebGPU WGSL pipelines.
+description: Device kernel and persistent-buffer evidence, with explicit numerical and performance boundaries.
 ---
 
-KairoECS provides two complementary GPU acceleration crates (`kairo-ecs-gpu` and `kairo-ecs-webgpu`) that preserve bit-for-bit deterministic parity with CPU simulation kernels while supporting zero-copy unified memory and multi-core workgroup execution.
+The Rust GPU and WebGPU crates contain device kernels and persistent-buffer
+paths. Support must be described per backend, device, kernel and execution
+receipt. A common trait or a CPU reference does not qualify every backend.
 
-## GPU Backend Matrix (`kairo-ecs-gpu` & `kairo-ecs-webgpu`)
+## Bounded hardware evidence
 
-| Backend / Session | Crate & Feature | Execution Model | Unified Memory / Zero-Copy | Determinism Contract |
-| --- | --- | --- | --- | --- |
-| `MetalBackend` | `kairo-ecs-gpu` (`metal-backend`) | Apple Silicon unified-memory compute (`apple-metal-unified-compute`) + MSL kernel (`abm_step`) + `std::thread::scope` multi-core workgroup dispatch | `supports_unified_memory: true`, `supports_zero_copy_borrow: true` | Bit-for-bit identical to `CpuFallbackCompute` and `PersistentGpuSession` |
-| `PersistentGpuSession` | `kairo-ecs-gpu` (`gpu`) | Persistent device-resident `ParticleState` buffers with `run_abm_tick` and multi-threaded `run_abm_tick_parallel` | Zero-copy `borrow_positions_zero_copy()` slice view | Deterministic `deterministic_jitter(seed, index)` integration |
-| `WgpuBackend` | `kairo-ecs-gpu` (`wgpu-backend`) | Cross-platform WebGPU/Vulkan/Metal/DX12 compute adapter + explicit `initialize_required_device()` probe | Host-staged buffer upload/download | Verified against `CpuFallbackCompute` reference |
-| `CudaBackend` | `kairo-ecs-gpu` (`cuda-backend`) | NVIDIA CUDA compute adapter + explicit `initialize_required_context()` hardware probe | Device buffer staging | Verified against `CpuFallbackCompute` reference |
-| `WebGpuComputePipeline` | `kairo-ecs-webgpu` (`webgpu`) | Browser/native WGSL compute shader pipeline (`@compute @workgroup_size(64)`) | Staged storage buffers | Validated in headless Chromium WebGPU lanes |
+The [Metal qualification tests](https://github.com/edithatogo/kairos/blob/main/crates/kairo-ecs-gpu/tests/metal_hardware_qualification.rs)
+exercise device identification, 10,000 particles over ten persistent-buffer
+ticks and a CPU comparison using 2,048 particles. Retained historical
+[execution output](https://github.com/edithatogo/kairos/blob/main/conductor/tracks/107-careops-staged-flow-compatibility/evidence/just-ci-mainline.log)
+records hardware-test passes for its source and toolchain.
 
-## Apple Silicon Metal & Persistent Session Example
+The floating-point comparison accepts absolute error up to `5e-5`. A test name
+containing `bit_for_bit` does not change that tolerance into exact equality.
+The particle update and bounded integer DES shader do not establish arbitrary
+model offload or a complete GPU event scheduler.
 
-```rust
-use kairo_ecs_gpu::{
-    GpuCompute, GpuState, MetalBackend, ParticleState, PersistentGpuSession,
-};
+## Claims that need their own measurements
 
-let particles = (0..4096)
-    .map(|i| ParticleState {
-        position: [i as f32, 0.0],
-        velocity: [1.0, 0.5],
-    })
-    .collect();
-let initial_state = GpuState { particles };
+| Claim | Required evidence |
+| --- | --- |
+| Actual GPU execution | Device/driver identity, backend, enabled features, successful kernel dispatch and source-bound logs. |
+| Numerical agreement | Model-specific exact, tolerance or statistical rule; independent reference and edge cases. |
+| End-to-end acceleration | Identical model/workload, optimized Rust CPU baseline, repeated timings and explicit compilation/transfer boundaries. |
+| Persistent or zero-copy data | Verified ownership/lifetime and measured movement at the particular boundary; no extrapolation to the whole workflow. |
+| Broad backend support | Separate installed hardware/browser acceptance for each advertised backend and platform. |
 
-// 1. Apple Silicon Metal unified-memory multi-core workgroup execution
-let mut metal = MetalBackend::with_threads(8);
-let adapter = MetalBackend::probe_host_adapter();
-assert!(metal.capabilities().supports_unified_memory);
-metal.upload_state(&initial_state).unwrap();
-metal.run_abm_step(0.1, 42).unwrap();
-let metal_out = metal.download_state().unwrap();
-
-// 2. Persistent GPU session with parallel workgroup dispatch and zero-copy borrow
-let mut session = PersistentGpuSession::new(64);
-session.upload_initial_state(&initial_state).unwrap();
-let stats = session.run_abm_tick_parallel(0.1, 42, 8).unwrap();
-assert_eq!(stats.workgroups_dispatched, 64);
-assert_eq!(session.borrow_positions_zero_copy(), &metal_out.particles[..]);
-```
-
-## Canonical Sources
-
-- `docs/gpu-compute/README.md`
-- `docs/gpu-compute/free-testing-routes.md`
-- `docs/gpu-compute/webgpu-comparison.md`
-- `docs/gpu-compute/webgpu-wgsl-subset.md`
+Read [GPU benchmark evidence](https://github.com/edithatogo/kairos/blob/main/docs/gpu-compute/benchmark-results.md),
+[free testing routes](https://github.com/edithatogo/kairos/blob/main/docs/gpu-compute/free-testing-routes.md)
+and the [capability register](https://github.com/edithatogo/kairos/blob/main/conductor/capabilities.json).
+General performance leadership and universal cross-device bitwise parity have
+not been established by the retained kernel tests.

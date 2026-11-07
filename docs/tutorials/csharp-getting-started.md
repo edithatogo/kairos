@@ -1,5 +1,9 @@
 # C# Getting Started
 
+**Runtime support:** The managed scheduler preview is unsupported. Raw `NativeMethods` declarations target the Rust C ABI, but their availability does not prove a shipped native library or a complete managed model API.
+
+Rust is the only supported simulation core. Follow [ADR 0010](../adr/0010-rust-only-execution.md), [installation](../install.md) and the [migration guide](../release/migration.md). The package checks below establish only their stated package/data scope.
+
 ## Prerequisites
 - .NET SDK 10.0 or .NET 11.0 preview
 - The KairoECS repository cloned
@@ -40,10 +44,10 @@ dotnet test Kairo.ECS.sln -c Release
 
 ## Native library loading
 
-Set `KAIRO_ECS_NATIVE_LIB_DIR` environment variable to the directory containing:
-- `kairo_ecs.dll` (Windows)
-- `libkairo_ecs.dylib` (macOS)
-- `libkairo_ecs.so` (Linux)
+Use the exact library identity and loading instructions in the binding README
+and `NativeMethods` source. The native library and C ABI must match the installed
+adapter's platform, architecture and version. Check actual engine creation,
+scheduling, execution and handle disposal; a metadata check is insufficient.
 
 ## Next steps
 

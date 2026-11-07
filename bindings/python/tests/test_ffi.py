@@ -10,7 +10,7 @@ def test_ffi_status_is_explicitly_not_configured_by_default(monkeypatch) -> None
 
     assert status["configured"] is False
     assert status["status"] == "not_configured"
-    assert status["detail"] == "set KAIRO_ECS_FFI_LIBRARY after native wheels are packaged"
+    assert status["detail"] == "set an absolute KAIRO_ECS_FFI_LIBRARY path; no host-language fallback is supported"
     assert status["library_path"] is None
 
 
@@ -21,7 +21,7 @@ def test_ffi_status_does_not_implicitly_load_env_library(monkeypatch) -> None:
 
     assert status["configured"] is False
     assert status["status"] == "not_loaded"
-    assert status["detail"] == "native FFI loading is not enabled in this pure Python slice"
+    assert status["detail"] == "NativeEngine validates and loads this explicit path; execution is not yet verified"
     assert status["library_path"] == "native/kairo_ecs.dll"
 
 
@@ -32,5 +32,5 @@ def test_ffi_status_empty_env_var(monkeypatch) -> None:
 
     assert status["configured"] is False
     assert status["status"] == "not_configured"
-    assert status["detail"] == "set KAIRO_ECS_FFI_LIBRARY after native wheels are packaged"
+    assert status["detail"] == "set an absolute KAIRO_ECS_FFI_LIBRARY path; no host-language fallback is supported"
     assert status["library_path"] is None

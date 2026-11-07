@@ -6,14 +6,14 @@
 \title{R bindings for KairoECS}
 \description{
 Minimal package surface for the R binding track. The exported helpers expose
-package metadata, a deterministic pure-R scheduler facade, event-log schema
-normalization, and an explicit not-configured native FFI status.
+package metadata, event-log schema normalization, and an explicit
+not-configured native FFI status. The pure-R scheduler is retired.
 }
 \details{
 \code{kairoecs_package_info()} returns the package metadata as a named list.
-\code{kairoecs_surface_ready()} returns \code{TRUE} when the package surface
-metadata is internally consistent.
-See \code{\link{kairoecs_new_scheduler}} for the scheduler facade and
+\code{kairoecs_surface_ready()} returns \code{FALSE} until a qualified Rust
+runtime adapter is available.
+See \code{\link{kairoecs_new_scheduler}} for the explicit native-required error and
 \code{\link{kairoecs_arrow_roundtrip}} for the optional Arrow roundtrip helper.
 }
 \usage{

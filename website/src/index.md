@@ -1,18 +1,24 @@
 # KairoECS Documentation
 
-KairoECS is a Rust-first simulation engine for deterministic event scheduling,
-ECS-style state, DES, ABM, Arrow telemetry, and polyglot bindings.
+KairoECS is a Rust simulation engine for reproducible discrete-event and
+agent-based models, with modular state, resource, data and execution APIs.
+
+**Current release: alpha.** [v0.4.0-alpha.1](https://github.com/edithatogo/kairos/releases/tag/v0.4.0-alpha.1)
+was published on 18 October 2026. Default-branch work is experimental. See
+[current capabilities and evidence](../../docs/current-state.md) and the
+[beta/stable gates](../../conductor/release-gates.md).
+
+**Rust is the only supported simulation core.** Language packages adapt native
+Rust or Rust-compiled WebAssembly. Independent host-language preview cores are
+unsupported immediately; missing native capabilities fail explicitly. Read the
+[compatibility notice](../../docs/adr/0010-rust-only-execution.md) before using an
+older quickstart.
 
 Public project links:
 
 - Repository: [github.com/edithatogo/kairos](https://github.com/edithatogo/kairos)
 - CI status: [GitHub Actions](https://github.com/edithatogo/kairos/actions)
-- Conductor status: [track index](../../conductor/tracks.md) and [narrative status](../../conductor/status.md)
-
-Current maturity: pre-release. Core scheduler/state/conformance foundations are
-implemented; DES/ABM flow APIs and the FFI bridge are in review; registry
-publication and stable API promises remain gated by release, compatibility,
-security, and packaging tracks.
+- Conductor: [track index](../../conductor/tracks.md), [narrative status](../../conductor/status.md) and [delivery programme](../../conductor/frontier-programme-20261107.md)
 
 ## Start Here
 
@@ -98,13 +104,16 @@ security, and packaging tracks.
 - [Community governance](../../docs/community/governance.md)
 - [Community roadmap](../../docs/community/roadmap.md)
 
-## R2 Implementation Map
+## Implementation and evidence
 
-- Core and shared contracts: `kairo-ecs-types`, `kairo-ecs-core`, `kairo-ecs-state`, `kairo-ecs-rng`, `kairo-ecs-des`, `kairo-ecs-abm`, `kairo-ecs-arrow`, and `kairo-ecs-ffi`.
-- Binding bridges and facades: `kairo-ecs-uniffi`, `kairo-ecs-diplomat`, `kairo-ecs-wasm`, plus preview language packages for Python, R, Julia, TypeScript/Wasm, C#, and Go.
-- Optional and advanced tracks now represented in docs: visualization, GPU/WebGPU, PDES, distributed MPI/gRPC, streaming, ML inference, FMI digital twin, cloud/HPC, and time-travel debugging.
-- Native binding status remains explicit: preview packages may expose pure-language scheduler facades while reporting native FFI as not configured until Track 02 publishes stable local artifacts.
-- Maturity language is staged: alpha means evidence-backed but limited, beta means wider release gates are active, and stable remains blocked until compatibility and release-candidate gates pass.
+- [Capability register](../../conductor/capabilities.json): implementation, native execution, validation and release acceptance are distinct.
+- [Current-state review](../../docs/current-state.md): source-linked Rust, DES/ABM, Arrow, PDES/MPI, GPU and scientific-method boundaries.
+- [Measured PDES results](../../docs/pdes/benchmark-results.md): historical small-workload slowdown against the sequential baseline.
+- [Scaling-report correction](../../docs/benchmarks/scaling-certification-report.md): generated placeholder figures are not HPC certification.
+- [Scientific validation datasets](../../conductor/validation-datasets.md) and [delivery programme](../../conductor/frontier-programme-20261107.md): completion work before broader claims and release promotion.
+
+A track marked `Done` describes its recorded scope. It does not imply complete
+native language support, scientific correctness or performance leadership.
 
 ## Local workflow
 
@@ -151,7 +160,7 @@ security, and packaging tracks.
 - `npm --prefix website run check:links` verifies required paths, navigation targets, and local Markdown links without writing generated output.
 - `npm --prefix website run build` renders the Astro/Starlight site and then runs the post-build compatibility generator for legacy source-backed GitHub Pages URLs.
 - `npm --prefix website run check:quality` verifies Starlight build artifacts, plugin coverage, docs concepts, legacy compatibility pages, and the static output size budget.
-- The generated docs index is intentionally offline-first and dependency-light, so CI and local contributors do not need network access after checkout.
+- The generated static site can be served offline after dependencies and build artefacts are available. A fresh checkout may require network access for locked npm packages and other build inputs.
 
 ## Contributor commands
 

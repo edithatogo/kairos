@@ -1,28 +1,34 @@
 ---
 title: Cloud/HPC Runtime Boundary
-description: Cloud batch templates, Slurm/Kubernetes manifests, columnar checkpoint I/O, and hardware evidence boundaries.
+description: Correct track ownership and explicit distinction between native acceptance, deployment templates and cluster scaling.
 ---
 
-KairoECS separates locally reproducible HPC software engineering from claims that require external multi-node supercomputing hardware.
+Cloud/HPC work spans native runtimes, storage, deployment and measurement.
+Locally executed Rust/MPI/GPU tests are real evidence within their scope;
+templates, contract bytes and synthetic scaling fixtures prove different things.
 
-## HPC Subsystem & Evidence Matrix (`Tracks 48–55`)
+## Programme ownership
 
-| Track | Subsystem | Local & Single-Host Verification (`Done`) | External Cluster Hardware Gate (`In Progress`) |
-| --- | --- | --- | --- |
-| `48` | HPC Programme Charter & Blocker Governance | `validate-hpc-parity-evidence.mjs` & `validate-free-compute-routes.mjs` | Final closure of Tracks 49–53, 55 on multi-node cluster hardware |
-| `49` | Optimistic PDES & Generational Bitset State | `CompactCheckpoint`, `GenerationalBitset`, `MatternGvtTracker`, straggler rollback | 64+ rank distributed Time Warp scaling benchmark |
-| `50` | Native MPI & gRPC Distributed Transports | `MpiProcessTransport`, `GrpcSocketTransport`, `KairoOptimisticEnvelopeV1`, OpenMPI 2-rank tests | Multi-node InfiniBand/RDMA fabric latency benchmark |
-| `51` | Cloud/HPC Live Execution Templates | Docker, Kubernetes Job, Slurm (`sbatch`), AWS/Azure/GCP Batch templates & structural validators | Live multi-node Slurm / managed cloud batch cluster execution |
-| `52` | Native GPU & Persistent Device Memory | `PersistentGpuSession`, Apple Silicon `MetalBackend` (`metal-backend`), `WgpuBackend`, `CudaBackend` | Dedicated multi-GPU NVIDIA CUDA H100/A100 cluster run |
-| `53` | In-repo Arrow-style batches & checkpoints (official crates planned) | `ArrowRecordBatch`, `ParquetZstdCheckpointWriter` (custom format; no official arrow/parquet dependency yet) | Multi-terabyte distributed lakehouse ingestion benchmark |
-| `54` | Native FMI 2.0/3.0 Dynamic Library Loading | `.fmu` ZIP extraction, `modelDescription.xml` parser, dynamic symbol loading, AAS digital twin | `Done` (fully verified in CI across Linux/macOS/Windows) |
-| `55` | Parallel HDF5/ADIOS2 & NUMA Pinning | `Hdf5CheckpointFile`, `Adios2CheckpointEnvelope`, `discover_numa_topology`, `ParallelEnsembleRunner` | Multi-socket Lustre/GPFS parallel filesystem I/O benchmark |
+| Track | Scope | Evidence boundary |
+| --- | --- | --- |
+| 46 | HPC programme charter and evidence governance | Defines acceptance; does not itself certify hardware performance. |
+| 47 | Conservative PDES runtime | Measured single-host execution and parity; recorded small-workload slowdown. |
+| 48 | Optimistic Time Warp | Bounded rollback, GVT, durable recovery and native execution qualification. |
+| 49 | MPI/gRPC state synchronization | Real bounded native transport cases, including MPI two/four-rank execution; broader cross-host scaling remains separate. |
+| 50 | NUMA, affinity and memory lifecycle | Topology and lifecycle implementation; benchmark the actual target topology before claiming an affinity benefit. |
+| 51 | Parallel I/O and checkpoint export | Optional real Arrow/Parquet paths exist. HDF5/ADIOS2-shaped contracts are not physical format interoperability or complete engine restart. |
+| 52 | Native GPU and persistent memory | Kernel-specific native evidence; no universal model speedup. |
+| 53 | FMI co-simulation master | Native lifecycle and contract tests; third-party FMU and multi-rate numerical validation require explicit results. |
+| 54 | Slurm/container/cloud acceptance | Deployment artefacts and bounded receipts; provider/platform execution must be demonstrated separately. |
+| 55 | Weak/strong scaling certification | Synthetic local output remains blocked from certification; real multi-node measurement is required. |
 
-## Canonical Sources
+## Use the right evidence
 
-- `docs/cloud-hpc/runtime-evidence-boundary.md`
-- `docs/cloud-hpc/free-compute-blocker-plan.md`
-- `docs/cloud-hpc/aws-batch.md`
-- `docs/cloud-hpc/azure-batch.md`
-- `docs/cloud-hpc/gcp-batch.md`
-- `docs/cloud-hpc/slurm.md`
+- [Current capabilities](https://github.com/edithatogo/kairos/blob/main/docs/current-state.md) and [capability register](https://github.com/edithatogo/kairos/blob/main/conductor/capabilities.json).
+- [Measured PDES results](https://github.com/edithatogo/kairos/blob/main/docs/pdes/benchmark-results.md) and [corrected scaling report](https://github.com/edithatogo/kairos/blob/main/docs/benchmarks/scaling-certification-report.md).
+- [Runtime evidence boundary](https://github.com/edithatogo/kairos/blob/main/docs/cloud-hpc/runtime-evidence-boundary.md) and [free-compute blocker plan](https://github.com/edithatogo/kairos/blob/main/docs/cloud-hpc/free-compute-blocker-plan.md).
+- [AWS Batch](https://github.com/edithatogo/kairos/blob/main/docs/cloud-hpc/aws-batch.md), [Azure Batch](https://github.com/edithatogo/kairos/blob/main/docs/cloud-hpc/azure-batch.md), [GCP Batch](https://github.com/edithatogo/kairos/blob/main/docs/cloud-hpc/gcp-batch.md) and [Slurm](https://github.com/edithatogo/kairos/blob/main/docs/cloud-hpc/slurm.md) deployment guidance.
+
+Independent simulations in an ensemble can scale differently from one tightly
+coupled PDES model. Measure and report these workload classes separately with
+raw timings, hardware, input hashes and correctness checks.

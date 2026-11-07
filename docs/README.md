@@ -2,9 +2,21 @@
 
 This directory is the source tree for KairoECS user, contributor, and release documentation. The active public website in `website/` is the Astro/Starlight shell; `website/docs-link-manifest.json` keeps this source tree reachable and drives compatibility HTML pages for legacy GitHub Pages links such as `/kairos/docs/README.html`.
 
+## Current state
+
+KairoECS is alpha, with Rust as its only supported simulation core. Start with
+[current capabilities and evidence](current-state.md), [installation](install.md)
+and the [Rust quickstart](tutorials/rust-getting-started.md). Language packages
+must load the actual Rust native/Wasm engine; earlier host-only preview cores
+are unsupported. See [migration](release/migration.md).
+
+The [delivery programme](../conductor/frontier-programme-20261107.md),
+[release gates](../conductor/release-gates.md) and
+[validation datasets](../conductor/validation-datasets.md) define completion work.
+
 ## Reading Paths
 
-- New users: start with `docs/scenarios/factory-bottleneck-run-replay.md`, `docs/starter-kits/README.md`, and the binding README for your language.
+- New users: start with the Rust quickstart and installation guide above, then use `docs/scenarios/factory-bottleneck-run-replay.md`, `docs/starter-kits/README.md` and the support boundary in your binding README.
 - Runner users: use `docs/cli/kairo-ecs-cli.md` for the scenario CLI quickstart and `docs/scenarios/factory-bottleneck-run-replay.md` for the committed smoke path.
 - Simulation authors: use `docs/trustworthy-simulation/verification-validation-uncertainty.md`, `docs/trustworthy-simulation/replay-and-seeds.md`, and `docs/validation/factory-bottleneck-v1-vvuq-note.md`.
 - Contributors: use `docs/developer-experience/docs-workflow.md`, `docs/community/contributor-onboarding.md`, and `docs/design/api-review.md`.

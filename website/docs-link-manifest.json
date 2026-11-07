@@ -1,23 +1,26 @@
 {
   "site": {
     "title": "KairoECS Documentation",
-    "description": "Dependency-light static documentation for KairoECS users and contributors.",
+    "description": "Rust simulation engine documentation, native-adapter boundaries and capability evidence.",
     "canonicalRoot": "/kairos/",
     "publicBase": "https://edithatogo.github.io/kairos",
     "sourceBase": "https://github.com/edithatogo/kairos/blob/main"
   },
   "requiredPaths": [
     "docs/README.md",
+    "docs/current-state.md",
     "docs/adr/",
     "docs/adr/0001-ecs-storage-strategy.md",
     "docs/adr/0002-time-representation.md",
     "docs/adr/0003-handle-generation.md",
     "docs/adr/0003-release-staging.md",
     "docs/adr/0004-project-name-kairoecs.md",
+    "docs/adr/0010-rust-only-execution.md",
     "docs/api/api-review-template.md",
     "docs/arrow/schema-reference.md",
     "docs/benchmarks/README.md",
     "docs/benchmarks/benchmark-policy.md",
+    "docs/benchmarks/scaling-certification-report.md",
     "docs/benchmarks/reproduce-comparison.md",
     "docs/cloud-hpc/aws-batch.md",
     "docs/cloud-hpc/azure-batch.md",
@@ -69,6 +72,7 @@
     "docs/playground/headless-snapshot.md",
     "docs/release/changelog-policy.md",
     "docs/release/compatibility.md",
+    "docs/release/migration.md",
     "docs/release/maintenance-handoff.md",
     "docs/release/release-checklist.md",
     "docs/release/release-governance.md",
@@ -121,6 +125,7 @@
       "title": "Start Here",
       "links": [
         { "label": "Documentation overview", "path": "docs/README.md" },
+        { "label": "Current capabilities and evidence", "path": "docs/current-state.md" },
         { "label": "Benchmark overview", "path": "docs/benchmarks/README.md" },
         { "label": "Implemented crate inventory", "path": "crates/README.md" },
         { "label": "Language binding inventory", "path": "bindings/README.md" },
@@ -180,6 +185,8 @@
         { "label": "Release governance", "path": "docs/release/release-governance.md" },
         { "label": "Release checklist", "path": "docs/release/release-checklist.md" },
         { "label": "Release compatibility", "path": "docs/release/compatibility.md" },
+        { "label": "Rust-only execution decision", "path": "docs/adr/0010-rust-only-execution.md" },
+        { "label": "Migration guidance", "path": "docs/release/migration.md" },
         { "label": "Supply-chain verification", "path": "docs/release/supply-chain-verification.md" },
         { "label": "Changelog policy", "path": "docs/release/changelog-policy.md" },
         { "label": "Maintenance handoff", "path": "docs/release/maintenance-handoff.md" }
@@ -222,6 +229,7 @@
       "title": "Trust and Quality",
       "links": [
         { "label": "Benchmark policy", "path": "docs/benchmarks/benchmark-policy.md" },
+        { "label": "Scaling evidence correction", "path": "docs/benchmarks/scaling-certification-report.md" },
         { "label": "Reproduce comparison", "path": "docs/benchmarks/reproduce-comparison.md" },
         { "label": "Research reproducibility", "path": "docs/research/reproducibility.md" },
         { "label": "VVUQ note", "path": "docs/validation/factory-bottleneck-v1-vvuq-note.md" },

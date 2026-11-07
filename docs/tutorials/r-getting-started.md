@@ -1,5 +1,9 @@
 # R Getting Started
 
+**Runtime support:** Package information, surface checks and Arrow field definitions are metadata/data helpers. The former R scheduler is unsupported; native scheduling remains unavailable until its adapter passes installed-library acceptance.
+
+Rust is the only supported simulation core. Follow [ADR 0010](../adr/0010-rust-only-execution.md), [installation](../install.md) and the [migration guide](../release/migration.md). The package checks below establish only their stated package/data scope.
+
 ## Prerequisites
 - R >= 4.2 installed
 - The KairoECS repository cloned

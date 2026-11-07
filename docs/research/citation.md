@@ -7,7 +7,7 @@ This page is the source-of-truth summary for how KairoECS should be cited and ar
 - Start from `website/src/index.md` for navigation.
 - Use `docs/community/adoption.md` for the user path into the project.
 - Use `docs/trustworthy-simulation/replay-and-seeds.md` and `docs/trustworthy-simulation/verification-validation-uncertainty.md` for reproducibility context.
-- The planned, unreleased metadata version is `0.4.0-alpha.1` and the repository code URL is `https://github.com/edithatogo/kairos`.
+- The source prerelease [v0.4.0-alpha.1](https://github.com/edithatogo/kairos/releases/tag/v0.4.0-alpha.1) was published on 18 October 2026. The repository code URL is `https://github.com/edithatogo/kairos`; [release-metadata-status.json](release-metadata-status.json) retains its source and release evidence.
 
 ## Citation metadata
 
@@ -60,22 +60,23 @@ KairoECS is registered in the SciCrunch Registry / Resource Identification Porta
 
 ## DOI and Zenodo path
 
-The first concrete archive target is the `0.4.0-alpha.1` pre-release. It is
-not yet DOI-minted; until a Zenodo sandbox or draft deposition exists, release
-notes must use this exact status instead of a placeholder DOI:
+The released `0.4.0-alpha.1` source snapshot remains the concrete Zenodo archive
+target. The repository records it as not yet DOI-minted; retain that DOI
+boundary separately from the published GitHub prerelease. Use verified archive
+records, never a placeholder DOI:
 
 ```text
 Archive status: pre-release metadata seed, not yet DOI-minted
 Release target: 0.4.0-alpha.1
 Repository code: https://github.com/edithatogo/kairos
-DOI/Zenodo link: none yet; add the Zenodo draft or minted DOI URL before any public release write
+DOI/Zenodo link: none recorded; add only a verified draft or minted DOI URL
 ```
 
 The DOI path is:
 
 1. Keep `.zenodo.json` checked in as the release metadata seed.
 2. Use a Zenodo sandbox or draft deposition first.
-3. Promote the first archived release, expected to be `0.4.0-alpha.1`, to a Zenodo DOI only after the release notes and archive record are complete.
+3. Archive the published `0.4.0-alpha.1` source snapshot through Zenodo after its release notes and archive record are complete.
 4. Record the minted DOI in the release notes and in the archive record.
 
 The current archive path is therefore `CITATION.cff` -> `.zenodo.json` ->
@@ -91,7 +92,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/19-research
 ```
 
 The validator checks that `CITATION.cff`, `codemeta.json`, `.zenodo.json`,
-`paper/paper.md`, `paper/paper.bib`, and this guide agree on planned version, lifecycle, dates when released,
+`paper/paper.md`, `paper/paper.bib`, and this guide agree on version, lifecycle, dates when released,
 repository URL, title, license, and the current non-minted archive status.
 
 ## Archive notes

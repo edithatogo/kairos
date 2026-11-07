@@ -16,7 +16,7 @@ export default defineConfig({
     starlight({
       title: "KairoECS",
       description:
-        "Deterministic simulation engine docs for Rust, Python, R, Julia, TypeScript/Wasm, C#, and Go.",
+        "Rust simulation engine documentation, native language adapters, and capability evidence.",
       editLink: {
         baseUrl: `${repo}/edit/main/website/src/content/docs/`,
       },
@@ -75,7 +75,7 @@ export default defineConfig({
         kairoecsLlmsTxt({
           projectName: "KairoECS",
           details:
-            "KairoECS documentation covers deterministic simulation, conformance evidence, and polyglot bindings.",
+            "KairoECS uses one Rust simulation core. Documentation distinguishes native adapters, conformance evidence, scientific validation, and alpha release boundaries.",
           optionalLinks: [{ label: "Repository", url: repo }],
         }),
         starlightIconsPlugin({ sidebar: true, codeblock: true }),

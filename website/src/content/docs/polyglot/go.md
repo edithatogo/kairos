@@ -1,42 +1,26 @@
 ---
 title: Go
-description: Go 1.24–1.26 cgo bindings for distributed microservices and digital-twin orchestration.
+description: Go package helpers and the requirement for actual Rust-native execution.
 ---
 
-The Go binding (`bindings/go/`) connects Go 1.24–1.26 services to `libkairo_ecs_ffi` via `cgo`, supporting cloud-native digital-twin orchestration and gRPC/Kafka streaming pipelines.
+The Go package has metadata and data helpers. The former Go scheduler is unsupported immediately. Setting `CGO_ENABLED=1` or passing host-only tests does not establish a native adapter; supported execution requires actual calls to the Rust library and installed-consumer acceptance.
 
-## Go Package Overview
+## Rust-only execution
 
-| Function / Type | Purpose |
-| --- | --- |
-| `kairo.NewSimulation(seed uint64)` | Allocate a native KairoECS simulation context |
-| `(*Simulation).Step(steps uint64) (uint64, error)` | Advance the simulation deterministically |
-| `(*Simulation).SnapshotDigest() uint64` | Compute the deterministic FNV-1a / xxHash state digest |
-| `(*Simulation).Close()` | Release native Rust memory safely |
+Rust is the only supported simulation core. Host languages may prepare inputs,
+orchestrate experiments and analyse results. They must fail explicitly for
+missing native simulation operations and never substitute a host-language core.
 
-## Example
+Use the [binding README](https://github.com/edithatogo/kairos/blob/main/bindings/go/README.md) for the actual current
+surface and tooling. The [Go tutorial](https://github.com/edithatogo/kairos/blob/main/docs/tutorials/go-getting-started.md)
+describes package checks within that boundary. Use the
+[Rust quickstart](rust.md) when a required native adapter operation is unavailable.
 
-```go
-package main
+## Support and migration
 
-import (
-	"fmt"
-	"github.com/edithatogo/kairos/bindings/go/kairo"
-)
+- [Installation](https://github.com/edithatogo/kairos/blob/main/docs/install.md).
+- [Immediate Rust-only decision](https://github.com/edithatogo/kairos/blob/main/docs/adr/0010-rust-only-execution.md) and [migration](https://github.com/edithatogo/kairos/blob/main/docs/release/migration.md).
+- [Capability register](https://github.com/edithatogo/kairos/blob/main/conductor/capabilities.json) and [release gates](https://github.com/edithatogo/kairos/blob/main/conductor/release-gates.md).
 
-func main() {
-	sim, err := kairo.NewSimulation(42)
-	if err != nil {
-		panic(err)
-	}
-	defer sim.Close()
-
-	now, _ := sim.Step(500)
-	fmt.Printf("SimTime=%d Digest=0x%x\n", now, sim.SnapshotDigest())
-}
-```
-
-Canonical sources:
-
-- `bindings/go/README.md`
-- `docs/tutorials/go-getting-started.md`
+The alpha support matrix must name tested operations and installed native
+artefacts. It must not infer full model support from metadata or schema helpers.

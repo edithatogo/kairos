@@ -1,49 +1,40 @@
 # Benchmarks
 
-Maturity: preview metadata gate. Native performance comparisons are not yet
-published.
+Maturity: preview metadata gate, with separate bounded native measurements.
+Broad comparative performance and HPC scaling certification remain incomplete.
 
-This directory is the benchmark and reproducibility entry point for KairoECS.
-It is intentionally source-backed and offline-first.
+## Read the evidence by type
 
-Benchmark readers should start here before reading the policy or reproduction
-pages.
+| Evidence | What it establishes |
+| --- | --- |
+| [Measured conservative-PDES results](../pdes/benchmark-results.md) | Actual single-host timings and final-state parity for the recorded ring workloads. The parallel runtime was slower than its sequential baseline. |
+| [GPU execution boundary](../gpu-compute/benchmark-results.md) | Bounded device/kernel qualification; no general end-to-end speedup claim. |
+| [Scaling-report correction](scaling-certification-report.md) | The published local scaling figures were generated placeholders, not measurements. |
+| [HPC summary](hpc-scaling-summary.json) | Schema/aggregation fixtures, explicitly blocked pending live scaling evidence. |
+| Benchmark smoke and reproducibility checks | Metadata, source, fixture and raw-results-policy alignment. They do not time a simulator. |
 
-## What to read first
+## Policy and evaluation plan
 
-- [Benchmark policy](benchmark-policy.md)
-- [Reproduce comparison](reproduce-comparison.md)
-- Raw-results policy manifest: `benches/raw-results-policy.json`
+- [Benchmark policy](benchmark-policy.md) and [reproduction guide](reproduce-comparison.md).
+- [Raw-results policy](../../benches/raw-results-policy.json).
+- [Measured-performance work](../../conductor/tracks/111-measured-performance/spec.md).
+- [Datasets and independent analytical oracles](../../conductor/validation-datasets.md).
 
-## What the benchmark surface proves
+Compare equivalent models and record exact inputs, software, hardware and raw
+outputs. Separate elapsed runtime, memory, numerical/model correctness and
+repeatability. Separate running independent experiments in parallel from
+parallelizing a single simulation. A fixture, imported result or formula cannot
+satisfy a measurement gate.
 
-- The benchmark plan names the canonical scenario set.
-- The smoke metadata stays aligned with the conformance fixture manifest.
-- Track 18 reproducibility checks keep the ready fixture IDs and source files
-  tied to real committed inputs.
-- The raw-results policy blocks public performance claims until command,
-  environment, seed, fixture, baseline, and raw output artifacts are archived.
-- GPU performance claims additionally require Track 52 live wgpu or CUDA
-  hardware evidence. The current Track 52 local CPU parity manifest is scaffold
-  evidence only and does not publish a speedup result.
+## Local metadata validation
 
-## Local validation
+Use the qualified interpreter selected under [AGENTS.md](../../AGENTS.md):
 
 ```bash
-python benches/benchmark_smoke.py
-python benches/benchmark_reproducibility.py
+.venv/bin/python benches/benchmark_smoke.py
+.venv/bin/python benches/benchmark_reproducibility.py
 ```
 
 Expected output: both commands emit JSON with `"status": "ok"`. These checks
-confirm benchmark metadata and reproducibility evidence alignment only; they do
-not publish or validate native timing results.
-
-## Related files
-
-- `benches/benchmark-plan.md`
-- `benches/benchmark-smoke.json`
-- `benches/raw-results-policy.json`
-- `benches/benchmark_smoke.py`
-- `benches/benchmark_reproducibility.py`
-- `conductor/hpc-evidence/manifests/track52-local-cpu-parity-scaffold.json`
-- `conductor/hpc-evidence/manifests/track52-live-gpu-hardware-template.json`
+validate benchmark metadata and reproducibility-evidence alignment only.
+Hardware and runtime qualification require their own commands and receipts.

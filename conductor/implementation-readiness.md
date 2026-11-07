@@ -1,5 +1,11 @@
 ## Current Track48/49 acceptance — 3 November 2026
 
+## Rust-only maturity programme — 7 November 2026
+
+[Approved programme](frontier-programme-20261107.md) coordinates Tracks 109–115. [Capability evidence](capabilities.md) governs current public claims, [release gates](release-gates.md) define beta/stable scope, and [scientific completion](scientific-completion.md) retains every outstanding method as an explicit obligation. [Native-only policy](native-only-policy.md) applies immediately. [Performance](performance-programme.md), [dependencies and CareOps contracts](dependency-and-consumer-contracts.md), and [validation datasets](validation-datasets.md) provide executable follow-up plans.
+
+Historical track completion is preserved as source-specific evidence, not inherited qualification. New phases remain pending until actual implementation, independent review and runtime evidence are recorded.
+
 Track48 and49 are **Done for the documented bounded native scope**. Root chat
 01a19bed-7060-7910-af22-38cb31f51446 is the source integrator in isolated standard
 worktree /Users/doughnut/.codex/worktrees/kairos-cap48-gvt/kairos, branch

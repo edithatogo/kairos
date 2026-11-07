@@ -11,8 +11,13 @@ from ._arrow import (
     EventLogRecord,
     EventStatus,
 )
+from ._errors import (
+    NativeBackendUnavailable,
+    NativeExecutionError,
+    UnsupportedNativeOperation,
+)
 from ._ffi import ffi_status
-from ._native import NativeSchedulerBridge, native_extension_status
+from ._native import NativeEngine, NativeSchedulerBridge, native_extension_status
 from ._scheduler import Scheduler
 from ._types import (
     DispatchedEvent,
@@ -37,6 +42,9 @@ __all__ = [
     "EventLogBatch",
     "EventLogRecord",
     "EventStatus",
+    "NativeBackendUnavailable",
+    "NativeEngine",
+    "NativeExecutionError",
     "NativeSchedulerBridge",
     "ParallelVecEnv",
     "PettingZooParallelAdapter",
@@ -44,6 +52,7 @@ __all__ = [
     "Scheduler",
     "SimTime",
     "StepOutcome",
+    "UnsupportedNativeOperation",
     "__version__",
     "ffi_status",
     "native_extension_status",
@@ -59,6 +68,8 @@ def self_check() -> dict[str, object]:
     return {
         "package": "kairo_ecs",
         "version": __version__,
-        "status": "ok",
+        "status": "metadata_only",
+        "execution": "rust_native_required",
+        "fallback_supported": False,
         "ffi": ffi_status(),
     }

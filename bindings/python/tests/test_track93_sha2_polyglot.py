@@ -27,11 +27,12 @@ def test_standard_sha256_nist_vectors() -> None:
 
 
 def test_event_log_batch_bytes_sha256_polyglot_parity() -> None:
-    scheduler = kairo_ecs.Scheduler()
-    scheduler.schedule_at(1000, priority=-1, kind=3)
-    outcome, event = scheduler.step()
-    assert outcome is kairo_ecs.StepOutcome.DISPATCHED
-    assert event is not None
+    # Static input record for data-conversion testing, not engine execution.
+    event = kairo_ecs.DispatchedEvent(
+        id=kairo_ecs.EventId(0, 0),
+        at=kairo_ecs.SimTime.from_ticks(1000), priority=-1,
+        sequence=0, kind=3,
+    )
 
     record = kairo_ecs.EventLogRecord.dispatched("run-sha2", event)
     batch = kairo_ecs.EventLogBatch([record])

@@ -1,58 +1,79 @@
-# TypeScript/Wasm Binding
+# TypeScript / Rust Wasm binding
 
-Track 09 owns this binding surface.
+Track 09 owns this binding. JavaScript simulation cores are unsupported
+immediately. `SchedulerFacade`, `createSchedulerFacade` and the synthetic
+`TimeTravelInspectorClient` throw `UnsupportedCoreError`.
 
-This package currently exposes the browser-smoke-safe TypeScript facade for the
-future KairoECS Wasm artifact. Native Wasm loading is an explicit
-`not-configured` contract until generated artifacts are wired in.
+## Load a generated Rust module
 
-Current facade:
+Build `crates/kairo-ecs-wasm` with its `wasm-export` feature and the appropriate
+wasm-bindgen/wasm-pack target. The generated module and `.wasm` artifact must be
+available to the consumer; this npm surface does not bundle a qualified native
+artifact yet.
 
-- scheduler ordering by `(timeTicks, priority, sequence)`;
-- event-log rows shaped to the Track 70 Schema v2 contract
-  (`kairo_ecs.event_log.v2`): 14 typed columns with generational-ID
-  `event_id_index`/`event_id_gen` and `entity_id_index`/`entity_id_gen`
-  pairs and full-range `time_ticks_hi`/`time_ticks_lo` limbs;
-- JSON roundtrip guard for the Arrow event-log boundary (only schema-v2
-  payloads are accepted);
-- `nativeWasmStatus()` / `loadNativeWasm()` contracts for native loading.
+```typescript
+import { WasmBridgeLoader } from "@kairo-ecs/typescript";
 
-**Documented copies and unsupported targets (Track 70 Phase 2, Task 2.3):**
+const engine = await WasmBridgeLoader.loadWasmEngine({
+  wasmModulePath: new URL("./generated/kairo_ecs_wasm.js", import.meta.url).href,
+});
+try {
+  engine.schedule_at(5n, 0, 1);
+  console.log(engine.run_for(1n));
+  console.log(engine.stats_json());
+} finally {
+  engine.free();
+}
+```
 
-- The facade runs without a native engine, so every event-log projection is
-  a **row copy** (plain JavaScript objects), not a zero-copy Arrow buffer
-  hand-off; there is no native Arrow C Data Interface capsule bridge in this
-  package yet.
-- The pure-TypeScript facade cannot observe engine-side ID recycling, so
-  event/entity handles are projected with **generation `0`**, explicitly:
-  real generational IDs come from the native engine surface (Rust FFI /
-  Python binding).
-- Entity projections are **null-together** per the v2 contract: both
-  `entity_id_index` and `entity_id_gen` are set together or both are null.
-- u64 values are projected as decimal strings for JSON precision safety;
-  u32 generations use `number`.
-- Browser: the facade is browser-safe (no Node APIs); native Wasm loading
-  and any populated Arrow export remain **unsupported** until Track 09
-  wires generated wasm-pack artifacts.
+The loader imports the supplied module, runs its default initializer when
+present, checks the generated `WasmEngine` methods and ABI version 1, and
+returns that engine. It does not substitute an inspector or a JavaScript
+scheduler. Missing modules, initialization failures and incompatible ABI shapes
+raise `NativeWasmNotConfiguredError`.
 
-Package root:
+`loadNativeWasm({ load: () => import(moduleUrl) })` provides the equivalent
+explicit loader interface. `nativeWasmStatus` is discovery metadata: even a
+provided loader reports `configured-unverified` until actually loaded. ABI
+checks are not artifact provenance or complete release qualification; consume
+Rust artifacts from a trusted, pinned build.
 
-- `package.json`
-- `package-lock.json`
-- `tsconfig.json`
-- `src/index.ts`
-- `test/index.test.ts`
-- `test/conformance.test.ts`
-- `scripts/browser-smoke.mjs`
+Current supported method names mirror Rust: `schedule_at`, `step`, `run_for`,
+`current_time_ticks`, `stats_json`, `reset`, `ffi_version` and `free`. Use bigint
+for u64 inputs. Rich event logs, model adapters, populated Arrow exports and
+verified time-travel/provenance remain unfinished capabilities. The retired
+synthetic inspector must not be used as evidence of these features.
 
-Local validation:
+## Metadata and data conversion
 
-- `npm ci`
-- `npm run typecheck`
-- `npm test`
-- `npm run test:browser`
-- `npm run build`
+Schema v2 constants and `roundTripArrowEventLog` remain available without Wasm.
+The latter copies JSON-compatible data supplied by the caller. It does not
+execute events or infer native event generations; decimal strings preserve
+u64 values. There is no Arrow C Data bridge in this package.
 
-`npm test` runs Vitest over the Node facade and conformance fixture bridge.
-`npm run test:browser` builds the package and launches a headless Chromium smoke
-test against the built ESM bundle over a temporary localhost server.
+## Validation
+
+```bash
+npm ci
+npm run typecheck
+npm test
+npm run test:policy
+npm run test:browser
+```
+
+These commands cover metadata, data conversion and explicit failure controls.
+The browser smoke verifies these same boundaries; it is not a native Wasm
+acceptance test.
+
+For actual Rust Wasm acceptance, first build the generated Node-compatible
+module, set `KAIRO_ECS_WASM_MODULE` to its file path, and run:
+
+```bash
+npm run test:native
+```
+
+This gate fails if the artifact is missing, checks real scheduling/time/counts
+and reset, and has no synthetic replacement. Historical
+`bench/results-node22-20k.json` measured the retired JavaScript scheduler and
+cannot substantiate current Rust performance. Its old benchmark entry point now
+fails explicitly.

@@ -25,7 +25,9 @@
     "prepack": "npm run build",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --pool=threads",
-    "test:browser": "npm run build && node scripts/browser-smoke.mjs"
+    "test:browser": "npm run build && node scripts/browser-smoke.mjs",
+    "test:policy": "npm run build && node scripts/test-runtime-policy.mjs",
+    "test:native": "npm run build && node scripts/native-wasm-smoke.mjs"
   },
   "license": "Apache-2.0",
   "devDependencies": {

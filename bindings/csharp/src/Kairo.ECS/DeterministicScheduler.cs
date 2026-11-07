@@ -1,162 +1,38 @@
-using System.Collections.ObjectModel;
-
 namespace Kairo.ECS;
 
 /// <summary>
-/// Managed deterministic scheduler facade for binding and conformance tests.
+/// Retired managed scheduler. Execution requires the Rust core through NativeMethods.
+/// This surface remains only to report the breaking change explicitly.
 /// </summary>
 public sealed class DeterministicScheduler
 {
-    private readonly List<ScheduledEvent> events = [];
-    private ulong nextEventId = 1;
-    private ulong nextSequence;
+    private static NotSupportedException Retired() => new(
+        "The managed scheduler is retired. Use the Rust C ABI through NativeMethods; no C# core or fallback is supported.");
 
-    /// <summary>
-    /// Gets the scheduler's current fixed tick time.
-    /// </summary>
-    public long CurrentTimeTicks { get; private set; }
+    /// <summary>Fails because the managed scheduler is no longer supported.</summary>
+    public DeterministicScheduler() => throw Retired();
 
-    /// <summary>
-    /// Schedules an event at an absolute simulation time.
-    /// </summary>
-    public ScheduledEvent ScheduleAt(long timeTicks, string eventKind, int priority = 0, string? payloadRef = null)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(eventKind);
+    /// <summary>Requires a Rust-backed engine adapter.</summary>
+    public long CurrentTimeTicks => throw Retired();
 
-        if (timeTicks < CurrentTimeTicks)
-        {
-            throw new ArgumentOutOfRangeException(nameof(timeTicks), "Events cannot be scheduled before the current simulation time.");
-        }
+    /// <summary>Requires a Rust-backed engine adapter.</summary>
+    public ScheduledEvent ScheduleAt(long timeTicks, string eventKind, int priority = 0, string? payloadRef = null) => throw Retired();
 
-        var scheduled = new ScheduledEvent(
-            nextEventId++,
-            timeTicks,
-            priority,
-            nextSequence++,
-            eventKind,
-            EventStatus.Scheduled,
-            payloadRef);
+    /// <summary>Requires a Rust-backed engine adapter.</summary>
+    public ScheduledEvent ScheduleAfter(long durationTicks, string eventKind, int priority = 0, string? payloadRef = null) => throw Retired();
 
-        events.Add(scheduled);
-        return scheduled;
-    }
+    /// <summary>Requires a Rust-backed engine adapter.</summary>
+    public bool Cancel(ulong eventId) => throw Retired();
 
-    /// <summary>
-    /// Schedules an event after a non-negative duration from the current simulation time.
-    /// </summary>
-    public ScheduledEvent ScheduleAfter(long durationTicks, string eventKind, int priority = 0, string? payloadRef = null)
-    {
-        if (durationTicks < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(durationTicks), "Event duration must be non-negative.");
-        }
+    /// <summary>Requires a Rust-backed engine adapter.</summary>
+    public ScheduledEvent? Step() => throw Retired();
 
-        return ScheduleAt(checked(CurrentTimeTicks + durationTicks), eventKind, priority, payloadRef);
-    }
+    /// <summary>Requires a Rust-backed engine adapter.</summary>
+    public IReadOnlyList<ScheduledEvent> RunFor(int maxEvents) => throw Retired();
 
-    /// <summary>
-    /// Cancels a scheduled event.
-    /// </summary>
-    public bool Cancel(ulong eventId)
-    {
-        var index = events.FindIndex(item => item.EventId == eventId);
-        if (index < 0 || events[index].Status != EventStatus.Scheduled)
-        {
-            return false;
-        }
+    /// <summary>Requires a Rust-backed engine adapter.</summary>
+    public IReadOnlyList<ScheduledEvent> RunUntil(long timeLimitTicks) => throw Retired();
 
-        events[index] = events[index] with { Status = EventStatus.Cancelled };
-        return true;
-    }
-
-    /// <summary>
-    /// Dispatches the next event by the core contract ordering: time, priority, sequence.
-    /// </summary>
-    public ScheduledEvent? Step()
-    {
-        var next = events
-            .Where(item => item.Status == EventStatus.Scheduled)
-            .OrderBy(item => item.TimeTicks)
-            .ThenBy(item => item.Priority)
-            .ThenBy(item => item.Sequence)
-            .FirstOrDefault();
-
-        if (next is null)
-        {
-            return null;
-        }
-
-        CurrentTimeTicks = next.TimeTicks;
-        var dispatched = next with { Status = EventStatus.Dispatched };
-        Replace(next.EventId, dispatched);
-        return dispatched;
-    }
-
-    /// <summary>
-    /// Dispatches up to <paramref name="maxEvents"/> events.
-    /// </summary>
-    public IReadOnlyList<ScheduledEvent> RunFor(int maxEvents)
-    {
-        if (maxEvents < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(maxEvents), "Maximum event count must be non-negative.");
-        }
-
-        var dispatched = new List<ScheduledEvent>(maxEvents);
-        for (var index = 0; index < maxEvents; index++)
-        {
-            var next = Step();
-            if (next is null)
-            {
-                break;
-            }
-
-            dispatched.Add(next);
-        }
-
-        return dispatched;
-    }
-
-    /// <summary>
-    /// Dispatches scheduled events with simulation time less than or equal to the supplied limit.
-    /// </summary>
-    public IReadOnlyList<ScheduledEvent> RunUntil(long timeLimitTicks)
-    {
-        if (timeLimitTicks < CurrentTimeTicks)
-        {
-            throw new ArgumentOutOfRangeException(nameof(timeLimitTicks), "Time limit cannot be before the current simulation time.");
-        }
-
-        var dispatched = new List<ScheduledEvent>();
-        while (PeekNextScheduled() is { } next && next.TimeTicks <= timeLimitTicks)
-        {
-            dispatched.Add(Step()!);
-        }
-
-        CurrentTimeTicks = Math.Max(CurrentTimeTicks, timeLimitTicks);
-        return dispatched;
-    }
-
-    /// <summary>
-    /// Returns a stable snapshot of all events for test and binding inspection.
-    /// </summary>
-    public IReadOnlyList<ScheduledEvent> Snapshot() => new ReadOnlyCollection<ScheduledEvent>(events.ToList());
-
-    private ScheduledEvent? PeekNextScheduled() => events
-        .Where(item => item.Status == EventStatus.Scheduled)
-        .OrderBy(item => item.TimeTicks)
-        .ThenBy(item => item.Priority)
-        .ThenBy(item => item.Sequence)
-        .FirstOrDefault();
-
-    private void Replace(ulong eventId, ScheduledEvent replacement)
-    {
-        var index = events.FindIndex(item => item.EventId == eventId);
-        if (index < 0)
-        {
-            throw new InvalidOperationException($"Event '{eventId}' was not found.");
-        }
-
-        events[index] = replacement;
-    }
+    /// <summary>Requires a Rust-backed engine adapter.</summary>
+    public IReadOnlyList<ScheduledEvent> Snapshot() => throw Retired();
 }

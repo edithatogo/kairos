@@ -1,36 +1,45 @@
 ---
 title: Conductor Status
-description: Track and validation status entry point across all 66 KairoECS engineering tracks.
+description: Source-linked capability, validation and release status without stale completion counters.
 ---
 
-The Conductor governance system is the single source of truth for track ownership,
-validation evidence, and release-boundary claims across KairoECS.
+Conductor records work ownership, acceptance criteria and retained evidence.
+Its [track registry](https://github.com/edithatogo/kairos/blob/main/conductor/tracks.yaml)
+and [narrative status](https://github.com/edithatogo/kairos/blob/main/conductor/status.md)
+are the current navigation points. This page does not duplicate a static track
+count that can drift from the registry.
 
-## Programme Summary (`59 / 66 Done`)
+## Read completion in context
 
-| Status | Count | Scope |
-| --- | ---: | --- |
-| `Done` | 59 | Core ECS/DES/ABM engine, polyglot bindings (Rust, Python, R, Julia, TypeScript/Wasm, C#, Go), WebGPU, PDES/Time Warp, Arrow/Parquet/FMI, Game Theory Ontology & Multi-Game Solvers (`Tracks 56–61`), and Frontier Waves (`Tracks 62–66`) |
-| `In Review` | 0 | All reviewed tracks with local proof have been closed out with concrete manifests |
-| `In Progress` | 7 | HPC Parity Wave (`Tracks 48–53, 55`): all local Rust/macOS multi-core, Apple Silicon Metal unified-memory compute, OpenMPI, HDF5, and Arrow/Parquet slices are implemented and verified; external multi-node cluster, InfiniBand, Lustre, and NVIDIA CUDA hardware runs remain gated |
-| `Planned` | 0 | Zero unstarted tracks remain |
-| **Total** | **66** | Complete 66-track Conductor DAG (`Tracks 00–66`) |
+A `Done` track means its recorded scope and acceptance were completed. It does
+not automatically establish native engine execution in every language, scientific
+correctness, hardware scaling or release readiness. Earlier preview work may
+have completed DTOs, contract tests or local fixtures while broader capabilities
+remain incomplete.
 
-## Wave Breakdown
+The [capability register](https://github.com/edithatogo/kairos/blob/main/conductor/capabilities.json)
+and [current-state review](https://github.com/edithatogo/kairos/blob/main/docs/current-state.md)
+separate:
 
-| Wave | Tracks | Status | Highlights |
-| --- | --- | --- | --- |
-| Wave 0–3: Foundation & Core Simulation | `00–17` | `Done` | `kairo-ecs-types`, `kairo-ecs-core`, `kairo-ecs-state` (`ArchetypeTable`), `kairo-ecs-rng`, `kairo-ecs-des`, `kairo-ecs-abm`, `kairo-ecs-ffi`, `kairo-ecs-arrow` |
-| Wave 4–5: Polyglot & Ecosystem Bindings | `18–33` | `Done` | Python (pure-Python facade), R (`extendr`), Julia (`ccall`), TypeScript/Wasm, C# (`.NET 10/11`), Go (`cgo`), UniFFI, Diplomat |
-| Wave 6: Advanced Runtime & Docs Platform | `34–47` | `Done` | Conservative & Optimistic PDES, MPI/gRPC transports, GPU/WebGPU compute, FMI 2.0/3.0, Kafka/Flight streaming, ONNX/VecEnv ML, Starlight docs |
-| Wave 7: HPC Parity Wave | `48–55` | `1 Done` (`54`), `7 In Progress` (`48–53, 55`) | Generational bitset rollback, multi-rank MPI/gRPC sockets, `MetalBackend` & `PersistentGpuSession`, in-repo Arrow-style batches + checkpoints, HDF5/ADIOS2 checkpoints, NUMA discovery |
-| Wave 8: Game Theory Ontology & Solvers | `56–61` | `Done` | `kairo-ecs-game-ontology` (Turtle/JSON-LD parser & codegen), `kairo-ecs-game-theory` (`PureNashSolver`, `LemkeHowsonSolver`, `SupportEnumerationSolver`, `BackwardInductionSolver`, `CfrPlusSolver`, `graph-relations`) |
-| Wave 9: Frontier SOTA & Multi-Core | `62–66` | `Done` | SimPy-parity preemptive resources, 2D continuous/CSR network ABM, FMI 3.0 + AAS digital twins, multi-threaded `ParallelVecEnv`, `ParallelEnsembleRunner`, Sobol/ABC-SMC, `CowWorldSnapshot` Wasm time-travel |
+- implemented source and API scope;
+- actual native execution and installed-consumer acceptance;
+- analytical, differential and empirical validation;
+- measured performance and qualified hardware;
+- beta/stable release acceptance.
 
-## Canonical Governance Files
+## Work toward release
 
-- `conductor/status.md`
-- `conductor/tracks.md`
-- `conductor/tracks.yaml`
-- `conductor/phase-closeout.yaml`
-- `conductor/implementation-readiness.md`
+| Programme area | Acceptance focus |
+| --- | --- |
+| Rust-only runtime | One core; missing native capabilities fail explicitly; every supported adapter executes the actual engine. |
+| Scientific-method completion | Independent oracles, correct method identities, numerical convergence and documented limits. |
+| Measured performance | Real workload timings, profiles, fair baselines and reproducible artefacts. |
+| Evidence automation | Claims tied to exact source, input and artefact hashes; synthetic fixtures remain labelled. |
+| Beta and stable release | A coherent, supported subset with native consumer, compatibility, security and recovery gates. |
+| Dependencies and consumers | Maintained implementations where qualified; applications consume Kairos through versioned contracts. |
+| Frontier experiments | Preregistered questions and comparison methods before new superiority claims. |
+
+Read the [delivery programme](https://github.com/edithatogo/kairos/blob/main/conductor/frontier-programme-20261107.md)
+and [release gates](https://github.com/edithatogo/kairos/blob/main/conductor/release-gates.md).
+Historical evidence remains useful at its recorded source revision; current
+changes need their own relevant verification.
