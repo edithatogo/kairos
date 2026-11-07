@@ -3,6 +3,11 @@
 Track 60 adds a dependency-light normal-form execution surface to `kairo-ecs-game-theory`.
 The current runtime is a flat-array solver contract, not a release performance claim.
 
+This page describes the finite pure-strategy baseline. Experimental mixed,
+correlated-equilibrium and replicator extensions have distinct correctness gaps;
+consult [current solver scope and S01–S04 qualification](equilibrium-and-cfr-solvers.md).
+Metadata certification does not establish generalized equilibrium correctness.
+
 ## Data layout
 
 - `StrategySpace` stores player-ordered strategy names.
@@ -33,4 +38,6 @@ rustup run stable-x86_64-pc-windows-gnu cargo bench -p kairo-ecs-game-theory --b
 
 ## Boundaries
 
-The Track 60 runtime does not yet provide mixed-strategy solvers, generated-ontology integration, extensive-form traversal, or externally benchmarked parity. Extensive-form Graph-ECS execution remains Track 61 scope.
+The Track 60 baseline above does not establish generalized mixed-strategy solving,
+generated-ontology integration or externally benchmarked parity. Extensive-form
+Graph-ECS execution has its own [runtime scope](extensive-form-runtime.md).

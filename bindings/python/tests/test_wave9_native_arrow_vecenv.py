@@ -42,19 +42,26 @@ def test_arrow_c_data_interface_and_duckdb_polars_spec() -> None:
 
 
 
-def test_native_bridge_does_not_return_a_fabricated_version() -> None:
+def test_native_bridge_does_not_return_a_fabricated_version(monkeypatch) -> None:
     import pytest
+
     from kairo_ecs import NativeBackendUnavailable
 
+    # Native CI configures a real artifact globally. This negative control must
+    # explicitly remove that configuration without changing the native gate.
+    monkeypatch.setenv("KAIRO_ECS_FFI_LIBRARY", "")
     with pytest.raises(NativeBackendUnavailable):
-        NativeSchedulerBridge("nonexistent.dylib")
+        NativeSchedulerBridge()
     status = native_extension_status()
+    assert status["status"] == "not_configured"
+    assert status["artifact_present"] is False
     assert status["compiled"] is False
     assert status["fallback_supported"] is False
 
 
 def test_parallel_vecenv_requires_rust_model() -> None:
     import pytest
+
     from kairo_ecs import UnsupportedNativeOperation
 
     with pytest.raises(UnsupportedNativeOperation):

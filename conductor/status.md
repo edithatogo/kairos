@@ -6,6 +6,8 @@ Kairos is an independent Rust simulation dependency consumed by careops-sim thro
 
 The previously recorded PR 366 draft state is historical: PR 366 merged on 3 November 2026. Earlier assignment/count snapshots below are retained as dated history and are superseded by the current machine registry and capability register.
 
+The immediate packet is recorded in [PR 378](https://github.com/edithatogo/kairos/pull/378) and the [implementation record](frontier-implementation-20261107.md). Final merge/check status is read from that PR; no phase or release is inferred from a source commit.
+
 ## Historical status records
 
 ## Current Track48/49 acceptance — 3 November 2026

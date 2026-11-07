@@ -341,7 +341,7 @@
       "status": "known-defect",
       "completion_track": "110",
       "scope": "Existing sequence and ensemble scaffolding are present.",
-      "limitations": "Known nonstandard vectors and 2^32 index overflow require S05; preserve explicitly versioned legacy replay.",
+      "limitations": "Known nonstandard vectors, 2^32 index overflow and fixed-multiplier confidence fields require S05; preserve explicitly versioned legacy replay. Those fields are not statistical confidence intervals.",
       "evidence": [
         "ensemble",
         "sobol_review",
@@ -354,7 +354,7 @@
       "status": "experimental",
       "completion_track": "110",
       "scope": "Deterministic stream/ensemble components exist.",
-      "limitations": "S06\u2013S08 require coverage, calibration, hazard and reference-posterior evidence for the specific estimator/model.",
+      "limitations": "S06\u2013S08 require coverage, calibration, hazard and reference-posterior evidence. The current ABC-SMC-named routine lacks sequential resampling/perturbation; distance-weighted fixed particles do not establish ABC-SMC.",
       "evidence": [
         "rng",
         "ensemble",

@@ -22,6 +22,10 @@ Current strengths include deterministic Rust scheduling/state/RNG, resource and 
 
 The original capability/dependency tracks retain their ownership and historical receipts. These follow-up tracks coordinate unresolved current acceptance; they do not silently mark previously unrun work complete. Shared registry changes are integrated by one coordinator with disjoint writer leases and independent review.
 
+## Delivery evidence
+
+[Implementation and validation record](frontier-implementation-20261107.md) distinguishes completed source changes, observed hosted results and remaining qualification. The current review is [PR 378](https://github.com/edithatogo/kairos/pull/378).
+
 ## Immediate delivery
 
 - Retire executable host schedulers and synthetic host environments, preserving explicit errors and actual native/Wasm interfaces.
