@@ -1,7 +1,7 @@
 namespace Kairo.ECS;
 
 /// <summary>
-/// Immutable event record exposed by the managed scheduler facade.
+/// Immutable event record for host-side data interchange.
 /// </summary>
 /// <param name="EventId">Monotonic event identifier assigned by the scheduler.</param>
 /// <param name="TimeTicks">Fixed tick-based simulation time.</param>

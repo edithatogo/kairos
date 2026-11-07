@@ -7,11 +7,12 @@ import kairo_ecs
 
 
 def test_isolated_tempdir_publication_lifecycle() -> None:
-    scheduler = kairo_ecs.Scheduler()
-    scheduler.schedule_at(500, priority=0, kind=1)
-    outcome, event = scheduler.step()
-    assert outcome is kairo_ecs.StepOutcome.DISPATCHED
-    assert event is not None
+    # Static input record for data-conversion testing, not engine execution.
+    event = kairo_ecs.DispatchedEvent(
+        id=kairo_ecs.EventId(0, 0),
+        at=kairo_ecs.SimTime.from_ticks(500), priority=0,
+        sequence=0, kind=1,
+    )
 
     record = kairo_ecs.EventLogRecord.dispatched("run-tempfile-py", event)
     batch = kairo_ecs.EventLogBatch([record])
@@ -33,13 +34,15 @@ def test_isolated_tempdir_publication_lifecycle() -> None:
 
 
 def test_tempfile_isolation_preserves_deterministic_content() -> None:
-    scheduler1 = kairo_ecs.Scheduler()
-    scheduler1.schedule_at(100, priority=0, kind=2)
-    _, event1 = scheduler1.step()
-
-    scheduler2 = kairo_ecs.Scheduler()
-    scheduler2.schedule_at(100, priority=0, kind=2)
-    _, event2 = scheduler2.step()
+    # Identical declared DTOs test codec stability, not simulator replay.
+    event1 = kairo_ecs.DispatchedEvent(
+        id=kairo_ecs.EventId(0, 0), at=kairo_ecs.SimTime.from_ticks(100),
+        priority=0, sequence=0, kind=2,
+    )
+    event2 = kairo_ecs.DispatchedEvent(
+        id=kairo_ecs.EventId(0, 0), at=kairo_ecs.SimTime.from_ticks(100),
+        priority=0, sequence=0, kind=2,
+    )
 
     record1 = kairo_ecs.EventLogRecord.dispatched("run-det-1", event1)
     record2 = kairo_ecs.EventLogRecord.dispatched("run-det-1", event2)

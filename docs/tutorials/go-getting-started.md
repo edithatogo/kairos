@@ -1,5 +1,9 @@
 # Go Getting Started
 
+**Runtime support:** Version and data helpers are distinct from execution. The former Go scheduler is unsupported; setting `CGO_ENABLED=1` does not create or qualify a native adapter.
+
+Rust is the only supported simulation core. Follow [ADR 0010](../adr/0010-rust-only-execution.md), [installation](../install.md) and the [migration guide](../release/migration.md). The package checks below establish only their stated package/data scope.
+
 ## Prerequisites
 - Go >= 1.23 installed
 - The KairoECS repository cloned
@@ -41,18 +45,11 @@ go vet ./...
 | `kairoecs_test.go` | Unit tests |
 | `go.mod` | Module manifest |
 
-## cgo integration
+## Native integration boundary
 
-The Go binding will use `cgo` to link against the C ABI library:
-- Set `CGO_ENABLED=1` for native builds
-- The C headers are in `include/kairo_ecs.h`
-
-## Cross-compilation
-
-For cross-platform builds, set `CGO_ENABLED=1` and `CC` to the target cross-compiler:
-```bash
-GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go build ./...
-```
+The versioned Rust C ABI is the intended integration surface. Native cgo support
+requires an implementation, correct library/header linking and installed-consumer
+acceptance. The source metadata package alone does not supply this runtime.
 
 ## Next steps
 

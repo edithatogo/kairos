@@ -12,8 +12,9 @@
 | Real ONNX inference does not deadlock under 1000 consecutive ticks | no | yes | yes |
 | Consecutive inference runs without memory leak | no | yes | yes |
 | Neural surrogate accuracy within 5% of original system | no | yes | yes |
-| `kairo_gym` Python package imports and passes Gymnasium API check (`check_env`) | yes | yes | yes |
-| `kairo_gym` reset/step/close contract compliance | yes | yes | yes |
+| `kairo_gym` rejects execution without a qualified Rust environment | yes | yes | yes |
+| Installed Rust environment passes Gymnasium API check (`check_env`) before advertising Gym support | capability gate | capability gate | capability gate |
+| Installed native reset/step/close contract compliance before advertising Gym support | capability gate | capability gate | capability gate |
 | RL training loop (PPO + Stable-Baselines3) completes without crash | no | yes | yes |
 | TensorRT inference matches ONNX output within numerical tolerance | no | no | yes |
 | Burn backend produces identical output to ONNX for same model | no | no | yes |
@@ -22,6 +23,8 @@
 | Docs: surrogate authoring guide includes runnable example | no | no | yes |
 | `cargo test` passes without GPU hardware (CPU-only CI) | yes | yes | yes |
 | `cargo test --features onnx` passes on CI with ONNX Runtime installed | no | yes | yes |
+
+**Current policy (7 November 2026):** [capability-scoped release gates](../../release-gates.md) supersede the blanket beta/1.0 feature inclusion above. All positive ML/Gym checks remain mandatory before that capability can be advertised. The Python host environment is retired immediately; its current tests prove explicit unavailability only. Real native Gym support remains open in Tracks 109/110.
 
 Alpha scope note: current `OrtSession` is a dependency-free contract double. It
 must not be reported as evidence that ONNX Runtime, TensorRT, Burn, or surrogate

@@ -253,6 +253,49 @@ fn test_engine_reset() {
 }
 
 #[test]
+fn test_engine_reset_never_reuses_event_handles() {
+    let engine = kairo_ecs_engine_new();
+    assert_ne!(engine, 0);
+    let first = kairo_ecs_schedule_at(engine, 10, 0, 1);
+    assert_ne!(first, 0);
+    let mut stale_handles = vec![first];
+
+    // Cover reset with a pending event, then consecutive resets after dispatch.
+    for reset_count in [1, 2] {
+        for _ in 0..reset_count {
+            assert_eq!(
+                kairo_ecs_engine_reset(engine),
+                KairoEcsStatusCode::KAIRO_ECS_OK
+            );
+        }
+        let fresh = kairo_ecs_schedule_after(engine, 20, 0, 2);
+        assert!(stale_handles.iter().all(|&stale| fresh > stale));
+        for &stale in &stale_handles {
+            assert_eq!(
+                kairo_ecs_cancel_event(engine, stale),
+                KairoEcsStatusCode::KAIRO_ECS_ERR_NOT_FOUND
+            );
+        }
+
+        let stats = kairo_ecs_stats(engine);
+        assert_eq!(stats.scheduled_events, 1);
+        assert_eq!(stats.cancelled_events, 0);
+        assert_eq!(stats.pending_events, 1);
+        assert_eq!(kairo_ecs_step(engine), KairoEcsStatusCode::KAIRO_ECS_OK);
+        assert_eq!(kairo_ecs_engine_current_time(engine), 20);
+        let stats = kairo_ecs_stats(engine);
+        assert_eq!(stats.dispatched_events, 1);
+        assert_eq!(stats.pending_events, 0);
+        stale_handles.push(fresh);
+    }
+
+    assert_eq!(
+        kairo_ecs_engine_free(engine),
+        KairoEcsStatusCode::KAIRO_ECS_OK
+    );
+}
+
+#[test]
 fn test_telemetry_flush() {
     let handle = kairo_ecs_engine_new();
     assert_ne!(handle, 0);

@@ -90,6 +90,14 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Verify repository-local Python 3.15.2
         run: python scripts/python_runtime.py --github
+      - name: Build actual Rust C ABI for native execution
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.99.1 --profile minimal
+          rustup default 1.99.1
+          mkdir -p artifacts/native-bindings
+          cargo rustc --locked --release -p kairo-ecs-ffi --lib --crate-type cdylib --message-format=json-render-diagnostics > artifacts/native-bindings/ffi-build.jsonl
+          node scripts/validation/select-native-artifact.mjs artifacts/native-bindings/ffi-build.jsonl artifacts/native-bindings/ffi-artifact.json >> "$GITHUB_ENV"
       - name: Python binding smoke
         run: |
           test -f bindings/python/pyproject.toml
@@ -98,6 +106,20 @@ jobs:
           python -m pip install --no-deps --no-build-isolation -e '.[test]'
           ruff check .
           python -m pytest -q
+
+      - name: Require actual Python Rust-native execution
+        env:
+          PYTHONPATH: bindings/python
+        run: |
+          set -euo pipefail
+          python -m unittest discover -s bindings/python/native_tests -v 2>&1 | tee artifacts/native-bindings/python-native-tests.log
+      - name: Retain Python native build and execution evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: python-native-execution
+          path: artifacts/native-bindings
+          if-no-files-found: error
 
   r:
     needs: changes
@@ -158,6 +180,33 @@ jobs:
           npm run typecheck
           npm test
 
+      - name: Install Rust Wasm build tools
+        run: rustup toolchain install 1.99.1 --profile minimal --target wasm32-unknown-unknown
+      - name: Install matching wasm-bindgen CLI
+        uses: taiki-e/install-action@86f7a0ffb25f40114606501a311ebcfaf882ea32 # v2.88.0
+        with:
+          tool: wasm-bindgen-cli@0.2.129
+          fallback: none
+      - name: Require actual Rust Wasm execution
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/native-bindings/wasm
+          cargo +1.99.1 build --locked --release -p kairo-ecs-wasm --features wasm-export --target wasm32-unknown-unknown
+          wasm-bindgen target/wasm32-unknown-unknown/release/kairo_ecs_wasm.wasm --target nodejs --out-dir artifacts/native-bindings/wasm --out-name kairo_ecs_wasm
+          printf '%s\n' '{"type":"commonjs"}' > artifacts/native-bindings/wasm/package.json
+          sha256sum artifacts/native-bindings/wasm/kairo_ecs_wasm.js artifacts/native-bindings/wasm/kairo_ecs_wasm_bg.wasm > artifacts/native-bindings/wasm/SHA256SUMS
+          git rev-parse HEAD > artifacts/native-bindings/wasm/source-commit.txt
+          rustc +1.99.1 --version > artifacts/native-bindings/wasm/toolchain.txt
+          wasm-bindgen --version >> artifacts/native-bindings/wasm/toolchain.txt
+          KAIRO_ECS_WASM_MODULE="$GITHUB_WORKSPACE/artifacts/native-bindings/wasm/kairo_ecs_wasm.js" npm --prefix bindings/typescript run test:native 2>&1 | tee artifacts/native-bindings/wasm-tests.log
+      - name: Retain Wasm build and execution evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: typescript-native-wasm-execution
+          path: artifacts/native-bindings
+          if-no-files-found: error
+
   csharp:
     needs: changes
     if: always() && (needs.changes.result != 'success' || needs.changes.outputs.csharp == 'true')
@@ -178,12 +227,34 @@ jobs:
           dotnet-version: |
             10.0.x
             11.0.x
+      - name: Build actual Rust C ABI for native execution
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.99.1 --profile minimal
+          rustup default 1.99.1
+          mkdir -p artifacts/native-bindings
+          cargo rustc --locked --release -p kairo-ecs-ffi --lib --crate-type cdylib --message-format=json-render-diagnostics > artifacts/native-bindings/ffi-build.jsonl
+          node scripts/validation/select-native-artifact.mjs artifacts/native-bindings/ffi-build.jsonl artifacts/native-bindings/ffi-artifact.json >> "$GITHUB_ENV"
       - name: C# smoke
         env:
           TARGET_FRAMEWORK: ${{ matrix.target-framework }}
         run: |
           test -f bindings/csharp/Kairo.ECS.sln
-          dotnet test bindings/csharp/tests/Kairo.ECS.Tests/Kairo.ECS.Tests.csproj -c Release -f "$TARGET_FRAMEWORK" -p:TreatWarningsAsErrors=true
+          dotnet test bindings/csharp/tests/Kairo.ECS.Tests/Kairo.ECS.Tests.csproj -c Release -f "$TARGET_FRAMEWORK" -p:TreatWarningsAsErrors=true --filter 'TestCategory!=Native'
+      - name: Require actual C# Rust-native execution
+        env:
+          TARGET_FRAMEWORK: ${{ matrix.target-framework }}
+          KAIRO_ECS_REQUIRE_NATIVE: '1'
+        run: |
+          set -euo pipefail
+          dotnet test bindings/csharp/tests/Kairo.ECS.Tests/Kairo.ECS.Tests.csproj -c Release -f "$TARGET_FRAMEWORK" -p:TreatWarningsAsErrors=true --filter 'TestCategory=Native' 2>&1 | tee artifacts/native-bindings/csharp-native-tests.log
+      - name: Retain C# native build and execution evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: csharp-native-execution-${{ matrix.target-framework }}
+          path: artifacts/native-bindings
+          if-no-files-found: error
 
   go:
     needs: changes
@@ -224,18 +295,20 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Verify repository-local Python 3.15.2
         run: python scripts/python_runtime.py --github
-      - name: Install and check optional Gymnasium integration
+      - name: Check retired host environment with Gymnasium installed
         if: matrix.python-version == '3.15.2'
         run: |
           python -m pip install --require-hashes -r python/kairo_gym/ci-requirements.lock
           PYTHONPATH=python/kairo_gym/src python - <<'PY'
           import gymnasium
-          from gymnasium.utils.env_checker import check_env
-          from kairo_gym import KairoGymEnv
+          from kairo_gym import KairoGymEnv, NativeEnvironmentUnavailable
 
-          env = KairoGymEnv()
-          assert isinstance(env, gymnasium.Env)
-          check_env(env)
+          try:
+              KairoGymEnv()
+          except NativeEnvironmentUnavailable:
+              pass
+          else:
+              raise AssertionError("A non-Rust environment was constructed")
           PY
       - name: Gymnasium wrapper smoke
         env:

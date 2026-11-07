@@ -8,7 +8,22 @@ This is an evidence and preparation checklist for maintainers. It is not a JOSS
 editorial decision, submission, or acceptance. The existing release, security,
 packaging and compatibility gates continue to apply.
 
-## Current official criteria
+## Update: 7 November 2026
+
+The observations below are retained as a dated assessment, not current release
+status. The [alpha source release](https://github.com/edithatogo/kairos/releases/tag/v0.4.0-alpha.1)
+was published on 18 October 2026. README now states the established dual license.
+The [paper draft](../../paper/paper.md) has been revised to qualify performance,
+native binding and scientific-method claims; it is not a finished submission.
+The [current-state review](../current-state.md) and
+[release gates](../../conductor/release-gates.md) supersede old maturity wording.
+
+Before submission, recheck current journal requirements, final author/contribution
+information, research-use evidence, source/archive identity and the rendered
+manuscript. Passing a calendar threshold alone does not demonstrate the required
+development history, scientific significance or independent validation.
+
+## Official criteria reviewed on 1 October 2026
 
 Primary sources reviewed on the observation date:
 

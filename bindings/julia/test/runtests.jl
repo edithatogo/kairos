@@ -6,12 +6,12 @@ using KairoECS
     @test self_check() == Dict(
         :package => "KairoECS",
         :version => "0.1.0",
-        :status => "ok",
+        :status => "metadata_only",
         :ffi_configured => "false",
     )
 end
 
-@testset "deterministic scheduler ordering" begin
+@testset "event-log data ordering" begin
     unordered = [
         EventLogRecord(
             run_id = "run-1",
@@ -219,3 +219,15 @@ end
 end
 
 include("test_arrow.jl")
+
+@testset "artifact discovery does not claim native execution" begin
+    mktemp() do path, io
+        write(io, "not a native library")
+        flush(io)
+        status = native_library_loader(path)
+        @test status["artifact_present"] == true
+        @test status["available"] == false
+        @test status["arrow_c_data_interface_supported"] == false
+    end
+    @test ffi_status().fallback_supported == false
+end

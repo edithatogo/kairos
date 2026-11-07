@@ -1,5 +1,11 @@
 # Surrogate Authoring Guide
 
+**Contract demonstration only.** The source below does not load a real ONNX
+graph or implement a validated surrogate. Rust-only execution is mandatory;
+legacy Python simulation/RL demonstrations are unsupported pending native model
+adapters. Follow [current capabilities](../current-state.md) and the
+[scientific completion plan](../../conductor/tracks/110-scientific-method-completion/plan.md).
+
 The initial surrogate example lives in `examples/ml-surrogate/de-surrogate`.
 It demonstrates the API shape for replacing a small differential-equation update
 with a shape-checked model session.
@@ -33,13 +39,11 @@ Run the scaffold checks before wiring a real backend:
 ```bash
 cargo check --manifest-path crates/kairo-ecs-ml/Cargo.toml --all-features --tests
 cargo check --manifest-path examples/ml-surrogate/de-surrogate/Cargo.toml --features onnx
-set PYTHONPATH=python\kairo_gym\src
-python -m unittest discover -s python\kairo_gym\tests
 ```
 
-The Rust checks prove the feature-gated API surface and example compile. The
-Python check proves the Gymnasium-style reset/step/close envelope imports and
-works without installing optional Gymnasium.
+These checks establish compilation of the feature-gated API and example. They
+do not execute inference, qualify a Rust-backed Gymnasium environment or validate
+reset/step model semantics.
 
 ## Evidence boundary
 

@@ -1,0 +1,27 @@
+{
+  "track_id": "113-beta-and-stable-release",
+  "type": "refactor",
+  "status": "spec_approved",
+  "approved": true,
+  "repository": "kairos",
+  "created_at": "2026-11-07T00:00:00+10:00",
+  "updated_at": "2026-11-07T00:00:00+10:00",
+  "title": "Beta and stable release qualification",
+  "spec_approved": true,
+  "implementation_started": false,
+  "accepted_phases": [],
+  "active_phase": null,
+  "coordinating_programme": "frontier-programme-20261107",
+  "depends_on": [
+    "15",
+    "16",
+    "20",
+    "25",
+    "109",
+    "110",
+    "111",
+    "112",
+    "114"
+  ]
+}
+

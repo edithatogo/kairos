@@ -41,39 +41,30 @@ def test_arrow_c_data_interface_and_duckdb_polars_spec() -> None:
     assert duckdb_spec["row_count"] == 1
 
 
-def test_native_scheduler_bridge_and_status() -> None:
+
+def test_native_bridge_does_not_return_a_fabricated_version(monkeypatch) -> None:
+    import pytest
+
+    from kairo_ecs import NativeBackendUnavailable
+
+    # Native CI configures a real artifact globally. This negative control must
+    # explicitly remove that configuration without changing the native gate.
+    monkeypatch.setenv("KAIRO_ECS_FFI_LIBRARY", "")
+    with pytest.raises(NativeBackendUnavailable):
+        NativeSchedulerBridge()
     status = native_extension_status()
-    assert "native_library" in status
-    assert "compiled" in status
-
-    bridge = NativeSchedulerBridge("nonexistent.dylib")
-    assert not bridge.available
-    assert bridge.get_version() == 1
+    assert status["status"] == "not_configured"
+    assert status["artifact_present"] is False
+    assert status["compiled"] is False
+    assert status["fallback_supported"] is False
 
 
-def test_parallel_vecenv_conformance() -> None:
-    env = ParallelVecEnv(num_envs=2)
-    obs, infos = env.reset()
-    assert len(obs) == 2
-    assert len(infos) == 2
+def test_parallel_vecenv_requires_rust_model() -> None:
+    import pytest
 
-    actions = [0, 1]
-    obs, rewards, terminated, _truncated, _infos = env.step(actions)
-    assert len(obs) == 2
-    assert len(rewards) == 2
-    assert not any(terminated)
-    env.close()
+    from kairo_ecs import UnsupportedNativeOperation
 
-
-def test_pettingzoo_parallel_adapter_conformance() -> None:
-    env = PettingZooParallelAdapter(["p0", "p1"])
-    assert len(env.possible_agents) == 2
-
-    obs, _infos = env.reset()
-    assert "p0" in obs
-
-    action_dict = {"p0": 0, "p1": 1}
-    obs, rewards, terminations, _truncations, _step_infos = env.step(action_dict)
-    assert "p0" in obs
-    assert "p0" in rewards
-    assert not terminations["p0"]
+    with pytest.raises(UnsupportedNativeOperation):
+        ParallelVecEnv(num_envs=2)
+    with pytest.raises(UnsupportedNativeOperation):
+        PettingZooParallelAdapter(["p0", "p1"])

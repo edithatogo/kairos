@@ -7,22 +7,30 @@ if (is.na(pkg_root)) {
 }
 
 status <- kairoecs_ffi_status()
-stopifnot(identical(status$configured, FALSE))
+stopifnot(identical(status$configured, FALSE), identical(status$fallback_supported, FALSE))
+stopifnot(identical(kairoecs_surface_ready(), FALSE))
 
-scheduler <- kairoecs_new_scheduler(run_id = "base-smoke")
-scheduler <- kairoecs_schedule_at(scheduler, 2, "second", priority = 0)
-scheduler <- kairoecs_schedule_at(scheduler, 1, "first", priority = 0)
-scheduler <- kairoecs_run_until(scheduler, 2)
-tryCatch(
-  kairoecs_cancel_event(scheduler, 1),
-  error = function(err) {
-    stopifnot(grepl("not pending", conditionMessage(err), fixed = TRUE))
-  }
+# Every legacy entry point fails, even for fabricated scheduler objects.
+operations <- list(
+  function() kairoecs_new_scheduler(),
+  function() kairoecs_schedule_at(list(), 1, "event"),
+  function() kairoecs_cancel_event(list(), 1),
+  function() kairoecs_run_until(list(), 1),
+  function() kairoecs_event_log(list())
 )
+for (operation in operations) {
+  error <- tryCatch({ operation(); NULL }, error = identity)
+  stopifnot(inherits(error, "kairoecs_native_required"))
+}
 
-log <- kairoecs_arrow_roundtrip(kairoecs_event_log(scheduler))
-stopifnot(identical(log$event_kind, c("first", "second")))
-stopifnot(identical(log$status, c("dispatched", "dispatched")))
-stopifnot(identical(attr(log, "kairoecs_schema"), "kairo_ecs.event_log.v2"))
-
-cat("base R smoke passed\n")
+# This is data conversion evidence, not engine execution.
+log <- data.frame(
+  schema_version = 2L, run_id = "data-only", event_id_index = "1", event_id_gen = 0,
+  entity_id_index = NA_character_, entity_id_gen = NA_real_,
+  time_ticks_hi = "0", time_ticks_lo = "5", time_scale = "ticks", priority = 0L,
+  sequence = "0", event_kind = "event", status = "dispatched", payload_ref = NA_character_
+)
+converted <- kairoecs_arrow_roundtrip(log)
+stopifnot(identical(converted$event_kind, "event"))
+stopifnot(identical(attr(converted, "kairoecs_schema"), "kairo_ecs.event_log.v2"))
+cat("base R metadata and native-required checks passed; no engine execution claimed\n")

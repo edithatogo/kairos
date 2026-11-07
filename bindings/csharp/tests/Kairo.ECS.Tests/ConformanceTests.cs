@@ -1,3 +1,4 @@
+// Fixture parsing below is metadata evidence, not Rust runtime conformance.
 using System.Text.Json;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -9,6 +10,7 @@ public sealed class ConformanceTests
     private static readonly string FixtureRoot = FindFixtureRoot();
 
     [TestMethod]
+    [TestCategory("Metadata")]
     public void DeterministicOrdering_Fixture_IsValid()
     {
         var json = File.ReadAllText(Path.Combine(FixtureRoot, "deterministic_ordering.json"));
@@ -21,6 +23,7 @@ public sealed class ConformanceTests
     }
 
     [TestMethod]
+    [TestCategory("Metadata")]
     public void Cancellation_Fixture_IsValid()
     {
         var json = File.ReadAllText(Path.Combine(FixtureRoot, "cancellation.json"));
@@ -32,6 +35,7 @@ public sealed class ConformanceTests
     }
 
     [TestMethod]
+    [TestCategory("Metadata")]
     public void RngReplay_Fixture_IsValid()
     {
         var json = File.ReadAllText(Path.Combine(FixtureRoot, "rng_replay.json"));

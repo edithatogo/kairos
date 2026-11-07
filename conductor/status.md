@@ -1,3 +1,15 @@
+# Current programme — 7 November 2026
+
+Reviewed source: `d56863505d938feb069af88a737eb7668113d14b`. Tracks 109 and 112 are In Progress; 110, 111, 113, 114 and 115 are Spec Approved. The programme immediately retires host simulation cores, corrects documentation and introduces explicit capability evidence. Scientific fixes, performance improvements, installed-platform qualification, beta/stable acceptance and frontier results remain open in their plans. No new phase is closed by this planning packet.
+
+Kairos is an independent Rust simulation dependency consumed by careops-sim through versioned public interfaces. Consumer-owned models and validation remain downstream; no consumer pin or release is promoted here. See [programme](frontier-programme-20261107.md), [capabilities](capabilities.md) and [release gates](release-gates.md).
+
+The previously recorded PR 366 draft state is historical: PR 366 merged on 3 November 2026. Earlier assignment/count snapshots below are retained as dated history and are superseded by the current machine registry and capability register.
+
+The immediate packet is recorded in [PR 378](https://github.com/edithatogo/kairos/pull/378) and the [implementation record](frontier-implementation-20261107.md). Final merge/check status is read from that PR; no phase or release is inferred from a source commit.
+
+## Historical status records
+
 ## Current Track48/49 acceptance — 3 November 2026
 
 Track48 and49 are **Done for the documented bounded native scope**. Root chat

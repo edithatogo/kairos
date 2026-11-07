@@ -5,6 +5,22 @@ gates and registry submission workflows.
 
 Create ecosystem-specific subdirectories only when the corresponding binding or native artifact has a real package manifest.
 
+## Rust-only runtime gate
+
+No package may advertise or activate a non-Rust simulation core. The old host
+schedulers are retired, including in alpha artifacts. Python/TypeScript/C#
+execution requires a built Rust native/Wasm artifact and actual execution
+coverage; Go/R/Julia currently provide metadata/data surfaces without a
+qualified runtime. See [binding support](../bindings/README.md) and the
+[machine-readable runtime inventory](../bindings/runtime-policy.json).
+
+Building an archive, importing a package, parsing a conformance fixture or
+finding a library file does not satisfy native runtime acceptance. Required
+native jobs must fail when their artifact is missing. Package publication
+requires artifact provenance, ABI checks, an explicitly supported platform
+matrix and consumer execution evidence. Dry-run manifests below are inventory
+and packaging evidence only; they do not override these capability limits.
+
 ## R2 dry-run package inventory
 
 `packaging/release-package-manifest.json` is the local source of truth for the

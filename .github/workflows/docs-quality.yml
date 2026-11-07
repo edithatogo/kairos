@@ -17,10 +17,13 @@ on:
       - 'tests/http-cache-security-regression.mjs'
       - 'scripts/prepare_mermaid_runtime.mjs'
       - 'tests/mermaid-runtime.test.mjs'
+      - 'tests/docs-link-remap.test.mjs'
       - 'tools/docs-quality-node-tools/package.json'
       - 'tools/docs-quality-node-tools/package-lock.json'
       - '*.md'
       - '**/*.mmd'
+      - 'conductor/**'
+      - 'tests/conformance/frontier-evidence-check.mjs'
       - 'docs/**'
       - 'website/**'
       - 'bindings/**'
@@ -51,6 +54,10 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '26.13.0'
+      - name: Verify capability evidence and generated status documentation
+        run: |
+          node --test tests/conformance/frontier-evidence-check.mjs
+          node scripts/validation/validate-frontier-evidence.mjs
       - name: Install website dependencies
         env:
           PYTHONDONTWRITEBYTECODE: '1'
@@ -112,9 +119,19 @@ jobs:
         uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
         with:
           # Website installation now precedes this step; npm dependency docs are not repository docs.
-          args: --verbose --no-progress --cache --max-cache-age 1d --exclude-path '(^|/)node_modules/' './*.md' './docs/**/*.md' './website/**/*.md'
+          # Validate main source links against this candidate before its new files reach main.
+          # Exact-prefix remapping checks local existence; other refs/repos stay online.
+          # https://lychee.cli.rs/recipes/local-folder/
+          args: >-
+            --verbose --no-progress --cache --max-cache-age 1d
+            --exclude-path '(^|/)node_modules/'
+            --remap '^https://github\.com/edithatogo/kairos/blob/main/ file://${{ github.workspace }}/'
+            './*.md' './docs/**/*.md' './website/**/*.md'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Verify candidate source-link remapping
+        # The pinned composite Lychee action installs its binary on GITHUB_PATH.
+        run: node --test tests/docs-link-remap.test.mjs
       - name: Save Lychee cache
         if: always()
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0

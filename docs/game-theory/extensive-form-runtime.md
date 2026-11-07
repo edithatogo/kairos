@@ -1,5 +1,9 @@
 # Extensive-Form Graph-ECS Runtime & Solvers
 
+This page covers graph representation and backward induction for supported
+perfect-information games. Information-set storage alone does not establish
+general imperfect-information solving; see [CFR scope and S04 qualification](equilibrium-and-cfr-solvers.md).
+
 ## Overview
 
 Track 61 implements extensive-form game representations and backward induction solvers over KairoECS's flat component stores. Games are represented as directed trees or DAGs composed of decision nodes, chance nodes, action edges, information sets, and terminal utility allocations.
@@ -20,7 +24,9 @@ Under the `graph-relations` feature, `kairo_ecs_game_theory::extensive_form` pro
 ## Solvers
 
 ### 1. Backward Induction Solver
+
 `BackwardInductionSolver` solves finite perfect-information sequential games by recursively finding optimal actions from the terminal leaves back to the root:
+
 ```rust
 use kairo_ecs_game_theory::extensive_form::BackwardInductionSolver;
 
@@ -30,12 +36,17 @@ println!("Expected payoff: {:?}", solution.expected_payoff);
 ```
 
 ### 2. Chance-Weighted Backward Induction Solver
+
 `ChanceWeightedBackwardInductionSolver` handles extensive-form games containing chance/stochastic nodes (such as card deals, dice rolls, or uncertain nature states):
+
 - Aggregates expected utilities across all chance branches weighted by outcome probabilities.
 - Maximizes expected payoffs at decision nodes based on downstream chance expectations.
 
 ## Multi-Game Certification
 
-End-to-end certification scenarios combining normal-form matrix games and extensive-form graph games are verified through:
+The following validator checks scenario metadata and source constraints. Its
+self-test does not execute the listed games or prove generalized solver behavior;
+independent native execution and mathematical validation remain separate gates.
+
 - `node scripts/validation/validate-multigame-certification.mjs --self-test`
 - Manifest: `conductor/game-theory-evidence/templates/track61-multigame-certification.json`

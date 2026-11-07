@@ -1,120 +1,53 @@
-test_that("package metadata is available", {
+test_that("package metadata does not claim runtime readiness", {
   info <- kairoecs_package_info()
-
-  expect_type(info, "list")
   expect_identical(info$package, "kairoECS")
   expect_identical(info$surface, "bindings/r")
-  expect_identical(info$track, "07-r-binding")
-})
-
-test_that("surface readiness check passes", {
-  expect_true(kairoecs_surface_ready())
-})
-
-test_that("native FFI status is explicit", {
+  expect_false(kairoecs_surface_ready())
   status <- kairoecs_ffi_status()
-
   expect_false(status$configured)
-  expect_true(grepl("not configured", status$reason, fixed = TRUE))
+  expect_false(status$fallback_supported)
   expect_true(is.na(status$abi))
 })
 
-test_that("scheduler dispatch order is deterministic", {
-  scheduler <- kairoecs_new_scheduler(run_id = "smoke")
-  scheduler <- kairoecs_schedule_at(scheduler, 10, "late", priority = 1)
-  scheduler <- kairoecs_schedule_at(scheduler, 5, "first", priority = 0)
-  scheduler <- kairoecs_schedule_at(scheduler, 10, "same-time-earlier-priority", priority = 0)
-  scheduler <- kairoecs_run_until(scheduler, 10)
-
-  log <- kairoecs_event_log(scheduler)
-  expect_identical(log$event_kind, c("first", "same-time-earlier-priority", "late"))
-  expect_identical(log$status, rep("dispatched", 3))
-  expect_identical(log$sequence, c("2", "3", "1"))
+test_that("all legacy runtime operations require Rust", {
+  expect_error(kairoecs_new_scheduler(), class = "kairoecs_native_required")
+  fabricated <- structure(list(), class = "kairoecs_scheduler")
+  expect_error(kairoecs_schedule_at(fabricated, 1, "event"), class = "kairoecs_native_required")
+  expect_error(kairoecs_cancel_event(fabricated, 1), class = "kairoecs_native_required")
+  expect_error(kairoecs_run_until(fabricated, 1), class = "kairoecs_native_required")
+  expect_error(kairoecs_event_log(fabricated), class = "kairoecs_native_required")
 })
 
-test_that("scheduler rejects unknown duplicate and dispatched cancellation", {
-  scheduler <- kairoecs_new_scheduler(run_id = "cancel")
-  scheduler <- kairoecs_schedule_at(scheduler, 1, "dispatched")
-  scheduler <- kairoecs_schedule_at(scheduler, 2, "cancelled")
+# Explicit data fixtures avoid presenting host-generated rows as Rust execution.
+data_fixture <- function() data.frame(
+  schema_version = 2L, run_id = "data-only", event_id_index = "18446744073709551615", event_id_gen = 3,
+  entity_id_index = "42", entity_id_gen = 2,
+  time_ticks_hi = "0", time_ticks_lo = "9007199254740993", time_scale = "ticks", priority = 0L,
+  sequence = "0", event_kind = "event", status = "dispatched", payload_ref = NA_character_
+)
 
-  expect_error(kairoecs_cancel_event(scheduler, 999), "not pending")
-
-  scheduler <- kairoecs_cancel_event(scheduler, 2)
-  expect_error(kairoecs_cancel_event(scheduler, 2), "not pending")
-
-  scheduler <- kairoecs_run_until(scheduler, 1)
-  expect_error(kairoecs_cancel_event(scheduler, 1), "not pending")
-
-  log <- kairoecs_event_log(scheduler)
-  expect_identical(log$status, c("dispatched", "cancelled"))
-})
-
-test_that("event log roundtrip preserves the v2 schema facade", {
-  scheduler <- kairoecs_new_scheduler(run_id = "roundtrip", time_scale = "ticks")
-  scheduler <- kairoecs_schedule_at(scheduler, 1, "arrive", entity_id = 42)
-
-  log <- kairoecs_arrow_roundtrip(kairoecs_event_log(scheduler))
-
+test_that("event log conversion preserves exact external decimal IDs and ticks", {
+  log <- kairoecs_arrow_roundtrip(data_fixture())
   expect_identical(attr(log, "kairoecs_schema"), "kairo_ecs.event_log.v2")
-  expect_identical(
-    names(log),
-    c(
-      "schema_version", "run_id", "event_id_index", "event_id_gen",
-      "entity_id_index", "entity_id_gen", "time_ticks_hi", "time_ticks_lo",
-      "time_scale", "priority", "sequence", "event_kind", "status", "payload_ref"
-    )
-  )
-  expect_identical(log$run_id, "roundtrip")
-  # Null-together generational entity columns, projected explicitly.
-  expect_identical(log$entity_id_index, "42")
-  expect_identical(log$entity_id_gen, 0)
-  expect_identical(log$time_ticks_hi, "0")
-  expect_identical(log$time_ticks_lo, "1")
+  expect_identical(log$event_id_index, "18446744073709551615")
+  expect_identical(log$time_ticks_lo, "9007199254740993")
+  expect_identical(log$entity_id_gen, 2)
+  expect_error(kairoecs_arrow_roundtrip(data.frame()), "missing required fields")
 })
 
-test_that("out-of-range ticks and entity ids reject explicitly", {
-  scheduler <- kairoecs_new_scheduler(run_id = "bounds")
-
-  # Exactly 2^53 is representable and stays exact through the limb projection.
-  bounded <- kairoecs_schedule_at(scheduler, 2^53, "boundary")
-  expect_identical(bounded$events$time_ticks_hi, "0")
-  expect_identical(bounded$events$time_ticks_lo, "9007199254740992")
-
-  expect_error(
-    kairoecs_schedule_at(scheduler, 2^60 + 1, "too-large"),
-    "exceeds the pure-R facade's exact precision limit",
-    fixed = TRUE
-  )
-  expect_error(
-    kairoecs_schedule_at(scheduler, 1, "entity-too-large", entity_id = 2^60 + 1),
-    "exceeds the pure-R facade's exact precision limit",
-    fixed = TRUE
-  )
-  expect_error(
-    kairoecs_schedule_at(scheduler, 1, "entity-negative", entity_id = -3),
-    "must be a single non-negative integer value",
-    fixed = TRUE
-  )
+test_that("a file is not evidence of a loaded native ABI", {
+  artifact <- tempfile()
+  writeLines("not a library", artifact)
+  on.exit(unlink(artifact))
+  status <- kairoecs_native_library_loader(artifact)
+  expect_true(status$artifact_present)
+  expect_false(status$available)
+  expect_false(status$arrow_c_data_interface_supported)
 })
 
-test_that("optional Arrow roundtrip preserves the v2 schema facade", {
+test_that("optional Arrow conversion preserves the external data fixture", {
   testthat::skip_if_not_installed("arrow")
-
-  scheduler <- kairoecs_new_scheduler(run_id = "arrow-roundtrip", time_scale = "ticks")
-  scheduler <- kairoecs_schedule_at(scheduler, 1, "arrive", entity_id = 42)
-
-  log <- kairoecs_arrow_roundtrip(kairoecs_event_log(scheduler), use_arrow = TRUE)
-
-  expect_identical(attr(log, "kairoecs_schema"), "kairo_ecs.event_log.v2")
-  expect_identical(
-    names(log),
-    c(
-      "schema_version", "run_id", "event_id_index", "event_id_gen",
-      "entity_id_index", "entity_id_gen", "time_ticks_hi", "time_ticks_lo",
-      "time_scale", "priority", "sequence", "event_kind", "status", "payload_ref"
-    )
-  )
-  expect_identical(log$run_id, "arrow-roundtrip")
-  expect_identical(log$event_kind, "arrive")
-  expect_equal(log$entity_id_index, "42")
+  log <- kairoecs_arrow_roundtrip(data_fixture(), use_arrow = TRUE)
+  expect_identical(log$event_id_index, "18446744073709551615")
+  expect_identical(log$time_ticks_lo, "9007199254740993")
 })

@@ -1,10 +1,11 @@
-# Go Packaging
+# Go packaging
 
-Track 42 owns Go module publication. Track 11 still owns the local Go module
-validation slice: it validates the Go module, the pure-Go scheduler facade, and
-the cgo header-smoke boundary.
+Track 11 owns binding behavior and Track 42 owns publication. The pure-Go
+scheduler is retired; default and native engine constructors explicitly fail
+until a Rust bridge is qualified. cgo header tests are compatibility evidence,
+not engine execution.
 
-Go module publication now uses annotated semantic tags under the Track 42
-publication gate. Module-proxy publication, release tags, signing, and
-credentials remain gated on the protected publication workflow and release
-approval.
+Any metadata-only module publication must state that runtime support is
+unavailable. A runtime release requires an actual Rust adapter, packaged
+artifacts and native consumer tests. See
+[the binding guide](../../bindings/go/README.md).

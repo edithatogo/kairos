@@ -19,9 +19,12 @@ const html = `<!doctype html>
     NativeWasmNotConfiguredError,
   } from "/dist/index.js";
 
-  const scheduler = createSchedulerFacade();
-  scheduler.scheduleAt({ timeTicks: 2n, priority: 0, eventKind: "browser" });
-  const [event] = scheduler.runFor(1);
+  let schedulerErrorName = "";
+  try {
+    createSchedulerFacade();
+  } catch (error) {
+    schedulerErrorName = error.name;
+  }
 
   let wasmErrorName = "";
   try {
@@ -33,8 +36,7 @@ const html = `<!doctype html>
   globalThis.__kairoSmoke = {
     packageName: createBindingSurfaceInfo({ runtimeTargets: ["browser"] }).packageName,
     runtimeTargets: createBindingSurfaceInfo({ runtimeTargets: ["browser"] }).runtimeTargets,
-    eventKind: event.eventKind,
-    now: scheduler.currentTimeTicks.toString(),
+    schedulerErrorName,
     wasmErrorName,
   };
 </script>`;
@@ -82,8 +84,7 @@ try {
 
   assert.equal(result.packageName, "@kairo-ecs/typescript");
   assert.deepEqual(result.runtimeTargets, ["browser"]);
-  assert.equal(result.eventKind, "browser");
-  assert.equal(result.now, "2");
+  assert.equal(result.schedulerErrorName, "UnsupportedCoreError");
   assert.equal(result.wasmErrorName, "NativeWasmNotConfiguredError");
 } finally {
   await browser?.close();

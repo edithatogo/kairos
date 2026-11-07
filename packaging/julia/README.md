@@ -1,13 +1,10 @@
-# Julia Packaging Notes
+# Julia packaging
 
-Track 42 owns release publication for this directory. Track 15 remains the dry-
-run inventory base, and Track 08 owns the local Julia binding validation slice
-under `bindings/julia/` and may consume this note as packaging context only.
+This package currently provides metadata and event-log DTO/data conversion.
+It has no qualified Rust engine adapter. Smoke-byte roundtrips are data tests;
+they are not Arrow IPC, native execution or performance evidence.
 
-The Julia package is intentionally local-only for this slice. Registry
-publication, package-server automation, and native library artifact packaging
-remain deferred to Track 42 and the Track 02 FFI artifact handoff.
-
-Track 08 now exposes a dependency-light event-log smoke payload in
-`bindings/julia` so package tests can cover the Arrow schema boundary before
-Julia Artifacts and native Arrow.jl IPC packaging are enabled.
+Runtime publication requires Rust library artifacts, ABI/lifetime validation
+and native consumer execution tests. See
+[the binding guide](../../bindings/julia/README.md). Track 08 owns binding
+behavior, Track 15 inventory and Track 42 publication gates.

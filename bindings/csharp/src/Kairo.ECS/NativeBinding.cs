@@ -7,6 +7,7 @@ namespace Kairo.ECS;
 /// </summary>
 public static class NativeBinding
 {
+    private const string NativeLibraryVariable = "KAIRO_ECS_FFI_LIBRARY";
     private const string NativeDirectoryVariable = "KAIRO_ECS_NATIVE_LIB_DIR";
 
     /// <summary>
@@ -35,6 +36,18 @@ public static class NativeBinding
     /// </summary>
     public static NativeBindingStatus GetStatus()
     {
+        var explicitLibrary = Environment.GetEnvironmentVariable(NativeLibraryVariable);
+        if (!string.IsNullOrWhiteSpace(explicitLibrary))
+        {
+            if (Path.IsPathFullyQualified(explicitLibrary) && File.Exists(explicitLibrary))
+            {
+                return new NativeBindingStatus(true, explicitLibrary,
+                    $"Resolved explicit file from {NativeLibraryVariable}; ABI execution is not yet verified.");
+            }
+            return new NativeBindingStatus(false, null,
+                $"{NativeLibraryVariable} must identify an existing absolute Rust shared-library file.");
+        }
+
         var configuredDirectory = Environment.GetEnvironmentVariable(NativeDirectoryVariable);
         if (!string.IsNullOrWhiteSpace(configuredDirectory))
         {
@@ -62,6 +75,6 @@ public static class NativeBinding
         return new NativeBindingStatus(
             false,
             null,
-            $"Native FFI is not configured. Set {NativeDirectoryVariable} or include runtimes/{RuntimeInformation.RuntimeIdentifier}/native/{PlatformLibraryName}.");
+            $"Native FFI is not configured. Set {NativeLibraryVariable}, {NativeDirectoryVariable} or include runtimes/{RuntimeInformation.RuntimeIdentifier}/native/{PlatformLibraryName}.");
     }
 }

@@ -6,11 +6,12 @@ import kairo_ecs
 
 
 def test_event_log_batch_round_trips_smoke_bytes() -> None:
-    scheduler = kairo_ecs.Scheduler()
-    scheduler.schedule_at(42, priority=-3, kind=5)
-    outcome, event = scheduler.step()
-    assert outcome is kairo_ecs.StepOutcome.DISPATCHED
-    assert event is not None
+    # Static input record for data-conversion testing, not engine execution.
+    event = kairo_ecs.DispatchedEvent(
+        id=kairo_ecs.EventId(0, 0),
+        at=kairo_ecs.SimTime.from_ticks(42), priority=-3,
+        sequence=0, kind=5,
+    )
 
     record = kairo_ecs.EventLogRecord.dispatched("run-1", event)
     batch = kairo_ecs.EventLogBatch([record])
@@ -25,11 +26,12 @@ def test_event_log_batch_round_trips_smoke_bytes() -> None:
 def test_event_log_batch_round_trips_pyarrow_table() -> None:
     pytest.importorskip("pyarrow", exc_type=ModuleNotFoundError)
 
-    scheduler = kairo_ecs.Scheduler()
-    scheduler.schedule_at(42, priority=-3, kind=5)
-    outcome, event = scheduler.step()
-    assert outcome is kairo_ecs.StepOutcome.DISPATCHED
-    assert event is not None
+    # Static input record for data-conversion testing, not engine execution.
+    event = kairo_ecs.DispatchedEvent(
+        id=kairo_ecs.EventId(0, 0),
+        at=kairo_ecs.SimTime.from_ticks(42), priority=-3,
+        sequence=0, kind=5,
+    )
 
     batch = kairo_ecs.EventLogBatch([kairo_ecs.EventLogRecord.dispatched("run-1", event)])
     table = batch.to_pyarrow_table()
@@ -64,11 +66,12 @@ def test_event_log_schema_matches_track_04_order() -> None:
 def test_event_log_batch_round_trips_generation_entities_and_tick_limbs() -> None:
     pytest.importorskip("pyarrow", exc_type=ModuleNotFoundError)
 
-    scheduler = kairo_ecs.Scheduler()
-    scheduler.schedule_at(42, priority=-3, kind=5)
-    outcome, event = scheduler.step()
-    assert outcome is kairo_ecs.StepOutcome.DISPATCHED
-    assert event is not None
+    # Static input record for data-conversion testing, not engine execution.
+    event = kairo_ecs.DispatchedEvent(
+        id=kairo_ecs.EventId(0, 0),
+        at=kairo_ecs.SimTime.from_ticks(42), priority=-3,
+        sequence=0, kind=5,
+    )
 
     record = kairo_ecs.EventLogRecord.dispatched("run-1", event)
     record = kairo_ecs.EventLogRecord(

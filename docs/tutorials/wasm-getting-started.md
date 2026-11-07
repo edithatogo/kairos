@@ -1,72 +1,57 @@
 # Wasm And TypeScript Getting Started
 
-This tutorial explains the current TypeScript facade and the explicit boundary
-around native Wasm loading.
+TypeScript is an adapter to Rust-compiled WebAssembly. The former in-memory
+scheduler and host-only time-travel inspector are unsupported immediately under
+[ADR 0010](../adr/0010-rust-only-execution.md).
 
-## What exists now
+## Build the native module
 
-The TypeScript package in `bindings/typescript/` currently exposes a
-browser-smoke-safe facade:
+Follow the [TypeScript binding README](../../bindings/typescript/README.md) for
+the supported Node runtime, lockfile and Rust/Wasm build steps. The Rust export
+source is [kairo-ecs-wasm](../../crates/kairo-ecs-wasm/src/lib.rs). Build it with
+its `wasm-export` feature and serve the generated JavaScript and Wasm files.
 
-- `createSchedulerFacade()` creates an in-memory scheduler facade;
-- `scheduleAt(...)`, `scheduleAfter(...)`, `cancel(...)`, `step()`, and
-  `runFor(...)` model deterministic scheduler behavior;
-- `snapshot()` exposes queued, dispatched, and cancelled events;
-- `eventLog(runId)` emits rows shaped for the `kairo_ecs.event_log.v1` boundary;
-- `nativeWasmStatus()` returns `not-configured` unless a loader is supplied.
-
-That `not-configured` state is intentional. It avoids implying that a generated
-Wasm artifact is available before Track 09 wires native artifacts.
-
-## Minimal facade use
-
-From `bindings/typescript`, run the package checks when Node dependencies are
-available:
-
-```powershell
-npm run typecheck
-npm test
-npm run build
-```
-
-The facade shape is:
+The configured URL below is an example deployment location, not a file shipped
+with the source package:
 
 ```ts
-import { createSchedulerFacade, nativeWasmStatus } from "@kairo-ecs/typescript";
+import { WasmBridgeLoader } from "@kairo-ecs/typescript";
 
-const scheduler = createSchedulerFacade();
-const scheduled = scheduler.scheduleAt({
-  timeTicks: 10,
-  priority: 0,
-  eventKind: "arrival",
+const engine = await WasmBridgeLoader.loadWasmEngine({
+  wasmModulePath: "/generated/kairo_ecs_wasm.js",
 });
-
-const cancelled = scheduler.cancel(scheduled.eventId);
-const status = nativeWasmStatus();
-
-console.log(cancelled, status.status);
+try {
+  const eventHandle = engine.schedule_at(10n, 0, 1);
+  console.log(eventHandle, engine.run_for(1n));
+  console.log(engine.stats_json());
+} finally {
+  engine.free();
+}
 ```
 
-Expect `status.status` to be `not-configured` unless a generated loader is
-provided by a later runtime slice.
+The loader initializes the generated module and checks its engine surface and
+ABI. Rust `u64` values use JavaScript `bigint`; do not convert event handles to
+floating-point numbers. An unavailable or incompatible module fails explicitly.
+A status of `not-configured` means no native runtime is configured; it never
+enables a host-language scheduler fallback.
 
-## Learning path
+## Qualification boundaries
 
-1. Read `bindings/typescript/README.md`.
-2. Read `bindings/typescript/src/index.ts` for the facade contract.
-3. Read `bindings/typescript/test/index.test.ts` for current behavior examples.
-4. Review [playground intent](../community/playground.md) before describing
-   browser demos.
+The supported learning path is scheduling, bounded execution and native stats.
+The presence of a snapshot-shaped object or a history counter does not establish
+state restoration, reversible execution or causal provenance. The earlier
+`createSchedulerFacade` and `TimeTravelInspectorClient` APIs are retired.
 
-## Example cross-links
+Run the binding's type, unit and native browser/Wasm acceptance checks for the
+actual generated artefact. Preserve the Rust revision, generated module hash,
+browser/Node version and execution output. A mocked loader or passing JavaScript
+unit test proves only its own boundary.
 
-- [Documentation example index](../../examples/docs/README.md)
-- [Visualization snapshot example](../../examples/viz/headless-snapshot/Cargo.toml)
-- [Event log telemetry example](../../examples/telemetry/README.md)
-- [Debug trace format](../debugging/trace-format.md)
+## Continue
 
-## Claim boundary
+- [Installation](../install.md) and [current capabilities](../current-state.md).
+- [Playground intent](../community/playground.md) and [headless snapshot example](../../examples/viz/headless-snapshot/Cargo.toml).
+- [Telemetry example](../../examples/telemetry/README.md) and [debug trace format](../debugging/trace-format.md).
+- [Track 109](../../conductor/tracks/109-rust-only-runtime/plan.md) for complete native adapter acceptance.
 
-This page does not claim native Wasm runtime support, hosted browser demos, or
-published npm availability. It documents the checked-in TypeScript facade and
-the loader contract.
+Registry publication and browser/hardware support remain release-gated.

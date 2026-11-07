@@ -29,7 +29,9 @@ public static class NativeMethods
             return NativeLibrary.Load(status.LibraryPath, assembly, searchPath);
         }
 
-        return IntPtr.Zero;
+        // Returning zero here would allow .NET's ambient library search to
+        // override a missing or invalid explicit Rust artifact configuration.
+        throw new DllNotFoundException(status.Reason);
     }
 
     /// <summary>

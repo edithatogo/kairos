@@ -1,15 +1,11 @@
-# R Packaging
+# R packaging
 
-Track 42 owns release publication for this directory. Track 15 remains the dry-
-run inventory base, and Track 07 owns the local R binding validation slice
-under `bindings/r/`. Release publication, registry automation, and native
-runtime artifact packaging remain gated on the publication and release tracks.
+The package currently contains metadata/data conversion and explicit errors for
+retired pure-R scheduler operations. It has no qualified native execution
+adapter. Base-R, testthat and optional Arrow conversion checks do not establish
+engine acceptance.
 
-Current local packaging gate:
-
-- `Rscript` is available through the local Scoop R installation.
-- Base-R and `testthat` package smoke checks are runnable from `bindings/r/`.
-- `Rcmd check --no-manual r` is the preferred Windows check command from
-  `bindings/`, because `R` can resolve to PowerShell history aliases.
-- Optional Arrow-backed roundtrip coverage is present in the test suite and is
-  skipped unless the R `arrow` package is installed.
+A runtime release requires a Rust FFI adapter, verified native artifacts,
+lifetime/error handling and real execution tests. See
+[the binding guide](../../bindings/r/README.md). Track 07 owns binding behavior,
+Track 15 packaging inventory, and Track 42 publication gates.

@@ -1,7 +1,8 @@
 using JSON3
 using Test
 
-@testset "conformance fixtures" begin
+# Fixture metadata only; no Rust runtime execution is claimed.
+@testset "conformance fixture metadata" begin
     deterministic = JSON3.read(read("conformance/fixtures/deterministic_ordering.json", String))
     @test deterministic.version == 1
     @test deterministic.expected_kind_order == [1, 2, 4, 3]

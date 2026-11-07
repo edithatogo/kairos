@@ -1,5 +1,7 @@
 # KairoECS Tracks Index
 
+**Current capability qualification:** use [the capability register](capabilities.md), [Rust-only policy](native-only-policy.md) and [release gates](release-gates.md). Historical Done labels describe accepted slices at their recorded source; they do not establish current scientific correctness, complete language support or release readiness. Tracks 109–115 coordinate the 7 November 2026 programme.
+
 This file is the human-readable Conductor status index. Keep it in lockstep with `conductor/tracks.yaml`, which is the authoritative machine-readable source for status, ownership, dependencies, paths, and gates.
 
 | Track | Name | Status | Primary subagent | Artifact |
@@ -114,6 +116,13 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 106 | Scheduler Preview API Compatibility | Done | `core-api-agent + conformance-agent + api-governance-agent` | See [archived record](archive/106-scheduler-preview-compatibility/index.md) |
 | 107 | CareOps staged allocation flow compatibility | Done | `des-api-agent + conformance-agent + api-governance-agent` | See `conductor/tracks/107-*/spec.md` |
 | 108 | Scientific ecosystem alignment | Blocked | `api-governance-agent` | See `conductor/tracks/108-*/spec.md` |
+| 109 | Rust-only runtime and native binding enforcement | In Progress | `ffi-agent + api-governance-agent` | [Plan](tracks/109-rust-only-runtime/plan.md) |
+| 110 | Scientific method and advanced capability completion | Spec Approved | `vv-uq-agent + game-theory-agent + ml-integration-agent` | [Plan](tracks/110-scientific-method-completion/plan.md) |
+| 111 | Measured performance and parallel execution improvement | Spec Approved | `performance-agent + pdes-agent` | [Plan](tracks/111-measured-performance/plan.md) |
+| 112 | Capability evidence and claim automation | In Progress | `conformance-agent + docs-agent + ci-agent` | [Plan](tracks/112-evidence-and-claim-automation/plan.md) |
+| 113 | Beta and stable release qualification | Spec Approved | `release-agent + api-governance-agent + security-agent` | [Plan](tracks/113-beta-and-stable-release/plan.md) |
+| 114 | Maintained dependencies and independent consumer contracts | Spec Approved | `api-governance-agent + core-scheduler-agent` | [Plan](tracks/114-dependency-and-consumer-contracts/plan.md) |
+| 115 | Frontier research experiments and reproducible evidence | Spec Approved | `research-agent + vv-uq-agent + performance-agent` | [Plan](tracks/115-frontier-experiments/plan.md) |
 
 ## Track status vocabulary
 

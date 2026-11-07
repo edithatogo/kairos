@@ -19,62 +19,152 @@ date: 2026-05-05
 bibliography: paper.bib
 ---
 
+# Draft status and evidence boundary
+
+This manuscript is a work in progress, updated on 7 November 2026. It describes
+implemented source and bounded software qualification, not a completed
+comparative performance study or independent empirical validation of application
+models. The [current-state review](https://github.com/edithatogo/kairos/blob/main/docs/current-state.md)
+and [capability register](https://github.com/edithatogo/kairos/blob/main/conductor/capabilities.json)
+identify known limitations and the evidence needed before stronger claims.
+
 # Summary
 
-`KairoECS` is a high-performance, deterministic, multi-method simulation engine implemented in Rust. It unifies Discrete-Event Simulation (DES) [@zeigler2000theory] and Agent-Based Modeling (ABM) [@north2013complex; @masad2015mesa] into a single, cohesive framework by combining a deterministic event-first scheduling kernel with an Entity-Component-System (ECS) data architecture. 
+KairoECS is an alpha Rust simulation engine combining discrete-event simulation
+(DES) and agent-based modelling (ABM). Its design brings ordered event scheduling,
+entity/component state, resource queues, spatial operations and versioned random
+streams into a modular workspace. DES and ABM provide complementary ways to
+represent systems in which individual behaviour interacts with shared queues and
+capacity constraints [@zeigler2000theory; @north2013complex; @masad2015mesa].
 
-In complex socio-technical systems—such as healthcare delivery, logistics networks, epidemiological interventions, and ecological resource management—individual decision-makers interact with shared operational infrastructure, queues, and resource constraints. Traditional modeling approaches force researchers to choose between discrete-event queuing engines or autonomous agent models. `KairoECS` bridges this methodological divide, enabling fine-grained individual agent behaviors to directly interact with priority-driven discrete-event queues without sacrificing performance or execution determinism.
-
-The planned target metadata version for the engine is `0.4.0-alpha.1`, with public source code, issue tracking, and contribution workflows hosted at `https://github.com/edithatogo/kairos`. `KairoECS` is registered in the SciCrunch Resource Identification Portal under persistent identifier `RRID:SCR_029085`.
+The [v0.4.0-alpha.1 prerelease](https://github.com/edithatogo/kairos/releases/tag/v0.4.0-alpha.1)
+was published on 18 October 2026. Later default-branch work remains experimental.
+The repository, issue tracker and contribution workflow are hosted at
+<https://github.com/edithatogo/kairos>. Release of a source snapshot does not imply
+publication or native qualification of every language package.
 
 # Statement of Need
 
-Scientific computational modeling requires reproducible, auditable, and performant tools capable of scaling from local analytical workflows to High-Performance Computing (HPC) clusters. However, existing computational simulation ecosystems face significant structural limitations:
+Models of healthcare operations, logistics and population behaviour often need
+both operational resources and individual decisions. Researchers also need to
+record input data, seed policy, numerical assumptions and model version so that
+results can be inspected and reproduced. A reusable simulation engine can reduce
+the amount of scheduling, state and data-exchange code each application maintains.
+It cannot replace domain-specific model design or validation against observations.
 
-1. **Paradigm Fragmentation:** Popular modeling environments typically support either pure discrete-event queuing or agent-based interaction, forcing unnatural architectural compromises when modeling hybrid systems (e.g., patient decision-making in hospital emergency departments).
-2. **Interpreter Overhead:** Python- and Java-based platforms often encounter severe performance bottlenecks when scaling to millions of concurrent agents or high-frequency event loops, restricting the feasibility of extensive sensitivity analysis and parameter calibration.
-3. **Reproducibility Gaps:** Lack of strict seed-level determinism, cross-platform float inconsistencies, and opaque internal memory states make bit-for-bit replay challenging across heterogeneous operating environments.
-4. **Data Interoperability:** Exporting telemetry across language boundaries typically incurs massive serialization penalties (e.g., JSON or CSV parsing), restricting real-time visualization and machine learning surrogate training.
-
-`KairoECS` directly addresses these challenges by delivering a native Rust core that enforces `#![forbid(unsafe_code)]`, guaranteed reproducible replay schedules across platforms, columnar telemetry adapters aligned with Apache Arrow schemas [@arrow2021], and idiomatic polyglot bindings for Python, TypeScript/Wasm, R, Julia, C#, and Go.
+KairoECS explores a common Rust execution core with explicit language and data
+boundaries. Host languages can prepare inputs, orchestrate experiments and analyse
+outputs; supported simulation execution must call native Rust or Rust-compiled
+WebAssembly. Independent host-language preview cores are unsupported under
+[ADR 0010](https://github.com/edithatogo/kairos/blob/main/docs/adr/0010-rust-only-execution.md).
+This policy reduces duplicated engine semantics, but it does not make an
+unimplemented adapter complete. Missing native capabilities must fail explicitly.
 
 # State of the Field
 
-The scientific simulation ecosystem features established frameworks tailored to specific paradigms:
+Established tools address a broad range of simulation needs. SimPy provides
+process-based DES in Python [@simpy2020]. Mesa supports Python ABM
+[@masad2015mesa], NetLogo provides an agent-modelling environment
+[@wilensky1999netlogo], and Repast Simphony provides infrastructure for complex
+adaptive systems modelling [@north2013complex]. Parallel DES has a substantial
+algorithmic literature, including conservative and optimistic synchronization
+[@fujimoto1990parallel]. Apache Arrow provides standardized columnar data
+interfaces [@arrow2021].
 
-- **SimPy** [@simpy2020] provides an intuitive process-based discrete-event environment in Python. While widely adopted in operational research, its reliance on Python generators and synchronous event loops limits throughput in large-scale multi-agent experiments.
-- **NetLogo** [@wilensky1999netlogo] has served as a benchmark for educational and exploratory agent-based modeling, but its custom language and runtime scale poorly to large-scale operational pipelines and lack native HPC integration.
-- **Repast Simphony and Repast HPC** [@north2013complex] offer robust agent simulation in Java and C++/MPI. However, developing cross-language workflows remains cumbersome, and integrating modern columnar data formats requires external tooling.
-- **Mesa** [@masad2015mesa] provides an extensible Python framework for ABM with visualization capabilities, but performance limits emerge when simulating complex spatial dynamics or high-density populations without Cython or Numba extensions.
-
-`KairoECS` complements these tools by providing a modular, typed engine that combines the speed and memory safety of Rust with Arrow-aligned telemetry interoperability, enabling researchers in Python, R, and Julia to orchestrate simulations without sacrificing core execution speed.
+KairoECS should be evaluated as an additional implementation with different
+engineering choices. Language choice alone does not establish speed, model
+expressiveness, reproducibility or lower maintenance cost. This draft makes no
+measured superiority claim over these frameworks. A useful comparison requires
+equivalent model semantics, independently checked outputs, representative
+workloads, exact versions and repeated raw timings. Existing libraries also offer
+algorithms, interoperability tests and maintenance practices that can be reused
+where their contracts and dependency costs fit.
 
 # Software Design and Architecture
 
-`KairoECS` is architected as a workspace of modular crates:
+The scheduling kernel orders events by fixed-tick simulation time, priority and
+insertion sequence. `SimTime` uses an unsigned 128-bit tick representation; the
+model defines the unit. Generational entity and event identities support lifetime
+checks. Entity/component storage and DES/ABM primitives provide reusable building
+blocks for model authors. The core crate forbids unsafe Rust, while FFI and some
+optional native integrations have separately reviewed unsafe boundaries. This is
+not a workspace-wide claim that every integration contains no unsafe code.
 
-- **Deterministic Core Kernel (`kairo-ecs-core`):** Implements an event-first scheduling engine using integer-quantized virtual simulation time (`SimTime`). Event execution order is strictly deterministic, using hierarchical tie-breaking by timestamp, event priority, and unique event sequence identifiers.
-- **Entity-Component-System Storage (`kairo-ecs-state`):** Organizes world state into cache-friendly columnar component arrays rather than deep object hierarchies. Systems operate over contiguous memory slices, maximizing CPU cache utilization during agent state evaluations.
-- **Pseudo-Random Number Generation (`kairo-ecs-rng`):** Implements stateful SplitMix64 deterministic PRNG streams (`DeterministicStream`) with independent entity seed derivation, ensuring reproducible state trajectories across operating systems and compilers.
-- **Columnar Telemetry Alignment (`kairo-ecs-arrow`):** Emits field-level schema-aligned telemetry records and event logs formatted for direct export and conversion into Apache Arrow record batches, supporting downstream scientific data pipelines (Polars, DuckDB, Arrow).
-- **Parallel and Distributed Engines (`kairo-ecs-pdes`, `kairo-ecs-mpi`):** Provides Conservative (Chandy-Misra-Bryant) and Optimistic (Time Warp) parallel discrete-event simulation algorithms [@fujimoto1990parallel] with rollback mechanisms and distributed state synchronization.
-- **Polyglot Foreign Function Interface (`kairo-ecs-ffi`):** Exposes C-ABI, UniFFI, Diplomat, and WebAssembly targets, powering native packages for Python (`pyarrow`), TypeScript/JavaScript (WebAssembly/WebGPU), R, Julia, C#, and Go.
+The current RNG implementation uses versioned ChaCha8 streams and explicit
+checkpoint/replay contracts. Reproduction depends on recording the RNG version
+and model execution semantics, not only a seed. Exact discrete event order,
+floating-point agreement within a declared tolerance and statistical agreement
+are different contracts; this paper does not promise universal bit-for-bit
+cross-platform model replay.
 
-# Research Impact and Application Scenarios
+Optional data features use maintained Arrow/Polars implementations and expose
+columnar interchange paths. Each consumer, format and ownership boundary needs
+qualification. Converting host-language DTOs into an Arrow table does not prove
+zero-copy transfer from the Rust engine. Functions and structures named for a
+format must also be checked against their actual byte representation.
 
-`KairoECS` is designed to support research across diverse computational domains:
+Conservative and optimistic PDES, MPI/gRPC transports, GPU kernels and FMI
+integration extend the execution surface. Bounded native evidence exists for
+some paths. A deployment template, a backend trait or a synthetic fixture is not
+proof of real hardware execution, interoperability or scaling. Applications such
+as `careops-sim` keep their domain models and policy outside Kairos and consume a
+versioned engine dependency.
 
-- **Healthcare Operations and Capacity Management:** Simulating emergency department crowding, elective surgical scheduling, and inpatient bed allocation, where patient behavioral choices (abandonment, treatment compliance) intersect with physical resource constraints (operating theaters, nursing shifts).
-- **Epidemiological Interventions:** Modeling infectious disease transmission across spatial contact networks while simultaneously tracking hospital bed availability, diagnostic queue wait-times, and vaccine distribution logistics.
-- **Algorithmic Game Theory and Economic Systems:** Evaluating strategic agent interactions, mechanism design, and regulatory compliance under inspection constraints and incomplete information.
-- **Digital Twins and Co-Simulation:** Interfacing with physical equipment models through the Functional Mock-up Interface (FMI 2.0/3.0) and Asset Administration Shell (AAS) connectors.
+# Verification and Evaluation
+
+At reviewed source `d56863505d938feb069af88a737eb7668113d14b`, the
+[hosted Rust verification job](https://github.com/edithatogo/kairos/actions/runs/41658006983/job/126030245516)
+reported 994 passing tests, 1,161/1,239 core lines covered (93.70%), and native MPI
+smoke runs at two and four ranks. These results belong to that revision and job
+matrix. Platform/feature exclusions still limit what executed. Coverage and test
+counts are software-verification evidence, not mathematical proof or empirical
+model validity.
+
+A [retained conservative-PDES benchmark](https://github.com/edithatogo/kairos/blob/main/docs/pdes/benchmark-results.md)
+measured five samples per configuration on an Apple M1 Max at source
+`45f01c49be1d15cefb64ad48e59ee0a7e4146b3e`. Its small ring workloads were
+substantially slower than the equivalent sequential Rust scheduler. Repeated
+worker creation and synchronization are identified costs to investigate. Those
+measurements establish execution and state parity within their workload; they
+do not establish general parallel speedup or a ranking against other engines.
+The [scaling-report correction](https://github.com/edithatogo/kairos/blob/main/docs/benchmarks/scaling-certification-report.md)
+explicitly excludes generated placeholder efficiency and speedup figures from
+performance evidence.
+
+# Limitations and Completion Work
+
+Scientific extensions have uneven maturity. The numerical audit identifies a
+routine named RK4 that currently performs an Euler-style update, and the named
+Lemke-Howson path is limited to a 2×2 calculation rather than a general pivoting
+solver. Demonstration inference and vectorized environments do not establish
+actual ONNX inference or simulation-backed reinforcement learning. These are
+correctness and scope issues to fix or exclude from supported claims, not merely
+documentation polish.
+
+The [scientific completion programme](https://github.com/edithatogo/kairos/blob/main/conductor/tracks/110-scientific-method-completion/plan.md)
+requires independent analytical and differential oracles, convergence studies,
+edge cases and honest method naming. The
+[dataset plan](https://github.com/edithatogo/kairos/blob/main/conductor/validation-datasets.md)
+separates verification fixtures from empirical validation, including held-out
+evaluation and uncertainty. Research applications in healthcare, economics and
+digital twins remain intended uses until their models pass those checks.
+
+Beta and stable promotion depend on a defined supported subset, installed-native
+consumer acceptance, compatibility, measured performance, recovery, documentation
+and supply-chain gates. Frontier experiments require explicit hypotheses and
+comparison methods before claims of novelty or performance leadership.
 
 # AI Usage Disclosure
 
-In compliance with the Journal of Open Source Software author guidelines on artificial intelligence tools: Artificial intelligence coding assistants (including Anthropic Claude and Google Antigravity) were utilized during the project for test authoring, syntactic refactoring, and documentation drafting. All system architectures, theoretical formulations, algorithms, mathematical invariant proofs, and code implementations were directed, reviewed, verified, and validated by human maintainers.
+This draft has been edited with AI assistance. Before submission, maintainers
+must reconcile the disclosure with actual project history and journal policy,
+verify citations and results, and take responsibility for the final manuscript.
+No blanket claim is made that all algorithms, proofs or implementations have
+already received independent human verification or validation.
 
 # Acknowledgements
 
-The authors acknowledge the open-source communities behind the Rust language, the Apache Arrow project, and the discrete-event and agent-based simulation literature whose foundational work made this engine possible.
+The authors acknowledge the open-source communities behind Rust, Apache Arrow
+and the simulation literature and software on which this work builds.
 
 # References

@@ -365,7 +365,7 @@ $trackChecks = @(
         Path = "conductor/tracks/37-ml-ai-integration-inference/test-matrix.md"
         Needles = @(
             '`kairo-ecs-ml` compiles with `--features onnx`',
-            '`kairo_gym` Python package imports and passes Gymnasium API check (`check_env`)',
+            '`kairo_gym` rejects execution without a qualified Rust environment',
             'Feature flag isolation: each feature compiles independently (`cargo hack`)'
         )
     },

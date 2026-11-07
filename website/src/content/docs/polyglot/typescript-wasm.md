@@ -1,32 +1,41 @@
 ---
 title: TypeScript and Wasm
-description: WebAssembly simulation engine, copy-on-write time-travel inspector, and WebGPU browser studio.
+description: Load a generated Rust/Wasm engine; unavailable modules fail explicitly.
 ---
 
-The TypeScript and WebAssembly surface (`crates/kairo-ecs-wasm` and `bindings/typescript/`) brings deterministic simulation and copy-on-write time-travel debugging to Node.js 22+ and modern browsers.
+TypeScript executes the Rust core through generated WebAssembly. Independent
+JavaScript schedulers are unsupported. Supply the generated module explicitly:
 
-## Wasm & TypeScript Capabilities
+```ts
+import { WasmBridgeLoader } from "@kairo-ecs/typescript";
 
-| Class / Method | Crate / Package | Description |
-| --- | --- | --- |
-| `WasmSimulation` | `kairo-ecs-wasm` | Deterministic DES/ABM execution compiled to `wasm32-unknown-unknown` |
-| `WasmTimeTravelInspector` | `kairo-ecs-wasm` | Copy-on-write (`CowWorldSnapshot`) timeline scrubbing, entity inspection, and state diffing (`diff_frames(t1, t2)`) |
-| `KairoTimelineScrubber` | `bindings/typescript` | Browser UI controller for step-back, branch-from-tick, and breakpoint evaluation |
-
-## Example
-
-```typescript
-import { WasmTimeTravelInspector } from "@kairoecs/wasm";
-
-const inspector = new WasmTimeTravelInspector();
-inspector.recordTick(1, [{ entityId: 1, health: 100, infected: false }]);
-inspector.recordTick(2, [{ entityId: 1, health: 85, infected: true }]);
-
-const diff = inspector.diffFrames(1, 2);
-console.log("Changed entities between tick 1 and 2:", diff);
+const engine = await WasmBridgeLoader.loadWasmEngine({
+  wasmModulePath: "/generated/kairo_ecs_wasm.js",
+});
+try {
+  engine.schedule_at(10n, 0, 1);
+  console.log(engine.run_for(1n));
+  console.log(engine.stats_json());
+} finally {
+  engine.free();
+}
 ```
 
-Canonical sources:
+The URL is an example deployment path. Generate and serve the module using the
+[binding's build instructions](https://github.com/edithatogo/kairos/blob/main/bindings/typescript/README.md).
+The loader initializes and validates the native engine; no module means an
+explicit load error. Rust `u64` parameters/results use JavaScript `bigint`.
 
-- `bindings/typescript/README.md`
-- `docs/tutorials/wasm-getting-started.md`
+## Support boundary
+
+The example covers native scheduling, bounded execution and stats. It does not
+establish arbitrary browser model execution, WebGPU acceleration or time-travel
+restoration. Snapshot-shaped metadata and history counters are insufficient
+evidence for causal provenance or reversible state.
+
+The former `createSchedulerFacade` and `TimeTravelInspectorClient` are retired.
+See the [Wasm tutorial](https://github.com/edithatogo/kairos/blob/main/docs/tutorials/wasm-getting-started.md),
+[migration guide](https://github.com/edithatogo/kairos/blob/main/docs/release/migration.md)
+and [capability register](https://github.com/edithatogo/kairos/blob/main/conductor/capabilities.json).
+Actual generated-module and browser acceptance remains distinct from TypeScript
+unit tests or package publication.

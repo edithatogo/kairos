@@ -1,5 +1,11 @@
 # KairoECS Track Map
 
+## Rust-only maturity programme — 7 November 2026
+
+[Approved programme](frontier-programme-20261107.md) coordinates Tracks 109–115. [Capability evidence](capabilities.md) governs current public claims, [release gates](release-gates.md) define beta/stable scope, and [scientific completion](scientific-completion.md) retains every outstanding method as an explicit obligation. [Native-only policy](native-only-policy.md) applies immediately. [Performance](performance-programme.md), [dependencies and CareOps contracts](dependency-and-consumer-contracts.md), and [validation datasets](validation-datasets.md) provide executable follow-up plans.
+
+Historical track completion is preserved as source-specific evidence, not inherited qualification. New phases remain pending until actual implementation, independent review and runtime evidence are recorded.
+
 KairoECS uses Conductor tracks as independently reviewable units of work. The roadmap is intentionally contract-first so subagents can work in parallel without corrupting core semantics or fragmenting the cross-language API.
 
 ## Registry synchronization

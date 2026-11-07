@@ -1,29 +1,40 @@
-# Benchmark Results
+# GPU execution and benchmark evidence
 
-GPU benchmark results are not yet available.
+Updated 7 November 2026. GPU implementation and bounded device qualification
+exist; a general model-acceleration or performance-superiority claim is not
+established.
 
-The current accepted validation is limited to:
+## What is implemented and tested
 
-- GPU crate compiles without default GPU dependencies.
-- CPU fallback parity harness produces deterministic ABM and DES output.
-- WGSL shader source exists for native GPU backend implementation.
-- Feature-gated native backend modules report explicit `*-backend-not-configured` errors until real backend dependencies are introduced.
-- Track 52 local CPU parity and persistent-memory contract evidence is recorded
-  as scaffold evidence in
-  `conductor/hpc-evidence/manifests/track52-local-cpu-parity-scaffold.json`.
+The [native GPU model contract](../../crates/kairo-ecs-gpu/src/compute.rs)
+contains particle positions/velocities and integer entity values. The
+[Metal qualification tests](../../crates/kairo-ecs-gpu/tests/metal_hardware_qualification.rs)
+exercise device identification, persistent buffers over ten ticks for 10,000
+particles, and a CPU comparison with 2,048 particles. Retained
+[execution evidence](../../conductor/tracks/107-careops-staged-flow-compatibility/evidence/just-ci-mainline.log)
+records hardware-test passes for its historical source/toolchain.
 
-Before marking `gpu-speedup-threshold` complete, record:
+The floating-point comparison accepts absolute error up to `5e-5`, despite its
+historical test name containing `bit_for_bit`. That establishes tolerance-based
+agreement for the tested operation, not exact equality across devices or arbitrary
+DES/ABM models. The DES shader's bounded integer updates are not a general GPU
+event scheduler.
 
-- Hardware model and driver version.
-- Backend and feature flags.
-- Agent count.
-- CPU baseline timing.
-- GPU timing.
-- Speedup ratio.
-- Peak GPU memory.
+The older [CPU parity scaffold](../../conductor/hpc-evidence/manifests/track52-local-cpu-parity-scaffold.json)
+remains historical contract evidence. It cannot stand in for hardware execution,
+and a successful device kernel cannot stand in for an end-to-end model benchmark.
 
-Hardware-backed wgpu or CUDA evidence must use a completed copy of
-`conductor/hpc-evidence/manifests/track52-live-gpu-hardware-template.json`.
-Until that copy is promoted to `evidence_class: live-hpc` with raw artifacts,
-checksums, device metadata, and `waiver.status: none`, benchmark statements
-remain no-results scaffold language.
+## Required performance comparison
+
+Before claiming GPU speedup, record hardware and driver identity, backend,
+source/feature/build profile, model definition, agent/event counts, random-stream
+policy, warm-up, raw repeated timings and memory consumption. Include compilation
+and upload/download costs according to explicitly stated timing boundaries.
+Compare with an optimized Rust CPU implementation of the same model and report
+the workload sizes at which GPU execution helps or loses.
+
+Use [Track 52's hardware manifest](../../conductor/hpc-evidence/manifests/track52-live-gpu-hardware-template.json)
+for the applicable source-bound qualification; use the
+[measured-performance programme](../../conductor/tracks/111-measured-performance/spec.md)
+for complete-model comparisons. Distinguish exact integer/discrete replay,
+floating-point tolerance and statistical equivalence in every result.

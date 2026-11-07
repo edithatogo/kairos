@@ -8,22 +8,18 @@ kairoecs_package_info <- function() {
   )
 }
 
-kairoecs_surface_ready <- function() {
-  info <- kairoecs_package_info()
-  is.list(info) &&
-    identical(info$package, "kairoECS") &&
-    identical(info$surface, "bindings/r") &&
-    identical(info$track, "07-r-binding")
-}
+# Runtime readiness requires a qualified Rust FFI adapter, not metadata alone.
+kairoecs_surface_ready <- function() FALSE
 
 kairoecs_ffi_status <- function() {
   list(
     configured = FALSE,
     reason = paste(
       "Native KairoECS FFI is not configured for this R package slice.",
-      "Using the deterministic pure-R scheduler facade."
+      "A qualified Rust adapter is required; the pure-R scheduler is retired."
     ),
-    abi = NA_character_
+    abi = NA_character_,
+    fallback_supported = FALSE
   )
 }
 
@@ -34,99 +30,32 @@ kairoecs_ffi_status <- function() {
 KAIRECS_SCHEMA_NAME <- "kairo_ecs.event_log.v2"
 KAIRECS_SCHEMA_VERSION <- 2L
 
-kairoecs_new_scheduler <- function(run_id = "r-local", time_scale = "nanoseconds") {
-  stopifnot(length(run_id) == 1, !is.na(run_id), nzchar(run_id))
-  stopifnot(length(time_scale) == 1, !is.na(time_scale), nzchar(time_scale))
+kairoecs_native_required <- function() {
+  stop(structure(
+    list(
+      message = paste(
+        "The pure-R scheduler is retired. A qualified Rust native adapter is required.",
+        "This package currently supports metadata and event-log conversion only."
+      ),
+      call = NULL
+    ),
+    class = c("kairoecs_native_required", "error", "condition")
+  ))
+}
 
-  scheduler <- list(
-    run_id = as.character(run_id),
-    time_scale = as.character(time_scale),
-    current_time = 0,
-    next_event_id = 1,
-    next_sequence = 1,
-    events = kairoecs_empty_event_log()
-  )
-  class(scheduler) <- "kairoecs_scheduler"
-  scheduler
+kairoecs_new_scheduler <- function(run_id = "r-local", time_scale = "nanoseconds") {
+  kairoecs_native_required()
 }
 
 kairoecs_schedule_at <- function(
-    scheduler,
-    time_ticks,
-    event_kind,
-    priority = 0L,
-    entity_id = NA,
-    payload_ref = NA_character_) {
-  assert_scheduler(scheduler)
-  stopifnot(length(time_ticks) == 1, is.finite(time_ticks), time_ticks >= 0)
-  stopifnot(length(event_kind) == 1, !is.na(event_kind), nzchar(event_kind))
-  stopifnot(length(priority) == 1, is.finite(priority))
-  stopifnot(length(entity_id) <= 1)
-  stopifnot(length(payload_ref) <= 1)
-
-  ticks_limbs <- kairoecs_u64_limbs(as.numeric(time_ticks))
-  entity_limbs <- kairoecs_entity_limbs(entity_id)
-
-  event <- data.frame(
-    schema_version = KAIRECS_SCHEMA_VERSION,
-    run_id = scheduler$run_id,
-    event_id_index = kairoecs_u64_decimal(scheduler$next_event_id),
-    event_id_gen = 0,
-    entity_id_index = entity_limbs[["index"]],
-    entity_id_gen = entity_limbs[["gen"]],
-    time_ticks_hi = kairoecs_u64_decimal(ticks_limbs[["hi"]]),
-    time_ticks_lo = kairoecs_u64_decimal(ticks_limbs[["lo"]]),
-    time_scale = scheduler$time_scale,
-    priority = as.integer(priority),
-    sequence = kairoecs_u64_decimal(scheduler$next_sequence),
-    event_kind = as.character(event_kind),
-    status = "scheduled",
-    payload_ref = normalize_nullable_character(payload_ref),
-    stringsAsFactors = FALSE
-  )
-
-  scheduler$events <- rbind(scheduler$events, event)
-  scheduler$next_event_id <- scheduler$next_event_id + 1
-  scheduler$next_sequence <- scheduler$next_sequence + 1
-  scheduler$events <- order_event_log(scheduler$events)
-  scheduler
+    scheduler, time_ticks, event_kind, priority = 0L,
+    entity_id = NA, payload_ref = NA_character_) {
+  kairoecs_native_required()
 }
 
-kairoecs_cancel_event <- function(scheduler, event_id) {
-  assert_scheduler(scheduler)
-  stopifnot(length(event_id) == 1, is.finite(event_id))
-
-  idx <- scheduler$events$event_id_index == kairoecs_u64_decimal(event_id) &
-    scheduler$events$status == "scheduled"
-  if (!any(idx)) {
-    stop("Event is not pending and cannot be cancelled.", call. = FALSE)
-  }
-  scheduler$events$status[idx] <- "cancelled"
-  scheduler
-}
-
-kairoecs_run_until <- function(scheduler, until_ticks = Inf) {
-  assert_scheduler(scheduler)
-  stopifnot(length(until_ticks) == 1, !is.na(until_ticks))
-
-  runnable <- scheduler$events$status == "scheduled" &
-    kairoecs_row_ticks(scheduler$events) <= until_ticks
-  scheduler$events$status[runnable] <- "dispatched"
-
-  if (any(runnable)) {
-    scheduler$current_time <- max(kairoecs_row_ticks(scheduler$events[runnable, , drop = FALSE]))
-  } else if (is.finite(until_ticks)) {
-    scheduler$current_time <- max(scheduler$current_time, as.numeric(until_ticks))
-  }
-
-  scheduler$events <- order_event_log(scheduler$events)
-  scheduler
-}
-
-kairoecs_event_log <- function(scheduler) {
-  assert_scheduler(scheduler)
-  scheduler$events
-}
+kairoecs_cancel_event <- function(scheduler, event_id) kairoecs_native_required()
+kairoecs_run_until <- function(scheduler, until_ticks = Inf) kairoecs_native_required()
+kairoecs_event_log <- function(scheduler) kairoecs_native_required()
 
 kairoecs_arrow_roundtrip <- function(event_log, use_arrow = FALSE) {
   event_log <- normalize_event_log(event_log)
@@ -161,92 +90,6 @@ kairoecs_empty_event_log <- function() {
     payload_ref = character(),
     stringsAsFactors = FALSE
   )
-}
-
-assert_scheduler <- function(scheduler) {
-  if (!inherits(scheduler, "kairoecs_scheduler")) {
-    stop("Expected a kairoecs_scheduler object.", call. = FALSE)
-  }
-}
-
-normalize_nullable_number <- function(value) {
-  if (length(value) == 0 || is.na(value[1])) {
-    return(NA_real_)
-  }
-  as.numeric(value)
-}
-
-normalize_nullable_character <- function(value) {
-  if (length(value) == 0 || is.na(value[1])) {
-    return(NA_character_)
-  }
-  as.character(value)
-}
-
-# u64 columns project as exact decimal character strings (base-R doubles lose
-# integer precision above 2^53); u32 generations stay numeric.
-kairoecs_u64_decimal <- function(value) {
-  if (is.na(value)) {
-    return(NA_character_)
-  }
-  sprintf("%.0f", as.numeric(value))
-}
-
-# Exact-integer guard shared by the facade's u64 projections: base-R doubles
-# represent integers exactly up to 2^53, so inputs beyond it reject explicitly
-# per the v2 contract ("overflow and malformed IDs reject explicitly"); the
-# documented full-u64/u128 interchange path is the native FFI surface.
-kairoecs_exact_integer <- function(value, what) {
-  value <- as.numeric(value)
-  if (length(value) != 1 || is.na(value) || !is.finite(value) ||
-      value < 0 || value != floor(value)) {
-    stop(paste0(what, " must be a single non-negative integer value."), call. = FALSE)
-  }
-  if (value > 2^53) {
-    stop(
-      paste0(
-        what,
-        " exceeds the pure-R facade's exact precision limit (2^53);",
-        " the native FFI surface carries full u64/u128 interchange."
-      ),
-      call. = FALSE
-    )
-  }
-  value
-}
-
-# Split an exact (<= 2^53) non-negative double tick count into u64 hi/lo
-# limbs.
-kairoecs_u64_limbs <- function(value) {
-  value <- kairoecs_exact_integer(value, "time_ticks")
-  hi <- floor(value / 2^64)
-  lo <- value - hi * 2^64
-  list(hi = hi, lo = lo)
-}
-
-# Entity projections are null-together per the v2 contract: both columns are
-# set together or both are NA. Facade-local single-generation handles project
-# generation 0 explicitly (the pure-R facade cannot observe engine-side ID
-# recycling).
-kairoecs_entity_limbs <- function(entity_id) {
-  if (length(entity_id) == 0 || is.na(entity_id[1])) {
-    return(list(index = NA_character_, gen = NA_real_))
-  }
-  entity_id <- kairoecs_exact_integer(entity_id, "entity_id")
-  list(
-    index = kairoecs_u64_decimal(entity_id),
-    gen = 0
-  )
-}
-
-# Numeric tick value of a limb row bundle for dispatch comparisons;
-# ordering uses (hi, lo) so the comparison stays inside the facade's
-# documented double precision limits.
-kairoecs_row_ticks <- function(event_log) {
-  if (nrow(event_log) == 0) {
-    return(numeric(0))
-  }
-  as.numeric(event_log$time_ticks_hi) * (2^64) + as.numeric(event_log$time_ticks_lo)
 }
 
 normalize_event_log <- function(event_log) {
@@ -293,13 +136,17 @@ order_event_log <- function(event_log) {
   ), , drop = FALSE]
 }
 
+# Artifact discovery is metadata only. Do not claim that an arbitrary file is
+# a loaded Rust engine or that it implements the Arrow C Data Interface.
 kairoecs_native_library_loader <- function(lib_path = NULL) {
   ext <- ifelse(.Platform$OS.type == "windows", ".dll", ifelse(Sys.info()["sysname"] == "Darwin", ".dylib", ".so"))
-  lib_name <- paste0("libkairo_ecs_ffi", ext)
-  found <- file.exists(lib_name)
+  prefix <- ifelse(.Platform$OS.type == "windows", "", "lib")
+  lib_name <- if (is.null(lib_path)) paste0(prefix, "kairo_ecs_ffi", ext) else lib_path
   list(
     native_library = lib_name,
-    available = found,
-    arrow_c_data_interface_supported = TRUE
+    artifact_present = file.exists(lib_name),
+    available = FALSE,
+    arrow_c_data_interface_supported = FALSE,
+    reason = "Rust library loading and ABI qualification are not implemented in this R binding."
   )
 }

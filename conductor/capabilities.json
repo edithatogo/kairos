@@ -1,0 +1,456 @@
+{
+  "schema_version": 1,
+  "reviewed_at": "2026-11-07",
+  "source_baseline": "d56863505d938feb069af88a737eb7668113d14b",
+  "policy": {
+    "simulation_core": "rust",
+    "host_fallback": false,
+    "consumer": "careops-sim",
+    "provider": "kairos",
+    "provider_depends_on_consumer": false
+  },
+  "status_definitions": {
+    "implemented": "Source implements the stated operation; this is not an installed-platform or release qualification.",
+    "qualified-bounded": "Historical native acceptance exists only for the stated cases and recorded source.",
+    "experimental": "Implemented pieces or contracts exist, with the stated qualification gaps.",
+    "known-defect": "A concrete method or correctness defect prevents the advertised guarantee.",
+    "unsupported": "Current execution is explicitly unavailable; no alternative host core is supported.",
+    "planned": "An approved implementation or research plan exists; capability is not delivered."
+  },
+  "evidence": {
+    "core": {
+      "kind": "source",
+      "path": "crates/kairo-ecs-core/src/lib.rs"
+    },
+    "state": {
+      "kind": "source",
+      "path": "crates/kairo-ecs-state/src/lib.rs"
+    },
+    "rng": {
+      "kind": "source",
+      "path": "crates/kairo-ecs-rng/src/lib.rs"
+    },
+    "des": {
+      "kind": "source",
+      "path": "crates/kairo-ecs-des/src/lib.rs"
+    },
+    "abm": {
+      "kind": "source",
+      "path": "crates/kairo-ecs-abm/src/lib.rs"
+    },
+    "ffi": {
+      "kind": "source",
+      "path": "crates/kairo-ecs-ffi/src/lib.rs"
+    },
+    "ffi_tests": {
+      "kind": "regression",
+      "path": "crates/kairo-ecs-ffi/tests/ffi_integration.rs"
+    },
+    "python": {
+      "kind": "source",
+      "path": "bindings/python/kairo_ecs/_native.py"
+    },
+    "wasm": {
+      "kind": "source",
+      "path": "crates/kairo-ecs-wasm/src/lib.rs"
+    },
+    "bindings": {
+      "kind": "policy",
+      "path": "bindings/runtime-policy.json"
+    },
+    "native_policy": {
+      "kind": "policy",
+      "path": "conductor/native-only-policy.md"
+    },
+    "pdes": {
+      "kind": "source",
+      "path": "crates/kairo-ecs-pdes/src/optimistic.rs"
+    },
+    "native49": {
+      "kind": "native-receipt",
+      "path": "conductor/tracks/49-distributed-mpi-grpc-state-synchronization/native-runtime-qualification-20261103.md",
+      "source_ref": "5026d926",
+      "scope": "Recorded MPI 2/4-rank cases and Mac ARM64/Colab Linux x86-64 gRPC cases; historical bounded acceptance.",
+      "sha256": "732caed139b2ad1d5390a872d7286220430cea2930ae526be36edef449e28247"
+    },
+    "pdes_benchmark": {
+      "kind": "benchmark",
+      "path": "benches/pdes/evidence/20261003T023735Z-45f01c49be-534c5f9f/benchmark-result.json",
+      "sha256": "69003d380f88dfe48249ca02d3beff8da18ae0f7c30f989976196a03c12e121c",
+      "schema": "kairoecs.pdes.benchmark.v1"
+    },
+    "synthetic_hpc": {
+      "kind": "synthetic",
+      "path": "benches/hpc-scaling-certification/local-runner.mjs"
+    },
+    "games": {
+      "kind": "source",
+      "path": "crates/kairo-ecs-game-theory/src/normal_form.rs"
+    },
+    "cfr": {
+      "kind": "source",
+      "path": "crates/kairo-ecs-game-theory/src/extensive_form.rs"
+    },
+    "ml": {
+      "kind": "source",
+      "path": "crates/kairo-ecs-ml/src/lib.rs"
+    },
+    "ensemble": {
+      "kind": "source",
+      "path": "crates/kairo-ecs-cli/src/ensemble.rs"
+    },
+    "sobol_review": {
+      "kind": "review",
+      "path": "conductor/tracks/92-sobol-burley-robustness/qualification-results.json"
+    },
+    "fmi": {
+      "kind": "source",
+      "path": "crates/kairo-ecs-fmi/src/import/fmu_loader.rs"
+    },
+    "science": {
+      "kind": "plan",
+      "path": "conductor/scientific-completion.md"
+    },
+    "performance": {
+      "kind": "plan",
+      "path": "conductor/performance-programme.md"
+    },
+    "dependency": {
+      "kind": "plan",
+      "path": "conductor/dependency-and-consumer-contracts.md"
+    },
+    "release": {
+      "kind": "plan",
+      "path": "conductor/release-gates.md"
+    },
+    "frontier": {
+      "kind": "plan",
+      "path": "conductor/tracks/115-frontier-experiments/plan.md"
+    }
+  },
+  "capabilities": [
+    {
+      "id": "rust-core",
+      "name": "Deterministic Rust scheduling, state and RNG",
+      "status": "implemented",
+      "completion_track": "109",
+      "scope": "Event ordering, cancellation, generational state and versioned RNG streams are implemented in Rust.",
+      "limitations": "Native platform, replay/version and installed-package qualification are separate gates.",
+      "evidence": [
+        "core",
+        "state",
+        "rng"
+      ]
+    },
+    {
+      "id": "des-abm",
+      "name": "DES and ABM modelling",
+      "status": "implemented",
+      "completion_track": "110",
+      "scope": "Rust resource/trajectory and agent/spatial APIs exist.",
+      "limitations": "Full hybrid boundary semantics, analytical scenarios and empirical model validation remain scoped obligations S17.",
+      "evidence": [
+        "des",
+        "abm",
+        "science"
+      ]
+    },
+    {
+      "id": "native-abi",
+      "name": "C ABI scheduling and statistics",
+      "status": "implemented",
+      "completion_track": "109",
+      "scope": "Rust ABI v1 exports handle creation, scheduling, stepping, cancellation and statistics.",
+      "limitations": "Counts do not identify dispatched events. Validate ownership/overflow/error behavior per binding.",
+      "evidence": [
+        "ffi",
+        "ffi_tests"
+      ]
+    },
+    {
+      "id": "python-native",
+      "name": "Python NativeEngine",
+      "status": "implemented",
+      "completion_track": "109",
+      "scope": "Thin ctypes adapter calls Rust ABI v1; no Python simulation core.",
+      "limitations": "Actual shared-library CI and installed package/platform acceptance remain required; legacy Scheduler is unavailable.",
+      "evidence": [
+        "python",
+        "bindings"
+      ]
+    },
+    {
+      "id": "wasm-native",
+      "name": "TypeScript loader and Rust Wasm scheduler",
+      "status": "implemented",
+      "completion_track": "109",
+      "scope": "Generated wasm-bindgen module owns simulation execution.",
+      "limitations": "Generated-artefact execution and safe API qualification are separate gates; current run_for maps native error to zero and JSON u64 statistics need precision handling. Inspector/debug metadata is unqualified.",
+      "evidence": [
+        "wasm",
+        "bindings"
+      ]
+    },
+    {
+      "id": "other-bindings",
+      "name": "R, Julia and Go simulation adapters",
+      "status": "unsupported",
+      "completion_track": "109",
+      "scope": "DTOs and package metadata may remain available.",
+      "limitations": "Simulation constructors fail or are unavailable until real Rust dispatch is implemented and separately qualified.",
+      "evidence": [
+        "bindings",
+        "native_policy"
+      ]
+    },
+    {
+      "id": "csharp",
+      "name": "C# native ABI declarations",
+      "status": "implemented",
+      "completion_track": "109",
+      "scope": "Raw native lifecycle/schedule/run/statistics APIs can call the Rust ABI.",
+      "limitations": "Managed DeterministicScheduler is retired; actual native CI and installed-package qualification are separate.",
+      "evidence": [
+        "bindings",
+        "ffi"
+      ]
+    },
+    {
+      "id": "gym",
+      "name": "Python Gymnasium environment",
+      "status": "unsupported",
+      "completion_track": "110",
+      "scope": "Constructor and registration reject until a qualified Rust environment exists.",
+      "limitations": "Installing Gymnasium does not enable execution; S10 retains actual native environment and checker work.",
+      "evidence": [
+        "native_policy",
+        "science"
+      ]
+    },
+    {
+      "id": "pdes",
+      "name": "Optimistic/distributed Rust runtime",
+      "status": "qualified-bounded",
+      "completion_track": "111",
+      "scope": "Recorded MPI 2/4-rank and two-host gRPC tests cover specified rollback, crash/restart and fixed-LP entity transfer cases.",
+      "limitations": "Historical acceptance applies to recorded sources and cases; no cross-host MPI, whole-LP relocation, cluster or scaling certification.",
+      "evidence": [
+        "pdes",
+        "native49"
+      ]
+    },
+    {
+      "id": "pdes-performance",
+      "name": "Measured PDES performance baseline",
+      "status": "experimental",
+      "completion_track": "111",
+      "scope": "Eight raw Oct 2026 benchmark rows include five timing repeats, event counts and parity; this small workload is slower than sequential.",
+      "limitations": "This historical hardware/workload baseline is not a universal performance result or a result for the current change.",
+      "evidence": [
+        "pdes_benchmark",
+        "performance"
+      ],
+      "performance_evidence": "pdes_benchmark"
+    },
+    {
+      "id": "hpc-scaling",
+      "name": "HPC weak/strong scaling certification",
+      "status": "experimental",
+      "completion_track": "111",
+      "scope": "Benchmark scaffolding and synthetic report generation exist.",
+      "limitations": "Formula-generated 92%/84% and 3.36x are not measurements and cannot certify scaling.",
+      "evidence": [
+        "synthetic_hpc",
+        "performance"
+      ]
+    },
+    {
+      "id": "gpu",
+      "name": "GPU acceleration",
+      "status": "experimental",
+      "completion_track": "110",
+      "scope": "Native operation-specific GPU kernels have bounded evidence recorded in existing tracks.",
+      "limitations": "Full arbitrary-model execution, exactness/tolerance contracts and speed/energy advantages require S11.",
+      "evidence": [
+        "science"
+      ]
+    },
+    {
+      "id": "arrow",
+      "name": "Arrow/Polars data interchange",
+      "status": "implemented",
+      "completion_track": "114",
+      "scope": "Rust native data export and separate Arrow C Data interfaces exist.",
+      "limitations": "kairo_ecs_telemetry_flush_ipc returns JSON statistics; Python DTO conversion is not proof of populated native zero-copy export.",
+      "evidence": [
+        "ffi",
+        "dependency"
+      ]
+    },
+    {
+      "id": "rk4",
+      "name": "Classical fourth-order integration",
+      "status": "known-defect",
+      "completion_track": "110",
+      "scope": "The existing step_continuous_rk4 method uses an Euler-style update and normalization.",
+      "limitations": "Do not claim RK4 order or general ODE correctness until S01 independent convergence tests pass.",
+      "evidence": [
+        "games",
+        "science"
+      ]
+    },
+    {
+      "id": "nash",
+      "name": "General Lemke\u2013Howson/Nash solving",
+      "status": "known-defect",
+      "completion_track": "110",
+      "scope": "The current named solver is a bounded 2x2 algebraic routine.",
+      "limitations": "Dominance/degeneracy cases do not establish general equilibrium correctness; S02 requires independent residual/oracle checks.",
+      "evidence": [
+        "games",
+        "science"
+      ]
+    },
+    {
+      "id": "ce",
+      "name": "Correlated-equilibrium optimisation",
+      "status": "experimental",
+      "completion_track": "110",
+      "scope": "A maintained Clarabel-backed path exists.",
+      "limitations": "S03 must verify the implemented incentive constraints, feasibility and objective against independent games.",
+      "evidence": [
+        "games",
+        "science"
+      ]
+    },
+    {
+      "id": "cfr",
+      "name": "General CFR/CFR+",
+      "status": "experimental",
+      "completion_track": "110",
+      "scope": "Kuhn-specific execution is present.",
+      "limitations": "Generic extensive-form and Leduc support require S04; a method name or convergence field does not prove them.",
+      "evidence": [
+        "cfr",
+        "science"
+      ]
+    },
+    {
+      "id": "qmc",
+      "name": "Standard Sobol and sensitivity analysis",
+      "status": "known-defect",
+      "completion_track": "110",
+      "scope": "Existing sequence and ensemble scaffolding are present.",
+      "limitations": "Known nonstandard vectors, 2^32 index overflow and fixed-multiplier confidence fields require S05; preserve explicitly versioned legacy replay. Those fields are not statistical confidence intervals.",
+      "evidence": [
+        "ensemble",
+        "sobol_review",
+        "science"
+      ]
+    },
+    {
+      "id": "uq",
+      "name": "CRN, ensembles and uncertainty",
+      "status": "experimental",
+      "completion_track": "110",
+      "scope": "Deterministic stream/ensemble components exist.",
+      "limitations": "S06\u2013S08 require coverage, calibration, hazard and reference-posterior evidence. The current ABC-SMC-named routine lacks sequential resampling/perturbation; distance-weighted fixed particles do not establish ABC-SMC.",
+      "evidence": [
+        "rng",
+        "ensemble",
+        "science"
+      ]
+    },
+    {
+      "id": "inference",
+      "name": "Real ONNX inference and vector environments",
+      "status": "experimental",
+      "completion_track": "110",
+      "scope": "Shape/backend contracts and stubs exist in Rust.",
+      "limitations": "Identity passthrough and synthetic rewards are not real model inference or environment dynamics; S09\u2013S10 remain open.",
+      "evidence": [
+        "ml",
+        "science"
+      ]
+    },
+    {
+      "id": "fmi",
+      "name": "External FMI/FMU interoperability",
+      "status": "experimental",
+      "completion_track": "110",
+      "scope": "Native FMU loading and repository-controlled fixtures exist.",
+      "limitations": "Independent Reference-FMUs and external-tool roundtrips are required by S13.",
+      "evidence": [
+        "fmi",
+        "science"
+      ]
+    },
+    {
+      "id": "hpc-io",
+      "name": "NUMA, parallel I/O and model restart",
+      "status": "experimental",
+      "completion_track": "110",
+      "scope": "Contracts and selected implementation pieces exist.",
+      "limitations": "Format-shaped bytes are not HDF5/ADIOS2 files; metadata/checkpoint export alone does not restore a model. S14 remains open.",
+      "evidence": [
+        "science"
+      ]
+    },
+    {
+      "id": "debugging",
+      "name": "Reversible debugging and causal provenance",
+      "status": "experimental",
+      "completion_track": "110",
+      "scope": "Selected native checkpoint/inspection components exist.",
+      "limitations": "Constructed Wasm inspector provenance and constant bookkeeping do not prove rollback, historical inspection or time travel. S15 remains open.",
+      "evidence": [
+        "wasm",
+        "science"
+      ]
+    },
+    {
+      "id": "streaming",
+      "name": "WebSocket and streaming interoperability",
+      "status": "experimental",
+      "completion_track": "110",
+      "scope": "Transport components and dependency decisions exist.",
+      "limitations": "S16 requires actual interoperable protocols, ordering and backpressure; custom framed TCP is not WebSocket.",
+      "evidence": [
+        "science"
+      ]
+    },
+    {
+      "id": "careops",
+      "name": "Independent CareOps consumer contract",
+      "status": "planned",
+      "completion_track": "114",
+      "scope": "Kairos provides versioned generic engine/data contracts; careops-sim owns domain models and validation.",
+      "limitations": "A standalone public-interface consumer fixture and downstream installed acceptance remain required; no consumer pin is promoted.",
+      "evidence": [
+        "dependency"
+      ]
+    },
+    {
+      "id": "release",
+      "name": "Beta and stable release",
+      "status": "planned",
+      "completion_track": "113",
+      "scope": "v0.4.0-alpha.1 is the existing release; bounded beta/stable gates are defined.",
+      "limitations": "New tests, plans and historical Done labels do not constitute beta/stable acceptance or publication.",
+      "evidence": [
+        "release"
+      ]
+    },
+    {
+      "id": "frontier",
+      "name": "Beyond-frontier research claims",
+      "status": "planned",
+      "completion_track": "115",
+      "scope": "Predeclared experiments cover deterministic execution planning, policy branching and executable evidence.",
+      "limitations": "No universal leadership or scientific novelty is asserted before independent baselines, held-out evaluation and reproduction.",
+      "evidence": [
+        "frontier"
+      ]
+    }
+  ]
+}

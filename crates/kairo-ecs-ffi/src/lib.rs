@@ -170,14 +170,22 @@ struct ScheduledEventHandle {
 
 impl EngineState {
     fn reset(&mut self) {
-        *self = Self::default();
+        // Event handles belong to the engine lifetime, not an individual run.
+        // Resetting the allocator would let a stale handle cancel a new event.
+        *self = Self {
+            next_event_handle: self.next_event_handle,
+            ..Self::default()
+        };
     }
 
-    fn record_event(&mut self, event_id: EventId, at_ticks: u64, priority: i32, kind: u32) -> u64 {
-        let handle = self
-            .next_event_handle
-            .checked_add(1)
-            .unwrap_or(self.next_event_handle.wrapping_add(1));
+    fn record_event(
+        &mut self,
+        handle: u64,
+        event_id: EventId,
+        at_ticks: u64,
+        priority: i32,
+        kind: u32,
+    ) -> u64 {
         self.next_event_handle = handle;
         self.event_handles.insert(
             handle,
@@ -199,6 +207,12 @@ impl EngineState {
     }
 
     fn schedule_at(&mut self, at_ticks: u64, priority: i32, kind: u32) -> u64 {
+        // Reserve zero for failure and never recycle an externally held handle.
+        // Check before touching the scheduler or its statistics.
+        let Some(handle) = self.next_event_handle.checked_add(1) else {
+            set_last_error("event handle space exhausted; create a new engine");
+            return 0;
+        };
         let event_id = self.scheduler.schedule(ScheduleRequest {
             at: SimTime::from_ticks(at_ticks as u128),
             priority,
@@ -207,7 +221,7 @@ impl EngineState {
         });
         self.stats.scheduled_events += 1;
         self.stats.pending_events = self.scheduler.pending_events() as u64;
-        self.record_event(event_id, at_ticks, priority, kind)
+        self.record_event(handle, event_id, at_ticks, priority, kind)
     }
 
     fn schedule_after(&mut self, after_ticks: u64, priority: i32, kind: u32) -> Option<u64> {
@@ -1680,6 +1694,54 @@ KairoEcsStatusCode kairo_ecs_export_event_log_arrow_stream(KairoEcsEngineHandle*
         assert_eq!(stats.pending_events, 0);
         assert_eq!(
             kairo_ecs_engine_free(handle),
+            KairoEcsStatusCode::KAIRO_ECS_OK
+        );
+    }
+
+    #[test]
+    fn event_handle_exhaustion_does_not_schedule_or_recover_after_reset() {
+        let engine = kairo_ecs_engine_new();
+        assert_ne!(engine, 0);
+        let first = kairo_ecs_schedule_at(engine, 10, 0, 1);
+        assert_ne!(first, 0);
+
+        // Reach the boundary without attempting 2^64 allocations. Exercise the
+        // public scheduling/cancellation/reset ABI after arranging this state.
+        with_engine_mut(engine, |state| state.next_event_handle = u64::MAX - 1)
+            .expect("valid engine");
+        let last = kairo_ecs_schedule_after(engine, 20, 0, 2);
+        assert_eq!(last, u64::MAX);
+        let before = kairo_ecs_stats(engine);
+        assert_eq!(before.scheduled_events, 2);
+        assert_eq!(before.pending_events, 2);
+
+        assert_eq!(kairo_ecs_schedule_at(engine, 30, 0, 3), 0);
+        assert!(kairo_ecs_last_error_string().contains("event handle space exhausted"));
+        assert_eq!(kairo_ecs_stats(engine), before);
+        assert_eq!(kairo_ecs_schedule_after(engine, 40, 0, 4), 0);
+        assert!(kairo_ecs_last_error_string().contains("event handle space exhausted"));
+        assert_eq!(kairo_ecs_stats(engine), before);
+
+        // A failed allocation must not overwrite either live handle.
+        assert_eq!(
+            kairo_ecs_cancel_event(engine, first),
+            KairoEcsStatusCode::KAIRO_ECS_OK
+        );
+        assert_eq!(
+            kairo_ecs_cancel_event(engine, last),
+            KairoEcsStatusCode::KAIRO_ECS_OK
+        );
+        for _ in 0..2 {
+            assert_eq!(
+                kairo_ecs_engine_reset(engine),
+                KairoEcsStatusCode::KAIRO_ECS_OK
+            );
+        }
+        assert_eq!(kairo_ecs_schedule_at(engine, 1, 0, 5), 0);
+        assert!(kairo_ecs_last_error_string().contains("event handle space exhausted"));
+        assert_eq!(kairo_ecs_stats(engine), KairoEcsStats::default());
+        assert_eq!(
+            kairo_ecs_engine_free(engine),
             KairoEcsStatusCode::KAIRO_ECS_OK
         );
     }

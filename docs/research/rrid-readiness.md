@@ -53,6 +53,15 @@ submission contact email is required. The maintainer subsequently supplied
 the contact email through the native form; its value is omitted from public
 evidence. Submission and receipt evidence are recorded below.
 
+## Current release note
+
+The assessment and submitted description below retain their original capture
+context. The [v0.4.0-alpha.1 source prerelease](https://github.com/edithatogo/kairos/releases/tag/v0.4.0-alpha.1)
+was subsequently published on 18 October 2026. Current Rust-only support and
+scientific qualification are recorded in [current capabilities](../current-state.md).
+RRID assignment identifies the resource; it does not certify release maturity,
+performance or model validity.
+
 ## Required fields and repository evidence
 
 | Item | Evidence at assessed revision | State |

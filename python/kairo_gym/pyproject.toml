@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "kairo-gym"
 version = "0.1.0"
-description = "Gymnasium-compatible reinforcement-learning wrapper for KairoECS"
+description = "Reserved KairoECS Gymnasium adapter; simulation unavailable until a qualified Rust environment exists"
 requires-python = ">=3.15.2,<3.16"
 dependencies = []
 

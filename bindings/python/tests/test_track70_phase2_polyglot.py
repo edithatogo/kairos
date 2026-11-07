@@ -9,11 +9,12 @@ def test_event_log_batch_v2_polars_roundtrip_zero_copy() -> None:
     pytest.importorskip("polars", exc_type=ModuleNotFoundError)
     pytest.importorskip("pyarrow", exc_type=ModuleNotFoundError)
 
-    scheduler = kairo_ecs.Scheduler()
-    scheduler.schedule_at(42, priority=-3, kind=5)
-    outcome, event = scheduler.step()
-    assert outcome is kairo_ecs.StepOutcome.DISPATCHED
-    assert event is not None
+    # Static input record for data-conversion testing, not engine execution.
+    event = kairo_ecs.DispatchedEvent(
+        id=kairo_ecs.EventId(0, 0),
+        at=kairo_ecs.SimTime.from_ticks(42), priority=-3,
+        sequence=0, kind=5,
+    )
 
     record = kairo_ecs.EventLogRecord.dispatched("run-v2", event)
     batch = kairo_ecs.EventLogBatch([record])
@@ -27,10 +28,12 @@ def test_event_log_batch_v2_polars_roundtrip_zero_copy() -> None:
 
 
 def test_arrow_c_capsule_schema_and_array() -> None:
-    scheduler = kairo_ecs.Scheduler()
-    scheduler.schedule_at(100, priority=0, kind=1)
-    outcome, event = scheduler.step()
-    assert outcome is kairo_ecs.StepOutcome.DISPATCHED
+    # Static input record for data-conversion testing, not engine execution.
+    event = kairo_ecs.DispatchedEvent(
+        id=kairo_ecs.EventId(0, 0),
+        at=kairo_ecs.SimTime.from_ticks(100), priority=0,
+        sequence=0, kind=1,
+    )
 
     record = kairo_ecs.EventLogRecord.dispatched("run-cap", event)
     batch = kairo_ecs.EventLogBatch([record])

@@ -10,8 +10,8 @@ as release evidence.
 | Goal | Start here | What it proves |
 |---|---|---|
 | Learn the scheduler contract in Rust | [Rust getting started](rust-getting-started.md) | The core scheduler API, cancellation behavior, and deterministic event order are discoverable from checked-in source. |
-| Try the Python facade | [Python getting started](python-getting-started.md) | A Python user can schedule, cancel, step, and inspect scheduler statistics with the local facade. |
-| Understand the Wasm/TypeScript boundary | [Wasm and TypeScript getting started](wasm-getting-started.md) | The TypeScript facade and native-Wasm `not-configured` contract are documented without claiming a generated Wasm artifact. |
+| Execute Rust from Python | [Python getting started](python-getting-started.md) | A configured `NativeEngine` loads the actual Rust library and exercises its narrow scheduling and statistics surface. |
+| Execute Rust/Wasm from TypeScript | [Wasm and TypeScript getting started](wasm-getting-started.md) | The loader requires a generated Rust/Wasm module; `not-configured` never enables a host-only core. |
 | Build a first model | [Model-building tutorial](model-building.md) | A user can choose an example, identify maturity, define events/entities/outputs, and map the work to validation docs. |
 
 ## Source-backed examples
@@ -33,7 +33,7 @@ as release evidence.
 
 ## Claim boundary
 
-These tutorials are offline learning paths. They do not claim that published
+These tutorials describe source-backed learning paths. Rust is the only supported simulation core; retired host-only previews are not a supported way to run a model. They do not claim that published
 packages, hosted notebooks, generated image assets, native Wasm binaries, GPU
 execution, or production support are available. Those claims remain gated by
 the packaging, documentation-site, playground, release, and runtime tracks.

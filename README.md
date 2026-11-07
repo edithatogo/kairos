@@ -1,116 +1,105 @@
 # KairoECS
 
 [![ci-core](https://github.com/edithatogo/kairos/actions/workflows/ci-core.yml/badge.svg)](https://github.com/edithatogo/kairos/actions/workflows/ci-core.yml)
-[![ci-bindings](https://github.com/edithatogo/kairos/actions/workflows/ci-bindings.yml/badge.svg)](https://github.com/edithatogo/kairos/actions/workflows/ci-bindings.yml)
-[![Validate Conductor](https://github.com/edithatogo/kairos/actions/workflows/validate-conductor.yml/badge.svg)](https://github.com/edithatogo/kairos/actions/workflows/validate-conductor.yml)
 [![Docs Quality](https://github.com/edithatogo/kairos/actions/workflows/docs-quality.yml/badge.svg)](https://github.com/edithatogo/kairos/actions/workflows/docs-quality.yml)
 
-KairoECS is a Rust-first simulation engine for deterministic event scheduling,
-ECS-style state, Discrete Event Simulation (DES), Agent-Based Modeling (ABM),
-Arrow telemetry, and polyglot bindings.
+**A Rust simulation engine for reproducible discrete-event and agent-based models.**
 
-The repository is now public, CI-backed, and organized with a Conductor track
-system so implementation, validation, documentation, release, and supply-chain
-work stay traceable.
+KairoECS combines event scheduling, entity/component state, resource queues,
+agent behaviours and deterministic random streams. Optional Rust crates add
+columnar data exchange, parallel execution, distributed synchronization and
+GPU kernels. Applications such as CareOps own their domain models and consume
+Kairos through a versioned dependency boundary.
 
-- Repository: <https://github.com/edithatogo/kairos>
-- Documentation site: <https://edithatogo.github.io/kairos/>
-- Status index: [conductor/tracks.md](conductor/tracks.md)
-- Narrative status: [conductor/status.md](conductor/status.md)
+[Documentation](https://edithatogo.github.io/kairos/) ·
+[Install from source](docs/install.md) ·
+[Current capabilities and evidence](docs/current-state.md) ·
+[Development programme](conductor/frontier-programme-20261107.md)
 
-## Current Status
+## Current release and support
 
-This is an active pre-release project. The core scheduler/state/conformance
-foundation is in place, with selected language bindings and docs gates already
-running in CI. Registry publication and stable API promises remain gated by the
-release, compatibility, security, and packaging tracks.
+**Alpha.** [v0.4.0-alpha.1](https://github.com/edithatogo/kairos/releases/tag/v0.4.0-alpha.1)
+was published on 18 October 2026. The default branch contains later experimental
+work; it is not a stable API or production-release promise. Beta and 1.0 have
+[explicit acceptance gates](conductor/release-gates.md).
 
-Current Conductor highlights:
+**Rust is the only supported simulation core.** Python, R, Julia, TypeScript,
+C# and Go are integration surfaces. They may execute a compiled Rust native
+library or Rust-compiled WebAssembly; they must never substitute a scheduler,
+random generator or simulation model written in the host language. Missing
+native capabilities return an explicit error. The former host-language preview
+cores are unsupported immediately; see the [breaking-change notice](docs/adr/0010-rust-only-execution.md).
+A successful package import or metadata check is not native-engine qualification.
 
-- Done: Track 00 foundation, Track 01 core/state, Track 05 headless visualization, Track 10 C# binding, Track 12 conformance/testing/benchmarks.
-- In review: Track 02 FFI/UniFFI/Diplomat bridge and Track 03 DES/ABM flow APIs.
-- In progress: Python, R, TypeScript/Wasm, Go, docs, CI/supply chain, packaging, release governance, benchmarks, research/citation, security, DX, and wave management.
-- Planned or spec-approved: Arrow, Julia, community/model-zoo/playground, API compatibility, interoperability, GPU/WebGPU, PDES, distributed simulation, streaming, ML, FMI/digital twin, cloud/HPC, and time-travel debugging.
+## What you can build on
 
-For the authoritative machine-readable view, use [conductor/tracks.yaml](conductor/tracks.yaml).
+| Area | Implemented scope | Qualification boundary |
+| --- | --- | --- |
+| Core simulation | Ordered event scheduling, cancellation, generational entities, component storage and versioned random streams | Replay depends on the recorded engine, model, RNG and numerical contract. |
+| DES and ABM | Resource queues, priority/preemption primitives, staged allocation, behaviours, spatial operations and hazard clocks | Applications must validate their own models and supported compositions. |
+| Data exchange | Optional Arrow/Polars tables, IPC/Parquet paths and C Data ownership interfaces | Features and installed consumers need separate qualification; zero-copy applies only to proven boundaries. |
+| Parallel and distributed execution | Conservative PDES, optimistic rollback, native MPI and typed gRPC synchronization | Bounded native acceptance exists; general HPC scaling and performance superiority are unproven. |
+| GPU execution | Native backends and persistent buffers for specific particle/event kernels | Kernel evidence does not establish arbitrary model offload, universal bitwise parity or end-to-end speedup. |
+| Scientific extensions | Game-theory, calibration, inference and FMI surfaces with differing maturity | Known algorithm gaps and demonstration backends are tracked; feature names do not certify scientific correctness. |
 
-## What Is Implemented
+The [capability register](conductor/capabilities.json) separates implementation,
+execution, validation and release acceptance. A Conductor track marked `Done`
+means its recorded scope was completed; it does not certify every feature in
+that topic.
 
-Core Rust crates:
+## Verification and performance
 
-- `kairo-ecs-types`: shared identifiers, event kinds, simulation time, and errors.
-- `kairo-ecs-core`: deterministic scheduler and event dispatch.
-- `kairo-ecs-state`: ECS-style world state and component storage.
-- `kairo-ecs-rng`: deterministic random streams.
-- `kairo-ecs-des`: DES trajectory/resource queue API.
-- `kairo-ecs-abm`: ABM behavior update API.
-- `kairo-ecs-viz`: dependency-light headless visualization frames.
-- `kairo-ecs-ffi`, `kairo-ecs-uniffi`, `kairo-ecs-diplomat`: bridge/facade surfaces in review.
+At the reviewed baseline
+[`d568635`](https://github.com/edithatogo/kairos/commit/d56863505d938feb069af88a737eb7668113d14b),
+[hosted Rust verification](https://github.com/edithatogo/kairos/actions/runs/41658006983/job/126030245516)
+reported 994 passing tests, 93.70% core line coverage and native MPI smoke runs
+with two and four ranks. Those results belong to that revision and execution
+matrix; each change requires its own relevant checks.
 
-Preview binding and package surfaces are tracked under [bindings/](bindings/) and
-[packaging/](packaging/). Some bindings deliberately expose pure-language smoke
-paths while native FFI artifacts are still being stabilized.
+Read the [measured PDES benchmark](docs/pdes/benchmark-results.md) before choosing
+parallel execution. Its small ring workloads were slower than the sequential
+baseline. The [scaling-report correction](docs/benchmarks/scaling-certification-report.md)
+explains why generated placeholder figures are not performance evidence.
+General comparative performance and real-system model validity remain evaluation
+work, with a [dataset and oracle plan](conductor/validation-datasets.md).
 
-## Start Here
+## Start with Rust
 
-- Install and local workflow: [docs/install.md](docs/install.md)
-- Documentation overview: [docs/README.md](docs/README.md)
-- Rust crates: [crates/README.md](crates/README.md)
-- Bindings inventory: [bindings/README.md](bindings/README.md)
-- Conformance fixtures: [conformance/README.md](conformance/README.md)
-- Scenario replay: [docs/scenarios/factory-bottleneck-run-replay.md](docs/scenarios/factory-bottleneck-run-replay.md)
-- Release checklist: [docs/release/release-checklist.md](docs/release/release-checklist.md)
-- Supply-chain verification: [docs/release/supply-chain-verification.md](docs/release/supply-chain-verification.md)
+Clone the repository and use the toolchain pinned in `rust-toolchain.toml`:
 
-## Dependency and runtime selection
+```bash
+git clone https://github.com/edithatogo/kairos.git
+cd kairos
+cargo test --locked -p kairo-ecs-core -p kairo-ecs-state
+cargo test --locked -p kairo-ecs-des -p kairo-ecs-abm
+```
 
-Prefer the newest suitable qualified versions. Necessary compatibility versions
-are permitted with a recorded reason/scope and actual consumer qualification;
-see [dependency policy](conductor/dependency-value-policy.md). Python 3.15.2
-remains the qualified default. Follow [AGENTS.md](AGENTS.md) for explicit local
-interpreter selection and safe environment handover.
+The [Rust quickstart](docs/tutorials/rust-getting-started.md) introduces the
+scheduler. The [installation guide](docs/install.md) explains the native-library
+requirement for language wrappers. The [binding inventory](bindings/README.md)
+records which operations each adapter can actually perform.
 
-## Quick Validation
+## Learn, evaluate and contribute
 
-```powershell
-cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-core -p kairo-ecs-state
-cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-des -p kairo-ecs-abm
-node tests/conformance/conformance-check.mjs
+- [Documentation overview](docs/README.md), [tutorials](docs/tutorials/index.md) and [model building](docs/tutorials/model-building.md).
+- [Rust crates](crates/README.md), [conformance](conformance/README.md) and [benchmark policy](docs/benchmarks/benchmark-policy.md).
+- [Scenario replay](docs/scenarios/factory-bottleneck-run-replay.md), [model zoo](docs/model-zoo/inventory.md) and [verification, validation and uncertainty](docs/trustworthy-simulation/verification-validation-uncertainty.md).
+- [Contributing](CONTRIBUTING.md), [security](SECURITY.md), [citation](docs/research/citation.md) and [release checklist](docs/release/release-checklist.md).
+- [Conductor index](conductor/index.md), [track registry](conductor/tracks.yaml), [workflow](conductor/workflow.md) and [phase evidence](conductor/phase-closeout.yaml).
+
+For a coherent Rust change, use `just ci`. Documentation changes use:
+
+```bash
+npm --prefix website ci
 npm --prefix website run check:all
-pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1
 ```
 
-CI also runs cross-platform Conductor, docs, core, bindings, security, and
-supply-chain checks on `main`.
-
-## Documentation Site
-
-The static site is built from Markdown sources in [docs/](docs/),
-[bindings/](bindings/), [crates/](crates/), and selected examples. The source
-entry point is [website/src/index.md](website/src/index.md), and the rendered
-GitHub Pages site is published at <https://edithatogo.github.io/kairos/>.
-
-Local site checks:
-
-```powershell
-npm --prefix website run check:links
-npm --prefix website run build
-npm --prefix website run check:quality
-```
-
-## Project Governance
-
-Conductor is the source of truth for status and closeout evidence:
-
-- [conductor/workflow.md](conductor/workflow.md): development and review workflow.
-- [conductor/phase-closeout.yaml](conductor/phase-closeout.yaml): closeout ledger.
-- [conductor/track-map.md](conductor/track-map.md): roadmap map.
-- [conductor/implementation-readiness.md](conductor/implementation-readiness.md): readiness gates.
-- [conductor/quality-gates.md](conductor/quality-gates.md): validation catalogue.
-
-When a track changes status, `conductor/tracks.yaml`, `conductor/tracks.md`,
-`conductor/phase-closeout.yaml`, and `conductor/status.md` must be synchronized.
+Prefer qualified maintained dependencies; see the
+[dependency policy](conductor/dependency-value-policy.md). Python 3.15.2 remains
+the selected tooling default. Necessary compatible profiles need a recorded
+consumer and qualification; follow [AGENTS.md](AGENTS.md).
 
 ## License
 
-Apache-2.0 OR MIT. See [LICENSE](LICENSE), [LICENSE-APACHE](LICENSE-APACHE) and [LICENSE-MIT](LICENSE-MIT).
+Apache-2.0 OR MIT. See [LICENSE](LICENSE), [LICENSE-APACHE](LICENSE-APACHE)
+and [LICENSE-MIT](LICENSE-MIT).
