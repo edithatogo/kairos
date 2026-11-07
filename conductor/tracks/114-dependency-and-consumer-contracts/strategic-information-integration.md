@@ -7,8 +7,10 @@ workpack. This is not a new trait, ABI, scheduler or runtime capability registry
 ## Preserve the independent release paths
 
 Kairos owns Rust-native simulation time, events, state, resources, RNG and replay.
-T17 in the game incubator owns generic representations and corrected solvers;
-UOGTO owns semantic profiles; applications own games and valuations; Voiage owns
+[Paignia T17](https://github.com/edithatogo/paignia/tree/main/conductor/tracks/t17_game_runtime_ecosystem_20261107)
+owns generic representations and corrected solvers; the reimbursement repository
+retains its application and historical seed provenance. UOGTO owns semantic
+profiles; applications own games and valuations; Voiage owns
 information-value calculations. Core simulation, bounded static game packages and
 the optional dynamic adapter keep separate acceptance/release evidence.
 
