@@ -72,6 +72,10 @@ The active site is Astro/Starlight. Source documentation remains in `docs/`,
 [docs platform](docs-platform.md) explains versioned pages, compatibility routes,
 search and `llms.txt`.
 
+Run `just docs-build` to build the site and `just docs-dev` to start the local
+documentation server. The [contributor workflow](https://github.com/edithatogo/kairos/blob/main/docs/developer-experience/docs-workflow.md)
+explains prerequisites and validation commands.
+
 ```bash
 npm --prefix website ci
 npm --prefix website run check:all
