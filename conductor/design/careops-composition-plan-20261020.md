@@ -142,3 +142,59 @@ Track69's whole-track66 prerequisite is removed; only actually consumed experime
 capabilities require a handoff. All runtime reservations remain protected.
 
 [Registration and dependency ADR](../tracks/29-wave-manager-execution-gatekeeper/adr-composition-registration-20261021.md) records the pending owner/dependency decision and unchanged historical statuses.
+
+## Paignia and CareOps boundary review
+
+Follow-up date: 8 November 2026 (Australia/Brisbane).
+
+This amendment supersedes the current-pin interpretation of the older snapshots
+above, while preserving their historical acceptance. Inspected CareOps main:
+`a44a8c9f1461839c5306dbf44a1fa9a3b1981c50`; actual Kairos gitlink:
+`07410266bf54b6f73c59db2f8cbfbc5697c53734`. Inspected upstream main:
+`e76b97be2ea3712645933d903822ff6381c8883e`. Main is not automatically a compatible
+replacement. This is source inspection; no new runtime or numerical result.
+
+**Decision:** strengthen the existing `careops-core` package within careops-sim.
+Its shared healthcare meaning is distinct from Kairos's neutral mechanics and
+from specialty/site models. Independent packaging plus a second actual healthcare
+consumer should precede a repository split. Paignia owns generic strategic-game
+representation/algorithms; clinical game construction remains downstream. HEOR
+values usage/outcomes and does not own scheduling, movement or allocation.
+
+| Observed source / limitation | Existing owner and bounded next behavior |
+| --- | --- |
+| `careops-core/src/pathway/adapter.rs::build_ed_canonical_graph` and ED event/key helpers in `identity.rs` leak specialty assumptions | CareOps A0–A7: move the ED graph builder and ED-specific encodings behind `careops-ed` adapters; existing exact identity-byte fixtures must remain unchanged. Kairos gains no patient or ED terms. |
+| `ConfigurablePathwayAdapter::run_simulation` scans patients for every tick to the horizon | CareOps pathway owner, K-C04 consumed contract: replace one transition family at a time with the single accepted scheduler; freeze equal-time/horizon/censoring behavior and measure sparse versus congested cases. No second production clock. |
+| `pathway/streams.rs` implements an LCG while its comment says SplitMix | CareOps stream adapter with Kairos RNG owner: correct the label and specify an explicit algorithm/stream version before substitution. Map module/entity/purpose and checkpoint state; old fixtures characterize historical behavior, not a silently selectable alternative core. |
+| `CompetingRiskModel` samples a unit-interval event probability and cause; Kairos has `CompetingHazards`/`SurvivalClock` | K-C04/Track69 plus CareOps: decide discrete versus continuous hazard semantics explicitly, including covariate update, residual work, tie order and censoring. Use constant-hazard analytic controls and model comparisons. A behavior-changing model revision is not cleanup. |
+| `StagedAllocator` coordinates one-resource claims and conformance tests call `StagedResourceRuntime`; `kairo-ecs-des` is only a careops-core dev-dependency | K-C02 and CareOps allocation owner: exercise actual production grant/release/cancel, capacity, late grant, ties and revision handling through the public adapter. ED already uses the Kairos core scheduler. Staged coordination is not an atomic multi-resource grant. Eligibility/fairness/clinical interruption policy stays downstream. |
+| ED→ward/community test runs complete ED then an independent single-bed oracle | CareOps A6 and K-C03/K-C04: add one live shared-scheduler fixture where downstream delay changes upstream occupancy while the run executes. Require no duplicated/lost person, leaked lease or causality violation; retain the independent oracle. |
+| `careops-core/src/experiment/` owns generic replications, workers, cancel/checkpoints and atomic output; ED wraps domain results | K-C05/Tracks21/22/66: settle a small reusable library API and compare the existing Kairos CLI ensemble implementation before moving code. Keep ED result/metadata semantics downstream and do not depend on the CLI or calibration stack. |
+| `careops-core/tests/logistics_consumer.rs` is an actual nonclinical experiment consumer | Reuse ED + logistics 1/2/4-worker, cancel and recovery cases for the narrow experiment transfer. These justify generic execution reuse, not a second healthcare consumer or whole-engine qualification. |
+
+The authoritative downstream work remains
+[`careops_core_domain_abstractions_20261020`](https://github.com/edithatogo/careops-sim/tree/main/conductor/tracks/careops_core_domain_abstractions_20261020)
+and [`kairos_domain_contracts_20261107`](https://github.com/edithatogo/careops-sim/tree/main/conductor/tracks/kairos_domain_contracts_20261107).
+Their bounded follow-up cards map onto A0–A7/R75–R77, preserving task IDs and
+accepted receipts. K-C labels above retain upstream ownership; this table is
+not another completion ledger or new approval process.
+
+The initial generic experiment contract, ED helper cleanup and RNG semantic
+inventory can progress independently of A7's second healthcare consumer. Each
+implementation packet names at most five files and one distinguishing test;
+unsettled numerical/model semantics receive one focused specialist decision
+before local-model implementation. Routine work needs a diff and actual checks,
+not a new risk dossier.
+
+CareOps R76.5 is an optional Paignia operational-game profile. R76.6/R77 runtime
+acceptance stays independent of it. R76.4's two valuations of the same neutral
+usage record should expose price-year/perspective/discounting choices and bundled
+cost double counting. Do not promote that fixture into a production HEOR engine.
+Generic movement remains Kairos's optional transit lifecycle; healthcare route,
+escort, staffing, handover and transport policy remain CareOps responsibilities.
+
+Source references: [CareOps core](https://github.com/edithatogo/careops-sim/tree/a44a8c9f1461839c5306dbf44a1fa9a3b1981c50/crates/careops-core/src),
+[CareOps tests](https://github.com/edithatogo/careops-sim/tree/a44a8c9f1461839c5306dbf44a1fa9a3b1981c50/crates/careops-core/tests),
+[composition oracle](https://github.com/edithatogo/careops-sim/blob/a44a8c9f1461839c5306dbf44a1fa9a3b1981c50/crates/careops-ed/tests/ed_ward_community_composition.rs),
+[Kairos hazard clock](https://github.com/edithatogo/kairos/blob/e76b97be2ea3712645933d903822ff6381c8883e/crates/kairo-ecs-des/src/hazard_clock.rs)
+and [RNG/competing hazards](https://github.com/edithatogo/kairos/tree/e76b97be2ea3712645933d903822ff6381c8883e/crates/kairo-ecs-rng/src).

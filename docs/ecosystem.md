@@ -12,28 +12,38 @@ not evidence of it.
 | --- | --- | --- |
 | Kairos | Time, events, state, identity, RNG, queues, allocation, replay; optional generic spatial and execution adapters | Maintained Rust infrastructure libraries |
 | UOGTO | Game vocabulary, stable identifiers, executable-subset mappings, SHACL and semantic examples | Domain extension proposals |
-| Rust game library | Game representations, solution concepts, solvers, residuals and traces | UOGTO mappings; optional Kairos execution adapter |
-| CareOps Sim | Healthcare flow, patient/staff movement, service and transport policies, model calibration | Kairos; optional game and economic models |
+| Paignia | Game representations, solution concepts, solvers, residuals and diagnostic traces | Optional UOGTO mappings; optional Kairos execution adapter |
+| CareOps shared library (`careops-core`) | Person/episode meaning, service handover, eligibility, effective healthcare capacity and domain composition | Kairos; optional Paignia and valuation adapters |
+| CareOps domain packages/applications | ED, birthing, ward/community models, patient/staff movement policies, site profiles and calibration | `careops-core` and Kairos public contracts |
 | Innovate | Innovation/policy diffusion, adoption, competition, substitution, complements, hype effects, forecasts and innovation-specific games | Optional Kairos/game adapters; Voiage outcome exchange |
 | Reimbursement game | Reimbursement institutions, particular strategic games and their economic assumptions | Generic game library, UOGTO, optional Kairos, Voiage and evidence providers |
 | HEOR model/package | Resource valuation, health outcomes/utilities, perspectives, horizon, discounting and economic evaluation | Neutral usage/outcome records and reviewed data |
 | Voiage | VOI estimators and decision uncertainty on paired strategy/draw outcomes | Domain-produced values and uncertainty contracts |
 
 The HEOR package is a **proposed boundary**, not a newly released provider.
-The game library already has an incubator: `uogto-game-core` and
-`uogto-game-solve` in `new-drug-reimbursement-game`. Do not build a second generic
-solver library before evaluating those crates.
+**[Paignia](https://github.com/edithatogo/paignia) is the chosen library and
+repository.** Its seed transfers the existing independent Rust core and solver
+from `new-drug-reimbursement-game`, renaming `uogto-game-core` and
+`uogto-game-solve` to `paignia-core` and `paignia-solve`. The reimbursement
+application becomes an immutable provider consumer through its existing
+[PR 101](https://github.com/edithatogo/new-drug-reimbursement-game/pull/101).
+Source transfer, artifact qualification, two real consumer receipts, registry
+publication and beta acceptance are separate steps. A repository's existence
+does not establish any numerical or release claim.
 
 The [extraction map](../conductor/contracts/game-extraction-map.md) now identifies
 the actual source to reconcile. Pure representations/solvers move to the game
 library; ECS storage and event execution meet it through a small optional
 [execution port](../conductor/contracts/game-execution-port.md). The receiving
-work is [issue 100](https://github.com/edithatogo/new-drug-reimbursement-game/issues/100)
-and its existing T17 track. No new library name or repository is assumed here.
+work follows the transferred T17 provider leaves in
+[Paignia Conductor](https://github.com/edithatogo/paignia/tree/main/conductor), with
+[issue 100](https://github.com/edithatogo/new-drug-reimbursement-game/issues/100)
+retaining the application handoff. Reconcile selected Kairos methods into that one
+implementation; keep UOGTO's ontology and semantic authority in UOGTO.
 
 ```mermaid
 flowchart TD
-    Apps["Domain applications"] --> Games["Game core and solvers"]
+    Apps["Domain applications"] --> Games["Paignia core and solvers"]
     Apps --> Sim["Kairos"]
     Apps --> Econ["HEOR model"]
     Apps -. "optional dynamic game" .-> Adapter["Game execution adapter"]
@@ -98,6 +108,33 @@ decision, but its monetary semantics do not belong in Kairos's allocator.
 
 Existing HEOML extension drafts in Innovate provide an interchange starting
 point; they do not establish a released HEOR engine or numerical validity.
+
+## CareOps already has the right library starting point
+
+Strengthen `careops-core` inside careops-sim before creating another repository.
+Its reusable healthcare contracts belong between Kairos and specialty packages;
+an ED graph builder and ED-specific event-key encoding belong in `careops-ed`.
+Site configuration, calibration data, UI and reporting remain application work.
+Move these boundaries through adapters that preserve existing identity bytes.
+
+The [source audit and upstream handoff](../conductor/design/careops-composition-plan-20261020.md#paignia-and-careops-boundary-review)
+identifies remaining duplicate mechanics: a configurable-pathway tick loop,
+custom RNG and hazard sampling, and production allocation bookkeeping. Reuse
+Kairos's scheduler/RNG/hazard/resource mechanisms after explicit semantic and
+replay qualification. A discrete unit-interval risk is not automatically a
+continuous-time hazard; changing that contract is a model version change.
+
+CareOps's generic experiment lifecycle is a candidate for the existing Kairos
+experiment-library work, supported by ED and logistics fixtures. Keep scenario
+results and clinical metrics downstream; a caller must not depend on the Kairos
+CLI to use the reusable lifecycle. The present sequential ED/ward/community
+oracle does not establish live composition under one scheduler. Qualify actual
+feedback, cancellation and resource conservation before making that claim.
+
+Independent packaging and a second actual healthcare consumer will show whether
+`careops-core` needs its own repository. Generic movement does not require a new
+healthcare or HEOR engine: Kairos supplies neutral mechanics, CareOps supplies
+physical/clinical policies, and HEOR supplies valuation.
 
 Do not impose one generic economic model on every use case. Cost-effectiveness,
 budget impact, distributional analysis and reimbursement payoffs may consume

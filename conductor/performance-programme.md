@@ -30,6 +30,31 @@ Profile heap work, tombstones, allocations and component access. Compare existin
 
 Independent scenario replications and uncertainty draws already map naturally to Rayon. Preserve seed/entity/purpose isolation and deterministic result merge. Never confuse faster independent ensembles with strong scaling of one simulation. Evaluate common-random-number variance reduction independently of throughput.
 
+### Provider and consumer hot paths identified by the boundary audit
+
+Two source-derived hypotheses need separate measurements before adding parallelism:
+
+- Kairos game `graph_relations::children_of` scans the component store for each
+  parent; DFS/outgoing-edge queries repeat that scan. The optional Paignia adapter
+  should build one validated adjacency snapshot with explicit game/ECS identity
+  mapping and topology revision invalidation. Compare build-plus-solve time,
+  repeated-solve amortization, allocations and memory against the existing route
+  on sparse/dense/wide/deep finite games. Reject altered chance, tie or payoff
+  semantics. Snapshot traversal can avoid repeated whole-store scans; no speedup
+  has been measured by this audit. T17 owns the static solver representation;
+  Kairos keeps only demonstrated generic storage mechanisms.
+- CareOps `ConfigurablePathwayAdapter::run_simulation` scans incomplete patients
+  across `0..=horizon_ticks`. Its consumer-owned follow-up compares sparse scheduled
+  transitions with that baseline under long idle horizons and congested service
+  cases. Freeze horizon/tie/censoring/RNG semantics first, report event counts and
+  full-run timing, and distinguish algorithmic scheduling changes from a change
+  in clinical hazard model. This is a candidate bottleneck, not a profile result.
+
+The [existing composition handoff](design/careops-composition-plan-20261020.md#paignia-and-careops-boundary-review)
+also routes experiment-lifecycle reuse. Its ED/logistics worker-count fixtures
+test deterministic replication scheduling; they do not demonstrate intra-model
+PDES speed or qualify an untested backend.
+
 ### P5: native GPU and distributed crossover
 
 GPU evaluation includes compilation/setup, upload/download, batching, dispatch, readback and total model runtime. Demonstrate a real supported model beyond particle-addition kernels, including mixed branch behaviour. Test CUDA and Metal/WGPU separately; name exact numerical guarantees per backend.

@@ -1,19 +1,23 @@
 # Game-library extraction map
 
 Direction refined 8 November 2026 (Australia/Brisbane). Owner: Track 114,
-`K01.games`; receiving work: the existing game incubator's
+`K01.games`; receiving provider: [Paignia](https://github.com/edithatogo/paignia),
+with the existing game incubator's
 [issue 100](https://github.com/edithatogo/new-drug-reimbursement-game/issues/100)
 and [T17](https://github.com/edithatogo/new-drug-reimbursement-game/tree/main/conductor/tracks/t17_game_runtime_ecosystem_20261107).
 This source inventory refines [ADR 0011](../../docs/adr/0011-ecosystem-boundaries.md).
-It is not a completed extraction, a new library name, or package acceptance.
+**Paignia is the chosen library name and actual standalone repository.** This
+inventory is not completed package acceptance. Its initial provider change owns
+the `paignia-core`/`paignia-solve` seed transfer. Existing incubator PR 101 owns
+the immutable dependency switch and real static reimbursement fixture.
 
 ## Inspected boundary
 
 Kairos source: `018ef4975f7f146c9fa730381ac3c2bab8b15b60`. Receiving source:
 `90602b93db7352bfb307bac7852db211cf94af1e` in
 `edithatogo/new-drug-reimbursement-game`. The generic packages are already
-`uogto-game-core` and `uogto-game-solve`; these names identify the current
-incubator, not a decision on the eventual repository or product name.
+`uogto-game-core` and `uogto-game-solve` at that historical snapshot. The Paignia
+rename reuses those packages and tests; it does not create a parallel solver.
 
 | Source and current API family | Destination and required action |
 | --- | --- |
@@ -36,6 +40,52 @@ The reimbursement application declares the generic crates as dependencies, but
 its inspected Rust library and executable do not call them. That declaration
 does not count as a real installed consumer. T17 must add an application case;
 unit tests inside the provider cannot supply both consumer receipts.
+
+## Immediate handoff and retained authority
+
+The follow-up inspected Kairos `e76b97be2ea3712645933d903822ff6381c8883e`,
+the incubator `f6c1c87b6b00875b33c1e19401c1de09481913ce`, and UOGTO
+`a5f90557c40f054255a1d6c2541fd76f07aa5090`. The application statement above is a
+dated baseline; PR 101 adds a source-level offer/acceptance consumer fixture.
+That fixture alone does not close installed-package or two-consumer qualification.
+
+| Move or retain now | Executable next step / receiving owner |
+| --- | --- |
+| Transfer the independent std-only core and core-dependent solve seed to Paignia, preserving tests and Apache-2.0 notices | T17.01–03 provider work moves to Paignia; incubator PR 101 replaces local implementations with an immutable dependency and actual reimbursement call. Record extraction provenance; package verification and publication remain separate. |
+| Assign generic Kairos normal-form representation, best response, strict dominance and bounded solver work to Paignia | K01.games/T17 reconcile definitions and error contracts into one implementation. Do not copy a second pure-Nash implementation alongside the seed. |
+| Select Kairos's existing Clarabel backend as a transfer candidate | Preserve its independent residual/incentive oracle tests and supported scope; establish an optional receiving backend boundary. Clarabel is currently unconditional in the Kairos game manifest. Qualify the receiving artifact before forwarding or retiring the old API. |
+| Transfer S01–S04 correction responsibility and their source fixtures with the methods | T17.04–07 remain pending. Euler-under-RK4, limited mixed-under-Lemke, product-distribution CE and Kuhn-only CFR are not promoted by a move. Track 110 retains source characterization/withdrawal decisions. |
+| Keep UOGTO ontology/IRIs, SHACL, competency queries and semantic examples in UOGTO | Consume a pinned executable profile through optional `paignia-uogto` mapping. Share licensed fixtures by provenance; semantic conformance is not numerical proof. |
+| Keep UOGTO's Python inspector/reference playground out of production execution | Its RDF game inspector is not a solver; the current `LLMPlayer` chooses the first action. Retain accurate reference/demo labels or retire misleading claims. No host-language runtime fallback. |
+| Split ECS topology/execution and restricted ontology input tooling before transfer | Optional `paignia-kairos` / `paignia-uogto` own those adapters. The core does not import Kairos, a reasoner or a second clock. |
+
+Record source repository, immutable commit, path, original licence and
+transformation for every copied artifact. The seed is Apache-2.0; Kairos source
+is MIT OR Apache-2.0; UOGTO code is MIT while its ontology/documentation is
+CC-BY-4.0. Retain per-artifact notices instead of applying a Rust package licence
+to imported ontology assets. Referencing a pinned UOGTO profile is preferable
+to copying its complete ontology into the core.
+
+## Ontology identity and packaging defects to resolve
+
+Kairos's bundled experimental fixtures use
+`https://kairos.dev/ontology/game-theory#`; canonical UOGTO uses
+`https://w3id.org/uogto/core#` and `https://w3id.org/uogto/extensions#`.
+Matching local class names do not establish equivalence. The optional importer
+needs an explicit versioned mapping with full-IRI collision/unknown-term negative
+fixtures; branding must not rewrite ontology identifiers.
+
+The bundled fixture manifests omit author/date/licence/review-commit fields
+required by their own `provenance/POLICY.md`. Keep these artifacts labelled legacy
+experimental until those fields are resolved. The generated Rust `include!`
+reaches outside the crate root; independently unpacked package tests must prove
+the replacement closure. Neither defect is repaired by moving the directory.
+
+The repeated `graph_relations::children_of` whole-store scans are an extraction
+performance candidate: construct a validated immutable adjacency snapshot once,
+with explicit semantic/game/ECS identity mapping and topology invalidation.
+Benchmark total snapshot-plus-solve cost and reuse before changing the reference
+representation. See the [performance programme](../performance-programme.md).
 
 ## Resolve incompatible semantics before copying code
 
@@ -95,6 +145,13 @@ Each unresolved design produces one-behaviour, at-most-five-file implementation
 leaves in the existing owning track before coding starts. Reuse the same tiny
 fixtures and one review per coherent contract/numerical milestone. There is no
 new cross-repository approval committee or status ledger.
+
+Paignia now owns provider T17.01–.08 and .12–.17. Preserve those stable IDs during
+the handoff; the former incubator retains historical receipts and application
+.09/.11, while .10 executes in the chosen second application. One canonical plan
+owns each method. The new repository's existence does not satisfy T17.12's two
+installed-consumer acceptance, and no generic source fork should remain in the
+reimbursement workspace after its dependency switch.
 
 The [release gates](../release-gates.md) keep Kairos core, static games and
 dynamic integration independently scoped. Moving or excluding a method does

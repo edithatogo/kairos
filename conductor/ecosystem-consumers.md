@@ -8,9 +8,14 @@ or old completed tracks. No dependency pin is changed by this review.
 Game-library follow-up: 8 November 2026 (Australia/Brisbane). The first inventory
 below retains its inspected source revisions. Current receiving coordination is
 [game-runtime issue 100](https://github.com/edithatogo/new-drug-reimbursement-game/issues/100)
-and T17, aligned with Innovate's G01–G04 programme. No separately named generic
-game repository was found in this bounded follow-up; use the existing incubator
-and do not infer a product-name decision from package names.
+and T17, aligned with Innovate's G01–G04 programme. **Paignia is the maintainer's
+chosen name and [actual repository](https://github.com/edithatogo/paignia).**
+The user supplied that newly created repository after the initial bounded lookup.
+Transfer the core/solve seed there; PR 101 makes the old incubator an immutable
+consumer. Naming, source movement, installed acceptance and publication remain
+distinct. Historical rows below retain their original pins. Canonical T17
+provider work moves to Paignia; domain-specific .09/.11 remain reimbursement
+application work and .10 belongs to the chosen second consumer.
 
 | Repository / inspected revision | Observed relationship | Required consumer-owned work |
 | --- | --- | --- |
@@ -28,6 +33,17 @@ The older CareOps record retaining `44261eb` describes a historical acceptance;
 it is **not** the current gitlink. Inspect the actual manifest and gitlink before
 preparing an upgrade. A newer Kairos main is not automatically a compatible
 replacement for a consumer's selected branch.
+
+The 8 November follow-up inspected CareOps main
+`a44a8c9f1461839c5306dbf44a1fa9a3b1981c50`, still pinning Kairos
+`07410266bf54b6f73c59db2f8cbfbc5697c53734`. It confirms an existing
+`careops-core` package and an actual nonclinical logistics test consumer for its
+experiment module. Its configurable-pathway loop/custom RNG and sequential
+ED/ward/community composition require the [bounded owner follow-ups](design/careops-composition-plan-20261020.md#paignia-and-careops-boundary-review).
+These source findings do not qualify a newer provider pin or native execution.
+CareOps issue [205](https://github.com/edithatogo/careops-sim/issues/205) maps the
+optional Paignia profile to R76.5; it is not mandatory for T17's first application
+consumer or for CareOps R76.6/R77 runtime acceptance.
 
 ## Repository-local workstreams
 

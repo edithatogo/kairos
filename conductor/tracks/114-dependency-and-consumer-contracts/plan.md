@@ -20,6 +20,14 @@ acceptance run on separate capability paths. A pending optional game profile
 must not block a runtime-only CareOps/Innovate receipt. These are pending
 implementation/qualification obligations, not runtime acceptance from this plan.
 
+Paignia is now the chosen game-library identity. The
+[provider supplement](paignia-innovate-handoff.md) maps KP01–KP05 into existing
+K01/114 tasks; those labels are acceptance refinements, not a second backlog.
+The [CareOps source review](../../design/careops-composition-plan-20261020.md#paignia-and-careops-boundary-review)
+routes shared healthcare cleanup downstream and generic experiment/RNG/resource
+reuse to existing K-C02/K-C04/K-C05 owners. It creates no duplicate track and
+does not change the 60-leaf workpack's pending statuses.
+
 ## Phase 0: Existing-state decisions
 
 - [ ] 114.0.1: Reconcile Tracks70–104 adoption/defer/no-go evidence; do not re-propose already adopted dependencies.
