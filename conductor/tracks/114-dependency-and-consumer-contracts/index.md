@@ -10,6 +10,7 @@ Status: Spec Approved. Created 7 November 2026 from the maintainer's approved re
 - [Test matrix](test-matrix.md)
 - [Risks](risk-register.md)
 - [Handoff](handoff.md)
+- [Paignia and Innovate provider supplement](paignia-innovate-handoff.md)
 - [Metadata](metadata.json)
 - [Detailed programme](../../dependency-and-consumer-contracts.md)
 - [Ecosystem decision](../../../docs/adr/0011-ecosystem-boundaries.md)
@@ -17,3 +18,6 @@ Status: Spec Approved. Created 7 November 2026 from the maintainer's approved re
 - [Movement and usage contract](../../contracts/movement-resource-usage.md)
 - [Bounded implementation workpack](../../execution/README.md)
 
+Paignia names the planned reusable game provider; the name does not qualify
+algorithms, create a repository or advance consumer/provider pins. Existing
+scientific completion, native-only execution and release gates remain in force.
