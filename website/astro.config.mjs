@@ -18,7 +18,7 @@ export default defineConfig({
       description:
         "Rust simulation engine documentation, native language adapters, and capability evidence.",
       editLink: {
-        baseUrl: `${repo}/edit/main/website/src/content/docs/`,
+        baseUrl: `${repo}/edit/main/website/`,
       },
       social: [
         {
