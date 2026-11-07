@@ -89,44 +89,13 @@ Quality gates
 Release implications
 ```
 
-## Development waves
+## Delivery order
 
-```mermaid
-gantt
-    title KairoECS Parallel Conductor Waves
-    dateFormat  YYYY-MM-DD
-    axisFormat  %d
-    section Wave 0 Foundation
-    Track 00 Foundation/Governance       :a0, 2026-01-01, 5d
-    Track 13 CI skeleton                 :a1, 2026-01-01, 5d
-    Track 14 Docs skeleton               :a2, 2026-01-01, 5d
-    Track 16 Release policy              :a3, 2026-01-01, 5d
-    section Wave 1 Contracts
-    Core/Types contracts                 :b0, after a0, 5d
-    FFI contract                         :b1, after a0, 5d
-    Arrow schema contract                :b2, after a0, 5d
-    Conformance fixtures                 :b3, after a0, 5d
-    section Wave 2 Core implementation
-    Scheduler                            :c0, after b0, 10d
-    ECS                                  :c1, after b0, 10d
-    RNG                                  :c2, after b0, 6d
-    Arrow builders                       :c3, after b2, 8d
-    section Wave 3 Surfaces
-    FFI bridge                           :d0, after c0, 8d
-    DES/ABM APIs                         :d1, after c1, 8d
-    Docs examples                        :d2, after c0, 10d
-    section Wave 4 Binding fanout
-    Python 3.10-3.14                     :e0, after d0, 10d
-    R                                    :e1, after d0, 10d
-    Julia                                :e2, after d0, 10d
-    TypeScript/Wasm                      :e3, after d0, 10d
-    C# .NET 10-11                        :e4, after d0, 10d
-    Go                                   :e5, after d0, 10d
-    section Wave 5 Release
-    Packaging                            :f0, after e0, 8d
-    Docs site                            :f1, after d2, 8d
-    Release candidate                    :f2, after f0, 5d
-```
+Use the live dependency graph, not the obsolete calendar waves. Strengthen the
+small Rust kernel and consumer contract first; complete supported scientific
+methods and installed adapters; qualify beta/stable packages; then evaluate
+advanced backends on measured workloads. Track 114 coordinates ecosystem
+interfaces and the [bounded workpack](execution/README.md) provides leaf scopes.
 
 ## Merge protocol
 
@@ -153,20 +122,45 @@ quality gates pass
 handoff file written
 ```
 
+## Proportionate task execution
+
+For routine authorized work, use one bounded task: one observable behaviour,
+up to five source/test files, explicit context and at most three focused check
+commands. Target 30–90 minutes for a settled local-model task. Return the diff,
+actual check results and any unresolved issue in the PR/commit. The existing
+path claim prevents concurrent writers; it is not a second approval process.
+Do not create a new ADR, risk register, review panel or evidence dossier per leaf.
+
+Keep status in the existing track plan/registry; the workpack describes scope
+and dependencies without a competing status ledger. One review may cover a
+coherent batch of routine leaves. A reviewer can be an agent; no additional
+human approval is required for reversible work already authorized by the user.
+Use specialist review for a numerical algorithm, public API/ABI/schema, replay,
+security or release decision. Missing architecture is a small design task before
+implementation, not an invitation for a basic model to guess.
+
+Existing per-phase review checkboxes refer to coherent milestones, not every
+leaf or red/green test iteration. Reuse unchanged evidence by source/config/input
+identity. Full native, consumer and release checks remain at the milestones they
+actually qualify. An unavailable tool is reported; it must not become a fake pass.
+
 ## Automatic phase closeout gate
 
-Every non-terminal track must close each phase through the same review-fix-cleanup loop before the next phase starts:
+At a coherent phase/status milestone, run `$conductor-review` (the Conductor
+review operation, not a requirement for a separately installed command), inspect
+the diff and auto-apply accepted review fixes. Record unresolved findings once
+in the track handoff. Synchronize `conductor/tracks.yaml`, `conductor/tracks.md`,
+`conductor/phase-closeout.yaml` and `conductor/status.md` only when their state
+changes; do not edit every ledger for every leaf. Update track-map/readiness only
+when ownership/dependencies/readiness change.
 
-1. Run `$conductor-review` against the track and current diff.
-2. Auto-apply accepted review fixes inside the track's owned paths.
-3. Record rejected, cross-track, or blocked-path fixes in `handoff.md`.
-4. Update the track registry/status surfaces in lockstep: `conductor/tracks.yaml` is the authoritative machine-readable registry, `conductor/tracks.md` is the human-readable index, `conductor/phase-closeout.yaml` is the review ledger, and `conductor/status.md` is the narrative status. Also update `conductor/implementation-readiness.md` and `conductor/track-map.md` when readiness, ownership, dependency, gate, or wave data changes.
-5. Run `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`, `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1`, and the gates listed in `test-matrix.md`.
-6. Commit and push the cleaned slice, then record the commit SHA or blocker in `handoff.md`.
-7. Run `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` to verify recorded commits, pushed refs, and cleanup state.
-8. Advance the next phase only after there is no in-scope unstaged or untracked work except documented draft satellites.
-
-Implementation review and registry synchronization are not optional. The implementation pass must invoke `$conductor-review` before any phase/status advance, apply accepted in-scope review fixes, and leave `conductor/tracks.yaml`, `conductor/tracks.md`, `conductor/phase-closeout.yaml`, and `conductor/status.md` saying the same thing about the track.
+Run the affected test matrix and
+`pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`,
+`pwsh -NoProfile -File scripts/validate_conductor_dag.ps1` at that milestone.
+Commit and push the cleaned slice, then use
+`pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`
+for publication/cleanup checks. Record a real blocker when a required gate
+cannot run. These are integration checks, not new user permission gates.
 
 ## Handoff timing rule
 
@@ -180,7 +174,7 @@ CI lint rule: If a track is `In Progress` or higher and its handoff.md contains 
 
 ## Focused validation and local Python
 
-Start with an affected file/node or native selector, for example `.venv/bin/python -m unittest discover -s tests -p test_local_python_runtime.py -v`, `.venv/bin/python -m pytest bindings/python/tests/test_import.py -q`, `cargo test --locked -p PACKAGE FILTER`, or the exact PowerShell validator. Use existing real nodes/files, not a guessed selection; verify tests executed. Python commands must use the verified local selected profile described in AGENTS.md; 3.15.1 remains the current qualified default. Necessary alternate versions are permitted under the dependency policy, with explicit consumer/scope, reason and actual qualification.
+Start with an affected file/node or native selector, for example `.venv/bin/python -m unittest discover -s tests -p test_local_python_runtime.py -v`, `.venv/bin/python -m pytest bindings/python/tests/test_import.py -q`, `cargo test --locked -p PACKAGE FILTER`, or the exact PowerShell validator. Use existing real nodes/files, not a guessed selection; verify tests executed. Python commands must use the verified local selected profile described in AGENTS.md; 3.15.2 remains the current qualified default. Necessary alternate versions are permitted under the dependency policy, with explicit consumer/scope, reason and actual qualification.
 
 Keep pytest cacheprovider enabled per worktree/environment. Failure-only mode is `--lf --last-failed-no-failures=none` (zero selected tests proves nothing). `--ff` still runs the whole selected suite; `--sw` is a local debug loop. Do not put selection flags in global addopts. Dependency/configuration/schema/fixture changes or unknown impact invalidate narrow selection and cached evidence. Full clean integration, package, coverage, security and release gates remain required at coherent milestones.
 

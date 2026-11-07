@@ -26,6 +26,23 @@ Every advertised method must end with an accurate supported implementation plus 
 
 ## Completion protocol
 
+### Ownership after ecosystem separation
+
+S01–S04 move with the reusable game methods to the separate game-library layer
+under [ADR 0011](../docs/adr/0011-ecosystem-boundaries.md). Track 110 retains the
+obligation until a receiving package, owner, algorithm/result contract and
+numerical acceptance are recorded. Keep the existing Kairos API unsupported or
+experimental until corrected or explicitly retired. No task closes merely
+because source moved to another repository. The remaining IDs stay with their
+existing capability owners; S17 additionally consumes the neutral
+[movement/resource-usage contract](contracts/movement-resource-usage.md).
+
+The [bounded workpack](execution/README.md) provides a distinguishing regression
+task for every S01–S17 obligation and decomposes immediate fixes and contracts.
+An advanced algorithm requiring unresolved design is assigned to a specialist;
+it is not disguised as a small local-model implementation task. Design tasks
+must produce the next bounded leaves before that implementation is dispatched.
+
 For each ID, record public API and actual callers, precise mathematical/runtime contract, an independent oracle, held-out cases, acceptance thresholds, current evidence class, proposed dependency, output-version implications and owner. Add failing tests that distinguish the real algorithm from the existing approximation before implementation. Preserve negative results. Freeze reference versions/licences/data hashes.
 
 Errors on unsupported inputs must be explicit. Numerical changes require an algorithm/RNG/schema version and consumer qualification. Do not copy implementation logic into the oracle. Production Rust dependencies are distinct from external test-only Python/C++/R references.

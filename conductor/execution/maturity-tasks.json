@@ -1,0 +1,2041 @@
+{
+  "schema_version": 1,
+  "scope": "Next bounded implementation tranche; status stays in parent track plans",
+  "tasks": [
+    {
+      "id": "K01.contract",
+      "title": "Choose the minimal consumer crate closure",
+      "parent": "114.1.1",
+      "kind": "design",
+      "executor": "specialist",
+      "requires": [],
+      "read": [
+        "docs/adr/0011-ecosystem-boundaries.md",
+        "Cargo.toml",
+        "conductor/ecosystem-consumers.md"
+      ],
+      "write": [
+        "conductor/contracts/minimal-consumer.md"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "tree",
+            "-p",
+            "kairo-ecs-des",
+            "--edges",
+            "normal"
+          ]
+        },
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "tree",
+            "-p",
+            "kairo-ecs-abm",
+            "--edges",
+            "normal"
+          ]
+        }
+      ],
+      "acceptance": "Record the real public symbols/feature closure needed by one standalone consumer; exclude domain, game, ontology, Arrow, GPU, MPI and host runtimes from the minimal profile.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed."
+    },
+    {
+      "id": "K01.fixture",
+      "title": "Build one standalone installed Rust consumer",
+      "parent": "114.1.2",
+      "kind": "qualification",
+      "executor": "specialist",
+      "requires": [
+        "K01.contract"
+      ],
+      "read": [
+        "conductor/dependency-and-consumer-contracts.md",
+        "crates/kairo-ecs-core/src/lib.rs",
+        "crates/kairo-ecs-des/src/lib.rs"
+      ],
+      "write": [
+        "tests/fixtures/minimal-consumer/Cargo.toml",
+        "tests/fixtures/minimal-consumer/Cargo.lock",
+        "tests/fixtures/minimal-consumer/src/main.rs"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "generate-lockfile",
+            "--manifest-path",
+            "tests/fixtures/minimal-consumer/Cargo.toml"
+          ]
+        },
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "run",
+            "--locked",
+            "--manifest-path",
+            "tests/fixtures/minimal-consumer/Cargo.toml"
+          ]
+        }
+      ],
+      "acceptance": "After K01.contract creates the reviewed package selection, generate the fixture lock once. In a clean consumer directory run actual event/state/resource work through an immutable provider revision or built package; no sibling repository required. A source-only workspace path smoke does not close this leaf.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed."
+    },
+    {
+      "id": "K01.features",
+      "title": "Verify optional heavy dependencies stay optional",
+      "parent": "114.2.3",
+      "kind": "implementation",
+      "executor": "local",
+      "requires": [
+        "K01.contract"
+      ],
+      "read": [
+        "Cargo.toml",
+        "crates/kairo-ecs-des/Cargo.toml",
+        "crates/kairo-ecs-abm/Cargo.toml"
+      ],
+      "write": [
+        "scripts/check_minimal_features.py",
+        "tests/test_minimal_features.py"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "python",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-p",
+            "test_minimal_features.py",
+            "-v"
+          ]
+        }
+      ],
+      "acceptance": "The future guard inspects resolved normal/build dependencies for the selected profile and rejects a deliberately introduced heavy/domain dependency; a textual manifest search alone is insufficient.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed."
+    },
+    {
+      "id": "K01.games",
+      "title": "Map experimental game APIs to the existing incubator",
+      "parent": "114.1.5",
+      "kind": "design",
+      "executor": "specialist",
+      "requires": [],
+      "read": [
+        "docs/adr/0011-ecosystem-boundaries.md",
+        "conductor/scientific-completion.md",
+        "crates/kairo-ecs-game-theory/src/lib.rs",
+        "crates/kairo-ecs-game-ontology/src/lib.rs"
+      ],
+      "write": [
+        "conductor/contracts/game-extraction-map.md"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-game-theory"
+          ]
+        },
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-game-ontology"
+          ]
+        }
+      ],
+      "acceptance": "List each public API, consumer, receiving package, S01-S04 obligation and retain/replace/withdraw decision. No new solver code or pin change. Pure core/solve remain Kairos-independent; optional adapter imports both.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed."
+    },
+    {
+      "id": "K02.contract",
+      "title": "Settle movement handle and cancellation semantics",
+      "parent": "114.1.6",
+      "kind": "design",
+      "executor": "specialist",
+      "requires": [],
+      "read": [
+        "conductor/contracts/movement-resource-usage.md",
+        "crates/kairo-ecs-abm/src/routing.rs",
+        "crates/kairo-ecs-des/src/boundary.rs",
+        "crates/kairo-ecs-types/src/lib.rs"
+      ],
+      "write": [
+        "conductor/contracts/movement-resource-usage.md"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-abm",
+            "--test",
+            "petgraph_routing_oracles"
+          ]
+        },
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-des"
+          ]
+        }
+      ],
+      "acceptance": "Specify exact Rust types/module placement, generation/idempotency, zero duration, overflow, stale topology, cancellation ordering and error surface; identify the public symbols used by each dependent leaf.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed."
+    },
+    {
+      "id": "K02.arrival",
+      "title": "Schedule exactly one movement arrival",
+      "parent": "114.1.6",
+      "kind": "implementation",
+      "executor": "local",
+      "requires": [
+        "K02.contract"
+      ],
+      "read": [
+        "conductor/contracts/movement-resource-usage.md",
+        "crates/kairo-ecs-abm/src/lib.rs",
+        "crates/kairo-ecs-abm/src/routing.rs"
+      ],
+      "write": [
+        "crates/kairo-ecs-abm/src/movement.rs",
+        "crates/kairo-ecs-abm/src/lib.rs",
+        "crates/kairo-ecs-abm/tests/movement_arrival.rs"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-abm",
+            "--test",
+            "movement_arrival"
+          ]
+        }
+      ],
+      "acceptance": "New test target: departure 10 plus duration 7 changes location once at tick 17; no change before arrival; overflow rejects before mutation. Route queries still schedule no events.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed."
+    },
+    {
+      "id": "K02.cancel",
+      "title": "Cancel a pending movement without a later arrival",
+      "parent": "114.1.6",
+      "kind": "implementation",
+      "executor": "local",
+      "requires": [
+        "K02.arrival"
+      ],
+      "read": [
+        "conductor/contracts/movement-resource-usage.md",
+        "crates/kairo-ecs-abm/src/lib.rs"
+      ],
+      "write": [
+        "crates/kairo-ecs-abm/src/movement.rs",
+        "crates/kairo-ecs-abm/tests/movement_cancellation.rs"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-abm",
+            "--test",
+            "movement_cancellation"
+          ]
+        }
+      ],
+      "acceptance": "Cancel before dispatch prevents location change; repeated cancellation and stale generation follow the contract; reuse of an entity ID cannot be moved by an old event.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed."
+    },
+    {
+      "id": "K02.replan",
+      "title": "Invalidate an arrival after topology-driven replanning",
+      "parent": "114.1.6",
+      "kind": "implementation",
+      "executor": "local",
+      "requires": [
+        "K02.cancel"
+      ],
+      "read": [
+        "conductor/contracts/movement-resource-usage.md",
+        "crates/kairo-ecs-abm/src/routing.rs"
+      ],
+      "write": [
+        "crates/kairo-ecs-abm/src/movement.rs",
+        "crates/kairo-ecs-abm/tests/movement_replan.rs"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-abm",
+            "--test",
+            "movement_replan"
+          ]
+        }
+      ],
+      "acceptance": "A route revision cancels/supersedes the old arrival; a closed edge cannot trigger the old destination change. Tie order is deterministic.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed."
+    },
+    {
+      "id": "K02.usage",
+      "title": "Record an occupancy interval at actual lease admission",
+      "parent": "114.1.7",
+      "kind": "implementation",
+      "executor": "local",
+      "requires": [
+        "K02.contract"
+      ],
+      "read": [
+        "conductor/contracts/movement-resource-usage.md",
+        "crates/kairo-ecs-des/src/staged_runtime.rs"
+      ],
+      "write": [
+        "crates/kairo-ecs-des/src/staged_runtime.rs",
+        "crates/kairo-ecs-des/tests/usage_intervals.rs"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-des",
+            "--test",
+            "usage_intervals"
+          ]
+        }
+      ],
+      "acceptance": "Capacity-one FIFO case yields adjacent half-open intervals at release/promotion; queued wait is not occupancy; duplicate rejected release adds no usage.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed."
+    },
+    {
+      "id": "K02.quantity",
+      "title": "Allocate an explicit quantity atomically",
+      "parent": "114.1.7",
+      "kind": "implementation",
+      "executor": "local",
+      "requires": [
+        "K02.usage"
+      ],
+      "read": [
+        "conductor/contracts/movement-resource-usage.md",
+        "crates/kairo-ecs-des/src/staged_runtime.rs"
+      ],
+      "write": [
+        "crates/kairo-ecs-des/src/staged_runtime.rs",
+        "crates/kairo-ecs-des/tests/allocation_quantity.rs"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-des",
+            "--test",
+            "allocation_quantity"
+          ]
+        }
+      ],
+      "acceptance": "Quantity two does not partially acquire one free unit and release returns exactly two; zero/overflow quantities reject. Preserve the contract-selected FIFO/head-of-line policy.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed."
+    },
+    {
+      "id": "K02.window",
+      "title": "Integrate occupied unit-ticks in an observation window",
+      "parent": "114.1.7",
+      "kind": "implementation",
+      "executor": "local",
+      "requires": [
+        "K02.usage"
+      ],
+      "read": [
+        "conductor/contracts/movement-resource-usage.md",
+        "crates/kairo-ecs-des/src/lib.rs"
+      ],
+      "write": [
+        "crates/kairo-ecs-des/src/usage.rs",
+        "crates/kairo-ecs-des/src/lib.rs",
+        "crates/kairo-ecs-des/tests/usage_window.rs"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-des",
+            "--test",
+            "usage_window"
+          ]
+        }
+      ],
+      "acceptance": "Hand-calculated overlap and active-lease censoring agree; splitting a window preserves the total; consumption/transfer records are not counted as occupancy.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed."
+    },
+    {
+      "id": "K02.replay",
+      "title": "Choose committed usage export under rollback",
+      "parent": "114.1.7",
+      "kind": "design",
+      "executor": "specialist",
+      "requires": [
+        "K02.usage"
+      ],
+      "read": [
+        "conductor/contracts/movement-resource-usage.md",
+        "crates/kairo-ecs-pdes/src/optimistic.rs",
+        "crates/kairo-ecs-des/src/staged_runtime.rs"
+      ],
+      "write": [
+        "conductor/contracts/usage-replay.md"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-pdes",
+            "--test",
+            "track48_rollback_regressions",
+            "--features",
+            "time-warp"
+          ]
+        }
+      ],
+      "acceptance": "Choose committed-only or revision/retraction semantics and specify one adversarial rollback fixture. Produce <=5-file implementation leaves; provisional plus replayed usage cannot be double counted.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed."
+    },
+    {
+      "id": "K02.composition",
+      "title": "Define movement-plus-resource cancellation ordering",
+      "parent": "114.1.8",
+      "kind": "design",
+      "executor": "specialist",
+      "requires": [
+        "K02.cancel",
+        "K02.usage"
+      ],
+      "read": [
+        "conductor/contracts/movement-resource-usage.md",
+        "crates/kairo-ecs-des/src/boundary.rs",
+        "crates/kairo-ecs-des/src/staged_runtime.rs"
+      ],
+      "write": [
+        "conductor/contracts/movement-allocation-composition.md"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-des",
+            "--test",
+            "careops_staged_allocation_compatibility"
+          ]
+        }
+      ],
+      "acceptance": "Specify a public-API composition for acquire/travel/release with no leaked lease after failure/cancel; domain policies remain consumer-owned. Add the exact subsequent Rust fixture task before implementation.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed."
+    },
+    {
+      "id": "K03.baseline",
+      "title": "Measure the matched serial and conservative workload",
+      "parent": "111.0.1",
+      "kind": "qualification",
+      "executor": "specialist",
+      "requires": [],
+      "read": [
+        "conductor/performance-programme.md",
+        "crates/kairo-ecs-pdes/benches/production.rs"
+      ],
+      "write": [
+        "conductor/performance/serial-parallel-baseline.md"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "bench",
+            "--locked",
+            "-p",
+            "kairo-ecs-pdes",
+            "--bench",
+            "production",
+            "--features",
+            "pdes"
+          ]
+        }
+      ],
+      "acceptance": "Record raw samples, source/hardware/input, setup versus steady-state and semantic work counts. Report slowdowns too; benchmark execution, not its name, is evidence.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed."
+    },
+    {
+      "id": "K03.profile",
+      "title": "Identify the largest measured conservative-runtime overhead",
+      "parent": "111.0.2",
+      "kind": "qualification",
+      "executor": "specialist",
+      "requires": [
+        "K03.baseline"
+      ],
+      "read": [
+        "conductor/performance-programme.md",
+        "crates/kairo-ecs-pdes/src/conservative.rs"
+      ],
+      "write": [
+        "conductor/performance/conservative-overhead.md"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "bench",
+            "--locked",
+            "-p",
+            "kairo-ecs-pdes",
+            "--bench",
+            "production",
+            "--features",
+            "pdes"
+          ]
+        }
+      ],
+      "acceptance": "Use a real profiler/counters on the frozen baseline; quantify startup/join, barriers, allocation and useful work. Select one change and its semantic regression oracle before implementation.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed."
+    },
+    {
+      "id": "K03.pool",
+      "title": "Reuse conservative workers for repeated rounds",
+      "parent": "111.1.1",
+      "kind": "implementation",
+      "executor": "specialist",
+      "requires": [
+        "K03.profile"
+      ],
+      "read": [
+        "conductor/performance-programme.md",
+        "crates/kairo-ecs-pdes/src/conservative.rs"
+      ],
+      "write": [
+        "crates/kairo-ecs-pdes/src/conservative.rs",
+        "crates/kairo-ecs-pdes/tests/persistent_worker_parity.rs"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-pdes",
+            "--test",
+            "persistent_worker_parity",
+            "--features",
+            "pdes"
+          ]
+        },
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "bench",
+            "--locked",
+            "-p",
+            "kairo-ecs-pdes",
+            "--bench",
+            "production",
+            "--features",
+            "pdes"
+          ]
+        }
+      ],
+      "acceptance": "Only after profiling selects this change: identical event/cancel order for 1/2/4 workers and bounded shutdown/error handling; measured crossover improvement without asserting universal speedup.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed."
+    },
+    {
+      "id": "K03.buffers",
+      "title": "Reuse one measured hot-path buffer",
+      "parent": "111.1.2",
+      "kind": "implementation",
+      "executor": "local",
+      "requires": [
+        "K03.profile"
+      ],
+      "read": [
+        "conductor/performance-programme.md",
+        "crates/kairo-ecs-pdes/src/conservative.rs"
+      ],
+      "write": [
+        "crates/kairo-ecs-pdes/src/conservative.rs",
+        "crates/kairo-ecs-pdes/tests/buffer_reuse_parity.rs"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-pdes",
+            "--test",
+            "buffer_reuse_parity",
+            "--features",
+            "pdes"
+          ]
+        },
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "bench",
+            "--locked",
+            "-p",
+            "kairo-ecs-pdes",
+            "--bench",
+            "production",
+            "--features",
+            "pdes"
+          ]
+        }
+      ],
+      "acceptance": "Select one allocation site from K03.profile. Reuse only that buffer; empty/error/cancel rounds retain serial parity and measured allocation reduction.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed."
+    },
+    {
+      "id": "K04.abi",
+      "title": "Exercise a real native missing-capability error",
+      "parent": "109.1.1",
+      "kind": "regression",
+      "executor": "local",
+      "requires": [],
+      "read": [
+        "crates/kairo-ecs-ffi/src/lib.rs",
+        "conductor/native-only-policy.md"
+      ],
+      "write": [
+        "crates/kairo-ecs-ffi/tests/native_capability_errors.rs"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-ffi",
+            "--test",
+            "native_capability_errors"
+          ]
+        }
+      ],
+      "acceptance": "New negative target invokes real Rust entrypoints and confirms unsupported operations return explicit errors without a result or host fallback.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed."
+    },
+    {
+      "id": "K04.adapters",
+      "title": "Select one incomplete native language adapter operation",
+      "parent": "109.1.2",
+      "kind": "design",
+      "executor": "specialist",
+      "requires": [
+        "K04.abi"
+      ],
+      "read": [
+        "bindings/README.md",
+        "conductor/native-only-policy.md",
+        "crates/kairo-ecs-ffi/src/lib.rs"
+      ],
+      "write": [
+        "conductor/contracts/next-native-adapter.md"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-ffi",
+            "--test",
+            "ffi_integration"
+          ]
+        }
+      ],
+      "acceptance": "Pick one real consumer/language/operation; name ABI symbols, ownership/lifetime/error contract and next <=5-file bridge plus installed-test leaves. Do not mark all language packages supported from imports.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed."
+    },
+    {
+      "id": "K05.claims",
+      "title": "Prevent an unsupported capability entering beta claims",
+      "parent": "112.1.1",
+      "kind": "regression",
+      "executor": "local",
+      "requires": [],
+      "read": [
+        "conductor/capabilities.json",
+        "scripts/validation/validate-frontier-evidence.mjs"
+      ],
+      "write": [
+        "tests/conformance/frontier-evidence-check.mjs"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "node",
+            "--test",
+            "tests/conformance/frontier-evidence-check.mjs"
+          ]
+        }
+      ],
+      "acceptance": "Add one negative claim/promotion case using the actual registry validator; metadata cannot upgrade source-only or unexecuted evidence into native acceptance.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed."
+    },
+    {
+      "id": "K05.beta",
+      "title": "Freeze one small beta support matrix",
+      "parent": "113.0.1",
+      "kind": "design",
+      "executor": "specialist",
+      "requires": [],
+      "read": [
+        "conductor/release-gates.md",
+        "conductor/capabilities.json",
+        "conductor/ecosystem-consumers.md"
+      ],
+      "write": [
+        "conductor/release/beta-scope.md"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "node",
+            "scripts/validation/validate-frontier-evidence.mjs"
+          ]
+        }
+      ],
+      "acceptance": "Enumerate exact packages/APIs/platforms and their missing acceptance tasks; unsupported extensions remain explicit with completion owners. No new release or tag.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed."
+    },
+    {
+      "id": "K05.package",
+      "title": "Specify the clean installed-package acceptance job",
+      "parent": "113.1.1",
+      "kind": "design",
+      "executor": "specialist",
+      "requires": [
+        "K05.beta",
+        "K01.fixture"
+      ],
+      "read": [
+        "conductor/release-gates.md",
+        "conductor/native-only-policy.md"
+      ],
+      "write": [
+        "conductor/release/installed-beta-job.md"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "package",
+            "--locked",
+            "-p",
+            "kairo-ecs-types",
+            "--list"
+          ]
+        }
+      ],
+      "acceptance": "After beta scope and minimal fixture, write exact build/install/run/upgrade steps and artifact identities for one supported target; package listing alone cannot accept installation.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed."
+    },
+    {
+      "id": "K06.frontier",
+      "title": "Predeclare one frontier comparison with a stopping rule",
+      "parent": "115.0.1",
+      "kind": "design",
+      "executor": "specialist",
+      "requires": [
+        "K03.baseline"
+      ],
+      "read": [
+        "conductor/validation-datasets.md",
+        "conductor/performance-programme.md",
+        "conductor/release-gates.md"
+      ],
+      "write": [
+        "conductor/research/first-frontier-comparison.md"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "python",
+            "scripts/maturity_tasks.py",
+            "check"
+          ]
+        }
+      ],
+      "acceptance": "Name one use case/comparator/metric, matched semantics, held-out workloads, accuracy budget and superiority/non-inferiority rule. Structural workpack check does not validate the scientific proposal.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed."
+    },
+    {
+      "id": "S01.regression",
+      "title": "Distinguish RK4 from clipped Euler",
+      "parent": "110:S01",
+      "kind": "regression",
+      "executor": "local",
+      "requires": [
+        "S01.completion"
+      ],
+      "read": [
+        "conductor/scientific-completion.md",
+        "crates/kairo-ecs-game-theory/src/normal_form.rs"
+      ],
+      "write": [
+        "crates/kairo-ecs-game-theory/tests/maturity_rk4_order.rs"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-game-theory",
+            "--test",
+            "maturity_rk4_order"
+          ]
+        }
+      ],
+      "acceptance": "First produce a distinguishing regression after its oracle/contract is settled. Verify the expected baseline failure; integrate the target with its paired implementation or explicit unsupported error before merging. Final oracle: On an analytic two-strategy replicator with declared fitness and interval, step refinement demonstrates the expected order and conserves mass without using clipping as the accuracy oracle.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed.",
+      "obligation": "S01"
+    },
+    {
+      "id": "S01.completion",
+      "title": "Specify the remaining S01 implementation leaves",
+      "parent": "110:S01",
+      "kind": "design",
+      "executor": "specialist",
+      "requires": [],
+      "read": [
+        "conductor/scientific-completion.md",
+        "crates/kairo-ecs-game-theory/src/normal_form.rs",
+        "conductor/validation-datasets.md"
+      ],
+      "write": [
+        "conductor/execution/scientific/s01-completion.md",
+        "conductor/execution/maturity-tasks.json"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-game-theory"
+          ]
+        }
+      ],
+      "acceptance": "Record algorithm/API/version, exact receiving package and independent oracle for S01. Decompose every remaining requirement in scientific-completion.md into one-behaviour <=5-file leaves with concrete commands, residual/tolerance and acceptance; add them to this catalogue before implementation. A current test pass is baseline only. No method is closed by this design note. This design may proceed from the source counterexample before its regression target passes; do not wait for the future algorithm to be implemented.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed.",
+      "obligation": "S01"
+    },
+    {
+      "id": "S02.regression",
+      "title": "Reject a false equilibrium in a dominant-action game",
+      "parent": "110:S02",
+      "kind": "regression",
+      "executor": "local",
+      "requires": [
+        "S02.completion"
+      ],
+      "read": [
+        "conductor/scientific-completion.md",
+        "crates/kairo-ecs-game-theory/src/normal_form.rs"
+      ],
+      "write": [
+        "crates/kairo-ecs-game-theory/tests/maturity_nash_dominance.rs"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-game-theory",
+            "--test",
+            "maturity_nash_dominance"
+          ]
+        }
+      ],
+      "acceptance": "First produce a distinguishing regression after its oracle/contract is settled. Verify the expected baseline failure; integrate the target with its paired implementation or explicit unsupported error before merging. Final oracle: Use an independently solved strictly dominant-action counterexample; report best-response residual and reject an alleged equilibrium with positive unilateral gain.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed.",
+      "obligation": "S02"
+    },
+    {
+      "id": "S02.completion",
+      "title": "Specify the remaining S02 implementation leaves",
+      "parent": "110:S02",
+      "kind": "design",
+      "executor": "specialist",
+      "requires": [],
+      "read": [
+        "conductor/scientific-completion.md",
+        "crates/kairo-ecs-game-theory/src/normal_form.rs",
+        "conductor/validation-datasets.md"
+      ],
+      "write": [
+        "conductor/execution/scientific/s02-completion.md",
+        "conductor/execution/maturity-tasks.json"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-game-theory"
+          ]
+        }
+      ],
+      "acceptance": "Record algorithm/API/version, exact receiving package and independent oracle for S02. Decompose every remaining requirement in scientific-completion.md into one-behaviour <=5-file leaves with concrete commands, residual/tolerance and acceptance; add them to this catalogue before implementation. A current test pass is baseline only. No method is closed by this design note. This design may proceed from the source counterexample before its regression target passes; do not wait for the future algorithm to be implemented.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed.",
+      "obligation": "S02"
+    },
+    {
+      "id": "S03.regression",
+      "title": "Verify one correlated-equilibrium incentive system",
+      "parent": "110:S03",
+      "kind": "regression",
+      "executor": "local",
+      "requires": [
+        "S03.completion"
+      ],
+      "read": [
+        "conductor/scientific-completion.md",
+        "crates/kairo-ecs-game-theory/src/normal_form.rs"
+      ],
+      "write": [
+        "crates/kairo-ecs-game-theory/tests/maturity_ce_incentives.rs"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-game-theory",
+            "--test",
+            "maturity_ce_incentives"
+          ]
+        }
+      ],
+      "acceptance": "First produce a distinguishing regression after its oracle/contract is settled. Verify the expected baseline failure; integrate the target with its paired implementation or explicit unsupported error before merging. Final oracle: Check every conditional unilateral-deviation inequality on an independently solved small game, including a distribution that violates one constraint.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed.",
+      "obligation": "S03"
+    },
+    {
+      "id": "S03.completion",
+      "title": "Specify the remaining S03 implementation leaves",
+      "parent": "110:S03",
+      "kind": "design",
+      "executor": "specialist",
+      "requires": [],
+      "read": [
+        "conductor/scientific-completion.md",
+        "crates/kairo-ecs-game-theory/src/normal_form.rs",
+        "conductor/validation-datasets.md"
+      ],
+      "write": [
+        "conductor/execution/scientific/s03-completion.md",
+        "conductor/execution/maturity-tasks.json"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-game-theory"
+          ]
+        }
+      ],
+      "acceptance": "Record algorithm/API/version, exact receiving package and independent oracle for S03. Decompose every remaining requirement in scientific-completion.md into one-behaviour <=5-file leaves with concrete commands, residual/tolerance and acceptance; add them to this catalogue before implementation. A current test pass is baseline only. No method is closed by this design note. This design may proceed from the source counterexample before its regression target passes; do not wait for the future algorithm to be implemented.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed.",
+      "obligation": "S03"
+    },
+    {
+      "id": "S04.regression",
+      "title": "Distinguish general information-set CFR from a named demo",
+      "parent": "110:S04",
+      "kind": "regression",
+      "executor": "specialist",
+      "requires": [
+        "S04.completion"
+      ],
+      "read": [
+        "conductor/scientific-completion.md",
+        "crates/kairo-ecs-game-theory/src/extensive_form.rs"
+      ],
+      "write": [
+        "crates/kairo-ecs-game-theory/tests/maturity_cfr_information.rs"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-game-theory",
+            "--test",
+            "maturity_cfr_information"
+          ]
+        }
+      ],
+      "acceptance": "First produce a distinguishing regression after its oracle/contract is settled. Verify the expected baseline failure; integrate the target with its paired implementation or explicit unsupported error before merging. Final oracle: Choose a supported imperfect-information fixture and an explicit information-set mismatch; solver result/unsupported error must reflect the real game, not a hard-coded Kuhn response.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed.",
+      "obligation": "S04"
+    },
+    {
+      "id": "S04.completion",
+      "title": "Specify the remaining S04 implementation leaves",
+      "parent": "110:S04",
+      "kind": "design",
+      "executor": "specialist",
+      "requires": [],
+      "read": [
+        "conductor/scientific-completion.md",
+        "crates/kairo-ecs-game-theory/src/extensive_form.rs",
+        "conductor/validation-datasets.md"
+      ],
+      "write": [
+        "conductor/execution/scientific/s04-completion.md",
+        "conductor/execution/maturity-tasks.json"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-game-theory"
+          ]
+        }
+      ],
+      "acceptance": "Record algorithm/API/version, exact receiving package and independent oracle for S04. Decompose every remaining requirement in scientific-completion.md into one-behaviour <=5-file leaves with concrete commands, residual/tolerance and acceptance; add them to this catalogue before implementation. A current test pass is baseline only. No method is closed by this design note. This design may proceed from the source counterexample before its regression target passes; do not wait for the future algorithm to be implemented.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed.",
+      "obligation": "S04"
+    },
+    {
+      "id": "S05.regression",
+      "title": "Match a pinned multidimensional Sobol reference vector",
+      "parent": "110:S05",
+      "kind": "regression",
+      "executor": "local",
+      "requires": [
+        "S05.completion"
+      ],
+      "read": [
+        "conductor/scientific-completion.md",
+        "crates/kairo-ecs-cli/src/ensemble.rs"
+      ],
+      "write": [
+        "crates/kairo-ecs-cli/tests/maturity_sobol_vectors.rs"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-cli",
+            "--test",
+            "maturity_sobol_vectors"
+          ]
+        }
+      ],
+      "acceptance": "First produce a distinguishing regression after its oracle/contract is settled. Verify the expected baseline failure; integrate the target with its paired implementation or explicit unsupported error before merging. Final oracle: Use a licensed/versioned independent vector table and include dimension/index limits; shape and determinism alone cannot pass the fixture.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed.",
+      "obligation": "S05"
+    },
+    {
+      "id": "S05.completion",
+      "title": "Specify the remaining S05 implementation leaves",
+      "parent": "110:S05",
+      "kind": "design",
+      "executor": "specialist",
+      "requires": [],
+      "read": [
+        "conductor/scientific-completion.md",
+        "crates/kairo-ecs-cli/src/ensemble.rs",
+        "conductor/validation-datasets.md"
+      ],
+      "write": [
+        "conductor/execution/scientific/s05-completion.md",
+        "conductor/execution/maturity-tasks.json"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-cli"
+          ]
+        }
+      ],
+      "acceptance": "Record algorithm/API/version, exact receiving package and independent oracle for S05. Decompose every remaining requirement in scientific-completion.md into one-behaviour <=5-file leaves with concrete commands, residual/tolerance and acceptance; add them to this catalogue before implementation. A current test pass is baseline only. No method is closed by this design note. This design may proceed from the source counterexample before its regression target passes; do not wait for the future algorithm to be implemented.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed.",
+      "obligation": "S05"
+    },
+    {
+      "id": "S06.regression",
+      "title": "Preserve entity-purpose CRN across branching",
+      "parent": "110:S06",
+      "kind": "regression",
+      "executor": "local",
+      "requires": [
+        "S06.completion"
+      ],
+      "read": [
+        "conductor/scientific-completion.md",
+        "crates/kairo-ecs-rng/src/lib.rs"
+      ],
+      "write": [
+        "crates/kairo-ecs-rng/tests/maturity_crn_branching.rs"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-rng",
+            "--test",
+            "maturity_crn_branching"
+          ]
+        }
+      ],
+      "acceptance": "First produce a distinguishing regression after its oracle/contract is settled. Verify the expected baseline failure; integrate the target with its paired implementation or explicit unsupported error before merging. Final oracle: Adding an unrelated event/entity draw cannot shift the paired entity-purpose stream; retain algorithm/version identity and test a deliberately wrong stream assignment.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed.",
+      "obligation": "S06"
+    },
+    {
+      "id": "S06.completion",
+      "title": "Specify the remaining S06 implementation leaves",
+      "parent": "110:S06",
+      "kind": "design",
+      "executor": "specialist",
+      "requires": [],
+      "read": [
+        "conductor/scientific-completion.md",
+        "crates/kairo-ecs-rng/src/lib.rs",
+        "conductor/validation-datasets.md"
+      ],
+      "write": [
+        "conductor/execution/scientific/s06-completion.md",
+        "conductor/execution/maturity-tasks.json"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-rng"
+          ]
+        }
+      ],
+      "acceptance": "Record algorithm/API/version, exact receiving package and independent oracle for S06. Decompose every remaining requirement in scientific-completion.md into one-behaviour <=5-file leaves with concrete commands, residual/tolerance and acceptance; add them to this catalogue before implementation. A current test pass is baseline only. No method is closed by this design note. This design may proceed from the source counterexample before its regression target passes; do not wait for the future algorithm to be implemented.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed.",
+      "obligation": "S06"
+    },
+    {
+      "id": "S07.regression",
+      "title": "Expose the fixed-batch ABC-SMC limitation",
+      "parent": "110:S07",
+      "kind": "regression",
+      "executor": "specialist",
+      "requires": [
+        "S07.completion"
+      ],
+      "read": [
+        "conductor/scientific-completion.md",
+        "crates/kairo-ecs-cli/src/ensemble.rs"
+      ],
+      "write": [
+        "crates/kairo-ecs-cli/tests/maturity_abc_sequential.rs"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-cli",
+            "--test",
+            "maturity_abc_sequential"
+          ]
+        }
+      ],
+      "acceptance": "First produce a distinguishing regression after its oracle/contract is settled. Verify the expected baseline failure; integrate the target with its paired implementation or explicit unsupported error before merging. Final oracle: Use a tiny analytical posterior and two tolerance generations. A fixed batch with distance weights must not be accepted as sequential resampling/perturbation/importance weighting.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed.",
+      "obligation": "S07"
+    },
+    {
+      "id": "S07.completion",
+      "title": "Specify the remaining S07 implementation leaves",
+      "parent": "110:S07",
+      "kind": "design",
+      "executor": "specialist",
+      "requires": [],
+      "read": [
+        "conductor/scientific-completion.md",
+        "crates/kairo-ecs-cli/src/ensemble.rs",
+        "conductor/validation-datasets.md"
+      ],
+      "write": [
+        "conductor/execution/scientific/s07-completion.md",
+        "conductor/execution/maturity-tasks.json"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-cli"
+          ]
+        }
+      ],
+      "acceptance": "Record algorithm/API/version, exact receiving package and independent oracle for S07. Decompose every remaining requirement in scientific-completion.md into one-behaviour <=5-file leaves with concrete commands, residual/tolerance and acceptance; add them to this catalogue before implementation. A current test pass is baseline only. No method is closed by this design note. This design may proceed from the source counterexample before its regression target passes; do not wait for the future algorithm to be implemented.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed.",
+      "obligation": "S07"
+    },
+    {
+      "id": "S08.regression",
+      "title": "Verify the exponential competing-risk special case",
+      "parent": "110:S08",
+      "kind": "regression",
+      "executor": "specialist",
+      "requires": [
+        "S08.completion"
+      ],
+      "read": [
+        "conductor/scientific-completion.md",
+        "crates/kairo-ecs-rng/src/competing_risks.rs"
+      ],
+      "write": [
+        "crates/kairo-ecs-rng/tests/maturity_hazard_analytic.rs"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-rng",
+            "--test",
+            "maturity_hazard_analytic"
+          ]
+        }
+      ],
+      "acceptance": "First produce a distinguishing regression after its oracle/contract is settled. Verify the expected baseline failure; integrate the target with its paired implementation or explicit unsupported error before merging. Final oracle: Compare survival and cause incidence with the analytic constant-hazard solution using predeclared Monte Carlo error; deterministic seed is not a substitute for coverage.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed.",
+      "obligation": "S08"
+    },
+    {
+      "id": "S08.completion",
+      "title": "Specify the remaining S08 implementation leaves",
+      "parent": "110:S08",
+      "kind": "design",
+      "executor": "specialist",
+      "requires": [],
+      "read": [
+        "conductor/scientific-completion.md",
+        "crates/kairo-ecs-rng/src/competing_risks.rs",
+        "conductor/validation-datasets.md"
+      ],
+      "write": [
+        "conductor/execution/scientific/s08-completion.md",
+        "conductor/execution/maturity-tasks.json"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-rng"
+          ]
+        }
+      ],
+      "acceptance": "Record algorithm/API/version, exact receiving package and independent oracle for S08. Decompose every remaining requirement in scientific-completion.md into one-behaviour <=5-file leaves with concrete commands, residual/tolerance and acceptance; add them to this catalogue before implementation. A current test pass is baseline only. No method is closed by this design note. This design may proceed from the source counterexample before its regression target passes; do not wait for the future algorithm to be implemented.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed.",
+      "obligation": "S08"
+    },
+    {
+      "id": "S09.regression",
+      "title": "Reject copied input as native inference",
+      "parent": "110:S09",
+      "kind": "regression",
+      "executor": "local",
+      "requires": [
+        "S09.completion"
+      ],
+      "read": [
+        "conductor/scientific-completion.md",
+        "crates/kairo-ecs-ml/src/lib.rs"
+      ],
+      "write": [
+        "crates/kairo-ecs-ml/tests/maturity_inference_truth.rs"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-ml",
+            "--test",
+            "maturity_inference_truth"
+          ]
+        }
+      ],
+      "acceptance": "First produce a distinguishing regression after its oracle/contract is settled. Verify the expected baseline failure; integrate the target with its paired implementation or explicit unsupported error before merging. Final oracle: A claimed inference backend must execute an independent non-identity model or return unavailable. Returning the input successfully cannot satisfy the non-identity oracle.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed.",
+      "obligation": "S09"
+    },
+    {
+      "id": "S09.completion",
+      "title": "Specify the remaining S09 implementation leaves",
+      "parent": "110:S09",
+      "kind": "design",
+      "executor": "specialist",
+      "requires": [],
+      "read": [
+        "conductor/scientific-completion.md",
+        "crates/kairo-ecs-ml/src/lib.rs",
+        "conductor/validation-datasets.md"
+      ],
+      "write": [
+        "conductor/execution/scientific/s09-completion.md",
+        "conductor/execution/maturity-tasks.json"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-ml"
+          ]
+        }
+      ],
+      "acceptance": "Record algorithm/API/version, exact receiving package and independent oracle for S09. Decompose every remaining requirement in scientific-completion.md into one-behaviour <=5-file leaves with concrete commands, residual/tolerance and acceptance; add them to this catalogue before implementation. A current test pass is baseline only. No method is closed by this design note. This design may proceed from the source counterexample before its regression target passes; do not wait for the future algorithm to be implemented.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed.",
+      "obligation": "S09"
+    },
+    {
+      "id": "S10.regression",
+      "title": "Prove that an action affects actual Rust environment state",
+      "parent": "110:S10",
+      "kind": "regression",
+      "executor": "specialist",
+      "requires": [
+        "S10.completion"
+      ],
+      "read": [
+        "conductor/scientific-completion.md",
+        "crates/kairo-ecs-ml/src/lib.rs"
+      ],
+      "write": [
+        "crates/kairo-ecs-ml/tests/maturity_vecenv_actions.rs"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-ml",
+            "--test",
+            "maturity_vecenv_actions"
+          ]
+        }
+      ],
+      "acceptance": "First produce a distinguishing regression after its oracle/contract is settled. Verify the expected baseline failure; integrate the target with its paired implementation or explicit unsupported error before merging. Final oracle: After a supported environment contract is chosen, compare paired scalar/batched trajectories and two distinct actions on one deterministic world. Synthetic rewards/observations cannot pass.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed.",
+      "obligation": "S10"
+    },
+    {
+      "id": "S10.completion",
+      "title": "Specify the remaining S10 implementation leaves",
+      "parent": "110:S10",
+      "kind": "design",
+      "executor": "specialist",
+      "requires": [],
+      "read": [
+        "conductor/scientific-completion.md",
+        "crates/kairo-ecs-ml/src/lib.rs",
+        "conductor/validation-datasets.md"
+      ],
+      "write": [
+        "conductor/execution/scientific/s10-completion.md",
+        "conductor/execution/maturity-tasks.json"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-ml"
+          ]
+        }
+      ],
+      "acceptance": "Record algorithm/API/version, exact receiving package and independent oracle for S10. Decompose every remaining requirement in scientific-completion.md into one-behaviour <=5-file leaves with concrete commands, residual/tolerance and acceptance; add them to this catalogue before implementation. A current test pass is baseline only. No method is closed by this design note. This design may proceed from the source counterexample before its regression target passes; do not wait for the future algorithm to be implemented.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed.",
+      "obligation": "S10"
+    },
+    {
+      "id": "S11.regression",
+      "title": "Distinguish device model execution from a host or mock path",
+      "parent": "110:S11",
+      "kind": "regression",
+      "executor": "specialist",
+      "requires": [
+        "S11.completion"
+      ],
+      "read": [
+        "conductor/scientific-completion.md",
+        "crates/kairo-ecs-gpu/src/lib.rs"
+      ],
+      "write": [
+        "crates/kairo-ecs-gpu/tests/maturity_device_model.rs"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-gpu",
+            "--test",
+            "maturity_device_model",
+            "--features",
+            "wgpu-backend"
+          ]
+        }
+      ],
+      "acceptance": "First produce a distinguishing regression after its oracle/contract is settled. Verify the expected baseline failure; integrate the target with its paired implementation or explicit unsupported error before merging. Final oracle: Run one supported kernel on an actual selected device with independently computed outputs. Record unavailable hardware as unexecuted; require native device evidence before promotion. This first hardware leaf selects wgpu-backend; reject a CPU/software fallback and record device/driver. Other backends need separate leaves.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed.",
+      "obligation": "S11"
+    },
+    {
+      "id": "S11.completion",
+      "title": "Specify the remaining S11 implementation leaves",
+      "parent": "110:S11",
+      "kind": "design",
+      "executor": "specialist",
+      "requires": [],
+      "read": [
+        "conductor/scientific-completion.md",
+        "crates/kairo-ecs-gpu/src/lib.rs",
+        "conductor/validation-datasets.md"
+      ],
+      "write": [
+        "conductor/execution/scientific/s11-completion.md",
+        "conductor/execution/maturity-tasks.json"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-gpu",
+            "--features",
+            "wgpu-backend"
+          ]
+        }
+      ],
+      "acceptance": "Record algorithm/API/version, exact receiving package and independent oracle for S11. Decompose every remaining requirement in scientific-completion.md into one-behaviour <=5-file leaves with concrete commands, residual/tolerance and acceptance; add them to this catalogue before implementation. A current test pass is baseline only. No method is closed by this design note. This design may proceed from the source counterexample before its regression target passes; do not wait for the future algorithm to be implemented.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed.",
+      "obligation": "S11"
+    },
+    {
+      "id": "S12.regression",
+      "title": "Replay a cancellation crossing a straggler rollback",
+      "parent": "110:S12",
+      "kind": "regression",
+      "executor": "local",
+      "requires": [
+        "S12.completion"
+      ],
+      "read": [
+        "conductor/scientific-completion.md",
+        "crates/kairo-ecs-pdes/src/optimistic.rs"
+      ],
+      "write": [
+        "crates/kairo-ecs-pdes/tests/maturity_cancel_straggler.rs"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-pdes",
+            "--test",
+            "maturity_cancel_straggler",
+            "--features",
+            "time-warp"
+          ]
+        }
+      ],
+      "acceptance": "First produce a distinguishing regression after its oracle/contract is settled. Verify the expected baseline failure; integrate the target with its paired implementation or explicit unsupported error before merging. Final oracle: One adversarial fixture must match serial final state and committed trace after rollback and anti-message handling, including no duplicate resource effect.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed.",
+      "obligation": "S12"
+    },
+    {
+      "id": "S12.completion",
+      "title": "Specify the remaining S12 implementation leaves",
+      "parent": "110:S12",
+      "kind": "design",
+      "executor": "specialist",
+      "requires": [],
+      "read": [
+        "conductor/scientific-completion.md",
+        "crates/kairo-ecs-pdes/src/optimistic.rs",
+        "conductor/validation-datasets.md"
+      ],
+      "write": [
+        "conductor/execution/scientific/s12-completion.md",
+        "conductor/execution/maturity-tasks.json"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-pdes",
+            "--features",
+            "time-warp"
+          ]
+        }
+      ],
+      "acceptance": "Record algorithm/API/version, exact receiving package and independent oracle for S12. Decompose every remaining requirement in scientific-completion.md into one-behaviour <=5-file leaves with concrete commands, residual/tolerance and acceptance; add them to this catalogue before implementation. A current test pass is baseline only. No method is closed by this design note. This design may proceed from the source counterexample before its regression target passes; do not wait for the future algorithm to be implemented.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed.",
+      "obligation": "S12"
+    },
+    {
+      "id": "S13.regression",
+      "title": "Exercise one external Reference FMU lifecycle",
+      "parent": "110:S13",
+      "kind": "regression",
+      "executor": "specialist",
+      "requires": [
+        "S13.completion"
+      ],
+      "read": [
+        "conductor/scientific-completion.md",
+        "crates/kairo-ecs-fmi/src/lib.rs"
+      ],
+      "write": [
+        "crates/kairo-ecs-fmi/tests/maturity_external_fmu.rs"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-fmi",
+            "--test",
+            "maturity_external_fmu",
+            "--features",
+            "fmi2"
+          ]
+        }
+      ],
+      "acceptance": "First produce a distinguishing regression after its oracle/contract is settled. Verify the expected baseline failure; integrate the target with its paired implementation or explicit unsupported error before merging. Final oracle: Use a pinned licensed external FMU and check independent event/save-restore output. A self-authored mock cannot satisfy this test; declare the actual archive/hash and runtime requirements before dispatch. This first external-FMU leaf selects FMI 2 and the fmi2 feature; FMI 3 requires its own fixture/leaf.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed.",
+      "obligation": "S13"
+    },
+    {
+      "id": "S13.completion",
+      "title": "Specify the remaining S13 implementation leaves",
+      "parent": "110:S13",
+      "kind": "design",
+      "executor": "specialist",
+      "requires": [],
+      "read": [
+        "conductor/scientific-completion.md",
+        "crates/kairo-ecs-fmi/src/lib.rs",
+        "conductor/validation-datasets.md"
+      ],
+      "write": [
+        "conductor/execution/scientific/s13-completion.md",
+        "conductor/execution/maturity-tasks.json"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-fmi",
+            "--features",
+            "fmi2"
+          ]
+        }
+      ],
+      "acceptance": "Record algorithm/API/version, exact receiving package and independent oracle for S13. Decompose every remaining requirement in scientific-completion.md into one-behaviour <=5-file leaves with concrete commands, residual/tolerance and acceptance; add them to this catalogue before implementation. A current test pass is baseline only. No method is closed by this design note. This design may proceed from the source counterexample before its regression target passes; do not wait for the future algorithm to be implemented.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed.",
+      "obligation": "S13"
+    },
+    {
+      "id": "S14.regression",
+      "title": "Read a written claimed format with an independent reader",
+      "parent": "110:S14",
+      "kind": "regression",
+      "executor": "specialist",
+      "requires": [
+        "S14.completion"
+      ],
+      "read": [
+        "conductor/scientific-completion.md",
+        "crates/kairo-ecs-arrow/src/lib.rs"
+      ],
+      "write": [
+        "crates/kairo-ecs-arrow/tests/maturity_native_io_format.rs"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-arrow",
+            "--test",
+            "maturity_native_io_format"
+          ]
+        }
+      ],
+      "acceptance": "First produce a distinguishing regression after its oracle/contract is settled. Verify the expected baseline failure; integrate the target with its paired implementation or explicit unsupported error before merging. Final oracle: Pick one advertised I/O format and real writer before dispatch; verify header/schema/data and reject contract bytes masquerading as that format. HDF5/ADIOS2 remain unaccepted until their real backends are tested.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed.",
+      "obligation": "S14"
+    },
+    {
+      "id": "S14.completion",
+      "title": "Specify the remaining S14 implementation leaves",
+      "parent": "110:S14",
+      "kind": "design",
+      "executor": "specialist",
+      "requires": [],
+      "read": [
+        "conductor/scientific-completion.md",
+        "crates/kairo-ecs-arrow/src/lib.rs",
+        "conductor/validation-datasets.md"
+      ],
+      "write": [
+        "conductor/execution/scientific/s14-completion.md",
+        "conductor/execution/maturity-tasks.json"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-arrow"
+          ]
+        }
+      ],
+      "acceptance": "Record algorithm/API/version, exact receiving package and independent oracle for S14. Decompose every remaining requirement in scientific-completion.md into one-behaviour <=5-file leaves with concrete commands, residual/tolerance and acceptance; add them to this catalogue before implementation. A current test pass is baseline only. No method is closed by this design note. This design may proceed from the source counterexample before its regression target passes; do not wait for the future algorithm to be implemented.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed.",
+      "obligation": "S14"
+    },
+    {
+      "id": "S15.regression",
+      "title": "Prove forward-back-forward state equivalence",
+      "parent": "110:S15",
+      "kind": "regression",
+      "executor": "local",
+      "requires": [
+        "S15.completion"
+      ],
+      "read": [
+        "conductor/scientific-completion.md",
+        "crates/kairo-ecs-debug/src/lib.rs"
+      ],
+      "write": [
+        "crates/kairo-ecs-debug/tests/maturity_checkpoint_branch.rs"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-debug",
+            "--test",
+            "maturity_checkpoint_branch"
+          ]
+        }
+      ],
+      "acceptance": "First produce a distinguishing regression after its oracle/contract is settled. Verify the expected baseline failure; integrate the target with its paired implementation or explicit unsupported error before merging. Final oracle: Use real engine checkpoints and an intervening branch mutation; replay reproduces the state/trace while sibling branch state is unchanged. Playback fixtures or page ratios alone cannot pass.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed.",
+      "obligation": "S15"
+    },
+    {
+      "id": "S15.completion",
+      "title": "Specify the remaining S15 implementation leaves",
+      "parent": "110:S15",
+      "kind": "design",
+      "executor": "specialist",
+      "requires": [],
+      "read": [
+        "conductor/scientific-completion.md",
+        "crates/kairo-ecs-debug/src/lib.rs",
+        "conductor/validation-datasets.md"
+      ],
+      "write": [
+        "conductor/execution/scientific/s15-completion.md",
+        "conductor/execution/maturity-tasks.json"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-debug"
+          ]
+        }
+      ],
+      "acceptance": "Record algorithm/API/version, exact receiving package and independent oracle for S15. Decompose every remaining requirement in scientific-completion.md into one-behaviour <=5-file leaves with concrete commands, residual/tolerance and acceptance; add them to this catalogue before implementation. A current test pass is baseline only. No method is closed by this design note. This design may proceed from the source counterexample before its regression target passes; do not wait for the future algorithm to be implemented.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed.",
+      "obligation": "S15"
+    },
+    {
+      "id": "S16.regression",
+      "title": "Distinguish RFC6455 execution from framed TCP",
+      "parent": "110:S16",
+      "kind": "regression",
+      "executor": "specialist",
+      "requires": [
+        "S16.completion"
+      ],
+      "read": [
+        "conductor/scientific-completion.md",
+        "crates/kairo-ecs-streaming/src/lib.rs"
+      ],
+      "write": [
+        "crates/kairo-ecs-streaming/tests/maturity_websocket_truth.rs"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-streaming",
+            "--test",
+            "maturity_websocket_truth"
+          ]
+        }
+      ],
+      "acceptance": "First produce a distinguishing regression after its oracle/contract is settled. Verify the expected baseline failure; integrate the target with its paired implementation or explicit unsupported error before merging. Final oracle: A claimed WebSocket endpoint must complete a real RFC6455 client handshake/frame exchange or report unavailable; typed framed TCP acceptance stays separately labelled.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed.",
+      "obligation": "S16"
+    },
+    {
+      "id": "S16.completion",
+      "title": "Specify the remaining S16 implementation leaves",
+      "parent": "110:S16",
+      "kind": "design",
+      "executor": "specialist",
+      "requires": [],
+      "read": [
+        "conductor/scientific-completion.md",
+        "crates/kairo-ecs-streaming/src/lib.rs",
+        "conductor/validation-datasets.md"
+      ],
+      "write": [
+        "conductor/execution/scientific/s16-completion.md",
+        "conductor/execution/maturity-tasks.json"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-streaming"
+          ]
+        }
+      ],
+      "acceptance": "Record algorithm/API/version, exact receiving package and independent oracle for S16. Decompose every remaining requirement in scientific-completion.md into one-behaviour <=5-file leaves with concrete commands, residual/tolerance and acceptance; add them to this catalogue before implementation. A current test pass is baseline only. No method is closed by this design note. This design may proceed from the source counterexample before its regression target passes; do not wait for the future algorithm to be implemented.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed.",
+      "obligation": "S16"
+    },
+    {
+      "id": "S17.regression",
+      "title": "Preserve resource capacity across cancel and queued admission",
+      "parent": "110:S17",
+      "kind": "regression",
+      "executor": "local",
+      "requires": [
+        "S17.completion"
+      ],
+      "read": [
+        "conductor/scientific-completion.md",
+        "crates/kairo-ecs-des/src/staged_runtime.rs"
+      ],
+      "write": [
+        "crates/kairo-ecs-des/tests/maturity_resource_conservation.rs"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-des",
+            "--test",
+            "maturity_resource_conservation"
+          ]
+        }
+      ],
+      "acceptance": "First produce a distinguishing regression after its oracle/contract is settled. Verify the expected baseline failure; integrate the target with its paired implementation or explicit unsupported error before merging. Final oracle: A capacity-one case conserves available plus leased units across queued cancellation/release; duplicate/stale handles cannot create or lose units.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed.",
+      "obligation": "S17"
+    },
+    {
+      "id": "S17.completion",
+      "title": "Specify the remaining S17 implementation leaves",
+      "parent": "110:S17",
+      "kind": "design",
+      "executor": "specialist",
+      "requires": [],
+      "read": [
+        "conductor/scientific-completion.md",
+        "crates/kairo-ecs-des/src/staged_runtime.rs",
+        "conductor/validation-datasets.md"
+      ],
+      "write": [
+        "conductor/execution/scientific/s17-completion.md",
+        "conductor/execution/maturity-tasks.json"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-des"
+          ]
+        }
+      ],
+      "acceptance": "Record algorithm/API/version, exact receiving package and independent oracle for S17. Decompose every remaining requirement in scientific-completion.md into one-behaviour <=5-file leaves with concrete commands, residual/tolerance and acceptance; add them to this catalogue before implementation. A current test pass is baseline only. No method is closed by this design note. This design may proceed from the source counterexample before its regression target passes; do not wait for the future algorithm to be implemented.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed.",
+      "obligation": "S17"
+    },
+    {
+      "id": "S05.bounds",
+      "title": "Reject Sobol dimension/index exhaustion before arithmetic",
+      "parent": "110:S05",
+      "kind": "implementation",
+      "executor": "local",
+      "requires": [
+        "S05.regression"
+      ],
+      "read": [
+        "conductor/scientific-completion.md",
+        "crates/kairo-ecs-cli/src/ensemble.rs"
+      ],
+      "write": [
+        "crates/kairo-ecs-cli/src/ensemble.rs",
+        "crates/kairo-ecs-cli/tests/sobol_bounds.rs"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-cli",
+            "--test",
+            "sobol_bounds"
+          ]
+        }
+      ],
+      "acceptance": "Checked bounds cover zero/unsupported dimensions and the documented index limit including 2^32; no wrap, panic or silent reuse. Output algorithm change remains explicitly versioned.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed.",
+      "obligation": "S05"
+    },
+    {
+      "id": "S05.intervals",
+      "title": "Specify statistically justified sensitivity intervals",
+      "parent": "110:S05",
+      "kind": "design",
+      "executor": "specialist",
+      "requires": [
+        "S05.regression"
+      ],
+      "read": [
+        "conductor/scientific-completion.md",
+        "crates/kairo-ecs-cli/src/ensemble.rs"
+      ],
+      "write": [
+        "conductor/execution/scientific/s05-intervals.md"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-cli"
+          ]
+        }
+      ],
+      "acceptance": "Replace the estimate-times-0.9/1.1 interpretation with a named interval method and repeated-sample coverage design for Ishigami/Sobol-G; emit separate estimator and coverage-test leaves.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed.",
+      "obligation": "S05"
+    }
+  ]
+}

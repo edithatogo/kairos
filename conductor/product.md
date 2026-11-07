@@ -8,6 +8,13 @@ The name KairoECS combines **Kairo** (evoking the right or opportune moment) wit
 
 ## Core promise
 
+Scope is bounded by [ADR 0011](../docs/adr/0011-ecosystem-boundaries.md): Kairos
+owns Rust execution mechanisms, not every analytical method or domain model.
+Game solvers sit above it; UOGTO owns semantics. CareOps and Innovate own their
+specific models. A HEOR layer values neutral resource use and outcomes; Voiage
+owns VOI. Optional analytical modules retain their scientific completion
+obligations without becoming mandatory kernel dependencies.
+
 KairoECS provides a Rust-owned simulation core that treats Discrete Event Simulation (DES) and Agent-Based Modeling (ABM) as equal paradigms, surfaced through idiomatic bindings for Python, R, Julia, TypeScript, C#, and Go.
 
 ## Primary users

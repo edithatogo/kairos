@@ -19,6 +19,14 @@
     "25",
     "70",
     "108"
+  ],
+  "scope_amendment": "2026-11-07: accepted ecosystem boundaries, movement/usage contracts and bounded implementation workpack; runtime acceptance pending",
+  "bounded_task_catalog": "../../execution/maturity-tasks.json",
+  "coordinating_repositories": [
+    "careops-sim",
+    "innovate",
+    "UOGTO",
+    "new-drug-reimbursement-game",
+    "voiage"
   ]
 }
-

@@ -1,5 +1,16 @@
 # Kairos Conductor index
 
+## Ecosystem boundaries and executable work
+
+[ADR 0011](../docs/adr/0011-ecosystem-boundaries.md) defines the simulation/game/domain/HEOR
+boundaries. [Consumer inventory](ecosystem-consumers.md) records actual source
+dependencies, [movement and usage](contracts/movement-resource-usage.md) defines
+the next neutral contracts, and the [bounded workpack](execution/README.md)
+provides small tasks with exact scopes and commands. Track 114 coordinates the
+cross-repository handoffs; implementation and consumer pin qualification remain
+with their source owners. Routine tasks use proportionate checks under the
+updated workflow, without new human approval gates.
+
 ## Rust-only maturity programme — 7 November 2026
 
 [Approved programme](frontier-programme-20261107.md) coordinates Tracks 109–115. [Capability evidence](capabilities.md) governs current public claims, [release gates](release-gates.md) define beta/stable scope, and [scientific completion](scientific-completion.md) retains every outstanding method as an explicit obligation. [Native-only policy](native-only-policy.md) applies immediately. [Performance](performance-programme.md), [dependencies and CareOps contracts](dependency-and-consumer-contracts.md), and [validation datasets](validation-datasets.md) provide executable follow-up plans.

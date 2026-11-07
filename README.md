@@ -11,6 +11,12 @@ columnar data exchange, parallel execution, distributed synchronization and
 GPU kernels. Applications such as CareOps own their domain models and consume
 Kairos through a versioned dependency boundary.
 
+Kairos owns simulation mechanisms. UOGTO supplies game semantics; a separate
+Rust game library owns solvers; CareOps, Innovate and reimbursement applications
+own their models. Economic valuation belongs above neutral resource-use records.
+See [scope and ecosystem](docs/ecosystem.md) for the accepted boundaries and
+the distinction between implemented packages and planned extraction.
+
 [Documentation](https://edithatogo.github.io/kairos/) ·
 [Install from source](docs/install.md) ·
 [Current capabilities and evidence](docs/current-state.md) ·
@@ -86,6 +92,7 @@ records which operations each adapter can actually perform.
 - [Scenario replay](docs/scenarios/factory-bottleneck-run-replay.md), [model zoo](docs/model-zoo/inventory.md) and [verification, validation and uncertainty](docs/trustworthy-simulation/verification-validation-uncertainty.md).
 - [Contributing](CONTRIBUTING.md), [security](SECURITY.md), [citation](docs/research/citation.md) and [release checklist](docs/release/release-checklist.md).
 - [Conductor index](conductor/index.md), [track registry](conductor/tracks.yaml), [workflow](conductor/workflow.md) and [phase evidence](conductor/phase-closeout.yaml).
+- [Consumer inventory](conductor/ecosystem-consumers.md), [movement/resource contract](conductor/contracts/movement-resource-usage.md) and [bounded maturity tasks](conductor/execution/README.md).
 
 For a coherent Rust change, use `just ci`. Documentation changes use:
 
