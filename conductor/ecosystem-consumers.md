@@ -5,6 +5,13 @@ visible repositories and code-search results, not a claim that no other consumer
 exist. Classification follows manifests and executable source, not project names
 or old completed tracks. No dependency pin is changed by this review.
 
+Game-library follow-up: 8 November 2026 (Australia/Brisbane). The first inventory
+below retains its inspected source revisions. Current receiving coordination is
+[game-runtime issue 100](https://github.com/edithatogo/new-drug-reimbursement-game/issues/100)
+and T17, aligned with Innovate's G01–G04 programme. No separately named generic
+game repository was found in this bounded follow-up; use the existing incubator
+and do not infer a product-name decision from package names.
+
 | Repository / inspected revision | Observed relationship | Required consumer-owned work |
 | --- | --- | --- |
 | `careops-sim` / `672d3e8f78f5e502a760b9d41200fdbaf4d9d144` | Direct Rust path dependencies on Kairos types/core/RNG/DES under `libs/kairos`; actual gitlink `07410266bf54b6f73c59db2f8cbfbc5697c53734` | Reconcile consumed staged-allocation and boundary APIs; install a minimal immutable package/commit fixture; keep physical/clinical policies local; adopt neutral usage/movement through a thin adapter |
@@ -12,6 +19,7 @@ or old completed tracks. No dependency pin is changed by this review.
 | `new-drug-reimbursement-game` / `ab4ce37a905a8cf9bb54d1ad905de4b0f34b7165` | Game crates already separate; Kairos event-export proposal and lock entry, no Kairos Cargo dependency | Incubate generic game packages, executable UOGTO profile and optional Kairos adapter; retain reimbursement economics and specific games here |
 | `UOGTO` / `ac5b8e86c4a3547d008e83ba4cfcbb5f3ba95f25` | Ontology/SHACL/JSON-LD provider and Python reference/demo runner | Version a supported executable profile and mapping fixtures; preserve semantic identities; distinguish ontology tooling from a production game/simulation core |
 | `voiage` / `a5d87a736fa9f0f876e44872d946b2170d2a0898` | Cross-domain VOI provider and existing uncertainty exchange; no required Kairos Rust dependency | Accept paired strategy/draw outcome or net-benefit records through optional producer adapters; reject unit/perspective/draw mismatch; keep existing non-HPC work eligible |
+| `nhra_game` / `3fe4aaa08521d103ddffbedd58eaa9d7d5256a55` (follow-up inspection) | Prospective domain consumer: Python `nhra_gt` 26.0.2 declares JAX/JAXopt/PyGambit; source owns monthly state/RNG transitions and local strategic solvers. It is not an installed Rust game/Kairos consumer | Select one independently checked static game for shared Rust solver adoption; keep NHRA institutions and payoff assumptions local. Qualify any later monthly native execution separately; do not count declared dependencies or the current Python/JAX engine as native acceptance |
 | `closer-to-whom` | Capacity-envelope Arrow/Parquet proposal and fixture; local `implied_capacity` computes implied workload | Qualify schema/version/units and distinguish implied requirements from observed or simulated feasible capacity; no scheduler required for static aggregation |
 | `gtpcnz` | A page labelled Kairos playback calls local `ABMSimulation`; the inspected page does not establish native Kairos dispatch | Audit the execution path before using a Kairos-backed claim; either consume real Rust output or label the local model/playback accurately |
 | `foi-process` | Proposed synthetic ProcessEvent/OCEL export, not evidence of an installed Kairos engine | Define a fictional queue model and versioned trace export; keep FOI rules/privacy classification in the domain and process-mining semantics in their provider |
@@ -41,6 +49,26 @@ C-DATA-2 playback native-dispatch/label reconciliation; C-DATA-3 synthetic OCEL
 export. Their implementation belongs in the consumer, not the Kairos kernel.
 Do not force a static data calculation to depend on a simulation runtime.
 
+For prospective NHRA consumption, retain three bounded handoffs here until its
+consumer-owned track and provider capability are selected: C-GAME-1 freezes one
+two-action game, assumptions, legal actions and independent expected result from
+`src/nhra_gt/subgames/nash.py` / `solvers_jax.py`; C-GAME-2 adds one actual installed
+Rust static solver case, versioned semantic-ID mapping and explicit unsupported
+result; C-GAME-3 separately qualifies one monthly native transition from
+`src/nhra_gt/engine.py`, including clock/RNG/replay identity. That application
+must select exact files/commands before implementation. Its local algorithms
+are candidate comparisons, not accepted numerical oracles merely because they
+already exist. No NHRA migration is claimed by this inventory.
+
+The [extraction map](contracts/game-extraction-map.md) and
+[execution port](contracts/game-execution-port.md) govern all game consumers.
+CareOps/Innovate core-runtime receipts and UOGTO static semantic receipts must
+not wait for optional dynamic-game receipts. Preserve optional tasks with their
+own scope; actual provider pin changes follow installed acceptance. The game
+library's solver diagnostic trace must not be mistaken for a causal event trace,
+and Voiage cannot infer producer RNG coupling or valid valuation from paired IDs
+alone.
+
 ## Contract ownership and dependency order
 
 1. Kairos owns neutral engine IDs/time/events/usage schemas and native error,
@@ -69,6 +97,7 @@ compatibility, privacy or release question.
 - [Existing game boundary ADR](https://github.com/edithatogo/new-drug-reimbursement-game/blob/ab4ce37a905a8cf9bb54d1ad905de4b0f34b7165/docs/architecture/adr/0002-uogto-above-kairos.md)
 - [UOGTO execution bindings](https://github.com/edithatogo/UOGTO/blob/ac5b8e86c4a3547d008e83ba4cfcbb5f3ba95f25/ontologies/extensions/kg-execution-bindings.ttl)
 - [Voiage Cargo workspace](https://github.com/edithatogo/voiage/blob/a5d87a736fa9f0f876e44872d946b2170d2a0898/Cargo.toml)
+- [NHRA manifest](https://github.com/edithatogo/nhra_game/blob/3fe4aaa08521d103ddffbedd58eaa9d7d5256a55/pyproject.toml), [monthly engine](https://github.com/edithatogo/nhra_game/blob/3fe4aaa08521d103ddffbedd58eaa9d7d5256a55/src/nhra_gt/engine.py) and [local solver surface](https://github.com/edithatogo/nhra_game/blob/3fe4aaa08521d103ddffbedd58eaa9d7d5256a55/src/nhra_gt/subgames/nash.py)
 - [Capacity envelope proposal](https://github.com/edithatogo/closer-to-whom/blob/main/upstream/issues/kairos-capacity-envelope-arrow.md)
 - [Playback page](https://github.com/edithatogo/gtpcnz/blob/91a6519f22f9390ba1c336e34c4305c0a66622e1/models/primarycare_model/pages/2_kairos_abm_playback.py)
 - [FOI export proposal](https://github.com/edithatogo/foi-process/blob/3939d9c83eae196e5003b77ff0fe49abce2822a7/repo-exports/kairos/foi-synthetic-ocel.md)

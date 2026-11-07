@@ -1,6 +1,6 @@
 # Handoff
 
-Updated 7 November 2026. Status: Spec Approved; no implementation phase is accepted by this registration.
+Updated 8 November 2026 (Australia/Brisbane). Status: Spec Approved; no implementation phase is accepted by this registration.
 
 ## Summary
 
@@ -64,3 +64,39 @@ paused, the original diff preserved, and exact changed files copied to a clean
 isolated checkout under a fresh claim. No shared history or lease policy changed.
 The reviewed PR and hosted check results are the publication record. No phase,
 consumer pin, scientific method or release is accepted by these structural checks.
+
+## Separate game-library refinement
+
+At Kairos baseline `018ef4975f7f146c9fa730381ac3c2bab8b15b60`, source inspection
+maps game algorithms into the existing incubator, ECS-facing representations
+into an optional game-owned adapter, and ontology mapping into semantic tooling.
+Receiving coordination is issue 100/T17; Innovate G01–G04 remains its existing
+consumer programme. No alternate solver, package/repository, runtime feature or
+provider pin is created here.
+
+The extraction map records source semantic differences and packaging hazards.
+The execution-port design separates diagnostic alternatives from actual causal
+events and defines lawful observation, stale-action, solver/simulation RNG and
+replay requirements. The catalogue has 60 bounded leaves; K01.port must bind
+these constraints to actual public APIs and exact fixture commands. S04 checks
+now enable graph-relations; game/ontology inventory checks include graph and
+generated/codegen features. All implementation/qualification leaves remain open.
+
+Core, static-game and dynamic-adapter release paths are independently scoped;
+optional game profiles cannot block runtime-only consumers. S01–S04 still need
+receiving numerical acceptance and source caller/API disposition. NHRA is a
+prospective consumer with pending handoffs, not a qualified Rust provider.
+
+Local structural validation: task checker accepts 60 leaves with S01–S17
+retained; all 14 checker tests pass; the 27-entry capability check and all nine
+frontier-evidence tests pass. The checker first rejected an invalid hyphenated
+new task ID; it was corrected to K01.port and the same checks rerun. Isolated
+Python 3.12.14 and Node 24.22.1 support these local tooling checks because the
+declared CI runtimes are unavailable here. No local Rust/native execution,
+package qualification or phase closure is claimed; exact-head hosted results
+and the reviewed PR remain the integration record.
+
+Independent read-only review found no blocking issue in the dependency paths,
+source-semantic map, feature commands or obligation transfer. The 37 local links
+in changed Markdown resolved and the whitespace check passed. This review does
+not qualify the future adapter or a numerical method.

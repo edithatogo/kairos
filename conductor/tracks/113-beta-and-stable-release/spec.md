@@ -22,6 +22,15 @@ This track owns its planning/evidence directory. Source scopes are coordinated w
 
 Depends on existing/new Tracks 15, 16, 20, 25, 109, 110, 111, 112, 114 for the named contracts. Work may proceed on independent subpackets after contract review; dependency closure is required for final acceptance. Disjoint worktrees and repository-wide claims prevent shared-checkout writers. No source owner or consumer pin is silently taken over.
 
+Resolve those dependencies by the candidate's explicit capability manifest, not
+whole-track completion. For a runtime-only core candidate, Track 110's game
+methods and Track 114's optional game adapter are excluded capabilities with
+open owners, not release prerequisites. The required installed CareOps receipt
+can exercise native simulation without its optional game profile. Any included
+game/adapter capability must pass its own receiving-provider, semantic and
+runtime gates. Exclusion cannot waive a required core contract or mark the
+optional track complete; see the release-scope matrix in release-gates.md.
+
 ## Blocked paths
 
 Unrelated worktrees, private credentials/data, external consumer implementation/pins and protected branch settings. Release publication and hardware/service provisioning have separate authority.
