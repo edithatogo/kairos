@@ -4,20 +4,28 @@ on:
   pull_request:
     paths:
       - 'crates/kairo-ecs-arrow/**'
+      - 'crates/kairo-ecs-arrow-ffi/**'
       - 'crates/kairo-ecs-fs-guard/**'
+      - 'crates/kairo-ecs-ffi/**'
       - 'crates/kairo-ecs-types/**'
       - 'Cargo.toml'
       - 'Cargo.lock'
       - 'rust-toolchain.toml'
       - '.github/workflows/arrow-platform.yml'
+      - 'scripts/validation/validate-trusted-domain-import-boundary.mjs'
+      - 'tests/conformance/trusted-domain-import-boundary-check.mjs'
   push:
     branches: [main]
     paths:
       - 'crates/kairo-ecs-arrow/**'
+      - 'crates/kairo-ecs-arrow-ffi/**'
       - 'crates/kairo-ecs-fs-guard/**'
+      - 'crates/kairo-ecs-ffi/**'
       - 'Cargo.toml'
       - 'Cargo.lock'
       - '.github/workflows/arrow-platform.yml'
+      - 'scripts/validation/validate-trusted-domain-import-boundary.mjs'
+      - 'tests/conformance/trusted-domain-import-boundary-check.mjs'
   workflow_dispatch:
 
 permissions:
@@ -52,6 +60,13 @@ jobs:
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
         with:
           key: arrow-platform
+      - name: Shared trusted import boundary and normal graphs
+        run: |
+          node --version
+          node scripts/validation/validate-trusted-domain-import-boundary.mjs --graph
+          node tests/conformance/trusted-domain-import-boundary-check.mjs
+      - name: Shared domain C Data imports
+        run: cargo test --locked -p kairo-ecs-arrow-ffi --features native-data
       - name: Native directory permission checks
         run: cargo test --locked -p kairo-ecs-fs-guard
       - name: Arrow publication, recovery and IPC checks
@@ -61,13 +76,27 @@ jobs:
           --test track70_phase3_durable_publication
           --test track70_phase3_durability
           --test track70_phase1_native_tables
+          --test track70_domain_c_data
+          --test track70_file_metadata
+      - name: Trusted domain C Data and event-log FFI consumers
+        run: cargo test --locked -p kairo-ecs-ffi --features native-data
       - name: Arrow unit checks
         run: cargo test --locked -p kairo-ecs-arrow --features polars-native --lib
       - name: Focused lint checks
         run: >-
-          cargo clippy --locked -p kairo-ecs-arrow -p kairo-ecs-fs-guard
-          --features kairo-ecs-arrow/polars-native --all-targets -- -D warnings
+          cargo clippy --locked -p kairo-ecs-arrow -p kairo-ecs-arrow-ffi -p kairo-ecs-fs-guard -p kairo-ecs-ffi
+          --features kairo-ecs-arrow/polars-native,kairo-ecs-arrow-ffi/native-data,kairo-ecs-ffi/native-data --all-targets -- -D warnings
       - name: Create source packages
         run: >-
           cargo package --locked --no-verify
           -p kairo-ecs-types -p kairo-ecs-fs-guard -p kairo-ecs-arrow
+      - name: Compile clean committed Git source with native consumers
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD 'HEAD^{tree}'
+          source_root="$(mktemp -d)"
+          git archive --format=tar HEAD | tar -xf - -C "$source_root"
+          CARGO_TARGET_DIR="$GITHUB_WORKSPACE/target" cargo check --locked \
+            --manifest-path "$source_root/Cargo.toml" \
+            -p kairo-ecs-arrow -p kairo-ecs-arrow-ffi -p kairo-ecs-ffi \
+            --features kairo-ecs-arrow/polars-native,kairo-ecs-arrow-ffi/native-data,kairo-ecs-ffi/native-data

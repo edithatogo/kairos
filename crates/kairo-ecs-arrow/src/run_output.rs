@@ -62,6 +62,7 @@
 //! imports keep compiling until it is retired with the Phase 3 closeout;
 //! every other variant is live.
 
+use std::collections::BTreeMap;
 use std::io::Write;
 use std::num::NonZeroUsize;
 use std::path::{Path, PathBuf};
@@ -73,7 +74,8 @@ use serde::{Deserialize, Serialize};
 use crate::polars_interop::open_run_file;
 use crate::polars_interop::{
     dataframe_to_records, open_protected_root, open_run_child, open_run_directory, read_parquet,
-    read_run_file, records_to_dataframe, write_parquet_zstd, write_run_file_staged,
+    read_run_file, records_to_dataframe, validate_file_metadata, write_parquet_zstd_with_metadata,
+    write_run_file_staged,
 };
 use crate::{ArrowError, EventLogRecord};
 
@@ -333,9 +335,12 @@ fn run_directory_name(config: &RunOutputConfig) -> String {
 
 /// Encode one bounded part (a canonical-order slice of the batch dataframe)
 /// to Parquet Zstd bytes.
-fn encode_part(slice: &mut polars::prelude::DataFrame) -> Result<Vec<u8>, RunOutputError> {
+fn encode_part(
+    slice: &mut polars::prelude::DataFrame,
+    metadata: &BTreeMap<String, String>,
+) -> Result<Vec<u8>, RunOutputError> {
     let mut buffer = Vec::new();
-    write_parquet_zstd(slice, &mut buffer).map_err(arrow_err)?;
+    write_parquet_zstd_with_metadata(slice, &mut buffer, metadata).map_err(arrow_err)?;
     Ok(buffer)
 }
 
@@ -554,6 +559,22 @@ impl RunOutput {
         &mut self,
         records: &[EventLogRecord],
     ) -> Result<Vec<PartReceipt>, RunOutputError> {
+        self.write_batch_with_metadata(records, &BTreeMap::new())
+    }
+
+    /// Publish through the original guarded path with metadata encoded before
+    /// part hashing. Caller declarations must be bound by its domain manifest;
+    /// the generic RunManifest shape is unchanged. Metadata may vary per part.
+    /// Invalid keys/budgets refuse before any output or state change, even for
+    /// an empty batch. Existing row bounds, order and acknowledgments apply.
+    pub fn write_batch_with_metadata(
+        &mut self,
+        records: &[EventLogRecord],
+        metadata: &BTreeMap<String, String>,
+    ) -> Result<Vec<PartReceipt>, RunOutputError> {
+        validate_file_metadata(metadata).map_err(|_| {
+            RunOutputError::InvalidArgument("file metadata violates key/size contract")
+        })?;
         self.verify_location()?;
         if records.is_empty() {
             return Ok(Vec::new());
@@ -580,7 +601,7 @@ impl RunOutput {
             let part_id = self.next_part_id;
             let file_name = part_file_name(part_id);
             let mut slice = records_to_dataframe(&window).map_err(arrow_err)?;
-            let encoded = encode_part(&mut slice)?;
+            let encoded = encode_part(&mut slice, metadata)?;
 
             write_run_file_staged(
                 &self.directory,
@@ -620,6 +641,21 @@ impl RunOutput {
         records: &[EventLogRecord],
         sink: &mut dyn Write,
     ) -> Result<Vec<PartReceipt>, RunOutputError> {
+        self.write_batch_to_with_metadata(records, sink, &BTreeMap::new())
+    }
+
+    /// Encode caller metadata before sending bytes to the original sink path.
+    /// Receipts attest the exact metadata-bearing bytes. A failed sink records
+    /// no receipt for that part; no hidden retry or byte-rewriting sink occurs.
+    pub fn write_batch_to_with_metadata(
+        &mut self,
+        records: &[EventLogRecord],
+        sink: &mut dyn Write,
+        metadata: &BTreeMap<String, String>,
+    ) -> Result<Vec<PartReceipt>, RunOutputError> {
+        validate_file_metadata(metadata).map_err(|_| {
+            RunOutputError::InvalidArgument("file metadata violates key/size contract")
+        })?;
         if records.is_empty() {
             return Ok(Vec::new());
         }
@@ -645,7 +681,7 @@ impl RunOutput {
             let part_id = self.next_part_id;
             let file_name = part_file_name(part_id);
             let mut slice = records_to_dataframe(&window).map_err(arrow_err)?;
-            let encoded = encode_part(&mut slice)?;
+            let encoded = encode_part(&mut slice, metadata)?;
             sink.write_all(&encoded).map_err(io_err)?;
             sink.flush().map_err(io_err)?;
 

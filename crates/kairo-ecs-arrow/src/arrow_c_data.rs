@@ -14,8 +14,8 @@
 //! (`export_array_to_c`, `export_field_to_c`, `export_iterator`) are safe in
 //! the pinned polars-arrow version: they produce ABI structs with owned
 //! buffers behind the interface release callback. ABI-level *imports* and
-//! struct handoffs live in `crates/kairo-ecs-ffi` (which carries the audited
-//! `allow(unsafe_code)` boundary) and consume this module's exports plus the
+//! struct handoffs live in the shared `crates/kairo-ecs-arrow-ffi` audited
+//! import boundary, reexported by `kairo-ecs-ffi`, and consume this module's exports plus the
 //! [`crate::arrow_c_data::arrow_ffi`] re-export; see reviewer notes in the Track 70 handoff.
 //!
 //! # Ownership and copies (documented; no universal zero-copy claim)
@@ -51,10 +51,14 @@
 //! table produces a length-0 struct array that still carries all 14 typed
 //! children, so independent readers stay schema-valid.
 
+/// Declared native domain-table exports using the same pinned C Data boundary.
+#[path = "domain_c_data.rs"]
+pub mod domain;
+
 use crate::{ArrowError, EVENT_LOG_FIELDS_V2, EVENT_LOG_STREAM_V2};
 use polars::prelude::*;
 pub use polars_arrow::array::StructArray;
-pub use polars_arrow::array::{Array, PrimitiveArray, Utf8Array};
+pub use polars_arrow::array::{Array, BooleanArray, PrimitiveArray, Utf8Array};
 pub use polars_arrow::datatypes::{ArrowDataType, Field as ArrowField};
 pub use polars_arrow::ffi::{
     export_array_to_c, export_field_to_c, export_iterator, ArrowArray, ArrowArrayStream,
@@ -67,8 +71,8 @@ pub use polars_arrow::ffi::{
 ///
 /// The import/parse side of the interface (`import_array_from_c`,
 /// `import_field_from_c`, `ArrowArrayStreamReader`) requires `unsafe` blocks
-/// and therefore does NOT live in this crate; ABI consumers use it from
-/// `kairo-ecs-ffi`. This re-export only carries the safe export constructors
+/// and therefore does NOT live in this crate; trusted consumers use the shared
+/// `kairo-ecs-arrow-ffi` boundary (also reexported by `kairo-ecs-ffi`). This re-export carries the safe export constructors
 /// plus the ABI struct types downstream tests need for `unsafe`-allowing
 /// crates.
 pub mod arrow_ffi {

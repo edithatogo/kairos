@@ -1,0 +1,19 @@
+[package]
+name = "kairo-ecs-arrow-ffi"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+# Shared audited native C Data consumer; no engine dependency.
+
+[dependencies]
+kairo-ecs-arrow = { path = "../kairo-ecs-arrow", version = "0.1.0", default-features = false, optional = true }
+
+[features]
+default = []
+native-data = ["dep:kairo-ecs-arrow", "kairo-ecs-arrow/polars-native"]
+
+[dev-dependencies]
+kairo-ecs-types = { path = "../kairo-ecs-types", version = "0.0.0" }
