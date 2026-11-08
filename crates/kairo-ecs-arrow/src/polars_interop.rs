@@ -7,7 +7,9 @@ use crate::{ArrowError, EventLogRecord, EventStatus, SCHEMA_VERSION_V2};
 use kairo_ecs_types::{EntityId, EventId};
 use polars::io::mmap::MmapBytesReader;
 use polars::prelude::*;
+use std::collections::BTreeMap;
 use std::io::Write;
+use std::sync::Arc;
 
 /// Checked 128-bit tick limb subtraction with borrow arithmetic.
 ///
@@ -262,8 +264,55 @@ pub fn dataframe_to_records(df: &DataFrame) -> Result<Vec<EventLogRecord>, Arrow
 
 /// Write a [`DataFrame`] to Parquet with Zstandard compression.
 pub fn write_parquet_zstd<W: Write>(df: &mut DataFrame, writer: W) -> Result<(), ArrowError> {
+    write_parquet_zstd_with_metadata(df, writer, &BTreeMap::new())
+}
+
+/// Aggregate caller metadata byte budget, including eight framing bytes per
+/// entry. This is not a whole-table, encoded-part or decoder RSS bound.
+pub const MAX_FILE_METADATA_BYTES: usize = 64 * 1024;
+pub(crate) fn validate_file_metadata(
+    metadata: &BTreeMap<String, String>,
+) -> Result<(), ArrowError> {
+    let mut bytes = 0usize;
+    for (key, value) in metadata {
+        if key.is_empty() || key == "ARROW:schema" {
+            return Err(ArrowError::InvalidArgument(
+                "empty or reserved file metadata key",
+            ));
+        }
+        bytes = bytes
+            .checked_add(key.len())
+            .and_then(|n| n.checked_add(value.len()))
+            .and_then(|n| n.checked_add(8))
+            .filter(|n| *n <= MAX_FILE_METADATA_BYTES)
+            .ok_or(ArrowError::InvalidArgument(
+                "file metadata byte budget exceeded",
+            ))?;
+    }
+    Ok(())
+}
+
+/// Write actual Parquet/Zstd with deterministic caller-declared file metadata.
+/// Keys cannot replace ARROW:schema. Declarations are not verified domain truth;
+/// callers bind them to their authoritative manifest and actual columns.
+/// Validation precedes any writer output. Empty metadata preserves plain output.
+pub fn write_parquet_zstd_with_metadata<W: Write>(
+    df: &mut DataFrame,
+    writer: W,
+    metadata: &BTreeMap<String, String>,
+) -> Result<(), ArrowError> {
+    validate_file_metadata(metadata)?;
+    let metadata = (!metadata.is_empty()).then(|| {
+        KeyValueMetadata::from_static(
+            metadata
+                .iter()
+                .map(|(k, v)| (k.clone(), v.clone()))
+                .collect(),
+        )
+    });
     ParquetWriter::new(writer)
         .with_compression(ParquetCompression::Zstd(None))
+        .with_key_value_metadata(metadata)
         .finish(df)
         .map_err(|e| ArrowError::Io(e.to_string()))?;
     Ok(())
@@ -278,7 +327,28 @@ pub fn read_parquet<R: MmapBytesReader>(reader: R) -> Result<DataFrame, ArrowErr
 
 /// Write a [`DataFrame`] to an Arrow IPC stream.
 pub fn write_ipc_stream<W: Write>(df: &mut DataFrame, writer: W) -> Result<(), ArrowError> {
-    IpcStreamWriter::new(writer)
+    write_ipc_stream_with_metadata(df, writer, &BTreeMap::new())
+}
+
+/// Write an Arrow IPC stream with caller schema metadata attached before start.
+/// The same reserved-key and64KiB budget as Parquet apply. Metadata semantics
+/// remain caller-owned, and empty metadata preserves the original plain output.
+pub fn write_ipc_stream_with_metadata<W: Write>(
+    df: &mut DataFrame,
+    writer: W,
+    metadata: &BTreeMap<String, String>,
+) -> Result<(), ArrowError> {
+    validate_file_metadata(metadata)?;
+    let mut writer = IpcStreamWriter::new(writer);
+    if !metadata.is_empty() {
+        writer.set_custom_schema_metadata(Arc::new(
+            metadata
+                .iter()
+                .map(|(k, v)| (k.as_str().into(), v.as_str().into()))
+                .collect(),
+        ));
+    }
+    writer
         .finish(df)
         .map_err(|e| ArrowError::Io(e.to_string()))?;
     Ok(())
