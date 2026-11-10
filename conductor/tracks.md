@@ -123,6 +123,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 113 | Beta and stable release qualification | Spec Approved | `release-agent + api-governance-agent + security-agent` | [Plan](tracks/113-beta-and-stable-release/plan.md) |
 | 114 | Maintained dependencies and independent consumer contracts | Spec Approved | `api-governance-agent + core-scheduler-agent` | [Plan](tracks/114-dependency-and-consumer-contracts/plan.md) |
 | 115 | Frontier research experiments and reproducible evidence | Spec Approved | `research-agent + vv-uq-agent + performance-agent` | [Plan](tracks/115-frontier-experiments/plan.md) |
+| 116 | Cohort and spatial tobacco/vaping microsimulation contracts for tobac | Spec Approved | `des-api-agent + abm-api-agent + vv-uq-agent` | [Plan](tracks/116-tobac-cohort-microsimulation-contracts/plan.md) |
 
 ## Track status vocabulary
 
