@@ -14,6 +14,10 @@ Format:
 
 ## Unreleased
 
+### Added
+
+- `.github/workflows/privacy-secrets.yml` adds pinned Microsoft Presidio and Gitleaks checks for pull requests and default-branch pushes, with scheduled and manual full audits. The detector uses an isolated Python 3.12 tooling profile; the application runtime remains unchanged.
+
 ### Removed
 
 - **Breaking — effective 7 November 2026:** support for independent host-language simulation cores in `bindings/python`, `bindings/r`, `bindings/typescript`, `bindings/csharp` and `bindings/go` ends immediately. The former scheduler facades and synthetic Python vector/RL execution must fail explicitly; there is no gradual migration or parallel support period. Rust native code or Rust-compiled WebAssembly is the only supported execution core. See [ADR 0010](docs/adr/0010-rust-only-execution.md), [compatibility](docs/release/compatibility.md) and [migration](docs/release/migration.md).

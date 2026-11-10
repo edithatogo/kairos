@@ -290,3 +290,37 @@ Replacement is atomic per package index after validation of the complete discove
 The accepted source bundle `f4734bed2da61533503a4b83ba19a35886b3a6ce` and selective CI bundle `ba784e87126a7d48b6654ae15ff31ac5790b169b` are integrated together. Seven focused suites passed 173 tests locally on Python 3.14.8 with the retained hash lock. The classifier runs archive tests for the exact helper, fixture, lock and test paths; unknown shared changes run all eight binding/archive lanes. Aggregate conformance runs the actual portable shell gate and rejects required lanes that are skipped or fail.
 
 Hosted qualification of this integrated head remains pending. Actual retained-archive readback and Darwin installer qualification are bounded local evidence. Linux native installer qualification and a trusted archive consumer workflow remain open; this integration does not certify release publication, SLSA provenance, or original package compilation.
+
+## Privacy workflow integration follow-through — 10 November 2026
+
+The authorized repository-wide privacy rollout adds the bounded CI/security
+maintenance leaf in PR #385. The implementation is pinned to
+`edithatogo/repository-standards@985503bc8eae58e7d6ef36a6e5427d0077e0193c`.
+This follow-through adds `privacy-secrets.yml` to the existing `ci-policy.yml`
+and both `workflow-security.yml` inventories. It changes no detector pin,
+validator, permission, product dependency, track status or release gate.
+
+Track 13 hands the accompanying changelog note to Track 16's release/security
+maintenance role; its handoff records the same bounded slice. No completed
+track is reopened or newly marked complete. The scanner's isolated Python
+3.12 environment is a tooling compatibility profile for Presidio 2.2.366; the
+qualified application/default Python 3.15.2 profile remains in place. Source
+PR #122 records the shared implementation's 84 tests and hosted qualification.
+
+Validation from PR head `44dbb729d8a243a8c52e37e9319a509a45936851` plus this
+focused working diff, with Node 24.22.1 and verified local Python 3.15.2:
+
+- `node scripts/validation/validate-track13-metadata.mjs`: passed, 117 tracks
+  checked. Before the repair it rejected the missing privacy-workflow inventory.
+- The unchanged `changelog-policy.yml` diff predicate: passed on the proposed
+  file list; the negative case omitting `CHANGELOG.md` still failed as required.
+- `git diff --check`: passed.
+
+Hosted acceptance for the updated commit remains pending. Existing native
+Conductor validation on the preceding head failed on Track 116 closeout
+evidence; this leaf neither changes that evidence nor treats the gate as passed.
+Required checks and the repository merge protocol remain binding.
+
+Independent review by the privacy-design-review agent found no blocking issue
+in this exact working diff: inventory assertions are additive, existing checks
+and pins are preserved, and the evidence does not claim hosted acceptance.
