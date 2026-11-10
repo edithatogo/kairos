@@ -17,6 +17,7 @@ Status: Spec Approved. Created 7 November 2026 from the maintainer's approved re
 - [Actual consumer inventory](../../ecosystem-consumers.md)
 - [Movement and usage contract](../../contracts/movement-resource-usage.md)
 - [Bounded implementation workpack](../../execution/README.md)
+- [Track 116: Cohort and spatial microsimulation contracts for tobac](../116-tobac-cohort-microsimulation-contracts/index.md)
 
 Paignia names the planned reusable game provider; the name does not qualify
 algorithms, create a repository or advance consumer/provider pins. Existing

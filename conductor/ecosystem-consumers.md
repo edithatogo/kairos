@@ -28,6 +28,7 @@ application work and .10 belongs to the chosen second consumer.
 | `closer-to-whom` | Capacity-envelope Arrow/Parquet proposal and fixture; local `implied_capacity` computes implied workload | Qualify schema/version/units and distinguish implied requirements from observed or simulated feasible capacity; no scheduler required for static aggregation |
 | `gtpcnz` | A page labelled Kairos playback calls local `ABMSimulation`; the inspected page does not establish native Kairos dispatch | Audit the execution path before using a Kairos-backed claim; either consume real Rust output or label the local model/playback accurately |
 | `foi-process` | Proposed synthetic ProcessEvent/OCEL export, not evidence of an installed Kairos engine | Define a fictional queue model and versioned trace export; keep FOI rules/privacy classification in the domain and process-mining semantics in their provider |
+| `tobac` / `d831e0d` | Prospective microsimulation cohort/spatial consumer (`dependency_ecosystem_codesign_20261110`); current cohort and regulatory VOI models run in Python/JAX | Consume neutral DES/ABM cohort-transition, competing-risk, CRN substream, and spatial exposure Arrow/Polars contracts under [Track 116](tracks/116-tobac-cohort-microsimulation-contracts/index.md); keep all tobacco/vaping epidemiology, NZHS/ASH data, and policy rules in `tobac` |
 
 The older CareOps record retaining `44261eb` describes a historical acceptance;
 it is **not** the current gitlink. Inspect the actual manifest and gitlink before
