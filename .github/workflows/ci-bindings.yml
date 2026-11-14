@@ -154,7 +154,7 @@ jobs:
           persist-credentials: false
       - uses: julia-actions/setup-julia@da908477b5db94c10ffce8cfea9f2b3b9d5db687 # v3.0.3
         with:
-          version: 'v1.13.3'
+          version: 'v1.13.4'
       - name: Julia smoke
         run: |
           test -f bindings/julia/Project.toml
@@ -171,7 +171,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: '26.13.0'
+          node-version: '26.13.1'
       - name: TypeScript smoke
         run: |
           test -f bindings/typescript/package.json
@@ -183,7 +183,7 @@ jobs:
       - name: Install Rust Wasm build tools
         run: rustup toolchain install 1.99.1 --profile minimal --target wasm32-unknown-unknown
       - name: Install matching wasm-bindgen CLI
-        uses: taiki-e/install-action@86f7a0ffb25f40114606501a311ebcfaf882ea32 # v2.88.0
+        uses: taiki-e/install-action@4a76afe23f9e08d2d9550fb56e556444e8611d21 # v2.90.4
         with:
           tool: wasm-bindgen-cli@0.2.129
           fallback: none
@@ -222,7 +222,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
         with:
           dotnet-version: |
             10.0.x
