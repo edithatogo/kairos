@@ -110,14 +110,30 @@ function gh(path, binary = false) {
   return execFileSync('gh', ['api', path], { encoding: binary ? undefined : 'utf8', maxBuffer: MAX_BYTES });
 }
 
-const recoveryBase = {
-  sha: '615b2e17cf97f39d1090b591061f193b2faf4cb3', runId: 41295426677, artifactId: 13079485453,
-  archiveDigest: 'sha256:54862f05e2d647031e6c18c887e3c016b18d1e1251894704915d692c273e6dcf',
-};
-const recoveryAnchor = {
-  sha: '22087510588589a8823743f7736aaf328318e1d8', runId: 41287167761, artifactId: 13075733686,
-  archiveDigest: 'sha256:a1d6876274277f0338339366b0e004bd1b5434cb8949d373f0b5b7c140097ebc',
-};
+// Recovery is limited to reviewed exact-main reports and immutable anchors.
+// Every ordinary baseline still requires all six native/coverage/aggregate jobs.
+const recoveryProfiles = [
+  {
+    base: {
+      sha: '615b2e17cf97f39d1090b591061f193b2faf4cb3', runId: 41295426677, artifactId: 13079485453,
+      archiveDigest: 'sha256:54862f05e2d647031e6c18c887e3c016b18d1e1251894704915d692c273e6dcf',
+    },
+    anchor: {
+      sha: '22087510588589a8823743f7736aaf328318e1d8', runId: 41287167761, artifactId: 13075733686,
+      archiveDigest: 'sha256:a1d6876274277f0338339366b0e004bd1b5434cb8949d373f0b5b7c140097ebc',
+    },
+  },
+  {
+    base: {
+      sha: '03f038a48cac450a5ec9ee0723bc9360786d539a', runId: 43597595767, artifactId: 14115830979,
+      archiveDigest: 'sha256:8a10134ea4ac0104cad8951e2f1211e4a4b2709d728e57473994945760bd9721',
+    },
+    anchor: {
+      sha: 'ab9834d14e254c9a3138a6ddb75c57a33aa892c3', runId: 42369359619, artifactId: 13573493387,
+      archiveDigest: 'sha256:94f50ad5e7ff04dc70285c86f3c010ed8e46d419a8ce720ba7c4677542e0bf19',
+    },
+  },
+];
 
 function requirePinnedReport(report, pin) {
   if (report.runId !== pin.runId || report.artifactId !== pin.artifactId || report.archiveDigest !== pin.archiveDigest) {
@@ -125,17 +141,18 @@ function requirePinnedReport(report, pin) {
   }
 }
 
-export function recoveryJobs(run, jobs) {
+export function recoveryJobs(run, jobs, sha = recoveryProfiles[0].base.sha) {
   // These two downstream jobs failed on missing parent evidence. All report
   // producers must still have succeeded on the pinned protected-main attempt.
-  if (run.id !== recoveryBase.runId || run.run_attempt !== 1) throw new Error('Unexpected recovery run');
+  const profile = recoveryProfiles.find(({ base }) => base.sha === sha);
+  if (!profile || run.id !== profile.base.runId || run.run_attempt !== 1) throw new Error('Unexpected recovery run');
   return ['Classify Rust changes', 'Rust 1.99.1 verification', 'Rust 1.99.1 workspace checks',
     'Rust 1.99.1 WebAssembly check', 'Rust project coverage', 'Rust core quality'].map(name => {
     const matches = jobs.filter(job => job.name === name);
     const expected = ['Rust project coverage', 'Rust core quality'].includes(name) ? 'failure' : 'success';
-    if (matches.length !== 1 || matches[0].head_sha !== recoveryBase.sha || matches[0].status !== 'completed'
+    if (matches.length !== 1 || matches[0].head_sha !== profile.base.sha || matches[0].status !== 'completed'
         || matches[0].conclusion !== expected) throw new Error('Unexpected recovery job: ' + name);
-    return { name, conclusion: expected, headSha: recoveryBase.sha };
+    return { name, conclusion: expected, headSha: profile.base.sha };
   });
 }
 
@@ -144,8 +161,9 @@ export function fetchBaseline(repository, sha) {
   const data = JSON.parse(gh(`repos/${repository}/actions/workflows/ci-core.yml/runs?event=push&branch=main&head_sha=${sha}&status=completed&per_page=100`));
   const run = selectBaselineRun(data.workflow_runs, repository, sha);
   const jobListing = JSON.parse(gh(`repos/${repository}/actions/runs/${run.id}/jobs?filter=latest&per_page=100`));
-  const recovering = repository === 'edithatogo/kairos' && sha === recoveryBase.sha;
-  const nativeJobs = recovering ? recoveryJobs(run, jobListing.jobs) : requireNativeBaselineJobs(jobListing.jobs, sha);
+  const recovery = repository === 'edithatogo/kairos'
+    ? recoveryProfiles.find(({ base }) => base.sha === sha) : undefined;
+  const nativeJobs = recovery ? recoveryJobs(run, jobListing.jobs, sha) : requireNativeBaselineJobs(jobListing.jobs, sha);
   const listing = JSON.parse(gh(`repos/${repository}/actions/runs/${run.id}/artifacts?per_page=100`));
   const artifact = selectBaselineArtifact(listing.artifacts, run, sha);
   const archive = gh(`repos/${repository}/actions/artifacts/${artifact.id}/zip`, true);
@@ -158,13 +176,13 @@ export function fetchBaseline(repository, sha) {
     if (entries.length !== 1 || entries[0] !== 'lcov.info') throw new Error('Unexpected baseline archive contents');
     const text = execFileSync('unzip', ['-p', zip, 'lcov.info'], { encoding: 'utf8', maxBuffer: MAX_BYTES });
     const report = { text, runId: run.id, artifactId: artifact.id, archiveDigest: artifact.digest, nativeJobs };
-    if (recovering) {
-      requirePinnedReport(report, recoveryBase);
-      const anchor = fetchBaseline(repository, recoveryAnchor.sha);
-      requirePinnedReport(anchor, recoveryAnchor);
+    if (recovery) {
+      requirePinnedReport(report, recovery.base);
+      const anchor = fetchBaseline(repository, recovery.anchor.sha);
+      requirePinnedReport(anchor, recovery.anchor);
       const comparison = compareCoverage(anchor.text, text);
       if (comparison.status !== 'pass') throw new Error('Exact base regressed against trusted recovery anchor');
-      report.recovery = { anchor: recoveryAnchor, ...comparison };
+      report.recovery = { anchor: recovery.anchor, ...comparison };
     }
     return report;
   } finally {
