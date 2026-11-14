@@ -14,6 +14,10 @@ Format:
 
 ## Unreleased
 
+### Fixed
+
+- CI toolchain checks isolate each .NET SDK lane from preinstalled newer SDKs. Dependency-update qualification contracts now match the reviewed installer pin and Node 26.13.1 workflow selection while retaining version, audit and security checks.
+
 ### Removed
 
 - **Breaking — effective 7 November 2026:** support for independent host-language simulation cores in `bindings/python`, `bindings/r`, `bindings/typescript`, `bindings/csharp` and `bindings/go` ends immediately. The former scheduler facades and synthetic Python vector/RL execution must fail explicitly; there is no gradual migration or parallel support period. Rust native code or Rust-compiled WebAssembly is the only supported execution core. See [ADR 0010](docs/adr/0010-rust-only-execution.md), [compatibility](docs/release/compatibility.md) and [migration](docs/release/migration.md).

@@ -170,6 +170,10 @@ jobs:
   dotnet:
     name: .NET ${{ matrix.dotnet-version }}
     runs-on: ubuntu-latest
+    env:
+      # Each lane must select its own SDK, not a newer preinstalled SDK.
+      DOTNET_INSTALL_DIR: ${{ runner.temp }}/kairos-dotnet-sdk
+      DOTNET_MULTILEVEL_LOOKUP: '0'
     strategy:
       fail-fast: false
       matrix:
