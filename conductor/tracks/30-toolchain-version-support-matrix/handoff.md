@@ -138,3 +138,26 @@ Official source: `https://static.rust-lang.org/dist/channel-rust-stable.toml`, m
 On base `34a680cdb738b5e855bac9b821f9adae8c805ed9`, from `/private/tmp/kairos-rust-stable-matrix-20261003`, the static validator passes; actual isolated Rust1.99.0 passes the 1.99 check; actual Rust1.98.1 is rejected with the expected mismatch. actionlint and diff checks pass. Rust1.99 uses isolated `/private/tmp/kairos-rust-matrix-toolchains-20261003`; no shared toolchain defaults changed. Exact commands, environments, exits and logs: `/tmp/rust-matrix-command-receipts.json`. Context was bounded to 24KB; the workflow was inspected separately after the combined packet exceeded budget. A negative attempt using only RUSTUP_TOOLCHAIN did not select the intended compiler on this host; the recorded negative check uses its actual bin directory explicitly.
 
 Narrow CHANGELOG handoff to Track16 records this current-stable observation; no minimum version change or supported-version removal. Hosted checks are still required before merge. No Track30 phase advance or full release qualification is claimed. npm security integration remains with the active parallel owner.
+
+## PR #363 SDK selection and pin reconciliation — 15 November 2026
+
+The existing .NET 10 matrix job installed SDK 10.0.404 but selected the runner's
+preinstalled .NET 11 SDK. This bounded Track 30 follow-through sets the
+maintained setup-dotnet action's documented `DOTNET_INSTALL_DIR` to a job-local
+temporary directory and disables multilevel lookup. Both declared .NET lanes
+retain the unchanged actual installed-version validator and expected prefixes.
+No support floor, matrix row or product global.json changes.
+
+Track 13 owns the associated exact taiki-e/install-action expectation update
+to `4a76afe23f9e08d2d9550fb56e556444e8611d21` (official v2.90.4 tag verified)
+and the strict npm workflow test's Node 26.13.1 expectation, matching this PR's
+existing workflow updates. The action/tool pins, audit predicates, failure
+checks and source-build fallback prohibition remain enforced. Track 16 owns
+the single Unreleased note. These are scoped cross-track handoffs under the
+existing dependency-update PR, not new phase or release acceptance.
+
+The source fix is prepared through GitHub after the local executor became
+unavailable. No fresh local runtime, validator or lease result is claimed.
+Existing hosted .NET 10/11 lanes, Node/npm qualification, metadata, security and
+native checks must pass on the final head. The separate exact-main coverage
+recovery in PR #391 must integrate first; historical failures remain retained.
