@@ -52,6 +52,29 @@ for (const job of pinnedJobs) {
   assert.throws(() => recoveryJobs(pinnedRun, [...pinnedJobs, job]));
   assert.throws(() => recoveryJobs(pinnedRun, pinnedJobs.map(other => other === job ? { ...job, conclusion: 'skipped' } : other)));
 }
+// A second reviewed recovery is exact-SHA/run/attempt only. It never broadens
+// normal baseline eligibility or accepts a failed report-producing job.
+const currentRecoverySha = '03f038a48cac450a5ec9ee0723bc9360786d539a';
+const currentRecoveryRun = { id: 43597595767, run_attempt: 1 };
+const currentRecoveryJobs = jobs.map(job => ({ ...job, head_sha: currentRecoverySha,
+  conclusion: ['Rust core quality', 'Rust project coverage'].includes(job.name) ? 'failure' : 'success' }));
+assert.equal(recoveryJobs(currentRecoveryRun, currentRecoveryJobs, currentRecoverySha).length, 6);
+assert.throws(() => requireNativeBaselineJobs(currentRecoveryJobs, currentRecoverySha));
+for (const otherSha of [sha, '615b2e17cf97f39d1090b591061f193b2faf4cb3', 'b'.repeat(40)]) {
+  assert.throws(() => recoveryJobs(currentRecoveryRun, currentRecoveryJobs, otherSha));
+}
+for (const runChange of [{ id: 41295426677 }, { id: 1 }, { run_attempt: 2 }, { run_attempt: undefined }]) {
+  assert.throws(() => recoveryJobs({ ...currentRecoveryRun, ...runChange }, currentRecoveryJobs, currentRecoverySha));
+}
+for (const job of currentRecoveryJobs) {
+  assert.throws(() => recoveryJobs(currentRecoveryRun, currentRecoveryJobs.filter(other => other !== job), currentRecoverySha));
+  assert.throws(() => recoveryJobs(currentRecoveryRun, [...currentRecoveryJobs, job], currentRecoverySha));
+  for (const change of [{ status: 'in_progress' }, { head_sha: sha }, { conclusion: 'skipped' },
+    { conclusion: job.conclusion === 'success' ? 'failure' : 'success' }]) {
+    assert.throws(() => recoveryJobs(currentRecoveryRun,
+      currentRecoveryJobs.map(other => other === job ? { ...job, ...change } : other), currentRecoverySha));
+  }
+}
 const bootstrap = 'd1ab2e5d0f5d79e29dc54dea89b8fa2a2ad61482';
 assert.equal(requireNativeBaselineJobs(jobs.filter(job => job.name !== 'Rust project coverage')
   .map(job => ({ ...job, head_sha: bootstrap })), bootstrap).length, 5);

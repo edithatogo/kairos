@@ -21,8 +21,8 @@ external-fault-injection = ["external-time-warp", "kairo-ecs-pdes/external-fault
 [dev-dependencies]
 kairo-ecs-grpc = { path = "../kairo-ecs-grpc", version = "0.0.0" }
 ed25519-dalek = "3.0.0"
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
 
 [lib]
 path = "src/lib.rs"
