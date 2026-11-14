@@ -17,6 +17,7 @@ Format:
 ### Fixed
 
 - CI toolchain checks isolate each .NET SDK lane from preinstalled newer SDKs. Dependency-update qualification contracts now match the reviewed installer pin and Node 26.13.1 workflow selection while retaining version, audit and security checks.
+- Rust workspace coverage can qualify the specifically reviewed main recovery report against an immutable, fully qualified anchor before applying the unchanged exact-base zero-regression gate. Native producer, source/artifact identity and checksum requirements remain enforced.
 
 ### Removed
 
