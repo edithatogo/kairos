@@ -19,4 +19,4 @@ unsafe_code = "allow"
 bytemuck = { version = "1.25.2", features = ["derive"] }
 kairo-ecs-cuda = { path = "../kairo-ecs-cuda", version = "0.1.0", optional = true }
 pollster = { version = "1.0.1", optional = true }
-wgpu = { version = "30.0.1", optional = true }
+wgpu = { version = "30.0.2", optional = true }

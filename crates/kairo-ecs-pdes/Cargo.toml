@@ -8,7 +8,7 @@ rust-version.workspace = true
 [dependencies]
 kairo-ecs-types = { path = "../kairo-ecs-types", version = "0.0.0" }
 
-rusqlite = { version = "0.41.1", optional = true, default-features = false, features = ["bundled"] }
+rusqlite = { version = "0.42.0", optional = true, default-features = false, features = ["bundled"] }
 sha2 = { version = "0.11.1", optional = true, default-features = false }
 
 serde = { version = "1.0.229", features = ["derive"], optional = true }
@@ -27,7 +27,7 @@ external-store-qualification = ["time-warp", "dep:rusqlite", "dep:sha2"]
 path = "src/lib.rs"
 
 [dev-dependencies]
-serde_json = "1"
+serde_json = "1.0.154"
 kairo-ecs-core = { path = "../kairo-ecs-core", version = "0.0.0" }
 
 [[bench]]

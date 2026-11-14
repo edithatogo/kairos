@@ -9,4 +9,4 @@ license = "Apache-2.0"
 publish = false
 
 [dev-dependencies]
-loom = { version = "=0.7.2", default-features = false }
+loom = { version = "=0.7.3", default-features = false }
