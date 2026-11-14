@@ -6,8 +6,9 @@
 
 - Reconcile existing `dependency-frontier-20261029`, simulation reproducibility, compatibility and CareOps-Sim upstream contracts; preserve pinned Polars/hashbrown patch and consumer pins.
 - **Verified:** multi-crate ECS/DES/ABM, Arrow/data, GPU, networking and bindings architecture; root MSRV 1.99.
-- **Evaluate:** Rayon only for independent deterministic partitions and stable reduction order, with worker-count equality; Crossbeam only for measured synchronous channel need.
-- **Evaluate:** Polars through existing qualified upstream pin; retain Arrow/Parquet schema and source-provenance requirements.
+- **Retain and extend:** Rayon is already adopted by [Track 78](tracks/78-rayon-robustness/index.md). Evaluate additional uses only for independent deterministic partitions and stable reduction order, with worker-count equality; do not reopen the accepted adoption.
+- **Evaluate:** Crossbeam only for a measured synchronous channel need.
+- **Retain and extend:** Polars through the existing qualified upstream pin and [Track 70](tracks/70-polars-native-data-processing/index.md). Evaluate extensions while retaining Arrow/Parquet schema, source-provenance requirements and separately qualified downstream consumer pins.
 - **Extend:** Proptest for event invariants, Criterion for CPU kernels and scenario benchmarks for distributed/GPU work, small redacted Insta output snapshots.
 - **Retain:** custom simulation scheduler, RNG streams and clock. No Tokio in CPU core merely for standardisation; PyO3 only within bindings crate and Syn/Quote only for procedural macros.
 - **Use tracing selectively:** bounded dispatch/operation telemetry with observer-effect benchmarks.
