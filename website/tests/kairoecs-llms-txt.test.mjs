@@ -89,7 +89,7 @@ test("lock graph removes the vulnerable chain and retains the exact renderer gra
   const expectedDependencies = {
     "@astrojs/mdx": "8.1.2",
     "@astrojs/starlight": "0.42.7",
-    "astro": "7.4.4",
+    "astro": "7.4.7",
     "hast-util-select": "6.0.4",
     "rehype-parse": "9.0.1",
     "rehype-remark": "10.0.1",
@@ -112,8 +112,8 @@ test("lock graph removes the vulnerable chain and retains the exact renderer gra
     "node_modules/starlight-llms-txt",
     "node_modules/to-regex-range",
   ];
-  const expectedLockSha256 = "5a00946fef1d12bce43f6e40285e973d1dee41f52bd435f5d6cd6ec39e36eabd";
-  const expectedRetainedGraphSha256 = "2e3217bdd63e0c8b789d7f978d3f77e413bb0c3b615bdc26b4e7c3bcc5517076";
+  const expectedLockSha256 = "fbd49a303eba5dc0a1301babd2611c04c5e19b19720c82ac7057713417668e06";
+  const expectedRetainedGraphSha256 = "d0257d7478f9bb6357a090c1461bb98398af5cd5634dd2da371f15d10e73c623";
   assert.deepEqual(pkg.dependencies, expectedDependencies, "package.json direct dependency map changed");
   assert.deepEqual(candidate.packages[""].dependencies, expectedDependencies, "lock root direct dependency map changed");
   assert.equal(createHash("sha256").update(readFileSync(path.join(root, "website/package-lock.json"))).digest("hex"), expectedLockSha256, "package lock content changed");
