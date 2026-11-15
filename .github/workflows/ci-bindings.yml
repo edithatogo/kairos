@@ -90,11 +90,19 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Verify repository-local Python 3.15.2
         run: python scripts/python_runtime.py --github
+      - name: Install exact Rust for native bindings
+        run: |
+          rustup toolchain install 1.99.1 --profile minimal
+          rustup default 1.99.1
+      - name: Cache native binding dependencies
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
+        with:
+          shared-key: native-bindings-ffi-1.99.1
+          cache-bin: false
+          save-if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
       - name: Build actual Rust C ABI for native execution
         run: |
           set -euo pipefail
-          rustup toolchain install 1.99.1 --profile minimal
-          rustup default 1.99.1
           mkdir -p artifacts/native-bindings
           cargo rustc --locked --release -p kairo-ecs-ffi --lib --crate-type cdylib --message-format=json-render-diagnostics > artifacts/native-bindings/ffi-build.jsonl
           node scripts/validation/select-native-artifact.mjs artifacts/native-bindings/ffi-build.jsonl artifacts/native-bindings/ffi-artifact.json >> "$GITHUB_ENV"
@@ -182,6 +190,12 @@ jobs:
 
       - name: Install Rust Wasm build tools
         run: rustup toolchain install 1.99.1 --profile minimal --target wasm32-unknown-unknown
+      - name: Cache Wasm binding dependencies
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
+        with:
+          shared-key: native-bindings-wasm-1.99.1
+          cache-bin: false
+          save-if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
       - name: Install matching wasm-bindgen CLI
         uses: taiki-e/install-action@86f7a0ffb25f40114606501a311ebcfaf882ea32 # v2.88.0
         with:
@@ -227,11 +241,19 @@ jobs:
           dotnet-version: |
             10.0.x
             11.0.x
+      - name: Install exact Rust for native bindings
+        run: |
+          rustup toolchain install 1.99.1 --profile minimal
+          rustup default 1.99.1
+      - name: Cache native binding dependencies
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
+        with:
+          shared-key: native-bindings-ffi-1.99.1
+          cache-bin: false
+          save-if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
       - name: Build actual Rust C ABI for native execution
         run: |
           set -euo pipefail
-          rustup toolchain install 1.99.1 --profile minimal
-          rustup default 1.99.1
           mkdir -p artifacts/native-bindings
           cargo rustc --locked --release -p kairo-ecs-ffi --lib --crate-type cdylib --message-format=json-render-diagnostics > artifacts/native-bindings/ffi-build.jsonl
           node scripts/validation/select-native-artifact.mjs artifacts/native-bindings/ffi-build.jsonl artifacts/native-bindings/ffi-artifact.json >> "$GITHUB_ENV"

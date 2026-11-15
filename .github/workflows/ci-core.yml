@@ -76,7 +76,10 @@ jobs:
       - name: Reclaim non-coverage build artifacts
         run: |
           df -h "$GITHUB_WORKSPACE"
-          cargo clean
+          # Keep target/llvm-cov-target dependency artifacts restored above.
+          # llvm-cov itself clears prior workspace coverage and profile data.
+          cargo clean --profile dev
+          cargo clean --doc
           df -h "$GITHUB_WORKSPACE"
       - name: Workspace tests and core coverage
         env:

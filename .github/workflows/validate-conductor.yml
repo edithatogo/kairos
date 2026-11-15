@@ -2,7 +2,7 @@ name: Validate Conductor
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 on:
   push:
@@ -72,8 +72,20 @@ jobs:
         if: runner.os == 'Windows'
         run: rustup toolchain install 1.99.1-x86_64-pc-windows-gnu --profile minimal --component rustfmt --component clippy
 
+      - name: Cache Conductor Rust dependencies
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
+        with:
+          key: conductor-1.99.1-${{ runner.os }}
+          # Inspect the same compiler used by the exact setup validation.
+          cmd-format: rustup run ${{ runner.os == 'Windows' && '1.99.1-x86_64-pc-windows-gnu' || '1.99.1' }} {0}
+          cache-bin: false
+          save-if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+
       - name: Validate conductor setup
         run: pwsh -NoProfile -File scripts/validate_conductor_setup.ps1
+
+      - name: Verify exact toolchain and platform test selection
+        run: pwsh -NoProfile -File scripts/validation/test-setup-rust-toolchain.ps1
 
       - name: Validate conductor DAG
         run: pwsh -NoProfile -File scripts/validate_conductor_dag.ps1
@@ -97,4 +109,6 @@ jobs:
         run: node --test tests/windows-linker-resolution.test.mjs
 
       - name: Validate track coverage
-        run: pwsh -NoProfile -File scripts/validate_track_coverage.ps1
+        # Linux already ran the exact locked workspace suite above. Preserve
+        # Windows' ambient-host suite as well as the explicitly pinned GNU suite.
+        run: pwsh -NoProfile -File scripts/validate_track_coverage.ps1 -SkipCargo:($env:RUNNER_OS -eq 'Linux')
