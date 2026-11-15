@@ -14,6 +14,10 @@ Format:
 
 ## Unreleased
 
+### Added
+
+- `.github/workflows/privacy-secrets.yml` adds pinned Microsoft Presidio and Gitleaks checks for pull requests and default-branch pushes, with scheduled and manual full audits. The detector uses an isolated Python 3.12 tooling profile; the application runtime remains unchanged.
+
 ### Fixed
 
 - Rust workspace coverage can qualify the specifically reviewed main recovery report against an immutable, fully qualified anchor before applying the unchanged exact-base zero-regression gate. Native producer, source/artifact identity and checksum requirements remain enforced.
