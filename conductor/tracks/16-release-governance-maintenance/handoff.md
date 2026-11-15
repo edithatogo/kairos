@@ -131,3 +131,21 @@ Implementation/review pass on 2026-05-08:
 ## Source candidate rehearsal (2026-10-01)
 
 Baseline c369ed1ac5111290a1e18974e6d282329cf70959: prepared an exact-commit source archive, package-version inventory, 34 manifest hashes and local checksum/evidence bundle. See docs/release/candidate-preparation.md and candidate-evidence.json. Package builds reuse a proven same-input hosted receipt; no runtime suites were repeated locally. Track15 stale filename rejection was reconciled to existing gated Track42 policy under a packaging-owner handoff, with four isolated negative/positive regression checks. Source archive baseline and modified policy-validation state are distinct. No phase advances or publication approval is claimed. Actual release version mapping, package archives, registry ownership, SBOM/provenance and release signoff remain blocked.
+
+## Privacy rollout changelog handoff — 10 November 2026
+
+Track 13's authorized CI/security maintenance leaf in PR #385 requires a
+changelog entry because the existing release-surface predicate includes
+`.github/workflows/`. This bounded Track 16 release/security follow-through
+adds one `Unreleased` entry naming `privacy-secrets.yml`, its PR/default-branch
+checks, scheduled/manual audits and isolated detector tooling profile. It
+changes no package version, release policy, compatibility contract or track
+status. The Track 13 handoff records the related workflow inventory assertions.
+
+The unchanged changelog predicate accepted the proposed file list and rejected
+a negative case with `CHANGELOG.md` omitted. Track 13's full metadata validator
+passed and `git diff --check` passed on the focused working diff based on
+`44dbb729d8a243a8c52e37e9319a509a45936851`. The local Python profile was verified
+as 3.15.2; Node was 24.22.1. These checks are not hosted, Rust, release or phase
+closeout acceptance. The preceding hosted Conductor failure for Track 116 and
+all required checks remain unresolved until their actual evidence clears.

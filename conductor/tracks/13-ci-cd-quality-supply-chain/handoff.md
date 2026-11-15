@@ -290,3 +290,74 @@ Replacement is atomic per package index after validation of the complete discove
 The accepted source bundle `f4734bed2da61533503a4b83ba19a35886b3a6ce` and selective CI bundle `ba784e87126a7d48b6654ae15ff31ac5790b169b` are integrated together. Seven focused suites passed 173 tests locally on Python 3.14.8 with the retained hash lock. The classifier runs archive tests for the exact helper, fixture, lock and test paths; unknown shared changes run all eight binding/archive lanes. Aggregate conformance runs the actual portable shell gate and rejects required lanes that are skipped or fail.
 
 Hosted qualification of this integrated head remains pending. Actual retained-archive readback and Darwin installer qualification are bounded local evidence. Linux native installer qualification and a trusted archive consumer workflow remain open; this integration does not certify release publication, SLSA provenance, or original package compilation.
+
+## Privacy workflow integration follow-through — 10 November 2026
+
+The authorized repository-wide privacy rollout adds the bounded CI/security
+maintenance leaf in PR #385. The implementation is pinned to
+`edithatogo/repository-standards@985503bc8eae58e7d6ef36a6e5427d0077e0193c`.
+This follow-through adds `privacy-secrets.yml` to the existing `ci-policy.yml`
+and both `workflow-security.yml` inventories. It changes no detector pin,
+validator, permission, product dependency, track status or release gate.
+
+Track 13 hands the accompanying changelog note to Track 16's release/security
+maintenance role; its handoff records the same bounded slice. No completed
+track is reopened or newly marked complete. The scanner's isolated Python
+3.12 environment is a tooling compatibility profile for Presidio 2.2.366; the
+qualified application/default Python 3.15.2 profile remains in place. Source
+PR #122 records the shared implementation's 84 tests and hosted qualification.
+
+Validation from PR head `44dbb729d8a243a8c52e37e9319a509a45936851` plus this
+focused working diff, with Node 24.22.1 and verified local Python 3.15.2:
+
+- `node scripts/validation/validate-track13-metadata.mjs`: passed, 117 tracks
+  checked. Before the repair it rejected the missing privacy-workflow inventory.
+- The unchanged `changelog-policy.yml` diff predicate: passed on the proposed
+  file list; the negative case omitting `CHANGELOG.md` still failed as required.
+- `git diff --check`: passed.
+
+Hosted acceptance for the updated commit remains pending. Existing native
+Conductor validation on the preceding head failed on Track 116 closeout
+evidence; this leaf neither changes that evidence nor treats the gate as passed.
+Required checks and the repository merge protocol remain binding.
+
+Independent review by the privacy-design-review agent found no blocking issue
+in this exact working diff: inventory assertions are additive, existing checks
+and pins are preserved, and the evidence does not claim hosted acceptance.
+
+## Exact-main coverage recovery — 15 November 2026 (Australia/Brisbane)
+
+This bounded Track 13 CI-maintenance follow-through restores qualification of
+exact base `03f038a48cac450a5ec9ee0723bc9360786d539a` using the existing pinned
+recovery mechanism. Normal baselines still require all six native, coverage and
+aggregate jobs to pass. The coordinator hands one Unreleased fix note to the
+Track 16 release-maintenance role; no package version or track status changes.
+
+The chain first broke at `018ef4975f7f146c9fa730381ac3c2bab8b15b60`, run
+`42384630128`: the gRPC transient-recovery oracle received two heartbeat
+attempts where it expected one, and nextest stopped before completing the
+workspace. That failure remains failed. Its mutating retry/readiness behavior
+needs a separate source-owned repair; rerunning it is not the coverage remedy.
+
+All actual report producers passed on base `03f038a`, run `43597595767`.
+The last fully qualified anchor is `ab9834d14e254c9a3138a6ddb75c57a33aa892c3`,
+run `42369359619`. The reviewed comparison from anchor to base changes only
+documentation/Conductor, website, docs CI and maturity tooling; Rust sources,
+native tests, Cargo closure, Rust toolchain and core coverage workflow are
+unchanged. This source comparison does not replace numeric qualification.
+
+The new case pins both reports' exact SHA, run, artifact and ZIP digest.
+Recovery requires all four real producer jobs to succeed on attempt 1, records
+the two failed downstream jobs as failed, verifies both artifact identities and
+bytes, and compares base coverage against the fully qualified anchor with zero
+tolerance. Candidate coverage must then independently meet the exact-base
+zero-regression comparison. Any absent/tampered evidence or numerical regression
+still fails; no generic latest-green fallback or producer-only relaxation exists.
+
+The focused regression suite retains the normal six-job, numeric, tiny-drop,
+provenance and historical-recovery negatives and adds wrong-head, wrong-run,
+wrong-attempt, missing/duplicate/nonterminal/failed-producer cases for this
+specific recovery. Source preparation uses GitHub APIs after the executor
+became unavailable; no fresh local execution or local lease result is claimed.
+Independent review and actual hosted regression/native/coverage checks on the
+candidate remain required before merge. No phase or release acceptance follows.
