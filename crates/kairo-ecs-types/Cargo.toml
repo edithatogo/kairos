@@ -5,6 +5,7 @@ edition.workspace = true
 license.workspace = true
 repository.workspace = true
 rust-version.workspace = true
+description = "Core identifier, tick, and schema types for KairoECS"
 
 [lib]
 path = "src/lib.rs"
