@@ -41,6 +41,11 @@ jobs:
     runs-on: ubuntu-24.04
     permissions: {}
     steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+
       - name: Validate release invocation before either profile
         shell: bash
         env:
@@ -63,6 +68,11 @@ jobs:
       contents: read # Check out exact source and read producer Git lineage.
       actions: read # Reacquire the explicitly pinned producer and consumer artifacts.
     steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+
       - name: Enforce trusted manual main preparation
         shell: bash
         env:
@@ -171,6 +181,11 @@ jobs:
       contents: read # Preserve the legacy source inventory and release evidence gate.
     runs-on: ubuntu-latest
     steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
