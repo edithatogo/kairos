@@ -5,6 +5,7 @@ edition.workspace = true
 license.workspace = true
 repository.workspace = true
 rust-version.workspace = true
+description = "Core deterministic ECS simulation kernel for KairoECS"
 
 [dependencies]
 kairo-ecs-types = { path = "../kairo-ecs-types", version = "0.0.0" }
