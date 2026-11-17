@@ -3,7 +3,9 @@
   "extends": [
     "github>edithatogo/renovate-config"
   ],
-  "dependencyDashboard": true,
+  "dependencyDashboard": {
+    "enabled": true
+  },
   "timezone": "Australia/Brisbane",
   "schedule": ["before 6am on Monday"],
   "prConcurrentLimit": 2,
