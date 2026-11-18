@@ -52,3 +52,13 @@ A convenient framework can alter identities, order or build footprint. Preserve 
 
 Only accepted capabilities may appear in supported beta/stable scope. Historical Done records are not transferred to new algorithms, platforms, dependencies or consumers. See [release gates](../../release-gates.md).
 
+
+## Serde post-adoption decision (18 November 2026; no reopening accepted tracks)
+
+Tracks 74/75 **already accepted** typed Serde control DTOs and `serde_json` encoding in `kairo-ecs-cli` and `kairo-ecs-debug`, replacing handwritten JSON. Existing contracts cover schema versions, large `u128` ticks, unknown fields, escaping, JSONL validation and trace monotonicity. Tracks 70 and other format lanes retain Arrow/Polars, TOML, XML, protobuf and transport capabilities; Serde cannot replace these formats or their domain semantics. No new Serde dependency migration is justified on the verified code.
+
+**Retain, maximise only where a real gap is proven:**
+- [ ] In current Track 114 consumer-contract integration, inventory *actual* Kairos→CareOps/Innovate control/replay DTO boundaries and duplicate JSON-writing call sites; use the accepted 74/75 DTOs rather than a second parallel schema where contracts are identical.
+- [ ] Validate cross-crate round trips, full-range `u128`, duplicate keys, unknown-field policy, NaN/nonfinite values, precise float modes, large/hostile JSONL and canonical byte/hash contract where one exists.
+- [ ] Keep `serde_json` for metadata and Arrow/Parquet for tabular data. Do not replace `prost`/`tonic`, parser recovery, FMI, MPI or deterministic numerical/state kernels with Serde.
+- [ ] Any further consumer-specific adaptation must pass exact-head locked Rust gates, independent downstream pinned fixture acceptance, API/semver policy, and integration review. No completed historical milestone is reopened and no runtime acceptance is claimed from this addendum.
