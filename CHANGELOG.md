@@ -16,6 +16,7 @@ Format:
 
 ### Added
 
+- `.github/workflows/fuzzing.yml` executes seven existing bounded scheduler property and negative-control tests on canonical Rust 1.99.1 for relevant pull requests and weekly/manual campaigns. Test logs are retained; coverage-guided cargo-fuzz and sanitizer execution remain explicitly unverified.
 - `.github/workflows/privacy-secrets.yml` adds pinned Microsoft Presidio and Gitleaks checks for pull requests and default-branch pushes, with scheduled and manual full audits. The detector uses an isolated Python 3.12 tooling profile; the application runtime remains unchanged.
 
 ### Fixed
