@@ -53,9 +53,38 @@ jobs:
           [[ "$GITHUB_REF" == refs/heads/main ]]
           [[ "$DRY_RUN" == true ]]
           [[ "$PROFILE" == legacy-source-inventory || "$PROFILE" == actual-package-archives ]]
+  dependency-scan:
+    name: Check locked Rust dependencies before evidence preparation
+    needs: validate-profile
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Inventory exact locked Rust dependencies
+        uses: edithatogo/repository-standards/.github/actions/cargo-lock-sbom@bc76f1fbe0fa87a1371eadc06b08f54b48c623f7
+        with:
+          lockfile: Cargo.lock
+          output: .grype/kairos.dependencies.cdx.json
+          name: kairos
+          source-sha: ${{ github.sha }}
+      - name: Scan resolved Rust dependencies with Grype
+        uses: edithatogo/repository-standards/.github/actions/grype-scan@bc76f1fbe0fa87a1371eadc06b08f54b48c623f7
+        with:
+          sbom: .grype/kairos.dependencies.cdx.json
+          mode: enforce
+          severity-cutoff: critical
+          artifact-name: grype-kairos-release
+          output-directory: .grype/release-report
+          source-sha: ${{ github.sha }}
+
   actual-archive-preparation:
     name: Verify retained actual package archives
-    needs: validate-profile
+    needs: [validate-profile, dependency-scan]
     if: inputs.profile == 'actual-package-archives' && github.repository == 'edithatogo/kairos' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     timeout-minutes: 45
@@ -165,7 +194,7 @@ jobs:
 
   release-dry-run:
     name: release-dry-run
-    needs: validate-profile
+    needs: [validate-profile, dependency-scan]
     if: inputs.profile == 'legacy-source-inventory'
     permissions:
       contents: read # Preserve the legacy source inventory and release evidence gate.

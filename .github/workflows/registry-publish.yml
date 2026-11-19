@@ -57,6 +57,22 @@ jobs:
           node scripts/validation/validate-code-health.mjs
           node scripts/validation/validate-publication-readiness.mjs
           python packaging/scripts/build_release_manifest.py --check
+      - name: Inventory exact locked Rust dependencies
+        uses: edithatogo/repository-standards/.github/actions/cargo-lock-sbom@bc76f1fbe0fa87a1371eadc06b08f54b48c623f7
+        with:
+          lockfile: Cargo.lock
+          output: .grype/kairos.dependencies.cdx.json
+          name: kairos
+          source-sha: ${{ github.sha }}
+      - name: Scan resolved Rust dependencies with Grype
+        uses: edithatogo/repository-standards/.github/actions/grype-scan@bc76f1fbe0fa87a1371eadc06b08f54b48c623f7
+        with:
+          sbom: .grype/kairos.dependencies.cdx.json
+          mode: enforce
+          severity-cutoff: critical
+          artifact-name: grype-kairos-registry
+          output-directory: .grype/registry-report
+          source-sha: ${{ github.sha }}
       - id: mode
         name: Record publish mode
         env:
