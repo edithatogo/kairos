@@ -36,6 +36,7 @@ concurrency:
 
 jobs:
   scan:
+    name: Scan resolved Cargo dependencies
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:

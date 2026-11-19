@@ -39,5 +39,5 @@ gates. No release was published, no dependency exception was introduced and no
 existing vulnerability gate was disabled by this rollout.
 
 References: [Cargo lockfile semantics](https://doc.rust-lang.org/cargo/guide/cargo-toml-vs-cargo-lock.html),
-[Grype documentation](https://oss.anchore.com/docs/overview/getting-started/),
+[Grype documentation](https://oss.anchore.com/docs/guides/vulnerability/getting-started/),
 [CycloneDX JSON 1.6](https://cyclonedx.org/docs/1.6/json/).
