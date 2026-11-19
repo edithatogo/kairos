@@ -1,0 +1,66 @@
+name: Grype resolved dependency advisory
+
+on:
+  pull_request:
+    paths:
+      - Cargo.lock
+      - Cargo.toml
+      - '**/Cargo.toml'
+      - .github/workflows/grype.yml
+      - .github/workflows/release.yml
+      - .github/workflows/registry-publish.yml
+  push:
+    branches: [main]
+    paths:
+      - Cargo.lock
+      - Cargo.toml
+      - '**/Cargo.toml'
+      - .github/workflows/grype.yml
+      - .github/workflows/release.yml
+      - .github/workflows/registry-publish.yml
+  schedule:
+    - cron: '29 4 * * 1'
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Optional exact release commit or tag to rescan its locked source dependencies
+        type: string
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: grype-source-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  scan:
+    name: Scan resolved Cargo dependencies
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+          persist-credentials: false
+      - name: Record the exact source being scanned
+        id: source
+        shell: bash
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Generate full Cargo.lock resolution inventory
+        uses: edithatogo/repository-standards/.github/actions/cargo-lock-sbom@bc76f1fbe0fa87a1371eadc06b08f54b48c623f7
+        with:
+          lockfile: Cargo.lock
+          output: .grype/kairos.dependencies.cdx.json
+          name: kairos
+          source-sha: ${{ steps.source.outputs.sha }}
+      - name: Scan current source resolution
+        uses: edithatogo/repository-standards/.github/actions/grype-scan@bc76f1fbe0fa87a1371eadc06b08f54b48c623f7
+        with:
+          sbom: .grype/kairos.dependencies.cdx.json
+          mode: advisory
+          severity-cutoff: critical
+          artifact-name: grype-kairos-source-${{ github.run_id }}-${{ github.run_attempt }}
+          output-directory: .grype/report
+          source-sha: ${{ steps.source.outputs.sha }}

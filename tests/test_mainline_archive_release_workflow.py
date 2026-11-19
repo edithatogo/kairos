@@ -75,8 +75,18 @@ class MainlineArchiveReleaseWorkflowTests(unittest.TestCase):
     def test_unknown_profile_cannot_skip_every_gate(self):
         guard = self.workflow.split("  validate-profile:\n", 1)[1].split("  actual-archive-preparation:\n", 1)[0]
         self.assertIn('[[ "$PROFILE" == legacy-source-inventory || "$PROFILE" == actual-package-archives ]]', guard)
-        self.assertIn("needs: validate-profile", self.actual)
-        self.assertIn("needs: validate-profile", self.legacy)
+        for profile in (self.actual, self.legacy):
+            self.assertRegex(profile, r"needs:\s*\[[^\]]*\bvalidate-profile\b[^\]]*\]")
+
+    def test_dependency_policy_failure_blocks_both_preparation_profiles(self):
+        scan = self.workflow.split("  dependency-scan:\n", 1)[1].split("  actual-archive-preparation:\n", 1)[0]
+        self.assertIn("needs: validate-profile", scan)
+        self.assertIn("lockfile: Cargo.lock", scan)
+        self.assertIn("mode: enforce", scan)
+        self.assertIn("severity-cutoff: critical", scan)
+        self.assertIn("source-sha: ${{ github.sha }}", scan)
+        for profile in (self.actual, self.legacy):
+            self.assertRegex(profile, r"needs:\s*\[[^\]]*\bdependency-scan\b[^\]]*\]")
 
 
 if __name__ == "__main__":

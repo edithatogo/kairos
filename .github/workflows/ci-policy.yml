@@ -68,6 +68,7 @@ jobs:
           test -f .github/workflows/docs.yml
           test -f .github/workflows/fuzzing.yml
           test -f .github/workflows/gpu-free-smoke.yml
+          test -f .github/workflows/grype.yml
           test -f .github/workflows/hpc-registry-publish.yml
           test -f .github/workflows/nightly.yml
           test -f .github/workflows/package-dry-run.yml
