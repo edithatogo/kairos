@@ -50,7 +50,7 @@ pub struct ScheduledEventPreview {
 }
 
 /// Deterministic single-threaded scheduler.
-#[derive(Clone, Debug, Default)]
+#[derive(Debug, Default)]
 pub struct Scheduler {
     heap: BinaryHeap<QueueEntry>,
     pending: HashSet<EventId>,
@@ -66,7 +66,7 @@ pub struct Scheduler {
 pub const SCHEDULER_CHECKPOINT_VERSION_V1: u16 = 1;
 
 /// Owned in-process state of a single-threaded Rust scheduler.
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct SchedulerCheckpoint(Scheduler);
 
 impl Scheduler {
@@ -83,7 +83,7 @@ impl Scheduler {
     pub fn checkpoint(&self) -> Versioned<SchedulerCheckpoint> {
         Versioned::new(
             SCHEDULER_CHECKPOINT_VERSION_V1,
-            SchedulerCheckpoint(self.clone()),
+            SchedulerCheckpoint(self.copy_state()),
         )
     }
 
@@ -98,7 +98,21 @@ impl Scheduler {
         if checkpoint.version != SCHEDULER_CHECKPOINT_VERSION_V1 {
             return Err(TypesError::UnsupportedDtoVersion(checkpoint.version));
         }
-        Ok(checkpoint.value.0.clone())
+        Ok(checkpoint.value.0.copy_state())
+    }
+
+    fn copy_state(&self) -> Self {
+        Self {
+            heap: self.heap.clone(),
+            pending: self.pending.clone(),
+            next_event_index: self.next_event_index,
+            next_event_generation: self.next_event_generation,
+            next_sequence: self.next_sequence,
+            now: self.now,
+            scheduled_events: self.scheduled_events,
+            dispatched_events: self.dispatched_events,
+            cancelled_events: self.cancelled_events,
+        }
     }
 
     pub fn schedule(&mut self, request: ScheduleRequest) -> EventId {
