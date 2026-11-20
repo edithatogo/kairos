@@ -7,8 +7,11 @@
 //! Paignia's `train_counterfactual_regret` on a declared information-set graph.
 //!
 //! ```compile_fail
-//! use kairo_ecs_game_theory::extensive_form::{CfrSolver, CfrVariant};
-//! let _ = CfrSolver::new(CfrVariant::CfrPlus, 1);
+//! use kairo_ecs_game_theory::extensive_form::CfrSolver;
+//! ```
+//!
+//! ```compile_fail
+//! use kairo_ecs_game_theory::extensive_form::CfrVariant;
 //! ```
 
 use crate::graph_relations::{children_of, transition_target, ChildOf, TransitionTo};
