@@ -13,6 +13,28 @@ pub mod extensive_form;
 #[cfg(feature = "graph-relations")]
 pub mod graph_relations;
 
+/// Normal-form game representations and retained equilibrium helpers.
+///
+/// Correlated equilibrium uses the optional Paignia solver. The legacy Kairos
+/// product shortcut, welfare solver, result and incentive verifier are retired.
+///
+/// ```compile_fail
+/// use kairo_ecs_game_theory::normal_form::CorrelatedEquilibriumSolver;
+/// ```
+///
+/// ```compile_fail
+/// use kairo_ecs_game_theory::normal_form::CorrelatedEquilibriumResult;
+/// ```
+///
+/// ```compile_fail
+/// use kairo_ecs_game_theory::normal_form::ClarabelConvexSolver;
+/// let _ = ClarabelConvexSolver::solve_correlated_equilibrium_social_welfare(&[], &[]);
+/// ```
+///
+/// ```compile_fail
+/// use kairo_ecs_game_theory::normal_form::ClarabelConvexSolver;
+/// let _ = ClarabelConvexSolver::verify_correlated_equilibrium_incentives(&[], &[], &[]);
+/// ```
 pub mod normal_form;
 
 #[cfg(feature = "generated-components")]
