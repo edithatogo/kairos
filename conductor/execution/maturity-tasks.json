@@ -214,7 +214,7 @@
           ]
         }
       ],
-      "acceptance": "Produce the exact public symbols, supported operation/error matrix, identity mapping, policy/chance causal trace, lawful observation, solver-versus-simulation RNG purpose and checkpoint contracts. Bind tiny positive and negative fixtures to exact owning-package commands. Existing package tests are a baseline, not adapter acceptance. Reuse receiving T17.08 leaves; add <=5-file Kairos implementation leaves only for demonstrated generic runtime gaps, with distinguishing tests. Static game and runtime-only core release paths remain independent of this optional adapter.",
+      "acceptance": "Produce the exact public symbols, supported operation/error matrix, identity mapping, policy/chance causal trace, lawful observation, solver-versus-simulation RNG purpose and checkpoint contracts. Bind tiny positive and negative fixtures to exact owning-package commands. Existing package tests are a baseline, not adapter acceptance. Reuse receiving T17.08 leaves; add <=5-file Kairos implementation leaves only for demonstrated generic runtime gaps, with distinguishing tests. Static game and runtime-only core release paths remain independent of this optional adapter. The receiving fixture commands and verified compiler/source receipts are recorded in conductor/contracts/game-port-acceptance.md.",
       "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed."
     },
     {
