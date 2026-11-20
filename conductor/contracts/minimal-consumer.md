@@ -10,7 +10,7 @@ scheduler, entity lifetime and random stream primitives.
 
 | Direct crate | Public API used by the consumer |
 | --- | --- |
-| `kairo-ecs-core` | `Scheduler` schedules and dispatches a selected transition. `Scheduler::checkpoint` captures state as a `SchedulerCheckpoint`. `Scheduler::from_checkpoint` restores it. `SchedulerStats` retains scheduler history. |
+| `kairo-ecs-core` | `Scheduler` schedules and dispatches a selected transition. `Scheduler::checkpoint` captures a `Versioned<SchedulerCheckpoint>`. `Scheduler::from_checkpoint` restores it. `SchedulerStats` reports event counters and current virtual time. |
 | `kairo-ecs-state` | `World::is_alive` checks the bound generational entity. The application provides the world that owns it. |
 | `kairo-ecs-rng` | `DeterministicStream`, `derive_stream_id` and `RngCheckpoint` identify and resume named streams. The adapter uses `rand_distr::weighted::WeightedIndex` for chance draws. `RngError` and `rand_distr::weighted::Error` surface stream and weight failures. |
 | `kairo-ecs-types` | `EntityId`, `EventId`, `EventKind`, `ScheduleRequest`, `DispatchedEvent`, `StepOutcome`, `SimTime`, `SimDuration` and `Versioned` carry native identities, time, dispatch results and checkpoint versions. `TypesError` carries version and time errors. |
@@ -32,19 +32,27 @@ with the Cargo manifests and lock at `235e6a3`. The four-root tree and adapter
 tests ran in a fresh archive of Paignia
 [`d4047c0`](https://github.com/edithatogo/paignia/tree/d4047c0648a89f2aee4461ff70bbc9641e5320cd/crates/paignia-kairos).
 
-```sh
+```bash
+set -euo pipefail
 export RUSTC="$(rustup which --toolchain 1.99.1 rustc)"
 export RUSTDOC="$(rustup which --toolchain 1.99.1 rustdoc)"
 cargo_199="$(rustup which --toolchain 1.99.1 cargo)"
-"$cargo_199" tree --locked -p kairo-ecs-des --edges normal --no-dedupe \
-  --prefix none --format '{p}' | LC_ALL=C sort -u | wc -l
-"$cargo_199" tree --locked -p kairo-ecs-abm --edges normal --no-dedupe \
-  --prefix none --format '{p}' | LC_ALL=C sort -u | wc -l
-cd target/k01-evidence/paignia-source
+evidence_dir="$PWD/target/k01-evidence"
+
+for crate_name in kairo-ecs-des kairo-ecs-abm; do
+  "$cargo_199" tree --locked -p "$crate_name" --edges normal --no-dedupe \
+    --prefix none --format '{p}' > "$evidence_dir/$crate_name.rust199.raw.txt"
+  LC_ALL=C sort -u "$evidence_dir/$crate_name.rust199.raw.txt" | wc -l
+done
+
+cd "$evidence_dir/paignia-source"
+: > "$evidence_dir/paignia-provider.rust199.raw.txt"
 for crate_name in kairo-ecs-core kairo-ecs-state kairo-ecs-rng kairo-ecs-types; do
   "$cargo_199" tree --locked --manifest-path crates/paignia-kairos/Cargo.toml \
-    -p "$crate_name" --edges normal --no-dedupe --prefix none --format '{p}'
-done | LC_ALL=C sort -u | wc -l
+    -p "$crate_name" --edges normal --no-dedupe --prefix none --format '{p}' \
+    >> "$evidence_dir/paignia-provider.rust199.raw.txt"
+done
+LC_ALL=C sort -u "$evidence_dir/paignia-provider.rust199.raw.txt" | wc -l
 "$cargo_199" test --locked --manifest-path crates/paignia-kairos/Cargo.toml \
   --all-targets --jobs 4
 ```
