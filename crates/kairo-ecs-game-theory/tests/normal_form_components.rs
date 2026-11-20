@@ -1,4 +1,4 @@
-use kairo_ecs_game_theory::normal_form::{PayoffMatrix, StrategySpace, Utility};
+use kairo_ecs_game_theory::normal_form::{NormalFormError, PayoffMatrix, StrategySpace, Utility};
 
 #[test]
 fn normal_form_components_preserve_shape_and_ordering() {
@@ -62,6 +62,18 @@ fn strategy_space_rejects_invalid_cardinality_and_names() {
             .unwrap_err()
             .to_string(),
         "player 0 has duplicate strategy name left"
+    );
+}
+
+#[test]
+fn counted_strategy_space_rejects_invalid_cardinality() {
+    assert_eq!(
+        StrategySpace::from_counts(Vec::new()),
+        Err(NormalFormError::NoPlayers)
+    );
+    assert_eq!(
+        StrategySpace::from_counts(vec![2, 0]),
+        Err(NormalFormError::NoStrategies { player: 1 })
     );
 }
 
