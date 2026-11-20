@@ -35,6 +35,28 @@ pub mod graph_relations;
 /// use kairo_ecs_game_theory::normal_form::ClarabelConvexSolver;
 /// let _ = ClarabelConvexSolver::verify_correlated_equilibrium_incentives(&[], &[], &[]);
 /// ```
+///
+/// Paignia owns bounded mixed-strategy Nash solving and candidate admission.
+///
+/// ```compile_fail
+/// use kairo_ecs_game_theory::normal_form::MixedStrategyProfile;
+/// ```
+///
+/// ```compile_fail
+/// use kairo_ecs_game_theory::normal_form::MixedNashSolver;
+/// ```
+///
+/// ```compile_fail
+/// use kairo_ecs_game_theory::normal_form::LemkeHowsonSolver;
+/// ```
+///
+/// ```compile_fail
+/// use kairo_ecs_game_theory::normal_form::nash_conv;
+/// ```
+///
+/// ```compile_fail
+/// use kairo_ecs_game_theory::normal_form::exploitability;
+/// ```
 pub mod normal_form;
 
 #[cfg(feature = "generated-components")]

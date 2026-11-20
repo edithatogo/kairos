@@ -10,7 +10,7 @@ to distinguish implemented operations from qualified mathematical guarantees.
 | Surface | Current implementation and limit |
 | --- | --- |
 | `BestResponseSolver`, `PureNashSolver`, `StrictDominanceSolver` | Enumerate best responses, pure equilibria and pure-strategy strict dominance for the supplied finite matrix. See the [normal-form guide](normal-form-runtime.md). |
-| `MixedNashSolver`, `LemkeHowsonSolver` | A 2×2 indifference calculation with clamping, not general support enumeration or complementary pivoting. Dominance and degenerate cases require correction. |
+| Mixed Nash | Paignia owns bounded support search and candidate admission. Kairos game-theory 0.5.0 withdraws its legacy mixed-strategy API. |
 | Correlated equilibrium | Paignia owns the bounded two-player program and independent primal and dual admission. Kairos game-theory 0.4.0 retires both former CE paths. |
 | `ClarabelConvexSolver` | Retains experimental zero-sum minimax and its separate equilibrium and residual checks. |
 | `ReplicatorDynamics::step_discrete` and `run_trajectory` | Experimental references. The trajectory uses the historical clipped and normalized Euler update with fixed fitness by strategy index. Game-theory 0.3.0 retires the old public RK4 symbol. |
@@ -28,6 +28,22 @@ For supported continuous replicator work, use Paignia's
 `replicator_euler_step` or `replicator_rk4_step` with the selected model
 and the declared problem and step settings. Requalify trajectories against
 that contract when changing methods. [Paignia S01 validation](https://github.com/edithatogo/paignia/blob/b8f21da9088fd3d6071121e165ff10973bec527e/docs/validation/replicator-rk4.md)
+
+## Mixed-Nash migration
+
+Kairos game-theory 0.5.0 withdraws `MixedStrategyProfile`, `MixedNashSolver`,
+`LemkeHowsonSolver`, `nash_conv`, and `exploitability`. Existing Git pins retain
+the historical matching-pennies control and outputs.
+
+Use Paignia's `solve_mixed_nash` with complete row and column payoff matrices.
+Inspect the typed status, supported game class and search scope before using
+any witness. To check a specific profile, call `evaluate_mixed_nash_candidate`
+and read its individual deviation gains and `sum_gain`. The previous average
+exploitability convention is half of `sum_gain` for an admitted candidate.
+Paignia explicitly reports Lemke–Howson as unsupported.
+
+[S02 migration contract](../../conductor/contracts/game-extraction-map.md) ·
+[Paignia mixed-Nash validation](https://github.com/edithatogo/paignia/blob/f363954fe17e2648942d1ac944280b485f865757/docs/validation/mixed-nash.md)
 
 ## Correlated-equilibrium migration
 

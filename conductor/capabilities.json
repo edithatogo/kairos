@@ -301,11 +301,11 @@
     },
     {
       "id": "nash",
-      "name": "General Lemke\u2013Howson/Nash solving",
-      "status": "known-defect",
+      "name": "Mixed Nash and Lemke\u2013Howson",
+      "status": "unsupported",
       "completion_track": "110",
-      "scope": "The current named solver is a bounded 2x2 algebraic routine.",
-      "limitations": "Dominance/degeneracy cases do not establish general equilibrium correctness; S02 requires independent residual/oracle checks.",
+      "scope": "Kairos game-theory 0.5.0 retires the legacy mixed-strategy surface. Paignia owns bounded mixed-Nash solving and candidate admission.",
+      "limitations": "Paignia requires verified finite witnesses within its support search and reports Lemke–Howson as unsupported. Kairos retains pure-strategy and experimental zero-sum minimax helpers.",
       "evidence": [
         "games",
         "science"

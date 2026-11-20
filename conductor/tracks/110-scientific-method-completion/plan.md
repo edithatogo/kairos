@@ -23,6 +23,11 @@ Close every stated scientific/advanced method with a correct implementation and 
   seven compile-fail doctests passed on Rust 1.99.1. The isolated S03 removal
   eliminates the product-equilibrium caller before S02 retires the shared
   legacy Lemke–Howson path. The remaining phase work stays in the checklist.
+- S02 withdraws the legacy five-symbol mixed-strategy surface in game-theory
+  0.5.0 following the S03 transfer. Paignia's accepted bounded support solver
+  retains matching pennies, rejects the false uniform witness under strict
+  dominance, and evaluates deviation gains for admitted candidates.
+  [Paignia mixed-Nash controls](https://github.com/edithatogo/paignia/blob/f363954fe17e2648942d1ac944280b485f865757/docs/validation/mixed-nash.md)
 - S04 withdrew the legacy public Kuhn solver and retained its test-only
   source control. Paignia records the independent Leduc result comparison.
   [Kairos #406](https://github.com/edithatogo/kairos/pull/406) ·

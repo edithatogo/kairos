@@ -4,7 +4,8 @@ Track 60 adds a dependency-light normal-form execution surface to `kairo-ecs-gam
 The current runtime is a flat-array solver contract, not a release performance claim.
 
 This page describes the finite pure-strategy baseline. Kairos retains experimental
-mixed-strategy and replicator extensions. Paignia owns bounded correlated equilibrium.
+replicator and zero-sum minimax extensions. Paignia owns bounded mixed Nash and
+correlated equilibrium.
 See [current solver scope and S01–S04 qualification](equilibrium-and-cfr-solvers.md).
 Metadata certification does not establish generalized equilibrium correctness.
 
