@@ -24,30 +24,37 @@ Earlier sections below retain the original inventory and transfer history.
 | Legacy API family | Source disposition and receiving contract |
 | --- | --- |
 | `StrategySpace` and `PayoffMatrix` constructors and accessors, `Utility`, `NormalFormError` | Replace for maintained finite games with Paignia `NormalFormGame`, scoped `ActionId` and `PlayerId`, and the selected method's payoff inputs and typed errors. Record the strategy order and each payoff owner explicitly during migration. |
-| `BestResponseSolver::best_responses`, `PureNashSolver::equilibria` and `StrictDominanceSolver::strictly_dominated_strategies` | Use Paignia's `pure_nash_equilibria` for its declared pure finite game scope. Retain the original response and dominance routines as experimental references until a receiving caller needs those standalone operations. |
-| `ReplicatorDynamics::step_discrete`, `step_continuous_rk4` and `run_trajectory` | S01 replaces the old continuous step with Paignia's separately versioned `replicator_euler_step` and `replicator_rk4_step`. Withdraw the old RK4 claim. Discrete updates and canned trajectories remain historical examples. |
-| `MixedNashSolver::solve_2x2_and_support_enumeration`, `LemkeHowsonSolver::solve`, `MixedStrategyProfile`, `nash_conv` and `exploitability` | S02 uses Paignia `solve_mixed_nash` and `evaluate_mixed_nash_candidate` with explicit status, scope and numerical diagnostics. Withdraw the complementary-pivot and unconditional equal-mixture claims. The old verifier helpers remain reference-only. |
-| `CorrelatedEquilibriumSolver::verify_and_solve`, `ClarabelConvexSolver::solve_correlated_equilibrium_social_welfare` and `verify_correlated_equilibrium_incentives` | S03 uses Paignia's optional `correlated-equilibrium` feature and its solve, candidate and certificate entry points. Withdraw the old independent-product shortcut as a CE solver. Preserve the legacy optimizer's actual oracle cases until its caller disposition is accepted. |
+| `BestResponseSolver::best_responses` and `BestResponse`, `PureNashSolver::equilibria` and `PureNashEquilibrium`, `StrictDominanceSolver::strictly_dominated_strategies` and `DominatedStrategy` | Retain the standalone response and dominance calls as experimental references, along with their result types. Migrate qualified pure Nash calls to Paignia's `pure_nash_equilibria` with an explicitly chosen `SolverConfig` tolerance. It returns strategy profiles. Reconstruct a required payoff vector from the caller's validated table using the same player order, and verify any intended exact ties with tolerance zero. |
+| `ReplicatorDynamics::step_discrete`, `step_continuous_rk4` and `run_trajectory` | S01 replaces the continuous model step with Paignia's versioned checked Euler or four-stage RK4. Withdraw the legacy RK4 claim. Preserve the clipped, renormalized Euler computation as a historical baseline, including the trajectory helper that calls it with canned fitness. Retain `step_discrete` and `run_trajectory` as experimental references without a production replacement in this slice. The source suite does not exercise either legacy replicator step. [T17.04 numerical evidence](https://github.com/edithatogo/paignia/blob/d4047c0648a89f2aee4461ff70bbc9641e5320cd/docs/validation/replicator-rk4.md#acceptance) |
+| `MixedNashSolver::solve_2x2_and_support_enumeration`, `LemkeHowsonSolver::solve`, `MixedStrategyProfile`, `nash_conv` and `exploitability` | S02 uses `solve_mixed_nash` and `evaluate_mixed_nash_candidate` for bounded support witnesses with typed status and scope. Paignia reports Lemke–Howson as unsupported. Withdraw the old equal-mixture and complementary-pivot claims. The legacy product CE shortcut calls the Lemke–Howson wrapper, which calls the 2×2 helper. Dispose of that caller before retiring the shared path. On an admitted candidate, the old Nash-convergence convention maps to `sum_gain` and average exploitability to half that sum. Invalid inputs require a typed rejection, since legacy `nash_conv` can return zero on undersized inputs. The old matching-pennies check leaves the dominant-action case uncovered. [Dominant-action oracle](https://github.com/edithatogo/paignia/blob/d4047c0648a89f2aee4461ff70bbc9641e5320cd/docs/validation/mixed-nash.md#prior-defect-dispositions) |
+| `CorrelatedEquilibriumSolver::verify_and_solve`, `ClarabelConvexSolver::solve_correlated_equilibrium_social_welfare`, its `CorrelatedEquilibriumResult` and `verify_correlated_equilibrium_incentives` | Withdraw the independent-product CE shortcut. For equivalent social welfare within one to eight actions per player, pass unmodified complete payoff matrices `A`, `B` and explicit coefficients `c = A + B` to Paignia `solve_correlated_equilibrium`. Read the receiving result and its typed status before using the joint weights. Map incentive-only verification to `evaluate_correlated_equilibrium_candidate` and its feasibility diagnostics. Use `evaluate_correlated_equilibrium_certificate` for primal–dual optimality evidence. Retain the traffic and Prisoner's Dilemma oracle cases for migration. [T17.06 contract](https://github.com/edithatogo/paignia/blob/d4047c0648a89f2aee4461ff70bbc9641e5320cd/docs/validation/correlated-equilibrium.md) |
 | `solve_zero_sum_minimax`, `verify_minimax_residuals`, `ZeroSumMinimaxResult` and the re-exported backend `SolverStatus` | Retain the legacy minimax surface and independent tests as experimental. The accepted Paignia CE boundary selects a different objective. Each provider owns its result/status contract. |
 | `ExtensiveNode`, `InformationSet`, `ActionEdge`, `ChanceOutcome`, `TerminalUtility`, `InformationSetFixture` and `information_set_fixtures` | Replace standalone game semantics with Paignia `GameSpecification`, native node and payoff types, and `InformationSetDeclaration` passed to `build_information_set_graph`. Bind the versioned source vocabulary at the UOGTO boundary. |
 | `BackwardInductionSolver::solve`, `ChanceWeightedBackwardInductionSolver::solve` and `ExtensiveFormError` | Use Paignia `backward_induction_result` for declared static games. Preserve intentional sparse-zero payoffs, ordered actions, and the tolerance-aware tie policy and result version. |
-| `CfrSolver::new`, `solve_kuhn_poker` and `CfrVariant` | S04 moves supported training to `train_counterfactual_regret` on an admitted Paignia information-set graph. Use the receiving best-response and Nash-convergence diagnostics within the tested scope. The old Kuhn-only routine has one in-module test at this source revision. Track 110 owns any source API withdrawal and migration. |
+| `CfrSolver::new`, `solve_kuhn_poker` and `CfrVariant` | S04 uses `train_counterfactual_regret` with a native specification, information-set declaration and a bounded positive iteration budget. Vanilla and CFR+ return the average policy and values and support receiving best-response and Nash-convergence diagnostics. Classify legacy `LinearCfr` and zero iterations as unsupported on migration. The legacy in-module test checks zero-iteration Vanilla and one positive-budget Kuhn CFR+ result. Preserve those historical controls. UOGTO records executable profile evidence in its T17.17 handoff. Track 110 owns source API migration and retirement for T17.07. [Kuhn and Leduc evidence](https://github.com/edithatogo/paignia/blob/d4047c0648a89f2aee4461ff70bbc9641e5320cd/docs/validation/cfr.md), [UOGTO profile](https://github.com/edithatogo/UOGTO/pull/139) |
 | `ExtensiveFormTopology`, traversal stores and returned paths, `outgoing_action_edges`, `outgoing_chance_outcomes`, `extensive_form_paths` and `validate_extensive_form_topology` | Retain ECS-bound traversal as an experimental source reference. The optional `paignia-kairos` adapter projects the selected policy and chance path onto public scheduling, state and RNG interfaces. K01.port owns that runtime contract. |
 | `ChildOf`, `TransitionTo`, `children_of`, `transition_target` and `depth_first_descendants` | Retain neutral state and relationship mechanics in Kairos. Game interpretation and payoff data remain with the adapter or application. |
 | `OntologyClass`, `OntologyProperty`, `OntologyDocument`, `ParseError`, `parse_turtle`, `parse_jsonld`, `normalize_ontology`, `generate_rust_components`, `CodegenError` and the generated-component re-exports | Retain legacy tooling and its qualified source tests for reproduction. UOGTO owns the maintained executable profile and its fixtures. Withdraw the old scanners and generated-component layer from the receiving package boundary. |
 
 ### Compatibility and scope
 
-The replacement uses distinct typed string identifiers for specifications,
-players, actions, nodes and sets. Runtime entity generations stay in the
-optional adapter. A transfer must preserve the full IRI and reject stale
-entity bindings. The current Paignia graph allows a zero-probability path
-under its named sparse-zero profile. Recall checks still include that path.
-Any conversion of a complete legacy payoff vector must preserve explicit
-player ownership and value. Outcome ties follow the receiving
-input-order, pairwise-tolerance and lexicographic rule. Use the versioned
-result for provenance and keep the diagnostic trace with the solver.
-A causal trace comes from dispatching the selected policy and chance events.
+Paignia's `GameSpecification.id` stores the full specification string.
+Result records use `GameSpecificationId`. Player, action, node and set
+identities are typed strings. Runtime entity generations stay in the
+optional adapter. Preserve full IRIs and reject stale entity bindings.
+Require an explicit choice of compatibility when migrating backward induction.
+Kairos keeps `z` for equal-value actions ordered `[z, a]`. The receiving
+input-order, pairwise-tolerance and lexicographic rule selects `a` in that
+case. Kairos rejects zero-weight chance edges and can error on an omitted
+decision payoff. Paignia's named profile admits zero-weight paths, checks
+total mass within `1e-9` and interprets intentional sparse payoffs as zero.
+Recall still checks a zero-weight path. The Paignia converter rejects these
+legacy profile declarations. Adopt the receiving rules explicitly with
+parity controls, or retain the legacy reference behavior where callers need
+it. Any complete vector conversion retains each payoff owner and value.
+Use the versioned result for provenance and keep the diagnostic trace with
+the solver. A causal trace comes from dispatching the selected policy and
+chance events.
 [Receiving runtime contract](https://github.com/edithatogo/paignia/blob/d4047c0648a89f2aee4461ff70bbc9641e5320cd/docs/architecture/game-runtime-contract-v1.md)
 
 ### Verification and callers
@@ -67,16 +74,27 @@ export RUSTC RUSTDOC
 "$kairos_cargo" test --locked -p kairo-ecs-game-ontology --features codegen
 ```
 
-The locked package listings contain 21 game-theory files and nine ontology
-files. The game-theory list omits the external
-`open-game-theory-ontology/fixtures/generated/rust/game_components.rs`
-target referenced by `include!`. The ontology codegen test fixtures also sit
-outside its package listing. Retain those capabilities as source-only legacy
-evidence. The receiving static provider keeps both Kairos crates out of its
-dependency closure. [Paignia artifact verification](https://github.com/edithatogo/paignia/actions/runs/44758809445)
+The locked package listings in
+`target/k01-evidence/game-theory-package-files.txt` and
+`target/k01-evidence/game-ontology-package-files.txt` contain 21 and nine
+files respectively. Game theory's `generated-components` feature build
+requires the external
+`open-game-theory-ontology/fixtures/generated/rust/game_components.rs`.
+Its re-exports include `Entity`, `PlayerId`, `StrategyId`, `ActionId`,
+`InformationSetId`, `GameNodeId`, `Action`, `ChanceNode`, `DecisionNode`,
+`Game`, `InformationSet`, `PayoffMatrix`, `PayoffOutcome`, `Player`,
+`Strategy`, `StrategySpace`, `TerminalNode`, `Transition` and `Utility`.
+Retain these as source-only experimental types. The ontology package omits
+the inputs used by its packaged codegen tests. The receiving static provider
+keeps both Kairos crates out of its dependency closure. [Paignia artifact verification](https://github.com/edithatogo/paignia/actions/runs/44758809445)
 
-Kairos production manifests list the two game crates as workspace members.
-Source matches appear in their own tests, benchmarks and example. A focused
+Kairos lists the two game crates as workspace members. Retain
+`examples/normal_form_runtime.rs` and `benches/normal_form.rs` as experimental
+comparisons because both call the standalone response and dominance APIs.
+The normal-form and Clarabel oracle tests, the extensive-form and relation
+tests, and the ontology ingestion, normalization and codegen tests retain
+the legacy behavior in their respective suites. The bounded migrated pure
+Nash calls use the explicit profile and payoff mapping above. A focused
 manifest and Rust-source search found zero imports of the old crate names
 in these inspected trees:
 
@@ -85,7 +103,8 @@ in these inspected trees:
 - Voiage `3fdac2f` and Dapane `8ef6c51`.
 
 This inventory bounds the verified migration scope to those sources. The
-feature tests preserve the legacy comparison baseline while Track 110 records
+reimbursement Chapter 8 receipt binds application `63a3801` to the distinct
+provider artifacts at `bd880dd`. The feature tests preserve the legacy comparison baseline while Track 110 records
 S01–S04 production API dispositions and source retirement. The native
 execution-port acceptance, real consumer evidence and release qualification
 have separate tasks.
