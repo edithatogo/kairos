@@ -314,10 +314,10 @@
     {
       "id": "ce",
       "name": "Correlated-equilibrium optimisation",
-      "status": "experimental",
+      "status": "unsupported",
       "completion_track": "110",
-      "scope": "A maintained Clarabel-backed path exists.",
-      "limitations": "S03 must verify the implemented incentive constraints, feasibility and objective against independent games.",
+      "scope": "Kairos game-theory 0.4.0 retires its correlated-equilibrium surface. Paignia owns the optional bounded solver and its certificate.",
+      "limitations": "Paignia admits complete two-player payoff tables and an explicit objective within the declared bounds. Kairos retains experimental zero-sum minimax.",
       "evidence": [
         "games",
         "science"
@@ -326,10 +326,10 @@
     {
       "id": "cfr",
       "name": "General CFR/CFR+",
-      "status": "experimental",
+      "status": "unsupported",
       "completion_track": "110",
-      "scope": "Kuhn-specific execution is present.",
-      "limitations": "Generic extensive-form and Leduc support require S04; a method name or convergence field does not prove them.",
+      "scope": "Kairos game-theory 0.2.0 retires the public Kuhn-specific solver. Paignia owns bounded vanilla CFR and CFR+.",
+      "limitations": "Historical Kuhn controls are test-only. Paignia supports its declared finite, perfect-recall information-set profile; legacy LinearCfr is unsupported.",
       "evidence": [
         "cfr",
         "science"

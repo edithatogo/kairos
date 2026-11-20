@@ -23,9 +23,11 @@ Format:
 ### Fixed
 
 - Rust workspace coverage can qualify the specifically reviewed main recovery report against an immutable, fully qualified anchor before applying the unchanged exact-base zero-regression gate. Native producer, source/artifact identity and checksum requirements remain enforced.
+- The .NET toolchain workflow selects the exact SDK installed by each matrix lane before validating its version.
 
 ### Removed
 
+- `kairo-ecs-game-theory` 0.4.0 withdraws both legacy correlated-equilibrium paths and their result and incentive APIs. Paignia owns the bounded method under the [S03 transfer decision](conductor/contracts/game-extraction-map.md). See the [migration guide](docs/game-theory/equilibrium-and-cfr-solvers.md#correlated-equilibrium-migration).
 - **Breaking — effective 7 November 2026:** support for independent host-language simulation cores in `bindings/python`, `bindings/r`, `bindings/typescript`, `bindings/csharp` and `bindings/go` ends immediately. The former scheduler facades and synthetic Python vector/RL execution must fail explicitly; there is no gradual migration or parallel support period. Rust native code or Rust-compiled WebAssembly is the only supported execution core. See [ADR 0010](docs/adr/0010-rust-only-execution.md), [compatibility](docs/release/compatibility.md) and [migration](docs/release/migration.md).
 
 ### Changed

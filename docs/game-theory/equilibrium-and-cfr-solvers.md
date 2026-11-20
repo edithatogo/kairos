@@ -11,8 +11,8 @@ to distinguish implemented operations from qualified mathematical guarantees.
 | --- | --- |
 | `BestResponseSolver`, `PureNashSolver`, `StrictDominanceSolver` | Enumerate best responses, pure equilibria and pure-strategy strict dominance for the supplied finite matrix. See the [normal-form guide](normal-form-runtime.md). |
 | `MixedNashSolver`, `LemkeHowsonSolver` | A 2×2 indifference calculation with clamping, not general support enumeration or complementary pivoting. Dominance and degenerate cases require correction. |
-| `CorrelatedEquilibriumSolver::verify_and_solve` | Forms a product from the preceding mixed-strategy routine; it does not independently verify incentive constraints. |
-| `ClarabelConvexSolver` | Provides separate zero-sum minimax and social-welfare correlated-equilibrium optimization paths. Solver success must be checked alongside independent feasibility, incentive and objective residuals. |
+| Correlated equilibrium | Paignia owns the bounded two-player program and independent primal and dual admission. Kairos game-theory 0.4.0 retires both former CE paths. |
+| `ClarabelConvexSolver` | Retains experimental zero-sum minimax and its separate equilibrium and residual checks. |
 | `ReplicatorDynamics::step_discrete` and `run_trajectory` | Experimental references. The trajectory uses the historical clipped and normalized Euler update with fixed fitness by strategy index. Game-theory 0.3.0 retires the old public RK4 symbol. |
 | CFR and CFR+ | Paignia owns training on its declared perfect-recall information-set graphs. Kairos game-theory 0.2.0 retires the Kuhn-specific public solver and retains its historical regression as test-only source. |
 
@@ -28,6 +28,27 @@ For supported continuous replicator work, use Paignia's
 `replicator_euler_step` or `replicator_rk4_step` with the selected model
 and the declared problem and step settings. Requalify trajectories against
 that contract when changing methods. [Paignia S01 validation](https://github.com/edithatogo/paignia/blob/b8f21da9088fd3d6071121e165ff10973bec527e/docs/validation/replicator-rk4.md)
+
+## Correlated-equilibrium migration
+
+Kairos game-theory 0.4.0 withdraws `CorrelatedEquilibriumSolver`, the
+`CorrelatedEquilibriumResult` type, and the CE solve and incentive methods on
+`ClarabelConvexSolver`. Existing Git pins preserve the former API and historical
+outputs. The bounded caller inventory found only the legacy CE oracle tests.
+
+Enable `paignia-solve`'s `correlated-equilibrium` feature. Supply complete row
+and column payoff tables in the same action order and an explicit objective to
+`solve_correlated_equilibrium`. To reproduce the social-welfare objective, use
+the cellwise sum of the two payoff tables. Inspect the returned status and the
+admitted joint candidate before using its raw weights. Use
+`evaluate_correlated_equilibrium_candidate` for primal diagnostics and
+`evaluate_correlated_equilibrium_certificate` to evaluate a primal and dual
+certificate. These APIs require one to eight actions per player. They preserve
+the original payoff units and report approximate admission.
+
+[S03 migration contract](../../conductor/contracts/game-extraction-map.md) ·
+[Paignia CE validation](https://github.com/edithatogo/paignia/blob/b8f21da9088fd3d6071121e165ff10973bec527e/docs/validation/correlated-equilibrium.md) ·
+[Migrated historical oracles](https://github.com/edithatogo/paignia/pull/64)
 
 ## CFR migration
 

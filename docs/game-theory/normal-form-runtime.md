@@ -3,9 +3,9 @@
 Track 60 adds a dependency-light normal-form execution surface to `kairo-ecs-game-theory`.
 The current runtime is a flat-array solver contract, not a release performance claim.
 
-This page describes the finite pure-strategy baseline. Experimental mixed,
-correlated-equilibrium and replicator extensions have distinct correctness gaps;
-consult [current solver scope and S01–S04 qualification](equilibrium-and-cfr-solvers.md).
+This page describes the finite pure-strategy baseline. Kairos retains experimental
+mixed-strategy and replicator extensions. Paignia owns bounded correlated equilibrium.
+See [current solver scope and S01–S04 qualification](equilibrium-and-cfr-solvers.md).
 Metadata certification does not establish generalized equilibrium correctness.
 
 ## Data layout
