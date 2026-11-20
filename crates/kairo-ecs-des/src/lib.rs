@@ -4,10 +4,12 @@ pub mod boundary;
 pub mod egress;
 pub mod hazard_clock;
 pub mod staged_runtime;
+pub mod usage;
 pub use boundary::*;
 pub use egress::*;
 pub use hazard_clock::*;
 pub use staged_runtime::*;
+pub use usage::*;
 
 use kairo_ecs_core::Scheduler;
 use kairo_ecs_state::World;
