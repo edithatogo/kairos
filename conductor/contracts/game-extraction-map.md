@@ -11,7 +11,86 @@ inventory is not completed package acceptance. Its initial provider change owns
 the `paignia-core`/`paignia-solve` seed transfer. Existing incubator PR 101 owns
 the immutable dependency switch and real static reimbursement fixture.
 
-## Inspected boundary
+## Source disposition on 21 November 2026
+
+The receiving static and optional runtime packages are maintained in Paignia.
+This inventory binds their bounded APIs at
+[`d4047c0`](https://github.com/edithatogo/paignia/commit/d4047c0648a89f2aee4461ff70bbc9641e5320cd)
+to the experimental Kairos sources at
+[`235e6a3`](https://github.com/edithatogo/kairos/commit/235e6a333ccc6e690f5b41f2c5eaa9a6784fe147).
+The legacy game crate sources and Cargo inputs match Kairos `40ba664`.
+Earlier sections below retain the original inventory and transfer history.
+
+| Legacy API family | Source disposition and receiving contract |
+| --- | --- |
+| `StrategySpace` and `PayoffMatrix` constructors and accessors, `Utility`, `NormalFormError` | Replace for maintained finite games with Paignia `NormalFormGame`, scoped `ActionId` and `PlayerId`, and the selected method's payoff inputs and typed errors. Record the strategy order and each payoff owner explicitly during migration. |
+| `BestResponseSolver::best_responses`, `PureNashSolver::equilibria` and `StrictDominanceSolver::strictly_dominated_strategies` | Use Paignia's `pure_nash_equilibria` for its declared pure finite game scope. Retain the original response and dominance routines as experimental references until a receiving caller needs those standalone operations. |
+| `ReplicatorDynamics::step_discrete`, `step_continuous_rk4` and `run_trajectory` | S01 replaces the old continuous step with Paignia's separately versioned `replicator_euler_step` and `replicator_rk4_step`. Withdraw the old RK4 claim. Discrete updates and canned trajectories remain historical examples. |
+| `MixedNashSolver::solve_2x2_and_support_enumeration`, `LemkeHowsonSolver::solve`, `MixedStrategyProfile`, `nash_conv` and `exploitability` | S02 uses Paignia `solve_mixed_nash` and `evaluate_mixed_nash_candidate` with explicit status, scope and numerical diagnostics. Withdraw the complementary-pivot and unconditional equal-mixture claims. The old verifier helpers remain reference-only. |
+| `CorrelatedEquilibriumSolver::verify_and_solve`, `ClarabelConvexSolver::solve_correlated_equilibrium_social_welfare` and `verify_correlated_equilibrium_incentives` | S03 uses Paignia's optional `correlated-equilibrium` feature and its solve, candidate and certificate entry points. Withdraw the old independent-product shortcut as a CE solver. Preserve the legacy optimizer's actual oracle cases until its caller disposition is accepted. |
+| `solve_zero_sum_minimax`, `verify_minimax_residuals`, `ZeroSumMinimaxResult` and the re-exported backend `SolverStatus` | Retain the legacy minimax surface and independent tests as experimental. The accepted Paignia CE boundary selects a different objective. Each provider owns its result/status contract. |
+| `ExtensiveNode`, `InformationSet`, `ActionEdge`, `ChanceOutcome`, `TerminalUtility`, `InformationSetFixture` and `information_set_fixtures` | Replace standalone game semantics with Paignia `GameSpecification`, native node and payoff types, and `InformationSetDeclaration` passed to `build_information_set_graph`. Bind the versioned source vocabulary at the UOGTO boundary. |
+| `BackwardInductionSolver::solve`, `ChanceWeightedBackwardInductionSolver::solve` and `ExtensiveFormError` | Use Paignia `backward_induction_result` for declared static games. Preserve intentional sparse-zero payoffs, ordered actions, and the tolerance-aware tie policy and result version. |
+| `CfrSolver::new`, `solve_kuhn_poker` and `CfrVariant` | S04 moves supported training to `train_counterfactual_regret` on an admitted Paignia information-set graph. Use the receiving best-response and Nash-convergence diagnostics within the tested scope. The old Kuhn-only routine has one in-module test at this source revision. Track 110 owns any source API withdrawal and migration. |
+| `ExtensiveFormTopology`, traversal stores and returned paths, `outgoing_action_edges`, `outgoing_chance_outcomes`, `extensive_form_paths` and `validate_extensive_form_topology` | Retain ECS-bound traversal as an experimental source reference. The optional `paignia-kairos` adapter projects the selected policy and chance path onto public scheduling, state and RNG interfaces. K01.port owns that runtime contract. |
+| `ChildOf`, `TransitionTo`, `children_of`, `transition_target` and `depth_first_descendants` | Retain neutral state and relationship mechanics in Kairos. Game interpretation and payoff data remain with the adapter or application. |
+| `OntologyClass`, `OntologyProperty`, `OntologyDocument`, `ParseError`, `parse_turtle`, `parse_jsonld`, `normalize_ontology`, `generate_rust_components`, `CodegenError` and the generated-component re-exports | Retain legacy tooling and its qualified source tests for reproduction. UOGTO owns the maintained executable profile and its fixtures. Withdraw the old scanners and generated-component layer from the receiving package boundary. |
+
+### Compatibility and scope
+
+The replacement uses distinct typed string identifiers for specifications,
+players, actions, nodes and sets. Runtime entity generations stay in the
+optional adapter. A transfer must preserve the full IRI and reject stale
+entity bindings. The current Paignia graph allows a zero-probability path
+under its named sparse-zero profile. Recall checks still include that path.
+Any conversion of a complete legacy payoff vector must preserve explicit
+player ownership and value. Outcome ties follow the receiving
+input-order, pairwise-tolerance and lexicographic rule. Use the versioned
+result for provenance and keep the diagnostic trace with the solver.
+A causal trace comes from dispatching the selected policy and chance events.
+[Receiving runtime contract](https://github.com/edithatogo/paignia/blob/d4047c0648a89f2aee4461ff70bbc9641e5320cd/docs/architecture/game-runtime-contract-v1.md)
+
+### Verification and callers
+
+Both locked source test commands passed with Cargo and rustc 1.99.1 on
+macOS arm64. The game-theory command executes 45 tests and the
+ontology command executes eight. The recorded logs are
+`target/k01-evidence/game-theory-feature-baseline.log` and
+`target/k01-evidence/game-ontology-feature-baseline.log`.
+
+```bash
+RUSTC="$(rustup which --toolchain 1.99.1 rustc)"
+RUSTDOC="$(rustup which --toolchain 1.99.1 rustdoc)"
+kairos_cargo="$(rustup which --toolchain 1.99.1 cargo)"
+export RUSTC RUSTDOC
+"$kairos_cargo" test --locked -p kairo-ecs-game-theory --features graph-relations,generated-components
+"$kairos_cargo" test --locked -p kairo-ecs-game-ontology --features codegen
+```
+
+The locked package listings contain 21 game-theory files and nine ontology
+files. The game-theory list omits the external
+`open-game-theory-ontology/fixtures/generated/rust/game_components.rs`
+target referenced by `include!`. The ontology codegen test fixtures also sit
+outside its package listing. Retain those capabilities as source-only legacy
+evidence. The receiving static provider keeps both Kairos crates out of its
+dependency closure. [Paignia artifact verification](https://github.com/edithatogo/paignia/actions/runs/44758809445)
+
+Kairos production manifests list the two game crates as workspace members.
+Source matches appear in their own tests, benchmarks and example. A focused
+manifest and Rust-source search found zero imports of the old crate names
+in these inspected trees:
+
+- Paignia `d4047c0` and reimbursement `b669bd0`.
+- Innovate `fd7e259` and CareOps `23553b7`.
+- Voiage `3fdac2f` and Dapane `8ef6c51`.
+
+This inventory bounds the verified migration scope to those sources. The
+feature tests preserve the legacy comparison baseline while Track 110 records
+S01–S04 production API dispositions and source retirement. The native
+execution-port acceptance, real consumer evidence and release qualification
+have separate tasks.
+
+## Historical source inventory
 
 Kairos source: `018ef4975f7f146c9fa730381ac3c2bab8b15b60`. Receiving source:
 `90602b93db7352bfb307bac7852db211cf94af1e` in
