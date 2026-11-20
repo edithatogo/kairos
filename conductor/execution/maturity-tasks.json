@@ -218,6 +218,43 @@
       "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed."
     },
     {
+      "id": "K01.checkpoint",
+      "title": "Preserve native scheduler state across an in-process checkpoint",
+      "parent": "114.1.10",
+      "kind": "implementation",
+      "executor": "specialist",
+      "requires": [
+        "K01.port"
+      ],
+      "read": [
+        "conductor/contracts/game-execution-port.md",
+        "crates/kairo-ecs-types/src/lib.rs"
+      ],
+      "write": [
+        "crates/kairo-ecs-core/src/lib.rs",
+        "crates/kairo-ecs-core/tests/scheduler_checkpoint.rs",
+        "docs/adr/adr-k01-scheduler-checkpoint.md",
+        "conductor/execution/maturity-tasks.json",
+        "conductor/tracks/114-dependency-and-consumer-contracts/test-matrix.md"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-core",
+            "--test",
+            "scheduler_checkpoint"
+          ]
+        }
+      ],
+      "acceptance": "A versioned opaque native snapshot retains time, queue order, cancellation membership, counters and event identity. Resuming yields exact native events and future allocations. A sibling fork can cancel and dispatch independently. Unsupported checkpoint versions fail. Paignia T17.16 separately owns policy, entity mapping and RNG binding and its combined replay test.",
+      "stop": "Retain the existing scheduler semantics and gates. Report any remaining native-state gap before claiming adapter replay acceptance."
+    },
+    {
       "id": "K02.contract",
       "title": "Settle movement handle and cancellation semantics",
       "parent": "114.1.6",
