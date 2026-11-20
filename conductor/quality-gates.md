@@ -441,9 +441,9 @@ Every gate listed in `conductor/tracks.yaml` must appear here as a bold gate ID.
 
 **hybrid-des-abm-100k-benchmark**: validates that the upgraded SoA ECS + DES resource + ABM spatial kernel meets or beats the 100k-event hybrid benchmark threshold.
 
-**mixed-nash-lemke-howson-parity**: validates 2-player Mixed-Strategy Nash Equilibrium (support enumeration and Lemke-Howson), Correlated Equilibrium, and Replicator Dynamics solvers against canonical game-theory fixtures.
+**mixed-nash-lemke-howson-parity** exercises the legacy matching-pennies mixed-strategy path. Paignia carries the qualified [bounded mixed-Nash and correlated-equilibrium controls](../docs/game-theory/equilibrium-and-cfr-solvers.md).
 
-**cfr-plus-extensive-form-convergence**: validates tabular `CFR` and `CFR+` exploitability convergence over extensive-form Graph-ECS games with chance nodes (e.g., Kuhn and Leduc Poker fixtures).
+**cfr-plus-extensive-form-convergence** preserves the historical Kairos Kuhn fixture in test-only source. Paignia owns bounded CFR and CFR+ on admitted information sets, with independent [Kuhn and Leduc controls](https://github.com/edithatogo/paignia/blob/b8f21da9088fd3d6071121e165ff10973bec527e/docs/validation/cfr.md).
 
 **rayon-vecenv-1024-worlds-throughput**: validates that `kairo-ecs-ml` steps 1,024+ parallel simulation worlds via `rayon` into contiguous observation/reward tensors deterministically.
 
