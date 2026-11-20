@@ -14,7 +14,26 @@ to distinguish implemented operations from qualified mathematical guarantees.
 | `CorrelatedEquilibriumSolver::verify_and_solve` | Forms a product from the preceding mixed-strategy routine; it does not independently verify incentive constraints. |
 | `ClarabelConvexSolver` | Provides separate zero-sum minimax and social-welfare correlated-equilibrium optimization paths. Solver success must be checked alongside independent feasibility, incentive and objective residuals. |
 | `ReplicatorDynamics::step_continuous_rk4` | Performs an Euler-style update, clipping and normalization; the name does not establish fourth-order integration. |
-| `CfrSolver::solve_kuhn_poker` | A Kuhn-specific routine with CFR variants; it does not accept arbitrary information-set graphs or establish Leduc/general-game support. |
+| CFR and CFR+ | Paignia owns training on its declared perfect-recall information-set graphs. Kairos game-theory 0.2.0 retires the Kuhn-specific public solver and retains its historical regression as test-only source. |
+
+## CFR migration
+
+For vanilla CFR, replace the legacy `CfrVariant::Vanilla` with
+`paignia_solve::CfrVariant::Cfr`. Paignia also exposes `CfrVariant::CfrPlus`.
+Call `paignia_solve::train_counterfactual_regret` with the game specification,
+information-set declaration, and a `CfrConfig` with an iteration count in
+`1..=100_000`. Linear CFR and zero-budget training are unsupported. The
+versioned result includes a root value for each player and the average strategy
+with each information set’s declared legal-action order. Choose a player's
+value and any action probability from the model's own identifiers. The old
+Kuhn aggregate bet probability has no generic result field.
+
+Existing Git pins retain their historical outputs. The withdrawn surface had no
+maintained runtime callers in the reviewed application snapshots. The
+feature-enabled compile-fail fixture verifies that the public Kairos symbols
+are unavailable, and the test-only fixture retains the historical Kuhn controls.
+[Paignia CFR and independent controls](https://github.com/edithatogo/paignia/blob/d4047c0648a89f2aee4461ff70bbc9641e5320cd/docs/validation/cfr.md) ·
+[Source and caller disposition](../../conductor/contracts/game-extraction-map.md)
 
 ## Independent validation
 
@@ -22,8 +41,9 @@ to distinguish implemented operations from qualified mathematical guarantees.
 - S02–S03: compare dominance, boundary, degenerate and rectangular games with independent Gambit/OpenSpiel solutions; check simplex constraints, best-response gains and CE incentive residuals.
 - S04: qualify graph-based CFR/CFR+ on Kuhn and Leduc using independent policy value/exploitability, convergence and perfect-recall checks.
 
-These obligations remain open in [S01–S04](../../conductor/scientific-completion.md)
-and the [Track 110 plan](../../conductor/tracks/110-scientific-method-completion/plan.md).
+Track 110 retains the independent method, source and caller obligations.
+[Scientific programme](../../conductor/scientific-completion.md) ·
+[Track 110 plan](../../conductor/tracks/110-scientific-method-completion/plan.md)
 Reference tools are external test oracles; production simulation remains Rust.
 Certification manifests and validator self-tests are evidence bookkeeping,
 not execution or independent mathematical proof of generalized game solvers.
