@@ -623,9 +623,17 @@ impl CorrelatedEquilibriumSolver {
     }
 }
 
+/// Historical replicator helpers for exploratory comparisons.
+///
+/// ```compile_fail
+/// use kairo_ecs_game_theory::normal_form::ReplicatorDynamics;
+///
+/// ReplicatorDynamics::step_continuous_rk4(&[0.25, 0.75], &[1.0, 0.0], 0.5);
+/// ```
 pub struct ReplicatorDynamics;
 
 impl ReplicatorDynamics {
+    /// Experimental discrete update retained for historical comparisons.
     pub fn step_discrete(pop: &[f64], fitness: &[f64]) -> Vec<f64> {
         let avg_fit: f64 = pop
             .iter()
@@ -641,7 +649,7 @@ impl ReplicatorDynamics {
             .collect()
     }
 
-    pub fn step_continuous_rk4(pop: &[f64], fitness: &[f64], dt: f64) -> Vec<f64> {
+    fn legacy_projected_euler_step(pop: &[f64], fitness: &[f64], dt: f64) -> Vec<f64> {
         let avg_fit: f64 = pop.iter().zip(fitness.iter()).map(|(x, f)| x * f).sum();
         let mut next: Vec<f64> = pop
             .iter()
@@ -657,13 +665,15 @@ impl ReplicatorDynamics {
         next
     }
 
+    /// Reproduce the experimental snapshots using the historical projected
+    /// Euler update with fixed fitness `1.0 + 0.1 * i` for strategy index `i`.
     pub fn run_trajectory(initial: &[f64], steps: usize, dt: f64) -> Vec<Vec<f64>> {
         let mut traj = Vec::with_capacity(steps);
         let mut curr = initial.to_vec();
         let fitness: Vec<f64> = (0..initial.len()).map(|i| 1.0 + (i as f64) * 0.1).collect();
         for _ in 0..steps {
             traj.push(curr.clone());
-            curr = Self::step_continuous_rk4(&curr, &fitness, dt);
+            curr = Self::legacy_projected_euler_step(&curr, &fitness, dt);
         }
         traj
     }
@@ -1169,6 +1179,32 @@ impl ClarabelConvexSolver {
         }
 
         true
+    }
+}
+
+#[test]
+fn historical_projected_euler_step_preserves_update_and_clipping() {
+    let population = [0.25, 0.75];
+    let fitness = [1.0, 0.0];
+    assert_eq!(
+        ReplicatorDynamics::legacy_projected_euler_step(&population, &fitness, 0.5),
+        [0.34375, 0.65625]
+    );
+    assert_eq!(
+        ReplicatorDynamics::legacy_projected_euler_step(&population, &fitness, 8.0),
+        [1.0, 0.0]
+    );
+}
+
+#[test]
+fn experimental_trajectory_preserves_snapshots_and_fixed_fitness() {
+    let initial = [0.25, 0.75];
+    let snapshots = ReplicatorDynamics::run_trajectory(&initial, 2, 1.0);
+    assert_eq!(snapshots.len(), 2);
+    assert_eq!(snapshots[0], initial);
+    assert_eq!(snapshots[1].len(), 2);
+    for (actual, expected) in snapshots[1].iter().zip([0.23125, 0.76875]) {
+        assert!((actual - expected).abs() < 1e-14);
     }
 }
 

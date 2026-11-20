@@ -24,7 +24,16 @@ Unrelated owners, cross-repository source, clinical policy, DES/resource semanti
 
 ## Contract
 
-Only if an accepted continuous-dynamics consumer needs an ODE solver, compare ode_solvers with retaining a correctly named/qualified existing method. step_continuous_rk4 currently performs one Euler-style update plus projection; that correctness mismatch is separately recorded in Track 65 and must not wait for this adoption. Do not claim a solver library replaces game equilibrium/CFR methods, DES scheduling, hazard policy or event detection. Specify fixed/adaptive timestep, tolerance, positivity/conservation and event-boundary restart contracts; version intentional trajectory differences.
+Game-theory 0.3.0 retires the legacy `step_continuous_rk4` export described in
+Track 65. Paignia owns the qualified fixed-step replicator methods.
+[Replicator migration](../../../docs/game-theory/equilibrium-and-cfr-solvers.md#replicator-migration)
+
+Compare `ode_solvers` with the qualified method only when an accepted
+continuous-dynamics consumer needs a general ODE solver. The comparison covers
+fixed or adaptive timesteps, tolerance, positivity, conservation and
+event-boundary restarts. Version intentional trajectory differences. Game
+solving, DES scheduling, hazard policy and event detection retain their own
+contracts.
 
 ## Acceptance criteria
 

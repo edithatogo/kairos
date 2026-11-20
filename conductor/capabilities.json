@@ -290,10 +290,10 @@
     {
       "id": "rk4",
       "name": "Classical fourth-order integration",
-      "status": "known-defect",
+      "status": "unsupported",
       "completion_track": "110",
-      "scope": "The existing step_continuous_rk4 method uses an Euler-style update and normalization.",
-      "limitations": "Do not claim RK4 order or general ODE correctness until S01 independent convergence tests pass.",
+      "scope": "Kairos game-theory 0.3.0 withdraws the legacy RK4 export. Paignia owns qualified fixed-step replicator integration.",
+      "limitations": "The Paignia qualification covers its declared replicator profile. General ODE integration remains conditional on Track 102.",
       "evidence": [
         "games",
         "science"
