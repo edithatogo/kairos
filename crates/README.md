@@ -26,7 +26,7 @@ Additional crates listed in `conductor/tech-stack.md` should be added only when 
 | `kairo-ecs-des` | Domain Paradigms | `SimResource`, `PriorityResource`, `PreemptiveResource`, `Container`, `Store` |
 | `kairo-ecs-abm` | Domain Paradigms | `GridSpace2D`, `ContinuousSpace2D`, `NetworkSpace` (CSR graph) |
 | `kairo-ecs-game-ontology` | Domain Paradigms | Turtle & JSON-LD ontology parser, IR normalization, deterministic Rust codegen |
-| `kairo-ecs-game-theory` | Domain Paradigms | Normal-form (`PureNashSolver`, `LemkeHowsonSolver`) & Extensive-form (`BackwardInductionSolver`, `CfrPlusSolver`, `graph-relations`) |
+| `kairo-ecs-game-theory` | Domain Paradigms | Pure Nash, experimental zero-sum minimax, and `graph-relations` extensive-form traversal and backward induction. The [migration guide](../docs/game-theory/equilibrium-and-cfr-solvers.md) describes the Paignia solver handoff. |
 | `kairo-ecs-pdes` | Parallel & Distributed | Conservative lookahead PDES and Jefferson Time Warp optimistic rollback + GVT |
 | `kairo-ecs-mpi` | Parallel & Distributed | `MpiProcessTransport` multi-rank collectives and GVT synchronization |
 | `kairo-ecs-grpc` | Parallel & Distributed | `GrpcSocketTransport` and `KairoOptimisticEnvelopeV1` TCP framing |

@@ -28,6 +28,9 @@ Close every stated scientific/advanced method with a correct implementation and 
   retains matching pennies, rejects the false uniform witness under strict
   dominance, and evaluates deviation gains for admitted candidates.
   [Paignia mixed-Nash controls](https://github.com/edithatogo/paignia/blob/f363954fe17e2648942d1ac944280b485f865757/docs/validation/mixed-nash.md)
+- The five new S02 conformance controls failed at `6a69262` because the old
+  imports compiled. After removal, 44 all-feature tests and 12 compile-fail
+  doctests passed on Rust 1.99.1. Paignia ran 39 mixed-Nash tests on Rust 1.75.0.
 - S04 withdrew the legacy public Kuhn solver and retained its test-only
   source control. Paignia records the independent Leduc result comparison.
   [Kairos #406](https://github.com/edithatogo/kairos/pull/406) ·
