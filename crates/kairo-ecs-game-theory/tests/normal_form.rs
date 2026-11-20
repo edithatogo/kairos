@@ -47,13 +47,20 @@ fn best_response_solver_selects_maximum_utility_against_fixed_opponents() {
 #[test]
 fn best_response_solver_preserves_ties_in_strategy_order() {
     let strategies = StrategySpace::new(vec![
-        vec!["left".to_owned(), "right".to_owned()],
+        vec!["left".to_owned(), "middle".to_owned(), "right".to_owned()],
         vec!["hold".to_owned()],
     ])
     .expect("valid strategy space");
     let matrix = PayoffMatrix::new(
         strategies,
-        vec![utility(2.0), utility(0.0), utility(2.0), utility(0.0)],
+        vec![
+            utility(2.0),
+            utility(0.0),
+            utility(1.0),
+            utility(0.0),
+            utility(2.0),
+            utility(0.0),
+        ],
     )
     .expect("valid payoff matrix");
 
@@ -63,7 +70,7 @@ fn best_response_solver_preserves_ties_in_strategy_order() {
             .iter()
             .map(|response| response.strategy)
             .collect::<Vec<_>>(),
-        vec![0, 1]
+        vec![0, 2]
     );
     assert!(responses
         .iter()

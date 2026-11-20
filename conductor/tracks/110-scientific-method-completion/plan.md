@@ -17,12 +17,21 @@ Close every stated scientific/advanced method with a correct implementation and 
 - S03 applies the [accepted transfer decision](../../contracts/game-extraction-map.md)
   in game-theory 0.4.0. Paignia receives the historical traffic and Prisoner's
   Dilemma oracles. Kairos retains its experimental zero-sum minimax and four
-  oracle tests. [Paignia #64](https://github.com/edithatogo/paignia/pull/64)
+  oracle tests. [Paignia #64](https://github.com/edithatogo/paignia/pull/64) ·
+  [Kairos #408](https://github.com/edithatogo/kairos/pull/408)
 - The S03 public conformance controls failed at `ae9ae116` because all four
   retired exports still compiled. After removal, 45 all-feature tests and
   seven compile-fail doctests passed on Rust 1.99.1. The isolated S03 removal
   eliminates the product-equilibrium caller before S02 retires the shared
   legacy Lemke–Howson path. The remaining phase work stays in the checklist.
+- S02 withdraws the legacy five-symbol mixed-strategy surface in game-theory
+  0.5.0 following the S03 transfer. Paignia's accepted bounded support solver
+  retains matching pennies, rejects the false uniform witness under strict
+  dominance, and evaluates deviation gains for admitted candidates.
+  [Paignia mixed-Nash controls](https://github.com/edithatogo/paignia/blob/f363954fe17e2648942d1ac944280b485f865757/docs/validation/mixed-nash.md)
+- The five new S02 conformance controls failed at `6a69262` because the old
+  imports compiled. After removal, 44 all-feature tests and 12 compile-fail
+  doctests passed on Rust 1.99.1. Paignia ran 39 mixed-Nash tests on Rust 1.75.0.
 - S04 withdrew the legacy public Kuhn solver and retained its test-only
   source control. Paignia records the independent Leduc result comparison.
   [Kairos #406](https://github.com/edithatogo/kairos/pull/406) ·
