@@ -17,7 +17,8 @@ Close every stated scientific/advanced method with a correct implementation and 
 - S03 applies the [accepted transfer decision](../../contracts/game-extraction-map.md)
   in game-theory 0.4.0. Paignia receives the historical traffic and Prisoner's
   Dilemma oracles. Kairos retains its experimental zero-sum minimax and four
-  oracle tests. [Paignia #64](https://github.com/edithatogo/paignia/pull/64)
+  oracle tests. [Paignia #64](https://github.com/edithatogo/paignia/pull/64) ·
+  [Kairos #408](https://github.com/edithatogo/kairos/pull/408)
 - The S03 public conformance controls failed at `ae9ae116` because all four
   retired exports still compiled. After removal, 45 all-feature tests and
   seven compile-fail doctests passed on Rust 1.99.1. The isolated S03 removal
