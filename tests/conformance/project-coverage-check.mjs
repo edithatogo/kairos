@@ -24,6 +24,8 @@ const repository = { id: 42, full_name: 'owner/repo' };
 const run = { id: 123, head_sha: sha, event: 'push', head_branch: 'main', status: 'completed',
   conclusion: 'success', path: '.github/workflows/ci-core.yml', repository, head_repository: repository };
 assert.equal(selectBaselineRun([run], 'owner/repo', sha), run);
+const activeRun = { ...run, id: run.id + 1, status: 'in_progress', conclusion: null };
+assert.equal(selectBaselineRun([activeRun, run], 'owner/repo', sha), run);
 for (const change of [{ head_sha: 'b'.repeat(40) }, { event: 'pull_request' }, { head_branch: 'other' },
   { conclusion: 'cancelled' }, { status: 'in_progress' }, { path: '.github/workflows/other.yml' },
   { head_repository: { full_name: 'attacker/repo' } }, { repository: { full_name: 'attacker/repo' } }]) {

@@ -158,7 +158,9 @@ export function recoveryJobs(run, jobs, sha = recoveryProfiles[0].base.sha) {
 
 export function fetchBaseline(repository, sha) {
   if (!/^[\w.-]+\/[\w.-]+$/.test(repository) || !/^[a-f0-9]{40}$/.test(sha)) throw new Error('Invalid repository/base SHA');
-  const data = JSON.parse(gh(`repos/${repository}/actions/workflows/ci-core.yml/runs?event=push&branch=main&head_sha=${sha}&status=completed&per_page=100`));
+  // GitHub's status filter can hide a completed exact-base run.
+  // selectBaselineRun checks the returned run's status and provenance.
+  const data = JSON.parse(gh(`repos/${repository}/actions/workflows/ci-core.yml/runs?event=push&branch=main&head_sha=${sha}&per_page=100`));
   const run = selectBaselineRun(data.workflow_runs, repository, sha);
   const jobListing = JSON.parse(gh(`repos/${repository}/actions/runs/${run.id}/jobs?filter=latest&per_page=100`));
   const recovery = repository === 'edithatogo/kairos'
