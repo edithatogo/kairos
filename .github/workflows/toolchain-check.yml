@@ -185,6 +185,7 @@ jobs:
         with:
           persist-credentials: false
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        id: setup-dotnet
         with:
           dotnet-version: ${{ matrix.dotnet-version }}
           dotnet-quality: ${{ matrix.quality }}
@@ -192,7 +193,22 @@ jobs:
         shell: pwsh
         env:
           EXPECTED_PREFIX: ${{ matrix.expected-prefix }}
-        run: pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem dotnet -ExpectedPrefix $env:EXPECTED_PREFIX
+          SDK_VERSION: ${{ steps.setup-dotnet.outputs.dotnet-version }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:SDK_VERSION)) {
+              throw 'The setup action did not report an installed SDK version.'
+          }
+          $sdkDirectory = Join-Path $env:RUNNER_TEMP 'kairo-dotnet-toolchain'
+          New-Item -ItemType Directory -Path $sdkDirectory | Out-Null
+          @{ sdk = @{ version = $env:SDK_VERSION; rollForward = 'disable' } } |
+              ConvertTo-Json | Set-Content -LiteralPath (Join-Path $sdkDirectory 'global.json') -Encoding utf8
+          Push-Location -LiteralPath $sdkDirectory
+          try {
+              $validator = Join-Path $env:GITHUB_WORKSPACE 'conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1'
+              & $validator -CheckInstalled -Ecosystem dotnet -ExpectedPrefix $env:EXPECTED_PREFIX
+          } finally {
+              Pop-Location
+          }
 
   go:
     name: Go ${{ matrix.go-version }}
