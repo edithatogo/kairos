@@ -11,7 +11,7 @@ use std::collections::{BinaryHeap, HashSet};
 
 use kairo_ecs_types::{
     DispatchedEvent, EntityId, EventId, EventKind, ScheduleRequest, SimTime, StepOutcome,
-    TypesError,
+    TypesError, Versioned,
 };
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -63,6 +63,12 @@ pub struct Scheduler {
     cancelled_events: u64,
 }
 
+pub const SCHEDULER_CHECKPOINT_VERSION_V1: u16 = 1;
+
+/// Owned in-process state of a single-threaded Rust scheduler.
+#[derive(Debug)]
+pub struct SchedulerCheckpoint(Scheduler);
+
 impl Scheduler {
     pub fn new() -> Self {
         Self::default()
@@ -70,6 +76,43 @@ impl Scheduler {
 
     pub fn now(&self) -> SimTime {
         self.now
+    }
+
+    /// Capture time, pending and cancelled events, counters and next identities.
+    #[must_use]
+    pub fn checkpoint(&self) -> Versioned<SchedulerCheckpoint> {
+        Versioned::new(
+            SCHEDULER_CHECKPOINT_VERSION_V1,
+            SchedulerCheckpoint(self.copy_state()),
+        )
+    }
+
+    /// Create an independent scheduler from an immutable checkpoint.
+    ///
+    /// # Errors
+    /// Returns [`TypesError::UnsupportedDtoVersion`] for an unknown checkpoint
+    /// version.
+    pub fn from_checkpoint(
+        checkpoint: &Versioned<SchedulerCheckpoint>,
+    ) -> Result<Self, TypesError> {
+        if checkpoint.version != SCHEDULER_CHECKPOINT_VERSION_V1 {
+            return Err(TypesError::UnsupportedDtoVersion(checkpoint.version));
+        }
+        Ok(checkpoint.value.0.copy_state())
+    }
+
+    fn copy_state(&self) -> Self {
+        Self {
+            heap: self.heap.clone(),
+            pending: self.pending.clone(),
+            next_event_index: self.next_event_index,
+            next_event_generation: self.next_event_generation,
+            next_sequence: self.next_sequence,
+            now: self.now,
+            scheduled_events: self.scheduled_events,
+            dispatched_events: self.dispatched_events,
+            cancelled_events: self.cancelled_events,
+        }
     }
 
     pub fn schedule(&mut self, request: ScheduleRequest) -> EventId {
