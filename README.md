@@ -69,7 +69,7 @@ explains why generated placeholder figures are not performance evidence.
 General comparative performance and real-system model validity remain evaluation
 work, with a [dataset and oracle plan](conductor/validation-datasets.md).
 
-## Start with Rust
+## Install from source
 
 Clone the repository and use the toolchain pinned in `rust-toolchain.toml`:
 
@@ -84,6 +84,23 @@ The [Rust quickstart](docs/tutorials/rust-getting-started.md) introduces the
 scheduler. The [installation guide](docs/install.md) explains the native-library
 requirement for language wrappers. The [binding inventory](bindings/README.md)
 records which operations each adapter can actually perform.
+
+## Run a scenario example
+
+From the repository root, run the checked-in factory bottleneck scheduler smoke
+scenario with its fixed seed manifest.
+
+```bash
+cargo run --locked -p kairo-ecs-cli -- replay \
+  --scenario examples/experiments/factory_bottleneck_v1.scenario.toml \
+  --seed-manifest examples/experiments/factory_bottleneck_v1.seeds.toml \
+  --output target/kairo-ecs-smoke/factory_bottleneck_v1
+```
+
+The CLI checks the expected event ordering and writes a manifest, a summary,
+and a replay comparison under the output directory. See the
+[scenario walkthrough](docs/scenarios/factory-bottleneck-run-replay.md) for the
+expected results and the limits of this smoke test.
 
 ## Learn, evaluate and contribute
 
