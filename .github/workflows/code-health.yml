@@ -26,3 +26,45 @@ jobs:
           node-version: '26.13.0'
       - name: Validate code health floor
         run: node scripts/validation/validate-code-health.mjs
+
+  alint:
+    name: alint
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Lint repository structure
+        shell: bash
+        run: |
+          version=0.22.1
+          release="alint-v${version}-x86_64-unknown-linux-musl"
+          archive="$RUNNER_TEMP/$release.tar.gz"
+          curl --fail --silent --show-error --location --proto '=https' \
+            --output "$archive" "https://github.com/asamarts/alint/releases/download/v$version/$release.tar.gz"
+          printf '%s  %s\n' 'be0fb8cfefb07b47fe7ee76d571ed9731d20037d3a421cdd9d285b01d79f9489' "$archive" | sha256sum --check --strict
+          tar -xzf "$archive" -C "$RUNNER_TEMP" -- "$release/alint"
+          "$RUNNER_TEMP/$release/alint" --version
+          "$RUNNER_TEMP/$release/alint" check --config .github/alint.yml --format github .
+
+  repohealth:
+    name: RepoHealth
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Report repository health
+        shell: bash
+        run: |
+          version=0.5.3
+          archive="$RUNNER_TEMP/repohealth.tar.gz"
+          curl --fail --silent --show-error --location --proto '=https' \
+            --output "$archive" "https://github.com/spbuilds/repohealth/releases/download/v$version/repohealth_${version}_linux_amd64.tar.gz"
+          printf '%s  %s\n' '68a2fee769ae8f3652d503d07508a91ec1cf73c8463b6846d030762f6d2459d2' "$archive" | sha256sum --check --strict
+          tar -xzf "$archive" -C "$RUNNER_TEMP" -- repohealth
+          "$RUNNER_TEMP/repohealth" --version
+          "$RUNNER_TEMP/repohealth" . --format markdown | tee -a "$GITHUB_STEP_SUMMARY"

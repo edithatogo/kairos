@@ -1,0 +1,9 @@
+version: 1
+
+extends:
+  # Focus the baseline on repository layout and content integrity.
+  - url: alint://bundled/oss-baseline@v1
+    except: [oss-final-newline, oss-no-trailing-whitespace]
+  - url: alint://bundled/rust@v1
+    except: [rust-no-tracked-target]
+  - alint://bundled/hygiene/no-tracked-artifacts@v1
