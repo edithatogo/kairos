@@ -5,6 +5,16 @@ concurrency:
   cancel-in-progress: false
 
 on:
+  pull_request:
+    paths:
+      - '.github/workflows/fuzzing.yml'
+      - 'crates/kairo-ecs-core/**'
+      - 'crates/kairo-ecs-types/**'
+      - 'crates/kairo-ecs-rng/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - 'rust-toolchain.toml'
+      - 'fuzz/**'
   schedule:
     - cron: '17 3 * * 0'
   workflow_dispatch:
@@ -13,6 +23,52 @@ permissions:
   contents: read
 
 jobs:
+  stable-properties:
+    name: Scheduler properties (Rust 1.99.1)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CARGO_BUILD_JOBS: '2'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install the canonical stable compiler
+        run: rustup toolchain install 1.99.1 --profile minimal
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
+        with:
+          key: scheduler-properties
+      - name: Build the existing bounded property suites
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/scheduler-properties
+          rustc +1.99.1 -Vv > artifacts/scheduler-properties/compiler.txt
+          git rev-parse HEAD > artifacts/scheduler-properties/commit.txt
+          timeout 600s cargo +1.99.1 test --locked -p kairo-ecs-core \
+            --test track96_phase0_proptest_baseline \
+            --test track96_phase1_proptest_invariants --no-run \
+            2>&1 | tee artifacts/scheduler-properties/build.log
+      - name: Run ordering, conservation, cancellation and oracle controls
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout 120s cargo +1.99.1 test --locked -p kairo-ecs-core \
+            --test track96_phase0_proptest_baseline \
+            --test track96_phase1_proptest_invariants -- --test-threads=1 --nocapture \
+            2>&1 | tee artifacts/scheduler-properties/tests.log
+      - name: Preserve test evidence and minimized regression seeds
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: scheduler-properties-${{ github.run_attempt }}
+          path: |
+            artifacts/scheduler-properties/
+            crates/kairo-ecs-core/proptest-regressions/
+            crates/kairo-ecs-core/tests/*.proptest-regressions
+          if-no-files-found: warn
+          retention-days: 14
+
   fuzz-unverified:
     name: Fuzzing UNVERIFIED (cargo-fuzz not run)
     runs-on: ubuntu-latest
