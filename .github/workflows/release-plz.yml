@@ -17,4 +17,9 @@ jobs:
     name: release-plz
     runs-on: ubuntu-latest
     steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+
       - run: echo "Release-plz workflow initialized for maintenance coverage."
