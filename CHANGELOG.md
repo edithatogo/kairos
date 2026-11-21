@@ -34,6 +34,7 @@ Format:
 
 ### Changed
 
+- GitHub Actions retain reusable Rust coverage dependencies during cleanup, cache native binding and Conductor dependencies, avoid the repeated Linux Conductor workspace test pass, and cancel superseded Conductor/docs PR runs. Current native tests, both Windows test passes, coverage thresholds and security gates remain required.
 - README, `website/`, `docs/adr/0011-ecosystem-boundaries.md` and Conductor define the Rust core's boundaries with game semantics, domain simulation and economic valuation. `.github/workflows/docs-quality.yml` now checks the bounded maturity task catalogue and its negative controls; the catalogue is a planning aid and does not execute tasks or establish runtime acceptance.
 - `bindings/python` exposes a bounded `NativeEngine` backed by the actual Rust C ABI; `bindings/typescript` requires a generated Rust/Wasm module. A missing library, incompatible ABI or unsupported operation produces an explicit error. `bindings/julia` metadata/DTO helpers and other package probes do not establish native engine availability.
 - `notebooks/python_scheduler_tutorial.ipynb` now requires an explicitly configured Rust library and exercises real native scheduling, cancellation and statistics. Stored outputs are cleared; notebook syntax validation is separate from native execution acceptance.

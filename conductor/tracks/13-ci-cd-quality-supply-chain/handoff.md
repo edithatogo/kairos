@@ -1,5 +1,89 @@
 # Handoff — 13 CI/CD, Code Quality & Supply Chain
 
+## CI runtime maintenance — 2026-11-15
+
+Base: `03f038a48cac450a5ec9ee0723bc9360786d539a`. This is a bounded
+Track 13 maintenance slice; historical phase status and runtime ownership do
+not change. A separate worktree uses the existing shared advisory lease store.
+
+### Measured problem
+
+- [Main core run 43597595767](https://github.com/edithatogo/kairos/actions/runs/43597595767),
+  job `132456941189`: native verification passed in 15m05s; coverage took 8m19s.
+  Restoring the 2,176,185,753-byte compressed cache took 73s, then whole-target
+  cleanup deleted 11.2 GiB, including reusable instrumented dependencies.
+  The complete workflow failed at its separate project-coverage gate.
+- [Main Conductor run 43597595725](https://github.com/edithatogo/kairos/actions/runs/43597595725):
+  Linux's later track-validation step took 71s and repeated the workspace tests
+  already run by exact-toolchain setup. Windows rebuilt nearly every dependency;
+  its ambient target is not explicitly identified in the log, so both Windows
+  executions remain required here.
+- [Binding run 43651048038](https://github.com/edithatogo/kairos/actions/runs/43651048038),
+  head `8403bdc741aa5fd770f78141154e759636778412`: 48m49s elapsed versus 9m19s
+  summed job execution. Its final three-second aggregate queued for 13m36s.
+  These samples establish substantial queue delay, not its account/provider cause.
+
+### Changes and preserved contracts
+
+`ci-core.yml` reclaims only the ordinary development profile and documentation.
+It retains `target/llvm-cov-target` dependency artifacts. The unchanged
+`cargo llvm-cov nextest` invocation clears previous workspace coverage outputs
+and profiles before testing; no cached result substitutes for current execution.
+All core commands, job identities, resource reporting, the 90% core floor,
+exact-base zero-regression comparison and artifact provenance remain intact.
+
+`ci-bindings.yml` installs exact Rust before restoring dependency caches.
+Python and both C# jobs share the native FFI dependency key; Wasm uses a separate
+key. Actual builds, artifact/source receipts and native consumer tests still run.
+New binding and Conductor caches use the already-pinned Rust cache action,
+exclude workspace crates by default, and save only on main pushes.
+
+`validate-conductor.yml` retains its exact locked setup suite on both OSes.
+Only Linux omits the later duplicate Cargo invocation; every track/document
+assertion still executes. Windows and unknown runner identities retain the
+ambient-host suite. Cache inspection explicitly selects the setup compiler,
+including Windows GNU, without altering the later ambient compiler.
+Conductor and docs cancel superseded PR runs; main runs are preserved.
+
+The existing mocked toolchain suite now exercises the actual workflow switch
+against the real track validator, including Windows failure propagation. Wiring
+it into Conductor also required updating its stale expected Node version to
+the already-accepted `mise.toml` value, 26.13.0; no runtime version was changed.
+
+### Local qualification and review
+
+Working directory: isolated `kairos-ci-worktree`, source base above. Passed:
+`actionlint` 1.7.12 on all four changed workflows; the existing Rust and binding
+classifier/aggregate suites; project-coverage negative tests; Track 13 metadata;
+the expanded mocked PowerShell toolchain suite; Conductor phase and DAG gates;
+and `git diff --check`. JavaScript checks used available Node 24.22.1, with
+repository-local Python 3.15.2 for the binding harness. Hosted configured runtimes
+remain an independent check.
+
+An actual Cargo 1.99.1 disposable-workspace probe confirmed that
+`clean --profile dev` removes ordinary build artifacts and `clean --doc` removes
+documentation while retaining instrumented sentinels byte-for-byte. Whole
+`cargo clean` was the negative control and removed that subtree. No compilation
+was claimed for this probe. Real child-PowerShell processes also confirmed
+the switch serializes as true only for Linux, and false for Windows, macOS and
+a missing runner identity.
+
+Independent CI review found no blocking issue in implementation patch SHA-256
+`0fd26b7a95a0ebe676a5cb5f50ca28b001cbf7266a6a1b2bfb28bcd0104ef095`.
+Its child-process serialization recommendation was verified as described above.
+
+### Integration and remaining evidence
+
+Hosted execution and warmed-cache timing on the actual candidate remain pending;
+no end-to-end speedup is claimed from configuration or local probes alone.
+Main's exact coverage baseline currently depends on the separate recovery in
+[#391](https://github.com/edithatogo/kairos/pull/391). Preserve that integration
+order and the existing coordinator; this slice neither changes the recovery
+pins nor bypasses its gate. Reconcile workflow action-pin updates from #363 and
+the binding changes in #365 if those land first. No protected settings, runner
+capacity, offline-security conditions, publication authority or consumer pins
+change.
+
 ## Current Rust 1.99 policy reconciliation — 2026-10-05
 
 Current `ci-core.yml` policy uses Rust 1.99.0 for stable verification, workspace

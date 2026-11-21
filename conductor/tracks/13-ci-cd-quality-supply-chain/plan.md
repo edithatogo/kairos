@@ -1,5 +1,20 @@
 # 13 CI/CD, Code Quality & Supply Chain — plan.md
 
+## Bounded CI runtime follow-up — 2026-11-15
+
+The existing Track 13 scaffold status is unchanged. This maintenance slice is
+limited to workflow scheduling and reusable build dependencies; coverage,
+platform qualification, security and publication contracts remain in force.
+
+- [x] Inspect current main, open CI work, shared writer claims and recent job/step timings.
+- [x] Reuse native and instrumented dependency builds, avoid the duplicate Linux
+  Conductor test pass, and cancel superseded Conductor/docs PR runs.
+- [x] Run focused workflow, routing, toolchain and Conductor checks; obtain independent review.
+- [~] Record hosted results on the actual candidate and integration dependencies.
+
+Evidence and the outstanding exact-main coverage dependency are recorded in
+the matching 2026-11-15 handoff entry. Local checks do not close the hosted gate.
+
 ## Phase 0 — Track startup
 
 - Read `conductor/workflow.md`.
