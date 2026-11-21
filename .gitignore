@@ -23,6 +23,18 @@ __pycache__/
 crates/kairo-ecs-pyo3/
 .serena/
 
+# Local environment files and credentials.
+.env
+.env.*
+!.env.example
+!.env.sample
+!.env.template
+*.pem
+*.key
+credentials.json
+credentials.yaml
+credentials.yml
+
 # Qualified repository-local Python environment; never tracked source.
 /.venv/
 
