@@ -17,6 +17,26 @@ This score is deliberately stricter than green CI. It combines code quality, rep
 
 Overall release threshold: `9.5`.
 
+## Repository lint and health reporting
+
+The [Code Health workflow](../.github/workflows/code-health.yml) runs both tools
+on pull requests, pushes to `main` and manual runs. It verifies the SHA-256 of
+each release archive before extracting and running its binary.
+
+- alint checks open-source repository structure, Rust workspace conventions and
+  build artifacts. It reports GitHub annotations and fails its job on errors.
+  The policy lives in [the alint configuration](../.github/alint.yml). [alint v0.22.1](https://github.com/asamarts/alint/releases/tag/v0.22.1)
+- RepoHealth uses full Git history and tags for its activity checks. Its job
+  summary includes the advisory 0–100 score, category breakdown and improvement
+  suggestions. [RepoHealth v0.5.3](https://github.com/spbuilds/repohealth/releases/tag/v0.5.3)
+
+With those versions on your path, run the checks from the repository root.
+
+```bash
+alint check --config .github/alint.yml .
+repohealth . --format markdown
+```
+
 ## Required evidence
 
 - All required GitHub Actions pass on `main`.

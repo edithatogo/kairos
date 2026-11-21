@@ -19,6 +19,7 @@ Format:
 - `kairo-ecs-core` exposes versioned in-process scheduler checkpoints that preserve event order and pending work when restoring independent replay branches. See the [scheduler checkpoint decision](docs/adr/adr-k01-scheduler-checkpoint.md).
 - Release evidence preparation and registry preflight now check the exact source `Cargo.lock` with Grype before proceeding, initially blocking critical findings. A separate advisory workflow checks dependency PRs and current source weekly; this source inventory does not replace archive, binding or binary qualification.
 - `.github/workflows/privacy-secrets.yml` adds pinned Microsoft Presidio and Gitleaks checks for pull requests and default-branch pushes, with scheduled and manual full audits. The detector uses an isolated Python 3.12 tooling profile; the application runtime remains unchanged.
+- alint checks repository structure in CI, and RepoHealth adds an advisory score and recommendations to the job summary. [Code Health workflow](.github/workflows/code-health.yml)
 
 ### Fixed
 
