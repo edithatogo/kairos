@@ -17,54 +17,9 @@ pub fn build_bounded_thread_pool(
         .build()
 }
 
-/// 1D / multi-dimensional Sobol sequence generator using direction numbers.
-#[derive(Clone, Debug)]
-pub struct SobolSequence {
-    dimension: usize,
-    count: u64,
-    direction_numbers: Vec<Vec<u32>>,
-}
+mod sobol;
 
-impl SobolSequence {
-    pub fn new(dimension: usize) -> Self {
-        let mut direction_numbers = Vec::with_capacity(dimension);
-        for d in 0..dimension {
-            let mut dim_dirs = Vec::with_capacity(32);
-            let v = (d as u32).wrapping_mul(37).wrapping_add(1);
-            for i in 0..32 {
-                dim_dirs.push(v << (31 - i));
-            }
-            direction_numbers.push(dim_dirs);
-        }
-        Self {
-            dimension,
-            count: 0,
-            direction_numbers,
-        }
-    }
-
-    pub fn next_point(&mut self) -> Vec<f64> {
-        let mut point = vec![0.0; self.dimension];
-        let gray = self.count ^ (self.count >> 1);
-
-        for d in 0..self.dimension {
-            let mut val = 0_u32;
-            let mut g = gray;
-            let mut i = 0;
-            while g > 0 {
-                if (g & 1) != 0 {
-                    val ^= self.direction_numbers[d][i];
-                }
-                g >>= 1;
-                i += 1;
-            }
-            point[d] = (val as f64) / 4294967296.0;
-        }
-
-        self.count += 1;
-        point
-    }
-}
+pub use sobol::{LegacySobolSequence, SobolError, SobolSequence};
 
 /// Deterministic seeded stratified Latin Hypercube Sampler.
 #[derive(Clone, Debug)]
@@ -527,8 +482,8 @@ mod tests {
 
     #[test]
     fn sobol_lhs_crn_ensemble_runner() {
-        let mut sobol = SobolSequence::new(2);
-        assert_eq!(sobol.next_point().len(), 2);
+        let mut sobol = SobolSequence::new(2).unwrap();
+        assert_eq!(sobol.next_point().unwrap().len(), 2);
 
         let lhs = LatinHypercubeSampler::new(2, 5, 123);
         let samples = lhs.generate();
