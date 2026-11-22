@@ -31,10 +31,14 @@ pub struct HazardChannelState {
     /// Active age on the current hazard curve at the start of the interval.
     active_age_at_interval_start: f64,
     due_at: Option<f64>,
+    consumed: bool,
 }
 
 impl HazardChannelState {
     fn predicted_at(&self) -> Option<f64> {
+        if self.consumed {
+            return None;
+        }
         if self.due_at.is_some() {
             return self.due_at;
         }
@@ -50,6 +54,9 @@ impl HazardChannelState {
     }
 
     fn accrue_until(&mut self, now: f64) {
+        if self.consumed {
+            return;
+        }
         if self.due_at.is_none() {
             self.due_at = self.predicted_at().filter(|&at| at <= now);
         }
@@ -129,10 +136,11 @@ impl SurvivalClock {
             existing.hazard = hazard;
             existing.priority = priority;
 
-            if self.policy == HazardInterruptionPolicy::Restart {
+            if existing.consumed || self.policy == HazardInterruptionPolicy::Restart {
                 existing.target_threshold = draw_standard_threshold(stream);
                 existing.accumulated_hazard = 0.0;
                 existing.due_at = None;
+                existing.consumed = false;
             }
         } else {
             let target_w = draw_standard_threshold(stream);
@@ -147,6 +155,7 @@ impl SurvivalClock {
                     interval_start_time: now,
                     active_age_at_interval_start: 0.0,
                     due_at: None,
+                    consumed: false,
                 },
             );
         }
@@ -319,15 +328,19 @@ impl SurvivalClock {
     }
 
     /// Handle dispatch of the scheduled event at current simulation time.
-    /// Resets the clock or marks it inactive.
+    /// An uncensored winner is consumed until `set_channel` rearms it.
     pub fn on_event_dispatched(&mut self) -> Option<RealizedEvent> {
         self.scheduled_event_id = None;
         self.is_active = false;
         if let Some((cause, realization_time)) = self.current_winner.take() {
+            let is_censored = std::mem::take(&mut self.current_is_censored);
+            if let (false, Some(channel)) = (is_censored, self.channels.get_mut(&cause)) {
+                channel.consumed = true;
+            }
             Some(RealizedEvent {
                 winning_cause: cause,
                 delta_time: (realization_time - self.last_update_time).max(0.0),
-                is_censored: self.current_is_censored,
+                is_censored,
             })
         } else {
             None

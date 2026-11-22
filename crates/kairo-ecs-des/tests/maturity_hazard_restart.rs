@@ -170,3 +170,39 @@ fn replacing_an_overdue_cause_retains_its_original_crossing_time() {
     assert!(!event.is_censored);
     assert_eq!(event.delta_time, 0.0);
 }
+
+#[test]
+fn rearming_a_dispatched_cause_starts_with_a_fresh_threshold() {
+    let (mut clock, mut scheduler, mut rng) = new_clock(HazardInterruptionPolicy::RetainResidual);
+    let rate = HazardRate::Constant { rate: 1.0 };
+    clock.set_channel(CAUSE, 0, rate.clone(), 0.0, &mut rng);
+    clock.channels.get_mut(&CAUSE).unwrap().target_threshold = 1.0;
+    let first = clock.reschedule(&mut scheduler, 0.0, None, 0).unwrap();
+    assert_eq!(first.delta_time, 1.0);
+    assert!(matches!(scheduler.step(), StepOutcome::Dispatched(_)));
+    assert_eq!(clock.on_event_dispatched(), Some(first));
+    assert_eq!(clock.compute_earliest_event(1.0), None);
+
+    let before = rng.word_pos();
+    clock.set_channel(CAUSE, 0, rate, 1.0, &mut rng);
+    assert!(rng.word_pos() > before);
+    let second = clock.reschedule(&mut scheduler, 1.0, None, 0).unwrap();
+    assert!(second.delta_time > 0.0);
+    close(second.delta_time, clock.channels[&CAUSE].target_threshold);
+}
+
+#[test]
+fn censoring_preserves_the_latent_cause() {
+    let (mut clock, mut scheduler, mut rng) = new_clock(HazardInterruptionPolicy::RetainResidual);
+    clock.set_channel(CAUSE, 0, HazardRate::Constant { rate: 1.0 }, 0.0, &mut rng);
+    clock.channels.get_mut(&CAUSE).unwrap().target_threshold = 4.0;
+    assert!(
+        clock
+            .reschedule(&mut scheduler, 0.0, Some(1.0), 0)
+            .unwrap()
+            .is_censored
+    );
+    assert!(matches!(scheduler.step(), StepOutcome::Dispatched(_)));
+    assert!(clock.on_event_dispatched().unwrap().is_censored);
+    assert_eq!(clock.compute_earliest_event(1.0), Some((CAUSE, 4.0)));
+}
