@@ -60,3 +60,16 @@ Errors on unsupported inputs must be explicit. Numerical changes require an algo
 
 [Dataset and oracle catalogue](validation-datasets.md), [performance programme](performance-programme.md) and [release gates](release-gates.md) define the complementary evidence. Algorithmic correctness, software verification, performance and empirical model validity remain separate decisions.
 
+
+## Qualified S05–S10 scopes
+
+| ID | Supported scope and verification |
+|---|---|
+| S05 | Joe–Kuo D(6) matched frozen SciPy 1.18.0 32-bit points across 16 dimensions. The final point and exhausted cursor have separate tests. Jansen first-order and total-effect intervals contained the Ishigami and Sobol-G analytical values in 36–40 of 40 trials per index. [Design and oracle](execution/scientific/s05-completion.md) |
+| S06 | The replicate, entity and purpose streams preserve paired draws through a scheduler branch. The observed paired and independent Bernoulli variances were 0.20865 and 0.45514. The paired interval included the true effect in 57 of 60 trials. [Design and oracle](execution/scientific/s06-completion.md) |
+| S07 | Sequential tolerance, Gaussian mixture weights and ESS are exercised against the exact beta posterior for two Bernoulli observations. Weighted posterior CDF rank RMSE was 0.02788 across 64 studies. [Design and oracle](execution/scientific/s07-completion.md) |
+| S08 | Conditional exponential and Weibull survival and incidence passed analytical bounds at three right-censor horizons. Piecewise inversion, frozen active age, checkpoint replay and cause/censor chronology have exact oracles. [Design and oracle](execution/scientific/s08-completion.md) |
+| S09 | The Rust affine surrogate and its held-out unit decay test are executable. The maximum absolute error was 0.016443 on 39 interior points. Extrapolation and unavailable ONNX execution return errors. [Design and oracle](execution/scientific/s09-completion.md) |
+| S10 | The native shared queue matched scalar and batched trajectories across 1,024 worlds. Both host checkers execute the queue through the opt-in `queue-env-v1` CLI. Installed Python 3.15.2 tests cover seed rejection, reset, termination, pipe lifetimes and malformed replies. [Design and oracle](execution/scientific/s10-completion.md) |
+
+The evidence concerns numerical correctness and model execution inside these contracts. See [ADR 0014](../docs/adr/0014-versioned-scientific-methods.md) for API migration.

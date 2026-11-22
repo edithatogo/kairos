@@ -4,3 +4,5 @@ Replace the shape-only environment with a Rust-owned finite queue model. Seed co
 The experimental `rl-queue` CLI feature exposes `queue-env-v1` over bounded newline-delimited JSON on child-process stdio. One process owns one queue environment. The caller supplies the native executable path, agent count, tick limit, reset seed and actions. The adapter returns the Rust observation and transition. Explicit close ends the child and invalid data leaves state intact. This route leaves the beta C ABI untouched.
 
 Qualify the installed optional `kairo-gym` package with Gymnasium's environment checker and PettingZoo's parallel checker, using a compiled CLI. Exercise replay, host input errors, value ownership and process cleanup with the same live binding.
+
+The qualified host route uses POSIX pipe readiness on Linux and macOS. A five-second complete-reply deadline and schema validation protect the handshake, reset and step. Invalid transport replies reap the child. Seed validation precedes changes to Gymnasium's host RNG.

@@ -2,8 +2,9 @@
 
 | Gate | Required evidence | Current acceptance |
 |---|---|---|
-| S01–S08 | Use the named independent analytical/game/QMC/statistical oracles in scientific-completion.md, including degenerate and boundary cases. | Pending for this track |
-| S09–S10 | Nonidentity outputs and real state transitions originate in Rust; scalar/batched equivalence, reset/seed/termination and lifetime tests. | Pending for this track |
+| S01–S04 | Receiving solvers and game oracles | See the Paignia source dispositions in the track plan |
+| S05–S08 | Independent vectors, statistical fixtures and analytical hazard timing | Bounded implementations and measured regression results in the scientific register |
+| S09–S10 | Native nonidentity outputs, scalar/batch parity, installed host checks and lifetime regressions | Affine surrogate and experimental shared queue. ONNX, TensorRT and Burn are unavailable |
 | S11–S17 | Actual devices/transports/external FMUs/filesystems or explicit capability-unavailable result; no mock or fixture metadata accepted as native proof. | Pending for this track |
 | Scientific claims | Every supported method has a measured residual/error criterion and held-out test; classify each unsupported method explicitly. | Pending for this track |
 | Capability/claim consistency | node scripts/validation/validate-frontier-evidence.mjs and node --test tests/conformance/frontier-evidence-check.mjs | Structural check only; no new runtime claim |
