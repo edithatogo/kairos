@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Build and exercise one native-core beta candidate on its actual host."""
 
 from __future__ import annotations
@@ -7,7 +6,6 @@ import argparse
 import hashlib
 import json
 import os
-from pathlib import Path
 import platform
 import re
 import shutil
@@ -16,7 +14,7 @@ import sys
 import tarfile
 import tomllib
 import venv
-
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 PROFILE = ROOT / "packaging/native-beta-scope.json"
@@ -134,8 +132,17 @@ with kairo_ecs.NativeEngine(sys.argv[2]) as engine:
     test_suite = clean / "native-tests"
     test_suite.mkdir()
     shutil.copyfile(PYTHON_CASE, test_suite / PYTHON_CASE.name)
+    execute_suite = """
+import sys
+import unittest
+
+suite = unittest.defaultTestLoader.discover(sys.argv[1])
+if suite.countTestCases() == 0:
+    raise SystemExit("No installed native Python tests discovered")
+raise SystemExit(not unittest.TextTestRunner(verbosity=2).run(suite).wasSuccessful())
+"""
     run(
-        python, "-Im", "unittest", "discover", "-s", test_suite, "-v",
+        python, "-Ic", execute_suite, test_suite,
         cwd=clean, env={**env, "KAIRO_ECS_FFI_LIBRARY": str(library)},
     )
 
@@ -328,6 +335,11 @@ def main() -> None:
     run_installed_python(wheel, library, clean, env)
     rust_resolution = run_installed_rust(cargo, clean, sdk, cfg)
     careops = run_installed_careops(cargo, clean, sdk, cfg)
+    require(
+        output("git", "rev-parse", "HEAD").strip() == head
+        and not output("git", "status", "--porcelain").strip(),
+        "Qualification source changed during artifact execution",
+    )
     receipt(dist / "installed-native-receipt.json", {
         "profile": cfg["profile"],
         "status": "pass",

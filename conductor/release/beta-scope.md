@@ -42,8 +42,9 @@ The ABI uses unsigned 64-bit ticks and handles, signed 32-bit priority and
 unsigned 32-bit event kind. Handle zero is a failure sentinel. Status-returning
 calls use the header's numeric values. A stale or foreign event returns
 `NOT_FOUND`, and freeing an unknown or already retired engine returns
-`ALREADY_FREED`. Reset and free retire all pending event handles for that
-engine. A past absolute tick or relative tick overflow returns zero without
+`ALREADY_FREED`. The profile uses one loaded native library instance per
+process. Handles stay with that instance. Reset and free retire all pending
+event handles for that engine. A past absolute tick or relative tick overflow returns zero without
 enqueueing. The read-only time and statistics functions return zero or zeroed
 statistics on an invalid handle.
 
