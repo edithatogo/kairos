@@ -1,5 +1,10 @@
 #![forbid(unsafe_code)]
 
+#[cfg(feature = "checkpoint-json")]
+mod checkpoint_json;
+#[cfg(feature = "checkpoint-json")]
+pub use checkpoint_json::SchedulerCheckpointError;
+
 #[cfg(all(feature = "numa", target_os = "linux"))]
 mod linux_numa;
 

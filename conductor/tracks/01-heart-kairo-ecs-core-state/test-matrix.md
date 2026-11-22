@@ -34,6 +34,8 @@ The Track 01 scheduler tests must keep coverage for:
 - duplicate cancellation
 - cancelled future events that should not force a false `LimitReached`
 - scheduler stats for scheduled, dispatched, cancelled, pending, and current simulation time
+- durable `checkpoint-json` v1 compatibility, full-width time, generation wrap and invalid-state rejection
+- fresh-process restore of the scheduler, RNG and fixture model with exact continuation parity via `cargo test --locked -p kairo-ecs-core --features checkpoint-json --test scheduler_checkpoint_json`
 - pure Rust facade status mapping for dispatch, empty, limit, invalid priority, and not-found cancellation
 
 The Track 01 state tests must keep coverage for:
