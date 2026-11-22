@@ -2391,6 +2391,249 @@
       "acceptance": "Replace the estimate-times-0.9/1.1 interpretation with a named interval method and repeated-sample coverage design for Ishigami/Sobol-G; emit separate estimator and coverage-test leaves.",
       "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed.",
       "obligation": "S05"
+    },
+    {
+      "id": "S05.directions",
+      "title": "Use bounded Joe-Kuo 6 Sobol directions",
+      "parent": "110:S05",
+      "kind": "implementation",
+      "executor": "local",
+      "requires": [
+        "S05.completion"
+      ],
+      "read": [
+        "conductor/execution/scientific/s05-completion.md"
+      ],
+      "write": [
+        "crates/kairo-ecs-cli/src/ensemble.rs",
+        "crates/kairo-ecs-cli/src/ensemble/sobol.rs",
+        "crates/kairo-ecs-cli/tests/maturity_sobol_vectors.rs",
+        "crates/kairo-ecs-cli/tests/sobol_bounds.rs"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-cli",
+            "--test",
+            "maturity_sobol_vectors"
+          ]
+        }
+      ],
+      "acceptance": "All frozen SciPy uint32 coordinates match, including dimension 16 and the last index. Preserve legacy trajectories.",
+      "stop": "Resolve invalid inputs and distinguish a missing oracle from a method failure.",
+      "obligation": "S05"
+    },
+    {
+      "id": "S05.bootstrap",
+      "title": "Estimate Sobol indices with paired-row bootstrap",
+      "parent": "110:S05",
+      "kind": "implementation",
+      "executor": "local",
+      "requires": [
+        "S05.completion"
+      ],
+      "read": [
+        "conductor/execution/scientific/s05-completion.md"
+      ],
+      "write": [
+        "crates/kairo-ecs-cli/src/ensemble.rs",
+        "crates/kairo-ecs-cli/src/ensemble/sensitivity.rs",
+        "crates/kairo-ecs-cli/Cargo.toml",
+        "Cargo.lock",
+        "crates/kairo-ecs-cli/tests/rayon_ensemble_oracles.rs"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-cli",
+            "--test",
+            "rayon_ensemble_oracles"
+          ]
+        }
+      ],
+      "acceptance": "Checked seeded outputs and intervals agree across serial and parallel evaluation.",
+      "stop": "Resolve invalid inputs and distinguish a missing oracle from a method failure.",
+      "obligation": "S05"
+    },
+    {
+      "id": "S05.coverage",
+      "title": "Measure sensitivity bias and marginal coverage",
+      "parent": "110:S05",
+      "kind": "implementation",
+      "executor": "local",
+      "requires": [
+        "S05.completion"
+      ],
+      "read": [
+        "conductor/execution/scientific/s05-completion.md"
+      ],
+      "write": [
+        "crates/kairo-ecs-cli/tests/sensitivity_coverage.rs"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-cli",
+            "--test",
+            "sensitivity_coverage"
+          ]
+        }
+      ],
+      "acceptance": "Ishigami and Sobol-G meet the predeclared bias, residual and coverage limits in the S05 design.",
+      "stop": "Resolve invalid inputs and distinguish a missing oracle from a method failure.",
+      "obligation": "S05"
+    },
+    {
+      "id": "S06.coupling",
+      "title": "Pair scenario draws by replicate, entity and purpose",
+      "parent": "110:S06",
+      "kind": "implementation",
+      "executor": "local",
+      "requires": [
+        "S06.completion"
+      ],
+      "read": [
+        "conductor/execution/scientific/s06-completion.md"
+      ],
+      "write": [
+        "crates/kairo-ecs-cli/src/ensemble.rs",
+        "crates/kairo-ecs-cli/tests/maturity_crn_coupling.rs"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-cli",
+            "--test",
+            "maturity_crn_coupling"
+          ]
+        }
+      ],
+      "acceptance": "Unrelated branch draws leave shared draws unchanged. Paired and independent estimators meet the Bernoulli variance and coverage limits.",
+      "stop": "Resolve invalid inputs and distinguish a missing oracle from a method failure.",
+      "obligation": "S06"
+    },
+    {
+      "id": "S07.sequential",
+      "title": "Implement and calibrate sequential ABC populations",
+      "parent": "110:S07",
+      "kind": "implementation",
+      "executor": "local",
+      "requires": [
+        "S07.completion"
+      ],
+      "read": [
+        "conductor/execution/scientific/s07-completion.md"
+      ],
+      "write": [
+        "crates/kairo-ecs-cli/src/ensemble.rs",
+        "crates/kairo-ecs-cli/src/ensemble/abc.rs",
+        "crates/kairo-ecs-cli/tests/maturity_abc_sequential.rs",
+        "crates/kairo-ecs-cli/tests/rayon_ensemble_oracles.rs"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-cli",
+            "--test",
+            "maturity_abc_sequential"
+          ]
+        }
+      ],
+      "acceptance": "Uniform prior/Bernoulli posterior means, independently computed weights, predictive probabilities and rank calibration agree with predeclared limits.",
+      "stop": "Resolve invalid inputs and distinguish a missing oracle from a method failure.",
+      "obligation": "S07"
+    },
+    {
+      "id": "S08.incidence",
+      "title": "Compare competing incidence with analytical trajectories",
+      "parent": "110:S08",
+      "kind": "implementation",
+      "executor": "local",
+      "requires": [
+        "S08.completion"
+      ],
+      "read": [
+        "conductor/execution/scientific/s08-completion.md"
+      ],
+      "write": [
+        "crates/kairo-ecs-rng/src/competing_risks.rs",
+        "crates/kairo-ecs-rng/tests/maturity_hazard_analytic.rs"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-rng",
+            "--test",
+            "maturity_hazard_analytic"
+          ]
+        }
+      ],
+      "acceptance": "Analytical inverse hazards agree to 1e-12 and simulated survival and incidence agree within the predeclared Monte Carlo error.",
+      "stop": "Resolve invalid inputs and distinguish a missing oracle from a method failure.",
+      "obligation": "S08"
+    },
+    {
+      "id": "S08.restart",
+      "title": "Verify DES interruption, reset and restore",
+      "parent": "110:S08",
+      "kind": "implementation",
+      "executor": "local",
+      "requires": [
+        "S08.completion"
+      ],
+      "read": [
+        "conductor/execution/scientific/s08-completion.md"
+      ],
+      "write": [
+        "crates/kairo-ecs-des/tests/maturity_hazard_restart.rs"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-des",
+            "--test",
+            "maturity_hazard_restart"
+          ]
+        }
+      ],
+      "acceptance": "Event times match an integrated hazard budget across interruption and checkpoint restore to 1e-12.",
+      "stop": "Resolve invalid inputs and distinguish a missing oracle from a method failure.",
+      "obligation": "S08"
     }
   ]
 }
