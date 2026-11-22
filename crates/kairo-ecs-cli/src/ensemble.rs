@@ -3,6 +3,8 @@
 //! Common Random Numbers, Saltelli/Jansen Sobol sensitivity analysis,
 //! sequential ABC-SMC, and Optuna batch scoring.
 
+use kairo_ecs_rng::DeterministicStream;
+use kairo_ecs_types::EntityId;
 use rayon::prelude::*;
 
 pub use rayon;
@@ -83,6 +85,22 @@ impl CommonRandomNumbersPlan {
         Self { base_seed }
     }
 
+    pub const COUPLING_VERSION: &'static str = "replicate-entity-purpose-chacha8-v1";
+
+    /// Open the common stream for one replicate, generational entity and purpose.
+    /// Each scenario supplies the same identifiers for the draws it wants to
+    /// couple. Retain the stream for subsequent draws in that purpose.
+    pub fn paired_stream(
+        &self,
+        replicate: u64,
+        entity: EntityId,
+        purpose: &str,
+    ) -> DeterministicStream {
+        let run_seed = DeterministicStream::from_seed_u64(self.base_seed, replicate).next_u64();
+        DeterministicStream::from_entity_purpose(run_seed, entity, purpose)
+    }
+
+    /// Historical seed mapping used by the scalar parameter sweep.
     pub fn entity_substream_seed(&self, run_id: u64, entity_id: u64) -> u64 {
         self.base_seed
             .wrapping_mul(31)
