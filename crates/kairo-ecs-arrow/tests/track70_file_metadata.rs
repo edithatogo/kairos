@@ -206,6 +206,58 @@ fn actual_partial_sink_failure_with_metadata_records_no_acknowledgment() {
     );
 }
 #[test]
+#[cfg(unix)]
+fn moved_output_directory_prevents_sink_acknowledgment() {
+    use std::path::Path;
+
+    struct MoveOnFlush<'a> {
+        original: &'a Path,
+        moved: &'a Path,
+    }
+    impl Write for MoveOnFlush<'_> {
+        fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+            Ok(bytes.len())
+        }
+
+        fn flush(&mut self) -> std::io::Result<()> {
+            std::fs::rename(self.original, self.moved)
+        }
+    }
+
+    let parent = support::protected_tempdir().unwrap();
+    let original = parent.path().join("output");
+    let moved = parent.path().join("moved");
+    std::fs::create_dir(&original).unwrap();
+    let mut output = RunOutput::create(config(), &original).unwrap();
+    let rows = records();
+    let metadata = metadata();
+    let mut bytes = Vec::new();
+
+    std::fs::rename(&original, &moved).unwrap();
+    assert!(output
+        .write_batch_to_with_metadata(&rows, &mut bytes, &metadata)
+        .is_err());
+    assert!(bytes.is_empty());
+    std::fs::rename(&moved, &original).unwrap();
+
+    let mut sink = MoveOnFlush {
+        original: &original,
+        moved: &moved,
+    };
+    assert!(output
+        .write_batch_to_with_metadata(&rows, &mut sink, &metadata)
+        .is_err());
+    assert!(output.parts().is_empty());
+    assert!(output.checkpoint_boundary().is_none());
+
+    std::fs::rename(&moved, &original).unwrap();
+    let receipts = output
+        .write_batch_to_with_metadata(&rows, &mut bytes, &metadata)
+        .unwrap();
+    assert_eq!(receipts[0].part_id, 1);
+    assert_eq!(receipts.len(), rows.len());
+}
+#[test]
 fn durable_receipts_attest_actual_metadata_and_explicit_independent_fixture() {
     let owned = support::protected_tempdir().unwrap();
     let supplied = std::env::var_os("KAIROS_METADATA_FIXTURE_ROOT").map(std::path::PathBuf::from);

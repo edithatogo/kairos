@@ -65,6 +65,16 @@ fn names_duplicates_null_roots_order_unsupported_types_and_negotiation_refuse() 
     assert!(domain::export_batch(&df.clear().select(["count"]).unwrap(), &base, None).is_err());
 }
 #[test]
+fn zero_batch_size_rejects_before_schema_validation() {
+    let invalid = frame().select(["count"]).unwrap();
+    assert!(matches!(
+        domain::export_stream(&invalid, &contract(), 0, None),
+        Err(kairo_ecs_arrow::ArrowError::InvalidArgument(
+            "max_batch_rows must be positive"
+        ))
+    ));
+}
+#[test]
 fn nullable_physical_column_cannot_be_declared_required() {
     let df = df!("count"=>[None,Some(2u64)],"kind"=>["a","b"]).unwrap();
     assert!(domain::export_batch(&df, &contract(), None).is_err());

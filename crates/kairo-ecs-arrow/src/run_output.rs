@@ -646,7 +646,8 @@ impl RunOutput {
 
     /// Encode caller metadata before sending bytes to the original sink path.
     /// Receipts attest the exact metadata-bearing bytes. A failed sink records
-    /// no receipt for that part; no hidden retry or byte-rewriting sink occurs.
+    /// no receipt for that part. The run directory must still be the held
+    /// directory when the sink acknowledges each part.
     pub fn write_batch_to_with_metadata(
         &mut self,
         records: &[EventLogRecord],
@@ -656,6 +657,7 @@ impl RunOutput {
         validate_file_metadata(metadata).map_err(|_| {
             RunOutputError::InvalidArgument("file metadata violates key/size contract")
         })?;
+        self.verify_location()?;
         if records.is_empty() {
             return Ok(Vec::new());
         }
@@ -684,6 +686,7 @@ impl RunOutput {
             let encoded = encode_part(&mut slice, metadata)?;
             sink.write_all(&encoded).map_err(io_err)?;
             sink.flush().map_err(io_err)?;
+            self.verify_location()?;
 
             let receipt = PartReceipt {
                 part_id,

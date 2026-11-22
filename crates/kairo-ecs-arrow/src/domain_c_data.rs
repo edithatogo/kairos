@@ -129,12 +129,12 @@ pub fn export_stream(
     max_batch_rows: usize,
     requested: Option<&ArrowField>,
 ) -> Result<OwnedStream, ArrowError> {
-    validate(df, contract, requested)?;
     if max_batch_rows == 0 {
         return Err(ArrowError::InvalidArgument(
             "max_batch_rows must be positive",
         ));
     }
+    validate(df, contract, requested)?;
     let frame = rechunked_clone(df);
     let total = frame.height();
     let bases = base_child_arrays(&frame);
