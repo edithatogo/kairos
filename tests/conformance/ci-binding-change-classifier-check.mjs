@@ -194,8 +194,9 @@ assert.deepEqual(
     'test_mainline_archive_release_workflow.py',
     'test_prepare_mainline_archive_release.py',
     'test_package_archive_attestation_workflow.py',
+    'test_native_beta_evidence.py',
   ],
-  'archive lane must run all sixteen focused suites in order',
+  'archive lane must run every focused suite in order',
 );
 const aggregateJob = workflow.slice(workflow.indexOf('  binding-ci:\n'));
 const scriptMatch = aggregateJob.match(/        run: \|\n((?:          .*\n)+)/);
