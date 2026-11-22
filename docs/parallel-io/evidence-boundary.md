@@ -11,7 +11,7 @@ This evidence is `scaffold` class only. It must not be used for claims about nat
 ## Checkpoint replacement and recovery
 
 The v1 local checkpoint writer validates that its bytes decode to the exact
-candidate before staging. Both path-based writers stage beside the destination,
+candidate before staging. The path-based checkpoint writers stage beside the destination,
 sync the staged file and rename it into place. A writer interrupted before the
 rename leaves the previous destination readable; abandoned staging files are
 not restart manifests. On Unix the parent directory is synced after rename.
@@ -29,8 +29,18 @@ the storage or transport integrity contract requires it.
 
 The [Track 51 handoff](../../conductor/tracks/51-parallel-io-arrow-checkpoint-export/handoff.md)
 records the separate native Polars IPC/ZSTD Parquet interchange test and
-independent Apache PyArrow readback. HDF5- and ADIOS2-labelled checkpoint adapters
-still write v1 contract bytes.
+independent Apache PyArrow readback. The HDF5 adapter now uses an installed
+HDF5 library. ADIOS2 file integration remains open and the labelled ADIOS2
+adapter writes v1 contract bytes.
+
+## Native HDF5 files
+
+Use the feature flag `hdf5` with a qualified HDF5 library, headers and loader
+path. The local and CI qualification selects HDF5 2.2.0. The native adapter
+requires UTF-8 paths and direct contiguous datasets. It stores both time
+limbs, payload presence and block metadata. Use the explicit legacy reader
+to migrate text files. See [ADR 0018](../adr/0018-native-hdf5-checkpoints.md)
+for the file schema and compatibility details.
 
 ## Live proof required
 
