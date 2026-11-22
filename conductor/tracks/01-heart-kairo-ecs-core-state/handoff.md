@@ -132,3 +132,23 @@ smoke passed 1,000 iterations.
 Hosted PR #154 Actions passed on `a97d54063c3080e401fc19a17fb8bb1c018b70c8`.
 This entry records the cross-track handoff only; it does not change Track 01's
 registry status or close any Track 01 lane review.
+
+## Durable scheduler replay — 23 November 2026
+
+The optional `checkpoint-json` feature restores the single-threaded Rust
+scheduler's pending requests, clock and counters. The new process in the
+conformance target reads the scheduler bytes and the matching model and RNG
+state from disk. A seeded service queue reproduces the uninterrupted suffix,
+new event IDs, final counters and RNG position across the restart.
+
+The independent runtime reviewer re-reviewed
+`d13c6694c408a776f60709bd8b5c61a4bec1265b` after fixes for an impossible clock,
+exhausted schedule capacity and version negotiation. The rebased implementation
+`98ba9a23ef77629de674e0ef0e99572571f8d271` has the same core patch and source
+files. Rust 1.99.1 on macOS ARM64 passed the four focused cases and 175 tests
+across core, types, state and RNG. The default standalone consumer also ran.
+
+The preview boundary is described in the
+[scheduler checkpoint ADR](../../../docs/adr/adr-k01-scheduler-checkpoint.md).
+Track 51 still owns integration with the native storage adapters and
+parallel filesystem qualification.
