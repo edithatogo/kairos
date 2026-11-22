@@ -1746,6 +1746,21 @@ KairoEcsStatusCode kairo_ecs_export_event_log_arrow_stream(KairoEcsEngineHandle*
     }
 
     #[test]
+    fn engine_handle_exhaustion_preserves_the_existing_owner() {
+        let mut registry = BridgeRegistry {
+            next_handle: AtomicU64::new(u64::MAX - 1),
+            ..BridgeRegistry::default()
+        };
+        let last = registry.insert(EngineState::default());
+        assert_eq!(last, u64::MAX);
+        assert_eq!(registry.insert(EngineState::default()), 0);
+        assert!(kairo_ecs_last_error_string().contains("engine handle space exhausted"));
+        assert_eq!(registry.engines.len(), 1);
+        assert!(registry.remove(last).is_some());
+        assert_eq!(registry.insert(EngineState::default()), 0);
+    }
+
+    #[test]
     fn panic_boundary_returns_panic_status() {
         assert_eq!(
             test_trigger_panic(),
