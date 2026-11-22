@@ -2330,6 +2330,9 @@ dependencies = [
 [[package]]
 name = "kairo-ecs-ml"
 version = "0.1.0"
+dependencies = [
+ "kairo-ecs-rng",
+]
 
 [[package]]
 name = "kairo-ecs-mpi"
