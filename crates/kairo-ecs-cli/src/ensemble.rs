@@ -1,7 +1,7 @@
 #![allow(clippy::needless_range_loop)]
 //! Ensemble SBI calibration, Sobol sampling, Latin Hypercube sampling,
 //! Common Random Numbers, Saltelli/Jansen Sobol sensitivity analysis,
-//! and ABC-SMC / Optuna batch objective calibration.
+//! sequential ABC-SMC, and Optuna batch scoring.
 
 use rayon::prelude::*;
 
@@ -17,9 +17,11 @@ pub fn build_bounded_thread_pool(
         .build()
 }
 
+mod abc;
 mod sensitivity;
 mod sobol;
 
+pub use abc::{AbcParticle, AbcPopulation, AbcSmcCalibrator, AbcSmcConfig, AbcSmcError};
 pub use sensitivity::{SensitivityError, SobolSensitivityAnalyzer};
 pub use sobol::{LegacySobolSequence, SobolError, SobolSequence};
 
@@ -159,13 +161,13 @@ impl ParallelEnsembleRunner {
     }
 }
 
-/// ABC-SMC Calibrator and Optuna Batch Objective.
+/// Historical fixed-batch discrepancy screening for Optuna and replay.
 #[derive(Clone, Debug)]
-pub struct AbcSmcCalibrator {
+pub struct BatchDistanceScorer {
     tolerance: f64,
 }
 
-impl AbcSmcCalibrator {
+impl BatchDistanceScorer {
     pub fn new(tolerance: f64) -> Self {
         Self { tolerance }
     }
@@ -189,7 +191,7 @@ impl AbcSmcCalibrator {
         let pool = rayon::ThreadPoolBuilder::new()
             .num_threads(threads)
             .build()
-            .expect("failed to build rayon thread pool for abc-smc calibrator");
+            .expect("failed to build rayon thread pool for batch distance scoring");
 
         self.evaluate_particles_parallel_with_pool(
             particles,
@@ -404,8 +406,8 @@ mod tests {
     }
 
     #[test]
-    fn abc_smc_calibrator_parallel_parity() {
-        let calibrator = AbcSmcCalibrator::new(1.0);
+    fn batch_distance_scorer_parallel_parity() {
+        let calibrator = BatchDistanceScorer::new(1.0);
         let particles = vec![vec![1.0, 1.0], vec![10.0, 10.0], vec![1.1, 0.9]];
         let reference = vec![1.0, 1.0];
         let simulator = |p: &[f64]| p.to_vec();
@@ -419,8 +421,8 @@ mod tests {
     }
 
     #[test]
-    fn optuna_abc_smc_calibration_hook() {
-        let calibrator = AbcSmcCalibrator::new(1.0);
+    fn optuna_batch_objective_hook() {
+        let calibrator = BatchDistanceScorer::new(1.0);
         let particles = vec![vec![1.0, 1.0], vec![10.0, 10.0]];
         let reference = vec![1.0, 1.0];
         let simulator = |p: &[f64]| p.to_vec();

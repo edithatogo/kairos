@@ -1,5 +1,6 @@
 use kairo_ecs_cli::ensemble::{
-    build_bounded_thread_pool, AbcSmcCalibrator, ParallelEnsembleRunner, SobolSensitivityAnalyzer,
+    build_bounded_thread_pool, BatchDistanceScorer, ParallelEnsembleRunner,
+    SobolSensitivityAnalyzer,
 };
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
@@ -59,8 +60,8 @@ fn test_sobol_sensitivity_parallel_bit_invariance() {
 }
 
 #[test]
-fn test_abc_smc_calibrator_parallel_bit_invariance() {
-    let calibrator = AbcSmcCalibrator::new(0.5);
+fn test_batch_distance_scorer_parallel_bit_invariance() {
+    let calibrator = BatchDistanceScorer::new(0.5);
     let particles: Vec<Vec<f64>> = (0..50)
         .map(|i| vec![(i as f64) * 0.1, ((50 - i) as f64) * 0.2])
         .collect();
@@ -232,8 +233,8 @@ fn test_workload_size_capping_and_empty_particles() {
     let res = runner.run_sweep(&point, |_s, p| p[0] + p[1]);
     assert_eq!(res, vec![4.0]);
 
-    // Empty particles in AbcSmcCalibrator should return immediately without allocating a thread pool
-    let calibrator = AbcSmcCalibrator::new(1.0);
+    // Empty particles in BatchDistanceScorer should return immediately without allocating a thread pool
+    let calibrator = BatchDistanceScorer::new(1.0);
     let (weights, accepted) = calibrator.evaluate_particles_parallel(&[], &[], &|_| vec![], 64);
     assert!(weights.is_empty());
     assert!(accepted.is_empty());
