@@ -671,6 +671,31 @@ pub struct OptimisticFossilReport {
     pub collected_tombstones: usize,
 }
 
+/// Immutable process checkpoint at an exclusive committed time cutoff.
+///
+/// The state includes effects of events strictly before the cutoff. Events
+/// at or after it remain speculative.
+#[derive(Clone, Debug)]
+pub struct CommittedProcessSnapshot<S> {
+    lp_id: LpId,
+    exclusive_cutoff: Tick,
+    state: S,
+}
+
+impl<S> CommittedProcessSnapshot<S> {
+    pub fn lp_id(&self) -> LpId {
+        self.lp_id
+    }
+
+    pub fn exclusive_cutoff(&self) -> Tick {
+        self.exclusive_cutoff
+    }
+
+    pub fn state(&self) -> &S {
+        &self.state
+    }
+}
+
 /// Runtime-bound validity token for one logical process state epoch.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct OptimisticStateToken {
@@ -1630,6 +1655,32 @@ impl<P: OptimisticProcess> OptimisticRuntime<P> {
     /// Exposes a process immutably so all logical mutations remain event-owned.
     pub fn process_at(&self, lp_id: LpId) -> Option<&P> {
         self.processes.get(&lp_id).map(|state| &state.process)
+    }
+
+    /// Read one process at this runtime's most recent fossil-collection cutoff.
+    ///
+    /// Uses the pre-state of the first retained event, or the current process
+    /// state if its speculative history is empty. The model's snapshot must
+    /// own every component whose committed state is read here.
+    pub fn committed_snapshot(
+        &self,
+        lp_id: LpId,
+    ) -> Result<CommittedProcessSnapshot<P::Snapshot>, OptimisticError> {
+        self.ensure_healthy()?;
+        let process = self
+            .processes
+            .get(&lp_id)
+            .ok_or(OptimisticError::UnknownLogicalProcess(lp_id))?;
+        let state = catch_unwind(AssertUnwindSafe(|| match process.history.first() {
+            Some(first) => first.before.clone(),
+            None => process.process.snapshot(),
+        }))
+        .map_err(|_| OptimisticError::SnapshotPanicked(lp_id))?;
+        Ok(CommittedProcessSnapshot {
+            lp_id,
+            exclusive_cutoff: self.gvt,
+            state,
+        })
     }
 
     fn ensure_healthy(&self) -> Result<(), OptimisticError> {

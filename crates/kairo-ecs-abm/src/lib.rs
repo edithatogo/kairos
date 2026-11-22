@@ -1,10 +1,12 @@
 #![forbid(unsafe_code)]
 
 pub mod geometry;
+pub mod movement;
 pub mod routing;
 pub mod spatial_index;
 pub mod spawning;
 pub use geometry::*;
+pub use movement::*;
 pub use routing::*;
 pub use spatial_index::*;
 pub use spawning::*;

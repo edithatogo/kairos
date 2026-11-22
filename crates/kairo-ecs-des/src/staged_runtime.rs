@@ -12,6 +12,13 @@ use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::fmt;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
+#[cfg(feature = "optimistic-usage")]
+mod usage_replay;
+#[cfg(feature = "optimistic-usage")]
+pub use usage_replay::{
+    committed_staged_usage, CommittedOptimisticUsageWindow, StagedResourceCheckpoint,
+};
+
 const SUBMIT_EVENT: u32 = 0x5354_4701;
 const RELEASE_EVENT: u32 = 0x5354_4702;
 const LEASE_REVISION: u64 = 1;
@@ -95,6 +102,7 @@ pub enum StagedRequestState {
     Scheduled,
     Queued,
     Active,
+    /// Terminal after release or withdrawal, including requests never admitted.
     Released,
 }
 
@@ -137,22 +145,23 @@ pub struct StagedResourceSnapshot {
 #[derive(Clone, Copy, Debug)]
 enum ScheduledAction {
     Submit(StagedRequestId),
-    Release(StagedRequestId),
+    Close(StagedRequestId),
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 struct RequestRecord {
     actor: StagedActorId,
     resource: StagedResourceId,
     state: StagedRequestState,
     lease: Option<StagedLeaseId>,
-    release_pending: bool,
+    pending_submit: Option<EventId>,
+    pending_close: Option<(SimTime, EventId)>,
     quantity: u64,
     admission: Option<UsageBoundary>,
     release: Option<UsageBoundary>,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 struct ResourceRecord {
     unit: Option<String>,
     capacity: u64,
@@ -208,6 +217,11 @@ impl StagedResourceRuntime {
 
     pub fn now(&self) -> SimTime {
         self.scheduler.now()
+    }
+
+    /// Tick of the next live allocation action, without dispatching it.
+    pub fn next_event_time(&mut self) -> Option<SimTime> {
+        self.scheduler.peek_next().map(|event| event.at)
     }
 
     fn alloc(index: &mut u64) -> Result<EntityId, StagedRuntimeError> {
@@ -327,7 +341,8 @@ impl StagedResourceRuntime {
                 resource,
                 state: StagedRequestState::Scheduled,
                 lease: None,
-                release_pending: false,
+                pending_submit: Some(request_event),
+                pending_close: None,
                 quantity,
                 admission: None,
                 release: None,
@@ -383,22 +398,58 @@ impl StagedResourceRuntime {
         }
         let r = self
             .requests
-            .get_mut(&lease.request)
+            .get(&lease.request)
             .ok_or(StagedRuntimeError::UnknownRequest)?;
-        if r.state != StagedRequestState::Active || r.lease != Some(lease) || r.release_pending {
+        if r.state != StagedRequestState::Active
+            || r.lease != Some(lease)
+            || r.pending_close.is_some()
+        {
             return Err(StagedRuntimeError::InvalidState);
         }
-        r.release_pending = true;
-        let entity = r.actor.entity;
+        self.schedule_close(lease.request, at);
+        Ok(())
+    }
+
+    /// Schedule withdrawal or release of a request in the allocator's native order.
+    ///
+    /// Returns false for an already closed request or an equal or earlier
+    /// pending close. Otherwise, the action executes at `at` and replaces any
+    /// later release. Requests withdrawn before admission produce no occupancy.
+    pub fn close_request(
+        &mut self,
+        request: StagedRequestId,
+        at: SimTime,
+    ) -> Result<bool, StagedRuntimeError> {
+        let record = self
+            .requests
+            .get(&request)
+            .ok_or(StagedRuntimeError::UnknownRequest)?;
+        if record.state == StagedRequestState::Released
+            || record.pending_close.is_some_and(|(tick, _)| tick <= at)
+        {
+            return Ok(false);
+        }
+        if at < self.now() || self.usage_sealed_through.is_some_and(|end| at <= end) {
+            return Err(StagedRuntimeError::InvalidReleaseTime);
+        }
+        self.schedule_close(request, at);
+        Ok(true)
+    }
+
+    fn schedule_close(&mut self, request: StagedRequestId, at: SimTime) {
+        let record = self.requests.get_mut(&request).expect("request validated");
+        if let Some((_, event)) = record.pending_close {
+            self.scheduler.cancel(event);
+            self.actions.remove(&event);
+        }
         let event = self.scheduler.schedule(ScheduleRequest {
             at,
             priority: 0,
-            entity: Some(entity),
+            entity: Some(record.actor.entity),
             kind: EventKind::custom(RELEASE_EVENT),
         });
-        self.actions
-            .insert(event, ScheduledAction::Release(lease.request));
-        Ok(())
+        self.actions.insert(event, ScheduledAction::Close(request));
+        record.pending_close = Some((at, event));
     }
 
     pub fn run_for(&mut self, max_events: u64) -> Result<u64, StagedRuntimeError> {
@@ -418,7 +469,7 @@ impl StagedResourceRuntime {
             };
             match action {
                 ScheduledAction::Submit(request) => self.activate_or_queue(request, boundary)?,
-                ScheduledAction::Release(request) => self.release_and_promote(request, boundary)?,
+                ScheduledAction::Close(request) => self.close_at(request, boundary)?,
             }
         }
         Ok(dispatched)
@@ -448,49 +499,20 @@ impl StagedResourceRuntime {
         {
             return Err(StagedRuntimeError::InvalidUsageWindow);
         }
-        let source = self
-            .usage_source
-            .as_ref()
-            .ok_or(StagedRuntimeError::MissingUsageSource)?;
-        let mut window = CommittedUsageWindow {
-            version: STAGED_USAGE_VERSION,
-            source: source.clone(),
-            resource: resource.entity,
-            quantity_unit: resource_record
-                .unit
-                .as_ref()
-                .ok_or(StagedRuntimeError::MissingResourceUnit)?
-                .clone(),
+        let window = occupancy_window(
+            resource,
+            resource_record,
+            &self.requests,
+            self.usage_source.as_ref(),
             start,
             end,
-            occupancy: Vec::new(),
-            occupied_unit_ticks: 0,
-        };
-        for (&request, record) in &self.requests {
-            if record.resource != resource {
-                continue;
-            }
-            let Some(admission) = record.admission else {
-                continue;
-            };
-            let release = record.release.filter(|boundary| boundary.at <= end);
-            let clipped_start = start.max(admission.at);
-            let clipped_end = release.map_or(end, |boundary| boundary.at);
-            if clipped_start < clipped_end {
-                window.add(OccupancySlice {
-                    actor: record.actor.entity,
-                    request: request.entity,
-                    lease_revision: LEASE_REVISION,
-                    quantity: record.quantity,
-                    admission,
-                    release,
-                    start: clipped_start,
-                    end: clipped_end,
-                })?;
-            }
-        }
-        self.usage_sealed_through = Some(self.usage_sealed_through.map_or(end, |old| old.max(end)));
+        )?;
+        self.record_usage_seal(end);
         Ok(window)
+    }
+
+    fn record_usage_seal(&mut self, end: SimTime) {
+        self.usage_sealed_through = Some(self.usage_sealed_through.map_or(end, |old| old.max(end)));
     }
 
     fn activate_or_queue(
@@ -502,6 +524,7 @@ impl StagedResourceRuntime {
             .requests
             .get_mut(&request)
             .ok_or(StagedRuntimeError::UnknownRequest)?;
+        record.pending_submit = None;
         let resource = self
             .resources
             .get_mut(&record.resource)
@@ -568,11 +591,61 @@ impl StagedResourceRuntime {
         resource.available = available;
         record.state = StagedRequestState::Released;
         record.lease = None;
-        record.release_pending = false;
+        record.pending_close = None;
         record.release = Some(boundary);
+        Self::promote_waiting(&mut self.requests, resource, boundary)
+    }
+
+    fn close_at(
+        &mut self,
+        request: StagedRequestId,
+        boundary: UsageBoundary,
+    ) -> Result<(), StagedRuntimeError> {
+        let record = self
+            .requests
+            .get_mut(&request)
+            .ok_or(StagedRuntimeError::UnknownRequest)?;
+        match record.state {
+            StagedRequestState::Active => self.release_and_promote(request, boundary),
+            StagedRequestState::Scheduled => {
+                let event = record
+                    .pending_submit
+                    .take()
+                    .ok_or(StagedRuntimeError::InvalidState)?;
+                if !self.scheduler.cancel(event) {
+                    return Err(StagedRuntimeError::InvalidState);
+                }
+                self.actions.remove(&event);
+                record.state = StagedRequestState::Released;
+                record.pending_close = None;
+                Ok(())
+            }
+            StagedRequestState::Queued => {
+                let resource = self
+                    .resources
+                    .get_mut(&record.resource)
+                    .ok_or(StagedRuntimeError::UnknownResource)?;
+                let position = resource
+                    .queued
+                    .iter()
+                    .position(|&queued| queued == request)
+                    .ok_or(StagedRuntimeError::InvalidState)?;
+                resource.queued.remove(position);
+                record.state = StagedRequestState::Released;
+                record.pending_close = None;
+                Self::promote_waiting(&mut self.requests, resource, boundary)
+            }
+            StagedRequestState::Released => Err(StagedRuntimeError::InvalidState),
+        }
+    }
+
+    fn promote_waiting(
+        requests: &mut BTreeMap<StagedRequestId, RequestRecord>,
+        resource: &mut ResourceRecord,
+        boundary: UsageBoundary,
+    ) -> Result<(), StagedRuntimeError> {
         while let Some(&next) = resource.queued.front() {
-            let record = self
-                .requests
+            let record = requests
                 .get_mut(&next)
                 .ok_or(StagedRuntimeError::UnknownRequest)?;
             if record.quantity > resource.available {
@@ -583,4 +656,53 @@ impl StagedResourceRuntime {
         }
         Ok(())
     }
+}
+
+fn occupancy_window(
+    resource: StagedResourceId,
+    resource_record: &ResourceRecord,
+    requests: &BTreeMap<StagedRequestId, RequestRecord>,
+    source: Option<&StagedUsageSource>,
+    start: SimTime,
+    end: SimTime,
+) -> Result<CommittedUsageWindow, StagedRuntimeError> {
+    let source = source.ok_or(StagedRuntimeError::MissingUsageSource)?;
+    let mut window = CommittedUsageWindow {
+        version: STAGED_USAGE_VERSION,
+        source: source.clone(),
+        resource: resource.entity,
+        quantity_unit: resource_record
+            .unit
+            .as_ref()
+            .ok_or(StagedRuntimeError::MissingResourceUnit)?
+            .clone(),
+        start,
+        end,
+        occupancy: Vec::new(),
+        occupied_unit_ticks: 0,
+    };
+    for (&request, record) in requests {
+        if record.resource != resource {
+            continue;
+        }
+        let Some(admission) = record.admission else {
+            continue;
+        };
+        let release = record.release.filter(|boundary| boundary.at <= end);
+        let clipped_start = start.max(admission.at);
+        let clipped_end = release.map_or(end, |boundary| boundary.at);
+        if clipped_start < clipped_end {
+            window.add(OccupancySlice {
+                actor: record.actor.entity,
+                request: request.entity,
+                lease_revision: LEASE_REVISION,
+                quantity: record.quantity,
+                admission,
+                release,
+                start: clipped_start,
+                end: clipped_end,
+            })?;
+        }
+    }
+    Ok(window)
 }

@@ -2142,6 +2142,7 @@ version = "0.1.0"
 dependencies = [
  "geo",
  "kairo-ecs-core",
+ "kairo-ecs-des",
  "kairo-ecs-rng",
  "kairo-ecs-state",
  "kairo-ecs-types",
@@ -2240,6 +2241,7 @@ name = "kairo-ecs-des"
 version = "0.1.0"
 dependencies = [
  "kairo-ecs-core",
+ "kairo-ecs-pdes",
  "kairo-ecs-rng",
  "kairo-ecs-state",
  "kairo-ecs-types",
