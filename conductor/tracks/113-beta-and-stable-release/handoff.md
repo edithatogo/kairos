@@ -52,12 +52,14 @@ SHA-256 is `f71b182d0e78256da2c10cd029809872dffb0b789abce234ce38da5787504f2c`.
   with Rust 1.99.1 and seed 42. After scheduling one million events and
   cancelling half, 45 drain samples had a median of 196.5 ms and a range of
   187.7–209.7 ms. The three process RSS peaks were 926,466,048,
-  978,944,000 and 1,026,064,384 bytes. RSS includes input setup. Raw receipt
-  SHA-256 `0200e4e4cdeb26161c8f493753d5ae314b3b57300da7ce8201b2cc60bffa1657`.
+  978,944,000 and 1,026,064,384 bytes. RSS includes input setup. SHA-256
+  `0200e4e4cdeb26161c8f493753d5ae314b3b57300da7ce8201b2cc60bffa1657`.
+  [Raw serial distribution](evidence/serial-3b3b8da.json).
   The existing conservative PDES ring at the same source revision passed exact
   final-state parity across 120 matched serial and parallel samples. Serial
-  was faster across the eight measured cases. Raw paired sample SHA-256
+  was faster across the eight measured cases. SHA-256
   `a0d4e599f5f59ead98b677b0234991c716f76238597318c06c706b1dbcd156f3`.
+  [Raw paired distribution](evidence/paired-pdes-3b3b8da.json).
 - **Signed SBOM.** The approved installation run supplied six named artifact
   subjects with five unique digests. Verified Syft generated an SPDX 2.3
   inventory of 1,171 packages. The GitHub signature verified for all five
@@ -68,11 +70,22 @@ SHA-256 is `f71b182d0e78256da2c10cd029809872dffb0b789abce234ce38da5787504f2c`.
   `b47ca531eb685607e35ea994012825e1b118fbd3702ad77be628812f3e26b904`.
   [Hosted signature and evidence](https://github.com/edithatogo/kairos/actions/runs/45044299499).
 
-Milestone 113.0.3 is complete. Phase 0 still requires a passing mutation gate
-and final maintainer acceptance under the
-[alpha-to-beta gates](../../release-gates.md#alpha-to-beta-all-required).
-The scheduled baseline reported 76 surviving mutants.
-[Scheduled mutation result](https://github.com/edithatogo/kairos/actions/runs/45019966071).
+The exact candidate's default scheduler and façade mutation run caught
+56 viable mutants with zero misses and zero timeouts. The full Linux
+mutation gate later passed on main at
+`8332110ef2b4c5bed23c6064ca5c951779f25a10` with 175 caught and zero missed.
+[Earlier scheduled baseline](https://github.com/edithatogo/kairos/actions/runs/45019966071).
+[Passing whole-core run](https://github.com/edithatogo/kairos/actions/runs/45047387545).
+
+The candidate also completed 20,000 coverage-guided scheduler inputs and a
+60-second libFuzzer campaign with Rust 1.99.1. The long run executed
+16,401,537 inputs and increased observed coverage from 66 to 127. The
+retained macOS wheel rejected wrong architecture, missing symbols and
+an incompatible ABI, then dispatched an event through the real C library.
+
+Milestone 113.0.3 records successful installation of these artifacts.
+Phase 0 requires qualification of the Apache-2.0 artifacts and final
+maintainer acceptance under the [alpha-to-beta gates](../../release-gates.md#alpha-to-beta-all-required).
 
 ## Summary
 
