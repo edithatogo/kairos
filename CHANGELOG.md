@@ -16,7 +16,7 @@ Format:
 
 ### Added
 
-- `.github/workflows/fair-software.yml` uses an isolated `howfairis==0.14.2` CLI for an advisory FAIR research-software metadata assessment after the upstream Docker action failed at hosted startup; `docs/FAIR_SOFTWARE_ASSESSMENT.md` records separate ARDC, licensing and scientific verification needs.
+- `.github/workflows/ci-policy.yml` now runs an isolated advisory `howfairis==0.14.2` CLI assessment, reusing an already-working job after repeated standalone FAIR workflow startup failures; `docs/FAIR_SOFTWARE_ASSESSMENT.md` records separate ARDC, licensing and scientific verification needs.
 
 - The native beta qualification builds a locked Rust SDK, a C ABI v1 library and a Python wheel, then exercises all three and the pinned CareOps allocation case from a clean installation on each target.
 - `kairo-ecs-abm` adds scheduled movement with cancellable arrivals and topology-driven replanning. `kairo-ecs-des` can close scheduled, queued and active requests at the journey's terminal event.
