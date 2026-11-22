@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "reviewed_at": "2026-11-07",
-  "source_baseline": "d56863505d938feb069af88a737eb7668113d14b",
+  "reviewed_at": "2026-11-23",
+  "source_baseline": "431a629daed2a4a76f0aac23a719eb6727657303",
   "policy": {
     "simulation_core": "rust",
     "host_fallback": false,
@@ -126,20 +126,83 @@
     "frontier": {
       "kind": "plan",
       "path": "conductor/tracks/115-frontier-experiments/plan.md"
+    },
+    "native_linux": {
+      "kind": "native-receipt",
+      "path": "conductor/tracks/112-evidence-and-claim-automation/evidence/installed-45051171243-x86_64-unknown-linux-gnu.json",
+      "source_ref": "e2875387ce45c34cd19716ea66f0102251a6aa6f",
+      "scope": "GitHub run 45051171243. Installed Rust SDK, C ABI v1, CPython 3.15.2 and CareOps contention on Linux x86-64 GNU.",
+      "sha256": "bdf06ca4ece1be84f63cda9793b9a9be5634e9b1e3dcd8a84aef3a50bb7ced88"
+    },
+    "native_macos": {
+      "kind": "native-receipt",
+      "path": "conductor/tracks/112-evidence-and-claim-automation/evidence/installed-45051171243-aarch64-apple-darwin.json",
+      "source_ref": "e2875387ce45c34cd19716ea66f0102251a6aa6f",
+      "scope": "GitHub run 45051171243. Installed Rust SDK, C ABI v1, CPython 3.15.2 and CareOps contention on macOS ARM64.",
+      "sha256": "3a871e601f5da415758ad3f47691853d5e39a67993295cd3a731256964bfd7b1"
+    },
+    "movement": {
+      "kind": "source",
+      "path": "crates/kairo-ecs-abm/src/movement.rs"
+    },
+    "arrow_domain": {
+      "kind": "source",
+      "path": "crates/kairo-ecs-arrow/src/lib.rs"
+    },
+    "arrow_stream": {
+      "kind": "source",
+      "path": "crates/kairo-ecs-arrow-ffi/src/lib.rs"
+    },
+    "sobol": {
+      "kind": "source",
+      "path": "crates/kairo-ecs-cli/src/ensemble/sobol.rs"
+    },
+    "native_queue": {
+      "kind": "source",
+      "path": "python/kairo_gym/src/kairo_gym/_native.py"
+    },
+    "consumer_108": {
+      "kind": "review",
+      "path": "conductor/tracks/108-scientific-ecosystem-alignment/handoff.md"
+    },
+    "movement_consumer": {
+      "kind": "review",
+      "path": "conductor/tracks/114-dependency-and-consumer-contracts/handoff.md"
+    },
+    "native_candidate": {
+      "kind": "review",
+      "path": "conductor/tracks/113-beta-and-stable-release/handoff.md"
+    },
+    "signed_candidate": {
+      "kind": "review",
+      "path": "conductor/tracks/112-evidence-and-claim-automation/handoff.md"
+    },
+    "s10_queue": {
+      "kind": "review",
+      "path": "conductor/execution/scientific/s10-completion.md"
+    },
+    "pdes_candidate": {
+      "kind": "benchmark",
+      "path": "conductor/tracks/113-beta-and-stable-release/evidence/paired-pdes-e287538.json",
+      "schema": "kairoecs.pdes.benchmark.v1",
+      "sha256": "acbeee268a6374e5dfdb44e79aae35da3b8beac59f04b5d12387a84980d661d6",
+      "source_ref": "e2875387ce45c34cd19716ea66f0102251a6aa6f"
     }
   },
   "capabilities": [
     {
       "id": "rust-core",
       "name": "Deterministic Rust scheduling, state and RNG",
-      "status": "implemented",
+      "status": "qualified-bounded",
       "completion_track": "109",
-      "scope": "Event ordering, cancellation, generational state and versioned RNG streams are implemented in Rust.",
-      "limitations": "Native platform, replay/version and installed-package qualification are separate gates.",
+      "scope": "The installed Rust 1.99.1 SDK passed the standalone service-station consumer and seeded ABM replay on Linux x86-64 GNU and macOS ARM64 at e287538.",
+      "limitations": "The native-core-v1 profile defines the candidate's supported slice. Alpha seeded replay uses a different RNG version.",
       "evidence": [
         "core",
         "state",
-        "rng"
+        "rng",
+        "native_linux",
+        "native_macos"
       ]
     },
     {
@@ -147,36 +210,42 @@
       "name": "DES and ABM modelling",
       "status": "implemented",
       "completion_track": "110",
-      "scope": "Rust resource/trajectory and agent/spatial APIs exist.",
-      "limitations": "Full hybrid boundary semantics, analytical scenarios and empirical model validation remain scoped obligations S17.",
+      "scope": "Rust resources, agent behavior and routes include scheduled movement, cancellation, replanning, lease cleanup and committed occupancy export.",
+      "limitations": "S17 retains full hybrid boundary semantics, analytical scenarios and empirical model validation. The movement contract is a Rust preview.",
       "evidence": [
         "des",
         "abm",
-        "science"
+        "science",
+        "movement",
+        "movement_consumer"
       ]
     },
     {
       "id": "native-abi",
       "name": "C ABI scheduling and statistics",
-      "status": "implemented",
+      "status": "qualified-bounded",
       "completion_track": "109",
-      "scope": "Rust ABI v1 exports handle creation, scheduling, stepping, cancellation and statistics.",
-      "limitations": "Counts do not identify dispatched events. Validate ownership/overflow/error behavior per binding.",
+      "scope": "The installed C ABI v1 archive passed lifecycle, timing, cancellation and statistics cases on Linux x86-64 GNU and macOS ARM64 at e287538.",
+      "limitations": "ABI v1 exposes counters. Dispatch identities and model or RNG controls require other interfaces.",
       "evidence": [
         "ffi",
-        "ffi_tests"
+        "ffi_tests",
+        "native_linux",
+        "native_macos"
       ]
     },
     {
       "id": "python-native",
       "name": "Python NativeEngine",
-      "status": "implemented",
+      "status": "qualified-bounded",
       "completion_track": "109",
-      "scope": "Thin ctypes adapter calls Rust ABI v1; no Python simulation core.",
-      "limitations": "Actual shared-library CI and installed package/platform acceptance remain required; legacy Scheduler is unavailable.",
+      "scope": "NativeEngine drove the installed C ABI v1 library from CPython 3.15.2 on Linux x86-64 GNU and macOS ARM64 at e287538.",
+      "limitations": "The tested profile requires an explicitly selected library. Legacy Scheduler is retired. More Python versions and targets need installed qualification.",
       "evidence": [
         "python",
-        "bindings"
+        "bindings",
+        "native_linux",
+        "native_macos"
       ]
     },
     {
@@ -218,13 +287,15 @@
     {
       "id": "gym",
       "name": "Python Gymnasium environment",
-      "status": "unsupported",
+      "status": "experimental",
       "completion_track": "110",
-      "scope": "Constructor and registration reject until a qualified Rust environment exists.",
-      "limitations": "Installing Gymnasium does not enable execution; S10 retains actual native environment and checker work.",
+      "scope": "The optional Gymnasium and PettingZoo hosts drive a Rust queue through the queue-env-v1 CLI. Both installed checkers passed on macOS.",
+      "limitations": "The preview needs a CLI built with rl-queue and POSIX pipes. Its evidence covers one queue model and CPython 3.15.2.",
       "evidence": [
         "native_policy",
-        "science"
+        "science",
+        "native_queue",
+        "s10_queue"
       ]
     },
     {
@@ -244,13 +315,15 @@
       "name": "Measured PDES performance baseline",
       "status": "experimental",
       "completion_track": "111",
-      "scope": "Eight raw Oct 2026 benchmark rows include five timing repeats, event counts and parity; this small workload is slower than sequential.",
-      "limitations": "This historical hardware/workload baseline is not a universal performance result or a result for the current change.",
+      "scope": "The e287538 conservative-PDES ring preserved final-state parity across 120 paired samples. Serial had lower median time in all eight measured cases.",
+      "limitations": "The ring covers 4 to 32 logical processes and 1,024 to 8,192 processed events. Larger models and GPU or distributed crossover require matched-workload evidence.",
       "evidence": [
         "pdes_benchmark",
-        "performance"
+        "performance",
+        "pdes_candidate",
+        "native_candidate"
       ],
-      "performance_evidence": "pdes_benchmark"
+      "performance_evidence": "pdes_candidate"
     },
     {
       "id": "hpc-scaling",
@@ -280,11 +353,14 @@
       "name": "Arrow/Polars data interchange",
       "status": "implemented",
       "completion_track": "114",
-      "scope": "Rust native data export and separate Arrow C Data interfaces exist.",
-      "limitations": "kairo_ecs_telemetry_flush_ipc returns JSON statistics; Python DTO conversion is not proof of populated native zero-copy export.",
+      "scope": "Optional Rust Arrow/Polars interchange supports populated domain tables and C Data and Stream exports. Installed CareOps and Innovate cases verified schema and retained buffers.",
+      "limitations": "The generic C ABI telemetry call returns JSON statistics. The installed Arrow evidence covers the recorded CareOps and Innovate optional data paths.",
       "evidence": [
         "ffi",
-        "dependency"
+        "dependency",
+        "arrow_domain",
+        "arrow_stream",
+        "consumer_108"
       ]
     },
     {
@@ -301,7 +377,7 @@
     },
     {
       "id": "nash",
-      "name": "Mixed Nash and Lemke\u2013Howson",
+      "name": "Mixed Nash and Lemke–Howson",
       "status": "unsupported",
       "completion_track": "110",
       "scope": "Kairos game-theory 0.5.0 retires the legacy mixed-strategy surface. Paignia owns bounded mixed-Nash solving and candidate admission.",
@@ -338,23 +414,24 @@
     {
       "id": "qmc",
       "name": "Standard Sobol and sensitivity analysis",
-      "status": "known-defect",
+      "status": "implemented",
       "completion_track": "110",
-      "scope": "Existing sequence and ensemble scaffolding are present.",
-      "limitations": "Known nonstandard vectors, 2^32 index overflow and fixed-multiplier confidence fields require S05; preserve explicitly versioned legacy replay. Those fields are not statistical confidence intervals.",
+      "scope": "Versioned Joe–Kuo D(6) Sobol points cover up to 16 dimensions and match frozen SciPy vectors. Jansen sensitivity intervals were checked on Ishigami and Sobol-G.",
+      "limitations": "The checked index space is 32-bit. The legacy sequence remains versioned for replay. Interval evidence covers the recorded models and replicate counts.",
       "evidence": [
         "ensemble",
         "sobol_review",
-        "science"
+        "science",
+        "sobol"
       ]
     },
     {
       "id": "uq",
       "name": "CRN, ensembles and uncertainty",
-      "status": "experimental",
+      "status": "implemented",
       "completion_track": "110",
-      "scope": "Deterministic stream/ensemble components exist.",
-      "limitations": "S06\u2013S08 require coverage, calibration, hazard and reference-posterior evidence. The current ABC-SMC-named routine lacks sequential resampling/perturbation; distance-weighted fixed particles do not establish ABC-SMC.",
+      "scope": "Rust implements paired common random numbers, sequential ABC-SMC and competing-risk clocks. Tests exercise an exact beta posterior, branch coupling and analytical hazard and censoring cases.",
+      "limitations": "Calibration and interval evidence covers the named reference models and assumptions. New application and empirical claims require their own validation.",
       "evidence": [
         "rng",
         "ensemble",
@@ -363,11 +440,11 @@
     },
     {
       "id": "inference",
-      "name": "Real ONNX inference and vector environments",
+      "name": "Rust affine surrogate inference",
       "status": "experimental",
       "completion_track": "110",
-      "scope": "Shape/backend contracts and stubs exist in Rust.",
-      "limitations": "Identity passthrough and synthetic rewards are not real model inference or environment dynamics; S09\u2013S10 remain open.",
+      "scope": "The Rust affine surrogate runs real inference and reports held-out error.",
+      "limitations": "The qualified fixture covers one model. Extrapolation and unavailable ONNX execution return errors.",
       "evidence": [
         "ml",
         "science"
@@ -422,12 +499,17 @@
     {
       "id": "careops",
       "name": "Independent CareOps consumer contract",
-      "status": "planned",
+      "status": "qualified-bounded",
       "completion_track": "114",
-      "scope": "Kairos provides versioned generic engine/data contracts; careops-sim owns domain models and validation.",
-      "limitations": "A standalone public-interface consumer fixture and downstream installed acceptance remain required; no consumer pin is promoted.",
+      "scope": "Hosted installed contention passed both profile targets. Archived CareOps cases cover replay, populated domain schema, retained buffers and one step-free porter movement on macOS ARM64.",
+      "limitations": "CareOps owns its application adapter, production pin and domain model validation.",
       "evidence": [
-        "dependency"
+        "dependency",
+        "des",
+        "native_linux",
+        "native_macos",
+        "consumer_108",
+        "movement_consumer"
       ]
     },
     {
@@ -435,10 +517,12 @@
       "name": "Beta and stable release",
       "status": "planned",
       "completion_track": "113",
-      "scope": "v0.4.0-alpha.1 is the existing release; bounded beta/stable gates are defined.",
-      "limitations": "New tests, plans and historical Done labels do not constitute beta/stable acceptance or publication.",
+      "scope": "The native-core-v1 beta candidate e287538 passed both clean installations. Signed SPDX evidence names the exact tested archive digests.",
+      "limitations": "Maintainer acceptance is pending. The published version remains v0.4.0-alpha.1. Stable release gates remain separate.",
       "evidence": [
-        "release"
+        "release",
+        "native_candidate",
+        "signed_candidate"
       ]
     },
     {

@@ -16,6 +16,15 @@ PROBE = ('import json, platform, sys; '
          'executable=sys.executable, prefix=sys.prefix)))')
 
 
+def verify_current(root: Path) -> None:
+    """Require the running process to use the selected checkout's Python."""
+    target = root.resolve(strict=True) / '.venv'
+    if tuple(sys.version_info) != VERSION:
+        raise RuntimeError('Activate the repository-local Python 3.15.2 (final).')
+    if target.is_symlink() or Path(sys.prefix).resolve() != target:
+        raise RuntimeError('Select the Python kernel from this checkout\'s .venv.')
+
+
 def prepare(root: Path) -> dict[str, str]:
     if tuple(sys.version_info) != VERSION:
         raise RuntimeError('Bootstrap must use exactly Python 3.15.2 (final).')

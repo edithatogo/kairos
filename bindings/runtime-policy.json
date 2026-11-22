@@ -12,7 +12,7 @@
       "artifact": "explicit absolute KAIRO_ECS_FFI_LIBRARY or lib_path; C ABI v1",
       "retired": ["Scheduler", "ParallelVecEnv", "PettingZooParallelAdapter"],
       "required_native_gate": "PYTHONPATH=bindings/python python -m unittest discover -s bindings/python/native_tests -v",
-      "qualification": "native execution suite required; packaged platform matrix pending"
+      "qualification": "native-core-v1 candidate e287538 passed installed CPython 3.15.2 and C ABI v1 on the two targets in packaging/native-beta-scope.json. See conductor/release/beta-scope.md."
     },
     "typescript": {
       "execution_api": "WasmBridgeLoader.loadWasmEngine / loadNativeWasm",

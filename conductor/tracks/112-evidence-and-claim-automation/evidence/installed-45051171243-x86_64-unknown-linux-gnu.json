@@ -1,0 +1,112 @@
+{
+  "artifacts_sha256": {
+    "kairo_ecs-0.1.0-py3-none-any.whl": "7595df567c16dc5ced1bfdf866f93e552a5e8a187da2257d4e052512d3b10286",
+    "kairos-c-abi.tar.gz": "73efab28c21ff0651df3e14775f3a62fbdb11b6d0ef304d903dca29851fbf41e",
+    "kairos-rust-sdk.tar.gz": "0060c934d7b5d9eb187387175fc4604184093823aedbfbb43fa52936b1a82240"
+  },
+  "c_abi": 1,
+  "c_fixture_sha256": "d8f5c4dfee6925e32061bae8d5f020f2e6acb01f111ea1a93e99bcfa10df839f",
+  "careops_installed": {
+    "active_sdk_crates": [
+      "kairo-ecs-core",
+      "kairo-ecs-des",
+      "kairo-ecs-rng",
+      "kairo-ecs-state",
+      "kairo-ecs-types"
+    ],
+    "case": "capacity_one_contention_keeps_one_active_lease_and_grants_queued_work_after_release",
+    "case_sha256": "3838709f71ba2b82abd622a0878f51a1e6a9cb52294fbdd50d7764c76e46d75e",
+    "lock_sha256": "1d0e485958016c00d0b9530951385eeeda1ab2f0fbb6d6cd064a1d8960aa80f8",
+    "packages": [
+      {
+        "manifest": "crates/kairo-ecs-core/Cargo.toml",
+        "name": "kairo-ecs-core",
+        "version": "0.0.0"
+      },
+      {
+        "manifest": "crates/kairo-ecs-des/Cargo.toml",
+        "name": "kairo-ecs-des",
+        "version": "0.1.0"
+      },
+      {
+        "manifest": "crates/kairo-ecs-rng/Cargo.toml",
+        "name": "kairo-ecs-rng",
+        "version": "0.0.0"
+      },
+      {
+        "manifest": "crates/kairo-ecs-state/Cargo.toml",
+        "name": "kairo-ecs-state",
+        "version": "0.0.0"
+      },
+      {
+        "manifest": "crates/kairo-ecs-types/Cargo.toml",
+        "name": "kairo-ecs-types",
+        "version": "0.0.0"
+      }
+    ],
+    "revision": "6810aaaa38229b725a9fe0f99a0a6c1d8693ebd9",
+    "source_archive_sha256": "1d3889e9dea1ceb1ab05def04d3098005875ffaf6b68015d79033b2ec4b5c661"
+  },
+  "library_sha256": "64041fb50116f8139da25cb07eb333e374961e82bf3f82d15fa274930c57d2f8",
+  "license": "Apache-2.0",
+  "platform": "Linux-7.0.0-1017-azure-x86_64-with-glibc2.39",
+  "profile": "native-core-v1",
+  "python": "3.15.2",
+  "python_loader_rejections": [
+    "missing-selection",
+    "wrong-architecture",
+    "missing-symbol",
+    "incompatible-abi"
+  ],
+  "python_suite_sha256": "4782e69a21cff62911b5ad1362582569ffe4725e6a2f88820d11b1d5236aace4",
+  "rust_fixture_sha256": "f4e3b2988ffd8cc286d6b45d2daefc3cc196a2e922db877f0567ecab56ffb6b5",
+  "rust_installed": {
+    "active_sdk_crates": [
+      "kairo-ecs-core",
+      "kairo-ecs-des",
+      "kairo-ecs-rng",
+      "kairo-ecs-state",
+      "kairo-ecs-types"
+    ],
+    "lock_sha256": "faf915af58f0c4d6c41500b63ef0f7ba4cf83fd83f0fb45651ad57dc8e1d83ce",
+    "packages": [
+      {
+        "manifest": "crates/kairo-ecs-core/Cargo.toml",
+        "name": "kairo-ecs-core",
+        "version": "0.0.0"
+      },
+      {
+        "manifest": "crates/kairo-ecs-des/Cargo.toml",
+        "name": "kairo-ecs-des",
+        "version": "0.1.0"
+      },
+      {
+        "manifest": "crates/kairo-ecs-rng/Cargo.toml",
+        "name": "kairo-ecs-rng",
+        "version": "0.0.0"
+      },
+      {
+        "manifest": "crates/kairo-ecs-state/Cargo.toml",
+        "name": "kairo-ecs-state",
+        "version": "0.0.0"
+      },
+      {
+        "manifest": "crates/kairo-ecs-types/Cargo.toml",
+        "name": "kairo-ecs-types",
+        "version": "0.0.0"
+      }
+    ]
+  },
+  "rustc": [
+    "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+    "binary: rustc",
+    "commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67",
+    "commit-date: 2026-10-13",
+    "host: x86_64-unknown-linux-gnu",
+    "release: 1.99.1",
+    "LLVM version: 23.1.1"
+  ],
+  "source_commit": "e2875387ce45c34cd19716ea66f0102251a6aa6f",
+  "status": "pass",
+  "target": "x86_64-unknown-linux-gnu"
+}
