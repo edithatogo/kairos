@@ -1,0 +1,524 @@
+name: CareOps exact runtime owner qualification
+
+on:
+  push:
+    branches: ['codex/pin-44261eb-owner-ci-20261122']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  native:
+    name: Native owner (${{ matrix.os }})
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-15]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Check out the exact runtime source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: 44261eb5cf8275f132f63a3396903d116d701dbe
+          persist-credentials: false
+      - name: Check out the qualification workflow
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ github.sha }}
+          path: .venv/qualification-control
+          persist-credentials: false
+      - name: Install the locked Python 3.15.1 environment
+        run: |
+          set -euo pipefail
+          runtime_head="$(git rev-parse HEAD)"
+          workflow_head="$(git -C .venv/qualification-control rev-parse HEAD)"
+          printf 'runtime_head=%s\nworkflow_head=%s\n' "$runtime_head" "$workflow_head"
+          test "$runtime_head" = 44261eb5cf8275f132f63a3396903d116d701dbe
+          test "$workflow_head" = "$GITHUB_SHA"
+          exclude_file="$(git rev-parse --git-path info/exclude)"
+          mkdir -p "$(dirname "$exclude_file")"
+          printf '%s\n' '/.venv/qualification-control/' '/.venv/owner-qualification/' >> "$exclude_file"
+          case "$RUNNER_OS/$RUNNER_ARCH" in
+            Linux/X64)
+              asset=pixi-x86_64-unknown-linux-musl
+              digest=32523b4d1f43ca1583579252bbf7f977f83e4ce16f1333225379ece9f46bff0c
+              ;;
+            macOS/ARM64)
+              asset=pixi-aarch64-apple-darwin
+              digest=86b4e47c6fbbf3da8aa47a2ad8ea2e1ec3f505ecf6d7d4c4fdaa203071690148
+              ;;
+            *) echo "unsupported native host: $RUNNER_OS/$RUNNER_ARCH" >&2; exit 1 ;;
+          esac
+          curl --fail --location --retry 2 --max-time 120 \
+            "https://github.com/prefix-dev/pixi/releases/download/v0.84.2/$asset" \
+            --output "$RUNNER_TEMP/pixi"
+          printf '%s  %s\n' "$digest" "$RUNNER_TEMP/pixi" | shasum -a 256 --check
+          chmod +x "$RUNNER_TEMP/pixi"
+          "$RUNNER_TEMP/pixi" --version | grep -Fx 'pixi 0.84.2'
+          mkdir -p .venv/owner-qualification
+          cp .venv/qualification-control/.github/qualification/careops-pin-44261eb/pixi.* \
+            .venv/owner-qualification/
+          "$RUNNER_TEMP/pixi" install --locked --manifest-path .venv/owner-qualification/pixi.toml
+          python_dir="$GITHUB_WORKSPACE/.venv/owner-qualification/.pixi/envs/default"
+          "$python_dir/bin/python" -c 'import platform,pyarrow,numpy,simpy; assert platform.python_version()=="3.15.1"; assert pyarrow.__version__=="25.0.1"; assert numpy.__version__=="2.5.3"; assert simpy.__version__=="4.1.2"; print(platform.python_version(),pyarrow.__version__,numpy.__version__,simpy.__version__)'
+          test -z "$(git status --porcelain)"
+          printf 'CAREOPS_OWNER_PYTHON=%s\n' "$python_dir/bin/python" >> "$GITHUB_ENV"
+          echo "$python_dir/bin" >> "$GITHUB_PATH"
+      - name: Install reviewed Rust 1.99.0
+        run: |
+          mkdir -p .artifacts/ci/native
+          set -o pipefail
+          rustup toolchain install 1.99.0 --profile minimal 2>&1 | tee .artifacts/ci/native/install.log
+      - name: Verify actual native host and source
+        env:
+          EXPECTED_OS: ${{ matrix.os }}
+        run: |
+          set -o pipefail
+          exec > >(tee -a .artifacts/ci/native/install.log) 2>&1
+          git rev-parse HEAD
+          task_rustc="$(rustup which --toolchain 1.99.0 rustc)"
+          "$task_rustc" -vV
+          if [ "$EXPECTED_OS" = macos-15 ]; then
+            "$task_rustc" -vV | grep -Fx 'host: aarch64-apple-darwin'
+          else
+            "$task_rustc" -vV | grep -Fx 'host: x86_64-unknown-linux-gnu'
+          fi
+          uname -a
+          if [ "$EXPECTED_OS" = macos-15 ]; then
+            test "$(uname -m)" = arm64
+          else
+            test "$(uname -m)" = x86_64
+          fi
+      - name: Test reusable native owner packages
+        run: |
+          mkdir -p .artifacts/ci/native
+          set -o pipefail
+          task_rustc="$(rustup which --toolchain 1.99.0 rustc)"
+          task_bin="$(dirname "$task_rustc")"
+          export RUSTC="$task_rustc" RUSTDOC="$task_bin/rustdoc" PATH="$task_bin:$PATH"
+          cargo test --locked -p kairo-ecs-core -p kairo-ecs-types -p kairo-ecs-state -p kairo-ecs-rng -p kairo-ecs-des -p kairo-ecs-abm -p kairo-ecs-arrow -p kairo-ecs-calibration 2>&1 | tee .artifacts/ci/native/owner.log
+      - name: Test calibration and resource lifecycle on current Rust 1.99.0
+        env:
+          EXPECTED_OS: ${{ matrix.os }}
+        run: |
+          set -euo pipefail
+          rustup run 1.99.0 rustc -vV | tee .artifacts/ci/native/calibration-current.log
+          grep -Fx 'release: 1.99.0' .artifacts/ci/native/calibration-current.log
+          if [ "$EXPECTED_OS" = macos-15 ]; then
+            grep -Fx 'host: aarch64-apple-darwin' .artifacts/ci/native/calibration-current.log
+          else
+            grep -Fx 'host: x86_64-unknown-linux-gnu' .artifacts/ci/native/calibration-current.log
+          fi
+          rustup run 1.99.0 cargo test --locked -p kairo-ecs-calibration 2>&1 | tee -a .artifacts/ci/native/calibration-current.log
+          rustup run 1.99.0 cargo test --locked -p kairo-ecs-arrow --features resource-lifecycle-io 2>&1 | tee .artifacts/ci/native/resource-lifecycle-current.log
+      - name: C2 save, restore, repeat, and sentinel verification on Rust 1.99.0
+        env:
+          EXPECTED_OS: ${{ matrix.os }}
+        run: |
+          set -euo pipefail
+          log_dir=".artifacts/c2-native-ci/${EXPECTED_OS}"
+          mkdir -p "$log_dir"
+          exclude_file="$(git rev-parse --git-path info/exclude)"
+          mkdir -p "$(dirname "$exclude_file")"
+          touch "$exclude_file"
+          for pattern in '/.artifacts/c2-native-ci/' '/.artifacts/c2-replay-demo/' '/.artifacts/c2-process-matrix/' '/.artifacts/c2-generic-context-tests/' '/.artifacts/c2-identity-rng/'; do
+            if ! grep -Fxq "$pattern" "$exclude_file"; then
+              printf '%s\n' "$pattern" >> "$exclude_file"
+            fi
+          done
+          git rev-parse HEAD | tee "$log_dir/source.log"
+          git rev-parse 'HEAD^{tree}' | tee "$log_dir/source-tree.log"
+          shasum -a 256 \
+            crates/kairo-ecs-calibration/src/c2_portable_checkpoint.rs \
+            crates/kairo-ecs-calibration/src/c2_portable_checkpoint/process_tests.rs \
+            crates/kairo-ecs-calibration/src/c2_portable_checkpoint/generic_context_tests.rs \
+            crates/kairo-ecs-calibration/src/c2_portable_checkpoint/identity_rng_tests.rs \
+            > "$log_dir/portable-source.sha256"
+          task_rustc="$(rustup which --toolchain 1.99.0 rustc)"
+          task_bin="$(dirname "$task_rustc")"
+          task_cargo="$(rustup which --toolchain 1.99.0 cargo)"
+          export RUSTC="$task_rustc" RUSTDOC="$task_bin/rustdoc" PATH="$task_bin:$PATH"
+          "$task_cargo" -V | tee -a "$log_dir/source.log"
+          "$task_rustc" -vV | tee -a "$log_dir/source.log"
+          grep -Fx 'release: 1.99.0' "$log_dir/source.log"
+          if [ "$EXPECTED_OS" = macos-15 ]; then
+            grep -Fx 'host: aarch64-apple-darwin' "$log_dir/source.log"
+          else
+            grep -Fx 'host: x86_64-unknown-linux-gnu' "$log_dir/source.log"
+          fi
+          export CARGO_TARGET_DIR="$RUNNER_TEMP/c2-native-ci-target"
+          rustup run 1.99.0 cargo test --locked -p kairo-ecs-des -p kairo-ecs-abm -p kairo-ecs-calibration --features kairo-ecs-calibration/flow,kairo-ecs-abm/test-support -- --nocapture 2>&1 | tee "$log_dir/flow-tests.log"
+          "$task_cargo" build --locked -p kairo-ecs-calibration --features flow,kairo-ecs-abm/test-support --example c2_replay_demo 2>&1 | tee "$log_dir/example-build.log"
+          binary="$CARGO_TARGET_DIR/debug/examples/c2_replay_demo"
+          test -x "$binary"
+          shasum -a 256 "$binary" | tee "$log_dir/example-binary.sha256"
+          checkpoint="$log_dir/checkpoint.json"
+          test ! -e "$checkpoint"
+          "$binary" save "$checkpoint" 2>&1 | tee "$log_dir/save.log"
+          shasum -a 256 "$checkpoint" | tee "$log_dir/checkpoint.sha256"
+          "$binary" restore "$checkpoint" > "$log_dir/restore-first.json" 2> "$log_dir/restore-first.log"
+          "$binary" restore "$checkpoint" > "$log_dir/restore-second.json" 2> "$log_dir/restore-second.log"
+          cmp "$log_dir/restore-first.json" "$log_dir/restore-second.json"
+          printf '%s\n' 'repeat_restore_output=identical' | tee "$log_dir/repeat-check.log"
+          sentinel="$log_dir/preexisting-checkpoint.json"
+          expected="$log_dir/preexisting-checkpoint.expected"
+          printf '%s\n' 'preexisting sentinel bytes' > "$sentinel"
+          cp "$sentinel" "$expected"
+          if "$binary" save "$sentinel" > "$log_dir/sentinel-save.stdout" 2> "$log_dir/sentinel-save.stderr"; then
+            status=0
+          else
+            status=$?
+          fi
+          test "$status" -eq 1
+          grep -F 'checkpoint destination already exists' "$log_dir/sentinel-save.stderr"
+          cmp "$expected" "$sentinel"
+          printf 'sentinel_save_exit=%s\nexisting_target_rejected=true\nsentinel_bytes_unchanged=true\n' "$status" | tee "$log_dir/sentinel-check.log"
+      - name: Preserve C2 native evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: c2-native-${{ matrix.os }}
+          path: |
+            .artifacts/c2-native-ci/${{ matrix.os }}/
+            .artifacts/c2-process-matrix/
+            .artifacts/c2-generic-context-tests/
+            .artifacts/c2-identity-rng/
+          retention-days: 7
+          if-no-files-found: error
+      - name: C5 native study CLI worker and hard-kill resume qualification
+        env:
+          EXPECTED_OS: ${{ matrix.os }}
+        run: |
+          set -euo pipefail
+          log_dir=".artifacts/ci/native/c5/${EXPECTED_OS}"
+          mkdir -p "$log_dir"
+          task_rustc="$(rustup which --toolchain 1.99.0 rustc)"
+          task_bin="$(dirname "$task_rustc")"
+          export RUSTC="$task_rustc" RUSTDOC="$task_bin/rustdoc" PATH="$task_bin:$PATH"
+          "$task_rustc" -vV | tee "$log_dir/toolchain.log"
+          grep -Fx 'release: 1.99.0' "$log_dir/toolchain.log"
+          cargo test --locked -p kairo-ecs-calibration --features flow,kairo-ecs-abm/test-support --lib c5_ 2>&1 | tee "$log_dir/study-native-tests.log"
+          cargo test --locked -p kairo-ecs-cli 2>&1 | tee "$log_dir/cli-tests.log"
+          cargo build --locked -p kairo-ecs-cli 2>&1 | tee "$log_dir/build.log"
+          "$CAREOPS_OWNER_PYTHON" scripts/qualify_c5.py --binary target/debug/kairo-ecs-cli --output "$log_dir/process" 2>&1 | tee "$log_dir/process.log"
+          git rev-parse HEAD > "$log_dir/source.log"
+          git rev-parse 'HEAD^{tree}' > "$log_dir/source-tree.log"
+          shasum -a 256 crates/kairo-ecs-calibration/src/c5_*.rs crates/kairo-ecs-cli/src/c5_*.rs crates/kairo-ecs-cli/src/main.rs crates/kairo-ecs-cli/src/scenario.rs crates/kairo-ecs-cli/build.rs Cargo.lock > "$log_dir/source.sha256"
+      - name: Preserve C5 native evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: c5-native-${{ matrix.os }}
+          path: .artifacts/ci/native/c5/${{ matrix.os }}/
+          retention-days: 7
+          if-no-files-found: error
+      - name: C3 native shadow acceptance and fresh-process recovery on Rust 1.99.0
+        env:
+          EXPECTED_OS: ${{ matrix.os }}
+        run: |
+          set -euo pipefail
+          log_dir=".artifacts/ci/native/c3/${EXPECTED_OS}"
+          mkdir -p "$log_dir"
+          git rev-parse HEAD | tee "$log_dir/source.log"
+          git rev-parse 'HEAD^{tree}' | tee "$log_dir/source-tree.log"
+          shasum -a 256 \
+            crates/kairo-ecs-calibration/src/shadow_c03.rs \
+            crates/kairo-ecs-calibration/src/shadow_pool.rs \
+            crates/kairo-ecs-calibration/src/shadow_runner.rs \
+            crates/kairo-ecs-calibration/src/shadow_wire.rs \
+            > "$log_dir/source.sha256"
+          task_rustc="$(rustup which --toolchain 1.99.0 rustc)"
+          task_bin="$(dirname "$task_rustc")"
+          task_cargo="$(rustup which --toolchain 1.99.0 cargo)"
+          export RUSTC="$task_rustc" RUSTDOC="$task_bin/rustdoc" PATH="$task_bin:$PATH"
+          "$task_cargo" -V | tee -a "$log_dir/toolchain.log"
+          "$task_rustc" -vV | tee -a "$log_dir/toolchain.log"
+          grep -Fx 'release: 1.99.0' "$log_dir/toolchain.log"
+          if [ "$EXPECTED_OS" = macos-15 ]; then
+            grep -Fx 'host: aarch64-apple-darwin' "$log_dir/toolchain.log"
+          else
+            grep -Fx 'host: x86_64-unknown-linux-gnu' "$log_dir/toolchain.log"
+          fi
+          acceptance_dir="$GITHUB_WORKSPACE/$log_dir/fresh-process"
+          test ! -e "$acceptance_dir"
+          mkdir -p "$acceptance_dir"
+          export C3_ACCEPTANCE_OUTDIR="$acceptance_dir"
+          "$task_cargo" test --locked -p kairo-ecs-calibration --features flow,kairo-ecs-abm/test-support,ipc,parquet --lib shadow_ 2>&1 | tee "$log_dir/shadow-tests.log"
+      - name: Preserve C3 native shadow evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: c3-native-${{ matrix.os }}
+          path: .artifacts/ci/native/c3/${{ matrix.os }}/
+          retention-days: 7
+          if-no-files-found: error
+      - name: Initialize Arrow IO Rust 1.99.0 evidence directory
+        run: mkdir -p ".artifacts/ci/arrow-io/1.99.0/${{ matrix.os }}"
+      - name: Q5.1 deterministic queues and bounded SimPy reference
+        run: |
+          set -euo pipefail
+          # Only declared generated CI outputs are ignored; source changes remain visible.
+          printf '%s\n' '/.artifacts/ci/' >> "$(git rev-parse --git-path info/exclude)"
+          log_dir=".artifacts/ci/q51"
+          mkdir -p "$log_dir"
+          git rev-parse HEAD | tee "$log_dir/source.log"
+          rustup run 1.99.0 cargo -V | tee -a "$log_dir/source.log"
+          rustup run 1.99.0 rustc -vV | tee -a "$log_dir/source.log"
+          rustup run 1.99.0 cargo test --locked -p kairo-ecs-des --test flow_determinism_conformance_v1 --test flow_preemption_property_v1 -- --nocapture 2>&1 | tee "$log_dir/debug.log"
+          rustup run 1.99.0 cargo test --locked -p kairo-ecs-des --release -- --nocapture 2>&1 | tee "$log_dir/release.log"
+          rustup run 1.99.0 cargo run --locked -p kairo-ecs-des --example flow_simpy_shared_v1 > "$log_dir/rust.json" 2> "$log_dir/rust-emitter.log"
+          "$CAREOPS_OWNER_PYTHON" -m unittest discover -s tests/conformance -p queue_simpy_v1_test.py -v 2>&1 | tee "$log_dir/comparator-tests.log"
+          "$CAREOPS_OWNER_PYTHON" --version | tee "$log_dir/reference-install.log"
+          "$CAREOPS_OWNER_PYTHON" -c 'import simpy; assert simpy.__version__ == "4.1.2"' | tee -a "$log_dir/reference-install.log"
+          "$CAREOPS_OWNER_PYTHON" tests/conformance/queue_simpy_v1.py --rust-trace "$log_dir/rust.json" --output "$log_dir/comparison.json" 2>&1 | tee "$log_dir/reference.log"
+      - name: Q5.2 supplementary queue benchmark checks
+        run: |
+          set -euo pipefail
+          log_dir=".artifacts/ci/q52"
+          mkdir -p "$log_dir"
+          git rev-parse HEAD | tee "$log_dir/source.log"
+          rustup run 1.99.0 rustc -vV | tee -a "$log_dir/source.log"
+          "$CAREOPS_OWNER_PYTHON" -m unittest discover -s benches/queue -p test_run_v1.py -v 2>&1 | tee "$log_dir/collector-tests.log"
+          rustup run 1.99.0 cargo test --locked -p kairo-ecs-des --release benchmark_q52_measurements -- --ignored --nocapture 2>&1 | tee "$log_dir/kernel.log"
+          "$CAREOPS_OWNER_PYTHON" benches/queue/run_v1.py --build --binary target/release/examples/flow_queue_benchmark_v1 --scenario churn --n 10 --resources 1 --capacity 1 --repeats 5 --timeout-seconds 30 --seed 42 --output-dir "$log_dir/runtime" 2>&1 | tee "$log_dir/runtime.log"
+          "$CAREOPS_OWNER_PYTHON" -c 'import glob,json; paths=glob.glob(".artifacts/ci/q52/runtime/*/result.json"); assert len(paths)==1, paths; r=json.load(open(paths[0])); assert r["status"]=="complete" and r["bounded_measurement_provenance_qualified"], r["status"]'
+          # This bounded smoke is correctness/provenance evidence; full local matrix
+          # and canonical upstream regression comparisons remain separate gates.
+      - name: Preserve Q5.2 supplementary benchmark evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: q52-queue-benchmarks-${{ matrix.os }}
+          path: .artifacts/ci/q52/
+          retention-days: 7
+          if-no-files-found: error
+      - name: Preserve Q5.1 conformance evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: q51-conformance-${{ matrix.os }}
+          path: .artifacts/ci/q51/
+          retention-days: 7
+          if-no-files-found: error
+      - name: Test Arrow IO with Rust 1.99.0
+        env:
+          EXPECTED_OS: ${{ matrix.os }}
+        run: |
+          set -o pipefail
+          log_dir=".artifacts/ci/arrow-io/1.99.0/${EXPECTED_OS}"
+          mkdir -p "$log_dir"
+          task_rustc="$(rustup which --toolchain 1.99.0 rustc)"
+          task_bin="$(dirname "$task_rustc")"
+          task_cargo="$(rustup which --toolchain 1.99.0 cargo)"
+          export RUSTC="$task_rustc" RUSTDOC="$task_bin/rustdoc" PATH="$task_bin:$PATH"
+          "$task_cargo" -V | tee "$log_dir/toolchain.log"
+          "$task_rustc" -vV | tee -a "$log_dir/toolchain.log"
+          grep -Fx 'release: 1.99.0' "$log_dir/toolchain.log"
+          if [ "$EXPECTED_OS" = macos-15 ]; then
+            grep -Fx 'host: aarch64-apple-darwin' "$log_dir/toolchain.log"
+          else
+            grep -Fx 'host: x86_64-unknown-linux-gnu' "$log_dir/toolchain.log"
+          fi
+          python_dir="$GITHUB_WORKSPACE/.venv/owner-qualification/.pixi/envs/default"
+          "$python_dir/bin/python" --version | tee "$log_dir/python.log"
+          "$python_dir/bin/python" -c 'import platform, pyarrow; assert platform.python_version() == "3.15.1", platform.python_version(); assert pyarrow.__version__ == "25.0.1", pyarrow.__version__' 2>&1 | tee -a "$log_dir/python.log"
+          fixtures="crates/kairo-ecs-arrow-io/tests/fixtures/interop_v1/generate.py"
+          "$python_dir/bin/python" "$fixtures" --check 2>&1 | tee "$log_dir/fixtures.log"
+          output_dir="$GITHUB_WORKSPACE/$log_dir/rust-output"
+          test ! -e "$output_dir"
+          mkdir -p "$output_dir"
+          export KAIROS_INTEROP_OUTDIR="$output_dir"
+          export KAIROS_C11_PHYSICAL_OUTDIR="$GITHUB_WORKSPACE/$log_dir/c11-rust-output"
+          "$task_cargo" test --locked -p kairo-ecs-arrow-io --all-features 2>&1 | tee "$log_dir/test.log"
+          "$task_cargo" test --locked -p kairo-ecs-arrow --features resource-lifecycle-io 2>&1 | tee "$log_dir/resource-lifecycle.log"
+          export C43_OUTPUT_DIR="$GITHUB_WORKSPACE/$log_dir/c43-rust-output"
+          export C44_DIAGNOSTICS_DIR="$GITHUB_WORKSPACE/$log_dir/c44-diagnostic-cases"
+          "$task_cargo" test --locked -p kairo-ecs-calibration --no-default-features --features ipc,parquet --test arrow_output_c43 --test sidecar_adapter_c43 --test sidecar_pipeline_c43 c43_ 2>&1 | tee "$log_dir/c43-native.log"
+          "$python_dir/bin/python" conformance/c43/readback.py --self-test 2>&1 | tee "$log_dir/c43-reader-controls.log"
+          "$python_dir/bin/python" conformance/c43/readback.py --require-manifests --require-statistical-diagnostics --mutation-controls "$C43_OUTPUT_DIR" 2>&1 | tee "$log_dir/c43-readback.log"
+          for case_name in overlap-and-ties empty-and-insufficient; do
+            "$python_dir/bin/python" conformance/c43/statistical_diagnostics.py "$C44_DIAGNOSTICS_DIR/$case_name" 2>&1 | tee "$log_dir/c44-$case_name-readback.log"
+          done
+          test -s "$output_dir/rust.ipc_file"
+          test -s "$output_dir/rust.ipc_stream"
+          test -s "$output_dir/rust.parquet"
+          "$python_dir/bin/python" "$fixtures" --check-rust "$output_dir" 2>&1 | tee "$log_dir/pyarrow-readback.log"
+          "$python_dir/bin/python" crates/kairo-ecs-arrow-io/tests/fixtures/calibration_physical_v2/generate.py --check-rust "$KAIROS_C11_PHYSICAL_OUTDIR" 2>&1 | tee "$log_dir/c11-pyarrow-readback.log"
+      - name: Preserve Arrow IO Rust 1.99.0 evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: arrow-io-rust-1.99.0-${{ matrix.os }}
+          path: .artifacts/ci/arrow-io/1.99.0/${{ matrix.os }}/
+          retention-days: 7
+          if-no-files-found: error
+      - name: Retain bounded failure log
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: careops-owner-failure-${{ matrix.os }}
+          path: .artifacts/ci/native/
+          retention-days: 7
+          if-no-files-found: error
+
+  arrow-io-current:
+    name: Arrow IO Rust 1.99.0 (${{ matrix.os }}, ${{ matrix.features }})
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-15]
+        features: [none, ipc, parquet, both]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Check out the exact runtime source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: 44261eb5cf8275f132f63a3396903d116d701dbe
+          persist-credentials: false
+      - name: Check out the qualification workflow
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ github.sha }}
+          path: .venv/qualification-control
+          persist-credentials: false
+      - name: Install the locked Python 3.15.1 environment
+        run: |
+          set -euo pipefail
+          runtime_head="$(git rev-parse HEAD)"
+          workflow_head="$(git -C .venv/qualification-control rev-parse HEAD)"
+          printf 'runtime_head=%s\nworkflow_head=%s\n' "$runtime_head" "$workflow_head"
+          test "$runtime_head" = 44261eb5cf8275f132f63a3396903d116d701dbe
+          test "$workflow_head" = "$GITHUB_SHA"
+          exclude_file="$(git rev-parse --git-path info/exclude)"
+          mkdir -p "$(dirname "$exclude_file")"
+          printf '%s\n' '/.venv/qualification-control/' '/.venv/owner-qualification/' >> "$exclude_file"
+          case "$RUNNER_OS/$RUNNER_ARCH" in
+            Linux/X64)
+              asset=pixi-x86_64-unknown-linux-musl
+              digest=32523b4d1f43ca1583579252bbf7f977f83e4ce16f1333225379ece9f46bff0c
+              ;;
+            macOS/ARM64)
+              asset=pixi-aarch64-apple-darwin
+              digest=86b4e47c6fbbf3da8aa47a2ad8ea2e1ec3f505ecf6d7d4c4fdaa203071690148
+              ;;
+            *) echo "unsupported native host: $RUNNER_OS/$RUNNER_ARCH" >&2; exit 1 ;;
+          esac
+          curl --fail --location --retry 2 --max-time 120 \
+            "https://github.com/prefix-dev/pixi/releases/download/v0.84.2/$asset" \
+            --output "$RUNNER_TEMP/pixi"
+          printf '%s  %s\n' "$digest" "$RUNNER_TEMP/pixi" | shasum -a 256 --check
+          chmod +x "$RUNNER_TEMP/pixi"
+          "$RUNNER_TEMP/pixi" --version | grep -Fx 'pixi 0.84.2'
+          mkdir -p .venv/owner-qualification
+          cp .venv/qualification-control/.github/qualification/careops-pin-44261eb/pixi.* \
+            .venv/owner-qualification/
+          "$RUNNER_TEMP/pixi" install --locked --manifest-path .venv/owner-qualification/pixi.toml
+          python_dir="$GITHUB_WORKSPACE/.venv/owner-qualification/.pixi/envs/default"
+          "$python_dir/bin/python" -c 'import platform,pyarrow,numpy,simpy; assert platform.python_version()=="3.15.1"; assert pyarrow.__version__=="25.0.1"; assert numpy.__version__=="2.5.3"; assert simpy.__version__=="4.1.2"; print(platform.python_version(),pyarrow.__version__,numpy.__version__,simpy.__version__)'
+          test -z "$(git status --porcelain)"
+          printf 'CAREOPS_OWNER_PYTHON=%s\n' "$python_dir/bin/python" >> "$GITHUB_ENV"
+          echo "$python_dir/bin" >> "$GITHUB_PATH"
+      - name: Initialize Arrow IO evidence directory
+        run: mkdir -p ".artifacts/ci/arrow-io/1.99.0/${{ matrix.os }}/${{ matrix.features }}"
+      - name: Install current stable Rust 1.99.0
+        run: rustup toolchain install 1.99.0 --profile minimal
+      - name: Verify Rust 1.99.0 host
+        env:
+          EXPECTED_OS: ${{ matrix.os }}
+        run: |
+          task_rustc="$(rustup which --toolchain 1.99.0 rustc)"
+          task_cargo="$(rustup which --toolchain 1.99.0 cargo)"
+          "$task_cargo" -V | tee ".artifacts/ci/arrow-io/1.99.0/${{ matrix.os }}/${{ matrix.features }}/toolchain.log"
+          "$task_rustc" -vV | tee -a ".artifacts/ci/arrow-io/1.99.0/${{ matrix.os }}/${{ matrix.features }}/toolchain.log"
+          grep -Fx 'release: 1.99.0' ".artifacts/ci/arrow-io/1.99.0/${{ matrix.os }}/${{ matrix.features }}/toolchain.log"
+          if [ "$EXPECTED_OS" = macos-15 ]; then
+            grep -Fx 'host: aarch64-apple-darwin' ".artifacts/ci/arrow-io/1.99.0/${{ matrix.os }}/${{ matrix.features }}/toolchain.log"
+          else
+            grep -Fx 'host: x86_64-unknown-linux-gnu' ".artifacts/ci/arrow-io/1.99.0/${{ matrix.os }}/${{ matrix.features }}/toolchain.log"
+          fi
+      - name: Install hash-locked PyArrow requirements
+        if: matrix.features == 'both'
+        run: |
+          set -o pipefail
+          log_dir=".artifacts/ci/arrow-io/1.99.0/${{ matrix.os }}/${{ matrix.features }}"
+          python_dir="$GITHUB_WORKSPACE/.venv/owner-qualification/.pixi/envs/default"
+          python_exe="$python_dir/bin/python"
+          "$python_exe" --version | tee "$log_dir/python.log"
+          "$python_exe" -c 'import platform, pyarrow; assert platform.python_version() == "3.15.1", platform.python_version(); assert pyarrow.__version__ == "25.0.1", pyarrow.__version__' 2>&1 | tee -a "$log_dir/python.log"
+          "$python_exe" crates/kairo-ecs-arrow-io/tests/fixtures/interop_v1/generate.py --check 2>&1 | tee "$log_dir/fixtures.log"
+      - name: Run Arrow IO feature selection
+        env:
+          EXPECTED_OS: ${{ matrix.os }}
+          FEATURE_SET: ${{ matrix.features }}
+          KAIROS_INTEROP_OUTDIR: ${{ github.workspace }}/.artifacts/ci/arrow-io/1.99.0/${{ matrix.os }}/${{ matrix.features }}/rust-output
+        run: |
+          set -o pipefail
+          log_dir=".artifacts/ci/arrow-io/1.99.0/${EXPECTED_OS}/${FEATURE_SET}"
+          task_rustc="$(rustup which --toolchain 1.99.0 rustc)"
+          task_bin="$(dirname "$task_rustc")"
+          task_cargo="$(rustup which --toolchain 1.99.0 cargo)"
+          export RUSTC="$task_rustc" RUSTDOC="$task_bin/rustdoc" PATH="$task_bin:$PATH"
+          cargo_args=(test --locked -p kairo-ecs-arrow-io --no-default-features)
+          case "$FEATURE_SET" in
+            none) ;;
+            ipc) cargo_args+=(--features ipc) ;;
+            parquet) cargo_args+=(--features parquet) ;;
+            both) cargo_args+=(--features 'ipc,parquet') ;;
+            *) echo "unsupported feature set: $FEATURE_SET" >&2; exit 2 ;;
+          esac
+          if [ "$FEATURE_SET" = both ]; then
+            test ! -e "$KAIROS_INTEROP_OUTDIR"
+            mkdir -p "$KAIROS_INTEROP_OUTDIR"
+          fi
+          "$task_cargo" "${cargo_args[@]}" 2>&1 | tee "$log_dir/test.log"
+          calibration_args=(test --locked -p kairo-ecs-calibration --no-default-features --test arrow_output_c43 --test sidecar_adapter_c43 --test sidecar_pipeline_c43)
+          case "$FEATURE_SET" in
+            none) ;;
+            ipc) calibration_args+=(--features ipc) ;;
+            parquet) calibration_args+=(--features parquet) ;;
+            both) calibration_args+=(--features 'ipc,parquet') ;;
+          esac
+          export C43_OUTPUT_DIR="$GITHUB_WORKSPACE/$log_dir/c43-rust-output"
+          export C44_DIAGNOSTICS_DIR="$GITHUB_WORKSPACE/$log_dir/c44-diagnostic-cases"
+          "$task_cargo" "${calibration_args[@]}" c43_ 2>&1 | tee "$log_dir/c43-native.log"
+          if [ "$FEATURE_SET" = both ]; then
+            "$GITHUB_WORKSPACE/.venv/owner-qualification/.pixi/envs/default/bin/python" conformance/c43/readback.py --self-test 2>&1 | tee "$log_dir/c43-reader-controls.log"
+            "$GITHUB_WORKSPACE/.venv/owner-qualification/.pixi/envs/default/bin/python" conformance/c43/readback.py --require-manifests --require-statistical-diagnostics --mutation-controls "$C43_OUTPUT_DIR" 2>&1 | tee "$log_dir/c43-readback.log"
+            for case_name in overlap-and-ties empty-and-insufficient; do
+              "$GITHUB_WORKSPACE/.venv/owner-qualification/.pixi/envs/default/bin/python" conformance/c43/statistical_diagnostics.py "$C44_DIAGNOSTICS_DIR/$case_name" 2>&1 | tee "$log_dir/c44-$case_name-readback.log"
+            done
+          fi
+          if [ "$FEATURE_SET" = both ]; then
+            test -s "$KAIROS_INTEROP_OUTDIR/rust.ipc_file"
+            test -s "$KAIROS_INTEROP_OUTDIR/rust.ipc_stream"
+            test -s "$KAIROS_INTEROP_OUTDIR/rust.parquet"
+            "$GITHUB_WORKSPACE/.venv/owner-qualification/.pixi/envs/default/bin/python" crates/kairo-ecs-arrow-io/tests/fixtures/interop_v1/generate.py --check-rust "$KAIROS_INTEROP_OUTDIR" 2>&1 | tee "$log_dir/pyarrow-readback.log"
+          fi
+      - name: Preserve Arrow IO Rust 1.99.0 feature evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: arrow-io-rust-1.99.0-${{ matrix.os }}-${{ matrix.features }}
+          path: .artifacts/ci/arrow-io/1.99.0/${{ matrix.os }}/${{ matrix.features }}/
+          retention-days: 7
+          if-no-files-found: error
+
+  native-required:
+    name: Native and Arrow IO required
+    if: always()
+    needs: [native, arrow-io-current]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Require native and every Arrow IO matrix child
+        env:
+          NATIVE_RESULT: ${{ needs.native.result }}
+          ARROW_IO_RESULT: ${{ needs.arrow-io-current.result }}
+        run: |
+          test "$NATIVE_RESULT" = success
+          test "$ARROW_IO_RESULT" = success
