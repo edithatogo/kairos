@@ -95,6 +95,7 @@ pub enum StagedRequestState {
     Scheduled,
     Queued,
     Active,
+    /// Terminal after release or withdrawal, including requests never admitted.
     Released,
 }
 
@@ -137,7 +138,7 @@ pub struct StagedResourceSnapshot {
 #[derive(Clone, Copy, Debug)]
 enum ScheduledAction {
     Submit(StagedRequestId),
-    Release(StagedRequestId),
+    Close(StagedRequestId),
 }
 
 #[derive(Debug)]
@@ -146,7 +147,8 @@ struct RequestRecord {
     resource: StagedResourceId,
     state: StagedRequestState,
     lease: Option<StagedLeaseId>,
-    release_pending: bool,
+    pending_submit: Option<EventId>,
+    pending_close: Option<(SimTime, EventId)>,
     quantity: u64,
     admission: Option<UsageBoundary>,
     release: Option<UsageBoundary>,
@@ -208,6 +210,11 @@ impl StagedResourceRuntime {
 
     pub fn now(&self) -> SimTime {
         self.scheduler.now()
+    }
+
+    /// Tick of the next live allocation action, without dispatching it.
+    pub fn next_event_time(&mut self) -> Option<SimTime> {
+        self.scheduler.peek_next().map(|event| event.at)
     }
 
     fn alloc(index: &mut u64) -> Result<EntityId, StagedRuntimeError> {
@@ -327,7 +334,8 @@ impl StagedResourceRuntime {
                 resource,
                 state: StagedRequestState::Scheduled,
                 lease: None,
-                release_pending: false,
+                pending_submit: Some(request_event),
+                pending_close: None,
                 quantity,
                 admission: None,
                 release: None,
@@ -383,22 +391,58 @@ impl StagedResourceRuntime {
         }
         let r = self
             .requests
-            .get_mut(&lease.request)
+            .get(&lease.request)
             .ok_or(StagedRuntimeError::UnknownRequest)?;
-        if r.state != StagedRequestState::Active || r.lease != Some(lease) || r.release_pending {
+        if r.state != StagedRequestState::Active
+            || r.lease != Some(lease)
+            || r.pending_close.is_some()
+        {
             return Err(StagedRuntimeError::InvalidState);
         }
-        r.release_pending = true;
-        let entity = r.actor.entity;
+        self.schedule_close(lease.request, at);
+        Ok(())
+    }
+
+    /// Schedule withdrawal or release of a request in the allocator's native order.
+    ///
+    /// Returns false for an already closed request or an equal or earlier
+    /// pending close. Otherwise, the action executes at `at` and replaces any
+    /// later release. Requests withdrawn before admission produce no occupancy.
+    pub fn close_request(
+        &mut self,
+        request: StagedRequestId,
+        at: SimTime,
+    ) -> Result<bool, StagedRuntimeError> {
+        let record = self
+            .requests
+            .get(&request)
+            .ok_or(StagedRuntimeError::UnknownRequest)?;
+        if record.state == StagedRequestState::Released
+            || record.pending_close.is_some_and(|(tick, _)| tick <= at)
+        {
+            return Ok(false);
+        }
+        if at < self.now() || self.usage_sealed_through.is_some_and(|end| at <= end) {
+            return Err(StagedRuntimeError::InvalidReleaseTime);
+        }
+        self.schedule_close(request, at);
+        Ok(true)
+    }
+
+    fn schedule_close(&mut self, request: StagedRequestId, at: SimTime) {
+        let record = self.requests.get_mut(&request).expect("request validated");
+        if let Some((_, event)) = record.pending_close {
+            self.scheduler.cancel(event);
+            self.actions.remove(&event);
+        }
         let event = self.scheduler.schedule(ScheduleRequest {
             at,
             priority: 0,
-            entity: Some(entity),
+            entity: Some(record.actor.entity),
             kind: EventKind::custom(RELEASE_EVENT),
         });
-        self.actions
-            .insert(event, ScheduledAction::Release(lease.request));
-        Ok(())
+        self.actions.insert(event, ScheduledAction::Close(request));
+        record.pending_close = Some((at, event));
     }
 
     pub fn run_for(&mut self, max_events: u64) -> Result<u64, StagedRuntimeError> {
@@ -418,7 +462,7 @@ impl StagedResourceRuntime {
             };
             match action {
                 ScheduledAction::Submit(request) => self.activate_or_queue(request, boundary)?,
-                ScheduledAction::Release(request) => self.release_and_promote(request, boundary)?,
+                ScheduledAction::Close(request) => self.close_at(request, boundary)?,
             }
         }
         Ok(dispatched)
@@ -502,6 +546,7 @@ impl StagedResourceRuntime {
             .requests
             .get_mut(&request)
             .ok_or(StagedRuntimeError::UnknownRequest)?;
+        record.pending_submit = None;
         let resource = self
             .resources
             .get_mut(&record.resource)
@@ -568,11 +613,61 @@ impl StagedResourceRuntime {
         resource.available = available;
         record.state = StagedRequestState::Released;
         record.lease = None;
-        record.release_pending = false;
+        record.pending_close = None;
         record.release = Some(boundary);
+        Self::promote_waiting(&mut self.requests, resource, boundary)
+    }
+
+    fn close_at(
+        &mut self,
+        request: StagedRequestId,
+        boundary: UsageBoundary,
+    ) -> Result<(), StagedRuntimeError> {
+        let record = self
+            .requests
+            .get_mut(&request)
+            .ok_or(StagedRuntimeError::UnknownRequest)?;
+        match record.state {
+            StagedRequestState::Active => self.release_and_promote(request, boundary),
+            StagedRequestState::Scheduled => {
+                let event = record
+                    .pending_submit
+                    .take()
+                    .ok_or(StagedRuntimeError::InvalidState)?;
+                if !self.scheduler.cancel(event) {
+                    return Err(StagedRuntimeError::InvalidState);
+                }
+                self.actions.remove(&event);
+                record.state = StagedRequestState::Released;
+                record.pending_close = None;
+                Ok(())
+            }
+            StagedRequestState::Queued => {
+                let resource = self
+                    .resources
+                    .get_mut(&record.resource)
+                    .ok_or(StagedRuntimeError::UnknownResource)?;
+                let position = resource
+                    .queued
+                    .iter()
+                    .position(|&queued| queued == request)
+                    .ok_or(StagedRuntimeError::InvalidState)?;
+                resource.queued.remove(position);
+                record.state = StagedRequestState::Released;
+                record.pending_close = None;
+                Self::promote_waiting(&mut self.requests, resource, boundary)
+            }
+            StagedRequestState::Released => Err(StagedRuntimeError::InvalidState),
+        }
+    }
+
+    fn promote_waiting(
+        requests: &mut BTreeMap<StagedRequestId, RequestRecord>,
+        resource: &mut ResourceRecord,
+        boundary: UsageBoundary,
+    ) -> Result<(), StagedRuntimeError> {
         while let Some(&next) = resource.queued.front() {
-            let record = self
-                .requests
+            let record = requests
                 .get_mut(&next)
                 .ok_or(StagedRuntimeError::UnknownRequest)?;
             if record.quantity > resource.available {
