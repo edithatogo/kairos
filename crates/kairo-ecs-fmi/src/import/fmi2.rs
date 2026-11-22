@@ -7,6 +7,44 @@ pub type Fmi2Integer = i32;
 pub type Fmi2Boolean = i32;
 pub type Fmi2String = *const c_char;
 
+#[repr(C)]
+pub(crate) struct Fmi2Callbacks {
+    logger: unsafe extern "C" fn(*mut c_void, Fmi2String, i32, Fmi2String, Fmi2String, ...),
+    allocate_memory: unsafe extern "C" fn(usize, usize) -> *mut c_void,
+    free_memory: unsafe extern "C" fn(*mut c_void),
+    step_finished: Option<unsafe extern "C" fn(*mut c_void, i32)>,
+    environment: *mut c_void,
+}
+
+unsafe extern "C" {
+    fn calloc(count: usize, size: usize) -> *mut c_void;
+    fn free(memory: *mut c_void);
+}
+
+// Import errors are reported through FMI status codes. The optional log text
+// and its C variadic arguments need no decoding on the Rust side.
+unsafe extern "C" fn discard_log(
+    _: *mut c_void,
+    _: Fmi2String,
+    _: i32,
+    _: Fmi2String,
+    _: Fmi2String,
+    _: ...
+) {
+}
+
+impl Fmi2Callbacks {
+    pub(crate) fn synchronous() -> Self {
+        Self {
+            logger: discard_log,
+            allocate_memory: calloc,
+            free_memory: free,
+            step_finished: None,
+            environment: std::ptr::null_mut(),
+        }
+    }
+}
+
 #[repr(i32)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Fmi2Status {

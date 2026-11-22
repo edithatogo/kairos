@@ -38,6 +38,7 @@ Format:
 
 ### Fixed
 
+- `kairo-ecs-fmi` loads packaged FMI 2 and 3 co-simulation binaries using their declared identities and retains libraries through cleanup. It checks complete FMI 3 step advancement and supports in-process checkpoints for FMUs that advertise state access.
 - The nightly core mutation check exercises NUMA tests and verifies topology, allocator metrics and telemetry rejection cases.
 - `kairo-ecs-cli` uses checked Joe–Kuo Sobol directions and estimates Jansen first-order and total-effect intervals via paired bootstrap. The previous trajectory is available through `LegacySobolSequence`.
 - `kairo-ecs-des` preserves active age and competing cause/censor chronology across interruption. `kairo-ecs-ml` reports unavailable ONNX execution explicitly.
@@ -56,6 +57,7 @@ Format:
 
 ### Changed
 
+- Standalone `kairo-ecs-fmi` binaries use `instantiate_with_token` with the exporter-provided identity. Raw FMI 3 tables now use the standard `Fmi3DoStep` output parameters.
 - `bindings/runtime-policy.json` records the installed CPython 3.15.2 and C ABI v1 qualification for the two native beta candidate targets. The local scheduler and benchmark notebooks verify the checkout's selected kernel before running.
 - The native beta Rust SDK and C ABI archives ship Apache-2.0. The installed Python probe covers wrong architecture, missing symbols and ABI version rejection.
 - Migrate fixed-batch calibration calls to `BatchDistanceScorer` and check the new fallible sampling and sensitivity results. See [ADR 0014](docs/adr/0014-versioned-scientific-methods.md).

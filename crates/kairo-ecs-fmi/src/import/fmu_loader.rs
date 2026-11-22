@@ -28,16 +28,16 @@ pub struct FmuLayout {
 impl FmuLayout {
     pub fn from_unpacked_dir(root: impl Into<PathBuf>) -> FmiResult<Self> {
         let root = root.into();
-        validate_unpacked_fmu_layout(&root)?;
-
-        let model_description = root.join("modelDescription.xml");
-        let platform = current_fmi_platform();
-        let binary = find_platform_binary(&root, &platform)?;
+        let report = validate_unpacked_fmu_layout(&root)?;
+        let binary = report
+            .selected_binary()
+            .expect("validated layout has a binary")
+            .to_path_buf();
         Ok(Self {
             root,
-            model_description,
+            model_description: report.model_description,
             binary,
-            platform,
+            platform: report.platform,
         })
     }
 
@@ -140,9 +140,14 @@ pub fn validate_unpacked_fmu_layout(root: impl AsRef<Path>) -> FmiResult<FmuLayo
             root: root.to_path_buf(),
         });
     }
-    validate_model_description_marker(&model_description)?;
+    let description = read_model_description(&model_description)?;
 
-    let platform = current_fmi_platform();
+    let standard = platform_for_version(&description.version);
+    let platform = if root.join("binaries").join(&standard).is_dir() {
+        standard
+    } else {
+        current_fmi_platform()
+    };
     let binary_dir = root.join("binaries").join(&platform);
     if !binary_dir.is_dir() {
         return Err(validation_error(
@@ -168,6 +173,13 @@ pub fn validate_unpacked_fmu_layout(root: impl AsRef<Path>) -> FmiResult<FmuLayo
         }
     }
     binary_candidates.sort();
+    if let Some(model_identifier) = &description.model_identifier {
+        if let Some(index) = binary_candidates.iter().position(|path| {
+            path.file_stem().and_then(|name| name.to_str()) == Some(model_identifier)
+        }) {
+            binary_candidates[..=index].rotate_right(1);
+        }
+    }
 
     if binary_candidates.is_empty() {
         return Err(FmiError::MissingBinary {
@@ -185,7 +197,76 @@ pub fn validate_unpacked_fmu_layout(root: impl AsRef<Path>) -> FmiResult<FmuLayo
     })
 }
 
-fn validate_model_description_marker(path: &Path) -> FmiResult<()> {
+#[derive(Default)]
+struct FmuDescription {
+    version: String,
+    guid: Option<String>,
+    instantiation_token: Option<String>,
+    model_identifier: Option<String>,
+    can_get_and_set_state: bool,
+    can_run_asynchronously: bool,
+}
+
+#[cfg(any(feature = "fmi2", feature = "fmi3"))]
+pub(crate) fn co_simulation_identity(
+    binary: &Path,
+    version: &str,
+) -> FmiResult<Option<(String, bool)>> {
+    let Some(binaries) = binary
+        .parent()
+        .and_then(Path::parent)
+        .filter(|parent| parent.file_name().is_some_and(|name| name == "binaries"))
+    else {
+        return Ok(None);
+    };
+    let root = binaries.parent().expect("binaries directory has a parent");
+    let description = read_model_description(&root.join("modelDescription.xml"))?;
+    if description.version != version
+        || description.model_identifier.as_deref() != binary.file_stem().and_then(|s| s.to_str())
+        || description.model_identifier.is_none()
+    {
+        return Err(validation_error(
+            "FMU layout",
+            format!(
+                "modelDescription.xml does not declare {version} CoSimulation for {}",
+                binary.display()
+            ),
+        ));
+    }
+    let token = if version == "2.0" {
+        if description.can_run_asynchronously {
+            return Err(FmiError::UnsupportedCapability(
+                "asynchronous FMI 2 co-simulation",
+            ));
+        }
+        description.guid
+    } else {
+        description.instantiation_token
+    };
+    let token = token
+        .filter(|token| !token.trim().is_empty())
+        .ok_or_else(|| {
+            validation_error(
+                "FMU layout",
+                format!("missing FMI {version} instance identity"),
+            )
+        })?;
+    Ok(Some((token, description.can_get_and_set_state)))
+}
+
+fn platform_for_version(version: &str) -> String {
+    if version == "2.0" && std::env::consts::ARCH != "aarch64" {
+        return current_fmi_platform();
+    }
+    let os = if cfg!(target_os = "macos") {
+        "darwin"
+    } else {
+        std::env::consts::OS
+    };
+    format!("{}-{os}", std::env::consts::ARCH)
+}
+
+fn read_model_description(path: &Path) -> FmiResult<FmuDescription> {
     let metadata = fs::metadata(path).map_err(|error| {
         io_error(
             "read modelDescription.xml metadata",
@@ -207,152 +288,122 @@ fn validate_model_description_marker(path: &Path) -> FmiResult<()> {
 
     let contents = fs::read_to_string(path)
         .map_err(|error| io_error("read modelDescription.xml", path.to_path_buf(), error))?;
-
     let mut reader = Reader::from_str(&contents);
     reader.config_mut().trim_text(true);
 
-    let mut depth: usize = 0;
+    let mut depth = 0_usize;
     let mut found_root = false;
     let mut root_closed = false;
-    let mut fmi_version: Option<String> = None;
+    let mut found_co_simulation = false;
+    let mut description = FmuDescription::default();
 
     loop {
-        match reader.read_event() {
-            Ok(Event::Start(e)) => {
-                if root_closed {
-                    return Err(validation_error(
-                        "FMU layout",
-                        format!(
-                            "unexpected element <{}> after root element closed in {}",
-                            e.local_name().as_ref(),
-                            path.display()
-                        ),
-                    ));
-                }
-                if !found_root {
-                    if e.local_name().as_ref() != "fmiModelDescription" {
-                        return Err(validation_error(
-                            "FMU layout",
-                            format!(
-                                "{} does not contain an fmiModelDescription root",
-                                path.display()
-                            ),
-                        ));
-                    }
-                    found_root = true;
-                    for attr in e.attributes() {
-                        let attr = attr.map_err(|err| {
-                            validation_error(
-                                "FMU layout",
-                                format!("malformed attribute in {}: {}", path.display(), err),
-                            )
-                        })?;
-                        if attr.key.as_ref() == "fmiVersion" {
-                            let value =
-                                attr.normalized_value(XmlVersion::Explicit1_0)
-                                    .map_err(|err| {
-                                        validation_error(
-                                            "FMU layout",
-                                            format!(
-                                                "malformed fmiVersion in {}: {}",
-                                                path.display(),
-                                                err
-                                            ),
-                                        )
-                                    })?;
-                            fmi_version = Some(value.into_owned());
-                        }
-                    }
-                }
-                depth += 1;
-                if depth > MAX_XML_DEPTH {
-                    return Err(validation_error(
-                        "FMU layout",
-                        format!(
-                            "{} exceeds maximum XML nesting depth of {}",
-                            path.display(),
-                            MAX_XML_DEPTH
-                        ),
-                    ));
-                }
-            }
-            Ok(Event::Empty(e)) => {
-                if root_closed {
-                    return Err(validation_error(
-                        "FMU layout",
-                        format!(
-                            "unexpected element <{}> after root element closed in {}",
-                            e.local_name().as_ref(),
-                            path.display()
-                        ),
-                    ));
-                }
-                if !found_root {
-                    if e.local_name().as_ref() != "fmiModelDescription" {
-                        return Err(validation_error(
-                            "FMU layout",
-                            format!(
-                                "{} does not contain an fmiModelDescription root",
-                                path.display()
-                            ),
-                        ));
-                    }
-                    found_root = true;
-                    root_closed = true;
-                    for attr in e.attributes() {
-                        let attr = attr.map_err(|err| {
-                            validation_error(
-                                "FMU layout",
-                                format!("malformed attribute in {}: {}", path.display(), err),
-                            )
-                        })?;
-                        if attr.key.as_ref() == "fmiVersion" {
-                            let value =
-                                attr.normalized_value(XmlVersion::Explicit1_0)
-                                    .map_err(|err| {
-                                        validation_error(
-                                            "FMU layout",
-                                            format!(
-                                                "malformed fmiVersion in {}: {}",
-                                                path.display(),
-                                                err
-                                            ),
-                                        )
-                                    })?;
-                            fmi_version = Some(value.into_owned());
-                        }
-                    }
-                }
-            }
+        let (element, open) = match reader.read_event() {
+            Ok(Event::Start(element)) => (element, true),
+            Ok(Event::Empty(element)) => (element, false),
             Ok(Event::End(e)) => {
-                depth = depth.saturating_sub(1);
-                if depth == 0 && e.local_name().as_ref() == "fmiModelDescription" {
-                    root_closed = true;
-                }
+                depth = depth.checked_sub(1).ok_or_else(|| {
+                    validation_error(
+                        "FMU layout",
+                        format!("unmatched XML close in {}", path.display()),
+                    )
+                })?;
+                root_closed = depth == 0 && e.local_name().as_ref() == "fmiModelDescription";
+                continue;
             }
             Ok(Event::Eof) => break,
-            Ok(Event::Comment(_))
-            | Ok(Event::Decl(_))
-            | Ok(Event::DocType(_))
-            | Ok(Event::PI(_))
-            | Ok(Event::GeneralRef(_)) => {
-                // Ignore XML declaration, comments, doctype, and processing instructions
+            Ok(Event::Text(t)) if (!found_root || root_closed) && !t.as_ref().trim().is_empty() => {
+                return Err(validation_error(
+                    "FMU layout",
+                    format!("unexpected text outside root element in {}", path.display()),
+                ));
             }
-            Ok(Event::Text(t)) => {
-                if (!found_root || root_closed) && !t.as_ref().trim().is_empty() {
-                    return Err(validation_error(
-                        "FMU layout",
-                        format!("unexpected text outside root element in {}", path.display()),
-                    ));
-                }
-            }
-            Ok(Event::CData(_)) => {}
+            Ok(_) => continue,
             Err(err) => {
                 return Err(validation_error(
                     "FMU layout",
-                    format!("malformed XML in {}: {}", path.display(), err),
+                    format!("malformed XML in {}: {err}", path.display()),
                 ));
             }
+        };
+
+        if root_closed {
+            return Err(validation_error(
+                "FMU layout",
+                format!(
+                    "unexpected element <{}> after root element closed in {}",
+                    element.local_name().as_ref(),
+                    path.display()
+                ),
+            ));
+        }
+        let co_simulation = depth == 1 && element.local_name().as_ref() == "CoSimulation";
+        if !found_root {
+            if element.local_name().as_ref() != "fmiModelDescription" {
+                return Err(validation_error(
+                    "FMU layout",
+                    format!(
+                        "{} does not contain an fmiModelDescription root",
+                        path.display()
+                    ),
+                ));
+            }
+        } else if co_simulation && found_co_simulation {
+            return Err(validation_error(
+                "FMU layout",
+                format!("multiple CoSimulation declarations in {}", path.display()),
+            ));
+        }
+        if !found_root || co_simulation {
+            for attribute in element.attributes() {
+                let attribute = attribute.map_err(|err| {
+                    validation_error(
+                        "FMU layout",
+                        format!("malformed attribute in {}: {err}", path.display()),
+                    )
+                })?;
+                let value = attribute
+                    .normalized_value(XmlVersion::Explicit1_0)
+                    .map_err(|err| {
+                        validation_error(
+                            "FMU layout",
+                            format!("malformed attribute value in {}: {err}", path.display()),
+                        )
+                    })?;
+                match (co_simulation, attribute.key.as_ref()) {
+                    (false, "fmiVersion") => description.version = value.into_owned(),
+                    (false, "guid") => description.guid = Some(value.into_owned()),
+                    (false, "instantiationToken") => {
+                        description.instantiation_token = Some(value.into_owned())
+                    }
+                    (true, "modelIdentifier") => {
+                        description.model_identifier = Some(value.into_owned())
+                    }
+                    (true, "canGetAndSetFMUstate") if description.version == "2.0" => {
+                        description.can_get_and_set_state = matches!(value.as_ref(), "true" | "1");
+                    }
+                    (true, "canGetAndSetFMUState") if description.version == "3.0" => {
+                        description.can_get_and_set_state = matches!(value.as_ref(), "true" | "1");
+                    }
+                    (true, "canRunAsynchronuously") if description.version == "2.0" => {
+                        description.can_run_asynchronously = matches!(value.as_ref(), "true" | "1");
+                    }
+                    _ => (),
+                }
+            }
+        }
+        found_co_simulation |= co_simulation;
+        root_closed = !found_root && !open;
+        found_root = true;
+        depth += usize::from(open);
+        if depth > MAX_XML_DEPTH {
+            return Err(validation_error(
+                "FMU layout",
+                format!(
+                    "{} exceeds maximum XML nesting depth of {MAX_XML_DEPTH}",
+                    path.display()
+                ),
+            ));
         }
     }
 
@@ -365,42 +416,19 @@ fn validate_model_description_marker(path: &Path) -> FmiResult<()> {
             ),
         ));
     }
-
     if depth != 0 {
         return Err(validation_error(
             "FMU layout",
             format!("malformed XML: unclosed XML tags in {}", path.display()),
         ));
     }
-
-    match fmi_version.as_deref() {
-        Some("2.0") | Some("3.0") => Ok(()),
-        Some(_) | None => Err(validation_error(
+    match description.version.as_str() {
+        "2.0" | "3.0" => Ok(description),
+        _ => Err(validation_error(
             "FMU layout",
             format!("{} does not declare FMI version 2.0 or 3.0", path.display()),
         )),
     }
-}
-
-fn find_platform_binary(root: &Path, platform: &str) -> FmiResult<PathBuf> {
-    let binary_dir = root.join("binaries").join(platform);
-    let entries = fs::read_dir(&binary_dir)
-        .map_err(|error| io_error("read FMU binary directory", binary_dir.clone(), error))?;
-
-    let extension = shared_library_extension();
-    for entry in entries {
-        let entry =
-            entry.map_err(|error| io_error("read FMU binary entry", binary_dir.clone(), error))?;
-        let path = entry.path();
-        if path.extension().and_then(|value| value.to_str()) == Some(extension) {
-            return Ok(path);
-        }
-    }
-
-    Err(FmiError::MissingBinary {
-        platform: platform.to_string(),
-        root: root.to_path_buf(),
-    })
 }
 
 fn shared_library_extension() -> &'static str {

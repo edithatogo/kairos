@@ -73,3 +73,10 @@ Errors on unsupported inputs must be explicit. Numerical changes require an algo
 | S10 | The native shared queue matched scalar and batched trajectories across 1,024 worlds. Both host checkers execute the queue through the opt-in `queue-env-v1` CLI. Installed Python 3.15.2 tests cover seed rejection, reset, termination, pipe lifetimes and malformed replies. [Design and oracle](execution/scientific/s10-completion.md) |
 
 The evidence concerns numerical correctness and model execution inside these contracts. See [ADR 0014](../docs/adr/0014-versioned-scientific-methods.md) for API migration.
+
+## S13 native co-simulation qualification
+
+The FMI 2 and FMI 3 Reference FMU tests execute a native impact and verify
+analytical height, velocity and exact checkpoint replay. The Linux
+OpenModelica case uses an independently compiled model with a time event.
+[Inputs and qualification commands](execution/scientific/s13-completion.md)

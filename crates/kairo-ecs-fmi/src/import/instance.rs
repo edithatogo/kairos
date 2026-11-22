@@ -1,8 +1,11 @@
 use crate::import::fmi2::{
-    Fmi2Boolean, Fmi2Component, Fmi2FunctionTable, Fmi2Integer, Fmi2Real, Fmi2Status, Fmi2String,
-    Fmi2ValueReference,
+    Fmi2Boolean, Fmi2Callbacks, Fmi2Component, Fmi2FunctionTable, Fmi2Integer, Fmi2Real,
+    Fmi2String, Fmi2ValueReference,
 };
+use crate::import::native_state::{NativeCallState, NativeFmuState};
 use crate::{FmiError, FmiResult};
+use std::sync::atomic::AtomicBool;
+use std::sync::Arc;
 
 pub trait FmuInstance {
     fn enter_initialization_mode(&mut self) -> FmiResult<()>;
@@ -23,6 +26,10 @@ pub struct Fmi2CoSimulationInstance {
     component: Fmi2Component,
     table: Fmi2FunctionTable,
     lifecycle_state: Fmi2LifecycleState,
+    _library: Option<Arc<libloading::Library>>,
+    _callbacks: Option<Box<Fmi2Callbacks>>,
+    saved_state: Option<NativeFmuState>,
+    calls: NativeCallState,
 }
 
 impl Fmi2CoSimulationInstance {
@@ -39,6 +46,10 @@ impl Fmi2CoSimulationInstance {
             component,
             table,
             lifecycle_state: Fmi2LifecycleState::Instantiated,
+            _library: None,
+            _callbacks: None,
+            saved_state: None,
+            calls: NativeCallState::default(),
         }
     }
 
@@ -61,7 +72,71 @@ impl Fmi2CoSimulationInstance {
     }
 
     pub fn lifecycle_state(&self) -> Fmi2LifecycleState {
-        self.lifecycle_state
+        if self.calls.failed() || !self.calls.can_call() {
+            Fmi2LifecycleState::Terminated
+        } else {
+            self.lifecycle_state
+        }
+    }
+
+    pub(crate) fn retain_library(
+        &mut self,
+        library: Arc<libloading::Library>,
+        fatal: Arc<AtomicBool>,
+        callbacks: Box<Fmi2Callbacks>,
+        saved_state: Option<NativeFmuState>,
+    ) {
+        self._library = Some(library);
+        self._callbacks = Some(callbacks);
+        self.saved_state = saved_state;
+        self.calls.fatal = fatal;
+    }
+
+    /// Capture one in-process state while in Step Mode.
+    pub fn save_state(&mut self) -> FmiResult<()> {
+        self.calls.check_active()?;
+        if self.lifecycle_state != Fmi2LifecycleState::StepMode {
+            return Err(FmiError::InvalidInput(
+                "FMU state requires Step Mode".into(),
+            ));
+        }
+        let result = self
+            .saved_state
+            .as_mut()
+            .ok_or(FmiError::UnsupportedCapability(
+                "FMI 2 state capture and restore",
+            ))?
+            .save(self.component);
+        self.calls.observe(result)
+    }
+
+    /// Restore the captured state. The caller resumes at its saved communication point.
+    pub fn restore_state(&mut self) -> FmiResult<()> {
+        self.calls.check_liveness()?;
+        if self.lifecycle_state != Fmi2LifecycleState::StepMode {
+            return Err(FmiError::InvalidInput(
+                "FMU state requires Step Mode".into(),
+            ));
+        }
+        let result = self
+            .saved_state
+            .as_ref()
+            .ok_or(FmiError::UnsupportedCapability(
+                "FMI 2 state capture and restore",
+            ))?
+            .restore(self.component);
+        self.calls.observe(result)?;
+        self.calls.recovered();
+        Ok(())
+    }
+
+    /// Release the saved state. A later call to `save_state` can capture a new one.
+    pub fn discard_state(&mut self) -> FmiResult<()> {
+        self.calls.check_liveness()?;
+        if let Some(state) = &mut self.saved_state {
+            self.calls.observe(state.clear(self.component))?;
+        }
+        Ok(())
     }
 
     pub fn setup_experiment(
@@ -70,6 +145,7 @@ impl Fmi2CoSimulationInstance {
         start_time: f64,
         stop_time: Option<f64>,
     ) -> FmiResult<()> {
+        self.calls.check_active()?;
         let tolerance_defined = i32::from(tolerance.is_some());
         let stop_time_defined = i32::from(stop_time.is_some());
         let status = unsafe {
@@ -82,10 +158,11 @@ impl Fmi2CoSimulationInstance {
                 stop_time.unwrap_or_default(),
             )
         };
-        require_success("fmi2SetupExperiment", status)
+        self.calls.accept("fmi2SetupExperiment", status)
     }
 
     pub fn get_real(&self, references: &[Fmi2ValueReference]) -> FmiResult<Vec<Fmi2Real>> {
+        self.calls.check_active()?;
         let mut values = vec![0.0; references.len()];
         let status = unsafe {
             (self.table.get_real)(
@@ -95,7 +172,7 @@ impl Fmi2CoSimulationInstance {
                 values.as_mut_ptr(),
             )
         };
-        require_success("fmi2GetReal", status)?;
+        self.calls.accept("fmi2GetReal", status)?;
         Ok(values)
     }
 
@@ -104,6 +181,7 @@ impl Fmi2CoSimulationInstance {
         references: &[Fmi2ValueReference],
         values: &[Fmi2Real],
     ) -> FmiResult<()> {
+        self.calls.check_active()?;
         ensure_matching_lengths(references.len(), values.len())?;
         let status = unsafe {
             (self.table.set_real)(
@@ -113,10 +191,11 @@ impl Fmi2CoSimulationInstance {
                 values.as_ptr(),
             )
         };
-        require_success("fmi2SetReal", status)
+        self.calls.accept("fmi2SetReal", status)
     }
 
     pub fn get_integer(&self, references: &[Fmi2ValueReference]) -> FmiResult<Vec<Fmi2Integer>> {
+        self.calls.check_active()?;
         let mut values = vec![0; references.len()];
         let status = unsafe {
             (self.table.get_integer)(
@@ -126,7 +205,7 @@ impl Fmi2CoSimulationInstance {
                 values.as_mut_ptr(),
             )
         };
-        require_success("fmi2GetInteger", status)?;
+        self.calls.accept("fmi2GetInteger", status)?;
         Ok(values)
     }
 
@@ -135,6 +214,7 @@ impl Fmi2CoSimulationInstance {
         references: &[Fmi2ValueReference],
         values: &[Fmi2Integer],
     ) -> FmiResult<()> {
+        self.calls.check_active()?;
         ensure_matching_lengths(references.len(), values.len())?;
         let status = unsafe {
             (self.table.set_integer)(
@@ -144,10 +224,11 @@ impl Fmi2CoSimulationInstance {
                 values.as_ptr(),
             )
         };
-        require_success("fmi2SetInteger", status)
+        self.calls.accept("fmi2SetInteger", status)
     }
 
     pub fn get_boolean(&self, references: &[Fmi2ValueReference]) -> FmiResult<Vec<bool>> {
+        self.calls.check_active()?;
         let mut values = vec![0; references.len()];
         let status = unsafe {
             (self.table.get_boolean)(
@@ -157,7 +238,7 @@ impl Fmi2CoSimulationInstance {
                 values.as_mut_ptr(),
             )
         };
-        require_success("fmi2GetBoolean", status)?;
+        self.calls.accept("fmi2GetBoolean", status)?;
         Ok(values.into_iter().map(|value| value != 0).collect())
     }
 
@@ -166,6 +247,7 @@ impl Fmi2CoSimulationInstance {
         references: &[Fmi2ValueReference],
         values: &[bool],
     ) -> FmiResult<()> {
+        self.calls.check_active()?;
         ensure_matching_lengths(references.len(), values.len())?;
         let raw: Vec<Fmi2Boolean> = values.iter().map(|value| i32::from(*value)).collect();
         let status = unsafe {
@@ -176,10 +258,11 @@ impl Fmi2CoSimulationInstance {
                 raw.as_ptr(),
             )
         };
-        require_success("fmi2SetBoolean", status)
+        self.calls.accept("fmi2SetBoolean", status)
     }
 
     pub fn get_string(&self, references: &[Fmi2ValueReference]) -> FmiResult<Vec<Fmi2String>> {
+        self.calls.check_active()?;
         let mut values = vec![std::ptr::null(); references.len()];
         let status = unsafe {
             (self.table.get_string)(
@@ -189,7 +272,7 @@ impl Fmi2CoSimulationInstance {
                 values.as_mut_ptr(),
             )
         };
-        require_success("fmi2GetString", status)?;
+        self.calls.accept("fmi2GetString", status)?;
         Ok(values)
     }
 
@@ -198,6 +281,7 @@ impl Fmi2CoSimulationInstance {
         references: &[Fmi2ValueReference],
         values: &[Fmi2String],
     ) -> FmiResult<()> {
+        self.calls.check_active()?;
         ensure_matching_lengths(references.len(), values.len())?;
         let status = unsafe {
             (self.table.set_string)(
@@ -207,27 +291,33 @@ impl Fmi2CoSimulationInstance {
                 values.as_ptr(),
             )
         };
-        require_success("fmi2SetString", status)
+        self.calls.accept("fmi2SetString", status)
     }
 }
 
 impl FmuInstance for Fmi2CoSimulationInstance {
     fn enter_initialization_mode(&mut self) -> FmiResult<()> {
+        self.calls.check_active()?;
         let status = unsafe { (self.table.enter_initialization_mode)(self.component) };
-        require_success("fmi2EnterInitializationMode", status)?;
+        self.calls.accept("fmi2EnterInitializationMode", status)?;
         self.lifecycle_state = Fmi2LifecycleState::InitializationMode;
         Ok(())
     }
 
     fn exit_initialization_mode(&mut self) -> FmiResult<()> {
+        self.calls.check_active()?;
         let status = unsafe { (self.table.exit_initialization_mode)(self.component) };
-        require_success("fmi2ExitInitializationMode", status)?;
+        self.calls.accept("fmi2ExitInitializationMode", status)?;
         self.lifecycle_state = Fmi2LifecycleState::StepMode;
         Ok(())
     }
 
     fn do_step(&mut self, current_time: f64, step_size: f64) -> FmiResult<()> {
-        let no_set_fmu_state_prior = 1;
+        self.calls.check_active()?;
+        if self.lifecycle_state != Fmi2LifecycleState::StepMode {
+            return Err(FmiError::InvalidInput("FMU step requires Step Mode".into()));
+        }
+        let no_set_fmu_state_prior = i32::from(self.saved_state.is_none());
         let status = unsafe {
             (self.table.do_step)(
                 self.component,
@@ -236,15 +326,19 @@ impl FmuInstance for Fmi2CoSimulationInstance {
                 no_set_fmu_state_prior,
             )
         };
-        require_success("fmi2DoStep", status)
+        self.calls.accept("fmi2DoStep", status)
     }
 
     fn terminate(&mut self) -> FmiResult<()> {
+        self.calls.check_liveness()?;
         if self.lifecycle_state == Fmi2LifecycleState::Terminated {
             return Ok(());
         }
-        let status = unsafe { (self.table.terminate)(self.component) };
-        require_success("fmi2Terminate", status)?;
+        self.discard_state()?;
+        if !self.calls.failed() {
+            let status = unsafe { (self.table.terminate)(self.component) };
+            self.calls.accept("fmi2Terminate", status)?;
+        }
         self.lifecycle_state = Fmi2LifecycleState::Terminated;
         Ok(())
     }
@@ -252,22 +346,19 @@ impl FmuInstance for Fmi2CoSimulationInstance {
 
 impl Drop for Fmi2CoSimulationInstance {
     fn drop(&mut self) {
-        let _ = self.terminate();
-        unsafe {
-            (self.table.free_instance)(self.component);
+        if self.calls.is_pending() {
+            // An unexpected asynchronous step may still use both. Keep them
+            // alive until process exit because this wrapper has no cancel API.
+            std::mem::forget(self._library.take());
+            std::mem::forget(self._callbacks.take());
+            return;
         }
-    }
-}
-
-fn require_success(operation: &'static str, raw_status: i32) -> FmiResult<()> {
-    let status = Fmi2Status::from_raw(raw_status);
-    if status.is_success() {
-        Ok(())
-    } else {
-        Err(FmiError::FmiStatus {
-            operation,
-            status: raw_status,
-        })
+        if self.lifecycle_state == Fmi2LifecycleState::StepMode || self.calls.failed() {
+            let _ = self.terminate();
+        }
+        if self.calls.can_call() {
+            unsafe { (self.table.free_instance)(self.component) };
+        }
     }
 }
 

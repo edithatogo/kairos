@@ -2,6 +2,8 @@ use std::ffi::{c_char, c_void};
 use std::sync::atomic::{AtomicI32, Ordering};
 
 static STEP_COUNT_FMI3: AtomicI32 = AtomicI32::new(0);
+static TERMINATION_COUNT: AtomicI32 = AtomicI32::new(0);
+static FREE_COUNT: AtomicI32 = AtomicI32::new(0);
 
 #[no_mangle]
 pub unsafe extern "C" fn fmi3InstantiateCoSimulation(
@@ -35,30 +37,57 @@ pub unsafe extern "C" fn fmi3EnterInitializationMode(
 
 #[no_mangle]
 pub unsafe extern "C" fn fmi3ExitInitializationMode(_instance: *mut c_void) -> i32 {
-    0
+    1
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn fmi3DoStep(
     _instance: *mut c_void,
-    _current_communication_point: f64,
-    _communication_step_size: f64,
+    current_communication_point: f64,
+    communication_step_size: f64,
     _no_set_fmustate_prior_to_current_point: bool,
     _event_handling_needed: *mut bool,
     _terminate_simulation: *mut bool,
-    _early_return_time: *mut f64,
+    _early_return: *mut bool,
+    last_successful_time: *mut f64,
 ) -> i32 {
+    *last_successful_time = if current_communication_point == 10.0 {
+        current_communication_point + communication_step_size / 2.0
+    } else if current_communication_point == 11.0 {
+        current_communication_point
+    } else {
+        current_communication_point + communication_step_size
+    };
     STEP_COUNT_FMI3.fetch_add(1, Ordering::SeqCst);
-    0
+    if current_communication_point == 12.0 {
+        3
+    } else if current_communication_point == 13.0 {
+        4
+    } else {
+        0
+    }
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn fmi3Terminate(_instance: *mut c_void) -> i32 {
-    0
+    TERMINATION_COUNT.fetch_add(1, Ordering::SeqCst);
+    1
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn fmi3FreeInstance(_instance: *mut c_void) {}
+pub unsafe extern "C" fn fmi3FreeInstance(_instance: *mut c_void) {
+    FREE_COUNT.fetch_add(1, Ordering::SeqCst);
+}
+
+#[no_mangle]
+pub extern "C" fn mockTerminateCount() -> i32 {
+    TERMINATION_COUNT.load(Ordering::SeqCst)
+}
+
+#[no_mangle]
+pub extern "C" fn mockFreeCount() -> i32 {
+    FREE_COUNT.load(Ordering::SeqCst)
+}
 
 #[no_mangle]
 pub unsafe extern "C" fn fmi3GetFloat64(
