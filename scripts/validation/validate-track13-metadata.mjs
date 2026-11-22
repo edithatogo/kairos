@@ -318,8 +318,10 @@ requireTerms('.github/workflows/nightly.yml', [
   'Miri analysis: UNVERIFIED',
 ]);
 requireTerms('.github/workflows/fuzzing.yml', [
-  'Fuzzing UNVERIFIED (cargo-fuzz not run)', 'Scheduler fuzzing: UNVERIFIED',
-  'this workflow reports no fuzz pass',
+  'Run coverage-guided scheduler fuzz', '-Cpasses=sancov-module',
+  '-Cllvm-args=-sanitizer-coverage-inline-8bit-counters',
+  '--manifest-path fuzz/Cargo.toml', '-runs=20000', '-max_total_time=60',
+  '-rss_limit_mb=2048', 'final > initial', 'Scheduler sanitizer analysis: UNVERIFIED',
 ]);
 
 requireTerms('codecov.yml', [

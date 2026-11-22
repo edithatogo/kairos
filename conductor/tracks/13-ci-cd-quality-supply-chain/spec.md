@@ -53,7 +53,8 @@ Arrow roundtrip tests
 docs site build
 package dry-runs
 security/supply-chain scans
-scheduled Rust 1.99.0 mutation and benchmark checks; Miri and fuzzing remain UNVERIFIED because nightly execution is disallowed
+scheduled Rust 1.99.1 mutation, benchmark and coverage-guided fuzz checks
+Miri and AddressSanitizer execution remain UNVERIFIED
 release artifact creation
 ```
 

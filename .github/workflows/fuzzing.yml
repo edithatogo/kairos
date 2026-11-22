@@ -69,26 +69,60 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
-  fuzz-unverified:
-    name: Fuzzing UNVERIFIED (cargo-fuzz not run)
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - name: Record the outstanding fuzzing obligation
+      - name: Run coverage-guided scheduler fuzz
+        env:
+          CARGO_TARGET_DIR: ${{ runner.temp }}/scheduler-fuzz-target
+          RUSTFLAGS: >-
+            -Cpasses=sancov-module
+            -Cllvm-args=-sanitizer-coverage-level=3
+            -Cllvm-args=-sanitizer-coverage-inline-8bit-counters
+            -Cllvm-args=-sanitizer-coverage-pc-table
+        shell: bash
         run: |
+          set -euo pipefail
+          evidence=artifacts/scheduler-fuzz
+          corpus="$RUNNER_TEMP/scheduler-fuzz-corpus"
+          mkdir -p "$evidence/findings" "$corpus"
+          cp fuzz/corpus/scheduler_requests/* "$corpus/"
+          rustc +1.99.1 -Vv > "$evidence/compiler.txt"
+          git rev-parse HEAD > "$evidence/commit.txt"
+          sha256sum fuzz/Cargo.lock fuzz/fuzz_targets/scheduler_requests.rs \
+            fuzz/corpus/scheduler_requests/* > "$evidence/inputs.sha256"
+          printf '%s\n' "$RUSTFLAGS" > "$evidence/rustflags.txt"
+          timeout 600s cargo +1.99.1 build --locked --release --manifest-path fuzz/Cargo.toml \
+            --target x86_64-unknown-linux-gnu --bin scheduler_requests \
+            2>&1 | tee "$evidence/build.log"
+          binary="$CARGO_TARGET_DIR/x86_64-unknown-linux-gnu/release/scheduler_requests"
+          sha256sum "$binary" > "$evidence/executable.sha256"
+
+          arguments=(-seed=472026 -max_len=1024 -rss_limit_mb=2048 -timeout=10)
+          if [[ "$GITHUB_EVENT_NAME" == pull_request ]]; then
+            arguments+=(-runs=20000)
+          else
+            arguments+=(-max_total_time=60)
+          fi
+          printf '%s\n' "${arguments[@]}" > "$evidence/arguments.txt"
+          timeout 120s "$binary" "$corpus" "${arguments[@]}" -artifact_prefix="$evidence/findings/" \
+            2>&1 | tee "$evidence/fuzz.log"
+          grep -Eq '^INFO: Loaded [1-9][0-9]* modules?.*\([1-9][0-9]* inline 8-bit counters\)' "$evidence/fuzz.log"
+          awk '
+            $2 == "INITED" && $3 == "cov:" { initial = $4 }
+            $2 == "DONE" && $3 == "cov:" { final = $4 }
+            END { exit !(initial > 0 && final > initial) }
+          ' "$evidence/fuzz.log"
+      - name: Record the outstanding sanitizer status
+        if: always()
+        run: |
+          mkdir -p artifacts/scheduler-fuzz
           {
-            echo '## Scheduler fuzzing: UNVERIFIED'
-            echo 'No fuzz run was performed. cargo-fuzz requires Rust nightly, which is disallowed by the sole Rust 1.99.1 policy.'
-            echo 'Outstanding obligation: reassess fuzz execution only under a future reviewed toolchain policy; this workflow reports no fuzz pass.'
-          } | tee fuzzing-unverified.txt >> "$GITHUB_STEP_SUMMARY"
-      - name: Preserve unverified fuzzing status
+            echo '## Scheduler sanitizer analysis: UNVERIFIED'
+            echo 'AddressSanitizer execution remains unverified under Rust 1.99.1.'
+          } | tee artifacts/scheduler-fuzz/sanitizer-status.txt >> "$GITHUB_STEP_SUMMARY"
+      - name: Preserve guided fuzz evidence and crash artifacts
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: scheduler-fuzz-unverified
-          path: fuzzing-unverified.txt
+          name: scheduler-fuzz-${{ github.run_attempt }}
+          path: artifacts/scheduler-fuzz/
           if-no-files-found: error
           retention-days: 30

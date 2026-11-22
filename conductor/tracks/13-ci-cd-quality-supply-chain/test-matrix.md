@@ -36,7 +36,7 @@
 - Benchmark smoke runs the offline metadata harness and `kairo-ecs-bench` compile check.
 - DST engine tests are excluded because `SimTime` uses logical integer ticks and the engine has no civil-time conversion; any future timestamp adapter must add DST boundary tests at that boundary.
 - Multithread stress tests are excluded until the single-thread scheduler and in-memory `&mut self` PDES transport are replaced by a concurrent API; thread-safety guarantees must accompany that API.
-- Fuzzing runs the checked-in scheduler request harness for 60 seconds weekly or on demand, enforces a 2 GiB RSS cap, and preserves crash artifacts for 30 days.
+- Fuzzing runs the checked-in scheduler request harness for 20,000 inputs on pull requests and 60 seconds weekly or on demand. The workflow requires runtime coverage growth, enforces a 2 GiB RSS cap, and preserves crash artifacts for 30 days.
 
 ## CI commands
 
@@ -65,7 +65,7 @@ node tests/conformance/conformance-check.mjs
 node tests/conformance/track07_13_hardening_check.mjs
 node tests/conformance/track12_20_evidence_check.mjs
 node scripts/validation/validate-track13-metadata.mjs
-Fuzzing remains UNVERIFIED; nightly cargo-fuzz execution is disallowed by the Rust 1.99.0-only policy.
+# Run the coverage-guided campaign through .github/workflows/fuzzing.yml.
 python benches/benchmark_smoke.py
 cargo check -p kairo-ecs-bench
 test -f renovate.json
