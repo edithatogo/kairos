@@ -5,12 +5,30 @@ standalone fixture are qualified.
 
 ## Provider and standalone fixture — 23 November 2026
 
+## Summary
+
 Chat `01a1fd18-51c7-7963-a3cc-d262d54582ba` owns the bounded provider change
 in the managed `kairos-cohort-contracts` worktree on
-`codex/cohort-native-export`. Deliverables are the opt-in Arrow module and an
-independent Cargo workspace rooted in the same provider source.
-[API and schema](../../../docs/design/track116-cohort-export-api-review.md) ·
+`codex/cohort-native-export`.
+
+## Files changed
+
+The Arrow module, independent Cargo workspace and existing Arrow platform
+workflow deliver and validate the exports.
 [Standalone fixture](../../../tests/fixtures/cohort-consumer/README.md).
+
+## Contracts consumed
+
+The fixture uses Track 69 hazards, the ABM spatial index and the shared
+trusted Arrow C Data importer.
+
+## Contracts changed
+
+The opt-in schema and replay contracts are accepted by
+[ADR 0015](../../../docs/adr/0015-cohort-and-exposure-schemas.md) and documented
+in the [API review](../../../docs/design/track116-cohort-export-api-review.md).
+
+## Tests added
 
 Rust 1.99.1 on macOS ARM64 ran five locked tests and the executable from a
 Git-free extracted tree `04dff29ffa3390b049b32e322860eb29e083602d`. Both

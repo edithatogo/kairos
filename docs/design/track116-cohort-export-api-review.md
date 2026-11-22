@@ -1,5 +1,8 @@
 # Cohort export API review
 
+[ADR 0015](../adr/0015-cohort-and-exposure-schemas.md) accepts the versioned
+schemas and draw-address contract.
+
 Track 116 adds `kairo_ecs_arrow::cohort` behind `cohort-native`. Use
 `transition_frame` or `spatial_exposure_frame` to build a typed Polars
 frame and its declared Arrow struct field. The existing trusted domain C Data
