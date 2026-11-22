@@ -1,0 +1,16 @@
+[package]
+name = "kairo-ecs-minimal-consumer"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.99"
+license = "Apache-2.0"
+publish = false
+
+[workspace]
+resolver = "2"
+
+[dependencies]
+kairo-ecs-core = { git = "https://github.com/edithatogo/kairos", rev = "235e6a333ccc6e690f5b41f2c5eaa9a6784fe147" }
+kairo-ecs-des = { git = "https://github.com/edithatogo/kairos", rev = "235e6a333ccc6e690f5b41f2c5eaa9a6784fe147" }
+kairo-ecs-state = { git = "https://github.com/edithatogo/kairos", rev = "235e6a333ccc6e690f5b41f2c5eaa9a6784fe147" }
+kairo-ecs-types = { git = "https://github.com/edithatogo/kairos", rev = "235e6a333ccc6e690f5b41f2c5eaa9a6784fe147" }
