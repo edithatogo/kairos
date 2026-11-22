@@ -2687,10 +2687,11 @@
         "conductor/execution/scientific/s10-completion.md"
       ],
       "write": [
+        "crates/kairo-ecs-ml/Cargo.toml",
+        "Cargo.lock",
         "crates/kairo-ecs-ml/src/lib.rs",
         "crates/kairo-ecs-ml/src/vecenv.rs",
-        "crates/kairo-ecs-ml/tests/maturity_vecenv_native.rs",
-        "crates/kairo-ecs-ml/tests/feature_matrix.rs"
+        "crates/kairo-ecs-ml/tests/maturity_vecenv_native.rs"
       ],
       "checks": [
         {
@@ -2709,6 +2710,111 @@
       ],
       "acceptance": "Independent nonidentity outputs and negative cases satisfy the linked design.",
       "stop": "An unsupported host or runtime remains unavailable.",
+      "obligation": "S10"
+    },
+    {
+      "id": "S10.wire",
+      "title": "Expose typed queue reset and step on local native stdio",
+      "parent": "110:S10",
+      "kind": "implementation",
+      "executor": "local",
+      "requires": [
+        "S10.queue"
+      ],
+      "read": [
+        "conductor/execution/scientific/s10-completion.md"
+      ],
+      "write": [
+        "crates/kairo-ecs-cli/Cargo.toml",
+        "Cargo.lock",
+        "crates/kairo-ecs-cli/src/main.rs",
+        "crates/kairo-ecs-cli/src/queue_env.rs"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-cli",
+            "--features",
+            "rl-queue",
+            "--bin",
+            "kairo-ecs-cli"
+          ]
+        }
+      ],
+      "acceptance": "The existing host contract and the named native execution and failure oracles pass on Python 3.15.2.",
+      "stop": "Report a named unavailable capability or missing exact artifact.",
+      "obligation": "S10"
+    },
+    {
+      "id": "S10.host",
+      "title": "Check Python adapters against a running native queue",
+      "parent": "110:S10",
+      "kind": "implementation",
+      "executor": "local",
+      "requires": [
+        "S10.wire"
+      ],
+      "read": [
+        "conductor/execution/scientific/s10-completion.md"
+      ],
+      "write": [
+        "python/kairo_gym/src/kairo_gym/env.py",
+        "python/kairo_gym/src/kairo_gym/_native.py",
+        "python/kairo_gym/src/kairo_gym/__init__.py",
+        "python/kairo_gym/tests/test_native_queue.py",
+        "python/kairo_gym/pyproject.toml"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "python",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "python/kairo_gym/tests",
+            "-v"
+          ]
+        }
+      ],
+      "acceptance": "The existing host contract and the named native execution and failure oracles pass on Python 3.15.2.",
+      "stop": "Report a named unavailable capability or missing exact artifact.",
+      "obligation": "S10"
+    },
+    {
+      "id": "S10.hostci",
+      "title": "Run both host checkers in the existing bindings lane",
+      "parent": "110:S10",
+      "kind": "implementation",
+      "executor": "local",
+      "requires": [
+        "S10.host"
+      ],
+      "read": [
+        "conductor/execution/scientific/s10-completion.md"
+      ],
+      "write": [
+        "python/kairo_gym/ci-requirements.in",
+        "python/kairo_gym/ci-requirements.lock",
+        ".github/workflows/ci-bindings.yml"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "node",
+            "tests/conformance/ci-binding-change-classifier-check.mjs"
+          ]
+        }
+      ],
+      "acceptance": "The existing host contract and the named native execution and failure oracles pass on Python 3.15.2.",
+      "stop": "Report a named unavailable capability or missing exact artifact.",
       "obligation": "S10"
     }
   ]
