@@ -1,9 +1,9 @@
-# Movement, allocation and resource-usage contract direction
+# Movement, allocation and resource-usage contract
 
-Accepted design direction, 7 November 2026; **implementation pending** under
-Track 114 and scientific obligation S17. Names below describe semantic fields,
-not an assertion that these public Rust types or schemas already exist. Settle
-the exact Rust API in a bounded contract task before implementation.
+Track 114 and scientific obligation S17 own this contract. The Rust API below
+defines the scheduled movement lifecycle. Resource usage and allocation
+composition have separate [replay](usage-replay.md) and
+[composition](movement-allocation-composition.md) contracts.
 
 ## Existing source to reuse
 
@@ -15,8 +15,7 @@ the exact Rust API in a bounded contract task before implementation.
 - DES `boundary.rs`: generic handover/transit, acknowledgement, cancellation and
   expiry. A boundary handover is not automatically a continuous spatial journey.
 - DES `staged_runtime.rs`: scoped actor/resource/request handles, scheduler-backed
-  FIFO contention and leases. Current lease capacity is one unit; snapshots
-  alone are not a time-stamped usage ledger.
+  FIFO contention, atomic quantities, leases and forward-only usage windows.
 
 ## Separate contracts
 
@@ -30,21 +29,50 @@ the exact Rust API in a bounded contract task before implementation.
 
 ## Movement lifecycle
 
-Use checked integer simulation ticks and preserve the scheduler's same-time tie
-order. A route with distance/effort cost cannot be converted to duration without
-a domain-supplied conversion. Define zero-duration movement, time overflow,
-destroyed actors, no route, stale topology/access and interrupted movement.
-Arrival changes location once. Cancellation cannot leave a later arrival that
-moves the entity. An operation's idempotency and generation prevent stale events
-from affecting a reused entity ID. Replanning has a new revision and explicitly
-cancels/supersedes the old arrival.
+The public API lives in `kairo_ecs_abm::movement`. A model owns one
+`MovementRuntime` alongside its `World` and `Scheduler`. It registers a live,
+generational actor's location with `place` and looks it up with `location`.
+`schedule` takes a `MovementRequest` with actor, destination, departure tick,
+access profile and scheduler priority. It returns a `MovementPlan` containing
+an opaque runtime-scoped `MovementId`, revision, origin, destination, departure
+and arrival ticks, the route and the exact scheduler event ID. `pending` reads
+the current plan for a handle.
 
-Movement may require resources, but does not imply it: a consumer composes a
-movement operation with a lease through public APIs. Resource acquisition,
-journey cancellation and resource release need one well-defined ordering and
-no leak on partial failure. Keep route queries and display interpolation free
-of side effects on simulation state. Rollback restores pending operations and
-locations along with the scheduler; visual playback alone is not rollback.
+Scheduling allows one pending move per actor. A missing placement, retired
+actor, past departure, unavailable route, non-tick cost or tick overflow
+returns a typed `MovementError` before enqueueing. Schedule at checked
+departure plus route duration, including a zero-duration route. Even then the
+arrival goes through the queue. The scheduler's priority and insertion order
+determine same-tick ordering. Route queries and display interpolation are pure.
+
+Pass the native `DispatchedEvent` to `on_arrival` before scheduling more work
+for that actor. Only the matching pending arrival can complete the move.
+`MovementArrivalOutcome` is `Arrived`, `ActorRetired` or `TopologyChanged`.
+Location changes only for `Arrived`. Repeated, superseded and unrelated events
+return no outcome. Actor retirement or topology invalidation consumes the
+arrival without changing a live actor's location.
+
+`cancel` takes the movement handle and cancels its exact pending scheduler event.
+An already finished or cancelled handle is an idempotent false. A foreign or
+unissued handle, or an event already removed from the scheduler but awaiting
+`on_arrival`, returns an error. Use `forget_actor` when retiring an actor before
+arrival to close its movement and remove placement. Reused entity indices have
+different generations and receive fresh placements and handles.
+
+After a topology edit, call `replan` for each affected pending handle.
+It uses the recorded access profile and the actor's last location and starts
+at the later of the original departure and the current scheduler tick. It
+validates the replacement before cancelling the old arrival, then enqueues it
+with the original priority, the same handle and the next revision. The same
+topology revision returns the existing plan. A topology replacement also
+invalidates the route. An unavailable replacement leaves the old event in
+place for explicit cancellation or a later `TopologyChanged` outcome. A model
+that changes an actor's access cancels and reschedules with the new profile.
+Continuous in-transit positions remain a model concern.
+
+For model-owned checkpoints, clone the runtime with its corresponding world
+and native scheduler checkpoint. Keep handles and emitted outcomes within
+that replay branch.
 
 ## Usage semantics
 
@@ -63,10 +91,10 @@ Define FIFO/head-of-line versus bypass policy before quantity requests ship.
 
 An authoritative usage record must include a stable idempotency key, schema
 version, run/scenario/branch identity, causal event and engine/model/RNG version
-references. For optimistic execution choose committed-only export or explicit
-revision/retraction records; never silently sum provisional and rolled-back
-usage. Define late/corrected records and reject duplicates with conflicting
-content. Keep Arrow/Parquet an optional encoding of the same semantic records.
+references. Optimistic execution exports from a checkpoint at the runtime's
+exclusive committed cutoff. Define late/corrected records and reject
+duplicates with conflicting content. Keep Arrow/Parquet an optional encoding
+of the same semantic records.
 
 ## Domain and HEOR responsibilities
 

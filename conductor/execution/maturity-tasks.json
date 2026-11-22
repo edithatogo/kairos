@@ -268,7 +268,8 @@
         "crates/kairo-ecs-types/src/lib.rs"
       ],
       "write": [
-        "conductor/contracts/movement-resource-usage.md"
+        "conductor/contracts/movement-resource-usage.md",
+        "docs/adr/0013-scheduled-movement-and-committed-usage.md"
       ],
       "checks": [
         {
@@ -314,7 +315,7 @@
       "write": [
         "crates/kairo-ecs-abm/src/movement.rs",
         "crates/kairo-ecs-abm/src/lib.rs",
-        "crates/kairo-ecs-abm/tests/movement_arrival.rs"
+        "crates/kairo-ecs-abm/tests/movement.rs"
       ],
       "checks": [
         {
@@ -326,7 +327,8 @@
             "-p",
             "kairo-ecs-abm",
             "--test",
-            "movement_arrival"
+            "movement",
+            "arrival"
           ]
         }
       ],
@@ -348,7 +350,7 @@
       ],
       "write": [
         "crates/kairo-ecs-abm/src/movement.rs",
-        "crates/kairo-ecs-abm/tests/movement_cancellation.rs"
+        "crates/kairo-ecs-abm/tests/movement.rs"
       ],
       "checks": [
         {
@@ -360,7 +362,8 @@
             "-p",
             "kairo-ecs-abm",
             "--test",
-            "movement_cancellation"
+            "movement",
+            "cancel"
           ]
         }
       ],
@@ -382,7 +385,8 @@
       ],
       "write": [
         "crates/kairo-ecs-abm/src/movement.rs",
-        "crates/kairo-ecs-abm/tests/movement_replan.rs"
+        "crates/kairo-ecs-abm/src/routing.rs",
+        "crates/kairo-ecs-abm/tests/movement.rs"
       ],
       "checks": [
         {
@@ -394,7 +398,8 @@
             "-p",
             "kairo-ecs-abm",
             "--test",
-            "movement_replan"
+            "movement",
+            "replan"
           ]
         }
       ],
@@ -511,7 +516,8 @@
       "kind": "design",
       "executor": "specialist",
       "requires": [
-        "K02.usage"
+        "K02.usage",
+        "K02.window"
       ],
       "read": [
         "conductor/contracts/movement-resource-usage.md",
@@ -547,8 +553,8 @@
       "kind": "design",
       "executor": "specialist",
       "requires": [
-        "K02.cancel",
-        "K02.usage"
+        "K02.replan",
+        "K02.quantity"
       ],
       "read": [
         "conductor/contracts/movement-resource-usage.md",
@@ -573,6 +579,153 @@
         }
       ],
       "acceptance": "Specify a public-API composition for acquire/travel/release with no leaked lease after failure/cancel; domain policies remain consumer-owned. Add the exact subsequent Rust fixture task before implementation.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed."
+    },
+    {
+      "id": "K02.cleanup",
+      "title": "Close staged requests at a model event tick",
+      "parent": "114.1.8",
+      "kind": "implementation",
+      "executor": "local",
+      "requires": [
+        "K02.composition"
+      ],
+      "read": [
+        "conductor/contracts/movement-allocation-composition.md",
+        "crates/kairo-ecs-des/src/staged_runtime.rs"
+      ],
+      "write": [
+        "crates/kairo-ecs-des/src/staged_runtime.rs",
+        "crates/kairo-ecs-des/tests/request_cleanup.rs"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-des",
+            "--test",
+            "request_cleanup"
+          ]
+        }
+      ],
+      "acceptance": "Close scheduled, queued or active requests once; removing the FIFO head can promote a successor, and a duplicate or replaced release cannot add occupancy.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed."
+    },
+    {
+      "id": "K02.journey",
+      "title": "Compose journey completion and cancellation with resource cleanup",
+      "parent": "114.1.8",
+      "kind": "implementation",
+      "executor": "local",
+      "requires": [
+        "K02.cleanup",
+        "K02.replan"
+      ],
+      "read": [
+        "conductor/contracts/movement-allocation-composition.md",
+        "conductor/contracts/movement-resource-usage.md"
+      ],
+      "write": [
+        "crates/kairo-ecs-abm/Cargo.toml",
+        "crates/kairo-ecs-abm/tests/movement_allocation.rs",
+        "Cargo.lock"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-abm",
+            "--test",
+            "movement_allocation"
+          ]
+        }
+      ],
+      "acceptance": "A public-API trajectory checks successful arrival, cancellation, retirement, unavailable replacement and start failure with capacity returned and hand-calculated occupancy.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed."
+    },
+    {
+      "id": "K02.cutoff",
+      "title": "Expose the committed optimistic process checkpoint",
+      "parent": "114.1.7",
+      "kind": "implementation",
+      "executor": "local",
+      "requires": [
+        "K02.replay"
+      ],
+      "read": [
+        "conductor/contracts/usage-replay.md",
+        "crates/kairo-ecs-pdes/src/optimistic.rs"
+      ],
+      "write": [
+        "crates/kairo-ecs-pdes/src/optimistic.rs",
+        "crates/kairo-ecs-pdes/src/lib.rs",
+        "crates/kairo-ecs-pdes/tests/committed_snapshot.rs"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-pdes",
+            "--test",
+            "committed_snapshot",
+            "--features",
+            "time-warp"
+          ]
+        }
+      ],
+      "acceptance": "The exclusive cutoff and checkpoint come from one runtime. The first retained event's pre-state excludes speculative effects, including at the cutoff.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed."
+    },
+    {
+      "id": "K02.export",
+      "title": "Export occupancy from a committed staged checkpoint",
+      "parent": "114.1.7",
+      "kind": "implementation",
+      "executor": "local",
+      "requires": [
+        "K02.cutoff",
+        "K02.cleanup"
+      ],
+      "read": [
+        "conductor/contracts/usage-replay.md",
+        "crates/kairo-ecs-des/src/staged_runtime.rs"
+      ],
+      "write": [
+        "crates/kairo-ecs-des/src/staged_runtime.rs",
+        "crates/kairo-ecs-des/src/staged_runtime/usage_replay.rs",
+        "crates/kairo-ecs-des/Cargo.toml",
+        "crates/kairo-ecs-des/tests/optimistic_usage.rs",
+        "Cargo.lock"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-des",
+            "--test",
+            "optimistic_usage",
+            "--features",
+            "optimistic-usage"
+          ]
+        }
+      ],
+      "acceptance": "A straggler changes release from tick 10 to 6, yielding four committed unit-ticks. The cutoff guards release provenance and a staged action due within the window prevents export.",
       "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed."
     },
     {
