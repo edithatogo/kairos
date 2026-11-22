@@ -3,7 +3,9 @@
 | Gate | Required evidence | Current acceptance |
 |---|---|---|
 | Bounded task integrity | `python scripts/maturity_tasks.py check`; `python -m unittest discover -s tests -p test_maturity_tasks.py -v` | Structural task/path/dependency/target checks only; no runtime or scientific promotion |
-| Movement and usage | Actual Rust arrival/cancel/admission/quantity/window/replay fixtures from K02 | Pending |
+| Scheduled movement | `kairo-ecs-abm` tests `movement` and `petgraph_routing_oracles` | Exact arrival and tie order, cancellation and stale route handling verified with Rust 1.99.1 |
+| Allocation and usage | `kairo-ecs-des` tests `request_cleanup`, `usage_intervals` and feature-gated `optimistic_usage` | Request cleanup, atomic occupancy and committed rollback export verified with Rust 1.99.1 |
+| Movement and allocation | `kairo-ecs-abm` test `movement_allocation` | Public Rust fixture verified with Rust 1.99.1. CareOps physical movement qualification pending |
 | Ecosystem direction | Pure game packages independent of Kairos; optional adapter imports both; HEOR and domains stay outside kernel | Accepted direction; package/consumer execution pending |
 | Native scheduler checkpoint | `cargo test --locked -p kairo-ecs-core --test scheduler_checkpoint` verifies exact replay, sibling cancellation and version admission | K01.checkpoint candidate. Paignia T17.16 separately owns policy, world binding and RNG replay |
 | Dependency direction | Kairos production manifest/source cannot require CareOps; minimal consumer fixture runs without the CareOps repository. | Pending for this track |

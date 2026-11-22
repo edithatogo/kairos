@@ -11,18 +11,26 @@ retained speculative event, or the live process checkpoint when no
 speculative event remains. The caller of fossil collection must establish the
 safe global bound for its execution mode.
 
-Enable the DES `optimistic-usage` feature and keep the complete staged
-allocator, including its scheduler, runtime identity, pending actions and
-usage state, in the process's `StagedResourceCheckpoint`. The adapter accepts
-this checkpoint through the committed process snapshot. Before exporting it
-checks that no staged action is still due through the end of the window. It
-returns the existing occupancy window with the producing LP and cutoff.
-Window construction is read-only and retains causal admission and release
-IDs. Scope usage identity to the producing LP and keep speculative handles
-inside the process checkpoint.
+Enable the DES `optimistic-usage` feature and capture the staged allocator
+with `StagedResourceRuntime::checkpoint`. Include its `StagedResourceCheckpoint`
+in the process snapshot and implement `AsRef<StagedResourceCheckpoint>` on a
+composite snapshot. Restore that checkpoint with the rest of the process state.
+
+Run all allocation actions due through the observation end and call
+`seal_usage_through` inside the model's event handler. This also covers quiet
+periods beyond the allocator's last dispatch. The seal prevents new actions
+through that tick and rolls back with the allocator. `committed_staged_usage`
+requires this seal to be present in the committed snapshot and the observation
+end to be strictly before its cutoff.
+
+The exporter returns the existing occupancy window with the producing LP and
+cutoff. Window construction is read-only and retains causal admission and
+release IDs. Scope usage identity to the producing LP and keep speculative
+handles inside the process checkpoint.
 
 The replay fixture admits usage at tick 2 and speculatively releases at tick
 10. A straggler moves the release to tick 6. After fossil collection, export a
-window ending at tick 8, verify four occupied unit-ticks and compare the result
-across a later cutoff. Also exercise an unreplayed future release in retained
-history, an endpoint at the cutoff and an unprocessed staged event.
+window ending at tick 8 and verify four occupied unit-ticks and exact agreement
+with canonical event order. A later cutoff preserves the same window. The
+fixture also checks censoring of a future release, rejection at the cutoff,
+and rejection of a seal when an unprocessed action is due.

@@ -455,7 +455,7 @@
       ],
       "write": [
         "crates/kairo-ecs-des/src/staged_runtime.rs",
-        "crates/kairo-ecs-des/tests/allocation_quantity.rs"
+        "crates/kairo-ecs-des/tests/usage_intervals.rs"
       ],
       "checks": [
         {
@@ -467,7 +467,8 @@
             "-p",
             "kairo-ecs-des",
             "--test",
-            "allocation_quantity"
+            "usage_intervals",
+            "actual_admission_promotes_fifo_without_partial_or_bypass"
           ]
         }
       ],
@@ -490,7 +491,7 @@
       "write": [
         "crates/kairo-ecs-des/src/usage.rs",
         "crates/kairo-ecs-des/src/lib.rs",
-        "crates/kairo-ecs-des/tests/usage_window.rs"
+        "crates/kairo-ecs-des/tests/usage_intervals.rs"
       ],
       "checks": [
         {
@@ -502,7 +503,8 @@
             "-p",
             "kairo-ecs-des",
             "--test",
-            "usage_window"
+            "usage_intervals",
+            "active_lease_is_censored_and_window_split_conserves_occupancy"
           ]
         }
       ],
