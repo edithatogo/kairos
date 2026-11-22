@@ -4,7 +4,7 @@ Release a precisely scoped beta, then an independently reproducible and compatib
 
 ## Phase 0: Candidate scope
 
-- [ ] 113.0.1: Freeze supported APIs, platforms and capabilities; identify exclusions and their owned completion tracks.
+- [x] 113.0.1: Freeze the native-core-v1 candidate APIs and platform profiles. Record excluded capabilities and their owners in the [beta scope](../../release/beta-scope.md).
 - [ ] 113.0.2: Complete every alpha-to-beta gate in release-gates.md, including immediate Rust-only enforcement.
 - [ ] 113.0.3: Qualify clean binary/package installation and an installed CareOps consumer against exact artefacts.
 - [ ] 113.0.review: Independently review this phase, apply accepted fixes, execute the named oracles and record the next-phase decision.

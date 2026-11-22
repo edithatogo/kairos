@@ -195,9 +195,8 @@ def run_installed_rust(cargo: tuple[str, ...], clean: Path, sdk: Path, cfg: dict
         f'{name} = {{ path = {json.dumps(str(sdk / "crates" / name))} }}'
         for name in read_toml(manifest)["dependencies"]
     ]
-    patch = (sdk / "Cargo.toml").read_text(encoding="utf-8").split("[patch.crates-io]", 1)[1]
     (consumer / "Cargo.toml").write_text(
-        template + "[dependencies]\n" + "\n".join(dependencies) + "\n\n[patch.crates-io]" + patch,
+        template + "[dependencies]\n" + "\n".join(dependencies) + "\n",
         encoding="utf-8",
     )
     sources = resolve(cargo, consumer, sdk, set(cfg["rust_crates"]))
@@ -234,14 +233,18 @@ def run_installed_careops(
     old_lock = source / "CareOps.lock"
     (source / "Cargo.lock").rename(old_lock)
     manifest = source / "Cargo.toml"
-    required = {"workspace", "workspace.package", "workspace.dependencies", "patch.crates-io"}
+    required = {"workspace", "workspace.package", "workspace.dependencies"}
     sections = re.split(r"(?=^\[)", manifest.read_text(encoding="utf-8"), flags=re.MULTILINE)
     selected = {section.split("]", 1)[0][1:]: section for section in sections if section.startswith("[")}
     require(required <= selected.keys(), "CareOps workspace sections changed")
     selected["workspace"] = re.sub(
         r"^members = .*", f'members = ["crates/{package}"]', selected["workspace"], flags=re.MULTILINE,
     )
-    manifest.write_text("".join(selected[name] for name in selected if name in required), encoding="utf-8")
+    selected_sections = required | {"patch.crates-io"}
+    manifest.write_text(
+        "".join(section for name, section in selected.items() if name in selected_sections),
+        encoding="utf-8",
+    )
     (source / "libs").mkdir()
     (source / "libs/kairos").symlink_to(sdk, target_is_directory=True)
     sources = resolve(cargo, source, sdk, set(cfg["rust_crates"]), old_lock)
