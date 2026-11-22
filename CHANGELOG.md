@@ -56,6 +56,7 @@ Format:
 
 ### Changed
 
+- `bindings/runtime-policy.json` records the installed CPython 3.15.2 and C ABI v1 qualification for the two native beta candidate targets. The local scheduler and benchmark notebooks verify the checkout's selected kernel before running.
 - The native beta Rust SDK and C ABI archives ship Apache-2.0. The installed Python probe covers wrong architecture, missing symbols and ABI version rejection.
 - Migrate fixed-batch calibration calls to `BatchDistanceScorer` and check the new fallible sampling and sensitivity results. See [ADR 0014](docs/adr/0014-versioned-scientific-methods.md).
 
