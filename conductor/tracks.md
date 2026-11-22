@@ -99,7 +99,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 89 | Tract inference qualification | Done | `ml-integration-agent` | See `conductor/tracks/89-*/spec.md` |
 | 90 | Argmin calibration optimiser qualification | Planned | `vv-uq-agent` | See `conductor/tracks/90-*/spec.md` |
 | 91 | rust-fmi adapter qualification | Done | `fmi-agent` | See `conductor/tracks/91-*/spec.md` |
-| 92 | Sobol sequence qualification | Planned | `experiment-agent` | See `conductor/tracks/92-*/spec.md` |
+| 92 | Sobol sequence qualification | Done | `experiment-agent` | [Declined dependency and qualified successor](tracks/92-sobol-burley-robustness/handoff.md#evaluation-closeout--23-november-2026) |
 | 93 | sha2 robustness | Done | `arrow-agent` | See `conductor/tracks/93-*/spec.md` |
 | 94 | tempfile robustness | Done | `arrow-agent` | See `conductor/tracks/94-*/spec.md` |
 | 95 | thiserror robustness | Done | `contracts-agent` | See `conductor/tracks/95-*/spec.md` |
@@ -120,7 +120,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 110 | Scientific method and advanced capability completion | Spec Approved | `vv-uq-agent + game-theory-agent + ml-integration-agent` | [Plan](tracks/110-scientific-method-completion/plan.md) |
 | 111 | Measured performance and parallel execution improvement | Spec Approved | `performance-agent + pdes-agent` | [Plan](tracks/111-measured-performance/plan.md) |
 | 112 | Capability evidence and claim automation | In Progress | `conformance-agent + docs-agent + ci-agent` | [Plan](tracks/112-evidence-and-claim-automation/plan.md) |
-| 113 | Beta and stable release qualification | Spec Approved | `release-agent + api-governance-agent + security-agent` | [Plan](tracks/113-beta-and-stable-release/plan.md) |
+| 113 | Beta and stable release qualification | In Progress | `release-agent + api-governance-agent + security-agent` | [Installed candidate](tracks/113-beta-and-stable-release/handoff.md#native-core-v1-candidate--23-november-2026) |
 | 114 | Maintained dependencies and independent consumer contracts | Spec Approved | `api-governance-agent + core-scheduler-agent` | [Plan](tracks/114-dependency-and-consumer-contracts/plan.md) |
 | 115 | Frontier research experiments and reproducible evidence | Spec Approved | `research-agent + vv-uq-agent + performance-agent` | [Plan](tracks/115-frontier-experiments/plan.md) |
 | 116 | Cohort and spatial tobacco/vaping microsimulation contracts for tobac | In Progress | `des-api-agent + abm-api-agent + vv-uq-agent` | [Provider and standalone fixture evidence](tracks/116-tobac-cohort-microsimulation-contracts/handoff.md#provider-and-standalone-fixture--23-november-2026) |
@@ -220,7 +220,7 @@ Historical snapshot, superseded by the3November2026 accepted source/native packe
 - [x] **Track 91: rust-fmi adapter qualification** — Done; evaluation completed (rejected); value gate closed. [Track](tracks/91-fmi-robustness/index.md).
 
 ---
-- [ ] **Track 92: Sobol sequence qualification** — Planned; evaluation; value gate pending. [Track](tracks/92-sobol-burley-robustness/index.md).
+- [x] **Track 92: Sobol sequence qualification** — Evaluation closed with dependency adoption declined and the built-in versioned sequence qualified. [Evidence](tracks/92-sobol-burley-robustness/handoff.md#evaluation-closeout--23-november-2026).
 
 ---
 - [x] **Track 93: sha2 robustness** — Completed (foundation); [plan](tracks/93-sha2-integrity/index.md).

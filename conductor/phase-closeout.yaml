@@ -1623,15 +1623,17 @@ entries:
 
   - track_id: "92"
     phase: "0"
-    state: pending
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Planning only; value and consumer gates unresolved"
-    fixes_applied: false
-    validation_commands: []
-    git_status: "planning worktree"
-    commit_sha: ""
-    pushed_ref: ""
-    next_phase_decision: "Verify prerequisites and value; conditional adoption is not automatically authorized"
+    review_result: "The no-adoption decision in PR 356 remains in force. PR 418 qualifies the built-in versioned Sobol method and sensitivity oracles for the supported use."
+    fixes_applied: true
+    validation_commands:
+      - "Frozen SciPy and Joe–Kuo points, sequence exhaustion, and Ishigami and Sobol-G sensitivity oracles recorded in the S05 completion receipt"
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+    git_status: clean
+    commit_sha: "7ff7eb6a9ec2cb8fa63a7e1a13f8355fc4aed638"
+    pushed_ref: "origin/main"
+    next_phase_decision: "Close the evaluation at its no-go result. Use the qualified built-in method and versioned replay contract."
 
   - track_id: "93"
     phase: "sha2-integrity"
@@ -1933,15 +1935,16 @@ entries:
     phase: "0"
     state: pending
     review_command: "$conductor-review"
-    review_result: "Programme approved; implementation and independent acceptance remain scoped to the track plan."
+    review_result: "The native-core-v1 candidate passed both hosted clean installs at exact main source. The retained macOS archives independently passed Rust, C ABI, Python and the installed CareOps case."
     fixes_applied: false
     validation_commands:
       - "node scripts/validation/validate-frontier-evidence.mjs"
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
-    git_status: "Implementation packet in progress; no phase acceptance claimed."
-    commit_sha: ""
-    pushed_ref: ""
-    next_phase_decision: "Complete Phase 0 oracles and independent review before closing or promoting this track."
+      - "packaging/scripts/qualify_native_beta.py against the exact candidate on both hosted targets"
+    git_status: clean
+    commit_sha: "3b3b8da0a7cdbd414e12a18722f189996a52c7ab"
+    pushed_ref: "origin/main"
+    next_phase_decision: "Accept the installed-artifact gate. Complete the remaining alpha-to-beta evidence and maintainer review for this candidate."
 
   - track_id: "114"
     phase: "0"
@@ -2000,6 +2003,6 @@ entries:
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
       - "pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree"
     git_status: clean
-    commit_sha: "51d718504c05d7c1198ef2048db89883f2cd94e0"
-    pushed_ref: "origin/codex/cohort-native-export"
+    commit_sha: "6955d3f85c71b21889a6d3aec1ca006a436ed4bd"
+    pushed_ref: "origin/main"
     next_phase_decision: "Accept the standalone provider fixture and hand off the schema to receiving adapter owners for installed qualification."

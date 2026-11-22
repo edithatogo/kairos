@@ -1,5 +1,18 @@
 # Handoff
 
+## Evaluation closeout — 23 November 2026
+
+PR #356 integrated the bounded no-go evaluation for `sobol_burley`. The
+supported use is now supplied by the built-in versioned method from #418 at
+`7ff7eb6a9ec2cb8fa63a7e1a13f8355fc4aed638`. It has frozen SciPy/Joe–Kuo
+comparisons through 16 dimensions, checked exhaustion, and independent
+Ishigami and Sobol-G sensitivity interval tests. Complete this evaluation at
+its no-go stop criterion. Adopt the successor through its versioned numerical
+and replay contracts. [Original no-go](https://github.com/edithatogo/kairos/pull/356) ·
+[Scientific implementation](https://github.com/edithatogo/kairos/pull/418) ·
+[S05 evidence](../../execution/scientific/s05-completion.md).
+
+
 Updated: 2026-10-22. Maturity: planned; adoption decision pending.
 
 ## Summary
