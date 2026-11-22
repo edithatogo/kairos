@@ -32,6 +32,20 @@ for review. Registry upload and release publication follow their own
 authorised workflow. Upgrade and rollback across candidate versions are part
 of the release-candidate phase.
 
+## Reuse the tested bytes for provenance
+
+Track 113 selects one successful `main` installation run and pins both
+installation receipt hashes. [Candidate record](../tracks/113-beta-and-stable-release/metadata.json).
+
+Release Attestations downloads those two bundles and checks their contents
+against the pinned receipts. It scans the bundled SDK source and lock inventory,
+C package contents, and Python package metadata with the verified Syft release.
+It signs the SPDX document against the original package digests and retains the
+bundle, subject checksums and installation receipts as `native-beta-provenance`.
+[Workflow](../../.github/workflows/release-attestations.yml).
+
+Run the workflow on `main` with `gh workflow run release-attestations.yml --ref main`.
+
 Use `packaging/scripts/qualify_native_beta.py --output DIRECTORY` from a clean
 checkout with the profiled Python and the hash-pinned packaging tools from
 `scripts/package-python-tools.lock`. The output directory must be new. Its

@@ -6,11 +6,6 @@ concurrency:
 
 on:
   workflow_dispatch:
-    inputs:
-      artifact_path:
-        description: Path to the release artifacts to attest
-        required: true
-        default: dist
 
 permissions:
   contents: read
@@ -18,33 +13,86 @@ permissions:
 jobs:
   attest:
     name: release-attestation
+    if: github.ref == 'refs/heads/main'
     permissions:
       contents: read
+      actions: read # Read and download the selected native beta run.
       id-token: write # Needed to sign release attestations with OIDC.
       attestations: write # Needed to publish artifact attestations.
-    runs-on: ubuntu-latest
-    env:
-      ARTIFACT_PATH: ${{ github.event.inputs.artifact_path || 'dist' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Verify release artifacts exist
-        run: |
-          test -d "${ARTIFACT_PATH}"
-          test -f "${ARTIFACT_PATH}/release-artifact-manifest.json"
-          test -f "${ARTIFACT_PATH}/SHA256SUMS"
-      - name: Install Syft
-        uses: anchore/sbom-action/download-syft@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
-      - name: Generate SBOM
-        run: syft "dir:${ARTIFACT_PATH}" -o "spdx-json=${ARTIFACT_PATH}/sbom.spdx.json"
-      - name: Upload SBOM artifact
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
-          name: release-sbom-spdx
-          path: ${{ env.ARTIFACT_PATH }}/sbom.spdx.json
-      - name: Attest SBOM
+          python-version: "3.15.2"
+      - name: Verify repository-local Python 3.15.2
+        run: python scripts/python_runtime.py --github
+      - name: Verify the selected successful main run
+        id: installed
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          candidate=conductor/tracks/113-beta-and-stable-release/metadata.json
+          run_id="$(jq -er '.installed_candidate_run_id | select(type == "number" and . > 0 and . == floor)' "$candidate")"
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run_id" > "$RUNNER_TEMP/installation-run.json"
+          python -B packaging/scripts/verify_native_beta_evidence.py \
+            --repository "$GITHUB_REPOSITORY" --run "$RUNNER_TEMP/installation-run.json"
+          printf 'run-id=%s\n' "$run_id" >> "$GITHUB_OUTPUT"
+      - name: Download the tested Linux and macOS packages
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ steps.installed.outputs.run-id }}
+          pattern: native-beta-*
+          path: ${{ runner.temp }}/installed-beta
+          digest-mismatch: error
+      - name: Verify tested bytes and unpack the SBOM inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -B packaging/scripts/verify_native_beta_evidence.py \
+            --repository "$GITHUB_REPOSITORY" --run "$RUNNER_TEMP/installation-run.json" \
+            --artifacts "$RUNNER_TEMP/installed-beta" --output "$RUNNER_TEMP/native-beta-provenance"
+      - name: Generate SPDX with the verified Syft release
+        shell: bash
+        env:
+          SYFT_CHECK_FOR_APP_UPDATE: "false"
+        run: |
+          set -euo pipefail
+          syft_install="$RUNNER_TEMP/verified-syft"
+          work="$RUNNER_TEMP/native-beta-provenance"
+          python -B scripts/supply_chain/install_verified_syft.py --output-dir "$syft_install"
+          python -B scripts/supply_chain/verify_syft_installation_receipt.py \
+            --target linux-amd64 --output-dir "$syft_install" > "$work/evidence/syft-validation.json"
+          cp "$syft_install/evidence/receipt.json" "$work/evidence/syft-receipt.json"
+          source="$(jq -er .head_sha "$work/evidence/installation-run.json")"
+          "$syft_install/bin/syft" "dir:$work/components" --source-name kairos-native-core-v1 \
+            --source-version "$source" -o "spdx-json=$work/evidence/sbom.spdx.json"
+          jq -e --slurpfile profile packaging/native-beta-scope.json '
+            .spdxVersion == "SPDX-2.3" and
+            ([.packages[].name] as $names |
+             ($profile[0].rust_crates + ["kairo-ecs"]) |
+             all(.[]; . as $name | $names | index($name) != null))
+          ' "$work/evidence/sbom.spdx.json"
+      - name: Attest the SBOM for the tested packages
+        id: sbom
         uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
-          subject-path: ${{ env.ARTIFACT_PATH }}
-          sbom-path: ${{ env.ARTIFACT_PATH }}/sbom.spdx.json
+          subject-checksums: ${{ runner.temp }}/native-beta-provenance/evidence/subjects.sha256
+          sbom-path: ${{ runner.temp }}/native-beta-provenance/evidence/sbom.spdx.json
+          push-to-registry: false
+          create-storage-record: false
+      - name: Retain the attestation bundle with its inputs
+        env:
+          SBOM_BUNDLE: ${{ steps.sbom.outputs.bundle-path }}
+        run: cp "$SBOM_BUNDLE" "$RUNNER_TEMP/native-beta-provenance/evidence/sbom.attestation.jsonl"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: native-beta-provenance
+          path: ${{ runner.temp }}/native-beta-provenance/evidence/
+          if-no-files-found: error
