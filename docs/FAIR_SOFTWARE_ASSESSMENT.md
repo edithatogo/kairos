@@ -4,12 +4,12 @@ Status: **provisional, not accepted**. This record documents review obligations;
 
 ## Automated evidence
 
-The read-only [howfairis](https://github.com/fair-software/howfairis) action checks the public repository, recognized license, software registry, citation metadata and software quality checklist. Its output is a **five-point indicator**, not verification of scientific results, accessibility or FAIR4RS compliance.
+The read-only [howfairis](https://github.com/fair-software/howfairis) CLI within the existing `CI Policy` job checks the public repository, recognized license, software registry, citation metadata and software quality checklist. Its output is a **five-point indicator**, not verification of scientific results, accessibility or FAIR4RS compliance.
 
-- Run: GitHub Actions > `FAIR research software assessment` (after the workflow is admitted).
+- Run: GitHub Actions > `CI Policy` > `Advisory FAIR public-software metadata assessment`; this is not a separate workflow.
 - Record the run URL, evaluated default-branch commit and each observed result here when available.
 - A failed or unavailable assessment stays **unknown**, never inferred as a pass.
-- This repository uses the `howfairis==0.14.2` CLI in an isolated CI interpreter instead of the Docker action (GitHub startup failures). The CLI version is pinned, its dependency installation is fail-closed, and only an incomplete FAIR score is advisory. Verify the hosted run before admission.
+- This repository uses the `howfairis==0.14.2` CLI inside existing CI Policy with isolated Python 3.11 tooling, instead of a standalone GitHub workflow (repeated startup failures). The CLI version is pinned, its dependency installation is fail-closed, and only an incomplete FAIR score is advisory. Verify the hosted run before admission.
 
 ## Evidence-based review
 
