@@ -50,10 +50,12 @@ jobs:
       - name: Qualify toolchains
         env:
           EXPECTED_TARGET: ${{ matrix.target }}
+          RUSTUP_HOME: ${{ runner.temp }}/native-beta-rustup
         run: |
           python -m pip install --require-hashes -r scripts/package-python-tools.lock
           rustup toolchain install 1.99.1 --profile minimal
           rustup run 1.99.1 rustc -Vv | grep -Fx "host: $EXPECTED_TARGET"
+          printf 'RUSTUP_HOME=%s\n' "$RUSTUP_HOME" >> "$GITHUB_ENV"
       - name: Build and run the clean-installed candidate
         run: python packaging/scripts/qualify_native_beta.py --output "$RUNNER_TEMP/native-beta"
       - name: Retain the exact tested artifacts and receipt

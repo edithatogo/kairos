@@ -18,8 +18,10 @@ dependencies. Run each check with the installed file paths.
   dispatch ordering, error statuses, reset, free and buffer ownership.
 - Run the existing Python native lifecycle suite against the installed
   distribution. Verify the adapter loads from the new environment and
-  executes the installed C ABI library. Check missing native configuration
-  explicitly before loading it.
+  executes the installed C ABI library. Require typed rejection for missing
+  configuration, wrong architecture, missing symbols and an incompatible ABI.
+- Verify the Apache-2.0 declaration in the SDK and installed wheel and the
+  full licence text in the Rust and C archives.
 - Fetch the exact public CareOps commit named in the profile. Install a
   fresh `careops-core` source copy in a small consumer workspace and select
   the same installed Rust SDK. Execute the original

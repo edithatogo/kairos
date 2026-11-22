@@ -49,8 +49,14 @@ class NativeSchedulerBridge:
             self.lib_path = str(path.resolve(strict=True))
             library = ctypes.CDLL(self.lib_path)
             u64, i32, u32 = ctypes.c_uint64, ctypes.c_int32, ctypes.c_uint32
+            version = library.kairo_ecs_ffi_version
+            version.argtypes = []
+            version.restype = u32
+            abi = int(version())
+            if abi != 1:
+                raise NativeBackendUnavailable(f"Unsupported Rust ABI version {abi}; expected 1")
+
             signatures: dict[str, tuple[list[Any], Any]] = {
-                "ffi_version": ([], u32),
                 "engine_new": ([], u64),
                 "engine_free": ([u64], ctypes.c_int),
                 "engine_reset": ([u64], ctypes.c_int),
@@ -69,13 +75,10 @@ class NativeSchedulerBridge:
                 function = getattr(library, f"kairo_ecs_{name}")
                 function.argtypes = argtypes
                 function.restype = restype
-            abi = int(library.kairo_ecs_ffi_version())
         except (OSError, AttributeError) as error:
             raise NativeBackendUnavailable(
                 f"Unable to load the required Rust ABI from {selected}: {error}"
             ) from error
-        if abi != 1:
-            raise NativeBackendUnavailable(f"Unsupported Rust ABI version {abi}; expected 1")
         self._lib = library
         self.available = True
 

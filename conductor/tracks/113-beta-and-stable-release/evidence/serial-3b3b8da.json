@@ -1,0 +1,169 @@
+{
+  "benchmark_arguments": [
+    "schedule_cancel_1m_mixed/schedule_cancel_pop",
+    "--bench",
+    "--noplot",
+    "--sample-size",
+    "15",
+    "--warm-up-time",
+    "1",
+    "--measurement-time",
+    "2"
+  ],
+  "build_command": [
+    "cargo",
+    "bench",
+    "--locked",
+    "--offline",
+    "-p",
+    "kairo-ecs-bench",
+    "--bench",
+    "scheduler",
+    "--no-run",
+    "--message-format=json"
+  ],
+  "cancelled_before_timed_drain": 500000,
+  "candidate_commit": "3b3b8da0a7cdbd414e12a18722f189996a52c7ab",
+  "cargo": "cargo 1.99.1 (5f94df478 2026-08-27)",
+  "drain_ns_per_iteration_summary": {
+    "count": 45,
+    "max": 209726500.0,
+    "median": 196506083.0,
+    "min": 187706875.0
+  },
+  "exit_status": 0,
+  "host": [
+    "Darwin 27.2.0 arm64",
+    "hw.model: MacBookPro18,4",
+    "hw.ncpu: 10",
+    "hw.memsize: 34359738368",
+    "machdep.cpu.brand_string: Apple M1 Max"
+  ],
+  "inputs": [
+    "de3ac23b60743df65591d8b7aa0003f93d4be589334cbe044bb0dd262de5dca6  /Volumes/PortableSSD/kairos-beta-serial.Qk29os/target/release/deps/scheduler-d693cbf3c518c8f9",
+    "0c9ba3875ccadc1c6882006aabe8eba2c6d00120682485036a8c9c113daa62b7  crates/kairo-ecs-bench/benches/scheduler.rs",
+    "bb693742c2bff6f5e62191b3aad99349299d7d0ecad9b9222a3b61dcc9480b17  Cargo.lock"
+  ],
+  "measurement": "Criterion times the scheduler drain after setup. /usr/bin/time -l reports the entire benchmark process peak RSS.",
+  "priority_seed": 42,
+  "runs": [
+    {
+      "criterion_mean_ns": {
+        "confidence_interval": {
+          "confidence_level": 0.95,
+          "lower_bound": 193328336.66333333,
+          "upper_bound": 197971819.26666668
+        },
+        "point_estimate": 195628572.0,
+        "standard_error": 1188236.2876016325
+      },
+      "drain_ns_per_iteration": [
+        201809000.0,
+        192282208.0,
+        192011791.0,
+        198600750.0,
+        196543791.0,
+        196118333.0,
+        192938416.0,
+        193795791.0,
+        202901958.0,
+        202502417.0,
+        200970833.0,
+        192103625.0,
+        193397750.0,
+        187706875.0,
+        190745042.0
+      ],
+      "files_sha256": {
+        "run-1/benchmark.log": "01bdfb28ce7eb2a643c6cd8fb19caf0099ed026605377302144280bb8606bd1a",
+        "run-1/criterion/schedule_cancel_1m_mixed/schedule_cancel_pop/new/estimates.json": "d19703cda710b3bf4b737e51740fc7d726532fcf049562f6839f5b9c234650a4",
+        "run-1/criterion/schedule_cancel_1m_mixed/schedule_cancel_pop/new/sample.json": "a231c2c3acc5f1b088d65605a38d523d37349a97a69d85ca8751a82efb4beac5"
+      },
+      "max_rss_bytes": 1026064384,
+      "run": 1
+    },
+    {
+      "criterion_mean_ns": {
+        "confidence_interval": {
+          "confidence_level": 0.95,
+          "lower_bound": 193550344.22833332,
+          "upper_bound": 199227148.21333334
+        },
+        "point_estimate": 196371433.46666667,
+        "standard_error": 1449367.5336266742
+      },
+      "drain_ns_per_iteration": [
+        206555625.0,
+        202255833.0,
+        194044750.0,
+        188543709.0,
+        189661250.0,
+        204563542.0,
+        188918042.0,
+        197857000.0,
+        199907834.0,
+        195841959.0,
+        195585167.0,
+        198226083.0,
+        194817333.0,
+        188286125.0,
+        200507250.0
+      ],
+      "files_sha256": {
+        "run-2/benchmark.log": "a688694692438e4e4d3595b1098e843a94762448da086d418feba05d454be7e9",
+        "run-2/criterion/schedule_cancel_1m_mixed/schedule_cancel_pop/new/estimates.json": "eec2c0f98668e4dff67899551b46ff384995231691183242f1aed52fac21bd6a",
+        "run-2/criterion/schedule_cancel_1m_mixed/schedule_cancel_pop/new/sample.json": "60db7423b79e20ef283248aa7c7a478780fb800ef326a0055ac93b8d5b6fbac5"
+      },
+      "max_rss_bytes": 978944000,
+      "run": 2
+    },
+    {
+      "criterion_mean_ns": {
+        "confidence_interval": {
+          "confidence_level": 0.95,
+          "lower_bound": 196230310.56166667,
+          "upper_bound": 200962541.66666666
+        },
+        "point_estimate": 198487716.73333332,
+        "standard_error": 1211649.006144121
+      },
+      "drain_ns_per_iteration": [
+        190657125.0,
+        194096083.0,
+        199213041.0,
+        195932417.0,
+        205358125.0,
+        200339250.0,
+        202415834.0,
+        200576542.0,
+        198587542.0,
+        193249125.0,
+        197261917.0,
+        196506083.0,
+        194736292.0,
+        198659875.0,
+        209726500.0
+      ],
+      "files_sha256": {
+        "run-3/benchmark.log": "add73d25f5f315be864d4d84ec9509dfb4defb0c97e0bda43e62b46321b49e8a",
+        "run-3/criterion/schedule_cancel_1m_mixed/schedule_cancel_pop/new/estimates.json": "3aa8c6fefff095a5b4e695e3c661a9333e042d42ef7a59784126bed0b3b93dff",
+        "run-3/criterion/schedule_cancel_1m_mixed/schedule_cancel_pop/new/sample.json": "1e9fde69810d1690aabb118040dc82461e1ed8598e66cfc5bfb7ea57628e7d26"
+      },
+      "max_rss_bytes": 926466048,
+      "run": 3
+    }
+  ],
+  "rustc": [
+    "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+    "binary: rustc",
+    "commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67",
+    "commit-date: 2026-10-13",
+    "host: aarch64-apple-darwin",
+    "release: 1.99.1",
+    "LLVM version: 23.1.1"
+  ],
+  "scheduled": 1000000,
+  "sdk_build_directory": "/Volumes/PortableSSD/kairos-beta-serial.Qk29os/sdk",
+  "sdk_installation_run": 45031314631,
+  "sdk_sha256": "a8981c2bd9537dba20d6027d15c75e5deb329a9f0ee6912dab2d9609874006c9"
+}
