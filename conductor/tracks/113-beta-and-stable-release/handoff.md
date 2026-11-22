@@ -29,10 +29,50 @@ Python lifecycle, Rust service-station and replay, and installed CareOps
 allocation cases. Every invocation exited zero. The independent receipt
 SHA-256 is `f71b182d0e78256da2c10cd029809872dffb0b789abce234ce38da5787504f2c`.
 
-Milestone 113.0.3 is complete. Finish the remaining
-[alpha-to-beta gates](../../release-gates.md#alpha-to-beta-all-required),
-including the candidate performance evidence and maintainer review, before
-the publication packet.
+### Candidate compatibility, performance and provenance
+
+- **CareOps replay.** The installed SDK built CareOps
+  `9af99b5730d6aa5cef1c05bd48e90fd377b80cf2` on macOS ARM64 with Rust
+  1.99.1. `c63_compatibility_replay_performance::historical_nominal_fixture_serializes_byte_identically`
+  admitted the persisted scenario from provider pin `44261eb5cf8275f132f63a3396903d116d701dbe`
+  and reproduced the frozen run byte for byte. The locked Cargo test exited
+  zero. Test log SHA-256
+  `fef95adbc919d2b58c558ffa6249129a2cd7c8abe835569f43afef0a1ac74cc5`.
+- **Public alpha compatibility.** The published archive and tag identify
+  `669520a292d4861cbe2971818100261cd62dedfc`. All 34 package manifest
+  digests matched. The release body lists a different SHA. Both distributions
+  passed the alpha ordering, cancellation and zero-delay fixtures. The alpha
+  RNG fixture passed on the alpha and failed on the candidate as expected
+  after the generator change. The candidate passed its own fixture. The
+  locked Rust 1.99.1 comparison receipt SHA-256 is
+  `4d8f04096551a1f4a845d6932f8ace9be3e3d4ee9a4d4ea447b38ab26bdd06ac`.
+  [Published alpha archive](https://github.com/edithatogo/kairos/releases/tag/v0.4.0-alpha.1).
+- **Timing and memory.** The installed SDK ran the existing serial
+  `schedule_cancel_1m_mixed/schedule_cancel_pop` benchmark on Apple M1 Max
+  with Rust 1.99.1 and seed 42. After scheduling one million events and
+  cancelling half, 45 drain samples had a median of 196.5 ms and a range of
+  187.7–209.7 ms. The three process RSS peaks were 926,466,048,
+  978,944,000 and 1,026,064,384 bytes. RSS includes input setup. Raw receipt
+  SHA-256 `0200e4e4cdeb26161c8f493753d5ae314b3b57300da7ce8201b2cc60bffa1657`.
+  The existing conservative PDES ring at the same source revision passed exact
+  final-state parity across 120 matched serial and parallel samples. Serial
+  was faster across the eight measured cases. Raw paired sample SHA-256
+  `a0d4e599f5f59ead98b677b0234991c716f76238597318c06c706b1dbcd156f3`.
+- **Signed SBOM.** The approved installation run supplied six named artifact
+  subjects with five unique digests. Verified Syft generated an SPDX 2.3
+  inventory of 1,171 packages. The GitHub signature verified for all five
+  digests against the release workflow on main
+  `7c0c561ff2ee38431bc5b2d8e2d68a036996e4e5`. The SBOM SHA-256 is
+  `13c34ae40c2b8094e7b80892b58e72a3c8a382344ad868516a99f6d9f2162275`.
+  The verification bundle SHA-256 is
+  `b47ca531eb685607e35ea994012825e1b118fbd3702ad77be628812f3e26b904`.
+  [Hosted signature and evidence](https://github.com/edithatogo/kairos/actions/runs/45044299499).
+
+Milestone 113.0.3 is complete. Phase 0 still requires a passing mutation gate
+and final maintainer acceptance under the
+[alpha-to-beta gates](../../release-gates.md#alpha-to-beta-all-required).
+The scheduled baseline reported 76 surviving mutants.
+[Scheduled mutation result](https://github.com/edithatogo/kairos/actions/runs/45019966071).
 
 ## Summary
 
