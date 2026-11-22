@@ -6,6 +6,7 @@ through component destruction. FMI 2 uses synchronous callbacks. FMI 3 uses
 the standard step signature and treats partial advancement as a typed error.
 Advertised state support enables one in-process checkpoint. Invalid native
 state outputs are never recorded as usable handles.
+[Compatibility decision and review](../../../docs/adr/0016-native-fmi-co-simulation.md).
 
 ## Upstream Reference FMUs
 
