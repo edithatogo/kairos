@@ -66,6 +66,7 @@ jobs:
           test -f .github/workflows/privacy-secrets.yml
           test -f .github/workflows/python-dependency-inventory.yml
           test -f .github/workflows/docs.yml
+          test -f .github/workflows/fair-software.yml
           test -f .github/workflows/fuzzing.yml
           test -f .github/workflows/gpu-free-smoke.yml
           test -f .github/workflows/grype.yml
