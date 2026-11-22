@@ -2003,6 +2003,6 @@ entries:
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
       - "pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree"
     git_status: clean
-    commit_sha: "51d718504c05d7c1198ef2048db89883f2cd94e0"
-    pushed_ref: "origin/codex/cohort-native-export"
+    commit_sha: "6955d3f85c71b21889a6d3aec1ca006a436ed4bd"
+    pushed_ref: "origin/main"
     next_phase_decision: "Accept the standalone provider fixture and hand off the schema to receiving adapter owners for installed qualification."

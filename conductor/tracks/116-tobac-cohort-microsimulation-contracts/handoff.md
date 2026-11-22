@@ -83,8 +83,8 @@ adapter. Tobacco/vaping epidemiology and policy inputs belong to `tobac`.
 |---|---|
 | `$conductor-review` | Independent review and re-review accepted the fixture. |
 | accepted fixes | Source-state visit addressing and a convergence check on imported results. |
-| commit SHA | `51d718504c05d7c1198ef2048db89883f2cd94e0`. |
-| pushed ref | `origin/codex/cohort-native-export` at implementation publication. |
+| commit SHA | [PR #420](https://github.com/edithatogo/kairos/pull/420) merged the reviewed provider as `6955d3f85c71b21889a6d3aec1ca006a436ed4bd`. |
+| pushed ref | `origin/main`. |
 | `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` | Required after pushing the closeout update. |
 | next-phase decision | Accept provider Phases 0–2 and hand off installed adapter qualification. |
 
