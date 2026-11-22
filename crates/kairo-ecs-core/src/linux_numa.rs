@@ -87,6 +87,17 @@ fn set_mask(tid: u64, mask: &str) -> Result<(), NumaError> {
     }
 }
 
+fn recover_failed_bind(
+    saved: &mut Option<(u32, String)>,
+    original: &str,
+    read_mask: impl FnOnce() -> Result<String, NumaError>,
+    restore_mask: impl FnOnce(&str) -> Result<(), NumaError>,
+) {
+    if read_mask().as_deref() == Ok(original) || restore_mask(original).is_ok() {
+        *saved = None;
+    }
+}
+
 pub(super) fn affinity(
     plan: &AffinityBindingPlan,
     action: AffinityAction,
@@ -112,10 +123,7 @@ pub(super) fn affinity(
             }
             *saved = Some((plan.core_id, original.clone()));
             if let Err(err) = set_mask(tid, &plan.core_id.to_string()) {
-                if allowed().as_deref() == Ok(original.as_str()) || set_mask(tid, &original).is_ok()
-                {
-                    *saved = None;
-                }
+                recover_failed_bind(saved, &original, allowed, |mask| set_mask(tid, mask));
                 return Err(err);
             }
             Ok(())
@@ -185,5 +193,58 @@ mod tests {
         for malformed in ["1-0", "0-2,2-5", "0-4294967295", "3,", "a"] {
             assert_eq!(cpu_list(malformed), None);
         }
+    }
+
+    #[test]
+    fn set_mask_rejects_invalid_thread_even_when_mask_matches() {
+        // This oracle needs Linux procfs and the util-linux taskset command.
+        if !Path::new("/usr/bin/taskset").is_file()
+            || !Path::new("/proc/thread-self/status").is_file()
+        {
+            return;
+        }
+        let original = allowed().unwrap();
+        assert_eq!(
+            set_mask(u64::MAX, &original),
+            Err(NumaError::InvalidAffinity)
+        );
+        assert_eq!(allowed().unwrap(), original);
+    }
+
+    #[test]
+    fn failed_bind_keeps_the_saved_mask_until_recovery_succeeds() {
+        let original = "1-3";
+        let previous = Some((2, original.to_owned()));
+        let mut saved = previous.clone();
+        recover_failed_bind(
+            &mut saved,
+            original,
+            || Ok(original.to_owned()),
+            |_| panic!("the original mask is still active"),
+        );
+        assert!(saved.is_none());
+
+        saved = previous.clone();
+        recover_failed_bind(
+            &mut saved,
+            original,
+            || Ok("2".to_owned()),
+            |mask| {
+                assert_eq!(mask, original);
+                Err(NumaError::InvalidAffinity)
+            },
+        );
+        assert_eq!(saved, previous);
+
+        recover_failed_bind(
+            &mut saved,
+            original,
+            || Ok("2".to_owned()),
+            |mask| {
+                assert_eq!(mask, original);
+                Ok(())
+            },
+        );
+        assert!(saved.is_none());
     }
 }

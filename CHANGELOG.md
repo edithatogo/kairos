@@ -38,6 +38,7 @@ Format:
 
 ### Fixed
 
+- The nightly core mutation check exercises NUMA tests and verifies topology, allocator metrics and telemetry rejection cases.
 - `kairo-ecs-cli` uses checked Joe–Kuo Sobol directions and estimates Jansen first-order and total-effect intervals via paired bootstrap. The previous trajectory is available through `LegacySobolSequence`.
 - `kairo-ecs-des` preserves active age and competing cause/censor chronology across interruption. `kairo-ecs-ml` reports unavailable ONNX execution explicitly.
 

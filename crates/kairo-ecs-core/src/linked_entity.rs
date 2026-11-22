@@ -283,12 +283,15 @@ impl RelationshipTelemetryRecord {
     }
 
     pub fn parse_ndjson_line(line: &str) -> Result<Self, LinkedEntityError> {
-        let trimmed = line.trim();
-        if !trimmed.starts_with('{') || !trimmed.ends_with('}') {
+        let Some(inner) = line
+            .trim()
+            .strip_prefix('{')
+            .and_then(|content| content.strip_suffix('}'))
+        else {
             return Err(LinkedEntityError::MalformedTelemetry(
                 "invalid JSON object".into(),
             ));
-        }
+        };
 
         fn extract_str(content: &str, key: &str) -> Result<String, LinkedEntityError> {
             let pattern = format!("\"{}\":\"", key);
@@ -351,7 +354,6 @@ impl RelationshipTelemetryRecord {
             })
         }
 
-        let inner = &trimmed[1..trimmed.len() - 1];
         let schema_version = extract_u64(inner, "schema_version")? as u16;
         let run_id = extract_str(inner, "run_id")?;
         let event_seq = extract_u64(inner, "event_seq")?;
@@ -631,6 +633,29 @@ mod tests {
 
         let invalid_utf8 = vec![0xFF, 0xFE, 0xFD];
         assert!(RelationshipTelemetryBatch::from_bytes(&invalid_utf8).is_err());
+    }
+
+    #[test]
+    fn telemetry_record_round_trips_and_requires_both_braces() {
+        let line = concat!(
+            r#"{"schema_version":1,"run_id":"fixture","event_seq":1,"time_ticks":3,"#,
+            r#""parent_index":1,"parent_generation":0,"child_index":2,"child_generation":1,"#,
+            r#""parent_model_id":null,"child_model_id":17,"kind":1,"policy":0,"lifecycle_event":"attached"}"#,
+        );
+        let batch = RelationshipTelemetryBatch::from_ndjson(line).unwrap();
+        assert_eq!(batch.len(), 1);
+        assert!(!batch.is_empty());
+        assert_eq!(batch.to_ndjson(), line);
+
+        for broken in [
+            line.strip_prefix('{').unwrap(),
+            line.strip_suffix('}').unwrap(),
+        ] {
+            assert!(matches!(
+                RelationshipTelemetryRecord::parse_ndjson_line(broken),
+                Err(LinkedEntityError::MalformedTelemetry(_))
+            ));
+        }
     }
 
     #[test]

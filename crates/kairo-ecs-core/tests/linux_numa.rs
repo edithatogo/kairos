@@ -109,7 +109,18 @@ fn current_thread_binding_is_reversible_and_isolated() {
     assert_eq!(allowed(), cpu.to_string());
     assert!(plan.apply().is_err());
     assert!(invalid.revert().is_err());
+    let without_opt_in = AffinityBindingPlan {
+        opt_in: false,
+        ..plan.clone()
+    };
+    assert_eq!(without_opt_in.revert(), Err(NumaError::InvalidAffinity));
+    assert_eq!(allowed(), cpu.to_string());
+
     plan.reversal().apply().unwrap();
+    assert_eq!(allowed(), original);
+
+    plan.apply().unwrap();
+    plan.revert().unwrap();
     assert_eq!(allowed(), original);
     assert!(plan.revert().is_err());
     println!("original {original}, bound {cpu}, restored {}", allowed());
