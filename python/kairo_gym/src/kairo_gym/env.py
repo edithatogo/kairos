@@ -1,6 +1,7 @@
 """Optional Gymnasium and PettingZoo adapters for the Rust queue model."""
 
 from dataclasses import dataclass
+from operator import index
 from typing import ClassVar
 
 from ._native import (
@@ -73,8 +74,10 @@ class KairoGymEnv(GymEnv):
         self.action_space = gymnasium.spaces.Discrete(2)
 
     def reset(self, *, seed=None, options=None):
+        seed = None if seed is None else index(seed)
+        observation = self._queue.reset(seed)
         super().reset(seed=seed)
-        return _observation(self._queue.reset(seed)), {}
+        return _observation(observation), {}
 
     def step(self, action):
         step = self._queue.step([action])

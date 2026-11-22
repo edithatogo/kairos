@@ -71,6 +71,9 @@ class NativeQueueTests(unittest.TestCase):
             child = env._queue._process
             observed, _ = env.reset(seed=42)
             self.assertEqual(observed.tolist(), initial["observation"])
+            with self.assertRaisesRegex(ValueError, "unsigned 64-bit integer"):
+                env.reset(seed=2**64)
+            self.assertEqual(env.np_random_seed, 42)
             with self.assertRaisesRegex(ValueError, "one action"):
                 env.step(2)
             step, reward, terminated, truncated, _ = env.step(1)
