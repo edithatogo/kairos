@@ -2189,6 +2189,8 @@ version = "0.1.0"
 dependencies = [
  "clap",
  "kairo-ecs-core",
+ "kairo-ecs-ml",
+ "kairo-ecs-rng",
  "kairo-ecs-types",
  "rayon",
  "serde",
@@ -2329,6 +2331,9 @@ dependencies = [
 [[package]]
 name = "kairo-ecs-ml"
 version = "0.1.0"
+dependencies = [
+ "kairo-ecs-rng",
+]
 
 [[package]]
 name = "kairo-ecs-mpi"

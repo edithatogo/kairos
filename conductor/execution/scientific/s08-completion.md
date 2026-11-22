@@ -1,0 +1,7 @@
+# S08 Competing risks
+
+For independent cause rates 0.4 and 0.8, survival at time t is exp(-1.2t) and cause incidence is rate/1.2 times one minus survival. Verify incidence at several horizons and right-censoring, using a four-standard-error bound plus one sample at each horizon. Score exact inverse hazards for exponential, shape-2 Weibull and piecewise rates on both sides of a breakpoint. Proportional Weibull causes have the same incidence split as proportional exponential causes and survival exp(-sum of cumulative hazards). Compare interrupted/checkpointed/restarted DES clock timestamps with an independent integrated-hazard budget, keeping cause identity deterministic. [R survival competing risks vignette](https://stat.ethz.ch/R-manual/R-devel/RHOME/library/survival/doc/compete.pdf)
+
+A suspended hazard accumulates neither age nor hazard. Resume preserves both, even when the curve varies with age. Replacing a channel begins a new curve at age zero. RetainResidual carries the integrated budget into that curve. Restart samples a new threshold. Use scheduler checkpoint/restore and a copied clock in the same process. This contract has no persisted clock schema.
+
+A late read or residual-preserving replacement ranks causes and right-censor cutoffs by their original crossing times. Dispatch uses the present time for an overdue result. RetainResidual keeps a due event, and dispatch carries the censor flag independently of the numeric cause ID.

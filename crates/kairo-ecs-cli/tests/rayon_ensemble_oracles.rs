@@ -1,5 +1,6 @@
 use kairo_ecs_cli::ensemble::{
-    build_bounded_thread_pool, AbcSmcCalibrator, ParallelEnsembleRunner, SobolSensitivityAnalyzer,
+    build_bounded_thread_pool, BatchDistanceScorer, ParallelEnsembleRunner,
+    SobolSensitivityAnalyzer,
 };
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
@@ -49,49 +50,18 @@ fn test_sobol_sensitivity_parallel_bit_invariance() {
     let sample_size = 64;
     let dimensions = 3;
 
-    let seq = SobolSensitivityAnalyzer::analyze(&ishigami, dimensions, sample_size);
-    let par1 = SobolSensitivityAnalyzer::analyze_parallel(&ishigami, dimensions, sample_size, 1);
-    let par2 = SobolSensitivityAnalyzer::analyze_parallel(&ishigami, dimensions, sample_size, 2);
-    let par4 = SobolSensitivityAnalyzer::analyze_parallel(&ishigami, dimensions, sample_size, 4);
-
-    for d in 0..dimensions {
-        assert!(
-            (seq.first_order[d] - par1.first_order[d]).abs() < 1e-12,
-            "dim {} seq vs par1 first_order mismatch",
-            d
-        );
-        assert!(
-            (par1.first_order[d] - par2.first_order[d]).abs() < 1e-12,
-            "dim {} par1 vs par2 first_order mismatch",
-            d
-        );
-        assert!(
-            (par2.first_order[d] - par4.first_order[d]).abs() < 1e-12,
-            "dim {} par2 vs par4 first_order mismatch",
-            d
-        );
-
-        assert!(
-            (seq.total_effect[d] - par1.total_effect[d]).abs() < 1e-12,
-            "dim {} seq vs par1 total_effect mismatch",
-            d
-        );
-        assert!(
-            (par1.total_effect[d] - par2.total_effect[d]).abs() < 1e-12,
-            "dim {} par1 vs par2 total_effect mismatch",
-            d
-        );
-        assert!(
-            (par2.total_effect[d] - par4.total_effect[d]).abs() < 1e-12,
-            "dim {} par2 vs par4 total_effect mismatch",
-            d
-        );
+    let sequential = SobolSensitivityAnalyzer::analyze(&ishigami, dimensions, sample_size).unwrap();
+    for workers in [1, 2, 4] {
+        let parallel =
+            SobolSensitivityAnalyzer::analyze_parallel(&ishigami, dimensions, sample_size, workers)
+                .unwrap();
+        assert_eq!(sequential, parallel, "{workers} workers");
     }
 }
 
 #[test]
-fn test_abc_smc_calibrator_parallel_bit_invariance() {
-    let calibrator = AbcSmcCalibrator::new(0.5);
+fn test_batch_distance_scorer_parallel_bit_invariance() {
+    let calibrator = BatchDistanceScorer::new(0.5);
     let particles: Vec<Vec<f64>> = (0..50)
         .map(|i| vec![(i as f64) * 0.1, ((50 - i) as f64) * 0.2])
         .collect();
@@ -263,8 +233,8 @@ fn test_workload_size_capping_and_empty_particles() {
     let res = runner.run_sweep(&point, |_s, p| p[0] + p[1]);
     assert_eq!(res, vec![4.0]);
 
-    // Empty particles in AbcSmcCalibrator should return immediately without allocating a thread pool
-    let calibrator = AbcSmcCalibrator::new(1.0);
+    // Empty particles in BatchDistanceScorer should return immediately without allocating a thread pool
+    let calibrator = BatchDistanceScorer::new(1.0);
     let (weights, accepted) = calibrator.evaluate_particles_parallel(&[], &[], &|_| vec![], 64);
     assert!(weights.is_empty());
     assert!(accepted.is_empty());

@@ -1,49 +1,47 @@
 use std::sync::Arc;
 
 use kairo_ecs_ml::{
-    ensure_backend_configured, Backend, BackendStatus, FallbackPolicy, InferenceTickHook,
-    OrtNeuralSystem, OrtSession, Tensor, TickPhase,
+    ensure_backend_configured, AffineSurrogate, Backend, BackendStatus, FallbackPolicy,
+    InferenceTickHook, ModelMetadata, OrtSession, Tensor, TickPhase,
 };
+
+fn bounded_affine(phase: TickPhase) -> AffineSurrogate {
+    AffineSurrogate::new(
+        ModelMetadata {
+            name: "affine".into(),
+            version: "1".into(),
+            input_shape: vec![1],
+            output_shape: vec![1],
+        },
+        Tensor::new([1, 1], [2.0]).unwrap(),
+        Tensor::scalar(1.0),
+        vec![(0.0, 10.0)],
+        phase,
+        FallbackPolicy::UseOriginalSystem,
+    )
+    .unwrap()
+}
 
 #[test]
 fn featureless_tick_hook_runs_registered_model() {
-    let session = OrtSession::from_bytes("identity", "0", [1], vec![1], vec![1]).expect("session");
-    let system = OrtNeuralSystem::new(
-        session,
-        TickPhase::BeforeSystems,
-        FallbackPolicy::UseOriginalSystem,
-    );
     let mut hook = InferenceTickHook::new();
-    hook.try_register(Arc::new(system)).expect("register");
-
+    hook.try_register(Arc::new(bounded_affine(TickPhase::BeforeSystems)))
+        .unwrap();
     let output = hook
         .run_phase(TickPhase::BeforeSystems, &Tensor::scalar(3.0))
-        .expect("inference");
-
-    assert_eq!(output[0].values(), &[3.0]);
+        .unwrap();
+    assert_eq!(output[0].values(), &[7.0]);
 }
 
 #[test]
 fn featureless_tick_hook_rejects_duplicate_model_registration() {
-    let session = OrtSession::from_bytes("identity", "1", [1], vec![1], vec![1]).expect("session");
-    let first = OrtNeuralSystem::new(
-        session.clone(),
-        TickPhase::BeforeSystems,
-        FallbackPolicy::UseOriginalSystem,
-    );
-    let second = OrtNeuralSystem::new(
-        session,
-        TickPhase::AfterSystems,
-        FallbackPolicy::UseOriginalSystem,
-    );
     let mut hook = InferenceTickHook::new();
-
-    hook.try_register(Arc::new(first)).expect("register first");
+    hook.try_register(Arc::new(bounded_affine(TickPhase::BeforeSystems)))
+        .unwrap();
     let error = hook
-        .try_register(Arc::new(second))
-        .expect_err("duplicate should fail");
-
-    assert_eq!(error.to_string(), "model identity:1 is already registered");
+        .try_register(Arc::new(bounded_affine(TickPhase::AfterSystems)))
+        .unwrap_err();
+    assert_eq!(error.to_string(), "model affine:1 is already registered");
 }
 
 #[test]
@@ -69,7 +67,7 @@ fn featureless_session_reports_backend_not_configured() {
         session.runtime_status(),
         BackendStatus::NotConfigured {
             backend: Backend::OnnxRuntime,
-            reason: "ONNX Runtime adapter is not wired in the dependency-free scaffold"
+            reason: "no qualified ONNX Runtime is configured"
         }
     );
     assert!(ensure_backend_configured(Backend::Burn).is_err());

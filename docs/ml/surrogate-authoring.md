@@ -1,53 +1,17 @@
-# Surrogate Authoring Guide
+# Surrogate authoring guide
 
-**Contract demonstration only.** The source below does not load a real ONNX
-graph or implement a validated surrogate. Rust-only execution is mandatory;
-legacy Python simulation/RL demonstrations are unsupported pending native model
-adapters. Follow [current capabilities](../current-state.md) and the
-[scientific completion plan](../../conductor/tracks/110-scientific-method-completion/plan.md).
+Use `AffineSurrogate` for an affine approximation over a known calibration domain. Supply a model identity and version, one matrix row per flattened output, a bias vector, and a finite range for each flattened input. Implement `NeuralSystem` directly when the model requires other Rust operations.
 
-The initial surrogate example lives in `examples/ml-surrogate/de-surrogate`.
-It demonstrates the API shape for replacing a small differential-equation update
-with a shape-checked model session.
+1. Freeze the training inputs and fitted coefficients with the model version.
+2. Validate the expected input and output shapes.
+3. Compare predictions with the original system on held-out points. Choose an error threshold before comparing.
+4. Register the model for the intended tick phase and choose the caller's fallback policy.
 
-Authoring steps:
+The [unit-rate decay example](../../examples/ml-surrogate/de-surrogate/src/main.rs) runs a secant approximation trained at time 0 and 0.4. The independent exponential solution gives a maximum absolute residual of about 0.016443 on 39 held-out interior points. Extrapolation returns an error.
 
-1. Export a model to ONNX outside KairoECS.
-2. Record the model name, version, input shape, and output shape.
-3. Wrap the session in `OrtNeuralSystem`.
-4. Register it with `InferenceTickHook` for `BeforeSystems` or `AfterSystems`.
-5. Validate output against the original system and record the relative error.
-
-The alpha scaffold uses deterministic passthrough inference so tests can validate
-the hook contract without bundling ONNX Runtime. This is not a surrogate
-accuracy benchmark. Real authoring work must record the configured backend,
-model version, input shape, output shape, and comparison run before claiming a
-surrogate replaces a deterministic system.
-
-At the tick boundary, Track 37 validates:
-
-- model metadata during `try_register`
-- duplicate `(model name, model version)` rejection during `try_register`
-- input tensor shape before `predict`
-- output tensor shape after `predict`
-- finite tensor values at tensor construction
-
-## Tutorial: dependency-free surrogate scaffold
-
-Run the scaffold checks before wiring a real backend:
-
-```bash
-cargo check --manifest-path crates/kairo-ecs-ml/Cargo.toml --all-features --tests
-cargo check --manifest-path examples/ml-surrogate/de-surrogate/Cargo.toml --features onnx
+```sh
+cargo run --manifest-path examples/ml-surrogate/de-surrogate/Cargo.toml
+cargo test --locked -p kairo-ecs-ml --test maturity_native_inference
 ```
 
-These checks establish compilation of the feature-gated API and example. They
-do not execute inference, qualify a Rust-backed Gymnasium environment or validate
-reset/step model semantics.
-
-## Evidence boundary
-
-This tutorial does not execute ONNX Runtime, TensorRT, Burn, Stable-Baselines3,
-or a real surrogate accuracy comparison. A tutorial can claim real surrogate
-readiness only after it records the backend, model artifact hash, validation
-dataset, baseline system, relative-error threshold, and measured latency.
+ONNX Runtime, TensorRT and Burn execution remain unavailable. Match any stronger accuracy claim to the model and held-out inputs that were qualified.

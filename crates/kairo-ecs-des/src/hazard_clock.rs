@@ -10,7 +10,7 @@ use std::collections::HashMap;
 /// Policy for managing accumulated hazard / threshold upon covariate change or process interruption.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum HazardInterruptionPolicy {
-    /// Discard accumulated threshold progress and sample fresh threshold upon reactivation.
+    /// Sample a fresh threshold when replacing a hazard channel.
     Restart,
     /// Retain residual threshold: remaining threshold W_rem = W_total - H(t_elapsed).
     RetainResidual,
@@ -28,6 +28,46 @@ pub struct HazardChannelState {
     pub target_threshold: f64,
     /// Calendar time when the current interval started.
     pub interval_start_time: f64,
+    /// Active age on the current hazard curve at the start of the interval.
+    active_age_at_interval_start: f64,
+    due_at: Option<f64>,
+    consumed: bool,
+}
+
+impl HazardChannelState {
+    fn predicted_at(&self) -> Option<f64> {
+        if self.consumed {
+            return None;
+        }
+        if self.due_at.is_some() {
+            return self.due_at;
+        }
+        let remaining = self.target_threshold - self.accumulated_hazard;
+        if remaining <= 0.0 {
+            return Some(self.interval_start_time);
+        }
+        let dt = self
+            .hazard
+            .invert_cumulative_hazard(self.active_age_at_interval_start, remaining)?;
+        let at = self.interval_start_time + dt;
+        (dt >= 0.0 && at.is_finite()).then_some(at)
+    }
+
+    fn accrue_until(&mut self, now: f64) {
+        if self.consumed {
+            return;
+        }
+        if self.due_at.is_none() {
+            self.due_at = self.predicted_at().filter(|&at| at <= now);
+        }
+        let aged = self.active_age_at_interval_start + (now - self.interval_start_time).max(0.0);
+        self.accumulated_hazard += self.hazard.cumulative_hazard(aged)
+            - self
+                .hazard
+                .cumulative_hazard(self.active_age_at_interval_start);
+        self.active_age_at_interval_start = aged;
+        self.interval_start_time = now;
+    }
 }
 
 /// Survival clock tracking continuous progression and competing risk events for a process or entity.
@@ -44,9 +84,13 @@ pub struct SurvivalClock {
     pub current_winner: Option<(CauseId, f64)>, // (cause_id, realization_calendar_time)
     pub is_active: bool,
     pub last_update_time: f64,
+    paused: bool,
+    current_is_censored: bool,
 }
 
 impl SurvivalClock {
+    pub const SEMANTICS_VERSION: &'static str = "elapsed-active-age-v2";
+
     /// Create a new survival clock.
     /// `tick_scale`: conversion factor where `sim_time_ticks = (continuous_time * tick_scale) as u64`.
     pub fn new(
@@ -67,11 +111,14 @@ impl SurvivalClock {
             current_winner: None,
             is_active: false,
             last_update_time: 0.0,
+            paused: false,
+            current_is_censored: false,
         }
     }
 
     /// Add or update a cause hazard specification.
-    /// If the channel already exists and `policy == RetainResidual`, residual threshold is preserved.
+    /// Replacing the channel starts the new hazard curve at age zero.
+    /// `RetainResidual` carries over the unspent threshold; `Restart` draws a fresh one.
     pub fn set_channel(
         &mut self,
         cause_id: CauseId,
@@ -81,23 +128,19 @@ impl SurvivalClock {
         stream: &mut DeterministicStream,
     ) {
         if let Some(existing) = self.channels.get_mut(&cause_id) {
-            let elapsed = (now - existing.interval_start_time).max(0.0);
-            let added_h = existing.hazard.cumulative_hazard(elapsed);
-            existing.accumulated_hazard += added_h;
+            if !self.paused {
+                existing.accrue_until(now);
+            }
             existing.interval_start_time = now;
+            existing.active_age_at_interval_start = 0.0;
             existing.hazard = hazard;
             existing.priority = priority;
 
-            if self.policy == HazardInterruptionPolicy::Restart {
+            if existing.consumed || self.policy == HazardInterruptionPolicy::Restart {
                 existing.target_threshold = draw_standard_threshold(stream);
                 existing.accumulated_hazard = 0.0;
-            } else {
-                // Retain residual threshold
-                if existing.accumulated_hazard >= existing.target_threshold {
-                    // Already exceeded or expired; draw fresh
-                    existing.target_threshold = draw_standard_threshold(stream);
-                    existing.accumulated_hazard = 0.0;
-                }
+                existing.due_at = None;
+                existing.consumed = false;
             }
         } else {
             let target_w = draw_standard_threshold(stream);
@@ -110,6 +153,9 @@ impl SurvivalClock {
                     accumulated_hazard: 0.0,
                     target_threshold: target_w,
                     interval_start_time: now,
+                    active_age_at_interval_start: 0.0,
+                    due_at: None,
+                    consumed: false,
                 },
             );
         }
@@ -120,9 +166,14 @@ impl SurvivalClock {
         self.channels.remove(&cause_id);
     }
 
-    /// Evaluate the earliest competing event among all active channels starting from `now`.
+    /// Evaluate the earliest competing event, reporting an overdue winner at `now`.
     pub fn compute_earliest_event(&self, now: f64) -> Option<(CauseId, f64)> {
-        if self.channels.is_empty() {
+        self.predicted_event()
+            .map(|(cause, at)| (cause, at.max(now)))
+    }
+
+    fn predicted_event(&self) -> Option<(CauseId, f64)> {
+        if self.paused {
             return None;
         }
 
@@ -133,15 +184,8 @@ impl SurvivalClock {
         causes.sort_by_key(|c| c.cause_id);
 
         for channel in causes {
-            let remaining_w = channel.target_threshold - channel.accumulated_hazard;
-            if remaining_w <= 0.0 {
-                candidate_events.push((channel.cause_id, channel.priority, now));
-                continue;
-            }
-            if let Some(dt) = channel.hazard.invert_cumulative_hazard(0.0, remaining_w) {
-                if dt >= 0.0 && !dt.is_infinite() {
-                    candidate_events.push((channel.cause_id, channel.priority, now + dt));
-                }
+            if let Some(at) = channel.predicted_at() {
+                candidate_events.push((channel.cause_id, channel.priority, at));
             }
         }
 
@@ -188,8 +232,13 @@ impl SurvivalClock {
         if let Some(ev_id) = self.scheduled_event_id.take() {
             let _ = scheduler.cancel(ev_id);
         }
+        self.current_winner = None;
+        self.is_active = false;
+        if self.paused {
+            return None;
+        }
 
-        let earliest = self.compute_earliest_event(now);
+        let earliest = self.predicted_event();
 
         let final_event = match (earliest, censor_time) {
             (Some((cause, t_event)), Some(t_censor)) => {
@@ -236,6 +285,7 @@ impl SurvivalClock {
         });
         self.scheduled_event_id = Some(event_id);
         self.current_winner = Some((final_event.winning_cause, now + final_event.delta_time));
+        self.current_is_censored = final_event.is_censored;
         self.is_active = true;
 
         Some(final_event)
@@ -244,7 +294,7 @@ impl SurvivalClock {
     /// Suspend/pause clock progression (e.g. entity pauses during transport holds).
     /// Freezes cumulative hazard without discarding residual thresholds.
     pub fn pause(&mut self, scheduler: &mut Scheduler, now: f64) {
-        if !self.is_active {
+        if self.paused {
             return;
         }
         if let Some(ev_id) = self.scheduled_event_id.take() {
@@ -252,13 +302,12 @@ impl SurvivalClock {
         }
         // Accumulate elapsed hazard up to now
         for channel in self.channels.values_mut() {
-            let elapsed = (now - channel.interval_start_time).max(0.0);
-            let added_h = channel.hazard.cumulative_hazard(elapsed);
-            channel.accumulated_hazard += added_h;
-            channel.interval_start_time = now;
+            channel.accrue_until(now);
         }
+        self.current_winner = None;
         self.is_active = false;
         self.last_update_time = now;
+        self.paused = true;
     }
 
     /// Resume clock progression after pause.
@@ -269,22 +318,29 @@ impl SurvivalClock {
         censor_time: Option<f64>,
         priority: i32,
     ) -> Option<RealizedEvent> {
-        for channel in self.channels.values_mut() {
-            channel.interval_start_time = now;
+        if self.paused {
+            for channel in self.channels.values_mut() {
+                channel.interval_start_time = now;
+            }
+            self.paused = false;
         }
         self.reschedule(scheduler, now, censor_time, priority)
     }
 
     /// Handle dispatch of the scheduled event at current simulation time.
-    /// Resets the clock or marks it inactive.
+    /// An uncensored winner is consumed until `set_channel` rearms it.
     pub fn on_event_dispatched(&mut self) -> Option<RealizedEvent> {
         self.scheduled_event_id = None;
         self.is_active = false;
         if let Some((cause, realization_time)) = self.current_winner.take() {
+            let is_censored = std::mem::take(&mut self.current_is_censored);
+            if let (false, Some(channel)) = (is_censored, self.channels.get_mut(&cause)) {
+                channel.consumed = true;
+            }
             Some(RealizedEvent {
                 winning_cause: cause,
                 delta_time: (realization_time - self.last_update_time).max(0.0),
-                is_censored: cause == CauseId(u32::MAX),
+                is_censored,
             })
         } else {
             None

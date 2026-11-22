@@ -6,6 +6,11 @@ use std::fs;
 use std::path::Path;
 use std::sync::Arc;
 
+mod affine;
+mod vecenv;
+pub use affine::AffineSurrogate;
+pub use vecenv::{ParallelVecEnv, QueueEnvironment, QueueObservation, QueueStep};
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct Tensor {
     shape: Vec<usize>,
@@ -16,8 +21,7 @@ impl Tensor {
     pub fn new(shape: impl Into<Vec<usize>>, values: impl Into<Vec<f32>>) -> Result<Self, MlError> {
         let shape = shape.into();
         let values = values.into();
-        validate_shape("tensor shape", &shape)?;
-        let expected_len = shape.iter().product::<usize>();
+        let expected_len = validate_shape("tensor shape", &shape)?;
 
         if expected_len != values.len() {
             return Err(MlError::new(format!(
@@ -150,6 +154,9 @@ impl Default for InferenceTickHook {
     }
 }
 
+const ONNX_UNAVAILABLE: &str = "no qualified ONNX Runtime is configured";
+
+/// ONNX model metadata and bytes for an unavailable execution backend.
 #[derive(Clone, Debug)]
 pub struct OrtSession {
     metadata: ModelMetadata,
@@ -204,21 +211,10 @@ impl OrtSession {
         Self::from_bytes(name, "unversioned", bytes, input_shape, output_shape)
     }
 
+    /// The model descriptor has no executable backend in this build.
     pub fn run(&self, input: &Tensor) -> Result<Tensor, MlError> {
         self.validate_input(input)?;
-
-        let output_len = self.metadata.output_shape.iter().product::<usize>();
-        let mut output = Vec::with_capacity(output_len);
-        for index in 0..output_len {
-            let value = input
-                .values()
-                .get(index % input.values().len())
-                .copied()
-                .unwrap_or(0.0);
-            output.push(value);
-        }
-
-        Tensor::new(self.metadata.output_shape.clone(), output)
+        Err(MlError::new(ONNX_UNAVAILABLE))
     }
 
     pub fn validate_input(&self, input: &Tensor) -> Result<(), MlError> {
@@ -240,7 +236,7 @@ impl OrtSession {
     pub fn runtime_status(&self) -> BackendStatus {
         BackendStatus::NotConfigured {
             backend: Backend::OnnxRuntime,
-            reason: "ONNX Runtime adapter is not wired in the dependency-free scaffold",
+            reason: ONNX_UNAVAILABLE,
         }
     }
 }
@@ -301,7 +297,7 @@ impl Display for MlError {
 
 impl Error for MlError {}
 
-fn validate_shape(label: &str, shape: &[usize]) -> Result<(), MlError> {
+fn validate_shape(label: &str, shape: &[usize]) -> Result<usize, MlError> {
     if shape.is_empty() {
         return Err(MlError::new(format!("{} must not be empty", label)));
     }
@@ -311,7 +307,10 @@ fn validate_shape(label: &str, shape: &[usize]) -> Result<(), MlError> {
             label
         )));
     }
-    Ok(())
+    shape
+        .iter()
+        .try_fold(1_usize, |size, width| size.checked_mul(*width))
+        .ok_or_else(|| MlError::new(format!("{label} element count overflows")))
 }
 
 fn validate_finite_values(label: &str, values: &[f32]) -> Result<(), MlError> {
@@ -456,40 +455,36 @@ mod tests {
         );
     }
 
-    #[test]
-    fn ort_session_runs_shape_checked_inference() {
-        let session =
-            OrtSession::from_bytes("identity", "0", [1, 2, 3], vec![2], vec![2]).expect("session");
-        let input = Tensor::new(vec![2], vec![1.0, 2.0]).expect("input");
-
-        let output = session.run(&input).expect("output");
-
-        assert_eq!(output, input);
-        assert_eq!(session.model_size_bytes(), 3);
+    fn affine_fixture(phase: TickPhase) -> AffineSurrogate {
+        AffineSurrogate::new(
+            ModelMetadata {
+                name: "affine".into(),
+                version: "1".into(),
+                input_shape: vec![1],
+                output_shape: vec![1],
+            },
+            Tensor::new([1, 1], [2.0]).unwrap(),
+            Tensor::scalar(1.0),
+            vec![(0.0, 10.0)],
+            phase,
+            FallbackPolicy::UseOriginalSystem,
+        )
+        .unwrap()
     }
 
     #[test]
     fn tick_hook_runs_matching_phase_only() {
-        let session =
-            OrtSession::from_bytes("identity", "0", [1], vec![1], vec![1]).expect("session");
-        let system = OrtNeuralSystem::new(
-            session,
-            TickPhase::BeforeSystems,
-            FallbackPolicy::UseOriginalSystem,
-        );
         let mut hook = InferenceTickHook::new();
-        hook.register(Arc::new(system));
+        hook.register(Arc::new(affine_fixture(TickPhase::BeforeSystems)));
 
         let input = Tensor::scalar(7.0);
-
         assert_eq!(
-            hook.run_phase(TickPhase::BeforeSystems, &input)
-                .expect("before"),
-            vec![input.clone()]
+            hook.run_phase(TickPhase::BeforeSystems, &input).unwrap(),
+            vec![Tensor::scalar(15.0)]
         );
         assert!(hook
             .run_phase(TickPhase::AfterSystems, &input)
-            .expect("after")
+            .unwrap()
             .is_empty());
     }
 
@@ -613,15 +608,8 @@ mod tests {
 
     #[test]
     fn try_register_rejects_duplicate_model_name_and_version() {
-        let session =
-            OrtSession::from_bytes("identity", "1", [1], vec![1], vec![1]).expect("session");
-        let system = OrtNeuralSystem::new(
-            session.clone(),
-            TickPhase::BeforeSystems,
-            FallbackPolicy::FailTick,
-        );
-        let duplicate =
-            OrtNeuralSystem::new(session, TickPhase::AfterSystems, FallbackPolicy::FailTick);
+        let system = affine_fixture(TickPhase::BeforeSystems);
+        let duplicate = affine_fixture(TickPhase::AfterSystems);
         let mut hook = InferenceTickHook::new();
 
         hook.try_register(Arc::new(system)).expect("register");
@@ -629,7 +617,7 @@ mod tests {
             .try_register(Arc::new(duplicate))
             .expect_err("duplicate model version should fail");
 
-        assert_eq!(error.to_string(), "model identity:1 is already registered");
+        assert_eq!(error.to_string(), "model affine:1 is already registered");
         assert_eq!(hook.len(), 1);
     }
 
@@ -642,7 +630,7 @@ mod tests {
             session.runtime_status(),
             BackendStatus::NotConfigured {
                 backend: Backend::OnnxRuntime,
-                reason: "ONNX Runtime adapter is not wired in the dependency-free scaffold"
+                reason: "no qualified ONNX Runtime is configured"
             }
         );
         assert_eq!(
@@ -652,157 +640,4 @@ mod tests {
             "TensorRt backend is not configured in the dependency-free Track 37 scaffold"
         );
     }
-}
-
-pub struct ParallelVecEnv {
-    pub num_envs: usize,
-    pub obs_dim: usize,
-    pub action_dim: usize,
-    pub num_threads: usize,
-}
-
-impl ParallelVecEnv {
-    pub fn new(num_envs: usize, obs_dim: usize, action_dim: usize) -> Self {
-        let num_threads = std::thread::available_parallelism()
-            .map(|n| n.get())
-            .unwrap_or(1);
-        Self {
-            num_envs,
-            obs_dim,
-            action_dim,
-            num_threads,
-        }
-    }
-
-    pub fn with_threads(
-        num_envs: usize,
-        obs_dim: usize,
-        action_dim: usize,
-        num_threads: usize,
-    ) -> Self {
-        Self {
-            num_envs,
-            obs_dim,
-            action_dim,
-            num_threads: num_threads.max(1),
-        }
-    }
-
-    pub fn num_threads(&self) -> usize {
-        self.num_threads
-    }
-
-    pub fn reset(&mut self) -> Vec<f32> {
-        vec![0.0; self.num_envs * self.obs_dim]
-    }
-
-    pub fn step_batch(
-        &mut self,
-        actions: &[i64],
-        out_obs: &mut [f32],
-        out_rewards: &mut [f32],
-        out_terminated: &mut [u8],
-        out_truncated: &mut [u8],
-    ) {
-        let num_envs = self.num_envs.min(actions.len());
-        if num_envs == 0 {
-            return;
-        }
-        let threads = self.num_threads.max(1).min(num_envs);
-        let chunk_size = num_envs.div_ceil(threads);
-
-        let obs_dim = self.obs_dim;
-
-        std::thread::scope(|s| {
-            let mut obs_chunks = out_obs.chunks_mut((chunk_size * obs_dim).max(1));
-            let mut rew_chunks = out_rewards.chunks_mut(chunk_size);
-            let mut term_chunks = out_terminated.chunks_mut(chunk_size);
-            let mut trunc_chunks = out_truncated.chunks_mut(chunk_size);
-
-            for chunk_idx in 0..threads {
-                let start_env = chunk_idx * chunk_size;
-                if start_env >= num_envs {
-                    break;
-                }
-                let end_env = (start_env + chunk_size).min(num_envs);
-
-                let sub_obs = obs_chunks.next().unwrap_or(&mut []);
-                let sub_rew = rew_chunks.next().unwrap_or(&mut []);
-                let sub_term = term_chunks.next().unwrap_or(&mut []);
-                let sub_trunc = trunc_chunks.next().unwrap_or(&mut []);
-                let actions_slice = &actions[start_env..end_env];
-
-                s.spawn(move || {
-                    for (local_idx, &action) in actions_slice.iter().enumerate() {
-                        let base = local_idx * obs_dim;
-                        for d in 0..obs_dim {
-                            if base + d < sub_obs.len() {
-                                sub_obs[base + d] = (action as f32) + (d as f32) * 0.25;
-                            }
-                        }
-                        if local_idx < sub_rew.len() {
-                            sub_rew[local_idx] = 0.1 + (action as f32) * 0.05;
-                        }
-                        if local_idx < sub_term.len() {
-                            sub_term[local_idx] = 0;
-                        }
-                        if local_idx < sub_trunc.len() {
-                            sub_trunc[local_idx] = 0;
-                        }
-                    }
-                });
-            }
-        });
-    }
-
-    pub fn step_with_ort_session(&mut self, _session: &str) {
-        // dummy ort session hook
-    }
-}
-
-#[test]
-fn rayon_vecenv_1024_worlds_throughput() {
-    let mut env = ParallelVecEnv::new(1024, 4, 2);
-    let _obs = env.reset();
-    let actions = vec![0i64; 1024];
-    let mut out_obs = vec![0.0f32; 1024 * 4];
-    let mut out_rewards = vec![0.0f32; 1024];
-    let mut out_term = vec![0u8; 1024];
-    let mut out_trunc = vec![0u8; 1024];
-    env.step_batch(
-        &actions,
-        &mut out_obs,
-        &mut out_rewards,
-        &mut out_term,
-        &mut out_trunc,
-    );
-    assert_eq!(out_rewards.len(), 1024);
-}
-
-#[test]
-fn multicore_vecenv_thread_parity() {
-    let mut env1 = ParallelVecEnv::with_threads(1024, 4, 2, 1);
-    let mut env8 = ParallelVecEnv::with_threads(1024, 4, 2, 8);
-
-    let actions: Vec<i64> = (0..1024).map(|i| (i % 7) as i64).collect();
-
-    let mut obs1 = vec![0.0f32; 1024 * 4];
-    let mut rew1 = vec![0.0f32; 1024];
-    let mut term1 = vec![0u8; 1024];
-    let mut trunc1 = vec![0u8; 1024];
-
-    let mut obs8 = vec![0.0f32; 1024 * 4];
-    let mut rew8 = vec![0.0f32; 1024];
-    let mut term8 = vec![0u8; 1024];
-    let mut trunc8 = vec![0u8; 1024];
-
-    env1.step_batch(&actions, &mut obs1, &mut rew1, &mut term1, &mut trunc1);
-    env8.step_batch(&actions, &mut obs8, &mut rew8, &mut term8, &mut trunc8);
-
-    assert_eq!(obs1, obs8);
-    assert_eq!(rew1, rew8);
-    assert_eq!(term1, term8);
-    assert_eq!(trunc1, trunc8);
-    assert_eq!(env1.num_threads(), 1);
-    assert_eq!(env8.num_threads(), 8);
 }
