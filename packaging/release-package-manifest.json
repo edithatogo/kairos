@@ -69,6 +69,10 @@
           "path": "crates/kairo-ecs-arrow/Cargo.toml"
         },
         {
+          "package": "kairo-ecs-arrow-ffi",
+          "path": "crates/kairo-ecs-arrow-ffi/Cargo.toml"
+        },
+        {
           "package": "kairo-ecs-bench",
           "path": "crates/kairo-ecs-bench/Cargo.toml"
         },

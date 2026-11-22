@@ -2171,6 +2171,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "kairo-ecs-arrow-ffi"
+version = "0.1.0"
+dependencies = [
+ "kairo-ecs-arrow",
+ "kairo-ecs-types",
+]
+
+[[package]]
 name = "kairo-ecs-bench"
 version = "0.1.0"
 dependencies = [
@@ -2261,6 +2269,7 @@ name = "kairo-ecs-ffi"
 version = "0.1.0"
 dependencies = [
  "kairo-ecs-arrow",
+ "kairo-ecs-arrow-ffi",
  "kairo-ecs-core",
  "kairo-ecs-rng",
  "kairo-ecs-state",
