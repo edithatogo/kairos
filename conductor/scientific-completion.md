@@ -89,3 +89,11 @@ The FMI 2 and FMI 3 Reference FMU tests execute a native impact and verify
 analytical height, velocity and exact checkpoint replay. The Linux
 OpenModelica case uses an independently compiled model with a time event.
 [Inputs and qualification commands](execution/scientific/s13-completion.md)
+
+## S14 native HDF5 checkpoint qualification
+
+The HDF5 adapter writes a typed compound event table and restores the complete
+logical record sequence. The HDF Group reader checked unequal full-width time
+limbs and the Rust tests rejected corruption and indirect links. The track
+retains native ADIOS2 integration, engine restart and parallel filesystem
+acceptance. [Evidence](execution/scientific/s14-completion.md).

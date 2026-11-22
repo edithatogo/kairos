@@ -28,3 +28,33 @@ typed historical-state readback and an independent native reader.
   costs, block layout and final state parity.
 
 The published native beta scope is governed by its existing artifact profile.
+
+## HDF5 execution on macOS ARM64
+
+The format-breaking probe failed at the signature assertion on source
+`b628216` with exit 101. Rust 1.99.1 selected the HDF Group 2.2.0 Mac package
+and linked `libhdf5.320.dylib` through `hdf5-metno` 0.15.1. The native product
+source and tests were frozen at `b77af55`. Commands below run from the Kairos
+checkout with the installed HDF5 library and vendor reader selected.
+
+| Command | Result | Log SHA-256 |
+| --- | --- | --- |
+| `cargo test --locked -p kairo-ecs-arrow --features hdf5,adios2` | 55 passed, exit 0. The independent reader is invoked separately. | `2ff0cff14d839a8c390eee42f795b5088ed8f6d5e4bfc33f209c583a5244871f` |
+| `cargo test --locked -p kairo-ecs-arrow --features hdf5 --test maturity_native_io_format h5dump -- --ignored --nocapture` | One passed, exit 0. Vendor DDL had unsigned time limbs 3 and 9223372036854775813, and signed priority -7. The legacy file was rejected. | `e6b843bbf070a962013bffa428eb5cd38a79eb8dc77caa3b1349219f8aa3fe1c` |
+
+Workspace lock SHA-256 is
+`22d9f5b9fc5af0ba77df8933a2f8a0d85a0eb41067a493aa56a26c8f48150d50`.
+Independent review accepted the bounded HDF5 record format after the UTF-8
+preflight, zero-length layout and fixed-size field checks were added. The
+failure controls address corrupted high limbs, invalid record values, indirect
+links and pre-publication replacement. Read-side external storage and virtual
+layouts were checked by source inspection. Valid large checkpoints retain
+the current in-memory manifest behaviour.
+
+The binding avoids a project-owned C ABI implementation. The static probe's
+bundled source was classified as the HDF5 license and rejected by the
+existing Rust license allowlist. The product links to a separately installed
+upstream library. The workspace Rust license check passes with the dynamic
+dependency graph and the policy file is unchanged.
+[HDF Group 2.2.0](https://github.com/HDFGroup/hdf5/releases/tag/2.2.0) ·
+[Rust binding 0.15.1](https://crates.io/crates/hdf5-metno/0.15.1).
