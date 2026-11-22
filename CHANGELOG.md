@@ -16,6 +16,8 @@ Format:
 
 ### Added
 
+- `.github/workflows/fair-software.yml` adds a SHA-pinned advisory FAIR research software check, with evidence recorded in `docs/FAIR_SOFTWARE_ASSESSMENT.md`; it does not change native qualification or release gates.
+
 - `.github/workflows/fuzzing.yml` executes seven existing bounded scheduler property and negative-control tests on canonical Rust 1.99.1 for relevant pull requests and weekly/manual campaigns. Test logs are retained; coverage-guided cargo-fuzz and sanitizer execution remain explicitly unverified.
 - `kairo-ecs-core` exposes versioned in-process scheduler checkpoints that preserve event order and pending work when restoring independent replay branches. See the [scheduler checkpoint decision](docs/adr/adr-k01-scheduler-checkpoint.md).
 - Release evidence preparation and registry preflight now check the exact source `Cargo.lock` with Grype before proceeding, initially blocking critical findings. A separate advisory workflow checks dependency PRs and current source weekly; this source inventory does not replace archive, binding or binary qualification.
