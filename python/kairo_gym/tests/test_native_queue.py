@@ -4,14 +4,17 @@ import gc
 import json
 import os
 import subprocess
+import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from kairo_gym import (
     KairoGymConfig,
     KairoGymEnv,
     NativeEnvironmentUnavailable,
     PettingZooQueueEnv,
+    _native,
     register_kairo_env,
 )
 
@@ -105,3 +108,64 @@ class NativeQueueTests(unittest.TestCase):
         gc.collect()
         self.assertEqual(process.returncode, 0)
         self.assertEqual(obs[b][0], 1)
+
+
+@unittest.skipUnless(os.name == "posix", "native queue uses POSIX process pipes")
+class InvalidNativeQueueTests(unittest.TestCase):
+    def test_bad_handshakes_time_out_or_fail_and_reap_the_child(self):
+        ready = '{"model":"finite-shared-queue-v1","max_waiting":10,"arrival_ticks":8}'
+        cases = [
+            ("", "complete reply"),
+            (f"printf '%s' '{ready}'\n", "complete reply"),
+            (
+                "printf '%s\\n' '{\"model\":\"finite-shared-queue-v1\"}'\n",
+                "invalid native queue handshake",
+            ),
+            (
+                f"printf '%s\\n' '{ready.replace('10', '-1')}'\n",
+                "invalid native queue handshake",
+            ),
+        ]
+        real_popen = subprocess.Popen
+        launched = []
+
+        def record_child(*args, **kwargs):
+            process = real_popen(*args, **kwargs)
+            launched.append(process)
+            return process
+
+        with (
+            tempfile.TemporaryDirectory() as folder,
+            patch.object(_native, "REPLY_TIMEOUT_SECONDS", 0.25),
+            patch.object(_native.subprocess, "Popen", side_effect=record_child),
+        ):
+            executable = Path(folder) / "invalid-transport"
+            for command, failure in cases:
+                with self.subTest(command=command):
+                    executable.write_text(f"#!/bin/sh\n{command}exec /bin/sleep 30\n")
+                    executable.chmod(0o700)
+                    with self.assertRaisesRegex(
+                        NativeEnvironmentUnavailable, f"(?i){failure}"
+                    ):
+                        _native.NativeQueue(executable, 1, 10)
+                    process = launched[-1]
+                    self.assertIsNotNone(process.returncode)
+                    self.assertTrue(process.stdin.closed and process.stdout.closed)
+
+    def test_invalid_native_transition_is_rejected_before_host_values_escape(self):
+        ready = '{"model":"finite-shared-queue-v1","max_waiting":10,"arrival_ticks":8}'
+        with tempfile.TemporaryDirectory() as folder:
+            executable = Path(folder) / "invalid-transition"
+            executable.write_text(
+                f"#!/bin/sh\nprintf '%s\\n' '{ready}'\n"
+                "IFS= read -r line\nprintf '%s\\n' '{\"observation\":[1,2,7]}'\n"
+                "exec /bin/sleep 30\n"
+            )
+            executable.chmod(0o700)
+            queue = _native.NativeQueue(executable, 1, 10)
+            self.addCleanup(queue.close)
+            with self.assertRaisesRegex(
+                NativeEnvironmentUnavailable, "Invalid step reply"
+            ):
+                queue.step([1])
+            self.assertIsNotNone(queue._process.returncode)
