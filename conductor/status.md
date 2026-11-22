@@ -20,6 +20,17 @@ The previously recorded PR 366 draft state is historical: PR 366 merged on 3 Nov
 
 The immediate packet is recorded in [PR 378](https://github.com/edithatogo/kairos/pull/378) and the [implementation record](frontier-implementation-20261107.md). Final merge/check status is read from that PR; no phase or release is inferred from a source commit.
 
+## Data and downstream qualification — 23 November 2026
+
+The owned Arrow domain exports and native file metadata are on main through
+PR #419. Track 108's installed CareOps and Innovate cases passed against that
+candidate. [Provider PR](https://github.com/edithatogo/kairos/pull/419) ·
+[Consumer evidence](tracks/108-scientific-ecosystem-alignment/handoff.md#installed-consumer-qualification--23-november-2026).
+
+Track 116's neutral exports and standalone fixture cover the provider phases.
+Installed adapter qualification is tracked in the receiving repositories.
+[Fixture evidence](tracks/116-tobac-cohort-microsimulation-contracts/handoff.md#provider-and-standalone-fixture--23-november-2026).
+
 ## Historical status records
 
 ## Current Track48/49 acceptance — 3 November 2026

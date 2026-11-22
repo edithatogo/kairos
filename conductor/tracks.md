@@ -115,7 +115,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 105 | Python 3.15 Runtime Migration and Qualification | In Progress | `python-agent + ci-agent + dx-agent` | See `conductor/tracks/105-*/spec.md` |
 | 106 | Scheduler Preview API Compatibility | Done | `core-api-agent + conformance-agent + api-governance-agent` | See [archived record](archive/106-scheduler-preview-compatibility/index.md) |
 | 107 | CareOps staged allocation flow compatibility | Done | `des-api-agent + conformance-agent + api-governance-agent` | See `conductor/tracks/107-*/spec.md` |
-| 108 | Scientific ecosystem alignment | Blocked | `api-governance-agent` | See `conductor/tracks/108-*/spec.md` |
+| 108 | Scientific ecosystem alignment | Done | `api-governance-agent` | [Installed candidate evidence](tracks/108-scientific-ecosystem-alignment/handoff.md#installed-consumer-qualification--23-november-2026) |
 | 109 | Rust-only runtime and native binding enforcement | In Progress | `ffi-agent + api-governance-agent` | [Plan](tracks/109-rust-only-runtime/plan.md) |
 | 110 | Scientific method and advanced capability completion | Spec Approved | `vv-uq-agent + game-theory-agent + ml-integration-agent` | [Plan](tracks/110-scientific-method-completion/plan.md) |
 | 111 | Measured performance and parallel execution improvement | Spec Approved | `performance-agent + pdes-agent` | [Plan](tracks/111-measured-performance/plan.md) |
@@ -123,7 +123,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 113 | Beta and stable release qualification | In Progress | `release-agent + api-governance-agent + security-agent` | [Installed candidate](tracks/113-beta-and-stable-release/handoff.md#native-core-v1-candidate--23-november-2026) |
 | 114 | Maintained dependencies and independent consumer contracts | Spec Approved | `api-governance-agent + core-scheduler-agent` | [Plan](tracks/114-dependency-and-consumer-contracts/plan.md) |
 | 115 | Frontier research experiments and reproducible evidence | Spec Approved | `research-agent + vv-uq-agent + performance-agent` | [Plan](tracks/115-frontier-experiments/plan.md) |
-| 116 | Cohort and spatial tobacco/vaping microsimulation contracts for tobac | Spec Approved | `des-api-agent + abm-api-agent + vv-uq-agent` | [Plan](tracks/116-tobac-cohort-microsimulation-contracts/plan.md) |
+| 116 | Cohort and spatial tobacco/vaping microsimulation contracts for tobac | In Progress | `des-api-agent + abm-api-agent + vv-uq-agent` | [Provider and standalone fixture evidence](tracks/116-tobac-cohort-microsimulation-contracts/handoff.md#provider-and-standalone-fixture--23-november-2026) |
 
 ## Track status vocabulary
 
@@ -273,4 +273,4 @@ Polars inventory leads; sha2/tempfile/proptest are separate tracks with gates on
 - [x] **Track 107: CareOps staged allocation flow compatibility** — [accepted provider and bridge consumer](tracks/107-careops-staged-flow-compatibility/handoff.md#bounded-consumer-closeout--1-november-2026).
 
 ---
-- [ ] **Track 108: Scientific ecosystem alignment** — [record](tracks/108-scientific-ecosystem-alignment/index.md); Track 107 and consumer acceptance are prerequisites. [Issue #336](https://github.com/edithatogo/kairos/issues/336).
+- [x] **Track 108: Scientific ecosystem alignment** — installed CareOps and Innovate checks passed against the selected provider candidate. [Evidence](tracks/108-scientific-ecosystem-alignment/handoff.md#installed-consumer-qualification--23-november-2026) · [Issue #336](https://github.com/edithatogo/kairos/issues/336).

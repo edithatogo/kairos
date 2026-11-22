@@ -1603,7 +1603,7 @@ tracks:
 
   - id: 108
     name: Scientific ecosystem alignment
-    status: Blocked
+    status: Done
     owner: api-governance-agent
     depends_on: ["107"]
     owned_paths:
@@ -1690,11 +1690,13 @@ tracks:
 
   - id: 116
     name: Cohort and spatial tobacco/vaping microsimulation contracts for tobac
-    status: Spec Approved
+    status: In Progress
     owner: des-api-agent + abm-api-agent + vv-uq-agent
     depends_on: ["01", "03", "04", "69", "70", "114"]
     owned_paths:
       - conductor/tracks/116-tobac-cohort-microsimulation-contracts/
+      - crates/kairo-ecs-arrow/src/cohort.rs
+      - tests/fixtures/cohort-consumer/
     required_gates:
       - phase-closeout-check
       - frontier-evidence-check
