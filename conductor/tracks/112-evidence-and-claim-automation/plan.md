@@ -4,17 +4,17 @@ Keep public claims traceable to precise evidence and prevent placeholders, histo
 
 ## Phase 0: Current truth
 
-- [ ] 112.0.1: Create a typed capability register with original/new owners, exact baseline, current boundaries and missing gates.
-- [ ] 112.0.2: Generate the human capability table from the manifest; link current README/homepages and release programme.
-- [ ] 112.0.3: Correct synthetic scaling certification prose and preserve actual measured historical evidence.
+- [ ] 112.0.1: Create a typed capability register with original/new owners, exact baseline, current boundaries and missing gates. The register now links the exact native install receipts and implemented scientific scopes.
+- [x] 112.0.2: Generate the human capability table from the manifest; link current README/homepages and release programme.
+- [x] 112.0.3: Label synthetic scaling results as aggregation fixtures and preserve the historical measurements. The register also links the current paired conservative-PDES comparison.
 - [ ] 112.0.review: Independently review this phase, apply accepted fixes, execute the named oracles and record the next-phase decision.
 
 ## Phase 1: Executable guards
 
-- [ ] 112.1.1: Validate manifest consistency, known capability states, evidence paths/hashes and required track links.
+- [x] 112.1.1: Validate manifest consistency, known capability states, evidence paths/hashes and required track links.
 - [ ] 112.1.2: Reject placeholder performance promotion and native/empirical/frontier claims without their specific evidence class.
-- [ ] 112.1.3: Add negative mutation cases for tampered results, missing native proof, unsupported status promotion and reversed consumer dependency.
-- [ ] 112.1.4: Wire focused checks into existing CI with no credentials or duplicate dependency stack.
+- [x] 112.1.3: Add negative mutation cases for tampered results, missing native proof, unsupported status promotion and reversed consumer dependency.
+- [x] 112.1.4: Run the existing manifest and guard tests in Docs Quality CI.
 - [ ] 112.1.review: Independently review this phase, apply accepted fixes, execute the named oracles and record the next-phase decision.
 
 ## Phase 2: Traceability and maintenance
