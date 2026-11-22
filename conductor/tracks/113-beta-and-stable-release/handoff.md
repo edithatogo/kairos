@@ -1,11 +1,56 @@
 # Handoff
 
-Updated 23 November 2026. The installed-artifact gate is accepted. Phase 0
-remains open for the remaining alpha-to-beta evidence.
+Updated 23 November 2026. Both advertised targets passed the installed
+candidate gate. Phase 0 remains open for final candidate review and
+maintainer acceptance.
 
-## Native core v1 candidate — 23 November 2026
+## Selected native core candidate
 
-Use the one `native-core-v1` candidate at main
+`native-core-v1` selects main commit
+`e2875387ce45c34cd19716ea66f0102251a6aa6f`. The Apache-2.0 Rust SDK, C ABI
+v1 archive and installed CPython 3.15.2 wheel passed on Linux x86-64 GNU and
+macOS ARM64. Both targets rejected missing selection, wrong architecture,
+missing symbols and an incompatible ABI. Both executed the installed CareOps
+contention case in the profiled environment.
+[Hosted installation and exact archives](https://github.com/edithatogo/kairos/actions/runs/45051171243).
+
+The shared SDK SHA-256 is
+`0060c934d7b5d9eb187387175fc4604184093823aedbfbb43fa52936b1a82240`.
+
+| Target | Hosted installed receipt SHA-256 |
+| --- | --- |
+| Linux x86-64 GNU | `bdf06ca4ece1be84f63cda9793b9a9be5634e9b1e3dcd8a84aef3a50bb7ced88` |
+| macOS ARM64 | `3a871e601f5da415758ad3f47691853d5e39a67993295cd3a731256964bfd7b1` |
+
+- **Compatibility.** CareOps `9af99b5730d6aa5cef1c05bd48e90fd377b80cf2`
+  admitted and reproduced its historical nominal run byte for byte using
+  the downloaded SDK and a locked Rust 1.99.1 build. Test log SHA-256
+  `b6b5b3ecc7fe6f89cfb4e12da87646bd2d025f0f068ae44acc4a0835dc9c31bc`.
+  The downloaded SDK also passed the three unchanged alpha scheduler
+  fixtures and the candidate RNG fixture. It reproduced the documented
+  SplitMix64-to-ChaCha8 replay break on the frozen alpha RNG fixture.
+  [Replay compatibility](../../release/beta-scope.md#alpha-replay-compatibility).
+- **Timing and memory.** The installed SDK's serial scheduler drain had a
+  median of 195.9 ms over 45 samples, with a range of 188.8–212.8 ms. The
+  three peak process RSS values were 1,336,705,024, 938,115,072 and
+  926,564,352 bytes. The conservative PDES ring preserved exact final-state
+  parity across 120 matched pairs. Serial had lower median elapsed time
+  in all eight measured cases.
+  [Serial samples](evidence/serial-e287538.json) · [Paired samples](evidence/paired-pdes-e287538.json).
+- **Core assurance.** The whole-core Linux campaign caught all 175 viable
+  mutants with zero misses and timeouts. Seven scheduler property tests
+  passed. The 60-second guided fuzz run executed 17,420,480 inputs and
+  increased coverage from 66 to 127. AddressSanitizer and Miri execution
+  remain unverified under the pinned profile.
+  [Mutation run](https://github.com/edithatogo/kairos/actions/runs/45051175801) · [Property and fuzz run](https://github.com/edithatogo/kairos/actions/runs/45051181965).
+
+Release Attestations verifies and signs the selected package digests using
+the installation run and receipt hashes above.
+[Provenance workflow](https://github.com/edithatogo/kairos/actions/workflows/release-attestations.yml).
+
+## First native core candidate — 23 November 2026
+
+The first `native-core-v1` candidate used main
 `3b3b8da0a7cdbd414e12a18722f189996a52c7ab`. GitHub run
 `45031314631` passed clean Rust SDK, C ABI v1 and CPython 3.15.2 installation
 and execution on Linux x86-64 GNU and macOS ARM64. Both ran the installed
@@ -83,9 +128,8 @@ The candidate also completed 20,000 coverage-guided scheduler inputs and a
 retained macOS wheel rejected wrong architecture, missing symbols and
 an incompatible ABI, then dispatched an event through the real C library.
 
-Milestone 113.0.3 records successful installation of these artifacts.
-Phase 0 requires qualification of the Apache-2.0 artifacts and final
-maintainer acceptance under the [alpha-to-beta gates](../../release-gates.md#alpha-to-beta-all-required).
+This candidate's installation and signed SBOM are retained as prior
+qualification evidence.
 
 ## Summary
 

@@ -1,0 +1,157 @@
+{
+  "arguments": [
+    "--bench",
+    "--noplot",
+    "--sample-size",
+    "15",
+    "--warm-up-time",
+    "1",
+    "--measurement-time",
+    "2"
+  ],
+  "benchmark": "schedule_cancel_1m_mixed/schedule_cancel_pop",
+  "build": "cargo bench --locked --offline -p kairo-ecs-bench --bench scheduler --no-run",
+  "cancelled_before_drain": 500000,
+  "candidate_commit": "e2875387ce45c34cd19716ea66f0102251a6aa6f",
+  "cargo": "cargo 1.99.1 (5f94df478 2026-08-27)",
+  "exit_status": 0,
+  "host": [
+    "Darwin 27.2.0 arm64",
+    "hw.ncpu: 10",
+    "hw.memsize: 34359738368",
+    "machdep.cpu.brand_string: Apple M1 Max"
+  ],
+  "inputs_sha256": [
+    "69e513fd02e5c2e3f4ee2b57c9b17ab4c4bb4bf1b78dabdaeea444bce32c8ecb  Cargo.lock",
+    "0c9ba3875ccadc1c6882006aabe8eba2c6d00120682485036a8c9c113daa62b7  crates/kairo-ecs-bench/benches/scheduler.rs",
+    "acfddaa02aaf0a0baf0a148c7b6b45f8e102c79c22282ee8a8b706bb34606057  crates/kairo-ecs-pdes/benches/production.rs"
+  ],
+  "installation_run": 45051171243,
+  "measurement": "Criterion times the scheduler drain after setup. /usr/bin/time -l records peak RSS for the full process.",
+  "priority_seed": 42,
+  "runs": [
+    {
+      "criterion_mean_ns": {
+        "confidence_interval": {
+          "confidence_level": 0.95,
+          "lower_bound": 193871361.06666666,
+          "upper_bound": 197877377.23166665
+        },
+        "point_estimate": 195821758.2,
+        "standard_error": 1028554.12728827
+      },
+      "drain_ns_per_iteration": [
+        192659667.0,
+        199287625.0,
+        193465875.0,
+        194929625.0,
+        200620750.0,
+        193146000.0,
+        193817166.0,
+        203381583.0,
+        195247958.0,
+        193439916.0,
+        191167917.0,
+        189900125.0,
+        194305458.0,
+        199895375.0,
+        202061333.0
+      ],
+      "maximum_rss_bytes": 1336705024,
+      "output_sha256": {
+        "run-1/benchmark.log": "a4a860bcad1f5c1c0446b1f9aa3e067b38e1c02acc1ebb884e17d5177fa7b462",
+        "run-1/criterion/schedule_cancel_1m_mixed/schedule_cancel_pop/new/estimates.json": "d05c00c651c30d99dc855fdd7af3b5f36fe91816e8cd57c1f6d2013c103dfd9e",
+        "run-1/criterion/schedule_cancel_1m_mixed/schedule_cancel_pop/new/sample.json": "7522980f49f9f4f3d5b4bc9afe4080512374ae4bf188a58ea9b3cef9989c882f"
+      },
+      "run": 1
+    },
+    {
+      "criterion_mean_ns": {
+        "confidence_interval": {
+          "confidence_level": 0.95,
+          "lower_bound": 193930466.66666666,
+          "upper_bound": 198802839.69
+        },
+        "point_estimate": 196432391.6,
+        "standard_error": 1246825.1879333053
+      },
+      "drain_ns_per_iteration": [
+        189993416.0,
+        200193625.0,
+        198626750.0,
+        195938834.0,
+        188790916.0,
+        198601917.0,
+        193788500.0,
+        200443083.0,
+        200765917.0,
+        200232875.0,
+        188971500.0,
+        198819666.0,
+        189368916.0,
+        198283917.0,
+        203666042.0
+      ],
+      "maximum_rss_bytes": 938115072,
+      "output_sha256": {
+        "run-2/benchmark.log": "9402af756bc2318fe86fe0213dd2c29ea34f37290dbd7b9741a21fb320746ccb",
+        "run-2/criterion/schedule_cancel_1m_mixed/schedule_cancel_pop/new/estimates.json": "05c3303d93af78546ba1086d318a9cc16d19791f481e7c44fd3174232c9ec86b",
+        "run-2/criterion/schedule_cancel_1m_mixed/schedule_cancel_pop/new/sample.json": "cba409f821a371e0bc9e55517ec4ad0927cd4c8f3662a6e716b04cb7abb2e6f5"
+      },
+      "run": 2
+    },
+    {
+      "criterion_mean_ns": {
+        "confidence_interval": {
+          "confidence_level": 0.95,
+          "lower_bound": 195060132.48333335,
+          "upper_bound": 202284607.27833334
+        },
+        "point_estimate": 198567511.0,
+        "standard_error": 1858780.4749810956
+      },
+      "drain_ns_per_iteration": [
+        192409125.0,
+        192304500.0,
+        208262458.0,
+        199347208.0,
+        193569250.0,
+        212819416.0,
+        193332375.0,
+        197987959.0,
+        207028583.0,
+        204315750.0,
+        189540583.0,
+        198384708.0,
+        190969042.0,
+        191842250.0,
+        206399458.0
+      ],
+      "maximum_rss_bytes": 926564352,
+      "output_sha256": {
+        "run-3/benchmark.log": "1432d5e4eaeb221d86d29b928db46c6c5ec1a19d92250c2428b1dd8c7de1cf32",
+        "run-3/criterion/schedule_cancel_1m_mixed/schedule_cancel_pop/new/estimates.json": "862e33e08393905384570eb62a43f03df1251a56575c2e025b456746eedf24d2",
+        "run-3/criterion/schedule_cancel_1m_mixed/schedule_cancel_pop/new/sample.json": "f44e48486b007df6fee02acb46adb8a788f16a9311c5bb37c4ad51ae3d719738"
+      },
+      "run": 3
+    }
+  ],
+  "rustc": [
+    "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+    "binary: rustc",
+    "commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67",
+    "commit-date: 2026-10-13",
+    "host: aarch64-apple-darwin",
+    "release: 1.99.1",
+    "LLVM version: 23.1.1"
+  ],
+  "scheduled": 1000000,
+  "sdk_sha256": "0060c934d7b5d9eb187387175fc4604184093823aedbfbb43fa52936b1a82240",
+  "serial_binary_sha256": "de3ac23b60743df65591d8b7aa0003f93d4be589334cbe044bb0dd262de5dca6",
+  "timing_ns": {
+    "count": 45,
+    "max": 212819416.0,
+    "median": 195938834.0,
+    "min": 188790916.0
+  }
+}
