@@ -59,7 +59,11 @@ Test-Path dist/SHA256SUMS
 Test-Path dist/sbom.spdx.json
 ```
 
-If the artifact tree is named differently, the release manager must record the actual artifact path in the release notes and in the workflow dispatch input for `sbom-attestations.yml` and `release-attestations.yml`.
+Record the actual artifact tree in the release notes and pass its path to
+`sbom-attestations.yml` when using that workflow. For `native-core-v1`,
+`release-attestations.yml` reads the selected installed candidate on `main`
+and uses its retained, verified archives.
+[Native beta provenance](../../release/installed-beta-job.md#reuse-the-tested-bytes-for-provenance).
 
 ## Exception handling
 
