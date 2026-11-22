@@ -186,4 +186,20 @@ mod tests {
             assert_eq!(cpu_list(malformed), None);
         }
     }
+
+    #[test]
+    fn set_mask_rejects_invalid_thread_even_when_mask_matches() {
+        // This oracle needs Linux procfs and the util-linux taskset command.
+        if !Path::new("/usr/bin/taskset").is_file()
+            || !Path::new("/proc/thread-self/status").is_file()
+        {
+            return;
+        }
+        let original = allowed().unwrap();
+        assert_eq!(
+            set_mask(u64::MAX, &original),
+            Err(NumaError::InvalidAffinity)
+        );
+        assert_eq!(allowed().unwrap(), original);
+    }
 }

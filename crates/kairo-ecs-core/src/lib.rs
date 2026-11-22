@@ -1103,6 +1103,15 @@ mod tests {
 
     #[cfg(feature = "numa")]
     #[test]
+    fn numa_topology_requires_nodes_when_supported() {
+        let mut topology = NumaTopology::synthetic_single_node(2, None);
+        assert_eq!(topology.validate(), Ok(()));
+        topology.nodes.clear();
+        assert_eq!(topology.validate(), Err(NumaError::EmptyTopology));
+    }
+
+    #[cfg(feature = "numa")]
+    #[test]
     fn affinity_plan_is_opt_in_and_reversible_without_binding() {
         let plan = AffinityBindingPlan::new(0, 3, true).unwrap();
         let reversal = plan.reversal();
@@ -1127,6 +1136,8 @@ mod tests {
         assert_eq!(pool.metrics().created, 1);
         assert_eq!(pool.metrics().reused, 1);
         assert!(!pool.metrics().uses_global_lock);
+        pool.recycle(second);
+        assert_eq!(pool.metrics().recycled, 2);
     }
 
     #[cfg(feature = "numa")]
@@ -1134,6 +1145,38 @@ mod tests {
     fn numa_topology_discover_returns_typed_report() {
         let topo = NumaTopology::discover();
         assert!(!topo.source.is_empty());
+    }
+
+    #[cfg(feature = "numa")]
+    #[test]
+    fn numa_topology_discover_honors_node_override() {
+        if std::env::var("KAIRO_NUMA_NODES").as_deref() == Ok("3") {
+            let topology = NumaTopology::discover();
+            assert_eq!(topology.source, "synthetic (KAIRO_NUMA_NODES)");
+            assert_eq!(topology.nodes.len(), 3);
+            assert_eq!(topology.nodes[0].cores, [0, 1]);
+            assert_eq!(topology.nodes[1].cores, [2, 3]);
+            assert_eq!(topology.nodes[2].cores, [4, 5]);
+            assert!(topology
+                .nodes
+                .iter()
+                .all(|node| node.memory_bytes == Some(1_073_741_824)));
+            return;
+        }
+
+        let output = std::process::Command::new(std::env::current_exe().unwrap())
+            .args([
+                "--exact",
+                "tests::numa_topology_discover_honors_node_override",
+            ])
+            .env("KAIRO_NUMA_NODES", "3")
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success() && String::from_utf8_lossy(&output.stdout).contains("1 passed"),
+            "{}",
+            String::from_utf8_lossy(&output.stdout),
+        );
     }
 
     #[cfg(feature = "numa")]
@@ -1154,6 +1197,7 @@ mod tests {
 
         arena.alloc(10);
         arena.alloc(20);
+        assert!(!arena.is_empty());
         assert_eq!(arena.len(), 2);
         assert_eq!(arena.metrics().chunk_count, 1);
 
