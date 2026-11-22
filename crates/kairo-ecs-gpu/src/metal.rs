@@ -1,6 +1,6 @@
 #![forbid(unsafe_code)]
 
-#[cfg(feature = "wgpu-backend")]
+#[cfg(all(target_os = "macos", feature = "wgpu-backend"))]
 use crate::compute::AgentParticle;
 use crate::compute::{
     DesEvent, GpuBackendAvailability, GpuBackendCapabilities, GpuCompute, GpuComputeError,
@@ -8,6 +8,9 @@ use crate::compute::{
 };
 
 pub const METAL_BACKEND_NAME: &str = "apple-metal-unified-compute";
+
+#[cfg(all(target_os = "macos", feature = "wgpu-backend"))]
+const METAL_KERNEL_WIDTH: u32 = 64;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct MetalAdapterInfo {
@@ -18,22 +21,258 @@ pub struct MetalAdapterInfo {
     pub metal_toolchain_available: bool,
 }
 
-#[cfg(feature = "wgpu-backend")]
+#[cfg(all(target_os = "macos", feature = "wgpu-backend"))]
 struct NativeMetalDeviceContext {
     device: wgpu::Device,
     queue: wgpu::Queue,
     abm_pipeline: wgpu::ComputePipeline,
     bind_group_layout: wgpu::BindGroupLayout,
-    particle_buffer: Option<wgpu::Buffer>,
-    staging_buffer: Option<wgpu::Buffer>,
-    particle_count: usize,
+    adapter_name: String,
+    particles: NativeParticleState,
 }
 
+#[cfg(all(target_os = "macos", feature = "wgpu-backend"))]
+enum NativeParticleState {
+    Empty,
+    Resident(NativeParticles),
+    Indeterminate,
+}
+
+#[cfg(all(target_os = "macos", feature = "wgpu-backend"))]
+fn metal_error(reason: &'static str) -> GpuComputeError {
+    GpuComputeError::DeviceUnavailable {
+        backend: METAL_BACKEND_NAME,
+        reason,
+    }
+}
+
+#[cfg(all(target_os = "macos", feature = "wgpu-backend"))]
+fn device_operation<T>(
+    device: &wgpu::Device,
+    reason: &'static str,
+    run: impl FnOnce() -> Result<T, GpuComputeError>,
+) -> Result<T, GpuComputeError> {
+    let internal = device.push_error_scope(wgpu::ErrorFilter::Internal);
+    let memory = device.push_error_scope(wgpu::ErrorFilter::OutOfMemory);
+    let validation = device.push_error_scope(wgpu::ErrorFilter::Validation);
+    let result = run();
+    let errors = [
+        pollster::block_on(validation.pop()),
+        pollster::block_on(memory.pop()),
+        pollster::block_on(internal.pop()),
+    ];
+    if errors.iter().any(Option::is_some) {
+        return Err(metal_error(reason));
+    }
+    result
+}
+
+#[cfg(all(target_os = "macos", feature = "wgpu-backend"))]
+fn upload_buffer(
+    device: &wgpu::Device,
+    label: &'static str,
+    bytes: &[u8],
+    usage: wgpu::BufferUsages,
+) -> Result<wgpu::Buffer, GpuComputeError> {
+    let buffer = device.create_buffer(&wgpu::BufferDescriptor {
+        label: Some(label),
+        size: bytes.len() as u64,
+        usage,
+        mapped_at_creation: true,
+    });
+    let mut view = buffer
+        .get_mapped_range_mut(..)
+        .map_err(|_| metal_error("could not map the Metal upload buffer"))?;
+    view.copy_from_slice(bytes);
+    drop(view);
+    buffer.unmap();
+    Ok(buffer)
+}
+
+#[cfg(all(target_os = "macos", feature = "wgpu-backend"))]
+struct NativeParticles {
+    buffer: wgpu::Buffer,
+    count: u32,
+    workgroups: u32,
+}
+
+#[cfg(all(target_os = "macos", feature = "wgpu-backend"))]
+impl NativeMetalDeviceContext {
+    fn replace_particles(&mut self, particles: &[AgentParticle]) -> Result<usize, GpuComputeError> {
+        let bytes = std::mem::size_of_val(particles);
+        let count =
+            u32::try_from(particles.len()).map_err(|_| GpuComputeError::DispatchSizeOverflow)?;
+        let workgroups = count.div_ceil(METAL_KERNEL_WIDTH);
+        let limits = self.device.limits();
+        if workgroups > limits.max_compute_workgroups_per_dimension {
+            return Err(GpuComputeError::DispatchSizeOverflow);
+        }
+        if bytes as u64
+            > limits
+                .max_buffer_size
+                .min(limits.max_storage_buffer_binding_size)
+        {
+            return Err(GpuComputeError::MemorySizeOverflow);
+        }
+
+        self.particles = if count == 0 {
+            NativeParticleState::Empty
+        } else {
+            device_operation(&self.device, "Metal particle upload failed", || {
+                Ok(NativeParticleState::Resident(NativeParticles {
+                    buffer: upload_buffer(
+                        &self.device,
+                        "metal_persistent_particles",
+                        bytemuck::cast_slice(particles),
+                        wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_SRC,
+                    )?,
+                    count,
+                    workgroups,
+                }))
+            })?
+        };
+        Ok(bytes)
+    }
+
+    fn wait_for_submission(
+        &self,
+        submission: wgpu::SubmissionIndex,
+    ) -> Result<(), GpuComputeError> {
+        self.device
+            .poll(wgpu::PollType::Wait {
+                submission_index: Some(submission),
+                timeout: Some(std::time::Duration::from_secs(30)),
+            })
+            .map_err(|_| metal_error("Metal submission did not complete"))?;
+        Ok(())
+    }
+
+    fn read_particles(
+        &self,
+        particles: &NativeParticles,
+    ) -> Result<Vec<AgentParticle>, GpuComputeError> {
+        device_operation(&self.device, "Metal particle readback failed", || {
+            const FAILURE: GpuComputeError = GpuComputeError::DeviceUnavailable {
+                backend: METAL_BACKEND_NAME,
+                reason: "Metal particle readback failed",
+            };
+            let staging = self.device.create_buffer(&wgpu::BufferDescriptor {
+                label: Some("metal_particle_readback"),
+                size: particles.buffer.size(),
+                usage: wgpu::BufferUsages::MAP_READ | wgpu::BufferUsages::COPY_DST,
+                mapped_at_creation: false,
+            });
+            let mut encoder = self
+                .device
+                .create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                    label: Some("metal_particle_readback"),
+                });
+            encoder.copy_buffer_to_buffer(
+                &particles.buffer,
+                0,
+                &staging,
+                0,
+                particles.buffer.size(),
+            );
+            let submitted = self.queue.submit(Some(encoder.finish()));
+            let slice = staging.slice(..);
+            let (sender, receiver) = std::sync::mpsc::channel();
+            slice.map_async(wgpu::MapMode::Read, move |result| {
+                let _ = sender.send(result);
+            });
+            self.wait_for_submission(submitted)?;
+            receiver
+                .recv_timeout(std::time::Duration::from_secs(30))
+                .map_err(|_| FAILURE)?
+                .map_err(|_| FAILURE)?;
+            let view = slice.get_mapped_range().map_err(|_| FAILURE)?;
+            let particles = bytemuck::try_cast_slice::<_, AgentParticle>(&view)
+                .map_err(|_| FAILURE)?
+                .to_vec();
+            drop(view);
+            staging.unmap();
+            Ok(particles)
+        })
+    }
+
+    fn dispatch_particles(
+        &self,
+        particles: &NativeParticles,
+        dt: f32,
+        seed: u64,
+    ) -> Result<GpuStepStats, GpuComputeError> {
+        device_operation(&self.device, "Metal ABM dispatch failed", || {
+            #[repr(C)]
+            #[derive(Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
+            struct Uniforms {
+                dt: f32,
+                seed_lo: u32,
+                seed_hi: u32,
+                count: u32,
+            }
+
+            let uniforms = Uniforms {
+                dt,
+                seed_lo: seed as u32,
+                seed_hi: (seed >> 32) as u32,
+                count: particles.count,
+            };
+            let uniform_buffer = upload_buffer(
+                &self.device,
+                "metal_uniforms",
+                bytemuck::bytes_of(&uniforms),
+                wgpu::BufferUsages::UNIFORM,
+            )?;
+            let bind_group = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
+                label: Some("metal_abm_bind_group"),
+                layout: &self.bind_group_layout,
+                entries: &[
+                    wgpu::BindGroupEntry {
+                        binding: 0,
+                        resource: particles.buffer.as_entire_binding(),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 1,
+                        resource: uniform_buffer.as_entire_binding(),
+                    },
+                ],
+            });
+            let mut encoder = self
+                .device
+                .create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                    label: Some("metal_abm_encoder"),
+                });
+            {
+                let mut pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
+                    label: Some("metal_abm_pass"),
+                    timestamp_writes: None,
+                });
+                pass.set_pipeline(&self.abm_pipeline);
+                pass.set_bind_group(0, &bind_group, &[]);
+                pass.dispatch_workgroups(particles.workgroups, 1, 1);
+            }
+            let submitted = self.queue.submit(Some(encoder.finish()));
+            self.wait_for_submission(submitted)?;
+            Ok(GpuStepStats {
+                uploaded_bytes: std::mem::size_of::<Uniforms>(),
+                downloaded_bytes: 0,
+                dispatched_workgroups: particles.workgroups,
+            })
+        })
+    }
+}
+
+/// Optional Apple Metal particle backend with a CPU compatibility constructor.
+///
+/// Cloning takes an independent CPU snapshot of the current state. A clone
+/// panics if the required native readback fails. Use `GpuCompute::download_state`
+/// to obtain a snapshot with a typed error on readback failure.
 pub struct MetalBackend {
     worker_threads: usize,
+    hardware_only: bool,
     session: PersistentGpuSession,
     adapter_info: MetalAdapterInfo,
-    #[cfg(feature = "wgpu-backend")]
+    #[cfg(all(target_os = "macos", feature = "wgpu-backend"))]
     native_ctx: Option<NativeMetalDeviceContext>,
 }
 
@@ -49,12 +288,35 @@ impl core::fmt::Debug for MetalBackend {
 
 impl Clone for MetalBackend {
     fn clone(&self) -> Self {
-        // Create fresh clone with same session state
+        #[cfg_attr(
+            not(all(target_os = "macos", feature = "wgpu-backend")),
+            allow(unused_mut)
+        )]
+        let mut session = self.session.clone();
+        #[cfg(all(target_os = "macos", feature = "wgpu-backend"))]
+        if self
+            .native_ctx
+            .as_ref()
+            .is_some_and(|ctx| !matches!(ctx.particles, NativeParticleState::Empty))
+        {
+            let state = self
+                .download_state()
+                .expect("could not snapshot Metal particles for clone");
+            session
+                .upload_once(&state)
+                .expect("Metal snapshot fits in host state");
+        }
         Self {
             worker_threads: self.worker_threads,
-            session: self.session.clone(),
-            adapter_info: self.adapter_info.clone(),
-            #[cfg(feature = "wgpu-backend")]
+            hardware_only: false,
+            session,
+            adapter_info: MetalAdapterInfo {
+                adapter_name: "CPU fallback".into(),
+                unified_memory: false,
+                max_threads_per_threadgroup: DEFAULT_WORKGROUP_SIZE,
+                ..self.adapter_info.clone()
+            },
+            #[cfg(all(target_os = "macos", feature = "wgpu-backend"))]
             native_ctx: None,
         }
     }
@@ -75,24 +337,46 @@ impl MetalBackend {
     }
 
     pub fn with_threads(worker_threads: usize) -> Self {
-        let adapter_info = Self::probe_host_adapter();
-        #[cfg(feature = "wgpu-backend")]
+        let worker_threads = worker_threads.max(1);
+        let adapter_info = MetalAdapterInfo {
+            adapter_name: "CPU fallback".into(),
+            unified_memory: false,
+            max_threads_per_threadgroup: DEFAULT_WORKGROUP_SIZE,
+            worker_threads,
+            metal_toolchain_available: cfg!(all(target_os = "macos", feature = "wgpu-backend")),
+        };
+        #[cfg(all(target_os = "macos", feature = "wgpu-backend"))]
         let native_ctx = Self::try_init_native_metal();
-        #[cfg(not(feature = "wgpu-backend"))]
-        let _native_ctx = ();
+        #[cfg(all(target_os = "macos", feature = "wgpu-backend"))]
+        let adapter_info = match &native_ctx {
+            Some(ctx) => MetalAdapterInfo {
+                adapter_name: ctx.adapter_name.clone(),
+                unified_memory: true,
+                max_threads_per_threadgroup: ctx
+                    .device
+                    .limits()
+                    .max_compute_invocations_per_workgroup,
+                ..adapter_info
+            },
+            None => adapter_info,
+        };
 
         Self {
-            worker_threads: worker_threads.max(1),
+            worker_threads,
+            hardware_only: false,
             session: PersistentGpuSession::new(METAL_BACKEND_NAME),
             adapter_info,
-            #[cfg(feature = "wgpu-backend")]
+            #[cfg(all(target_os = "macos", feature = "wgpu-backend"))]
             native_ctx,
         }
     }
 
-    #[cfg(feature = "wgpu-backend")]
+    #[cfg(all(target_os = "macos", feature = "wgpu-backend"))]
     fn try_init_native_metal() -> Option<NativeMetalDeviceContext> {
-        let instance = wgpu::Instance::default();
+        let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
+            backends: wgpu::Backends::METAL,
+            ..wgpu::InstanceDescriptor::new_without_display_handle()
+        });
         let adapter = pollster::block_on(instance.request_adapter(&wgpu::RequestAdapterOptions {
             power_preference: wgpu::PowerPreference::HighPerformance,
             force_fallback_adapter: false,
@@ -101,13 +385,22 @@ impl MetalBackend {
         }))
         .ok()?;
 
+        let info = adapter.get_info();
+        if info.backend != wgpu::Backend::Metal
+            || info.device_type != wgpu::DeviceType::IntegratedGpu
+            || !info.name.starts_with("Apple ")
+        {
+            return None;
+        }
         let (device, queue) =
             pollster::block_on(adapter.request_device(&wgpu::DeviceDescriptor::default())).ok()?;
 
-        let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-            label: Some("metal_abm_kernel"),
-            source: wgpu::ShaderSource::Wgsl(
-                r#"
+        let (abm_pipeline, bind_group_layout) =
+            device_operation(&device, "Metal ABM pipeline setup failed", || {
+                let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+                    label: Some("metal_abm_kernel"),
+                    source: wgpu::ShaderSource::Wgsl(
+                        r#"
                 struct Particle {
                     x: f32,
                     y: f32,
@@ -143,127 +436,90 @@ impl MetalBackend {
                     particles[idx].y += (particles[idx].vy - jitter) * uniforms.dt;
                 }
             "#
-                .into(),
-            ),
-        });
+                        .into(),
+                    ),
+                });
 
-        let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-            label: Some("abm_bind_group_layout"),
-            entries: &[
-                wgpu::BindGroupLayoutEntry {
-                    binding: 0,
-                    visibility: wgpu::ShaderStages::COMPUTE,
-                    ty: wgpu::BindingType::Buffer {
-                        ty: wgpu::BufferBindingType::Storage { read_only: false },
-                        has_dynamic_offset: false,
-                        min_binding_size: None,
-                    },
-                    count: None,
-                },
-                wgpu::BindGroupLayoutEntry {
-                    binding: 1,
-                    visibility: wgpu::ShaderStages::COMPUTE,
-                    ty: wgpu::BindingType::Buffer {
-                        ty: wgpu::BufferBindingType::Uniform,
-                        has_dynamic_offset: false,
-                        min_binding_size: None,
-                    },
-                    count: None,
-                },
-            ],
-        });
+                let bind_group_layout =
+                    device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                        label: Some("abm_bind_group_layout"),
+                        entries: &[
+                            wgpu::BindGroupLayoutEntry {
+                                binding: 0,
+                                visibility: wgpu::ShaderStages::COMPUTE,
+                                ty: wgpu::BindingType::Buffer {
+                                    ty: wgpu::BufferBindingType::Storage { read_only: false },
+                                    has_dynamic_offset: false,
+                                    min_binding_size: None,
+                                },
+                                count: None,
+                            },
+                            wgpu::BindGroupLayoutEntry {
+                                binding: 1,
+                                visibility: wgpu::ShaderStages::COMPUTE,
+                                ty: wgpu::BindingType::Buffer {
+                                    ty: wgpu::BufferBindingType::Uniform,
+                                    has_dynamic_offset: false,
+                                    min_binding_size: None,
+                                },
+                                count: None,
+                            },
+                        ],
+                    });
 
-        let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-            label: Some("abm_pipeline_layout"),
-            bind_group_layouts: &[Some(&bind_group_layout)],
-            immediate_size: 0,
-        });
+                let pipeline_layout =
+                    device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+                        label: Some("abm_pipeline_layout"),
+                        bind_group_layouts: &[Some(&bind_group_layout)],
+                        immediate_size: 0,
+                    });
 
-        let abm_pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
-            label: Some("abm_compute_pipeline"),
-            layout: Some(&pipeline_layout),
-            module: &shader,
-            entry_point: Some("main"),
-            compilation_options: Default::default(),
-            cache: None,
-        });
+                let abm_pipeline =
+                    device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
+                        label: Some("abm_compute_pipeline"),
+                        layout: Some(&pipeline_layout),
+                        module: &shader,
+                        entry_point: Some("main"),
+                        compilation_options: Default::default(),
+                        cache: None,
+                    });
+
+                Ok((abm_pipeline, bind_group_layout))
+            })
+            .ok()?;
 
         Some(NativeMetalDeviceContext {
             device,
             queue,
             abm_pipeline,
             bind_group_layout,
-            particle_buffer: None,
-            staging_buffer: None,
-            particle_count: 0,
+            adapter_name: info.name,
+            particles: NativeParticleState::Empty,
         })
     }
 
+    /// Return metadata from the selected device or the CPU fallback.
     pub fn probe_host_adapter() -> MetalAdapterInfo {
-        #[cfg_attr(not(target_os = "macos"), allow(unused_mut))]
-        let mut adapter_name = "Apple Silicon Metal Unified Memory GPU".to_string();
-        let metal_toolchain_available = cfg!(target_os = "macos");
-
-        #[cfg(target_os = "macos")]
-        {
-            if let Ok(output) = std::process::Command::new("sysctl")
-                .args(["-n", "machdep.cpu.brand_string"])
-                .output()
-            {
-                if output.status.success() {
-                    let brand = String::from_utf8_lossy(&output.stdout).trim().to_string();
-                    if !brand.is_empty() {
-                        adapter_name = format!("Apple Silicon ({})", brand);
-                    }
-                }
-            } else if let Ok(output) = std::process::Command::new("ioreg")
-                .args(["-r", "-c", "AGXAccelerator", "-d", "1"])
-                .output()
-            {
-                if output.status.success() {
-                    let stdout = String::from_utf8_lossy(&output.stdout);
-                    if stdout.contains("Apple") {
-                        adapter_name = "Apple AGX Accelerator (Metal Unified Memory)".to_string();
-                    }
-                }
-            }
-        }
-
-        MetalAdapterInfo {
-            adapter_name,
-            unified_memory: true,
-            max_threads_per_threadgroup: 1024,
-            worker_threads: std::thread::available_parallelism()
-                .map(|n| n.get())
-                .unwrap_or(4),
-            metal_toolchain_available,
-        }
+        Self::new().adapter_info
     }
 
+    /// Select native Apple Metal or return a typed device error.
+    ///
+    /// This constructor provides particle ABM on the device. DES is
+    /// unavailable in hardware-only sessions.
     pub fn initialize_macos_hardware_only() -> Result<Self, GpuComputeError> {
-        #[cfg(target_os = "macos")]
+        #[cfg(all(target_os = "macos", feature = "wgpu-backend"))]
         {
-            let has_apple_gpu = std::process::Command::new("ioreg")
-                .args(["-r", "-c", "AGXAccelerator", "-d", "1"])
-                .output()
-                .map(|o| o.status.success() && String::from_utf8_lossy(&o.stdout).contains("AGX"))
-                .unwrap_or(false);
-            if has_apple_gpu {
-                Ok(Self::new())
-            } else {
-                Err(GpuComputeError::DeviceUnavailable {
-                    backend: METAL_BACKEND_NAME,
-                    reason: "no Apple AGX GPU detected on this macOS host",
-                })
+            let mut backend = Self::new();
+            if backend.native_ctx.is_some() {
+                backend.hardware_only = true;
+                return Ok(backend);
             }
         }
-        #[cfg(not(target_os = "macos"))]
-        {
-            Err(GpuComputeError::DeviceUnavailable {
-                backend: METAL_BACKEND_NAME,
-                reason: "Apple Metal backend requires macOS host or Metal-compatible unified memory runtime",
-            })
-        }
+        Err(GpuComputeError::DeviceUnavailable {
+            backend: METAL_BACKEND_NAME,
+            reason: "no native Apple Metal GPU is available in this build",
+        })
     }
 
     pub fn msl_abm_kernel_source() -> &'static str {
@@ -318,167 +574,58 @@ impl GpuCompute for MetalBackend {
     }
 
     fn capabilities(&self) -> GpuBackendCapabilities {
-        #[cfg(feature = "wgpu-backend")]
+        #[cfg(all(target_os = "macos", feature = "wgpu-backend"))]
         let availability = if self.native_ctx.is_some() {
             GpuBackendAvailability::Available
         } else {
             GpuBackendAvailability::CpuFallback
         };
-        #[cfg(not(feature = "wgpu-backend"))]
+        #[cfg(not(all(target_os = "macos", feature = "wgpu-backend")))]
         let availability = GpuBackendAvailability::CpuFallback;
 
         GpuBackendCapabilities {
             backend_name: METAL_BACKEND_NAME,
             availability,
-            max_workgroup_size: DEFAULT_WORKGROUP_SIZE,
-            supports_zero_copy_borrow: true,
-            supports_unified_memory: true,
+            max_workgroup_size: self.adapter_info.max_threads_per_threadgroup,
+            supports_zero_copy_borrow: false,
+            supports_unified_memory: availability == GpuBackendAvailability::Available,
         }
     }
 
     fn upload_state(&mut self, state: &GpuState) -> Result<GpuStepStats, GpuComputeError> {
-        let stats = self.session.upload_once(state)?;
-
-        #[cfg(feature = "wgpu-backend")]
+        #[cfg(all(target_os = "macos", feature = "wgpu-backend"))]
         if let Some(ctx) = &mut self.native_ctx {
-            use wgpu::util::DeviceExt;
-            let buffer_size = (state.particles.len() * std::mem::size_of::<AgentParticle>()) as u64;
-            if buffer_size > 0 {
-                let p_buf = ctx
-                    .device
-                    .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                        label: Some("metal_persistent_particles"),
-                        contents: bytemuck::cast_slice(&state.particles),
-                        usage: wgpu::BufferUsages::STORAGE
-                            | wgpu::BufferUsages::COPY_SRC
-                            | wgpu::BufferUsages::COPY_DST,
-                    });
-
-                let s_buf = ctx.device.create_buffer(&wgpu::BufferDescriptor {
-                    label: Some("metal_staging_particles"),
-                    size: buffer_size,
-                    usage: wgpu::BufferUsages::MAP_READ | wgpu::BufferUsages::COPY_DST,
-                    mapped_at_creation: false,
-                });
-
-                ctx.particle_buffer = Some(p_buf);
-                ctx.staging_buffer = Some(s_buf);
-                ctx.particle_count = state.particles.len();
-            }
+            let uploaded_bytes = ctx.replace_particles(&state.particles)?;
+            self.session.upload_once(&GpuState {
+                particles: Vec::new(),
+                entity_values: state.entity_values.clone(),
+            })?;
+            return Ok(GpuStepStats {
+                uploaded_bytes,
+                ..GpuStepStats::default()
+            });
         }
-
-        Ok(stats)
+        self.session.upload_once(state)
     }
 
     fn run_abm_step(&mut self, dt: f32, seed: u64) -> Result<GpuStepStats, GpuComputeError> {
-        #[cfg(feature = "wgpu-backend")]
+        #[cfg(all(target_os = "macos", feature = "wgpu-backend"))]
         if let Some(ctx) = &mut self.native_ctx {
-            if let Some(particle_buffer) = &ctx.particle_buffer {
-                use wgpu::util::DeviceExt;
-
-                #[repr(C)]
-                #[derive(Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
-                struct Uniforms {
-                    dt: f32,
-                    seed_lo: u32,
-                    seed_hi: u32,
-                    count: u32,
-                }
-
-                let uniforms = Uniforms {
-                    dt,
-                    seed_lo: seed as u32,
-                    seed_hi: (seed >> 32) as u32,
-                    count: ctx.particle_count as u32,
-                };
-
-                let uniform_buf =
-                    ctx.device
-                        .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                            label: Some("metal_uniforms"),
-                            contents: bytemuck::bytes_of(&uniforms),
-                            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-                        });
-
-                let bind_group = ctx.device.create_bind_group(&wgpu::BindGroupDescriptor {
-                    label: Some("metal_abm_bind_group"),
-                    layout: &ctx.bind_group_layout,
-                    entries: &[
-                        wgpu::BindGroupEntry {
-                            binding: 0,
-                            resource: particle_buffer.as_entire_binding(),
-                        },
-                        wgpu::BindGroupEntry {
-                            binding: 1,
-                            resource: uniform_buf.as_entire_binding(),
-                        },
-                    ],
-                });
-
-                let mut encoder =
-                    ctx.device
-                        .create_command_encoder(&wgpu::CommandEncoderDescriptor {
-                            label: Some("metal_abm_encoder"),
-                        });
-
-                let workgroups = ((ctx.particle_count as u32).saturating_add(63)) / 64;
-                {
-                    let mut compute_pass =
-                        encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
-                            label: Some("metal_abm_pass"),
-                            timestamp_writes: None,
-                        });
-                    compute_pass.set_pipeline(&ctx.abm_pipeline);
-                    compute_pass.set_bind_group(0, &bind_group, &[]);
-                    compute_pass.dispatch_workgroups(workgroups.max(1), 1, 1);
-                }
-
-                if let Some(staging_buffer) = &ctx.staging_buffer {
-                    let buffer_size =
-                        (ctx.particle_count * std::mem::size_of::<AgentParticle>()) as u64;
-                    encoder.copy_buffer_to_buffer(
-                        particle_buffer,
-                        0,
-                        staging_buffer,
-                        0,
-                        buffer_size,
-                    );
-                }
-
-                let submission_index = ctx.queue.submit(Some(encoder.finish()));
-
-                // Read back to session state to maintain CPU/session sync
-                if let Some(staging_buffer) = &ctx.staging_buffer {
-                    let buffer_slice = staging_buffer.slice(..);
-                    let (sender, receiver) = std::sync::mpsc::channel();
-                    buffer_slice.map_async(wgpu::MapMode::Read, move |res| {
-                        let _ = sender.send(res);
-                    });
-                    let _ = ctx.device.poll(wgpu::PollType::Wait {
-                        submission_index: Some(submission_index),
-                        timeout: None,
-                    });
-                    if let Ok(Ok(())) = receiver.recv() {
-                        if let Ok(data) = buffer_slice.get_mapped_range() {
-                            if let Ok(result_particles) =
-                                bytemuck::try_cast_slice::<u8, AgentParticle>(&data)
-                            {
-                                if let Ok(state) = self.session.download_state() {
-                                    let mut updated = state;
-                                    updated.particles = result_particles.to_vec();
-                                    let _ = self.session.upload_once(&updated);
-                                }
-                            }
-                        }
+            match &ctx.particles {
+                NativeParticleState::Resident(particles) => {
+                    let result = ctx.dispatch_particles(particles, dt, seed);
+                    if result.is_err() {
+                        // The device may have executed the step. Require an explicit upload.
+                        ctx.particles = NativeParticleState::Indeterminate;
                     }
-                    staging_buffer.unmap();
+                    return result;
                 }
-
-                return Ok(GpuStepStats {
-                    uploaded_bytes: 0,
-                    downloaded_bytes: 0,
-                    dispatched_workgroups: workgroups.max(1),
-                });
+                NativeParticleState::Indeterminate => {
+                    return Err(metal_error(
+                        "upload particle state after a failed Metal submission",
+                    ));
+                }
+                NativeParticleState::Empty => {}
             }
         }
 
@@ -487,12 +634,35 @@ impl GpuCompute for MetalBackend {
     }
 
     fn run_des_step(&mut self, events: &[DesEvent]) -> Result<GpuStepStats, GpuComputeError> {
-        self.session.run_des_tick(events)
+        if self.hardware_only {
+            return Err(GpuComputeError::UnsupportedBackend(METAL_BACKEND_NAME));
+        }
+        self.session.run_des_tick(events)?;
+        Ok(GpuStepStats::default())
     }
 
     fn download_state(&self) -> Result<GpuState, GpuComputeError> {
-        let mut session_clone = self.session.clone();
-        session_clone.download_state()
+        let mut session = self.session.clone();
+        #[cfg_attr(
+            not(all(target_os = "macos", feature = "wgpu-backend")),
+            allow(unused_mut)
+        )]
+        let mut state = session.download_state()?;
+        #[cfg(all(target_os = "macos", feature = "wgpu-backend"))]
+        if let Some(ctx) = &self.native_ctx {
+            match &ctx.particles {
+                NativeParticleState::Resident(particles) => {
+                    state.particles = ctx.read_particles(particles)?
+                }
+                NativeParticleState::Indeterminate => {
+                    return Err(metal_error(
+                        "upload particle state after a failed Metal submission",
+                    ));
+                }
+                NativeParticleState::Empty => {}
+            }
+        }
+        Ok(state)
     }
 }
 
@@ -501,13 +671,62 @@ mod tests {
     use super::*;
     use crate::compute::{AgentParticle, CpuFallbackCompute};
 
+    #[cfg(all(target_os = "macos", feature = "wgpu-backend"))]
+    #[test]
+    fn invalid_native_buffer_fences_particle_state_until_reupload() {
+        let mut backend = MetalBackend::initialize_macos_hardware_only().unwrap();
+        let state = GpuState {
+            particles: vec![AgentParticle {
+                x: 0.0,
+                y: 0.0,
+                vx: 1.0,
+                vy: 0.0,
+            }],
+            entity_values: Vec::new(),
+        };
+        backend.upload_state(&state).unwrap();
+        let ctx = backend.native_ctx.as_mut().unwrap();
+        let NativeParticleState::Resident(particles) = &mut ctx.particles else {
+            panic!("particle upload did not create a native buffer");
+        };
+        // This native buffer lacks STORAGE use. The device must reject the
+        // dispatch under the error scope and a fresh upload must recover.
+        particles.buffer = ctx.device.create_buffer(&wgpu::BufferDescriptor {
+            label: None,
+            size: std::mem::size_of::<AgentParticle>() as u64,
+            usage: wgpu::BufferUsages::COPY_SRC,
+            mapped_at_creation: false,
+        });
+        assert!(matches!(
+            backend.run_abm_step(0.25, 7),
+            Err(GpuComputeError::DeviceUnavailable { .. })
+        ));
+        assert!(matches!(
+            backend.download_state(),
+            Err(GpuComputeError::DeviceUnavailable { .. })
+        ));
+        assert!(matches!(
+            backend.run_abm_step(0.25, 7),
+            Err(GpuComputeError::DeviceUnavailable { .. })
+        ));
+        backend.upload_state(&state).unwrap();
+        assert_eq!(backend.download_state().unwrap(), state);
+        assert_eq!(
+            backend.run_abm_step(0.25, 7).unwrap().dispatched_workgroups,
+            1
+        );
+    }
+
     #[test]
     fn test_metal_backend_capabilities() {
         let backend = MetalBackend::new();
         let caps = backend.capabilities();
         assert_eq!(caps.backend_name, METAL_BACKEND_NAME);
-        assert!(caps.supports_unified_memory);
-        assert!(caps.supports_zero_copy_borrow);
+        assert_eq!(
+            caps.supports_unified_memory,
+            caps.availability == GpuBackendAvailability::Available
+        );
+        assert!(!caps.supports_zero_copy_borrow);
     }
 
     #[test]
