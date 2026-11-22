@@ -8,7 +8,7 @@ const MAX_COMMAND_BYTES: u64 = 512;
 #[derive(Deserialize)]
 #[serde(tag = "op", rename_all = "snake_case", deny_unknown_fields)]
 enum Command {
-    Reset { seed: u64 },
+    Reset { seed: Option<u64> },
     Step { actions: Vec<i64> },
 }
 
@@ -70,7 +70,10 @@ fn serve(
         }
         let reply = match serde_json::from_slice(&line) {
             Ok(Command::Reset { seed }) => Reply::Reset {
-                observation: env.reset(seed),
+                observation: match seed {
+                    Some(seed) => env.reset(seed),
+                    None => env.reset_continuing(),
+                },
             },
             Ok(Command::Step { actions }) => match env.step(&actions) {
                 Ok(step) => Reply::Step {

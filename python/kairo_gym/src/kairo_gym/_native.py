@@ -98,6 +98,7 @@ class NativeQueue:
 
         self._close = weakref.finalize(self, _close_process, self._process)
         self._agents = agents
+        self._initialized = False
         try:
             ready = self._receive()
             bounds = (ready.get("max_waiting"), ready.get("arrival_ticks"))
@@ -160,14 +161,19 @@ class NativeQueue:
         )
 
     def reset(self, seed):
-        seed = secrets.randbits(64) if seed is None else index(seed)
-        if not 0 <= seed < 2**64:
-            raise ValueError("Native queue seed must be an unsigned 64-bit integer")
+        if seed is None:
+            if not self._initialized:
+                seed = secrets.randbits(64)
+        else:
+            seed = index(seed)
+            if not 0 <= seed < 2**64:
+                raise ValueError("Native queue seed must be an unsigned 64-bit integer")
         reply = self._request({"op": "reset", "seed": seed})
         if reply.keys() != {"observation"} or not self._valid_observation(
             reply["observation"]
         ):
             raise self._unavailable("Invalid reset reply from native queue")
+        self._initialized = True
         return reply["observation"]
 
     def step(self, actions):

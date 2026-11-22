@@ -51,6 +51,82 @@ class NativeQueueTests(unittest.TestCase):
             self.assertEqual(initial.tolist(), [0, 2, 8])
             self.assertEqual(env.step(1)[0][0], 1)
 
+    def test_seeded_gymnasium_replays_multiple_unseeded_episodes(self):
+        def rollout(env):
+            episodes = []
+            for seed in (42, None, None, 42):
+                env.reset(seed=seed)
+                episode = []
+                for action in (1, 0, 1, 1):
+                    observation, reward, terminated, truncated, _ = env.step(action)
+                    episode.append(
+                        (observation.tolist(), reward, terminated, truncated)
+                    )
+                episodes.append(episode)
+            return episodes
+
+        with (
+            patch.object(
+                _native.secrets,
+                "randbits",
+                side_effect=AssertionError("unexpected entropy"),
+            ),
+            KairoGymEnv(
+                KairoGymConfig(max_steps=4), executable=self.executable
+            ) as first,
+            KairoGymEnv(
+                KairoGymConfig(max_steps=4), executable=self.executable
+            ) as second,
+        ):
+            episodes = rollout(first)
+            self.assertEqual(episodes, rollout(second))
+            self.assertEqual(episodes[0], episodes[-1])
+
+    def test_seeded_pettingzoo_replays_multiple_unseeded_episodes(self):
+        def rollout(env):
+            episodes = []
+            for seed in (17, None, None):
+                env.reset(seed=seed)
+                episode = []
+                for _ in range(4):
+                    observations, rewards, terminated, truncated, _ = env.step(
+                        dict.fromkeys(env.agents, 1)
+                    )
+                    episode.append(
+                        (
+                            {
+                                agent: value.tolist()
+                                for agent, value in observations.items()
+                            },
+                            rewards,
+                            terminated,
+                            truncated,
+                        )
+                    )
+                episodes.append(episode)
+            return episodes
+
+        first = PettingZooQueueEnv(max_steps=4, executable=self.executable)
+        self.addCleanup(first.close)
+        second = PettingZooQueueEnv(max_steps=4, executable=self.executable)
+        self.addCleanup(second.close)
+        with patch.object(
+            _native.secrets,
+            "randbits",
+            side_effect=AssertionError("unexpected entropy"),
+        ):
+            self.assertEqual(rollout(first), rollout(second))
+
+    def test_first_unseeded_reset_draws_entropy_once(self):
+        with (
+            patch.object(_native.secrets, "randbits", return_value=42) as entropy,
+            KairoGymEnv(executable=self.executable) as env,
+        ):
+            for _ in range(3):
+                env.reset()
+                env.step(1)
+            entropy.assert_called_once_with(64)
+
     def test_gym_values_match_direct_native_wire_and_survive_reset_and_close(self):
         commands = [{"op": "reset", "seed": 42}, {"op": "step", "actions": [1]}]
         frames = "".join(json.dumps(command) + "\n" for command in commands)

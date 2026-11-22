@@ -1,4 +1,5 @@
 use kairo_ecs_ml::{ParallelVecEnv, QueueEnvironment};
+use kairo_ecs_rng::DeterministicStream;
 
 fn world(agents: usize, horizon: u32, seed: u64) -> QueueEnvironment {
     QueueEnvironment::new(agents, horizon, seed).unwrap()
@@ -96,4 +97,24 @@ fn invalid_batches_preserve_worlds_and_allow_individual_reset() {
     assert_eq!(repeated[0], first[0]);
     assert_eq!(repeated[1].observation[0], 2);
     assert_eq!(first[1].observation[0], 1);
+}
+
+#[test]
+fn unseeded_episode_reset_preserves_the_exact_arrival_stream_position() {
+    let mut episode = world(1, 3, 42);
+    let mut expected = DeterministicStream::from_run_seed(42);
+    for _ in 0..3 {
+        let mut waiting = QueueEnvironment::INITIAL_WAITING;
+        for tick in 1..=3 {
+            waiting += expected.next_u32() & 1;
+            let step = episode.step(&[0]).unwrap();
+            assert_eq!(step.observation, [tick, waiting, 8 - tick]);
+        }
+        assert_eq!(episode.reset_continuing(), [0, 2, 8]);
+    }
+    episode.reset(42);
+    assert_eq!(
+        episode.step(&[0]).unwrap(),
+        world(1, 3, 42).step(&[0]).unwrap()
+    );
 }

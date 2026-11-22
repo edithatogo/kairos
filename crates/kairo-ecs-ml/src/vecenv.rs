@@ -57,6 +57,11 @@ impl QueueEnvironment {
 
     pub fn reset(&mut self, seed: u64) -> QueueObservation {
         self.rng = DeterministicStream::from_run_seed(seed);
+        self.reset_continuing()
+    }
+
+    /// Start another episode while retaining the existing arrival RNG stream.
+    pub fn reset_continuing(&mut self) -> QueueObservation {
         self.ticks = 0;
         self.waiting = Self::INITIAL_WAITING;
         self.observation()
