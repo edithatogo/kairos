@@ -31,6 +31,7 @@ Format:
 
 ### Fixed
 
+- The native Polars dependency closure updates `url` to 2.5.9 and its required `form_urlencoded` dependency to 1.2.3, addressing [RUSTSEC-2026-0592](https://github.com/RustSec/advisory-db/blob/main/crates/url/RUSTSEC-2026-0592.md) in nested `blob:` URL origin handling.
 - `kairo-ecs-ffi` rejects foreign event handles and backwards scheduling. Python's `NativeEngine` blocks copying and serialization of its owned Rust handle.
 - Rust workspace coverage can qualify the specifically reviewed main recovery report against an immutable, fully qualified anchor before applying the unchanged exact-base zero-regression gate. Native producer, source/artifact identity and checksum requirements remain enforced.
 - The .NET toolchain workflow selects the exact SDK installed by each matrix lane before validating its version.
