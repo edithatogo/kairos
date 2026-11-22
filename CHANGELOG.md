@@ -16,6 +16,8 @@ Format:
 
 ### Added
 
+- Release Attestations reuses the selected native beta installation bundles and signs an SPDX inventory against the tested package digests.
+
 - `kairo-ecs-arrow` adds opt-in cohort-transition and spatial-exposure schemas with paired, entity-addressed RNG provenance and a standalone fictional consumer.
 
 - `kairo-ecs-cli` adds sequential ABC-SMC and entity-purpose common random numbers. The optional `rl-queue` feature lets the installed `kairo-gym` adapters execute a Rust-owned queue through Gymnasium and PettingZoo.
