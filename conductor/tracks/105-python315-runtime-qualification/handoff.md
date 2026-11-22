@@ -1,5 +1,34 @@
 # Handoff
 
+## Local notebook kernels — 23 November 2026
+
+Integration chat `01a1fd18-51c7-7963-a3cc-d262d54582ba` owns the two local
+notebooks and the shared runtime check in the Kairos closeout worktree on
+`codex/track105-local-jupyter-20261123`. Both notebooks verify the running
+kernel version and checkout-local `.venv` prefix before executing their
+examples.
+
+In `/Volumes/PortableSSD/kairos-notebook-runtime.kWkNqe`, CPython 3.15.2,
+ipykernel 7.4.0 and nbclient 0.11.0 ran the notebooks over local IPC from
+the `notebooks` directory. A second actual 3.15.2 kernel with a different
+prefix failed the first code cell in each notebook. Then all six code cells
+passed using the selected kernel. The scheduler loaded the installed
+wheel and C ABI library from [run 45051171243](https://github.com/edithatogo/kairos/actions/runs/45051171243).
+The benchmark notebook read the committed sample fixtures.
+
+The scratch execution command was
+`.venv/bin/python check_notebooks.py "$PWD"` with `JUPYTER_PATH` pointing
+at the isolated kernelspec directory and `KAIRO_ECS_FFI_LIBRARY` at the
+matching installed library. Exit 0. The execution receipt SHA-256 is
+`0d52469ca4de3ecd99ea387a82744a58a095c048a4e74725ed2467cfff40b02e`.
+The retained dependency list SHA-256 is
+`73c9193e6aca7a9cf948f3734469be9277ca31c1e998315ea24c2a7e25450126`.
+Independent review matched the helper and notebook source bytes to the
+tested copies and verified both executed notebook hashes and early
+prefix rejection.
+The executed notebook logs retain the pre-existing nbformat cell-ID warning.
+Colab-managed accelerator kernels and the wider Track 105 inventory remain open.
+
 ## Qualified runtime pin repair — 29 October 2026
 
 Integration chat `01a18344-cfb8-7711-8c38-fef1052b9fcf` owns this bounded
