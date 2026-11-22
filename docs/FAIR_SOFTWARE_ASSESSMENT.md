@@ -9,7 +9,7 @@ The read-only [howfairis](https://github.com/fair-software/howfairis) action che
 - Run: GitHub Actions > `FAIR research software assessment` (after the workflow is admitted).
 - Record the run URL, evaluated default-branch commit and each observed result here when available.
 - A failed or unavailable assessment stays **unknown**, never inferred as a pass.
-- External action pinned to upstream v0.2.1 commit `4c11146488125aa6e1531184eed51d781bcd5871`; review supply-chain and hosted execution before admission.
+- This repository uses the `howfairis==0.14.2` CLI in an isolated CI interpreter instead of the Docker action (GitHub startup failures). The CLI version is pinned, its dependency installation is fail-closed, and only an incomplete FAIR score is advisory. Verify the hosted run before admission.
 
 ## Evidence-based review
 
