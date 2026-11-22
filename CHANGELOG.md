@@ -16,6 +16,9 @@ Format:
 
 ### Added
 
+- `kairo-ecs-cli` adds sequential ABC-SMC and entity-purpose common random numbers. The optional `rl-queue` feature lets the installed `kairo-gym` adapters execute a Rust-owned queue through Gymnasium and PettingZoo.
+- `kairo-ecs-ml` executes a bounded affine surrogate and batches real Rust queue worlds.
+
 - `.github/workflows/community-standards.yml` runs the pinned shared repository-standards file gate for community guidance, issue and pull-request templates, and a local licence. The existing CI and workflow-security inventories include this workflow; required merge-check settings remain a separate repository control.
 
 - `.github/workflows/ci-policy.yml` now runs an isolated advisory `howfairis==0.14.2` CLI assessment, reusing an already-working job after repeated standalone FAIR workflow startup failures; `docs/FAIR_SOFTWARE_ASSESSMENT.md` records separate ARDC, licensing and scientific verification needs.
@@ -31,6 +34,9 @@ Format:
 
 ### Fixed
 
+- `kairo-ecs-cli` uses checked Joe–Kuo Sobol directions and estimates Jansen first-order and total-effect intervals via paired bootstrap. The previous trajectory is available through `LegacySobolSequence`.
+- `kairo-ecs-des` preserves active age and competing cause/censor chronology across interruption. `kairo-ecs-ml` reports unavailable ONNX execution explicitly.
+
 - The community-standards workflow now groups runs by workflow and ref, cancelling in-progress runs only for superseding pull-request events.
 - The native Polars dependency closure updates `url` to 2.5.9 and its required `form_urlencoded` dependency to 1.2.3, addressing [RUSTSEC-2026-0592](https://github.com/RustSec/advisory-db/blob/main/crates/url/RUSTSEC-2026-0592.md) in nested `blob:` URL origin handling.
 - `kairo-ecs-ffi` rejects foreign event handles and backwards scheduling. Python's `NativeEngine` blocks copying and serialization of its owned Rust handle.
@@ -44,6 +50,8 @@ Format:
 - **Breaking — effective 7 November 2026:** support for independent host-language simulation cores in `bindings/python`, `bindings/r`, `bindings/typescript`, `bindings/csharp` and `bindings/go` ends immediately. The former scheduler facades and synthetic Python vector/RL execution must fail explicitly; there is no gradual migration or parallel support period. Rust native code or Rust-compiled WebAssembly is the only supported execution core. See [ADR 0010](docs/adr/0010-rust-only-execution.md), [compatibility](docs/release/compatibility.md) and [migration](docs/release/migration.md).
 
 ### Changed
+
+- Migrate fixed-batch calibration calls to `BatchDistanceScorer` and check the new fallible sampling and sensitivity results. See [ADR 0014](docs/adr/0014-versioned-scientific-methods.md).
 
 - README, `website/`, `docs/adr/0011-ecosystem-boundaries.md` and Conductor define the Rust core's boundaries with game semantics, domain simulation and economic valuation. `.github/workflows/docs-quality.yml` now checks the bounded maturity task catalogue and its negative controls; the catalogue is a planning aid and does not execute tasks or establish runtime acceptance.
 - `bindings/python` exposes a bounded `NativeEngine` backed by the actual Rust C ABI; `bindings/typescript` requires a generated Rust/Wasm module. A missing library, incompatible ABI or unsupported operation produces an explicit error. `bindings/julia` metadata/DTO helpers and other package probes do not establish native engine availability.

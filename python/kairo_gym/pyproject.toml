@@ -13,4 +13,4 @@ dependencies = []
 
 [project.optional-dependencies]
 gymnasium = ["gymnasium>=1.4.0,<2"]
-pettingzoo = ["pettingzoo>=1.27.0,<2"]
+pettingzoo = ["pettingzoo>=1.24.3,<2"]
