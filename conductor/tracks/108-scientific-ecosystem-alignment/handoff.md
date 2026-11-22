@@ -1,6 +1,42 @@
 # Handoff
 
-Updated 2026-10-29.
+Updated 2026-11-23.
+
+## Installed consumer qualification — 23 November 2026
+
+Integration chat `01a1fd18-51c7-7963-a3cc-d262d54582ba` reconciled the provider
+in the Kairos closeout worktree. PR #419 corrected sink acknowledgment and
+stream bound handling, then passed 69 checks including the native Arrow
+matrix on Linux, macOS and Windows. Main commit
+`3b3b8da0a7cdbd414e12a18722f189996a52c7ab` has the identical source tree to
+candidate `875fec9ef6c76d72819200c30705460ec47fdec6`. PR #367 was superseded
+and its two review threads resolved. [Integrated provider](https://github.com/edithatogo/kairos/pull/419).
+
+| Consumer | Exact installed case | Result |
+|---|---|---|
+| CareOps | Archived main `9af99b5730d6aa5cef1c05bd48e90fd377b80cf2` replay and archived R143 source `ecbf0ffc9b11f152a36b513cb9ff19bc48fffe40`, each built against the extracted candidate SDK with Rust 1.99.1 on macOS ARM64 | Four replay cases, three populated ED/calibration/birthing schema cases and two independent lone-export lifetime controls passed. The ED lifetime run used seed 7 and four replications. A retained batch survived source file removal, frame drop and early C Stream reader release. |
+| Innovate | Base `a9360c1ea3414eaf0e712dbb131d3e923e958571`, isolated receiving source `d04c80a605c5fa2af9bb89e5a145d1ee7af4ad96` and a macOS ARM64 CPython 3.15.2 wheel installed outside the source tree | 47 passed, zero skips. Seed 42 produced three real DES dispatches. Both import paths agreed on the complete 14-column event-log v2 schema, its fingerprint, and rows retained after producer and reader release. Safe holder drops exercised release. |
+
+The CareOps SDK archive SHA-256 is
+`28d24c6ba842541c61a779ad21eb8c089d1758801e687e498abb4f411cfda84e`.
+The retained independent receipt with commands, exits, lock and log hashes is
+`7236d99a62d7ad4196eba1d25c470d8aeba8ed465cf62bbebded182079b867fc`.
+CareOps #199 provides the original R143 fixture provenance.
+[CareOps source qualification](https://github.com/edithatogo/careops-sim/pull/199).
+
+The Innovate wheel SHA-256 is
+`6e0287310f2e7a0c731a8e23dc160b7797496bf258955b1a8110122403f612ae`.
+The installed receipt with exact selectors and artifact hashes is
+`cd4e25d899e75b0b2ab7571da553597e065d74a59eb77bb73a1b1909b2e76618`.
+The bounded receiving patch is retained at SHA-256
+`69ee272c9475b5dadc8f80142573258d8c8bf4a9acddbf3be89d8478b2bd338a`.
+The receiving workspace uses the same immutable Polars `hashbrown` patch as
+Kairos. The existing hosted main run supplies the earlier installed replay
+and Innovate IPC evidence. [Innovate hosted baseline](https://github.com/edithatogo/innovate/actions/runs/45010882098).
+
+Track 108 accepts this installed candidate. The Innovate candidate uses an
+isolated receiving probe. Each consumer owns its shipping integration and pin
+selection.
 
 ## Registry reconciliation — 29 October 2026
 

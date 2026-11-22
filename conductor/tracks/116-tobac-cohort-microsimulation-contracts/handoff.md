@@ -1,26 +1,49 @@
 # Handoff
 
-Updated 10 November 2026 (Australia/Brisbane). Status: Spec Approved; no implementation phase is accepted by this registration.
+Updated 23 November 2026 (Australia/Brisbane). The provider contract and
+standalone fixture are qualified.
 
-## Summary
+## Provider and standalone fixture — 23 November 2026
 
-Registered Track 116 (`116-tobac-cohort-microsimulation-contracts`) to coordinate neutral DES/ABM cohort-trajectory, semi-Markov competing-risk, CRN substream coupling, and spatial retail-exposure Arrow/Polars contracts for `edithatogo/tobac` (`conductor/tracks/dependency_ecosystem_codesign_20261110/`). All tobacco/vaping epidemiology, regulatory policy levers, and New Zealand demographic inputs remain strictly owned by `tobac`.
+Chat `01a1fd18-51c7-7963-a3cc-d262d54582ba` owns the bounded provider change
+in the managed `kairos-cohort-contracts` worktree on
+`codex/cohort-native-export`. Deliverables are the opt-in Arrow module and an
+independent Cargo workspace rooted in the same provider source.
+[API and schema](../../../docs/design/track116-cohort-export-api-review.md) ·
+[Standalone fixture](../../../tests/fixtures/cohort-consumer/README.md).
 
-## Files changed
+Rust 1.99.1 on macOS ARM64 ran five locked tests and the executable from a
+Git-free extracted tree `04dff29ffa3390b049b32e322860eb29e083602d`. Both
+commands exited zero. The executable returned 3,323 baseline, 3,968 paired
+policy and two spatial rows. It checked the effective primitive buffer address
+at a nonzero stream offset after releasing the frame and reader.
 
-This track's specification, plan, metadata, agent contract, risk register, test matrix, and index; plus registry entries in `conductor/tracks.yaml`, `conductor/tracks.md`, `conductor/ecosystem-consumers.md`, and `conductor/tracks/114-dependency-and-consumer-contracts/index.md`.
+Independent review identified two gaps. The implementation now counts visits
+per entity and origin state, and its paired trace proves the shared sampled exit
+after one arm takes an extra intermediate transition. The convergence case
+compares imported trajectories from 100,000 entities to independent analytic
+incidence and survival probabilities at 2 and 6 seconds. Re-review accepted both
+fixes. The extracted archive and fixture lock SHA-256 values are
+`88dfa8c7bf3adb741d40b86d98453661b34ec2c5483709f777214e3e6a8933db` and
+`cfe3cd69b39eaace6bb4fef031c9d1567356d3768444944ce81d75f0c9ea4072`.
+Published implementation commit `51d718504c05d7c1198ef2048db89883f2cd94e0`
+has that exact tree.
 
-## Contracts consumed
+The `tobac` handoff is the two versioned fields, typed metadata and runnable
+fixture. The receiving transport preserves its own provenance and input
+metadata. Receiving adapter qualification and pin selection belong to the
+application repositories. [tobac interchange](https://github.com/edithatogo/tobac/blob/cf0cff9260c0c168c99342a4f71a565ecea6c6d5/src/tobac/interchange.py).
 
-`AGENTS.md`, `docs/adr/0011-ecosystem-boundaries.md`, `conductor/ecosystem-consumers.md`, and Tracks 01, 03, 04, 69, 70, and 114.
+## Prior registration
 
-## Contracts changed
+The 10 November 2026 registration coordinated Kairos with
+`edithatogo/tobac` under `dependency_ecosystem_codesign_20261110`. Its
+dependency records remain in Tracks 01, 03, 04, 69, 70 and 114 and
+[ADR 0011](../../../docs/adr/0011-ecosystem-boundaries.md).
 
-Planning registration only. Defines the target neutral cohort-transition and CRN substream handoff boundary for `tobac`; no Rust crate API, ABI, or dependency pin is changed by this registration.
-
-## Tests added
-
-`test-matrix.md` defines the required positive/negative schema, CRN coupling, and analytical semi-Markov convergence oracles for Phases 0–2.
+The [cohort API review](../../../docs/design/track116-cohort-export-api-review.md)
+defines the contracts changed. The [test matrix](test-matrix.md) records
+schema, simulation and installed fixture checks.
 
 ## Known risks
 
@@ -28,27 +51,24 @@ Uncoupled RNG substreams under variable event counts can inflate Monte Carlo var
 
 ## Follow-up issues
 
-Execute Phases 0–2 in `plan.md` before `tobac` adopts an installed Kairos microsimulation adapter pin.
+The receiving applications own their installed round-trips and summary
+qualification.
 
 ## Integration notes
 
-Keep Kairos neutral and domain-free. Coordinate downstream consumer qualification in `edithatogo/tobac` under `dependency_ecosystem_codesign_20261110`.
+Use the versioned schema metadata and locked fixture for the receiving
+adapter. Tobacco/vaping epidemiology and policy inputs belong to `tobac`.
 
 ## Phase closeout evidence
 
-No phase is closed. Planning registration is not execution or scientific validation evidence.
-
-Record the following evidence when an implementation phase reaches closeout;
-these pending fields do not certify the registration or advance a phase.
-
-| Evidence | Current state |
+| Evidence | Result |
 |---|---|
-| `$conductor-review` | Pending independent review of the implemented phase and its acceptance oracles. |
-| accepted fixes | Pending the phase review; record applied fixes and unresolved findings when they exist. |
-| commit SHA | Pending the reviewed implementation commit; the registration commit is not runtime evidence. |
-| pushed ref | Pending publication of that reviewed implementation commit. |
-| `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` | Required after the reviewed commit is pushed; no implementation closeout result is claimed. |
-| next-phase decision | Remain Spec Approved. All Phase 0–2 tasks are pending; no implementation phase may advance from structural checks alone. |
+| `$conductor-review` | Independent review and re-review accepted the fixture. |
+| accepted fixes | Source-state visit addressing and a convergence check on imported results. |
+| commit SHA | `51d718504c05d7c1198ef2048db89883f2cd94e0`. |
+| pushed ref | `origin/codex/cohort-native-export` at implementation publication. |
+| `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` | Required after pushing the closeout update. |
+| next-phase decision | Accept provider Phases 0–2 and hand off installed adapter qualification. |
 
 ## Registration repair — 14 November 2026
 
