@@ -58,6 +58,7 @@ jobs:
           test -f .github/workflows/devbox-runtime.yml
           test -f .github/workflows/code-health.yml
           test -f .github/workflows/codeql.yml
+          test -f .github/workflows/community-standards.yml
           test -f .github/workflows/conductor-assessment-reminder.yml
           test -f .github/workflows/conformance.yml
           test -f .github/workflows/dependency-review.yml

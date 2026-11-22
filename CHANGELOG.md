@@ -16,6 +16,8 @@ Format:
 
 ### Added
 
+- `.github/workflows/community-standards.yml` runs the pinned shared repository-standards file gate for community guidance, issue and pull-request templates, and a local licence. The existing CI and workflow-security inventories include this workflow; required merge-check settings remain a separate repository control.
+
 - `.github/workflows/ci-policy.yml` now runs an isolated advisory `howfairis==0.14.2` CLI assessment, reusing an already-working job after repeated standalone FAIR workflow startup failures; `docs/FAIR_SOFTWARE_ASSESSMENT.md` records separate ARDC, licensing and scientific verification needs.
 
 - The native beta qualification builds a locked Rust SDK, a C ABI v1 library and a Python wheel, then exercises all three and the pinned CareOps allocation case from a clean installation on each target.

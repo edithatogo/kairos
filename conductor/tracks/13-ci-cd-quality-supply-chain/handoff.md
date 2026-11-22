@@ -361,3 +361,28 @@ specific recovery. Source preparation uses GitHub APIs after the executor
 became unavailable; no fresh local execution or local lease result is claimed.
 Independent review and actual hosted regression/native/coverage checks on the
 candidate remain required before merge. No phase or release acceptance follows.
+
+## Community Standards workflow inventory — 22 November 2026
+
+The coordinator's bounded follow-through for PR #417 starts from
+`97be8d5897fac0e8e7e1662a7d6f5afe51d46a4d`. Add the existing
+`community-standards.yml` caller to `ci-policy.yml` and both
+`workflow-security.yml` inventories. Track 13 hands the accompanying Unreleased
+changelog note to Track 16's release-maintenance role. The note describes the
+shared file gate and distinguishes delivery from required merge-check settings.
+The shared action pin, validators, policy requirements, runtime code and track
+statuses are unchanged.
+
+Local validation used Node 24.22.3 and verified repo-local Python 3.15.2 in the
+isolated checkout at that head plus this working diff:
+
+- `node scripts/validation/validate-track13-metadata.mjs` passed with 117 tracks.
+  The preceding run rejected the missing community-workflow inventory.
+- The unchanged `changelog-policy.yml` diff predicate accepted the proposed PR
+  file list and rejected both the preceding PR list and a negative case omitting
+  `CHANGELOG.md`.
+- `git diff --check` passed.
+
+Hosted checks on the integrated follow-up remain required. This maintenance
+slice does not rerun or qualify Rust execution, scientific behavior or release
+readiness, and does not advance a Conductor phase.
