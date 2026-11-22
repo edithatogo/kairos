@@ -3,9 +3,10 @@ use std::ffi::CStr;
 use kairo_ecs_ffi::{
     kairo_ecs_buffer_free, kairo_ecs_cancel_event, kairo_ecs_engine_current_time,
     kairo_ecs_engine_free, kairo_ecs_engine_new, kairo_ecs_engine_reset, kairo_ecs_ffi_version,
-    kairo_ecs_last_error_message, kairo_ecs_run_for, kairo_ecs_run_until,
-    kairo_ecs_run_until_or_for, kairo_ecs_schedule_after, kairo_ecs_schedule_at, kairo_ecs_stats,
-    kairo_ecs_step, kairo_ecs_telemetry_flush_ipc, KairoEcsStatusCode,
+    kairo_ecs_last_error_message, kairo_ecs_last_error_string, kairo_ecs_run_for,
+    kairo_ecs_run_until, kairo_ecs_run_until_or_for, kairo_ecs_schedule_after,
+    kairo_ecs_schedule_at, kairo_ecs_stats, kairo_ecs_step, kairo_ecs_telemetry_flush_ipc,
+    KairoEcsStats, KairoEcsStatusCode,
 };
 
 fn free_engine(handle: u64) {
@@ -309,10 +310,81 @@ fn test_telemetry_flush() {
     assert!(!buffer.data.is_null());
     assert_ne!(buffer.len, 0);
 
-    // SAFETY: buffer.data is a valid pointer to buffer.len bytes from telemetry_flush_ipc
+    free_engine(handle);
+
+    // SAFETY: The returned allocation stays live until buffer_free.
     let data = unsafe { std::slice::from_raw_parts(buffer.data, buffer.len) };
-    assert!(!data.is_empty());
+    assert_eq!(
+        std::str::from_utf8(data).unwrap(),
+        "{\"now_ticks\":10,\"scheduled_events\":2,\"dispatched_events\":2,\"cancelled_events\":0,\"pending_events\":0}",
+    );
 
     kairo_ecs_buffer_free(buffer);
+}
+
+#[test]
+fn event_handles_are_retired_by_reset_and_free_and_rejected_by_other_engines() {
+    let first = kairo_ecs_engine_new();
+    let second = kairo_ecs_engine_new();
+    let retired = kairo_ecs_schedule_at(first, 5, 0, 1);
+    let live = kairo_ecs_schedule_at(second, 7, 0, 1);
+    assert_ne!(retired, live);
+    let before = kairo_ecs_stats(second);
+
+    assert_eq!(
+        kairo_ecs_cancel_event(second, retired),
+        KairoEcsStatusCode::KAIRO_ECS_ERR_NOT_FOUND,
+    );
+    assert_eq!(kairo_ecs_stats(second), before);
+    free_engine(first);
+    assert_eq!(kairo_ecs_schedule_at(first, 2, 0, 1), 0);
+    assert_eq!(kairo_ecs_stats(first), KairoEcsStats::default());
+    assert_eq!(
+        kairo_ecs_step(first),
+        KairoEcsStatusCode::KAIRO_ECS_ERR_NOT_FOUND,
+    );
+    assert_eq!(
+        kairo_ecs_engine_reset(second),
+        KairoEcsStatusCode::KAIRO_ECS_OK,
+    );
+    let replacement = kairo_ecs_engine_new();
+    assert_ne!(first, replacement);
+    assert_ne!(kairo_ecs_schedule_at(replacement, 5, 0, 1), 0);
+    for stale in [retired, live] {
+        assert_eq!(
+            kairo_ecs_cancel_event(replacement, stale),
+            KairoEcsStatusCode::KAIRO_ECS_ERR_NOT_FOUND,
+        );
+    }
+    assert_eq!(kairo_ecs_stats(replacement).pending_events, 1);
+    free_engine(replacement);
+    free_engine(second);
+}
+
+#[test]
+fn time_errors_do_not_change_the_queue_and_last_error_is_thread_local() {
+    let handle = kairo_ecs_engine_new();
+    assert_ne!(
+        kairo_ecs_schedule_at(handle, u64::MAX, i32::MIN, u32::MAX),
+        0
+    );
+    assert_eq!(kairo_ecs_step(handle), KairoEcsStatusCode::KAIRO_ECS_OK);
+    let before = kairo_ecs_stats(handle);
+    assert_eq!(kairo_ecs_schedule_at(handle, u64::MAX - 1, 0, 0), 0);
+    assert!(kairo_ecs_last_error_string().contains("precedes"));
+    let other_error = std::thread::spawn(|| {
+        assert_eq!(
+            kairo_ecs_engine_free(0),
+            KairoEcsStatusCode::KAIRO_ECS_ERR_ALREADY_FREED,
+        );
+        kairo_ecs_last_error_string()
+    })
+    .join()
+    .unwrap();
+    assert!(other_error.contains("already freed or unknown"));
+    assert!(kairo_ecs_last_error_string().contains("precedes"));
+    assert_eq!(kairo_ecs_schedule_after(handle, 1, 0, 0), 0);
+    assert!(kairo_ecs_last_error_string().contains("tick range"));
+    assert_eq!(kairo_ecs_stats(handle), before);
     free_engine(handle);
 }

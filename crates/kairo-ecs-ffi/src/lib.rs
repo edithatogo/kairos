@@ -153,7 +153,6 @@ struct EngineState {
     _world: World,
     stats: KairoEcsStats,
     _run_seed: u64,
-    next_event_handle: u64,
     event_handles: HashMap<u64, ScheduledEventHandle>,
     event_handles_by_id: HashMap<EventId, u64>,
     event_log: Vec<FfiEventLogRecord>,
@@ -170,12 +169,7 @@ struct ScheduledEventHandle {
 
 impl EngineState {
     fn reset(&mut self) {
-        // Event handles belong to the engine lifetime, not an individual run.
-        // Resetting the allocator would let a stale handle cancel a new event.
-        *self = Self {
-            next_event_handle: self.next_event_handle,
-            ..Self::default()
-        };
+        *self = Self::default();
     }
 
     fn record_event(
@@ -186,7 +180,6 @@ impl EngineState {
         priority: i32,
         kind: u32,
     ) -> u64 {
-        self.next_event_handle = handle;
         self.event_handles.insert(
             handle,
             ScheduledEventHandle {
@@ -206,15 +199,18 @@ impl EngineState {
         }
     }
 
-    fn schedule_at(&mut self, at_ticks: u64, priority: i32, kind: u32) -> u64 {
-        // Reserve zero for failure and never recycle an externally held handle.
-        // Check before touching the scheduler or its statistics.
-        let Some(handle) = self.next_event_handle.checked_add(1) else {
-            set_last_error("event handle space exhausted; create a new engine");
+    fn schedule_at(&mut self, at_ticks: u64, priority: i32, kind: u32, handles: &AtomicU64) -> u64 {
+        let at = SimTime::from_ticks(at_ticks as u128);
+        if at < self.scheduler.now() {
+            set_last_error("event time precedes the current simulation tick");
+            return 0;
+        }
+        let Some(handle) = allocate_handle(handles) else {
+            set_last_error("event handle space exhausted");
             return 0;
         };
         let event_id = self.scheduler.schedule(ScheduleRequest {
-            at: SimTime::from_ticks(at_ticks as u128),
+            at,
             priority,
             entity: None,
             kind: EventKind::Custom(kind),
@@ -224,7 +220,13 @@ impl EngineState {
         self.record_event(handle, event_id, at_ticks, priority, kind)
     }
 
-    fn schedule_after(&mut self, after_ticks: u64, priority: i32, kind: u32) -> Option<u64> {
+    fn schedule_after(
+        &mut self,
+        after_ticks: u64,
+        priority: i32,
+        kind: u32,
+        handles: &AtomicU64,
+    ) -> Option<u64> {
         let at = self
             .scheduler
             .now()
@@ -232,7 +234,7 @@ impl EngineState {
             .unwrap_or_else(|| SimTime::from_ticks(u128::MAX));
         u64::try_from(at.ticks())
             .ok()
-            .map(|ticks| self.schedule_at(ticks, priority, kind))
+            .map(|ticks| self.schedule_at(ticks, priority, kind, handles))
     }
 
     fn apply_outcome(&mut self, outcome: StepOutcome) {
@@ -375,10 +377,10 @@ struct BridgeRegistry {
 
 impl BridgeRegistry {
     fn insert(&mut self, engine: EngineState) -> u64 {
-        let handle = self
-            .next_handle
-            .fetch_add(1, Ordering::Relaxed)
-            .wrapping_add(1);
+        let Some(handle) = allocate_handle(&self.next_handle) else {
+            set_last_error("engine handle space exhausted");
+            return 0;
+        };
         self.engines.insert(handle, engine);
         handle
     }
@@ -392,7 +394,19 @@ impl BridgeRegistry {
     }
 }
 
+fn allocate_handle(counter: &AtomicU64) -> Option<u64> {
+    counter
+        .try_update(Ordering::Relaxed, Ordering::Relaxed, |value| {
+            value.checked_add(1)
+        })
+        .ok()
+        .map(|previous| previous + 1)
+}
+
 static REGISTRY: OnceLock<Mutex<BridgeRegistry>> = OnceLock::new();
+// This sequence outlives every engine and prevents a foreign event from
+// aliasing a live event in the receiving engine.
+static NEXT_EVENT_HANDLE: AtomicU64 = AtomicU64::new(0);
 static TELEMETRY_STORE: OnceLock<Mutex<HashMap<usize, Vec<u8>>>> = OnceLock::new();
 
 thread_local! {
@@ -522,7 +536,7 @@ pub extern "C" fn kairo_ecs_schedule_at(
 ) -> u64 {
     ffi_boundary(0, || {
         with_engine_mut(handle, |engine| {
-            engine.schedule_at(at_ticks, priority, kind)
+            engine.schedule_at(at_ticks, priority, kind, &NEXT_EVENT_HANDLE)
         })
         .unwrap_or(0)
     })
@@ -538,7 +552,7 @@ pub extern "C" fn kairo_ecs_schedule_after(
     ffi_boundary(0, || {
         with_engine_mut(handle, |engine| {
             engine
-                .schedule_after(after_ticks, priority, kind)
+                .schedule_after(after_ticks, priority, kind, &NEXT_EVENT_HANDLE)
                 .ok_or_else(|| {
                     set_last_error("ffi tick range exceeded");
                     KairoEcsStatusCode::KAIRO_ECS_ERR_INVALID_ARGUMENT
@@ -1700,50 +1714,35 @@ KairoEcsStatusCode kairo_ecs_export_event_log_arrow_stream(KairoEcsEngineHandle*
 
     #[test]
     fn event_handle_exhaustion_does_not_schedule_or_recover_after_reset() {
-        let engine = kairo_ecs_engine_new();
-        assert_ne!(engine, 0);
-        let first = kairo_ecs_schedule_at(engine, 10, 0, 1);
+        // Manipulate an isolated allocator so parallel ABI tests remain usable.
+        let handles = AtomicU64::new(0);
+        let mut engine = EngineState::default();
+        let first = engine.schedule_at(10, 0, 1, &handles);
         assert_ne!(first, 0);
 
-        // Reach the boundary without attempting 2^64 allocations. Exercise the
-        // public scheduling/cancellation/reset ABI after arranging this state.
-        with_engine_mut(engine, |state| state.next_event_handle = u64::MAX - 1)
-            .expect("valid engine");
-        let last = kairo_ecs_schedule_after(engine, 20, 0, 2);
+        handles.store(u64::MAX - 1, Ordering::Relaxed);
+        let last = engine.schedule_after(20, 0, 2, &handles).unwrap();
         assert_eq!(last, u64::MAX);
-        let before = kairo_ecs_stats(engine);
+        let before = engine.stats;
         assert_eq!(before.scheduled_events, 2);
         assert_eq!(before.pending_events, 2);
 
-        assert_eq!(kairo_ecs_schedule_at(engine, 30, 0, 3), 0);
+        assert_eq!(engine.schedule_at(30, 0, 3, &handles), 0);
         assert!(kairo_ecs_last_error_string().contains("event handle space exhausted"));
-        assert_eq!(kairo_ecs_stats(engine), before);
-        assert_eq!(kairo_ecs_schedule_after(engine, 40, 0, 4), 0);
+        assert_eq!(engine.stats, before);
+        assert_eq!(engine.schedule_after(40, 0, 4, &handles), Some(0));
         assert!(kairo_ecs_last_error_string().contains("event handle space exhausted"));
-        assert_eq!(kairo_ecs_stats(engine), before);
+        assert_eq!(engine.stats, before);
 
         // A failed allocation must not overwrite either live handle.
-        assert_eq!(
-            kairo_ecs_cancel_event(engine, first),
-            KairoEcsStatusCode::KAIRO_ECS_OK
-        );
-        assert_eq!(
-            kairo_ecs_cancel_event(engine, last),
-            KairoEcsStatusCode::KAIRO_ECS_OK
-        );
+        assert_eq!(engine.cancel(first), Ok(true));
+        assert_eq!(engine.cancel(last), Ok(true));
         for _ in 0..2 {
-            assert_eq!(
-                kairo_ecs_engine_reset(engine),
-                KairoEcsStatusCode::KAIRO_ECS_OK
-            );
+            engine.reset();
         }
-        assert_eq!(kairo_ecs_schedule_at(engine, 1, 0, 5), 0);
+        assert_eq!(engine.schedule_at(1, 0, 5, &handles), 0);
         assert!(kairo_ecs_last_error_string().contains("event handle space exhausted"));
-        assert_eq!(kairo_ecs_stats(engine), KairoEcsStats::default());
-        assert_eq!(
-            kairo_ecs_engine_free(engine),
-            KairoEcsStatusCode::KAIRO_ECS_OK
-        );
+        assert_eq!(engine.stats, KairoEcsStats::default());
     }
 
     #[test]
