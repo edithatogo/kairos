@@ -96,6 +96,12 @@ fn replacing_a_channel_during_hold_respects_the_selected_policy() {
             close(clock.channels[&CAUSE].accumulated_hazard, 0.0);
             clock.channels[&CAUSE].target_threshold / 0.5
         };
+        let mut uncensored = clock.clone();
+        let at = uncensored
+            .resume(&mut Scheduler::new(), 8.0, None, 0)
+            .unwrap();
+        assert!(!at.is_censored);
+        close(at.delta_time, expected);
         // Independent censoring oracle with a cutoff before the winning time.
         let censor_at = 8.0 + expected / 2.0;
         let result = clock
@@ -111,4 +117,42 @@ fn replacing_a_channel_during_hold_respects_the_selected_policy() {
             SimTime::from_ticks((censor_at * 1000.0).round() as u128)
         );
     }
+}
+
+#[test]
+fn late_queries_compare_cause_and_censor_chronology_before_clamping() {
+    let (mut clock, mut scheduler, mut rng) = new_clock(HazardInterruptionPolicy::RetainResidual);
+    let lower_id = CauseId(1);
+    for (cause, threshold) in [(CAUSE, 2.0), (lower_id, 4.0)] {
+        clock.set_channel(cause, 0, HazardRate::Constant { rate: 1.0 }, 0.0, &mut rng);
+        clock.channels.get_mut(&cause).unwrap().target_threshold = threshold;
+    }
+    assert_eq!(clock.compute_earliest_event(5.0), Some((CAUSE, 5.0)));
+    let late = clock.reschedule(&mut scheduler, 5.0, Some(3.0), 0).unwrap();
+    assert_eq!(late.winning_cause, CAUSE);
+    assert_eq!(late.delta_time, 0.0);
+    assert!(!late.is_censored);
+    assert!(
+        clock
+            .reschedule(&mut scheduler, 5.0, Some(1.0), 0)
+            .unwrap()
+            .is_censored
+    );
+}
+
+#[test]
+fn changing_a_hazard_at_the_due_time_retains_its_dispatch_and_full_cause_id() {
+    let (mut clock, mut scheduler, mut rng) = new_clock(HazardInterruptionPolicy::RetainResidual);
+    let cause = CauseId(u32::MAX);
+    clock.set_channel(cause, 0, HazardRate::Constant { rate: 1.0 }, 0.0, &mut rng);
+    clock.channels.get_mut(&cause).unwrap().target_threshold = 1.0;
+    let before = rng.checkpoint();
+    clock.set_channel(cause, 0, HazardRate::Zero, 1.0, &mut rng);
+    assert_eq!(rng.checkpoint(), before);
+    let expected = clock.reschedule(&mut scheduler, 1.0, Some(1.0), 0).unwrap();
+    assert!(!expected.is_censored);
+    assert_eq!(expected.winning_cause, cause);
+    assert_eq!(expected.delta_time, 0.0);
+    assert!(matches!(scheduler.step(), StepOutcome::Dispatched(_)));
+    assert_eq!(clock.on_event_dispatched(), Some(expected));
 }

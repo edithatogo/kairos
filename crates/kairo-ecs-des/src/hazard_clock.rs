@@ -59,6 +59,7 @@ pub struct SurvivalClock {
     pub is_active: bool,
     pub last_update_time: f64,
     paused: bool,
+    current_is_censored: bool,
 }
 
 impl SurvivalClock {
@@ -85,6 +86,7 @@ impl SurvivalClock {
             is_active: false,
             last_update_time: 0.0,
             paused: false,
+            current_is_censored: false,
         }
     }
 
@@ -111,13 +113,6 @@ impl SurvivalClock {
             if self.policy == HazardInterruptionPolicy::Restart {
                 existing.target_threshold = draw_standard_threshold(stream);
                 existing.accumulated_hazard = 0.0;
-            } else {
-                // Retain residual threshold
-                if existing.accumulated_hazard >= existing.target_threshold {
-                    // Already exceeded or expired; draw fresh
-                    existing.target_threshold = draw_standard_threshold(stream);
-                    existing.accumulated_hazard = 0.0;
-                }
             }
         } else {
             let target_w = draw_standard_threshold(stream);
@@ -141,8 +136,13 @@ impl SurvivalClock {
         self.channels.remove(&cause_id);
     }
 
-    /// Evaluate the earliest competing event among all active channels starting from `now`.
+    /// Evaluate the earliest competing event, reporting an overdue winner at `now`.
     pub fn compute_earliest_event(&self, now: f64) -> Option<(CauseId, f64)> {
+        self.predicted_event()
+            .map(|(cause, at)| (cause, at.max(now)))
+    }
+
+    fn predicted_event(&self) -> Option<(CauseId, f64)> {
         if self.paused {
             return None;
         }
@@ -156,7 +156,11 @@ impl SurvivalClock {
         for channel in causes {
             let remaining_w = channel.target_threshold - channel.accumulated_hazard;
             if remaining_w <= 0.0 {
-                candidate_events.push((channel.cause_id, channel.priority, now));
+                candidate_events.push((
+                    channel.cause_id,
+                    channel.priority,
+                    channel.interval_start_time,
+                ));
                 continue;
             }
             if let Some(dt) = channel
@@ -165,7 +169,7 @@ impl SurvivalClock {
             {
                 let at = channel.interval_start_time + dt;
                 if dt >= 0.0 && at.is_finite() {
-                    candidate_events.push((channel.cause_id, channel.priority, at.max(now)));
+                    candidate_events.push((channel.cause_id, channel.priority, at));
                 }
             }
         }
@@ -219,7 +223,7 @@ impl SurvivalClock {
             return None;
         }
 
-        let earliest = self.compute_earliest_event(now);
+        let earliest = self.predicted_event();
 
         let final_event = match (earliest, censor_time) {
             (Some((cause, t_event)), Some(t_censor)) => {
@@ -266,6 +270,7 @@ impl SurvivalClock {
         });
         self.scheduled_event_id = Some(event_id);
         self.current_winner = Some((final_event.winning_cause, now + final_event.delta_time));
+        self.current_is_censored = final_event.is_censored;
         self.is_active = true;
 
         Some(final_event)
@@ -316,7 +321,7 @@ impl SurvivalClock {
             Some(RealizedEvent {
                 winning_cause: cause,
                 delta_time: (realization_time - self.last_update_time).max(0.0),
-                is_censored: cause == CauseId(u32::MAX),
+                is_censored: self.current_is_censored,
             })
         } else {
             None
