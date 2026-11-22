@@ -6,6 +6,7 @@ use petgraph::graph::{EdgeIndex, EdgeReference, NodeIndex};
 use petgraph::visit::{EdgeFiltered, EdgeRef};
 use petgraph::Direction;
 use std::collections::{BTreeMap, HashMap, HashSet};
+use std::sync::Arc;
 
 /// Cost unit declared for a spatial topology and its edges.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -219,6 +220,7 @@ pub struct SpatialTopology {
     edge_id_to_edge: HashMap<u64, EdgeIndex>,
     unit: CostUnit,
     topology_version: u64,
+    identity: Arc<()>,
     route_cache: HashMap<(EntityId, EntityId, AccessProfile), (u64, SpatialRoute)>,
 }
 
@@ -231,6 +233,7 @@ impl SpatialTopology {
             edge_id_to_edge: HashMap::new(),
             unit,
             topology_version: 1,
+            identity: Arc::new(()),
             route_cache: HashMap::new(),
         }
     }
@@ -241,6 +244,10 @@ impl SpatialTopology {
 
     pub fn version(&self) -> u64 {
         self.topology_version
+    }
+
+    pub(crate) fn identity(&self) -> &Arc<()> {
+        &self.identity
     }
 
     pub fn node_count(&self) -> usize {
@@ -589,6 +596,10 @@ impl SpatialTopology {
 
     fn bump_version(&mut self) {
         self.topology_version = self.topology_version.wrapping_add(1);
+        if self.topology_version == 0 {
+            self.identity = Arc::new(());
+            self.route_cache.clear();
+        }
     }
 
     fn rebuild_indices(&mut self) {
