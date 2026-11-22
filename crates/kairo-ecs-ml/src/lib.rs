@@ -6,6 +6,9 @@ use std::fs;
 use std::path::Path;
 use std::sync::Arc;
 
+mod affine;
+pub use affine::AffineSurrogate;
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct Tensor {
     shape: Vec<usize>,
@@ -16,8 +19,7 @@ impl Tensor {
     pub fn new(shape: impl Into<Vec<usize>>, values: impl Into<Vec<f32>>) -> Result<Self, MlError> {
         let shape = shape.into();
         let values = values.into();
-        validate_shape("tensor shape", &shape)?;
-        let expected_len = shape.iter().product::<usize>();
+        let expected_len = validate_shape("tensor shape", &shape)?;
 
         if expected_len != values.len() {
             return Err(MlError::new(format!(
@@ -150,6 +152,9 @@ impl Default for InferenceTickHook {
     }
 }
 
+const ONNX_UNAVAILABLE: &str = "no qualified ONNX Runtime is configured";
+
+/// ONNX model metadata and bytes for an unavailable execution backend.
 #[derive(Clone, Debug)]
 pub struct OrtSession {
     metadata: ModelMetadata,
@@ -204,21 +209,10 @@ impl OrtSession {
         Self::from_bytes(name, "unversioned", bytes, input_shape, output_shape)
     }
 
+    /// The model descriptor has no executable backend in this build.
     pub fn run(&self, input: &Tensor) -> Result<Tensor, MlError> {
         self.validate_input(input)?;
-
-        let output_len = self.metadata.output_shape.iter().product::<usize>();
-        let mut output = Vec::with_capacity(output_len);
-        for index in 0..output_len {
-            let value = input
-                .values()
-                .get(index % input.values().len())
-                .copied()
-                .unwrap_or(0.0);
-            output.push(value);
-        }
-
-        Tensor::new(self.metadata.output_shape.clone(), output)
+        Err(MlError::new(ONNX_UNAVAILABLE))
     }
 
     pub fn validate_input(&self, input: &Tensor) -> Result<(), MlError> {
@@ -240,7 +234,7 @@ impl OrtSession {
     pub fn runtime_status(&self) -> BackendStatus {
         BackendStatus::NotConfigured {
             backend: Backend::OnnxRuntime,
-            reason: "ONNX Runtime adapter is not wired in the dependency-free scaffold",
+            reason: ONNX_UNAVAILABLE,
         }
     }
 }
@@ -301,7 +295,7 @@ impl Display for MlError {
 
 impl Error for MlError {}
 
-fn validate_shape(label: &str, shape: &[usize]) -> Result<(), MlError> {
+fn validate_shape(label: &str, shape: &[usize]) -> Result<usize, MlError> {
     if shape.is_empty() {
         return Err(MlError::new(format!("{} must not be empty", label)));
     }
@@ -311,7 +305,10 @@ fn validate_shape(label: &str, shape: &[usize]) -> Result<(), MlError> {
             label
         )));
     }
-    Ok(())
+    shape
+        .iter()
+        .try_fold(1_usize, |size, width| size.checked_mul(*width))
+        .ok_or_else(|| MlError::new(format!("{label} element count overflows")))
 }
 
 fn validate_finite_values(label: &str, values: &[f32]) -> Result<(), MlError> {
@@ -456,40 +453,36 @@ mod tests {
         );
     }
 
-    #[test]
-    fn ort_session_runs_shape_checked_inference() {
-        let session =
-            OrtSession::from_bytes("identity", "0", [1, 2, 3], vec![2], vec![2]).expect("session");
-        let input = Tensor::new(vec![2], vec![1.0, 2.0]).expect("input");
-
-        let output = session.run(&input).expect("output");
-
-        assert_eq!(output, input);
-        assert_eq!(session.model_size_bytes(), 3);
+    fn affine_fixture(phase: TickPhase) -> AffineSurrogate {
+        AffineSurrogate::new(
+            ModelMetadata {
+                name: "affine".into(),
+                version: "1".into(),
+                input_shape: vec![1],
+                output_shape: vec![1],
+            },
+            Tensor::new([1, 1], [2.0]).unwrap(),
+            Tensor::scalar(1.0),
+            vec![(0.0, 10.0)],
+            phase,
+            FallbackPolicy::UseOriginalSystem,
+        )
+        .unwrap()
     }
 
     #[test]
     fn tick_hook_runs_matching_phase_only() {
-        let session =
-            OrtSession::from_bytes("identity", "0", [1], vec![1], vec![1]).expect("session");
-        let system = OrtNeuralSystem::new(
-            session,
-            TickPhase::BeforeSystems,
-            FallbackPolicy::UseOriginalSystem,
-        );
         let mut hook = InferenceTickHook::new();
-        hook.register(Arc::new(system));
+        hook.register(Arc::new(affine_fixture(TickPhase::BeforeSystems)));
 
         let input = Tensor::scalar(7.0);
-
         assert_eq!(
-            hook.run_phase(TickPhase::BeforeSystems, &input)
-                .expect("before"),
-            vec![input.clone()]
+            hook.run_phase(TickPhase::BeforeSystems, &input).unwrap(),
+            vec![Tensor::scalar(15.0)]
         );
         assert!(hook
             .run_phase(TickPhase::AfterSystems, &input)
-            .expect("after")
+            .unwrap()
             .is_empty());
     }
 
@@ -613,15 +606,8 @@ mod tests {
 
     #[test]
     fn try_register_rejects_duplicate_model_name_and_version() {
-        let session =
-            OrtSession::from_bytes("identity", "1", [1], vec![1], vec![1]).expect("session");
-        let system = OrtNeuralSystem::new(
-            session.clone(),
-            TickPhase::BeforeSystems,
-            FallbackPolicy::FailTick,
-        );
-        let duplicate =
-            OrtNeuralSystem::new(session, TickPhase::AfterSystems, FallbackPolicy::FailTick);
+        let system = affine_fixture(TickPhase::BeforeSystems);
+        let duplicate = affine_fixture(TickPhase::AfterSystems);
         let mut hook = InferenceTickHook::new();
 
         hook.try_register(Arc::new(system)).expect("register");
@@ -629,7 +615,7 @@ mod tests {
             .try_register(Arc::new(duplicate))
             .expect_err("duplicate model version should fail");
 
-        assert_eq!(error.to_string(), "model identity:1 is already registered");
+        assert_eq!(error.to_string(), "model affine:1 is already registered");
         assert_eq!(hook.len(), 1);
     }
 
@@ -642,7 +628,7 @@ mod tests {
             session.runtime_status(),
             BackendStatus::NotConfigured {
                 backend: Backend::OnnxRuntime,
-                reason: "ONNX Runtime adapter is not wired in the dependency-free scaffold"
+                reason: "no qualified ONNX Runtime is configured"
             }
         );
         assert_eq!(
