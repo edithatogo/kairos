@@ -3,8 +3,9 @@
 use std::path::PathBuf;
 use std::process::Command;
 
-use kairo_ecs_fmi::import::dynamic_loader::LoadedFmuLibrary;
+use kairo_ecs_fmi::import::dynamic_loader::LoadedFmi3Library;
 use kairo_ecs_fmi::import::fmi3::Fmi3LifecycleState;
+use kairo_ecs_fmi::FmiError;
 
 fn compile_test_cdylib_fmi3() -> PathBuf {
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
@@ -40,12 +41,13 @@ fn test_fmi3_dynamic_loading_and_1000_steps() {
 
     // 1. Dynamic symbol binding and loading gate: fmi-dynamic-loading (FMI 3)
     let loaded_lib =
-        LoadedFmuLibrary::load_fmi3_from_path(&dylib_path).expect("Failed to load FMI 3 library");
+        LoadedFmi3Library::load_from_path(&dylib_path).expect("Failed to load FMI 3 library");
 
     // 2. Lifecycle instantiate
     let mut instance = loaded_lib
-        .instantiate_checked("test_plant_fmi3", "resources/")
+        .instantiate_with_token("test_plant_fmi3", "mock-fmi3", "resources/")
         .expect("Failed to instantiate FMI 3 component");
+    drop(loaded_lib);
 
     assert_eq!(instance.lifecycle_state(), Fmi3LifecycleState::Instantiated);
 
@@ -77,10 +79,60 @@ fn test_fmi3_dynamic_loading_and_1000_steps() {
         assert_eq!(values.len(), 1);
         assert!((values[0] - (100.0 + (step as f64) + 1.0)).abs() < 1e-6);
     }
+    assert!(matches!(
+        instance.do_step(10.0, step_size),
+        Err(FmiError::Validation { message, .. }) if message.contains("FMU reached")
+    ));
+    let one_ulp = f64::from_bits(11.0_f64.to_bits() + 1) - 11.0;
+    assert!(matches!(
+        instance.do_step(11.0, one_ulp),
+        Err(FmiError::Validation { message, .. }) if message.contains("FMU reached")
+    ));
 
     // 6. Terminate & free
     instance.terminate().expect("terminate failed");
     assert_eq!(instance.lifecycle_state(), Fmi3LifecycleState::Terminated);
+    drop(instance);
+
+    let library = LoadedFmi3Library::load_from_path(&dylib_path).unwrap();
+    let counters = unsafe { libloading::Library::new(&dylib_path) }.unwrap();
+    let calls = |symbol: &[u8]| {
+        let counter: libloading::Symbol<unsafe extern "C" fn() -> i32> =
+            unsafe { counters.get(symbol) }.unwrap();
+        unsafe { counter() }
+    };
+    let terminations = calls(b"mockTerminateCount");
+    let frees = calls(b"mockFreeCount");
+    let start = || {
+        let mut instance = library
+            .instantiate_with_token("fault-control", "mock-fmi3", "resources/")
+            .unwrap();
+        instance.enter_initialization_mode(None, 0.0, None).unwrap();
+        instance.exit_initialization_mode().unwrap();
+        instance
+    };
+    let mut instance = start();
+    assert!(matches!(
+        instance.do_step(12.0, step_size),
+        Err(FmiError::FmiStatus { status: 3, .. })
+    ));
+    assert_eq!(instance.lifecycle_state(), Fmi3LifecycleState::Terminated);
+    assert!(instance.do_step(12.0, step_size).is_err());
+    drop(instance);
+    assert_eq!(calls(b"mockTerminateCount"), terminations);
+    assert_eq!(calls(b"mockFreeCount"), frees + 1);
+
+    let mut instance = start();
+    let mut sibling = start();
+    assert!(matches!(
+        instance.do_step(13.0, step_size),
+        Err(FmiError::FmiStatus { status: 4, .. })
+    ));
+    assert!(sibling.do_step(13.0, step_size).is_err());
+    drop(instance);
+    drop(sibling);
+    assert_eq!(calls(b"mockTerminateCount"), terminations);
+    assert_eq!(calls(b"mockFreeCount"), frees + 1);
 
     println!("Qualified 1,000 co-simulation steps on dynamically loaded native FMI 3 FMU!");
 }

@@ -1,61 +1,59 @@
-# FMI Import Guide
+# FMI import guide
 
-Track 38 starts with FMI 2.0 co-simulation import. The current crate exposes the first safe boundary:
+Enable `fmi2` or `fmi3` for native co-simulation. Use trusted FMU archives.
+Instantiation executes the model's shared library in the importing process.
 
-- unpacked FMU layout detection under `binaries/<platform>/`
-- `modelDescription.xml` presence checks plus a dependency-free FMI version/root marker check
-- dependency-free layout validation with explicit missing-root, missing-binary-directory, and missing-binary diagnostics
-- FMI 2.0 function-table types
-- `Fmi2CoSimulationInstance` lifecycle and scalar access wrappers
+`FmuArchive::extract_to` unpacks an archive into a new directory and selects
+its host binary. `FmuLayout::from_unpacked_dir` accepts an existing extraction.
+`validate_unpacked_fmu_layout` reports the XML and binary paths for inspection.
+At native load, the library name must match the CoSimulation declaration.
+The importer uses the FMI 2 GUID or FMI 3 instantiation token declared in
+`modelDescription.xml`.
 
-Archive extraction and dynamic symbol binding are deliberately not hidden behind placeholders. Until `zip` and `libloading` are accepted into the dependency policy, callers should unpack a reference FMU and pass the unpacked root to `FmuLayout::from_unpacked_dir`.
+| Host | FMI 2 directory | FMI 3 directory |
+|---|---|---|
+| Linux x86-64 | `binaries/linux64` | `binaries/x86_64-linux` |
+| Linux ARM64 | `binaries/aarch64-linux` | `binaries/aarch64-linux` |
+| macOS x86-64 | `binaries/darwin64` | `binaries/x86_64-darwin` |
+| macOS ARM64 | `binaries/aarch64-darwin` | `binaries/aarch64-darwin` |
+| Windows x86-64 | `binaries/win64` | `binaries/x86_64-windows` |
+
+The layout inspector also recognizes the previous host directory naming.
+
+## Run an FMI 2 communication step
+
+Pass the absolute file URI for the extracted `resources` directory to
+`instantiate_checked` for FMI 2. For FMI 3, pass the native absolute directory
+path with its trailing separator. The instance retains its library and
+callbacks until native cleanup.
 
 ```rust
+use kairo_ecs_fmi::import::dynamic_loader::LoadedFmuLibrary;
 use kairo_ecs_fmi::import::fmu_loader::FmuLayout;
+use kairo_ecs_fmi::import::instance::FmuInstance;
 
-let layout = FmuLayout::from_unpacked_dir("path/to/unpacked-fmu")?;
-println!("FMU binary for this host: {}", layout.binary().display());
-# Ok::<(), kairo_ecs_fmi::FmiError>(())
+fn step(layout: &FmuLayout, resources_uri: &str) -> kairo_ecs_fmi::FmiResult<()> {
+    let library = LoadedFmuLibrary::load_from_path(layout.binary())?;
+    let mut instance = library.instantiate_checked("plant", resources_uri)?;
+    instance.setup_experiment(None, 0.0, Some(1.0))?;
+    instance.enter_initialization_mode()?;
+    instance.exit_initialization_mode()?;
+    instance.do_step(0.0, 0.01)?;
+    instance.terminate()
+}
 ```
 
-For pre-flight checks that should not instantiate a runtime wrapper, call
-`validate_unpacked_fmu_layout`. The returned report records the host platform,
-`modelDescription.xml` path, platform binary directory, and discovered shared
-library candidates. The validator does not perform XSD validation and does not
-prove that the FMU can be instantiated; it only rejects packaging mistakes that
-can be found before archive extraction and dynamic loading are introduced.
+For standalone binaries, pass the exporter-provided identity to
+`instantiate_with_token`. Checkpoint support is enabled by the packaged
+CoSimulation capability. Call `save_state` in Step Mode and retain the
+communication time in the caller. After `restore_state`, resume from that time.
+`discard_state` releases the one process-local checkpoint.
 
-## Platform directory mapping
+FMI 3 executes model events internally. Its `do_step` method returns an error
+when the FMU reports a partial step, requests importer event handling or
+requests termination. Low-level callers constructing an `Fmi3FunctionTable`
+must supply the standard `fmi3DoStep` signature with separate `earlyReturn`
+and `lastSuccessfulTime` output pointers.
 
-| Host | FMI binary directory |
-|---|---|
-| Windows x86_64 | `binaries/win64` |
-| Linux x86_64 | `binaries/linux64` |
-| macOS x86_64 | `binaries/darwin64` |
-| macOS arm64 | `binaries/darwinaarch64` |
-
-## Lifecycle contract
-
-The safe wrapper maps non-success FMI status codes into `FmiError::FmiStatus` and always attempts `fmi2Terminate` and `fmi2FreeInstance` in `Drop`. The import runtime still needs the dynamic loader implementation before it can instantiate arbitrary third-party FMUs directly from disk.
-
-## Tutorial: unpacked FMU preflight
-
-Use this sequence for documentation examples and CI smoke checks that must not
-load third-party native code:
-
-```bash
-cargo check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --all-features --tests
-cargo check --manifest-path examples/fmi-co-simulation/basic-import/Cargo.toml
-```
-
-In Rust, point `FmuLayout::from_unpacked_dir` at an already-unpacked FMU root and
-inspect the selected host binary path before attempting dynamic loading in a
-later integration environment.
-
-## Evidence boundary
-
-Current preflight evidence proves local package layout checks, FMI root/version
-markers, feature-gated wrapper compilation, and safe wrapper types. It does not
-prove `.fmu` zip extraction, dynamic library loading, `fmi2Instantiate`, a
-1000-step co-simulation run, OpenModelica compatibility, FMI XSD validation, or
-AASX Package Explorer validation.
+The [external qualification](../../conductor/execution/scientific/s13-completion.md)
+records the exercised models, platforms and tolerances.

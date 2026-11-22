@@ -44,8 +44,9 @@ fn test_fmi_dynamic_loading_and_1000_steps() {
 
     // 2. Lifecycle instantiate
     let mut instance = loaded_lib
-        .instantiate_checked("test_plant_0", "resources/")
+        .instantiate_with_token("test_plant_0", "mock-fmi2", "resources/")
         .expect("Failed to instantiate FMU component");
+    drop(loaded_lib);
 
     assert_eq!(instance.lifecycle_state(), Fmi2LifecycleState::Instantiated);
 

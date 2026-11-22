@@ -1,20 +1,30 @@
+#![cfg(any(feature = "fmi2", feature = "fmi3"))]
+
+use std::ffi::CString;
 use std::path::Path;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
+#[cfg(feature = "fmi2")]
 use crate::import::fmi2::{
-    Fmi2Boolean, Fmi2Component, Fmi2DoStep, Fmi2EnterInitializationMode,
+    Fmi2Boolean, Fmi2Callbacks, Fmi2Component, Fmi2DoStep, Fmi2EnterInitializationMode,
     Fmi2ExitInitializationMode, Fmi2FreeInstance, Fmi2FunctionTable, Fmi2GetBoolean,
     Fmi2GetInteger, Fmi2GetReal, Fmi2GetString, Fmi2SetBoolean, Fmi2SetInteger, Fmi2SetReal,
     Fmi2SetString, Fmi2SetupExperiment, Fmi2Terminate,
 };
+#[cfg(feature = "fmi3")]
 use crate::import::fmi3::{
     Fmi3CoSimulationInstance, Fmi3DoStep, Fmi3EnterInitializationMode, Fmi3ExitInitializationMode,
     Fmi3FreeInstance, Fmi3FunctionTable, Fmi3GetFloat64, Fmi3InstantiateCoSimulation,
     Fmi3SetFloat64, Fmi3Terminate,
 };
+use crate::import::fmu_loader::co_simulation_identity;
+#[cfg(feature = "fmi2")]
 use crate::import::instance::Fmi2CoSimulationInstance;
+use crate::import::native_state::NativeFmuState;
 use crate::{FmiError, FmiResult};
 
+#[cfg(feature = "fmi2")]
 pub type Fmi2Instantiate = unsafe extern "C" fn(
     *const std::ffi::c_char,
     i32,
@@ -25,15 +35,21 @@ pub type Fmi2Instantiate = unsafe extern "C" fn(
     Fmi2Boolean,
 ) -> Fmi2Component;
 
+#[cfg(feature = "fmi2")]
 pub struct LoadedFmuLibrary {
-    #[allow(dead_code)]
     lib: Arc<libloading::Library>,
+    fatal: Arc<AtomicBool>,
+    identity: Option<(String, bool)>,
     pub table: Fmi2FunctionTable,
     pub instantiate_fn: Option<Fmi2Instantiate>,
 }
 
+#[cfg(feature = "fmi2")]
 impl LoadedFmuLibrary {
+    /// Loads a trusted FMI 2 native library. A library inside an FMU uses the
+    /// CoSimulation identity and capabilities from its model description.
     pub fn load_from_path(dylib_path: &Path) -> FmiResult<Self> {
+        let identity = co_simulation_identity(dylib_path, "2.0")?;
         let lib = unsafe {
             libloading::Library::new(dylib_path).map_err(|e| {
                 FmiError::LibraryLoadFailed(format!("failed to load {}: {e}", dylib_path.display()))
@@ -105,6 +121,8 @@ impl LoadedFmuLibrary {
 
             Ok(Self {
                 lib: Arc::new(lib),
+                fatal: Arc::default(),
+                identity,
                 table,
                 instantiate_fn,
             })
@@ -116,16 +134,44 @@ impl LoadedFmuLibrary {
         instance_name: &str,
         resource_location: &str,
     ) -> FmiResult<Fmi2CoSimulationInstance> {
+        let (guid, supports_state) = self.identity.as_ref().ok_or_else(missing_description)?;
+        self.instantiate(instance_name, guid, resource_location, *supports_state)
+    }
+
+    /// Instantiates a standalone binary with its exporter-provided FMI 2 GUID.
+    pub fn instantiate_with_token(
+        &self,
+        instance_name: &str,
+        guid: &str,
+        resource_location: &str,
+    ) -> FmiResult<Fmi2CoSimulationInstance> {
+        self.instantiate(instance_name, guid, resource_location, false)
+    }
+
+    fn instantiate(
+        &self,
+        instance_name: &str,
+        guid: &str,
+        resource_location: &str,
+        supports_state: bool,
+    ) -> FmiResult<Fmi2CoSimulationInstance> {
+        check_fatal(&self.fatal)?;
         let instantiate = self
             .instantiate_fn
             .ok_or_else(|| FmiError::SymbolNotFound("fmi2Instantiate not found".to_string()))?;
 
-        let c_instance_name = std::ffi::CString::new(instance_name)
-            .map_err(|_| FmiError::InvalidInput("invalid instance_name".to_string()))?;
-        let c_guid = std::ffi::CString::new("{12345678-1234-1234-1234-123456789abc}")
-            .map_err(|_| FmiError::InvalidInput("invalid guid".to_string()))?;
-        let c_res_loc = std::ffi::CString::new(resource_location)
-            .map_err(|_| FmiError::InvalidInput("invalid resource_location".to_string()))?;
+        let c_instance_name = c_string(instance_name, "instance_name")?;
+        let c_guid = c_string(guid, "guid")?;
+        let c_res_loc = c_string(resource_location, "resource_location")?;
+        let saved_state = supports_state
+            .then(|| {
+                NativeFmuState::load(
+                    &self.lib,
+                    ["fmi2GetFMUstate", "fmi2SetFMUstate", "fmi2FreeFMUstate"],
+                )
+            })
+            .transpose()?;
+        let callbacks = Box::new(Fmi2Callbacks::synchronous());
 
         let component = unsafe {
             instantiate(
@@ -133,32 +179,43 @@ impl LoadedFmuLibrary {
                 1, // fmi2CoSimulation
                 c_guid.as_ptr(),
                 c_res_loc.as_ptr(),
-                std::ptr::null(),
+                std::ptr::from_ref(callbacks.as_ref()).cast(),
                 0, // visible
                 0, // loggingOn
             )
         };
 
-        if component.is_null() {
-            return Err(FmiError::NullComponent);
-        }
-
-        unsafe { Fmi2CoSimulationInstance::from_raw_parts_checked(component, self.table) }
+        let mut instance =
+            unsafe { Fmi2CoSimulationInstance::from_raw_parts_checked(component, self.table) }?;
+        instance.retain_library(
+            Arc::clone(&self.lib),
+            Arc::clone(&self.fatal),
+            callbacks,
+            saved_state,
+        );
+        Ok(instance)
     }
 
+    #[cfg(feature = "fmi3")]
     pub fn load_fmi3_from_path(dylib_path: &Path) -> FmiResult<LoadedFmi3Library> {
         LoadedFmi3Library::load_from_path(dylib_path)
     }
 }
 
+#[cfg(feature = "fmi3")]
 pub struct LoadedFmi3Library {
-    #[allow(dead_code)]
     lib: Arc<libloading::Library>,
+    fatal: Arc<AtomicBool>,
+    identity: Option<(String, bool)>,
     pub table: Fmi3FunctionTable,
 }
 
+#[cfg(feature = "fmi3")]
 impl LoadedFmi3Library {
+    /// Loads a trusted FMI 3 native library. A library inside an FMU uses the
+    /// CoSimulation identity and capabilities from its model description.
     pub fn load_from_path(dylib_path: &Path) -> FmiResult<Self> {
+        let identity = co_simulation_identity(dylib_path, "3.0")?;
         let lib = unsafe {
             libloading::Library::new(dylib_path).map_err(|e| {
                 FmiError::LibraryLoadFailed(format!("failed to load {}: {e}", dylib_path.display()))
@@ -204,6 +261,8 @@ impl LoadedFmi3Library {
 
             Ok(Self {
                 lib: Arc::new(lib),
+                fatal: Arc::default(),
+                identity,
                 table,
             })
         }
@@ -214,21 +273,48 @@ impl LoadedFmi3Library {
         instance_name: &str,
         resource_location: &str,
     ) -> FmiResult<Fmi3CoSimulationInstance> {
+        let (token, supports_state) = self.identity.as_ref().ok_or_else(missing_description)?;
+        self.instantiate(instance_name, token, resource_location, *supports_state)
+    }
+
+    /// Instantiates a standalone binary with its exporter-provided FMI 3 token.
+    pub fn instantiate_with_token(
+        &self,
+        instance_name: &str,
+        token: &str,
+        resource_location: &str,
+    ) -> FmiResult<Fmi3CoSimulationInstance> {
+        self.instantiate(instance_name, token, resource_location, false)
+    }
+
+    fn instantiate(
+        &self,
+        instance_name: &str,
+        token: &str,
+        resource_location: &str,
+        supports_state: bool,
+    ) -> FmiResult<Fmi3CoSimulationInstance> {
+        check_fatal(&self.fatal)?;
         let instantiate = self.table.instantiate_co_simulation.ok_or_else(|| {
             FmiError::SymbolNotFound("fmi3InstantiateCoSimulation not found".to_string())
         })?;
 
-        let c_instance_name = std::ffi::CString::new(instance_name)
-            .map_err(|_| FmiError::InvalidInput("invalid instance_name".to_string()))?;
-        let c_guid = std::ffi::CString::new("{12345678-1234-1234-1234-123456789abc}")
-            .map_err(|_| FmiError::InvalidInput("invalid token".to_string()))?;
-        let c_res_loc = std::ffi::CString::new(resource_location)
-            .map_err(|_| FmiError::InvalidInput("invalid resource_location".to_string()))?;
+        let c_instance_name = c_string(instance_name, "instance_name")?;
+        let c_token = c_string(token, "instantiation_token")?;
+        let c_res_loc = c_string(resource_location, "resource_location")?;
+        let saved_state = supports_state
+            .then(|| {
+                NativeFmuState::load(
+                    &self.lib,
+                    ["fmi3GetFMUState", "fmi3SetFMUState", "fmi3FreeFMUState"],
+                )
+            })
+            .transpose()?;
 
         let component = unsafe {
             instantiate(
                 c_instance_name.as_ptr(),
-                c_guid.as_ptr(),
+                c_token.as_ptr(),
                 c_res_loc.as_ptr(),
                 false,
                 false,
@@ -237,15 +323,43 @@ impl LoadedFmi3Library {
                 std::ptr::null(),
                 0,
                 std::ptr::null(),
-                std::ptr::null(),
+                discard_fmi3_log as *const std::ffi::c_void,
                 std::ptr::null(),
             )
         };
 
-        if component.is_null() {
-            return Err(FmiError::NullComponent);
-        }
-
-        unsafe { Fmi3CoSimulationInstance::from_raw_parts_checked(component, self.table) }
+        let mut instance =
+            unsafe { Fmi3CoSimulationInstance::from_raw_parts_checked(component, self.table) }?;
+        instance.retain_library(Arc::clone(&self.lib), Arc::clone(&self.fatal), saved_state);
+        Ok(instance)
     }
+}
+
+fn c_string(value: &str, field: &str) -> FmiResult<CString> {
+    CString::new(value).map_err(|_| FmiError::InvalidInput(format!("invalid {field}")))
+}
+
+fn missing_description() -> FmiError {
+    FmiError::InvalidInput(
+        "FMU modelDescription.xml is required. For a standalone binary supply its token explicitly."
+            .into(),
+    )
+}
+
+fn check_fatal(fatal: &AtomicBool) -> FmiResult<()> {
+    if fatal.load(Ordering::Acquire) {
+        return Err(FmiError::InvalidInput(
+            "FMU library is disabled after a fatal status".into(),
+        ));
+    }
+    Ok(())
+}
+
+#[cfg(feature = "fmi3")]
+unsafe extern "C" fn discard_fmi3_log(
+    _: *mut std::ffi::c_void,
+    _: i32,
+    _: *const std::ffi::c_char,
+    _: *const std::ffi::c_char,
+) {
 }

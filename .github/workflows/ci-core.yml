@@ -18,6 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       rust: ${{ steps.classify.outputs.rust }}
+      fmi: ${{ steps.classify.outputs.fmi }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -36,6 +37,11 @@ jobs:
         run: |
           set -euo pipefail
           node scripts/validation/classify-rust-ci-changes.mjs "$EVENT_NAME" "$BASE_SHA" "$HEAD_SHA" >> "$GITHUB_OUTPUT"
+          if git diff --quiet "$BASE_SHA" "$HEAD_SHA" -- crates/kairo-ecs-fmi Cargo.toml Cargo.lock rust-toolchain.toml .github/workflows/ci-core.yml; then
+            echo 'fmi=false' >> "$GITHUB_OUTPUT"
+          else
+            echo 'fmi=true' >> "$GITHUB_OUTPUT"
+          fi
 
   rust-stable:
     name: Rust 1.99.1 verification
@@ -81,8 +87,23 @@ jobs:
       - name: Workspace tests and core coverage
         env:
           CARGO_BUILD_JOBS: '2'
+        shell: bash
         run: |
-          cargo llvm-cov nextest --workspace --all-features --lcov --output-path lcov.info
+          set -euo pipefail
+          fmi_dir="$(mktemp -d)"
+          trap 'rm -rf "$fmi_dir"' EXIT
+          curl --fail --silent --show-error --location \
+            https://github.com/modelica/Reference-FMUs/releases/download/v0.0.42/Reference-FMUs.zip \
+            -o "$fmi_dir/reference.zip"
+          echo "b6b4a195b9c0f6bdd3459cd949cbb35fc21ee2049d6dab4cb7a3ba7da63b1e97  $fmi_dir/reference.zip" | sha256sum -c -
+          unzip -q "$fmi_dir/reference.zip" '2.0/BouncingBall.fmu' '3.0/BouncingBall.fmu' 'LICENSE.txt' -d "$fmi_dir/reference"
+          export KAIRO_REFERENCE_FMUS_DIR="$fmi_dir/reference"
+          sha256sum "$fmi_dir/reference/"{2.0,3.0}/BouncingBall.fmu
+          cargo llvm-cov clean --workspace
+          cargo llvm-cov test --no-report --locked -p kairo-ecs-fmi --all-features \
+            --test maturity_external_fmu bouncing_ball -- --ignored | tee "$fmi_dir/reference.log"
+          grep -Fq 'test result: ok. 2 passed; 0 failed; 0 ignored' "$fmi_dir/reference.log"
+          cargo llvm-cov nextest --workspace --all-features --lcov --output-path lcov.info --no-clean
           node scripts/validation/check-core-coverage.mjs lcov.info
       - name: Capture runner resources after coverage
         if: always()
@@ -136,6 +157,40 @@ jobs:
           sudo apt-get update
           sudo apt-get install --no-install-recommends -y libopenmpi-dev openmpi-bin libclang-dev
           mpiexec --version
+      - name: Independently built OpenModelica FMU
+        if: needs.changes.outputs.fmi == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          fmi_dir="$(mktemp -d)"
+          trap 'rm -rf "$fmi_dir"' EXIT
+          cat > "$fmi_dir/KairosDecay.mo" <<'MODEL'
+          model KairosDecay
+            output Real x(start=1, fixed=true);
+          equation
+            der(x) = -x;
+            when time >= 0.5 then
+              reinit(x, 2);
+            end when;
+          end KairosDecay;
+          MODEL
+          cat > "$fmi_dir/build.mos" <<'SCRIPT'
+          getVersion();
+          loadFile("KairosDecay.mo");
+          buildModelFMU(KairosDecay, version="2.0", fmuType="cs");
+          getErrorString();
+          SCRIPT
+          sha256sum "$fmi_dir/KairosDecay.mo" "$fmi_dir/build.mos"
+          docker run --rm --network none --user "$(id -u):$(id -g)" \
+            --env HOME=/tmp --volume "$fmi_dir:/work" --workdir /work \
+            openmodelica/openmodelica@sha256:1fa776fd2f03cdcfc03db6f6ac69888dd48c8eca442034495b178dc73b96dc40 \
+            omc build.mos
+          export KAIRO_OPENMODELICA_FMU="$fmi_dir/KairosDecay.fmu"
+          test -s "$KAIRO_OPENMODELICA_FMU"
+          sha256sum "$KAIRO_OPENMODELICA_FMU"
+          cargo test --locked -p kairo-ecs-fmi --features fmi2 --test maturity_external_fmu openmodelica -- --ignored \
+            | tee "$fmi_dir/openmodelica.log"
+          grep -Fq 'test result: ok. 1 passed; 0 failed; 0 ignored' "$fmi_dir/openmodelica.log"
       - name: Check workspace on Rust 1.99.1
         run: cargo +1.99.1 check --workspace --exclude kairo-ecs-wasm --exclude kairo-ecs-arrow --lib --bins --all-features --locked
       - name: Check default Arrow telemetry on Rust 1.99.1

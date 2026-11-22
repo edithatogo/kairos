@@ -43,6 +43,7 @@ pub enum FmiError {
     },
     LibraryLoadFailed(String),
     SymbolNotFound(String),
+    UnsupportedCapability(&'static str),
     InvalidInput(String),
 }
 
@@ -97,6 +98,9 @@ impl fmt::Display for FmiError {
             ),
             Self::LibraryLoadFailed(msg) => write!(f, "FMI library load failed: {msg}"),
             Self::SymbolNotFound(sym) => write!(f, "FMI symbol not found: {sym}"),
+            Self::UnsupportedCapability(capability) => {
+                write!(f, "FMU does not support {capability}")
+            }
             Self::InvalidInput(msg) => write!(f, "FMI invalid input: {msg}"),
         }
     }

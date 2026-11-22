@@ -2002,7 +2002,8 @@
       ],
       "read": [
         "conductor/scientific-completion.md",
-        "crates/kairo-ecs-fmi/src/lib.rs"
+        "crates/kairo-ecs-fmi/src/lib.rs",
+        "conductor/execution/scientific/s13-completion.md"
       ],
       "write": [
         "crates/kairo-ecs-fmi/tests/maturity_external_fmu.rs"
@@ -2019,11 +2020,95 @@
             "--test",
             "maturity_external_fmu",
             "--features",
-            "fmi2"
+            "fmi2",
+            "bouncing_ball",
+            "--",
+            "--ignored"
           ]
         }
       ],
-      "acceptance": "First produce a distinguishing regression after its oracle/contract is settled. Verify the expected baseline failure; integrate the target with its paired implementation or explicit unsupported error before merging. Final oracle: Use a pinned licensed external FMU and check independent event/save-restore output. A self-authored mock cannot satisfy this test; declare the actual archive/hash and runtime requirements before dispatch. This first external-FMU leaf selects FMI 2 and the fmi2 feature; FMI 3 requires its own fixture/leaf.",
+      "acceptance": "Use the hash-verified upstream FMI 2 BouncingBall FMU. Compare height and velocity to the independent analytic trajectory and require exact replay after restoring a checkpoint across impact. Run after dropping the loader and check release through the instance. Record the pinned archive, native host, observed result and exit.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed.",
+      "obligation": "S13"
+    },
+    {
+      "id": "S13.reference3",
+      "title": "Verify FMI 3 native impact and state replay",
+      "parent": "110:S13",
+      "kind": "regression",
+      "executor": "specialist",
+      "requires": [
+        "S13.completion"
+      ],
+      "read": [
+        "conductor/scientific-completion.md",
+        "crates/kairo-ecs-fmi/src/lib.rs",
+        "conductor/execution/scientific/s13-completion.md"
+      ],
+      "write": [
+        "crates/kairo-ecs-fmi/tests/maturity_external_fmu.rs"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-fmi",
+            "--test",
+            "maturity_external_fmu",
+            "--features",
+            "fmi3",
+            "bouncing_ball",
+            "--",
+            "--ignored"
+          ]
+        }
+      ],
+      "acceptance": "Run the pinned FMI 3 BouncingBall input through the standard four-output fmi3DoStep ABI. Compare to the independent trajectory and require exact state replay after impact. The lifecycle target rejects partial and zero-progress steps and verifies terminal cleanup.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed.",
+      "obligation": "S13"
+    },
+    {
+      "id": "S13.openmodelica",
+      "title": "Execute a separately built OpenModelica co-simulation case",
+      "parent": "110:S13",
+      "kind": "regression",
+      "executor": "specialist",
+      "requires": [
+        "S13.regression"
+      ],
+      "read": [
+        "conductor/scientific-completion.md",
+        "crates/kairo-ecs-fmi/src/lib.rs",
+        "conductor/execution/scientific/s13-completion.md"
+      ],
+      "write": [
+        ".github/workflows/ci-core.yml",
+        "crates/kairo-ecs-fmi/tests/maturity_external_fmu.rs"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-fmi",
+            "--test",
+            "maturity_external_fmu",
+            "--features",
+            "fmi2",
+            "openmodelica",
+            "--",
+            "--ignored"
+          ]
+        }
+      ],
+      "acceptance": "Build the documented Modelica input with the digest-pinned compiler. Require the real FMI 2 time event and analytic decay on both sides. Reject unavailable state with the typed capability result. Record compiler, source and FMU digest, actual native host and exit.",
       "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed.",
       "obligation": "S13"
     },
