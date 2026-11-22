@@ -2160,6 +2160,7 @@ dependencies = [
  "cap-primitives",
  "criterion",
  "kairo-ecs-fs-guard",
+ "kairo-ecs-rng",
  "kairo-ecs-types",
  "polars",
  "polars-arrow",

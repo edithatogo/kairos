@@ -16,6 +16,8 @@ Format:
 
 ### Added
 
+- `kairo-ecs-arrow` adds opt-in cohort-transition and spatial-exposure schemas with paired, entity-addressed RNG provenance and a standalone fictional consumer.
+
 - `kairo-ecs-cli` adds sequential ABC-SMC and entity-purpose common random numbers. The optional `rl-queue` feature lets the installed `kairo-gym` adapters execute a Rust-owned queue through Gymnasium and PettingZoo.
 - `kairo-ecs-ml` executes a bounded affine surrogate and batches real Rust queue worlds.
 
