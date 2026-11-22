@@ -12,6 +12,13 @@ use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::fmt;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
+#[cfg(feature = "optimistic-usage")]
+mod usage_replay;
+#[cfg(feature = "optimistic-usage")]
+pub use usage_replay::{
+    committed_staged_usage, CommittedOptimisticUsageWindow, StagedResourceCheckpoint,
+};
+
 const SUBMIT_EVENT: u32 = 0x5354_4701;
 const RELEASE_EVENT: u32 = 0x5354_4702;
 const LEASE_REVISION: u64 = 1;
@@ -141,7 +148,7 @@ enum ScheduledAction {
     Close(StagedRequestId),
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 struct RequestRecord {
     actor: StagedActorId,
     resource: StagedResourceId,
@@ -154,7 +161,7 @@ struct RequestRecord {
     release: Option<UsageBoundary>,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 struct ResourceRecord {
     unit: Option<String>,
     capacity: u64,
@@ -492,49 +499,20 @@ impl StagedResourceRuntime {
         {
             return Err(StagedRuntimeError::InvalidUsageWindow);
         }
-        let source = self
-            .usage_source
-            .as_ref()
-            .ok_or(StagedRuntimeError::MissingUsageSource)?;
-        let mut window = CommittedUsageWindow {
-            version: STAGED_USAGE_VERSION,
-            source: source.clone(),
-            resource: resource.entity,
-            quantity_unit: resource_record
-                .unit
-                .as_ref()
-                .ok_or(StagedRuntimeError::MissingResourceUnit)?
-                .clone(),
+        let window = occupancy_window(
+            resource,
+            resource_record,
+            &self.requests,
+            self.usage_source.as_ref(),
             start,
             end,
-            occupancy: Vec::new(),
-            occupied_unit_ticks: 0,
-        };
-        for (&request, record) in &self.requests {
-            if record.resource != resource {
-                continue;
-            }
-            let Some(admission) = record.admission else {
-                continue;
-            };
-            let release = record.release.filter(|boundary| boundary.at <= end);
-            let clipped_start = start.max(admission.at);
-            let clipped_end = release.map_or(end, |boundary| boundary.at);
-            if clipped_start < clipped_end {
-                window.add(OccupancySlice {
-                    actor: record.actor.entity,
-                    request: request.entity,
-                    lease_revision: LEASE_REVISION,
-                    quantity: record.quantity,
-                    admission,
-                    release,
-                    start: clipped_start,
-                    end: clipped_end,
-                })?;
-            }
-        }
-        self.usage_sealed_through = Some(self.usage_sealed_through.map_or(end, |old| old.max(end)));
+        )?;
+        self.record_usage_seal(end);
         Ok(window)
+    }
+
+    fn record_usage_seal(&mut self, end: SimTime) {
+        self.usage_sealed_through = Some(self.usage_sealed_through.map_or(end, |old| old.max(end)));
     }
 
     fn activate_or_queue(
@@ -678,4 +656,53 @@ impl StagedResourceRuntime {
         }
         Ok(())
     }
+}
+
+fn occupancy_window(
+    resource: StagedResourceId,
+    resource_record: &ResourceRecord,
+    requests: &BTreeMap<StagedRequestId, RequestRecord>,
+    source: Option<&StagedUsageSource>,
+    start: SimTime,
+    end: SimTime,
+) -> Result<CommittedUsageWindow, StagedRuntimeError> {
+    let source = source.ok_or(StagedRuntimeError::MissingUsageSource)?;
+    let mut window = CommittedUsageWindow {
+        version: STAGED_USAGE_VERSION,
+        source: source.clone(),
+        resource: resource.entity,
+        quantity_unit: resource_record
+            .unit
+            .as_ref()
+            .ok_or(StagedRuntimeError::MissingResourceUnit)?
+            .clone(),
+        start,
+        end,
+        occupancy: Vec::new(),
+        occupied_unit_ticks: 0,
+    };
+    for (&request, record) in requests {
+        if record.resource != resource {
+            continue;
+        }
+        let Some(admission) = record.admission else {
+            continue;
+        };
+        let release = record.release.filter(|boundary| boundary.at <= end);
+        let clipped_start = start.max(admission.at);
+        let clipped_end = release.map_or(end, |boundary| boundary.at);
+        if clipped_start < clipped_end {
+            window.add(OccupancySlice {
+                actor: record.actor.entity,
+                request: request.entity,
+                lease_revision: LEASE_REVISION,
+                quantity: record.quantity,
+                admission,
+                release,
+                start: clipped_start,
+                end: clipped_end,
+            })?;
+        }
+    }
+    Ok(window)
 }
