@@ -11,6 +11,9 @@ use polars::prelude::*;
 use polars_arrow::datatypes::Metadata;
 use std::collections::HashMap;
 
+#[cfg(test)]
+mod tests;
+
 pub const TRANSITION_SCHEMA: &str = "kairo_ecs.cohort_transition.v1";
 pub const EXPOSURE_SCHEMA: &str = "kairo_ecs.spatial_exposure.v1";
 

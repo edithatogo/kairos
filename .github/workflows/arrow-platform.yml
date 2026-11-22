@@ -92,7 +92,7 @@ jobs:
           cargo test --locked --manifest-path "$fixture"
           cargo run --locked --manifest-path "$fixture"
       - name: Arrow unit checks
-        run: cargo test --locked -p kairo-ecs-arrow --features polars-native --lib
+        run: cargo test --locked -p kairo-ecs-arrow --features cohort-native --lib
       - name: Focused lint checks
         run: >-
           cargo clippy --locked -p kairo-ecs-arrow -p kairo-ecs-arrow-ffi -p kairo-ecs-fs-guard -p kairo-ecs-ffi
