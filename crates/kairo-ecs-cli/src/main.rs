@@ -3,6 +3,8 @@
 pub use kairo_ecs_cli::contracts;
 pub use kairo_ecs_cli::ensemble;
 
+#[cfg(feature = "rl-queue")]
+mod queue_env;
 mod scenario;
 
 use std::env;
@@ -72,6 +74,15 @@ pub enum Commands {
         #[arg(long)]
         output: PathBuf,
     },
+    /// Run the experimental native queue model on local stdio.
+    #[cfg(feature = "rl-queue")]
+    #[command(name = "queue-env-v1")]
+    QueueEnv {
+        #[arg(long, value_parser = clap::value_parser!(u32).range(1..=32))]
+        agents: u32,
+        #[arg(long, value_parser = clap::value_parser!(u32).range(1..))]
+        max_ticks: u32,
+    },
     /// Reserved for Track 22
     Collect,
     /// Reserved for Track 22
@@ -113,6 +124,8 @@ pub fn execute(cli: Cli) -> Result<(), String> {
         } => handle_run(&scenario, seed_manifest.as_deref(), output.as_deref()),
         Commands::Checkpoint { output } => handle_checkpoint(&output),
         Commands::Resume { checkpoint, output } => handle_resume(&checkpoint, &output),
+        #[cfg(feature = "rl-queue")]
+        Commands::QueueEnv { agents, max_ticks } => queue_env::run(agents as usize, max_ticks),
         Commands::Collect | Commands::Analyze => {
             let name = match cmd {
                 Commands::Collect => "collect",
