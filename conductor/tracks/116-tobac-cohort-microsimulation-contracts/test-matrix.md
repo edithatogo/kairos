@@ -10,6 +10,7 @@
 | CRN counterfactual substream coupling | Equal pre-intervention traces, deterministic replay, and a shared sampled exit after an extra intermediate state | Passed from the reviewed extracted source tree |
 | Semi-Markov competing-risk convergence | Actual imported trajectories from 100,000 entities vs analytical early and late survival and cause-specific incidence | Passed within four binomial standard errors per outcome |
 | Downstream `tobac` consumer fixture | Locked standalone fictional fixture and executable, including a retained buffer after early stream release | Five tests and executable passed from the reviewed extracted source tree |
+| Standalone Arrow IPC output | Emit the baseline, policy and exposure streams through the fixture CLI and read typed columns, requiredness, units and original provenance | Seven locked fixture tests and an independent PyArrow 26.0.1 readback passed. Both cohort arms shared all 1,451 pre-intervention rows. |
 
 Run both `cargo test --locked --manifest-path tests/fixtures/cohort-consumer/Cargo.toml`
 and `cargo run --locked --manifest-path tests/fixtures/cohort-consumer/Cargo.toml`.
