@@ -72,6 +72,28 @@ Uncoupled RNG substreams under variable event counts can inflate Monte Carlo var
 The receiving applications own their installed round-trips and summary
 qualification.
 
+## Standalone Arrow IPC output — 23 November 2026
+
+The [standalone fixture](../../../tests/fixtures/cohort-consumer/README.md)
+emits individual Arrow IPC streams for the baseline cohort, paired policy cohort
+and spatial exposures. It projects the declared C Data struct fields directly
+into flat IPC columns. The emitted schema retains the physical types, column
+requiredness, tick units and cohort RNG metadata.
+
+The independent reviewer checked the projection and accepted the explicit
+stdout flush after the Arrow end marker. The locked fixture suite passed seven
+tests with Rust 1.99.1 on macOS ARM64. PyArrow 26.0.1 read 3,323 baseline
+transitions, 3,968 policy transitions and two exposure rows. The two arms
+matched on every field in the 1,451 pre-intervention transitions. The
+independent readback receipt SHA-256 is
+`202ff0b94228e6c782cbdda887af9eb65fee1497f40d6b03ac805ebd08cf5ab5`.
+
+The installed `tobac` 0.2.0 importer at
+`fe06ef5958ba0f218317a738fe8de95973300a12` read its own positive Evidence
+control and rejected each neutral stream with its exact-schema error.
+Track 116 receiving acceptance still requires the dedicated adapter and
+downstream cohort summary checks.
+
 ## Integration notes
 
 Use the versioned schema metadata and locked fixture for the receiving

@@ -8,7 +8,12 @@ use kairo_ecs_arrow::cohort::{
 use kairo_ecs_arrow_ffi::native_tables::{import_batch, import_stream};
 use kairo_ecs_rng::{CauseId, CompetingCause, CompetingHazards, HazardRate, TieBreaker};
 use kairo_ecs_types::{EntityId, SimTime};
-use std::error::Error;
+use polars_arrow::{
+    datatypes::ArrowSchema,
+    io::ipc::write::{StreamWriter, WriteOptions},
+    record_batch::RecordBatchT,
+};
+use std::{error::Error, ffi::OsStr, io, io::Write, sync::Arc};
 
 #[cfg(test)]
 mod tests;
@@ -103,7 +108,7 @@ fn spatial_rows() -> Result<[SpatialExposure; 2]> {
     Ok([observe(0.0, 10, 0.0, 0.0)?, observe(END, 11, 80.0, 80.0)?])
 }
 
-fn main() -> Result<()> {
+fn verify_fixture() -> Result<()> {
     let baseline = arm(SEED, BASELINE, ENTITIES)?;
     let policy = arm(SEED, INTERVENTION, ENTITIES)?;
     assert!(baseline
@@ -147,4 +152,53 @@ fn main() -> Result<()> {
         exposure.len()
     );
     Ok(())
+}
+
+fn emit_fixture(name: &OsStr) -> Result<()> {
+    let (frame, schema) = match name.to_str() {
+        Some("cohort-baseline") => {
+            transition_frame(&arm(SEED, BASELINE, ENTITIES)?, TickUnit::Millisecond, SEED)?
+        }
+        Some("cohort-policy") => transition_frame(
+            &arm(SEED, INTERVENTION, ENTITIES)?,
+            TickUnit::Millisecond,
+            SEED,
+        )?,
+        Some("spatial-exposure") => {
+            spatial_exposure_frame(&spatial_rows()?, TickUnit::Millisecond)?
+        }
+        _ => return Err("expected cohort-baseline, cohort-policy or spatial-exposure".into()),
+    };
+    let (field, batch) = import_batch(domain::export_batch(&frame, &schema, Some(&schema))?)?;
+    let (fields, length, arrays, validity) = batch.into_data();
+    if validity.is_some_and(|bitmap| bitmap.unset_bits() > 0) {
+        return Err("cannot project null struct rows into an Arrow IPC stream".into());
+    }
+    let projection: ArrowSchema = fields
+        .into_iter()
+        .map(|field| (field.name.clone(), field))
+        .collect();
+    let batch = RecordBatchT::try_new(length, Arc::new(projection), arrays)?;
+    let mut metadata = field
+        .metadata
+        .as_deref()
+        .cloned()
+        .ok_or("missing declared schema metadata")?;
+    metadata.insert("kairo_ecs.projected_schema".into(), field.name);
+    let mut writer = StreamWriter::new(io::stdout().lock(), WriteOptions { compression: None });
+    writer.set_custom_schema_metadata(Arc::new(metadata));
+    writer.start(batch.schema(), None)?;
+    writer.write(&batch, None)?;
+    writer.finish()?;
+    writer.into_inner().flush()?;
+    Ok(())
+}
+
+fn main() -> Result<()> {
+    let arguments: Vec<_> = std::env::args_os().skip(1).collect();
+    match arguments.as_slice() {
+        [] => verify_fixture(),
+        [flag, name] if flag == "--emit" => emit_fixture(name),
+        _ => Err("usage: kairo-ecs-cohort-consumer [--emit <fixture>]".into()),
+    }
 }
