@@ -1,2 +1,5 @@
-# Keep the optional Gymnasium smoke lane on the latest selected stable release.
+# Checker and isolated optional-host package build dependencies.
 gymnasium==1.4.0
+pettingzoo==1.27.0
+setuptools==84.2.1
+wheel==0.48.0

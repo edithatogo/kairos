@@ -7,7 +7,13 @@ import subprocess
 import unittest
 from pathlib import Path
 
-from kairo_gym import KairoGymConfig, KairoGymEnv, NativeEnvironmentUnavailable, PettingZooQueueEnv
+from kairo_gym import (
+    KairoGymConfig,
+    KairoGymEnv,
+    NativeEnvironmentUnavailable,
+    PettingZooQueueEnv,
+    register_kairo_env,
+)
 
 
 class NativeQueueTests(unittest.TestCase):
@@ -15,7 +21,9 @@ class NativeQueueTests(unittest.TestCase):
     def setUpClass(cls):
         executable = os.environ.get("KAIRO_NATIVE_QUEUE_BIN")
         if executable is None:
-            raise unittest.SkipTest("KAIRO_NATIVE_QUEUE_BIN must name a built rl-queue executable")
+            raise unittest.SkipTest(
+                "KAIRO_NATIVE_QUEUE_BIN must name a built rl-queue executable"
+            )
         cls.executable = Path(executable).resolve(strict=True)
 
     def test_gymnasium_checker_uses_the_native_queue(self):
@@ -31,6 +39,15 @@ class NativeQueueTests(unittest.TestCase):
         self.addCleanup(env.close)
         parallel_api_test(env, num_cycles=40)
 
+    def test_registered_gymnasium_environment_runs_the_selected_native_binary(self):
+        import gymnasium
+
+        env_id = register_kairo_env("KairoQueueTest-v1", executable=self.executable)
+        with gymnasium.make(env_id) as env:
+            initial, _ = env.reset(seed=42)
+            self.assertEqual(initial.tolist(), [0, 2, 8])
+            self.assertEqual(env.step(1)[0][0], 1)
+
     def test_gym_values_match_direct_native_wire_and_survive_reset_and_close(self):
         commands = [{"op": "reset", "seed": 42}, {"op": "step", "actions": [1]}]
         frames = "".join(json.dumps(command) + "\n" for command in commands)
@@ -45,7 +62,9 @@ class NativeQueueTests(unittest.TestCase):
         model, initial, transition = map(json.loads, checked.stdout.splitlines())
         self.assertEqual(model["model"], "finite-shared-queue-v1")
 
-        with KairoGymEnv(KairoGymConfig(max_steps=1), executable=self.executable) as env:
+        with KairoGymEnv(
+            KairoGymConfig(max_steps=1), executable=self.executable
+        ) as env:
             child = env._queue._process
             observed, _ = env.reset(seed=42)
             self.assertEqual(observed.tolist(), initial["observation"])

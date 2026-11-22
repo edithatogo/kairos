@@ -1,8 +1,14 @@
 """Optional Gymnasium and PettingZoo adapters for the Rust queue model."""
 
 from dataclasses import dataclass
+from typing import ClassVar
 
-from ._native import NATIVE_REQUIRED, NativeEnvironmentUnavailable, NativeQueue, executable_path
+from ._native import (
+    NATIVE_REQUIRED,
+    NativeEnvironmentUnavailable,
+    NativeQueue,
+    executable_path,
+)
 
 try:
     import gymnasium
@@ -48,16 +54,20 @@ def _observation_space(queue):
 class KairoGymEnv(GymEnv):
     """Single-agent queue where the selected Rust executable owns the episode."""
 
-    metadata = {"render_modes": []}
+    metadata: ClassVar[dict] = {"render_modes": []}
     render_mode = None
 
     def __init__(self, config: KairoGymConfig | None = None, *, executable=None):
         executable = executable_path(executable)
         if gymnasium is None:
-            raise NativeEnvironmentUnavailable("Install the optional Gymnasium dependency")
+            raise NativeEnvironmentUnavailable(
+                "Install the optional Gymnasium dependency"
+            )
         config = KairoGymConfig() if config is None else config
         if (config.observation_size, config.action_size) != (3, 2):
-            raise ValueError("The native queue requires three observation fields and two actions")
+            raise ValueError(
+                "The native queue requires three observation fields and two actions"
+            )
         self._queue = NativeQueue(executable, 1, config.max_steps)
         self.observation_space = _observation_space(self._queue)
         self.action_space = gymnasium.spaces.Discrete(2)
@@ -83,18 +93,28 @@ class KairoGymEnv(GymEnv):
 class PettingZooQueueEnv(ParallelEnv):
     """Ordered agents sharing the same Rust queue inside one child process."""
 
-    metadata = {"name": "kairo_queue_v1", "render_modes": [], "is_parallelizable": True}
+    metadata: ClassVar[dict] = {
+        "name": "kairo_queue_v1",
+        "render_modes": [],
+        "is_parallelizable": True,
+    }
     render_mode = None
 
     def __init__(self, agents=2, max_steps=128, *, executable=None):
         executable = executable_path(executable)
         if gymnasium is None or ParallelEnv is object:
-            raise NativeEnvironmentUnavailable("Install the optional PettingZoo dependency")
+            raise NativeEnvironmentUnavailable(
+                "Install the optional PettingZoo dependency"
+            )
         self._queue = NativeQueue(executable, agents, max_steps)
         self.possible_agents = [f"worker_{i}" for i in range(agents)]
         self.agents = []
-        self.observation_spaces = {agent: _observation_space(self._queue) for agent in self.possible_agents}
-        self.action_spaces = {agent: gymnasium.spaces.Discrete(2) for agent in self.possible_agents}
+        self.observation_spaces = {
+            agent: _observation_space(self._queue) for agent in self.possible_agents
+        }
+        self.action_spaces = {
+            agent: gymnasium.spaces.Discrete(2) for agent in self.possible_agents
+        }
 
     def observation_space(self, agent):
         return self.observation_spaces[agent]
@@ -137,6 +157,9 @@ def register_kairo_env(env_id: str = "KairoECS-v0", *, executable=None) -> str:
     executable = executable_path(executable)
     if gymnasium is None:
         raise NativeEnvironmentUnavailable("Install the optional Gymnasium dependency")
+    # Probe the versioned binary before exposing it through the host registry.
+    with KairoGymEnv(executable=executable):
+        pass
     gymnasium.register(
         id=env_id,
         entry_point="kairo_gym:KairoGymEnv",
