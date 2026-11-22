@@ -110,6 +110,7 @@ fn take_text(text: &mut &[u8], length: u64) -> Result<String, ArrowError> {
 }
 
 pub(super) fn write(path: &Path, manifest: &CheckpointManifest) -> Result<(), ArrowError> {
+    require_utf8_path(path)?;
     manifest.validate_for_restore()?;
     let mut text = Vec::new();
     let rows = manifest
@@ -147,6 +148,7 @@ pub(super) fn write(path: &Path, manifest: &CheckpointManifest) -> Result<(), Ar
 }
 
 pub(super) fn read(path: &Path) -> Result<CheckpointManifest, ArrowError> {
+    require_utf8_path(path)?;
     let mut signature = [0; 8];
     std::fs::File::open(path)
         .map_err(io)?
@@ -169,11 +171,11 @@ pub(super) fn read(path: &Path) -> Result<CheckpointManifest, ArrowError> {
         }
     })
     .map_err(io)?;
-    if read_field::<u8>(&file, "schema")? != SCHEMA {
+    if read_field::<u8>(&file, "schema", Some(SCHEMA.len()))? != SCHEMA {
         return Err(ArrowError::UnexpectedStreamHeader);
     }
-    let rows = read_field::<EventRow>(&file, "records")?;
-    let all_text = read_field::<u8>(&file, "text")?;
+    let rows = read_field::<EventRow>(&file, "records", None)?;
+    let all_text = read_field::<u8>(&file, "text", None)?;
     let mut text = all_text.as_slice();
     let records = rows
         .into_iter()
@@ -182,7 +184,7 @@ pub(super) fn read(path: &Path) -> Result<CheckpointManifest, ArrowError> {
     if !text.is_empty() {
         return Err(ArrowError::InvalidNumber("text length"));
     }
-    let blocks = read_field::<BlockRow>(&file, "blocks")?
+    let blocks = read_field::<BlockRow>(&file, "blocks", None)?
         .into_iter()
         .map(|block| {
             Ok(ContiguousBlock {
@@ -193,7 +195,7 @@ pub(super) fn read(path: &Path) -> Result<CheckpointManifest, ArrowError> {
             })
         })
         .collect::<Result<Vec<_>, ArrowError>>()?;
-    let [checksum] = read_field::<u64>(&file, "legacy_checksum")?[..] else {
+    let [checksum] = read_field::<u64>(&file, "legacy_checksum", Some(1))?[..] else {
         return Err(ArrowError::InvalidNumber("checksum"));
     };
     let manifest = CheckpointManifest {
@@ -206,7 +208,7 @@ pub(super) fn read(path: &Path) -> Result<CheckpointManifest, ArrowError> {
         records,
         checksum,
     };
-    if read_field::<u8>(&file, "sha256")? != digest(&manifest) {
+    if read_field::<u8>(&file, "sha256", Some(32))? != digest(&manifest) {
         return Err(ArrowError::InvalidNumber("checkpoint sha256"));
     }
     Ok(manifest)
@@ -214,17 +216,25 @@ pub(super) fn read(path: &Path) -> Result<CheckpointManifest, ArrowError> {
 
 fn write_field<T: H5Type>(file: &File, name: &str, values: &[T]) -> Result<(), ArrowError> {
     file.new_dataset_builder()
+        .no_chunk()
         .with_data(values)
         .create(name)
         .map_err(io)?;
     Ok(())
 }
 
-fn read_field<T: H5Type>(file: &File, name: &str) -> Result<Vec<T>, ArrowError> {
+fn read_field<T: H5Type>(
+    file: &File,
+    name: &str,
+    expected_count: Option<usize>,
+) -> Result<Vec<T>, ArrowError> {
     let data = file.dataset(name).map_err(io)?;
     let [count] = data.shape()[..] else {
         return Err(ArrowError::UnexpectedFieldHeader);
     };
+    if expected_count.is_some_and(|expected| count != expected) {
+        return Err(ArrowError::UnexpectedFieldHeader);
+    }
     let bytes = count
         .checked_mul(size_of::<T>())
         .ok_or(ArrowError::InvalidNumber("dataset size"))? as u64;
@@ -246,7 +256,7 @@ fn read_field<T: H5Type>(file: &File, name: &str) -> Result<Vec<T>, ArrowError> 
 }
 
 fn read_string(file: &File, name: &str) -> Result<String, ArrowError> {
-    String::from_utf8(read_field::<u8>(file, name)?).map_err(|_| ArrowError::InvalidUtf8)
+    String::from_utf8(read_field::<u8>(file, name, None)?).map_err(|_| ArrowError::InvalidUtf8)
 }
 
 fn digest(manifest: &CheckpointManifest) -> [u8; 32] {
@@ -293,6 +303,59 @@ fn hash_text(hash: &mut Sha256, value: &str) {
     hash.update(value.as_bytes());
 }
 
+fn require_utf8_path(path: &Path) -> Result<(), ArrowError> {
+    if path.to_str().is_none() {
+        return Err(ArrowError::InvalidArgument(
+            "HDF5 checkpoint paths must be UTF-8",
+        ));
+    }
+    Ok(())
+}
+
 fn io(error: impl Display) -> ArrowError {
     ArrowError::Io(error.to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn native_checkpoint_preserves_empty_tables_and_explicit_empty_payloads() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("empty.h5");
+        let mut manifest = CheckpointManifest {
+            checkpoint_id: "initial".into(),
+            format: CheckpointFormat::Hdf5,
+            run_id: "native".into(),
+            schema_fingerprint: crate::event_log_schema_fingerprint(),
+            row_count: 0,
+            blocks: Vec::new(),
+            records: Vec::new(),
+            checksum: 0,
+        };
+        manifest.checksum = manifest.calculate_checksum();
+        write(&path, &manifest).unwrap();
+        assert_eq!(read(&path).unwrap(), manifest);
+
+        manifest.records.push(CheckpointRecord {
+            event_id: EventId::new(1, 0),
+            entity_id: None,
+            time_ticks: 1,
+            priority: 0,
+            sequence: 0,
+            event_kind: "custom:1".into(),
+            status: EventStatus::Dispatched,
+            payload_ref: Some(String::new()),
+        });
+        manifest.blocks.push(ContiguousBlock {
+            offset_bytes: 0,
+            byte_len: 4,
+            row_count: 1,
+        });
+        manifest.row_count = 1;
+        manifest.checksum = manifest.calculate_checksum();
+        write(&path, &manifest).unwrap();
+        assert_eq!(read(&path).unwrap(), manifest);
+    }
 }
