@@ -16,6 +16,8 @@ Format:
 
 ### Added
 
+- `.github/workflows/ci-policy.yml` now runs an isolated advisory `howfairis==0.14.2` CLI assessment, reusing an already-working job after repeated standalone FAIR workflow startup failures; `docs/FAIR_SOFTWARE_ASSESSMENT.md` records separate ARDC, licensing and scientific verification needs.
+
 - The native beta qualification builds a locked Rust SDK, a C ABI v1 library and a Python wheel, then exercises all three and the pinned CareOps allocation case from a clean installation on each target.
 - `kairo-ecs-abm` adds scheduled movement with cancellable arrivals and topology-driven replanning. `kairo-ecs-des` can close scheduled, queued and active requests at the journey's terminal event.
 - `kairo-ecs-pdes` exposes committed optimistic process checkpoints. The DES `optimistic-usage` feature exports sealed occupancy windows from those checkpoints with their producing LP and exclusive cutoff.

@@ -1,0 +1,34 @@
+# FAIR research software assessment
+
+Status: **provisional, not accepted**. This record documents review obligations; it is not a FAIR certification or a claim that checks passed.
+
+## Automated evidence
+
+The read-only [howfairis](https://github.com/fair-software/howfairis) CLI within the existing `CI Policy` job checks the public repository, recognized license, software registry, citation metadata and software quality checklist. Its output is a **five-point indicator**, not verification of scientific results, accessibility or FAIR4RS compliance.
+
+- Run: GitHub Actions > `CI Policy` > `Advisory FAIR public-software metadata assessment`; this is not a separate workflow.
+- Record the run URL, evaluated default-branch commit and each observed result here when available.
+- A failed or unavailable assessment stays **unknown**, never inferred as a pass.
+- This repository uses the `howfairis==0.14.2` CLI inside existing CI Policy with isolated Python 3.11 tooling, instead of a standalone GitHub workflow (repeated startup failures). The CLI version is pinned, its dependency installation is fail-closed, and only an incomplete FAIR score is advisory. Verify the hosted run before admission.
+
+## Evidence-based review
+
+| Question | Evidence required | Current disposition |
+| --- | --- | --- |
+| Public, version-controlled source | Public GitHub URL and relevant release/commit | Not yet reviewed |
+| License and third-party rights | Actual license, provenance and dependency/data rights | Not yet reviewed |
+| Software registry / persistent identity | Verified registry record and versioned DOI if available | Not yet reviewed |
+| Citation and authorship | Verified `CITATION.cff`, authors, software version and publication metadata | Not yet reviewed |
+| Software quality checklist | Existing tests/CI, contribution, security and quality documents | Not yet reviewed |
+| ARDC FAIR checklist | [Interactive ARDC assessment](https://fairsoftwarechecklist.net/) with answer-level evidence | Not yet reviewed |
+| Reproducibility | Exact commit, fixtures, environment, commands, expected/observed outputs | Not yet reviewed |
+
+## Admission rules
+
+1. Prefer an existing repository document, CI control or dependency to adding another tool (the [Ponytail](https://github.com/DietrichGebert/ponytail) reuse-first principle). Do not install Ponytail or duplicate Conductor to obtain a FAIR score.
+2. Fix real gaps individually; keep scientific-method, data-rights, security and reproducibility gates independent of FAIR badges.
+3. Never manufacture a license grant, DOI, authorship, registry entry, publication or checklist answer. Consult an owner where rights or attribution are unclear.
+4. Keep this workflow advisory until its pinned action, GitHub Actions logs and security posture are independently reviewed. PR-triggered runs assess repository-level metadata and may reflect the published/default branch rather than proposed content.
+5. Preserve existing Conductor ownership and qualification holds; do not merge solely to improve a score.
+
+References: [fair-software.eu](https://fair-software.eu), [howfairis action](https://github.com/fair-software/howfairis-github-action), [ARDC checklist](https://github.com/ardc-fair-checklist/ardc-fair-checklist.github.io), [Ponytail](https://github.com/DietrichGebert/ponytail).
