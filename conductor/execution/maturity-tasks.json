@@ -1922,6 +1922,43 @@
       "obligation": "S11"
     },
     {
+      "id": "S11.metal",
+      "title": "Keep native Metal particle state resident until explicit readback",
+      "parent": "110:S11",
+      "kind": "implementation",
+      "executor": "specialist",
+      "requires": [
+        "S11.regression"
+      ],
+      "read": [
+        "conductor/execution/scientific/s11-completion.md",
+        "conductor/tracks/52-native-gpu-acceleration-persistent-device-memory/agent-contract.md"
+      ],
+      "write": [
+        "crates/kairo-ecs-gpu/src/metal.rs",
+        "crates/kairo-ecs-gpu/tests/metal_hardware_qualification.rs"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-gpu",
+            "--features",
+            "wgpu-backend",
+            "--test",
+            "maturity_device_model"
+          ]
+        }
+      ],
+      "acceptance": "On actual Apple Silicon, select native Metal; run four ABM steps on 65 particles. Check analytical motion within 2e-6, exact velocities and exact device replay. Require one explicit state readback, zero dispatch after empty replacement, independent snapshot state and a typed rejection of native DES.",
+      "stop": "Keep unsupported devices and native DES explicit. Record baseline rejection and exact native execution separately.",
+      "obligation": "S11"
+    },
+    {
       "id": "S12.regression",
       "title": "Replay a cancellation crossing a straggler rollback",
       "parent": "110:S12",

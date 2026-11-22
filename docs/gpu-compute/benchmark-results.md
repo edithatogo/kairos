@@ -24,6 +24,17 @@ The older [CPU parity scaffold](../../conductor/hpc-evidence/manifests/track52-l
 remains historical contract evidence. It cannot stand in for hardware execution,
 and a successful device kernel cannot stand in for an end-to-end model benchmark.
 
+## Apple M1 Max particle workload
+
+The native Apple Metal backend retains particles between steps and reads
+them back on demand. Local macOS 27.2.1 qualification compared complete
+particle workloads with the Rust CPU implementation. Each pair included
+upload, stepping and final readback. CPU won all 60 pairs. At 262,144
+particles and 16 steps, the medians were 3.457 ms CPU and 6.191 ms Metal.
+Pipeline setup took 19.618 ms outside the pairs.
+[Method and results](../../conductor/execution/scientific/s11-completion.md) ·
+[Raw timings](../../conductor/execution/scientific/s11-metal-timings.tsv).
+
 ## Required performance comparison
 
 Before claiming GPU speedup, record hardware and driver identity, backend,
