@@ -125,5 +125,5 @@ consumer and qualification; follow [AGENTS.md](AGENTS.md).
 
 ## License
 
-Apache-2.0 OR MIT. See [LICENSE](LICENSE), [LICENSE-APACHE](LICENSE-APACHE)
-and [LICENSE-MIT](LICENSE-MIT).
+New distributions of project-owned code use [Apache-2.0](LICENSE).
+The [MIT licence](LICENSE-MIT) accompanies the historical dual-licensed releases.

@@ -21,7 +21,7 @@ PROFILE = ROOT / "packaging/native-beta-scope.json"
 RUST_CASE = ROOT / "tests/fixtures/minimal-consumer/src/main.rs"
 C_CASE = ROOT / "tests/conformance/native-beta-abi.c"
 PYTHON_CASE = ROOT / "bindings/python/native_tests/test_native_engine.py"
-LICENSES = ("LICENSE-APACHE", "LICENSE-MIT")
+LICENSE_NAME = "LICENSE-APACHE"
 
 
 def run(*args: str | Path, cwd: Path = ROOT, env: dict | None = None) -> None:
@@ -80,8 +80,7 @@ def make_c_archive(
     (c_stage / "include").mkdir()
     shutil.copyfile(libraries[0], c_stage / "lib" / libraries[0].name)
     shutil.copyfile(ROOT / "include/kairo_ecs.h", c_stage / "include/kairo_ecs.h")
-    for name in LICENSES:
-        shutil.copyfile(ROOT / name, c_stage / name)
+    shutil.copyfile(ROOT / LICENSE_NAME, c_stage / LICENSE_NAME)
     path = dist / "kairos-c-abi.tar.gz"
     with tarfile.open(path, "w:gz") as bundle:
         for member in sorted(c_stage.iterdir()):
@@ -101,7 +100,26 @@ def run_installed_c(abi: Path, library: Path, clean: Path, env: dict) -> None:
     run(binary, library, cwd=clean, env=env)
 
 
-def run_installed_python(wheel: Path, library: Path, clean: Path, env: dict) -> None:
+def run_installed_python(wheel: Path, library: Path, clean: Path, env: dict) -> list[str]:
+    probe = clean / "abi-probe.c"
+    probe.write_text(
+        "unsigned int kairo_ecs_ffi_version(void) { return ABI_VERSION; }\n",
+        encoding="ascii",
+    )
+    link_flags = ("-dynamiclib",) if sys.platform == "darwin" else ("-shared", "-fPIC")
+    foreign_flags = ("-arch", "x86_64") if sys.platform == "darwin" else ("-m32", "-nostdlib")
+    probes = (
+        ("wrong-architecture", 1, foreign_flags),
+        ("missing-symbol", 1, ()),
+        ("incompatible-abi", 2, ()),
+    )
+    for name, version, flags in probes:
+        run(
+            "cc", "-std=c11", "-Wall", "-Wextra", "-Werror", *link_flags, *flags,
+            f"-DABI_VERSION={version}", probe, "-o", clean / f"{name}{library.suffix}",
+            cwd=clean, env=env,
+        )
+
     environment = clean / "python"
     venv.EnvBuilder(with_pip=True).create(environment)
     python = environment / "bin/python"
@@ -117,14 +135,31 @@ import kairo_ecs
 
 assert Path(kairo_ecs.__file__).resolve().is_relative_to(Path(sys.prefix).resolve())
 assert importlib.metadata.version("kairo-ecs") == sys.argv[1]
+assert importlib.metadata.metadata("kairo-ecs")["License-Expression"] == "Apache-2.0"
 try:
     kairo_ecs.NativeEngine()
 except kairo_ecs.NativeBackendUnavailable:
     pass
 else:
     raise AssertionError("NativeEngine started without an installed library selection")
-with kairo_ecs.NativeEngine(sys.argv[2]) as engine:
-    assert Path(engine.library_path).resolve() == Path(sys.argv[2]).resolve()
+
+library = Path(sys.argv[2])
+architecture_error = "incompatible architecture" if sys.platform == "darwin" else "wrong ELF class"
+for name, cause, detail in (
+    ("wrong-architecture", OSError, architecture_error),
+    ("missing-symbol", AttributeError, "kairo_ecs_engine_new"),
+    ("incompatible-abi", type(None), "Unsupported Rust ABI version 2"),
+):
+    probe = Path.cwd() / f"{name}{library.suffix}"
+    try:
+        kairo_ecs.NativeEngine(str(probe))
+    except kairo_ecs.NativeBackendUnavailable as error:
+        assert isinstance(error.__cause__, cause) and detail in str(error), str(error)
+    else:
+        raise AssertionError(f"NativeEngine accepted {name}")
+
+with kairo_ecs.NativeEngine(str(library)) as engine:
+    assert Path(engine.library_path).resolve() == library.resolve()
     engine.schedule_at(11)
     assert engine.step() and engine.current_time_ticks == 11
 """
@@ -145,6 +180,7 @@ raise SystemExit(not unittest.TextTestRunner(verbosity=2).run(suite).wasSuccessf
         python, "-Ic", execute_suite, test_suite,
         cwd=clean, env={**env, "KAIRO_ECS_FFI_LIBRARY": str(library)},
     )
+    return ["missing-selection", *(name for name, _, _ in probes)]
 
 
 def external_dependencies(lock: Path) -> set[tuple]:
@@ -304,7 +340,7 @@ def main() -> None:
     os.environ["CARGO_INCREMENTAL"] = "0"
 
     sdk_package = dist / "kairos-rust-sdk.tar.gz"
-    archive(ROOT, head, sdk_package, "Cargo.toml", "Cargo.lock", "crates", *LICENSES)
+    archive(ROOT, head, sdk_package, "Cargo.toml", "Cargo.lock", "crates", LICENSE_NAME)
     c_package = make_c_archive(cargo, cfg["ffi_crate"], work, dist, ".dylib" if sys.platform == "darwin" else ".so")
     python_source = work / "python-source"
     python_archive = work / "python-source.tar.gz"
@@ -325,6 +361,13 @@ def main() -> None:
     abi = clean / "abi"
     unpack(sdk_package, sdk)
     unpack(c_package, abi)
+    require(
+        read_toml(sdk / "Cargo.toml")["workspace"]["package"]["license"] == "Apache-2.0",
+        "Installed Rust SDK licence differs from Apache-2.0",
+    )
+    apache_license = sha256(ROOT / LICENSE_NAME)
+    for distribution in (sdk, abi):
+        require(sha256(distribution / LICENSE_NAME) == apache_license, "Installed licence differs")
     (library,) = (abi / "lib").iterdir()
     env = {
         key: value for key, value in os.environ.items()
@@ -332,7 +375,7 @@ def main() -> None:
         and not key.startswith("DYLD_")
     }
     run_installed_c(abi, library, clean, env)
-    run_installed_python(wheel, library, clean, env)
+    loader_rejections = run_installed_python(wheel, library, clean, env)
     rust_resolution = run_installed_rust(cargo, clean, sdk, cfg)
     careops = run_installed_careops(cargo, clean, sdk, cfg)
     require(
@@ -348,7 +391,9 @@ def main() -> None:
         "platform": platform.platform(),
         "rustc": rustc.splitlines(),
         "python": platform.python_version(),
+        "python_loader_rejections": loader_rejections,
         "c_abi": cfg["c_abi"],
+        "license": "Apache-2.0",
         "artifacts_sha256": digests,
         "library_sha256": sha256(library),
         "rust_fixture_sha256": sha256(RUST_CASE),

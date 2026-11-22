@@ -56,6 +56,7 @@ Format:
 
 ### Changed
 
+- The native beta Rust SDK and C ABI archives ship Apache-2.0. The installed Python probe covers wrong architecture, missing symbols and ABI version rejection.
 - Migrate fixed-batch calibration calls to `BatchDistanceScorer` and check the new fallible sampling and sensitivity results. See [ADR 0014](docs/adr/0014-versioned-scientific-methods.md).
 
 - README, `website/`, `docs/adr/0011-ecosystem-boundaries.md` and Conductor define the Rust core's boundaries with game semantics, domain simulation and economic valuation. `.github/workflows/docs-quality.yml` now checks the bounded maturity task catalogue and its negative controls; the catalogue is a planning aid and does not execute tasks or establish runtime acceptance.
