@@ -1,32 +1,26 @@
-# Vectorized VecEnv and MARL
+# Native queue environments
 
-Native vector environments and multi-agent reinforcement-learning adapters remain
-experimental or unavailable. [Rust-only policy](../../conductor/native-only-policy.md)
-requires Rust to own each world's state, RNG, action effects, reward and termination;
-host-language APIs may marshal data and call that implementation.
+`QueueEnvironment` runs a finite shared queue with seeded arrivals. Actions idle or serve, and rewards depend on completed jobs and waiting work. `ParallelVecEnv` owns a batch of those worlds and returns results in input order. A failed validation leaves the batch untouched. Reset accepts one seed per world, and `reset_at` restarts an individual completed world.
 
-## Current surfaces
+The experimental `kairo-gym` package provides `KairoGymEnv` for one agent and `PettingZooQueueEnv` for ordered agents sharing a queue. Each adapter connects to one feature-enabled Rust process. Linux and macOS use the same bounded `queue-env-v1` stdio protocol. A missing or incompatible executable returns an error. Always close the adapter when finished.
 
-The [Rust ML crate](../../crates/kairo-ecs-ml/src/lib.rs) exposes `ParallelVecEnv`
-dimensions, `reset` and `step_batch`. The current batch method constructs
-observations/rewards from action values without executing independent model worlds;
-`step_with_ort_session` is a no-op. Thread-count parity tests exercise this scaffold.
-`OrtSession::run` copies/repeats input values; `runtime_status()` reports an
-unconfigured runtime. The method does not execute an ONNX model.
+```sh
+cargo build --locked --release -p kairo-ecs-cli --features rl-queue
+python -m pip install --require-hashes -r python/kairo_gym/ci-requirements.lock
+python -m pip install --no-build-isolation --no-deps ./python/kairo_gym
+KAIRO_NATIVE_QUEUE_BIN="$PWD/target/release/kairo-ecs-cli" \
+  python -m unittest discover -s python/kairo_gym/tests -v
+```
 
-The [Python vector/PettingZoo constructors](../../bindings/python/kairo_ecs/vecenv.py)
-and [Gymnasium environment/registration](../../python/kairo_gym/src/kairo_gym/env.py)
-now fail explicitly. Installing Gymnasium or finding a shared library does not
-enable these environments. The [Python native scheduler](../../bindings/python/README.md)
-is a separate, narrower API without a qualified RL model adapter.
+Use the repo-selected Python 3.15.2 interpreter. Supply the built executable explicitly to the adapter.
 
-## Required native qualification
+```python
+from pathlib import Path
+from kairo_gym import KairoGymEnv
 
-- S09: execute a real licensed model against independent nonidentity outputs, with shape/operator errors and held-out surrogate accuracy checks.
-- S10: compare actual batched and scalar Rust trajectories; verify seeded resets, action/reward/termination semantics, cross-world isolation and thread-count replay.
-- Run real Gymnasium/PettingZoo API checks through installed native artifacts, including buffer ownership, close/error behavior and missing-backend rejection. Shape checks and synthetic rewards cannot satisfy this gate.
+with KairoGymEnv(executable=Path("target/release/kairo-ecs-cli").resolve()) as env:
+    observation, info = env.reset(seed=42)
+    observation, reward, terminated, truncated, info = env.step(1)
+```
 
-Follow [completion items S09–S10](../../conductor/scientific-completion.md) and the
-[Track 110 plan](../../conductor/tracks/110-scientific-method-completion/plan.md).
-Publish training or throughput claims only after the model contract and
-[measurement scope](../../conductor/performance-programme.md) are independently qualified.
+The real Gymnasium and PettingZoo checkers, direct native dispatch comparison, deterministic reset and pipe lifetime regressions cover this queue model. Broader simulation environments require their own adapter and conformance evidence.
