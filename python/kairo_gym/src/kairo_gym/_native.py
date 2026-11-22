@@ -48,7 +48,9 @@ class NativeQueue:
         if type(agents) is not int or not 1 <= agents <= 32:
             raise ValueError("The native queue supports between 1 and 32 agents")
         if type(max_ticks) is not int or not 1 <= max_ticks < 2**32:
-            raise ValueError("The native queue needs a positive unsigned 32-bit tick limit")
+            raise ValueError(
+                "The native queue needs a positive unsigned 32-bit tick limit"
+            )
         try:
             self._process = subprocess.Popen(
                 [
@@ -71,8 +73,14 @@ class NativeQueue:
         try:
             ready = self._receive()
             if ready.get("model") != "finite-shared-queue-v1":
-                raise NativeEnvironmentUnavailable("Unexpected native queue model version")
-            self.observation_high = (max_ticks, ready["max_waiting"], ready["arrival_ticks"])
+                raise NativeEnvironmentUnavailable(
+                    "Unexpected native queue model version"
+                )
+            self.observation_high = (
+                max_ticks,
+                ready["max_waiting"],
+                ready["arrival_ticks"],
+            )
         except BaseException:
             self.close()
             raise
@@ -81,7 +89,9 @@ class NativeQueue:
         try:
             reply = json.loads(self._process.stdout.readline(1024))
         except (OSError, ValueError) as error:
-            raise NativeEnvironmentUnavailable("Native queue did not respond") from error
+            raise NativeEnvironmentUnavailable(
+                "Native queue did not respond"
+            ) from error
         if not isinstance(reply, dict):
             raise NativeEnvironmentUnavailable("Invalid reply from native queue")
         return reply
@@ -109,7 +119,9 @@ class NativeQueue:
         return self._request({"op": "reset", "seed": seed})["observation"]
 
     def step(self, actions):
-        return self._request({"op": "step", "actions": [index(action) for action in actions]})
+        return self._request(
+            {"op": "step", "actions": [index(action) for action in actions]}
+        )
 
     def close(self):
         self._close()
