@@ -21,6 +21,10 @@ pub mod polars_interop;
 #[cfg(feature = "polars-native")]
 pub mod arrow_c_data;
 
+/// Typed cohort trajectory and spatial exposure tables for native interchange.
+#[cfg(feature = "cohort-native")]
+pub mod cohort;
+
 /// Track 70 Phase 3: durable run-output publication — unique run directories,
 /// bounded per-replication parts staged beside their destination and renamed
 /// into place, manifest-last publication, and readers that require a

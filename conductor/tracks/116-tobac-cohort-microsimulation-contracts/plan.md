@@ -1,26 +1,27 @@
 # Track 116 implementation plan
 
-Provide neutral DES/ABM cohort-trajectory, competing-risk, and spatial exposure contracts for `tobac` microsimulation cross-checks while keeping all tobacco/vaping domain assumptions in `tobac`. Every implementation item below remains pending.
+Provide neutral DES/ABM cohort-trajectory, competing-risk, and spatial exposure contracts for `tobac` microsimulation cross-checks. The provider contract and standalone fixture are qualified. The receiving applications own their domain inputs and installed adapter round-trips.
 
 ## Phase 0: Contract and fixture boundary
 
-- [ ] 116.0.1: Specify the neutral Arrow/Polars cohort transition and exposure record schemas (`entity_id`, `stratum_id`, `from_state`, `to_state`, `dwell_time`, `event_time`, `rng_substream_id`, `spatial_cell_id`) and align them with Track 114 movement/usage boundaries.
-- [ ] 116.0.2: Define the deterministic entity-level CRN substream addressing contract so paired policy arms remain coupled even when event counts diverge across interventions.
-- [ ] 116.0.3: Define positive and negative contract fixtures (monotonic clock violation, negative hazard rate, duplicate entity state, mismatched time unit, uncoupled RNG stream).
-- [ ] 116.0.review: Independently review this phase, apply accepted fixes, execute the named oracles and record the next-phase decision.
+- [x] 116.0.1: Specify neutral typed Arrow/Polars cohort transition and exposure schemas with full-width identity and time.
+- [x] 116.0.2: Define paired draw addresses by entity, source state, visit and slot.
+- [x] 116.0.3: Exercise negative controls for clocks, hazard rates, repeated visits, units and RNG provenance.
+- [x] 116.0.review: Independently review the contracts and execute the named oracles.
 
 ## Phase 1: Competing-risk and spatial exposure adapters
 
-- [ ] 116.1.1: Bind Track 69 competing-risk / non-Markovian dwell-time sampling to the neutral cohort transition batch exporter without domain-specific state names.
-- [ ] 116.1.2: Bind Track 03/86/87 spatial proximity queries to neutral outlet-density/distance exposure covariates for ABM cohort steps.
-- [ ] 116.1.3: Verify large-sample convergence of the microsimulation competing-risk kernel against an independent analytical semi-Markov cohort oracle.
-- [ ] 116.1.review: Independently review this phase, apply accepted fixes, execute the named oracles and record the next-phase decision.
+- [x] 116.1.1: Feed real Track 69 competing-risk draws into the cohort trajectory exporter in the standalone fixture.
+- [x] 116.1.2: Feed real spatial-index proximity queries into the exposure exporter.
+- [x] 116.1.3: Compare imported trajectory outcomes from 100,000 entities with an independent piecewise survival and incidence reference.
+- [x] 116.1.review: Review independently, apply the accepted fixes and rerun the oracles.
 
 ## Phase 2: Downstream `tobac` qualification handoff
 
-- [ ] 116.2.1: Publish a minimal public fictional cohort fixture that runs without `tobac` installed and verifies Arrow/Polars batch export and CRN replay identity.
-- [ ] 116.2.2: Record the handoff receipt for `edithatogo/tobac` (`dependency_ecosystem_codesign_20261110`); keep `tobac` pin upgrades in `tobac`'s own repository after installed qualification.
-- [ ] 116.2.review: Independently review this phase, apply accepted fixes, execute the named oracles and record the next-phase decision.
+- [x] 116.2.1: Deliver the locked, fictional standalone consumer and prove execution from clean source.
+- [x] 116.2.2: Record the provider handoff for `edithatogo/tobac` in the existing handoff.
+- [x] 116.2.review: Independently review the standalone fixture and its acceptance evidence.
+- [ ] Qualify installed receiving adapters against the versioned schemas, including downstream cohort summaries.
 
 ## Phase closeout gate
 

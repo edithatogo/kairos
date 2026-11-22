@@ -1,0 +1,20 @@
+[package]
+name = "kairo-ecs-cohort-consumer"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.99"
+license = "Apache-2.0"
+publish = false
+
+[workspace]
+resolver = "2"
+
+[dependencies]
+kairo-ecs-abm = { path = "../../../crates/kairo-ecs-abm" }
+kairo-ecs-arrow = { path = "../../../crates/kairo-ecs-arrow", features = ["cohort-native"] }
+kairo-ecs-arrow-ffi = { path = "../../../crates/kairo-ecs-arrow-ffi", features = ["native-data"] }
+kairo-ecs-rng = { path = "../../../crates/kairo-ecs-rng" }
+kairo-ecs-types = { path = "../../../crates/kairo-ecs-types" }
+
+[patch.crates-io]
+hashbrown = { git = "https://github.com/pola-rs/hashbrown", rev = "d76a6f81abd8f388676aff15068236a8d21c7e1a" }
