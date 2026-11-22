@@ -38,6 +38,8 @@ Format:
 
 ### Fixed
 
+- `kairo-ecs-arrow` writes typed native HDF5 checkpoints behind `hdf5`. The adapter restores full-width event records and verifies an integrity digest. See [ADR 0018](docs/adr/0018-native-hdf5-checkpoints.md).
+
 - `kairo-ecs-fmi` loads packaged FMI 2 and 3 co-simulation binaries using their declared identities and retains libraries through cleanup. It checks complete FMI 3 step advancement and supports in-process checkpoints for FMUs that advertise state access.
 - The nightly core mutation check exercises NUMA tests and verifies topology, allocator metrics and telemetry rejection cases.
 - `kairo-ecs-cli` uses checked Joe–Kuo Sobol directions and estimates Jansen first-order and total-effect intervals via paired bootstrap. The previous trajectory is available through `LegacySobolSequence`.

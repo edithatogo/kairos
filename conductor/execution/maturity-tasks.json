@@ -2208,6 +2208,8 @@
             "--locked",
             "-p",
             "kairo-ecs-arrow",
+            "--features",
+            "hdf5",
             "--test",
             "maturity_native_io_format"
           ]
@@ -2247,6 +2249,45 @@
       ],
       "acceptance": "Record algorithm/API/version, exact receiving package and independent oracle for S14. Decompose every remaining requirement in scientific-completion.md into one-behaviour <=5-file leaves with concrete commands, residual/tolerance and acceptance; add them to this catalogue before implementation. A current test pass is baseline only. No method is closed by this design note. This design may proceed from the source counterexample before its regression target passes; do not wait for the future algorithm to be implemented.",
       "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed.",
+      "obligation": "S14"
+    },
+    {
+      "id": "S14.hdf5",
+      "title": "Write and restore a native HDF5 checkpoint",
+      "parent": "110:S14",
+      "kind": "implementation",
+      "executor": "specialist",
+      "requires": [
+        "S14.regression"
+      ],
+      "read": [
+        "conductor/execution/scientific/s14-completion.md",
+        "conductor/tracks/51-parallel-io-arrow-checkpoint-export/spec.md"
+      ],
+      "write": [
+        "crates/kairo-ecs-arrow/Cargo.toml",
+        "crates/kairo-ecs-arrow/src/lib.rs",
+        "crates/kairo-ecs-arrow/src/hdf5_checkpoint.rs",
+        "Cargo.lock"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-arrow",
+            "--features",
+            "hdf5",
+            "--test",
+            "maturity_native_io_format"
+          ]
+        }
+      ],
+      "acceptance": "Require the HDF5 signature, byte-exact logical record restoration, rejection of damaged fields and a passing independent h5dump read with full-width fields. Preserve the previous file when writing fails before publication.",
+      "stop": "Keep platform and tool availability explicit. Native file readback cannot establish engine restart or parallel filesystem performance.",
       "obligation": "S14"
     },
     {

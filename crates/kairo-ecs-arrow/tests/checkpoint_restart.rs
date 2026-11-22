@@ -153,7 +153,7 @@ fn hdf5_adapter_returns_disabled_without_feature() {
 
 #[cfg(feature = "hdf5")]
 #[test]
-fn hdf5_checkpoint_contract_records_format_and_checksum() {
+fn hdf5_checkpoint_native_roundtrip_preserves_manifest() {
     let batch = ParallelIoRecordBatch::from_dispatched("hdf5-run", [event(7, 20, 0)])
         .expect("record batch");
     let checkpoint = CheckpointManifest::from_batch("hdf5-0001", CheckpointFormat::Hdf5, &batch)
@@ -163,14 +163,14 @@ fn hdf5_checkpoint_contract_records_format_and_checksum() {
 
     let receipt = adapter
         .write_manifest(&path, &checkpoint)
-        .expect("hdf5 contract write");
+        .expect("HDF5 checkpoint write");
     let restored = adapter
         .restore_manifest(&path)
-        .expect("hdf5 contract restore");
+        .expect("HDF5 checkpoint restore");
     let _ = fs::remove_file(&path);
 
     assert_eq!(receipt.format, CheckpointFormat::Hdf5);
-    assert!(receipt.contract_only);
+    assert!(!receipt.contract_only);
     assert_eq!(checkpoint.format, CheckpointFormat::Hdf5);
     assert_eq!(checkpoint.records[0].sequence, 0);
     assert_eq!(restored.final_tick, 20);

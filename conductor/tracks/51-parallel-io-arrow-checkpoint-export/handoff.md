@@ -1,6 +1,21 @@
 # Track 51 Handoff
 
-Last updated: 2026-06-24
+## Native HDF5 checkpoint slice — 23 November 2026
+
+The integration owner is chat `01a1fd18-51c7-7963-a3cc-d262d54582ba` in the
+Kairos closeout worktree on `codex/native-hdf5-checkpoint-20261123`. The
+existing adapter now writes a native HDF5 file with typed record and block
+datasets. Its record restore preserves the time limbs, metadata and ordering.
+The explicit contract reader handles legacy files.
+
+The independent HDF Group reader passed against the product output on Apple
+Silicon. The pinned Linux core job runs the same physical format oracle.
+The implementation remains within the local-file boundary, with ADIOS2
+integration, engine restart and live-filesystem evidence open.
+[Commands, hashes and review](../../execution/scientific/s14-completion.md) ·
+[File contract](../../../docs/adr/0018-native-hdf5-checkpoints.md).
+
+## Historical contract baseline — 24 June 2026
 
 ## Summary
 

@@ -25,6 +25,9 @@ pub mod arrow_c_data;
 #[cfg(feature = "cohort-native")]
 pub mod cohort;
 
+#[cfg(feature = "hdf5")]
+mod hdf5_checkpoint;
+
 /// Track 70 Phase 3: durable run-output publication — unique run directories,
 /// bounded per-replication parts staged beside their destination and renamed
 /// into place, manifest-last publication, and readers that require a
@@ -666,6 +669,8 @@ pub trait CheckpointAdapter {
 
 #[cfg(feature = "parallel-io")]
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+/// Native HDF5 checkpoint records. Use `CheckpointManifest::read_contract_file`
+/// to migrate historical text checkpoints.
 pub struct Hdf5CheckpointAdapter;
 
 #[cfg(feature = "parallel-io")]
@@ -935,7 +940,16 @@ impl CheckpointAdapter for Hdf5CheckpointAdapter {
     ) -> Result<CheckpointAdapterReceipt, ArrowError> {
         #[cfg(feature = "hdf5")]
         {
-            write_adapter_contract(path, manifest, CheckpointFormat::Hdf5)
+            let path = path.as_ref();
+            require_checkpoint_format(manifest, CheckpointFormat::Hdf5)?;
+            hdf5_checkpoint::write(path, manifest)?;
+            Ok(CheckpointAdapterReceipt {
+                format: CheckpointFormat::Hdf5,
+                path: path.display().to_string(),
+                row_count: manifest.row_count,
+                checksum: manifest.checksum,
+                contract_only: false,
+            })
         }
         #[cfg(not(feature = "hdf5"))]
         {
@@ -950,7 +964,7 @@ impl CheckpointAdapter for Hdf5CheckpointAdapter {
     ) -> Result<RestoredCheckpoint, ArrowError> {
         #[cfg(feature = "hdf5")]
         {
-            restore_adapter_contract(path, CheckpointFormat::Hdf5)
+            hdf5_checkpoint::read(path.as_ref())?.restore()
         }
         #[cfg(not(feature = "hdf5"))]
         {
@@ -998,7 +1012,7 @@ impl CheckpointAdapter for Adios2CheckpointAdapter {
     }
 }
 
-#[cfg(all(feature = "parallel-io", any(feature = "hdf5", feature = "adios2")))]
+#[cfg(feature = "adios2")]
 fn write_adapter_contract(
     path: impl AsRef<std::path::Path>,
     manifest: &CheckpointManifest,
@@ -1015,7 +1029,7 @@ fn write_adapter_contract(
     })
 }
 
-#[cfg(all(feature = "parallel-io", any(feature = "hdf5", feature = "adios2")))]
+#[cfg(feature = "adios2")]
 fn restore_adapter_contract(
     path: impl AsRef<std::path::Path>,
     expected_format: CheckpointFormat,
@@ -2147,8 +2161,10 @@ pub fn atomic_write_file(
     use std::io::Write;
     let dest = destination.as_ref();
     std::fs::create_dir_all(publication_parent(dest)).map_err(|e| ArrowError::Io(e.to_string()))?;
-    publish_staged(dest, allow_overwrite, |file| {
-        file.write_all(data)
+    publish_staged(dest, allow_overwrite, |staged| {
+        staged
+            .as_file_mut()
+            .write_all(data)
             .map_err(|e| ArrowError::Io(format!("Failed to write to staging file: {e}")))
     })
 }
@@ -2163,6 +2179,14 @@ fn publication_parent(dest: &std::path::Path) -> &std::path::Path {
 fn publish_checkpoint<T>(
     dest: &std::path::Path,
     write: impl FnOnce(&mut std::fs::File) -> Result<T, ArrowError>,
+) -> Result<T, ArrowError> {
+    publish_checkpoint_staged(dest, |staged| write(staged.as_file_mut()))
+}
+
+#[cfg(feature = "parallel-io")]
+fn publish_checkpoint_staged<T>(
+    dest: &std::path::Path,
+    write: impl FnOnce(&mut tempfile::NamedTempFile) -> Result<T, ArrowError>,
 ) -> Result<T, ArrowError> {
     let existing = match std::fs::symlink_metadata(dest) {
         Ok(meta) if meta.is_file() => Some(
@@ -2179,8 +2203,8 @@ fn publish_checkpoint<T>(
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => None,
         Err(e) => return Err(ArrowError::Io(e.to_string())),
     };
-    publish_staged(dest, true, |file| {
-        let result = write(file)?;
+    publish_staged(dest, existing.is_some(), |staged| {
+        let result = write(staged)?;
         #[cfg(unix)]
         if let Some(original) = existing {
             use std::os::unix::fs::{MetadataExt, PermissionsExt};
@@ -2194,6 +2218,7 @@ fn publish_checkpoint<T>(
                     "checkpoint target changed while staging",
                 ));
             }
+            let file = staged.as_file();
             let stage = file.metadata().map_err(|e| ArrowError::Io(e.to_string()))?;
             if stage.uid() != meta.uid() || stage.gid() != meta.gid() {
                 return Err(ArrowError::InvalidArgument(
@@ -2212,12 +2237,12 @@ fn publish_checkpoint<T>(
 fn publish_staged<T>(
     dest: &std::path::Path,
     allow_overwrite: bool,
-    write: impl FnOnce(&mut std::fs::File) -> Result<T, ArrowError>,
+    write: impl FnOnce(&mut tempfile::NamedTempFile) -> Result<T, ArrowError>,
 ) -> Result<T, ArrowError> {
     let parent = publication_parent(dest);
     let mut staged = tempfile::NamedTempFile::new_in(parent)
         .map_err(|e| ArrowError::Io(format!("Failed to create temporary staging file: {e}")))?;
-    let result = write(staged.as_file_mut())?;
+    let result = write(&mut staged)?;
     staged
         .as_file()
         .sync_all()
