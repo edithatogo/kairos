@@ -18,6 +18,7 @@ path = "src/main.rs"
 [dependencies]
 clap = { version = "4.6.7", features = ["derive"] }
 kairo-ecs-core = { path = "../kairo-ecs-core", version = "0.0.0" }
+kairo-ecs-rng = { path = "../kairo-ecs-rng", version = "0.0.0" }
 kairo-ecs-types = { path = "../kairo-ecs-types", version = "0.0.0" }
 rayon = "1.12"
 serde = { version = "1", features = ["derive"] }

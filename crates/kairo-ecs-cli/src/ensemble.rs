@@ -17,8 +17,10 @@ pub fn build_bounded_thread_pool(
         .build()
 }
 
+mod sensitivity;
 mod sobol;
 
+pub use sensitivity::{SensitivityError, SobolSensitivityAnalyzer};
 pub use sobol::{LegacySobolSequence, SobolError, SobolSequence};
 
 /// Deterministic seeded stratified Latin Hypercube Sampler.
@@ -154,160 +156,6 @@ impl ParallelEnsembleRunner {
                 })
                 .collect()
         })
-    }
-}
-
-/// Sobol Sensitivity Analyzer computing first-order (Si) and total-effect (STi)
-/// Saltelli/Jansen sensitivity indices with bootstrap confidence intervals.
-#[derive(Clone, Debug)]
-pub struct SobolSensitivityAnalyzer {
-    pub first_order: Vec<f64>,
-    pub total_effect: Vec<f64>,
-    pub ci_lower_first: Vec<f64>,
-    pub ci_upper_first: Vec<f64>,
-}
-
-impl SobolSensitivityAnalyzer {
-    pub fn analyze_parallel<F>(
-        model_fn: &F,
-        dimensions: usize,
-        sample_size: usize,
-        num_threads: usize,
-    ) -> Self
-    where
-        F: Fn(&[f64]) -> f64 + Sync,
-    {
-        let threads = num_threads.max(1).min(sample_size);
-        let pool = rayon::ThreadPoolBuilder::new()
-            .num_threads(threads)
-            .build()
-            .expect("failed to build rayon thread pool for sobol sensitivity analyzer");
-
-        Self::analyze_parallel_with_pool(model_fn, dimensions, sample_size, &pool)
-    }
-
-    pub fn analyze_parallel_with_pool<F>(
-        model_fn: &F,
-        dimensions: usize,
-        sample_size: usize,
-        pool: &rayon::ThreadPool,
-    ) -> Self
-    where
-        F: Fn(&[f64]) -> f64 + Sync,
-    {
-        let l_sampler = LatinHypercubeSampler::new(dimensions, sample_size, 42);
-        let a_matrix = l_sampler.generate();
-        let b_sampler = LatinHypercubeSampler::new(dimensions, sample_size, 1337);
-        let b_matrix = b_sampler.generate();
-
-        let (y_a, y_b) = pool.install(|| {
-            let ya: Vec<f64> = a_matrix.par_iter().map(|row| model_fn(row)).collect();
-            let yb: Vec<f64> = b_matrix.par_iter().map(|row| model_fn(row)).collect();
-            (ya, yb)
-        });
-
-        let mean_y: f64 = y_a.iter().sum::<f64>() / (sample_size as f64);
-        let var_y: f64 = y_a.iter().map(|&y| (y - mean_y).powi(2)).sum::<f64>()
-            / ((sample_size - 1).max(1) as f64);
-
-        let mut first_order = vec![0.0; dimensions];
-        let mut total_effect = vec![0.0; dimensions];
-
-        for d in 0..dimensions {
-            // Evaluate in parallel into per-index slots, then reduce sequentially in
-            // index order so results are bit-identical for any thread count.
-            let y_ab_all: Vec<f64> = pool.install(|| {
-                (0..sample_size)
-                    .into_par_iter()
-                    .map(|i| {
-                        let mut ab_row = a_matrix[i].clone();
-                        ab_row[d] = b_matrix[i][d];
-                        model_fn(&ab_row)
-                    })
-                    .collect()
-            });
-
-            let mut total_v1 = 0.0;
-            let mut total_v2 = 0.0;
-            for i in 0..sample_size {
-                total_v1 += y_b[i] * (y_ab_all[i] - y_a[i]);
-                total_v2 += (y_a[i] - y_ab_all[i]).powi(2);
-            }
-
-            if var_y > 1e-12 {
-                first_order[d] = (total_v1 / (sample_size as f64)) / var_y;
-                total_effect[d] = 0.5 * (total_v2 / (sample_size as f64)) / var_y;
-            } else {
-                first_order[d] = 0.0;
-                total_effect[d] = 0.0;
-            }
-        }
-
-        let ci_lower_first = first_order.iter().map(|&v| v * 0.9).collect();
-        let ci_upper_first = first_order.iter().map(|&v| v * 1.1).collect();
-
-        Self {
-            first_order,
-            total_effect,
-            ci_lower_first,
-            ci_upper_first,
-        }
-    }
-
-    pub fn analyze(
-        model_fn: &dyn Fn(&[f64]) -> f64,
-        dimensions: usize,
-        sample_size: usize,
-    ) -> Self {
-        let l_sampler = LatinHypercubeSampler::new(dimensions, sample_size, 42);
-        let a_matrix = l_sampler.generate();
-        let b_sampler = LatinHypercubeSampler::new(dimensions, sample_size, 1337);
-        let b_matrix = b_sampler.generate();
-
-        let mut first_order = vec![0.0; dimensions];
-        let mut total_effect = vec![0.0; dimensions];
-
-        let mut y_a = Vec::with_capacity(sample_size);
-        let mut y_b = Vec::with_capacity(sample_size);
-        for i in 0..sample_size {
-            y_a.push(model_fn(&a_matrix[i]));
-            y_b.push(model_fn(&b_matrix[i]));
-        }
-
-        let mean_y: f64 = y_a.iter().sum::<f64>() / (sample_size as f64);
-        let var_y: f64 = y_a.iter().map(|&y| (y - mean_y).powi(2)).sum::<f64>()
-            / ((sample_size - 1).max(1) as f64);
-
-        for d in 0..dimensions {
-            let mut sum_v1 = 0.0;
-            let mut sum_v2 = 0.0;
-            for i in 0..sample_size {
-                let mut ab_row = a_matrix[i].clone();
-                ab_row[d] = b_matrix[i][d];
-                let y_ab = model_fn(&ab_row);
-
-                sum_v1 += y_b[i] * (y_ab - y_a[i]);
-                sum_v2 += (y_a[i] - y_ab).powi(2);
-            }
-
-            if var_y > 1e-12 {
-                first_order[d] = (sum_v1 / (sample_size as f64)) / var_y;
-                total_effect[d] = 0.5 * (sum_v2 / (sample_size as f64)) / var_y;
-            } else {
-                first_order[d] = 0.0;
-                total_effect[d] = 0.0;
-            }
-        }
-
-        let ci_lower_first = first_order.iter().map(|&v| v * 0.9).collect();
-        let ci_upper_first = first_order.iter().map(|&v| v * 1.1).collect();
-
-        Self {
-            first_order,
-            total_effect,
-            ci_lower_first,
-            ci_upper_first,
-        }
     }
 }
 
@@ -498,7 +346,7 @@ mod tests {
     #[test]
     fn sobol_sensitivity_analyzer_test() {
         let linear_fn = |x: &[f64]| x[0] + 2.0 * x[1];
-        let analyzer = SobolSensitivityAnalyzer::analyze(&linear_fn, 2, 32);
+        let analyzer = SobolSensitivityAnalyzer::analyze(&linear_fn, 2, 32).unwrap();
         assert_eq!(analyzer.first_order.len(), 2);
     }
 
@@ -526,8 +374,8 @@ mod tests {
     #[test]
     fn sobol_sensitivity_analyzer_parallel_parity() {
         let linear_fn = |x: &[f64]| x[0] + 2.0 * x[1];
-        let analyzer1 = SobolSensitivityAnalyzer::analyze(&linear_fn, 2, 32);
-        let analyzer8 = SobolSensitivityAnalyzer::analyze_parallel(&linear_fn, 2, 32, 8);
+        let analyzer1 = SobolSensitivityAnalyzer::analyze(&linear_fn, 2, 32).unwrap();
+        let analyzer8 = SobolSensitivityAnalyzer::analyze_parallel(&linear_fn, 2, 32, 8).unwrap();
 
         for (a, b) in analyzer1
             .first_order
