@@ -1,6 +1,64 @@
 # Handoff
 
-Updated 8 November 2026 (Australia/Brisbane). Status: Spec Approved; no implementation phase is accepted by this registration.
+Updated 23 November 2026 (Australia/Brisbane). Status: Spec Approved. Phase acceptance is pending.
+
+## Installed CareOps movement — 23 November 2026
+
+Integration chat `01a1fd18-51c7-7963-a3cc-d262d54582ba` owns the movement
+qualification and evidence files in the Kairos closeout worktree on
+`codex/careops-installed-movement-20261123`. The CareOps receiving probe ran in
+`/Volumes/PortableSSD/kairos-careops-movement.FDdotV/careops`.
+
+The test used [CareOps main `9af99b5`](https://github.com/edithatogo/careops-sim/tree/9af99b5730d6aa5cef1c05bd48e90fd377b80cf2)
+and the extracted Rust SDK from [native install run 45051171243](https://github.com/edithatogo/kairos/actions/runs/45051171243).
+The SDK is from Kairos `e2875387ce45c34cd19716ea66f0102251a6aa6f`, SHA-256
+`0060c934d7b5d9eb187387175fc4604184093823aedbfbb43fa52936b1a82240`.
+The CareOps source archive contains the workspace manifest, lock and
+`crates/careops-core`, SHA-256
+`380c917c5791cb57cf714d064f9a67e3baebdeecdb0dd1948e5f538511a5509f`.
+
+In the archived workspace, use the [installed CareOps recipe](../../../packaging/scripts/qualify_native_beta.py)
+to isolate `careops-core` and point its Kairos dependencies at the extracted
+SDK. Add SDK `kairo-ecs-abm` and `kairo-ecs-state` as dev dependencies, copy
+the SDK root's immutable `hashbrown` patch into the consumer root and append
+the [probe module](careops_movement.rs) to
+`crates/careops-core/tests/allocation_kairos_conformance.rs`. The initial
+resolution selected registry `hashbrown` outside the retained locks. Reusing
+the SDK patch resolved all six Kairos crates from the extracted artifact and
+kept external dependencies within the two frozen locks. The resolved lock
+SHA-256 is `e9c5dd385bfa4f04c59cc509cf1576e83275a3d039896a2fcdb49b4c2e8e96ae`.
+
+`rustup run 1.99.1 cargo test --locked --offline -p careops-core --test allocation_kairos_conformance`
+passed all three tests on macOS ARM64, exit 0. The probe reuses CareOps's
+`StagedAllocator` grant and release acknowledgments. The ordinary route
+uses the stairs. A fictional patient requiring step-free access takes the
+eight-tick lift route with a porter admitted at tick 2. Arrival at tick 10
+changes location once, completes the CareOps handover and releases eight
+porter-ticks of occupancy. Cancellation at tick 5 keeps the origin and
+releases after three porter-ticks. Both cases match the occupancy interval
+to the resource, actor, request and lease revision and clear the pending
+movement. The existing capacity-one contention test also passed. There are
+no stochastic draws in this fixture. The probe SHA-256 is
+`b18681d9b122e1eeee2f6e5ba8c5803a3c462f7bc6a079c0d775a1d7c3f3c45c`
+and the test log SHA-256 is
+`0e921ca53ecb0cefe1bc75f58368534649af417905ad6f37a7e1d35dc6dad757`.
+
+Independent review matched all 67 active SDK files to the candidate's
+source. The review added the occupancy identity and pending-movement
+checks and verified the rebuilt three-test pass.
+
+CareOps owns the application adapter and provider pin under
+[R76.2 and R77](https://github.com/edithatogo/careops-sim/blob/9af99b5730d6aa5cef1c05bd48e90fd377b80cf2/conductor/tracks/kairos_domain_contracts_20261107/plan.md).
+
+## Reused installed consumer evidence
+
+The [Track 108 receipts](../108-scientific-ecosystem-alignment/handoff.md#installed-consumer-qualification--23-november-2026)
+cover replay, schema and lifetime. The 47 passing tests on the installed
+Innovate receiving wheel included native DES dispatch, seeded replay and engine
+error, ABM agent state under forced adoption, and checkpoints resumed at
+ticks 0, 4 and 6 across DES, ABM and network paths. The Arrow/Polars cases
+compared event rows and exercised retained buffers after producer or reader
+drop. Innovate owns production qualification and pin selection.
 
 ## Summary
 
