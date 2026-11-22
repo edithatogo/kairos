@@ -10,6 +10,12 @@ Reviewed source: `d56863505d938feb069af88a737eb7668113d14b`. Tracks 109 and 112 
 
 Kairos is an independent Rust simulation dependency consumed by careops-sim through versioned public interfaces. Consumer-owned models and validation remain downstream; no consumer pin or release is promoted here. See [programme](frontier-programme-20261107.md), [capabilities](capabilities.md) and [release gates](release-gates.md).
 
+Track 113 has a selected installed `native-core-v1` candidate for Linux x86-64
+and macOS ARM64. Track 92's dependency evaluation is closed after the built-in
+sequence and sensitivity qualification in #418.
+[Installed candidate](tracks/113-beta-and-stable-release/handoff.md#native-core-v1-candidate--23-november-2026) ·
+[Sobol disposition](tracks/92-sobol-burley-robustness/handoff.md#evaluation-closeout--23-november-2026).
+
 The previously recorded PR 366 draft state is historical: PR 366 merged on 3 November 2026. Earlier assignment/count snapshots below are retained as dated history and are superseded by the current machine registry and capability register.
 
 The immediate packet is recorded in [PR 378](https://github.com/edithatogo/kairos/pull/378) and the [implementation record](frontier-implementation-20261107.md). Final merge/check status is read from that PR; no phase or release is inferred from a source commit.

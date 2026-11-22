@@ -1430,7 +1430,7 @@ tracks:
 
   - id: 92
     name: Sobol sequence qualification
-    status: Planned
+    status: Done
     owner: experiment-agent
     depends_on: ["72"]
     owned_paths:
@@ -1657,7 +1657,7 @@ tracks:
 
   - id: 113
     name: Beta and stable release qualification
-    status: Spec Approved
+    status: In Progress
     owner: release-agent + api-governance-agent + security-agent
     depends_on: ["15", "16", "20", "25", "109", "110", "111", "112", "114"]
     owned_paths:
