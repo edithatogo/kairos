@@ -386,3 +386,29 @@ isolated checkout at that head plus this working diff:
 Hosted checks on the integrated follow-up remain required. This maintenance
 slice does not rerun or qualify Rust execution, scientific behavior or release
 readiness, and does not advance a Conductor phase.
+
+## Community Standards concurrency review — 22 November 2026
+
+This bounded Track 13 follow-through starts from PR #417 head
+`45fa2612b40cf8de4010750b8c7c03d0360a020d` and implements the unresolved workflow
+concurrency review. The community gate now uses the existing `ci-policy.yml`
+workflow/ref group and cancels in-progress runs only for pull-request events.
+Its four trigger types, main push branch, stable check name, read-only
+permissions, ten-minute timeout and reviewed shared-action SHA remain unchanged.
+Track 13 hands the required Unreleased note to Track 16; no phase is advanced.
+
+Focused local validation:
+
+- The existing Python 3.15.2 / PyYAML 6.0.3 tooling parsed the workflow and proved
+  its entire previous structure unchanged after removing the new concurrency
+  block; the block exactly matches `ci-policy.yml`.
+- `node scripts/validation/validate-track13-metadata.mjs`: passed, 117 tracks,
+  on Node 24.22.3. Repo-local Python 3.15.2 identity was also verified.
+- `git diff --check`: passed; only the caller, Unreleased note and this handoff
+  change. No runtime, dependency lock or policy gate changes.
+
+Local actionlint/zizmor executables were unavailable; no new tools or native
+builds were added for this workflow-only follow-through. Fresh hosted workflow
+checks remain required, and the review thread is resolved only after the fix is
+published. The preceding head's 49 successful and two skipped checks do not
+qualify this new candidate.
