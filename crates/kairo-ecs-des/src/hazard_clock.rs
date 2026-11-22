@@ -30,10 +30,29 @@ pub struct HazardChannelState {
     pub interval_start_time: f64,
     /// Active age on the current hazard curve at the start of the interval.
     active_age_at_interval_start: f64,
+    due_at: Option<f64>,
 }
 
 impl HazardChannelState {
+    fn predicted_at(&self) -> Option<f64> {
+        if self.due_at.is_some() {
+            return self.due_at;
+        }
+        let remaining = self.target_threshold - self.accumulated_hazard;
+        if remaining <= 0.0 {
+            return Some(self.interval_start_time);
+        }
+        let dt = self
+            .hazard
+            .invert_cumulative_hazard(self.active_age_at_interval_start, remaining)?;
+        let at = self.interval_start_time + dt;
+        (dt >= 0.0 && at.is_finite()).then_some(at)
+    }
+
     fn accrue_until(&mut self, now: f64) {
+        if self.due_at.is_none() {
+            self.due_at = self.predicted_at().filter(|&at| at <= now);
+        }
         let aged = self.active_age_at_interval_start + (now - self.interval_start_time).max(0.0);
         self.accumulated_hazard += self.hazard.cumulative_hazard(aged)
             - self
@@ -113,6 +132,7 @@ impl SurvivalClock {
             if self.policy == HazardInterruptionPolicy::Restart {
                 existing.target_threshold = draw_standard_threshold(stream);
                 existing.accumulated_hazard = 0.0;
+                existing.due_at = None;
             }
         } else {
             let target_w = draw_standard_threshold(stream);
@@ -126,6 +146,7 @@ impl SurvivalClock {
                     target_threshold: target_w,
                     interval_start_time: now,
                     active_age_at_interval_start: 0.0,
+                    due_at: None,
                 },
             );
         }
@@ -154,23 +175,8 @@ impl SurvivalClock {
         causes.sort_by_key(|c| c.cause_id);
 
         for channel in causes {
-            let remaining_w = channel.target_threshold - channel.accumulated_hazard;
-            if remaining_w <= 0.0 {
-                candidate_events.push((
-                    channel.cause_id,
-                    channel.priority,
-                    channel.interval_start_time,
-                ));
-                continue;
-            }
-            if let Some(dt) = channel
-                .hazard
-                .invert_cumulative_hazard(channel.active_age_at_interval_start, remaining_w)
-            {
-                let at = channel.interval_start_time + dt;
-                if dt >= 0.0 && at.is_finite() {
-                    candidate_events.push((channel.cause_id, channel.priority, at));
-                }
+            if let Some(at) = channel.predicted_at() {
+                candidate_events.push((channel.cause_id, channel.priority, at));
             }
         }
 

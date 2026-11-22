@@ -156,3 +156,17 @@ fn changing_a_hazard_at_the_due_time_retains_its_dispatch_and_full_cause_id() {
     assert!(matches!(scheduler.step(), StepOutcome::Dispatched(_)));
     assert_eq!(clock.on_event_dispatched(), Some(expected));
 }
+
+#[test]
+fn replacing_an_overdue_cause_retains_its_original_crossing_time() {
+    let (mut clock, mut scheduler, mut rng) = new_clock(HazardInterruptionPolicy::RetainResidual);
+    for (cause, threshold) in [(CAUSE, 2.0), (CauseId(1), 4.0)] {
+        clock.set_channel(cause, 0, HazardRate::Constant { rate: 1.0 }, 0.0, &mut rng);
+        clock.channels.get_mut(&cause).unwrap().target_threshold = threshold;
+    }
+    clock.set_channel(CAUSE, 0, HazardRate::Zero, 5.0, &mut rng);
+    let event = clock.reschedule(&mut scheduler, 5.0, Some(3.0), 0).unwrap();
+    assert_eq!(event.winning_cause, CAUSE);
+    assert!(!event.is_censored);
+    assert_eq!(event.delta_time, 0.0);
+}
