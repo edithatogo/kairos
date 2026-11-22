@@ -34,7 +34,8 @@ an old green workflow is not acceptance of the current release candidate.
 - [ ] Performance claims link raw measurements, exact workload/backend/hardware metadata and a suitable baseline; generated fixtures are never counted as measurements.
 - [ ] Correctness and model validation are recorded separately from throughput and coverage.
 - [ ] Security scans reviewed.
-- [ ] `release.yml`, `release-attestations.yml`, and `sbom-attestations.yml` are all passing on the release branch.
+- [ ] `release.yml` and `sbom-attestations.yml` are passing on the release branch.
+- [ ] `release-attestations.yml` passes on `main` for the exact installed native beta candidate, with the SPDX attestation verified against its package digests.
 
 ## Docs
 
