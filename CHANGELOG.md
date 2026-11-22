@@ -16,6 +16,8 @@ Format:
 
 ### Added
 
+- `.github/workflows/community-standards.yml` runs the pinned shared repository-standards file gate for community guidance, issue and pull-request templates, and a local licence. The existing CI and workflow-security inventories include this workflow; required merge-check settings remain a separate repository control.
+
 - `.github/workflows/ci-policy.yml` now runs an isolated advisory `howfairis==0.14.2` CLI assessment, reusing an already-working job after repeated standalone FAIR workflow startup failures; `docs/FAIR_SOFTWARE_ASSESSMENT.md` records separate ARDC, licensing and scientific verification needs.
 
 - The native beta qualification builds a locked Rust SDK, a C ABI v1 library and a Python wheel, then exercises all three and the pinned CareOps allocation case from a clean installation on each target.
@@ -29,6 +31,8 @@ Format:
 
 ### Fixed
 
+- The community-standards workflow now groups runs by workflow and ref, cancelling in-progress runs only for superseding pull-request events.
+- The native Polars dependency closure updates `url` to 2.5.9 and its required `form_urlencoded` dependency to 1.2.3, addressing [RUSTSEC-2026-0592](https://github.com/RustSec/advisory-db/blob/main/crates/url/RUSTSEC-2026-0592.md) in nested `blob:` URL origin handling.
 - `kairo-ecs-ffi` rejects foreign event handles and backwards scheduling. Python's `NativeEngine` blocks copying and serialization of its owned Rust handle.
 - Rust workspace coverage can qualify the specifically reviewed main recovery report against an immutable, fully qualified anchor before applying the unchanged exact-base zero-regression gate. Native producer, source/artifact identity and checksum requirements remain enforced.
 - The .NET toolchain workflow selects the exact SDK installed by each matrix lane before validating its version.

@@ -81,3 +81,48 @@ Codecov reports the merged `8eafd77` report complete with `ci_passed=true`, 81 f
 A concrete readback bug is corrected: GitHub's commit-status list omits `sha`. The collector now paginates the immutable commit endpoint, validates each returned API URL against the exact repository/commit, rejects explicit conflicting SHAs, and binds the validated response to that commit. Focused positive/negative tests preserve rejection of another repository, head, host and a missing provenance URL. Patch-only success still cannot satisfy the project-status gate.
 
 CareOps terminal coordination preserves temporary backport `7e304c9c59874cd63e7ed6667a99cfb5c617f52e` on Track 70 base `5692e6a`: seven exact API/test/fixture blobs, unchanged RNG/state/types/manifests/lock, 84 focused upstream tests and 562 locked parent Rust tests passing with zero ignored, 26 seeded baseline hashes identical and audit zero. These are the consumer owner's frozen receipts, not a new integrator execution. Seven Python failures reproduce on the unchanged parent baseline; full Clippy has a pre-existing birthing warning, while affected allocation Clippy passes. The initial staged parent handoff was preserved as patch `3ea9f2a93d1544343ad297c7350716c1c22924d04775b26af4279c6177c827c6`. The owner subsequently resolved registration additively, preserving existing entries and hook/scanner bytes, and reports normal commit hooks passed with zero privacy findings. The parent is now clean at source commit `ef781481916f4aa416294a5c4b1d0326fc8141c7` and status commit `3172b2f1cde34e77a30451b2cb5762b9b61bae5b`. These commits supersede the uncommitted handoff; nothing is pushed or merged by that lane, and its advanced local base `87439c3` still requires bounded comparison before remote-main promotion. The owner retains that checkout and child branch. The backport must not merge into current Kairos main; full CareOps acceptance and parent promotion remain unclaimed.
+
+## URL security maintenance — 22 November 2026
+
+This bounded follow-through starts from PR #417 head
+`ae73538f0ace9cb7589318c82e00505ebcbb249e`, whose native verification failed on
+[RUSTSEC-2026-0592](https://github.com/RustSec/advisory-db/blob/main/crates/url/RUSTSEC-2026-0592.md).
+`cargo update -p url --precise 2.5.9` changes only the `url` 2.5.8 → 2.5.9
+and required `form_urlencoded` 1.2.2 → 1.2.3 version/checksum pairs in the
+583-package root lock. The published URL patch requires `form_urlencoded ^1.2.3`.
+All dependency edges, manifests, Polars/hashbrown Git revisions and advisory
+settings remain unchanged.
+
+The affected native dependency path runs through object_store/reqwest/tower-http
+and pinned Polars into `kairo-ecs-arrow` and its optional native-data consumers.
+Kairos has no direct `Url::origin` call. Upstream now permits a `blob:` URL to
+inherit an inner origin only for HTTP, HTTPS or file schemes; nested and other
+inner schemes receive an opaque origin without recursive descent.
+
+Local validation used the exact Rust/Cargo 1.99.1 toolchain, cargo-deny 0.20.2
+and cargo-audit 0.22.2. The official scanner release archive SHA-256 values and
+both downloaded crate checksums were verified. Commands ran from the isolated
+Kairos checkout on the base above plus this three-file candidate:
+
+- `cargo metadata --locked --no-deps --format-version 1`: passed.
+- `cargo deny --locked check advisories sources`: passed; its default feature
+  selection reports the optional Polars source as unmatched.
+- `cargo deny --locked --features kairo-ecs-arrow/polars-native check advisories sources`:
+  passed with the affected source closure enabled.
+- `cargo audit --json`: passed with zero vulnerability entries and 14 retained
+  warnings (five unmaintained and nine unsound heapless advisories), using
+  advisory database commit `248aea09726d5129d5616fa24535e5db1b84808b`. No ignore or
+  policy exception was added.
+- `cargo test --locked -p kairo-ecs-arrow --features polars-native --test track94_phase1_tempfile_verification`:
+  five passed, zero failed or ignored, including actual Polars durable
+  publication, deterministic manifest identity, readback and no-clobber checks.
+  The local build used one job and `CARGO_PROFILE_TEST_DEBUG=0`; test assertions
+  and the repository's hosted profiles are unchanged.
+- `git diff --check`: passed. The only source changes are the root lock and the
+  corresponding Unreleased and maintenance notes.
+
+Execution logs and exact source, lock, tool and output hashes are recorded in
+`/workspace/scratch/47b05914ed50/kairos-url-security-evidence/validation-receipt.json`.
+This focused local qualification does not repeat the full workspace, MPI,
+coverage or platform suites. Independent review and fresh exact-head hosted
+gates remain required before merge; no phase or release acceptance is advanced.

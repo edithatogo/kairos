@@ -361,3 +361,54 @@ specific recovery. Source preparation uses GitHub APIs after the executor
 became unavailable; no fresh local execution or local lease result is claimed.
 Independent review and actual hosted regression/native/coverage checks on the
 candidate remain required before merge. No phase or release acceptance follows.
+
+## Community Standards workflow inventory — 22 November 2026
+
+The coordinator's bounded follow-through for PR #417 starts from
+`97be8d5897fac0e8e7e1662a7d6f5afe51d46a4d`. Add the existing
+`community-standards.yml` caller to `ci-policy.yml` and both
+`workflow-security.yml` inventories. Track 13 hands the accompanying Unreleased
+changelog note to Track 16's release-maintenance role. The note describes the
+shared file gate and distinguishes delivery from required merge-check settings.
+The shared action pin, validators, policy requirements, runtime code and track
+statuses are unchanged.
+
+Local validation used Node 24.22.3 and verified repo-local Python 3.15.2 in the
+isolated checkout at that head plus this working diff:
+
+- `node scripts/validation/validate-track13-metadata.mjs` passed with 117 tracks.
+  The preceding run rejected the missing community-workflow inventory.
+- The unchanged `changelog-policy.yml` diff predicate accepted the proposed PR
+  file list and rejected both the preceding PR list and a negative case omitting
+  `CHANGELOG.md`.
+- `git diff --check` passed.
+
+Hosted checks on the integrated follow-up remain required. This maintenance
+slice does not rerun or qualify Rust execution, scientific behavior or release
+readiness, and does not advance a Conductor phase.
+
+## Community Standards concurrency review — 22 November 2026
+
+This bounded Track 13 follow-through starts from PR #417 head
+`45fa2612b40cf8de4010750b8c7c03d0360a020d` and implements the unresolved workflow
+concurrency review. The community gate now uses the existing `ci-policy.yml`
+workflow/ref group and cancels in-progress runs only for pull-request events.
+Its four trigger types, main push branch, stable check name, read-only
+permissions, ten-minute timeout and reviewed shared-action SHA remain unchanged.
+Track 13 hands the required Unreleased note to Track 16; no phase is advanced.
+
+Focused local validation:
+
+- The existing Python 3.15.2 / PyYAML 6.0.3 tooling parsed the workflow and proved
+  its entire previous structure unchanged after removing the new concurrency
+  block; the block exactly matches `ci-policy.yml`.
+- `node scripts/validation/validate-track13-metadata.mjs`: passed, 117 tracks,
+  on Node 24.22.3. Repo-local Python 3.15.2 identity was also verified.
+- `git diff --check`: passed; only the caller, Unreleased note and this handoff
+  change. No runtime, dependency lock or policy gate changes.
+
+Local actionlint/zizmor executables were unavailable; no new tools or native
+builds were added for this workflow-only follow-through. Fresh hosted workflow
+checks remain required, and the review thread is resolved only after the fix is
+published. The preceding head's 49 successful and two skipped checks do not
+qualify this new candidate.
