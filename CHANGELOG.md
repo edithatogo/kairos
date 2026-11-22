@@ -16,6 +16,7 @@ Format:
 
 ### Added
 
+- The native beta qualification builds a locked Rust SDK, a C ABI v1 library and a Python wheel, then exercises all three and the pinned CareOps allocation case from a clean installation on each target.
 - `kairo-ecs-abm` adds scheduled movement with cancellable arrivals and topology-driven replanning. `kairo-ecs-des` can close scheduled, queued and active requests at the journey's terminal event.
 - `kairo-ecs-pdes` exposes committed optimistic process checkpoints. The DES `optimistic-usage` feature exports sealed occupancy windows from those checkpoints with their producing LP and exclusive cutoff.
 - `.github/workflows/fuzzing.yml` executes seven existing bounded scheduler property and negative-control tests on canonical Rust 1.99.1 for relevant pull requests and weekly/manual campaigns. Test logs are retained; coverage-guided cargo-fuzz and sanitizer execution remain explicitly unverified.
@@ -26,6 +27,7 @@ Format:
 
 ### Fixed
 
+- `kairo-ecs-ffi` rejects foreign event handles and backwards scheduling. Python's `NativeEngine` blocks copying and serialization of its owned Rust handle.
 - Rust workspace coverage can qualify the specifically reviewed main recovery report against an immutable, fully qualified anchor before applying the unchanged exact-base zero-regression gate. Native producer, source/artifact identity and checksum requirements remain enforced.
 - The .NET toolchain workflow selects the exact SDK installed by each matrix lane before validating its version.
 

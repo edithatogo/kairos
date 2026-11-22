@@ -31,3 +31,10 @@ The runner retains receipts and candidate artifacts through GitHub Actions
 for review. Registry upload and release publication follow their own
 authorised workflow. Upgrade and rollback across candidate versions are part
 of the release-candidate phase.
+
+Use `packaging/scripts/qualify_native_beta.py --output DIRECTORY` from a clean
+checkout with the profiled Python and the hash-pinned packaging tools from
+`scripts/package-python-tools.lock`. The output directory must be new. Its
+`artifacts` directory holds the three distributions, checksums and the
+installed receipt. The Rust SDK supplies the provider's locked dependency
+versions when resolving both Cargo consumers.

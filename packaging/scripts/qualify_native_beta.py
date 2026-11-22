@@ -164,17 +164,23 @@ def resolve(
         frozen.update(entry for entry in external_dependencies(extra_lock) if entry[0] not in sdk_names)
     drift = external_dependencies(lock) - frozen
     require(not drift, f"Dependencies outside the frozen locks: {sorted(drift)}")
+    workspace_members = set(metadata["workspace_members"])
     packages = [
         {
             "name": package["name"],
             "version": package["version"],
             "manifest": str(Path(package["manifest_path"]).resolve().relative_to(sdk)),
         }
-        for package in metadata["packages"] if package["name"].startswith("kairo-ecs-")
+        for package in metadata["packages"]
+        if package["id"] not in workspace_members and package["name"].startswith("kairo-ecs-")
     ]
     require(bool(packages), "The consumer did not resolve any installed SDK crate")
     active = output(*cargo, "tree", "--locked", "--offline", "--edges", "normal,dev", "--prefix", "none", cwd=consumer)
     active_crates = set(re.findall(r"^(kairo-ecs-[a-z-]+) v", active, re.MULTILINE))
+    active_crates.difference_update(
+        package["name"] for package in metadata["packages"] if package["id"] in workspace_members
+    )
+    require(bool(active_crates), "The consumer has no active SDK crates")
     require(active_crates <= allowed_crates, f"Unexpected active SDK crates: {active_crates - allowed_crates}")
     return {"packages": packages, "active_sdk_crates": sorted(active_crates), "lock_sha256": sha256(lock)}
 
@@ -239,7 +245,7 @@ def run_installed_careops(
     (source / "libs").mkdir()
     (source / "libs/kairos").symlink_to(sdk, target_is_directory=True)
     sources = resolve(cargo, source, sdk, set(cfg["rust_crates"]), old_lock)
-    run_case(cargo, source, "-p", package, "--test", careops["test"], case=careops["case"])
+    run_case(cargo, source, "--offline", "-p", package, "--test", careops["test"], case=careops["case"])
     return {
         "revision": careops["revision"],
         "case": careops["case"],
@@ -254,6 +260,7 @@ def main() -> None:
     parser.add_argument("--output", required=True, type=Path)
     output_root = parser.parse_args().output.resolve()
     cfg = json.loads(PROFILE.read_text(encoding="utf-8"))
+    require(cfg["c_abi"] == 1, "The installed C and Python cases qualify ABI v1")
     require(platform.python_version() == cfg["python"], "Qualification requires the profiled CPython version")
     require(sys.implementation.name == "cpython", "Qualification requires CPython")
     rust = ("rustup", "run", cfg["rust"], "rustc")
