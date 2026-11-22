@@ -24,6 +24,16 @@ surface is the following.
 | `kairo-ecs-des` | `DESContext`, FIFO `Resource`, and `StagedResourceRuntime` actor/resource creation, atomic requests, admission, lease release and forward occupancy windows |
 | `kairo-ecs-abm` | `ABMContext`, `AgentBehavior` and `BehaviorSimulation` for native scheduling and behavior, with deterministic entity streams |
 
+## Alpha replay compatibility
+
+The published `v0.4.0-alpha.1` archive uses SplitMix64 for deterministic
+draws. This candidate uses ChaCha8. For seed 7 and entity 42, generation 0,
+the first fixture draw changes from 58,032,735 to 4,087,599,687. Retain the
+alpha archive for exact alpha replay and regenerate seeded baselines when
+adopting this profile. The alpha ordering, cancellation and zero-delay
+fixtures pass on the candidate.
+[Candidate replay evidence](../tracks/113-beta-and-stable-release/handoff.md#candidate-compatibility-performance-and-provenance).
+
 ## C ABI v1 and Python
 
 The C package installs [`kairo_ecs.h`](../../include/kairo_ecs.h). The v1
