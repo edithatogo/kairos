@@ -1,0 +1,3 @@
+# S10 Native vector environments
+
+Replace the shape-only environment with a Rust-owned finite queue model. Seed controls arrivals. Each action controls service, the observation contains the remaining demand, and the environment distinguishes completed work from a tick limit. Compare equal-seed scalar and batched trajectories, including reinitialization, hard termination and atomically rejected invalid actions. Encode only actions and typed observations at a host boundary. Keep the installed Gymnasium and PettingZoo checker and lifetime obligations open until a qualified host can exercise the same native model through that boundary.

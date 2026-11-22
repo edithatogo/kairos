@@ -2615,6 +2615,7 @@
         "conductor/execution/scientific/s08-completion.md"
       ],
       "write": [
+        "crates/kairo-ecs-des/src/hazard_clock.rs",
         "crates/kairo-ecs-des/tests/maturity_hazard_restart.rs"
       ],
       "checks": [
@@ -2634,6 +2635,81 @@
       "acceptance": "Event times match an integrated hazard budget across interruption and checkpoint restore to 1e-12.",
       "stop": "Resolve invalid inputs and distinguish a missing oracle from a method failure.",
       "obligation": "S08"
+    },
+    {
+      "id": "S09.affine",
+      "title": "Run bounded affine inference in Rust and fail closed for ONNX",
+      "parent": "110:S09",
+      "kind": "implementation",
+      "executor": "local",
+      "requires": [
+        "S09.completion"
+      ],
+      "read": [
+        "conductor/execution/scientific/s09-completion.md"
+      ],
+      "write": [
+        "crates/kairo-ecs-ml/src/lib.rs",
+        "crates/kairo-ecs-ml/src/affine.rs",
+        "crates/kairo-ecs-ml/tests/maturity_native_inference.rs",
+        "crates/kairo-ecs-ml/tests/feature_matrix.rs",
+        "examples/ml-surrogate/de-surrogate/src/main.rs"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-ml",
+            "--all-features",
+            "--test",
+            "maturity_native_inference"
+          ]
+        }
+      ],
+      "acceptance": "Independent nonidentity outputs and negative cases satisfy the linked design.",
+      "stop": "An unsupported host or runtime remains unavailable.",
+      "obligation": "S09"
+    },
+    {
+      "id": "S10.queue",
+      "title": "Run stateful queue episodes in Rust",
+      "parent": "110:S10",
+      "kind": "implementation",
+      "executor": "local",
+      "requires": [
+        "S10.completion"
+      ],
+      "read": [
+        "conductor/execution/scientific/s10-completion.md"
+      ],
+      "write": [
+        "crates/kairo-ecs-ml/src/lib.rs",
+        "crates/kairo-ecs-ml/src/vecenv.rs",
+        "crates/kairo-ecs-ml/tests/maturity_vecenv_native.rs",
+        "crates/kairo-ecs-ml/tests/feature_matrix.rs"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-ml",
+            "--all-features",
+            "--test",
+            "maturity_vecenv_native"
+          ]
+        }
+      ],
+      "acceptance": "Independent nonidentity outputs and negative cases satisfy the linked design.",
+      "stop": "An unsupported host or runtime remains unavailable.",
+      "obligation": "S10"
     }
   ]
 }
