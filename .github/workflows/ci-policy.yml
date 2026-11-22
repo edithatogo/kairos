@@ -66,7 +66,6 @@ jobs:
           test -f .github/workflows/privacy-secrets.yml
           test -f .github/workflows/python-dependency-inventory.yml
           test -f .github/workflows/docs.yml
-          test -f .github/workflows/fair-software.yml
           test -f .github/workflows/fuzzing.yml
           test -f .github/workflows/gpu-free-smoke.yml
           test -f .github/workflows/grype.yml
@@ -107,3 +106,10 @@ jobs:
           grep -n -E 'unknown-registry = "deny"' deny.toml
           grep -n -E 'unknown-git = "deny"' deny.toml
           grep -n -F 'allow-registry = ["https://github.com/rust-lang/crates.io-index"]' deny.toml
+      - name: Advisory FAIR public-software metadata assessment
+        continue-on-error: true
+        env:
+          REPOSITORY_URL: https://github.com/${{ github.repository }}
+        run: |
+          command -v uvx
+          uvx --python 3.11 --from howfairis==0.14.2 howfairis "$REPOSITORY_URL"
