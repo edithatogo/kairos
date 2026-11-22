@@ -32,6 +32,17 @@ The shared SDK SHA-256 is
   fixtures and the candidate RNG fixture. It reproduced the documented
   SplitMix64-to-ChaCha8 replay break on the frozen alpha RNG fixture.
   [Replay compatibility](../../release/beta-scope.md#alpha-replay-compatibility).
+- **CareOps schema and buffer ownership.** The same downloaded SDK passed
+  three R143 schema cases for populated ED, calibration and birthing
+  projections. Two retained-buffer controls passed after producer and
+  stream release. All nine resolved Kairos crates came from the installed SDK.
+  Test log SHA-256
+  `b54ea4b32fef67ed4e192cee977667f070ff0d6049951ea91a90756c04cbc19b`.
+- **Resource preemption.** The installed SDK matched an independently
+  calculated 15-row trace for priority replacement, equal and lower priority
+  queueing, full-width interruption ticks, remaining work, capacity and
+  priority/FIFO release.
+  [Resource trace](evidence/preemption-e287538.json).
 - **Timing and memory.** The installed SDK's serial scheduler drain had a
   median of 195.9 ms over 45 samples, with a range of 188.8–212.8 ms. The
   three peak process RSS values were 1,336,705,024, 938,115,072 and

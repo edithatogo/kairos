@@ -1,0 +1,201 @@
+{
+  "candidate_commit": "e2875387ce45c34cd19716ea66f0102251a6aa6f",
+  "command": [
+    "cargo",
+    "run",
+    "--locked",
+    "--offline"
+  ],
+  "exit_status": 0,
+  "installed_receipt_sha256": "3a871e601f5da415758ad3f47691853d5e39a67993295cd3a731256964bfd7b1",
+  "installed_run": 45051171243,
+  "observed_and_matched_reference": [
+    {
+      "entity": [
+        10,
+        4
+      ],
+      "holders": 1,
+      "interruption": null,
+      "kind": "preemption",
+      "priority": -2,
+      "queued": 0,
+      "tick": 0,
+      "work": 19
+    },
+    {
+      "entity": [
+        11,
+        1
+      ],
+      "holders": 2,
+      "interruption": null,
+      "kind": "preemption",
+      "priority": 5,
+      "queued": 0,
+      "tick": 1,
+      "work": 31
+    },
+    {
+      "entity": [
+        12,
+        0
+      ],
+      "holders": 2,
+      "interruption": null,
+      "kind": "preemption",
+      "priority": -3,
+      "queued": 1,
+      "tick": 2,
+      "work": 7
+    },
+    {
+      "entity": [
+        13,
+        2
+      ],
+      "holders": 2,
+      "interruption": null,
+      "kind": "preemption",
+      "priority": -2,
+      "queued": 2,
+      "tick": 3,
+      "work": 13
+    },
+    {
+      "entity": [
+        14,
+        7
+      ],
+      "holders": 2,
+      "interruption": [
+        10,
+        4,
+        19,
+        10
+      ],
+      "kind": "preemption",
+      "priority": 0,
+      "queued": 2,
+      "tick": 10,
+      "work": 23
+    },
+    {
+      "entity": [
+        15,
+        6
+      ],
+      "holders": 2,
+      "interruption": null,
+      "kind": "preemption",
+      "priority": 0,
+      "queued": 3,
+      "tick": 73786976294838206475,
+      "work": 17
+    },
+    {
+      "entity": [
+        18446744073709551615,
+        4294967295
+      ],
+      "holders": 2,
+      "interruption": [
+        14,
+        7,
+        23,
+        73786976294838206476
+      ],
+      "kind": "preemption",
+      "priority": 2147483647,
+      "queued": 3,
+      "tick": 73786976294838206476,
+      "work": 18446744073709551615
+    },
+    {
+      "entity": [
+        16,
+        5
+      ],
+      "holders": 2,
+      "interruption": null,
+      "kind": "preemption",
+      "priority": 5,
+      "queued": 4,
+      "tick": 73786976294838206477,
+      "work": 20
+    },
+    {
+      "entity": [
+        17,
+        5
+      ],
+      "holders": 2,
+      "interruption": [
+        11,
+        1,
+        31,
+        73786976294838206478
+      ],
+      "kind": "preemption",
+      "priority": 6,
+      "queued": 4,
+      "tick": 73786976294838206478,
+      "work": 99
+    },
+    {
+      "holders": 0,
+      "kind": "zero-capacity",
+      "priority": -2147483648,
+      "queued": 1
+    },
+    {
+      "holders": 0,
+      "kind": "zero-capacity",
+      "priority": 2147483647,
+      "queued": 2
+    },
+    {
+      "entity": [
+        14,
+        7
+      ],
+      "kind": "priority-release",
+      "queued": 2
+    },
+    {
+      "entity": [
+        18446744073709551615,
+        4294967295
+      ],
+      "kind": "priority-release",
+      "queued": 1
+    },
+    {
+      "entity": [
+        11,
+        1
+      ],
+      "kind": "priority-release",
+      "queued": 0
+    },
+    {
+      "entity": null,
+      "kind": "priority-release",
+      "queued": 0
+    }
+  ],
+  "probe_lock_sha256": "9493fd0554f6fb8dc7f75121cc19fa6662347a418154db322e551d7b8a7d0ebd",
+  "probe_source_sha256": "54b875ad6c20d9036b51f4eee9b0af010d13ec44d8231fa697af29a6b3ab5723",
+  "reference": "Hand-calculated two-server trace. Higher priority may replace the weakest holder. Equal and lower priorities queue. The capacity-zero control always queues, and the nonpreemptive release order respects priority and FIFO ties.",
+  "rustc": [
+    "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+    "binary: rustc",
+    "commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67",
+    "commit-date: 2026-10-13",
+    "host: aarch64-apple-darwin",
+    "release: 1.99.1",
+    "LLVM version: 23.1.1"
+  ],
+  "sdk_sha256": "0060c934d7b5d9eb187387175fc4604184093823aedbfbb43fa52936b1a82240",
+  "trace_sha256": "29f5061c63b53aebfda144e46bcd473547143e15db746d912cbab988373119a6"
+}

@@ -435,7 +435,7 @@ Every gate listed in `conductor/tracks.yaml` must appear here as a bold gate ID.
 
 **soa-column-query-simd-parity**: validates that `kairo-ecs-state` stores component columns in 64-byte cache-aligned Structure-of-Arrays (SoA) buffers and supports deterministic multi-component queries (`Query<(&A, &mut B)>`).
 
-**des-resource-preemption-reneging-simpy-parity**: validates that `kairo-ecs-des` implements `CapacityResource`, `PreemptiveResource`, `Container`, `Store`, wait conditions, balking, and reneging with trace parity against SimPy reference fixtures (`tests/conformance/queue_simpy_v1.py`).
+**des-resource-preemption-reneging-simpy-parity** retains the historical gate name. The installed native beta SDK has an independent fixed trace for `PreemptiveResource` admission and interruption and `PriorityResource` release order. External trace parity for the full resource, container, store, wait, balking and reneging suite remains unverified. [Candidate resource trace](tracks/113-beta-and-stable-release/evidence/preemption-e287538.json).
 
 **abm-spatial-grid-continuous-network-parity**: validates that `kairo-ecs-abm` implements `GridSpace2D/3D`, `ContinuousSpace2D/3D` (spatial hash / k-d tree neighbor queries), and `GraphSpace` (CSR + `graph-relations`) with deterministic neighbor iteration.
 
