@@ -7,6 +7,8 @@ built library's absolute path and PYTHONPATH=bindings/python.
 
 from __future__ import annotations
 
+import copy
+import pickle
 import unittest
 
 from kairo_ecs import NativeEngine, NativeExecutionError
@@ -63,3 +65,29 @@ class RustEngineTests(unittest.TestCase):
         for operation in (engine.step, engine.stats, lambda: engine.schedule_at(1)):
             with self.assertRaises(NativeExecutionError):
                 operation()
+
+    def test_handles_belong_to_one_engine_and_one_live_run(self) -> None:
+        with NativeEngine() as first, NativeEngine() as second:
+            stale = first.schedule_at(5)
+            original = second.schedule_at(7)
+            self.assertFalse(second.cancel(stale))
+            self.assertEqual(second.stats()["pending_events"], 1)
+            first.close()
+            second.reset()
+            self.assertFalse(second.cancel(original))
+            self.assertNotEqual(second.schedule_at(8), original)
+            self.assertFalse(second.cancel(stale))
+            self.assertTrue(second.step())
+            with self.assertRaisesRegex(NativeExecutionError, "precedes"):
+                second.schedule_at(7)
+            self.assertEqual(second.current_time_ticks, 8)
+            self.assertEqual(second.stats()["scheduled_events"], 1)
+
+    def test_owned_engine_cannot_be_copied_or_serialized(self) -> None:
+        with NativeEngine() as engine:
+            engine.schedule_at(5)
+            for operation in (copy.copy, copy.deepcopy, pickle.dumps):
+                with self.assertRaisesRegex(TypeError, "owns a Rust handle"):
+                    operation(engine)
+            self.assertTrue(engine.step())
+            self.assertEqual(engine.current_time_ticks, 5)

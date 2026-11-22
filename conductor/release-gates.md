@@ -6,6 +6,10 @@ Approved programme: 7 November 2026. [Track 113](tracks/113-beta-and-stable-rele
 
 Freeze an explicit capability manifest before preparing a candidate. The initial beta/stable core consists of Rust types, scheduler, state, random streams, DES resources, ABM behaviour, their documented telemetry contract, C ABI and one fully qualified Python native interface. Add a platform or binding to the support matrix only after its installed native tests pass. Rust-compiled Wasm can be included after its own browser/Node qualification.
 
+The [native beta scope](release/beta-scope.md) defines the first candidate's
+API and two target profiles. Its [installed qualification](release/installed-beta-job.md)
+binds the Rust, C, Python and CareOps runs to the candidate artifacts.
+
 PDES, GPU, distributed execution, FMI, game theory, ML/RL and advanced calibration are separately versioned experimental features until their own gates close. Every advertised method still has a completion task; excluding it from the first stable scope does not cancel that work. Unsupported methods must be unavailable or explicitly experimental, and cannot silently masquerade as qualified methods.
 
 ### Separate game-library release paths

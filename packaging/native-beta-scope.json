@@ -1,0 +1,26 @@
+{
+  "profile": "native-core-v1",
+  "rust": "1.99.1",
+  "python": "3.15.2",
+  "c_abi": 1,
+  "platforms": [
+    "x86_64-unknown-linux-gnu",
+    "aarch64-apple-darwin"
+  ],
+  "rust_crates": [
+    "kairo-ecs-types",
+    "kairo-ecs-core",
+    "kairo-ecs-state",
+    "kairo-ecs-rng",
+    "kairo-ecs-des",
+    "kairo-ecs-abm"
+  ],
+  "ffi_crate": "kairo-ecs-ffi",
+  "careops": {
+    "repository": "https://github.com/edithatogo/careops-sim.git",
+    "revision": "6810aaaa38229b725a9fe0f99a0a6c1d8693ebd9",
+    "package": "careops-core",
+    "test": "allocation_kairos_conformance",
+    "case": "capacity_one_contention_keeps_one_active_lease_and_grants_queued_work_after_release"
+  }
+}

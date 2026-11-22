@@ -1003,7 +1003,8 @@
         "conductor/ecosystem-consumers.md"
       ],
       "write": [
-        "conductor/release/beta-scope.md"
+        "conductor/release/beta-scope.md",
+        "packaging/native-beta-scope.json"
       ],
       "checks": [
         {
@@ -1047,7 +1048,105 @@
           ]
         }
       ],
-      "acceptance": "After beta scope and minimal fixture, write exact build/install/run/upgrade steps and artifact identities for one supported target; package listing alone cannot accept installation.",
+      "acceptance": "Specify exact artifact construction, digest verification, clean platform installation, and executable Rust, C, Python and CareOps acceptance. Keep publication separate from candidate qualification.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed."
+    },
+    {
+      "id": "K05.abi",
+      "title": "Enforce native ABI ownership and error semantics",
+      "parent": "113.0.2",
+      "kind": "implementation",
+      "executor": "local",
+      "requires": [
+        "K05.beta"
+      ],
+      "read": [
+        "conductor/release-gates.md",
+        "include/kairo_ecs.h"
+      ],
+      "write": [
+        "crates/kairo-ecs-ffi/src/lib.rs",
+        "crates/kairo-ecs-ffi/tests/ffi_integration.rs",
+        "bindings/python/kairo_ecs/_native.py",
+        "bindings/python/native_tests/test_native_engine.py"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-ffi",
+            "--test",
+            "ffi_integration"
+          ]
+        }
+      ],
+      "acceptance": "Native handles stay unique across engines and reset. Error and lifetime tests exercise real execution, invalid times, foreign/stale handles, independent telemetry ownership and Python close/copy behavior.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed."
+    },
+    {
+      "id": "K05.install",
+      "title": "Run the three installed native artifact consumers",
+      "parent": "113.0.3",
+      "kind": "qualification",
+      "executor": "local",
+      "requires": [
+        "K05.package",
+        "K05.abi"
+      ],
+      "read": [
+        "packaging/native-beta-scope.json",
+        "conductor/release/installed-beta-job.md",
+        "tests/fixtures/minimal-consumer/src/main.rs"
+      ],
+      "write": [
+        "packaging/scripts/qualify_native_beta.py",
+        "tests/conformance/native-beta-abi.c",
+        ".github/workflows/native-beta.yml"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "python",
+            "packaging/scripts/qualify_native_beta.py",
+            "--help"
+          ]
+        }
+      ],
+      "acceptance": "The same hash-verified SDK, shared library and wheel used in the candidate pass actual standalone Rust, C and clean CPython execution on both native targets. Retain source, artifact and runtime identities.",
+      "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed."
+    },
+    {
+      "id": "K05.careops",
+      "title": "Run the exact CareOps case against the installed candidate",
+      "parent": "113.0.3",
+      "kind": "qualification",
+      "executor": "local",
+      "requires": [
+        "K05.install"
+      ],
+      "read": [
+        "packaging/native-beta-scope.json",
+        "conductor/release/installed-beta-job.md"
+      ],
+      "write": [
+        "packaging/scripts/qualify_native_beta.py"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "python",
+            "packaging/scripts/qualify_native_beta.py",
+            "--help"
+          ]
+        }
+      ],
+      "acceptance": "The unmodified public CareOps lease contention case from the pinned revision passes with the same installed SDK, recorded lock closure and install receipt. The selected product pin remains consumer-owned.",
       "stop": "Stop on an unresolved contract/oracle, missing required runtime or out-of-scope edit; report the smallest reproducer. Do not broaden scope or mark a missing check passed."
     },
     {

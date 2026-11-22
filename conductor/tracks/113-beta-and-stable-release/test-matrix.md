@@ -3,7 +3,8 @@
 | Gate | Required evidence | Current acceptance |
 |---|---|---|
 | Beta | Every enumerated required gate has candidate-specific evidence or the capability is excluded. | Pending for this track |
-| Installed packages | Tests execute distributed artefacts in clean advertised environments, not only editable source. | Pending for this track |
+| Installed packages | [Native beta installed artifacts workflow](../../../.github/workflows/native-beta.yml) executes the Rust, C and Python artifacts on Linux x86-64 and macOS ARM64. | Each candidate needs its own hash-bound receipt |
+| Installed CareOps | The pinned public CareOps lease-contention case runs against the same installed SDK from both legs of the matrix. | Each candidate needs its own hash-bound receipt |
 | Stable | Independent reproduction, upgrade/replay fixtures, supported limits and no unresolved critical/high defects in supported scope. | Pending for this track |
 | Publication | Actual tag/registry/provenance readback is distinct from CI or PR success. | Pending for this track |
 | Capability/claim consistency | node scripts/validation/validate-frontier-evidence.mjs and node --test tests/conformance/frontier-evidence-check.mjs | Structural check only; no new runtime claim |

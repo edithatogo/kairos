@@ -7,7 +7,7 @@ import os
 import sys
 from pathlib import Path
 from threading import RLock
-from typing import Any, Self
+from typing import Any, Never, Self
 
 from ._errors import NativeBackendUnavailable, NativeExecutionError
 
@@ -45,8 +45,8 @@ class NativeSchedulerBridge:
             raise NativeBackendUnavailable(
                 f"Rust native library must be an existing absolute file: {selected}"
             )
-        self.lib_path = str(path.resolve(strict=True))
         try:
+            self.lib_path = str(path.resolve(strict=True))
             library = ctypes.CDLL(self.lib_path)
             u64, i32, u32 = ctypes.c_uint64, ctypes.c_int32, ctypes.c_uint32
             signatures: dict[str, tuple[list[Any], Any]] = {
@@ -72,7 +72,7 @@ class NativeSchedulerBridge:
             abi = int(library.kairo_ecs_ffi_version())
         except (OSError, AttributeError) as error:
             raise NativeBackendUnavailable(
-                f"Unable to load the required Rust ABI from {self.lib_path}: {error}"
+                f"Unable to load the required Rust ABI from {selected}: {error}"
             ) from error
         if abi != 1:
             raise NativeBackendUnavailable(f"Unsupported Rust ABI version {abi}; expected 1")
@@ -193,6 +193,9 @@ class NativeEngine:
             if self._handle:
                 handle, self._handle = self._handle, 0
                 self._check_status(self._lib.kairo_ecs_engine_free(handle), "engine_free")
+
+    def __reduce_ex__(self, _protocol: int) -> Never:
+        raise TypeError("NativeEngine owns a Rust handle and cannot be copied or serialized")
 
     def __enter__(self) -> Self:
         self._open_handle()

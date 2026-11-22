@@ -1,0 +1,64 @@
+name: Native beta installed artifacts
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/native-beta.yml"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "crates/kairo-ecs-*/**"
+      - "include/kairo_ecs.h"
+      - "bindings/python/**"
+      - "packaging/native-beta-scope.json"
+      - "packaging/scripts/qualify_native_beta.py"
+      - "scripts/package-python-tools.lock"
+      - "tests/conformance/native-beta-abi.c"
+      - "tests/fixtures/minimal-consumer/**"
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  installed:
+    name: Installed native beta (${{ matrix.target }})
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            target: x86_64-unknown-linux-gnu
+          - runner: macos-15
+            target: aarch64-apple-darwin
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.15.2"
+      - name: Verify repository-local Python 3.15.2
+        run: python scripts/python_runtime.py --github
+      - name: Qualify toolchains
+        env:
+          EXPECTED_TARGET: ${{ matrix.target }}
+        run: |
+          python -m pip install --require-hashes -r scripts/package-python-tools.lock
+          rustup toolchain install 1.99.1 --profile minimal
+          rustup run 1.99.1 rustc -Vv | grep -Fx "host: $EXPECTED_TARGET"
+      - name: Build and run the clean-installed candidate
+        run: python packaging/scripts/qualify_native_beta.py --output "$RUNNER_TEMP/native-beta"
+      - name: Retain the exact tested artifacts and receipt
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: native-beta-${{ matrix.target }}
+          path: ${{ runner.temp }}/native-beta/artifacts
+          if-no-files-found: error
