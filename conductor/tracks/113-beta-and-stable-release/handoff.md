@@ -4,7 +4,7 @@ Updated 23 November 2026. Both advertised targets passed the installed
 candidate gate. Phase 0 remains open for final candidate review and
 maintainer acceptance.
 
-## Selected native core candidate
+## Native core v1 candidate — 23 November 2026
 
 `native-core-v1` selects main commit
 `e2875387ce45c34cd19716ea66f0102251a6aa6f`. The Apache-2.0 Rust SDK, C ABI
@@ -21,6 +21,8 @@ The shared SDK SHA-256 is
 | --- | --- |
 | Linux x86-64 GNU | `bdf06ca4ece1be84f63cda9793b9a9be5634e9b1e3dcd8a84aef3a50bb7ced88` |
 | macOS ARM64 | `3a871e601f5da415758ad3f47691853d5e39a67993295cd3a731256964bfd7b1` |
+
+### Candidate compatibility, performance and provenance
 
 - **Compatibility.** CareOps `9af99b5730d6aa5cef1c05bd48e90fd377b80cf2`
   admitted and reproduced its historical nominal run byte for byte using
@@ -74,7 +76,7 @@ Python lifecycle, Rust service-station and replay, and installed CareOps
 allocation cases. Every invocation exited zero. The independent receipt
 SHA-256 is `f71b182d0e78256da2c10cd029809872dffb0b789abce234ce38da5787504f2c`.
 
-### Candidate compatibility, performance and provenance
+### First candidate compatibility, performance and provenance
 
 - **CareOps replay.** The installed SDK built CareOps
   `9af99b5730d6aa5cef1c05bd48e90fd377b80cf2` on macOS ARM64 with Rust
