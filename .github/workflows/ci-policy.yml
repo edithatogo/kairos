@@ -106,14 +106,13 @@ jobs:
           grep -n -E 'unknown-registry = "deny"' deny.toml
           grep -n -E 'unknown-git = "deny"' deny.toml
           grep -n -F 'allow-registry = ["https://github.com/rust-lang/crates.io-index"]' deny.toml
-      - name: Provision pinned metadata assessment toolchain
-        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
-        with:
-          version: "0.10.0"
-      - name: Verify pinned howfairis CLI
-        run: uvx --python 3.11 --from howfairis==0.14.2 howfairis --help
+      - name: Bootstrap isolated metadata tooling
+        run: |
+          python3 -m venv "$RUNNER_TEMP/fair-tools"
+          "$RUNNER_TEMP/fair-tools/bin/python" -m pip install --disable-pip-version-check uv==0.10.0
+          "$RUNNER_TEMP/fair-tools/bin/uvx" --python 3.11 --from howfairis==0.14.2 howfairis --help
       - name: Advisory FAIR public-software metadata assessment
         continue-on-error: true
         env:
           REPOSITORY_URL: https://github.com/${{ github.repository }}
-        run: uvx --python 3.11 --from howfairis==0.14.2 howfairis "$REPOSITORY_URL"
+        run: "$RUNNER_TEMP/fair-tools/bin/uvx" --python 3.11 --from howfairis==0.14.2 howfairis "$REPOSITORY_URL"
