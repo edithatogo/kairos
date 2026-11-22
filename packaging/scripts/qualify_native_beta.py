@@ -240,13 +240,20 @@ def run_installed_careops(
     selected["workspace"] = re.sub(
         r"^members = .*", f'members = ["crates/{package}"]', selected["workspace"], flags=re.MULTILINE,
     )
+    dependencies = read_toml(manifest)["workspace"]["dependencies"]
+    sdk_dependencies = [name for name in dependencies if name in cfg["rust_crates"]]
+    require(bool(sdk_dependencies), "CareOps has no declared native SDK dependencies")
+    section = selected["workspace.dependencies"]
+    for name in sdk_dependencies:
+        path = f"libs/kairos/crates/{name}"
+        require(dependencies[name].get("path") == path, f"CareOps provider selection changed: {name}")
+        section = section.replace(json.dumps(path), json.dumps(str(sdk / "crates" / name)), 1)
+    selected["workspace.dependencies"] = section
     selected_sections = required | {"patch.crates-io"}
     manifest.write_text(
         "".join(section for name, section in selected.items() if name in selected_sections),
         encoding="utf-8",
     )
-    (source / "libs").mkdir()
-    (source / "libs/kairos").symlink_to(sdk, target_is_directory=True)
     sources = resolve(cargo, source, sdk, set(cfg["rust_crates"]), old_lock)
     run_case(cargo, source, "--offline", "-p", package, "--test", careops["test"], case=careops["case"])
     return {
