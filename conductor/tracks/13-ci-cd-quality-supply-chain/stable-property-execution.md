@@ -12,11 +12,13 @@ cancellation and generational identities. Generators retain their checked-in
 fixed seeds and case counts. Compilation and execution have separate 600-second
 and 120-second process budgets, inside a 15-minute job limit.
 
-The workflow retains the explicit `Fuzzing UNVERIFIED (cargo-fuzz not run)` job.
-These stable properties do not establish coverage-guided libFuzzer execution,
-AddressSanitizer qualification, or completion of the nightly release obligation.
-No compiler policy, root dependency, accepted Track 96 status, scheduler source,
-or frozen integration PR is changed.
+The same job builds the existing `scheduler_requests` libFuzzer target with
+locked dependencies and the stable LLVM sanitizer-coverage pass. The fuzzer
+uses edge counters for guidance and checks dispatch ordering, cancellation and
+conservation. Pull requests run 20,000 inputs. Scheduled and manual runs
+exercise the corpus for 60 seconds. Each run uses seed 472026, a 1,024-byte input
+limit and a 2 GiB RSS limit. CI requires a loaded counter table and new
+coverage during the run. AddressSanitizer and Miri execution remain unverified.
 
 ## Reproduction and review
 
@@ -30,6 +32,10 @@ Workflow artifacts retain the checked-out commit, compiler identity, build/test
 logs and any generated property regression seed files for fourteen days. A
 failed command remains a failed job; no retries or allowed-failure step is added.
 PR code executes with read-only contents permission and no persisted credentials.
+
+The fuzz artifact retains the same source and compiler identity, seed file and
+binary digests, compiler flags, campaign arguments, coverage log and any
+crashes for thirty days.
 
 Candidate validation is recorded in the PR. This note records implementation
 scope and commands; it is not a native-test, hosted-run, or release acceptance.
