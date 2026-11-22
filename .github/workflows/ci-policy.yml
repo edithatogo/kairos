@@ -115,4 +115,5 @@ jobs:
         continue-on-error: true
         env:
           REPOSITORY_URL: https://github.com/${{ github.repository }}
-        run: "$RUNNER_TEMP/fair-tools/bin/uvx" --python 3.11 --from howfairis==0.14.2 howfairis "$REPOSITORY_URL"
+        run: |
+          "$RUNNER_TEMP/fair-tools/bin/uvx" --python 3.11 --from howfairis==0.14.2 howfairis "$REPOSITORY_URL"
