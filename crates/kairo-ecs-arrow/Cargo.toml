@@ -13,6 +13,7 @@ kairo-ecs-types = { path = "../kairo-ecs-types", version = "0.0.0" }
 kairo-ecs-rng = { path = "../kairo-ecs-rng", version = "0.0.0", optional = true }
 sha2 = { version = "0.11.1", default-features = false }
 tempfile = "3.27.0"
+hdf5-metno = { version = "=0.15.1", optional = true }
 
 # Track 62 Phase 0: the official Arrow logical-type crate, admitted default-off
 # behind `arrow-native`. Phase 0 only needs schema types; see the handoff for
@@ -56,7 +57,7 @@ cohort-native = ["polars-native", "dep:kairo-ecs-rng"]
 # to Track 29/20 and is deliberately not taken here.
 parquet-native = []
 parallel-io = []
-hdf5 = ["parallel-io"]
+hdf5 = ["parallel-io", "dep:hdf5-metno"]
 adios2 = ["parallel-io"]
 
 [dev-dependencies]
