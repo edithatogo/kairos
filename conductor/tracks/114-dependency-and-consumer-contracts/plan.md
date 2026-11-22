@@ -38,14 +38,14 @@ does not change the 60-leaf workpack's pending statuses.
 ## Phase 1: Independent core and adapters
 
 - [ ] 114.1.1: Define the smallest public Rust crate/facade, ABI and schema contracts; keep heavyweight features optional.
-- [ ] 114.1.2: Add a standalone installed downstream fixture that builds without CareOps or private paths/data.
+- [x] 114.1.2: Add a standalone installed downstream fixture that builds without CareOps or private paths/data. The [native install receipt](../113-beta-and-stable-release/handoff.md#native-core-v1-candidate--23-november-2026) covers the minimal Rust fixture.
 - [ ] 114.1.3: Define the CareOps-owned domain adapter and immutable dependency selection; preserve current accepted pins until qualification.
-- [ ] 114.1.4: Connect existing Track108 installed-consumer gates to candidate native dispatch/replay/schema/lifetime acceptance.
+- [x] 114.1.4: Connect installed-consumer gates to candidate native dispatch, replay, schema and lifetime acceptance. Reuse the [Track 108 receipts](../108-scientific-ecosystem-alignment/handoff.md#installed-consumer-qualification--23-november-2026).
 - [ ] 114.1.5: Complete the source/API extraction map into existing game core/solve and optional adapter; resolve identity/chance/payoff/tie differences, feature-enabled package closure and S01–S04 receiving acceptance. Keep solver diagnostics distinct from causal execution traces.
 - [x] 114.1.6: Implement scheduled movement arrival, cancellation and topology-revision handling behind the neutral Rust contract. The movement and routing tests cover exact ticks, stale arrivals and native queue order.
 - [x] 114.1.7: Implement admission/release intervals, atomic quantities, observation windows and committed-only export under optimistic replay. The replay fixture verifies a late release against canonical event order.
-- [ ] 114.1.8: Qualify downstream CareOps physical movement. The public Rust fixture verifies movement and lease cleanup together across arrival, cancellation, replanning, retirement and start failure.
-- [ ] 114.1.9: Qualify Innovate's actual native event/state/RNG dispatch and optional data features; printed imports and source metadata cannot close this item.
+- [x] 114.1.8: Qualify the installed CareOps physical-movement case. The [receiving probe](handoff.md#installed-careops-movement--23-november-2026) combines the actual CareOps allocation coordinator with native movement, cancellation and measured porter occupancy.
+- [x] 114.1.9: Qualify Innovate's native event dispatch, state, seeded replay and optional data features in the [installed Track 108 receiving wheel](handoff.md#reused-installed-consumer-evidence).
 - [ ] 114.1.10: Hand off versioned game semantic and paired outcome contracts to UOGTO, the game library and Voiage; qualify lawful observation, stale-action/lifetime handling and separate solver/simulation RNG purposes through K01.port. Domain consumers own game/economic assumptions and provider pin changes.
 - [ ] 114.1.review: Independently review this phase, apply accepted fixes, execute the named oracles and record the next-phase decision.
 
