@@ -74,6 +74,15 @@ Errors on unsupported inputs must be explicit. Numerical changes require an algo
 
 The evidence concerns numerical correctness and model execution inside these contracts. See [ADR 0014](../docs/adr/0014-versioned-scientific-methods.md) for API migration.
 
+## S11 Apple Metal particle qualification
+
+An Apple M1 Max ran the resident particle kernel across two workgroups.
+Positions agreed with an independent scalar reference within `2e-6` and two
+same-device runs produced bitwise identical positions. Empty replacement,
+concurrent readback and native validation recovery passed. CPU was faster
+in all 60 paired timings for this particle model.
+[Evidence](execution/scientific/s11-completion.md) · [Raw timings](execution/scientific/s11-metal-timings.tsv).
+
 ## S13 native co-simulation qualification
 
 The FMI 2 and FMI 3 Reference FMU tests execute a native impact and verify

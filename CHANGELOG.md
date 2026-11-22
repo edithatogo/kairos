@@ -57,6 +57,8 @@ Format:
 
 ### Changed
 
+- `kairo-ecs-gpu` keeps Apple Metal particles resident until explicit readback. Empty uploads retire old particles, and native counters report actual GPU transfers. See [ADR 0017](docs/adr/0017-metal-particle-residency.md).
+
 - Standalone `kairo-ecs-fmi` binaries use `instantiate_with_token` with the exporter-provided identity. Raw FMI 3 tables now use the standard `Fmi3DoStep` output parameters.
 - `bindings/runtime-policy.json` records the installed CPython 3.15.2 and C ABI v1 qualification for the two native beta candidate targets. The local scheduler and benchmark notebooks verify the checkout's selected kernel before running.
 - The native beta Rust SDK and C ABI archives ship Apache-2.0. The installed Python probe covers wrong architecture, missing symbols and ABI version rejection.
