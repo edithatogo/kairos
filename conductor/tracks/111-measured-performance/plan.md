@@ -4,7 +4,7 @@ Remove demonstrated overhead, establish a measured serial/parallel/GPU crossover
 
 ## Phase 0: Reproducible baseline
 
-- [x] 111.0.1: Reproduce historical small-workload PDES measurements and freeze a common serial/parallel input tape. [Evidence](handoff.md#matched-ring-and-worker-reuse--23-november-2026).
+- [x] 111.0.1: Reproduce historical small-workload PDES measurements and freeze a common serial/parallel input tape. [Evidence](handoff.md#matched-ring-and-worker-reuse).
 - [ ] 111.0.2: Profile thread startup/join, synchronization, allocation, queue, snapshots, serialization and transfer cost.
 - [ ] 111.0.3: Separate initialization, steady state and end-to-end timings; retain raw samples, hardware, inputs and exact source.
 - [ ] 111.0.review: Independently review this phase, apply accepted fixes, execute the named oracles and record the next-phase decision.

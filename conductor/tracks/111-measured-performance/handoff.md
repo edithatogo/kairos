@@ -1,11 +1,11 @@
 # Handoff
 
-## Matched ring and worker reuse — 23 November 2026
+## Matched ring and worker reuse
 
 Chat `01a1fd18-51c7-7963-a3cc-d262d54582ba` owns the Kairos closeout worktree
 on `codex/pdes-crossover-20261123`. The measured source is `a0a9ae53e3a536309abe67269167ad730f7f44d2`.
 The scoped and pooled binaries used that same tree and Rust 1.99.1.
-[Execution receipt](evidence/receipt.json).
+The runs completed on 23 November 2026. [Execution receipt](evidence/receipt.json).
 
 The eight historical strong/weak cases reproduced on `ba58873` with ten
 samples per case. The four-LP strong ring processed 4,096 events in both

@@ -85,7 +85,7 @@ and seeds 7, 47 and 24301. Protocol tests additionally cover causality boundarie
 invalid routes and state, sparse progress, poisoning, and adversarial 8-LP
 10,000-tick execution. [Benchmark evidence](benchmark-results.md) records the
 separate throughput measurements and host limits.
-[Worker-pool measurements and raw samples](../../conductor/tracks/111-measured-performance/handoff.md#matched-ring-and-worker-reuse--23-november-2026)
+[Worker-pool measurements and raw samples](../../conductor/tracks/111-measured-performance/handoff.md#matched-ring-and-worker-reuse)
 cover the optional executor.
 
 ## Handoff

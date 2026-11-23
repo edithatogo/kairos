@@ -37,7 +37,7 @@ Track 111 is In Progress. The optional persistent worker pool cut the median
 cheap four-LP ring time from 75.41 ms to 18.06 ms on Apple M1 Max. The
 serial-to-pool crossover was between the 2,048 and 8,192 mixes-per-event
 samples. The paired runs checked ordered state and counters.
-[Method and raw measurements](tracks/111-measured-performance/handoff.md#matched-ring-and-worker-reuse--23-november-2026).
+[Method and raw measurements](tracks/111-measured-performance/handoff.md#matched-ring-and-worker-reuse).
 
 ## Historical status records
 
