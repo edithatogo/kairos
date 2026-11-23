@@ -25,6 +25,13 @@ pub mod arrow_c_data;
 #[cfg(feature = "cohort-native")]
 pub mod cohort;
 
+#[cfg(all(feature = "adios2", any(target_os = "linux", target_os = "macos")))]
+mod adios2_checkpoint;
+#[cfg(any(
+    feature = "hdf5",
+    all(feature = "adios2", any(target_os = "linux", target_os = "macos"))
+))]
+mod checkpoint_data;
 #[cfg(feature = "hdf5")]
 mod hdf5_checkpoint;
 
@@ -444,6 +451,12 @@ impl Display for ArrowError {
 
 impl Error for ArrowError {}
 
+impl From<std::io::Error> for ArrowError {
+    fn from(error: std::io::Error) -> Self {
+        Self::Io(error.to_string())
+    }
+}
+
 #[cfg(feature = "parallel-io")]
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct ContiguousBlock {
@@ -675,6 +688,8 @@ pub struct Hdf5CheckpointAdapter;
 
 #[cfg(feature = "parallel-io")]
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+/// Serial ADIOS2 BP5 checkpoint directories on Linux and macOS.
+/// Use `CheckpointManifest::read_contract_file` for historical text files.
 pub struct Adios2CheckpointAdapter;
 
 #[cfg(feature = "parallel-io")]
@@ -985,11 +1000,20 @@ impl CheckpointAdapter for Adios2CheckpointAdapter {
         path: impl AsRef<std::path::Path>,
         manifest: &CheckpointManifest,
     ) -> Result<CheckpointAdapterReceipt, ArrowError> {
-        #[cfg(feature = "adios2")]
+        #[cfg(all(feature = "adios2", any(target_os = "linux", target_os = "macos")))]
         {
-            write_adapter_contract(path, manifest, CheckpointFormat::Adios2)
+            let path = path.as_ref();
+            require_checkpoint_format(manifest, CheckpointFormat::Adios2)?;
+            adios2_checkpoint::write(path, manifest)?;
+            Ok(CheckpointAdapterReceipt {
+                format: CheckpointFormat::Adios2,
+                path: path.display().to_string(),
+                row_count: manifest.row_count,
+                checksum: manifest.checksum,
+                contract_only: false,
+            })
         }
-        #[cfg(not(feature = "adios2"))]
+        #[cfg(not(all(feature = "adios2", any(target_os = "linux", target_os = "macos"))))]
         {
             let _ = (path, manifest);
             Err(ArrowError::AdapterDisabled("adios2"))
@@ -1000,11 +1024,11 @@ impl CheckpointAdapter for Adios2CheckpointAdapter {
         &self,
         path: impl AsRef<std::path::Path>,
     ) -> Result<RestoredCheckpoint, ArrowError> {
-        #[cfg(feature = "adios2")]
+        #[cfg(all(feature = "adios2", any(target_os = "linux", target_os = "macos")))]
         {
-            restore_adapter_contract(path, CheckpointFormat::Adios2)
+            adios2_checkpoint::read(path.as_ref())?.restore()
         }
-        #[cfg(not(feature = "adios2"))]
+        #[cfg(not(all(feature = "adios2", any(target_os = "linux", target_os = "macos"))))]
         {
             let _ = path;
             Err(ArrowError::AdapterDisabled("adios2"))
@@ -1012,34 +1036,10 @@ impl CheckpointAdapter for Adios2CheckpointAdapter {
     }
 }
 
-#[cfg(feature = "adios2")]
-fn write_adapter_contract(
-    path: impl AsRef<std::path::Path>,
-    manifest: &CheckpointManifest,
-    expected_format: CheckpointFormat,
-) -> Result<CheckpointAdapterReceipt, ArrowError> {
-    require_checkpoint_format(manifest, expected_format)?;
-    manifest.write_contract_file(path.as_ref())?;
-    Ok(CheckpointAdapterReceipt {
-        format: expected_format,
-        path: path.as_ref().display().to_string(),
-        row_count: manifest.row_count,
-        checksum: manifest.checksum,
-        contract_only: true,
-    })
-}
-
-#[cfg(feature = "adios2")]
-fn restore_adapter_contract(
-    path: impl AsRef<std::path::Path>,
-    expected_format: CheckpointFormat,
-) -> Result<RestoredCheckpoint, ArrowError> {
-    let manifest = CheckpointManifest::read_contract_file(path.as_ref())?;
-    require_checkpoint_format(&manifest, expected_format)?;
-    manifest.restore()
-}
-
-#[cfg(all(feature = "parallel-io", any(feature = "hdf5", feature = "adios2")))]
+#[cfg(any(
+    feature = "hdf5",
+    all(feature = "adios2", any(target_os = "linux", target_os = "macos"))
+))]
 fn require_checkpoint_format(
     manifest: &CheckpointManifest,
     expected_format: CheckpointFormat,

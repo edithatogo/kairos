@@ -39,6 +39,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install --no-install-recommends -y libopenmpi-dev openmpi-bin libclang-dev
           mpiexec --version
+      - name: Prepare pinned HDF5 library
+        run: bash scripts/prepare-hdf5-ci.sh
+      - name: Prepare pinned ADIOS2 library
+        run: bash scripts/prepare-adios2-ci.sh
       - name: Run benchmarks
         shell: bash
         run: |

@@ -73,6 +73,8 @@ jobs:
           mpiexec --version
       - name: Prepare pinned HDF5 library and independent reader
         run: bash scripts/prepare-hdf5-ci.sh
+      - name: Prepare pinned ADIOS2 library and independent reader
+        run: bash scripts/prepare-adios2-ci.sh
       - name: Verify workspace readiness
         run: |
           test -f Cargo.toml
@@ -108,6 +110,9 @@ jobs:
           cargo llvm-cov test --no-report --locked -p kairo-ecs-arrow --features hdf5 \
             --test maturity_native_io_format h5dump -- --ignored --nocapture | tee "$RUNNER_TEMP/kairo-h5dump.log"
           grep -Fq 'test result: ok. 1 passed; 0 failed; 0 ignored' "$RUNNER_TEMP/kairo-h5dump.log"
+          cargo llvm-cov test --no-report --locked -p kairo-ecs-arrow --features adios2 \
+            --test maturity_native_adios2 bpls -- --ignored --nocapture | tee "$RUNNER_TEMP/kairo-bpls.log"
+          grep -Fq 'test result: ok. 1 passed; 0 failed; 0 ignored' "$RUNNER_TEMP/kairo-bpls.log"
           cargo llvm-cov nextest --workspace --all-features --lcov --output-path lcov.info --no-clean
           node scripts/validation/check-core-coverage.mjs lcov.info
       - name: Capture runner resources after coverage

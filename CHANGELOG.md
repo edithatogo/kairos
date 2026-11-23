@@ -61,6 +61,8 @@ Format:
 
 ### Changed
 
+- The optional `kairo-ecs-arrow` ADIOS2 adapter writes native BP5 checkpoints on Linux and macOS with an installed ADIOS2 2.12 library. `CheckpointManifest` still reads legacy contract files for migration.
+
 - `kairo-ecs-gpu` keeps Apple Metal particles resident until explicit readback. Empty uploads retire old particles, and native counters report actual GPU transfers. See [ADR 0017](docs/adr/0017-metal-particle-residency.md).
 
 - Standalone `kairo-ecs-fmi` binaries use `instantiate_with_token` with the exporter-provided identity. Raw FMI 3 tables now use the standard `Fmi3DoStep` output parameters.

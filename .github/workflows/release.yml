@@ -238,6 +238,8 @@ jobs:
           mpiexec --version
       - name: Prepare pinned HDF5 library
         run: bash scripts/prepare-hdf5-ci.sh
+      - name: Prepare pinned ADIOS2 library
+        run: bash scripts/prepare-adios2-ci.sh
       - name: Validate release checklist
         env:
           DRY_RUN: ${{ github.event.inputs.dry_run }}

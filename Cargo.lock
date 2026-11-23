@@ -2214,6 +2214,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "kairo-ecs-adios2"
+version = "0.1.0"
+
+[[package]]
 name = "kairo-ecs-arrow"
 version = "0.1.0"
 dependencies = [
@@ -2222,11 +2226,13 @@ dependencies = [
  "cap-primitives",
  "criterion",
  "hdf5-metno",
+ "kairo-ecs-adios2",
  "kairo-ecs-fs-guard",
  "kairo-ecs-rng",
  "kairo-ecs-types",
  "polars",
  "polars-arrow",
+ "rustix",
  "same-file",
  "serde",
  "serde_json",
