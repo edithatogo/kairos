@@ -342,11 +342,12 @@ fn main() {
             let inputs = make_inputs(config.seed, lp_count, event_count);
             let sequential = || run_sequential(lp_count, &inputs, event_work);
             let parallel = || run_pdes(lp_count, &inputs, event_work);
-            for _ in 0..WARMUP_RUNS {
-                let _ = sequential();
-                let _ = parallel().expect("benchmark warmup must complete");
-            }
             let (sequential_expected, _) = sequential();
+            let (warmup_state, _, _) = parallel().expect("benchmark warmup must complete");
+            assert_eq!(
+                warmup_state, sequential_expected,
+                "warmup state parity failed"
+            );
             let mut sequential_samples = Vec::with_capacity(config.repetitions);
             let mut pdes_samples = Vec::with_capacity(config.repetitions);
             let mut sequential_setup = Vec::with_capacity(config.repetitions);
@@ -420,10 +421,16 @@ fn main() {
     } else {
         "kairoecs.pdes.benchmark.v1"
     };
+    let executor = if cfg!(feature = "pdes-worker-pool") {
+        "pooled"
+    } else {
+        "scoped"
+    };
     println!(
         "{}",
         json!({
             "schema_version": schema,
+            "pdes_executor": executor,
             "seed": config.seed,
             "repetitions": config.repetitions,
             "warmup_runs": WARMUP_RUNS,
