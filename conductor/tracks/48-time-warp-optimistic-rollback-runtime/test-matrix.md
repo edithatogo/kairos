@@ -12,6 +12,7 @@ See [current qualification](../49-distributed-mpi-grpc-state-synchronization/nat
 | Gate | Command | Required for |
 |---|---|---|
 | Time Warp tests | `cargo test -p kairo-ecs-pdes --features time-warp` | Implementation |
+| In-flight cuts | `cargo test --locked -p kairo-ecs-pdes --all-features --lib in_flight_` | Coordinator and participant restart, rollback parity and delivery at the floor |
 | Conservative regression | `cargo test -p kairo-ecs-pdes --features pdes` | Review |
 | Benchmark compile | `cargo check --benches -p kairo-ecs-pdes --features pdes,time-warp` | Review |
 | Local Time Warp evidence manifest | `node scripts/validation/validate-hpc-parity-evidence.mjs` | Evidence boundary |

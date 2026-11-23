@@ -219,6 +219,76 @@ fn standby_complete_join_exact_admission_and_stale_tls_fail_closed() {
 }
 #[test]
 fn actual_old30_new25_waits_for_descendant_retirement_and_survives_restart() {
+    late_delivery_and_restart(false);
+}
+
+#[test]
+fn in_flight_cut_caps_the_floor_and_preserves_rollback_across_restart() {
+    late_delivery_and_restart(true);
+}
+
+#[test]
+fn in_flight_delivery_at_the_floor_survives_restart() {
+    let _serial = super::super::external_store::FIXTURE_SERIAL.lock().unwrap();
+    let da = Temp::new();
+    let db = Temp::new();
+    let mut a = open(&da, 0);
+    let mut b = open(&db, 1);
+    activate(&mut a, &mut b);
+    a.schedule_initial(
+        0,
+        RemoteEvent {
+            source_lp: LpId(0),
+            dest_lp: LpId(1),
+            tick: Tick::from_ticks(40),
+            event_payload: vec![9],
+        },
+    )
+    .unwrap();
+    let delivery = a.pending_packets().unwrap().pop().unwrap();
+    a.close_initial_inputs().unwrap();
+    b.close_initial_inputs().unwrap();
+    let pause = a.pause_cut_with_in_flight().unwrap();
+    let pa = a.prepare_cut(100).unwrap();
+    let revision = a.revision().unwrap();
+    drop(a);
+    drop(b);
+
+    let mut a = open(&da, 0);
+    let mut b = open(&db, 1);
+    assert!(!a.is_active());
+    assert_eq!(a.retained_pause(), Some(pause.as_slice()));
+    assert_eq!(a.prepare_cut(100).unwrap(), pa);
+    assert_eq!(a.revision().unwrap(), revision);
+    assert_eq!(
+        b.receive_from([1; 32], &delivery),
+        Err(ExternalError::Standby)
+    );
+    b.receive_from([1; 32], a.retained_pause().unwrap())
+        .unwrap();
+    assert!(!b.is_active());
+    let pb = b.prepare_cut(100).unwrap();
+    let cut = a.commit_cut(vec![pa, pb]).unwrap();
+    b.recover_cut(&cut).unwrap();
+    assert_eq!((a.gvt(), b.gvt()), (40, 40));
+    assert_eq!(a.retained_pause(), None);
+    assert_eq!(b.retained_pause(), None);
+    activate(&mut a, &mut b);
+    assert_eq!(a.pending_packets().unwrap(), vec![delivery.clone()]);
+    let replies = b.receive_from([1; 32], &delivery).unwrap();
+    let revision = b.revision().unwrap();
+    assert_eq!(b.receive_from([1; 32], &delivery).unwrap(), replies);
+    assert_eq!(b.revision().unwrap(), revision);
+    for reply in replies {
+        a.receive_packet(&reply).unwrap();
+    }
+    assert!(a.pending_packets().unwrap().is_empty());
+    assert_eq!(b.run_until_with_budget(100, 2).unwrap(), 1);
+    let model: Model = serde_json::from_slice(b.model_bytes(1).unwrap()).unwrap();
+    assert_eq!(model.trace, vec![(40, vec![9])]);
+}
+
+fn late_delivery_and_restart(capture_in_flight: bool) {
     let _serial = super::super::external_store::FIXTURE_SERIAL.lock().unwrap();
     let da = Temp::new();
     let db = Temp::new();
@@ -238,7 +308,12 @@ fn actual_old30_new25_waits_for_descendant_retirement_and_survives_restart() {
     deliver(&mut a, &mut b, &old);
     b.run_until_with_budget(100, 1).unwrap();
     let child = b.pending_packets().unwrap()[0].clone();
-    deliver(&mut b, &mut a, &child);
+    if capture_in_flight {
+        // The child runs, but its durable admission never reaches B.
+        assert_eq!(a.receive_packet(&child).unwrap().len(), 1);
+    } else {
+        deliver(&mut b, &mut a, &child);
+    }
     a.run_until_with_budget(100, 1).unwrap();
     self_deliver(&mut a, &p10);
     a.run_until_with_budget(100, 3).unwrap();
@@ -260,6 +335,32 @@ fn actual_old30_new25_waits_for_descendant_retirement_and_survives_restart() {
         .reversals
         .iter()
         .any(|r| r.applied && r.receipt.is_none()));
+    let decision = if capture_in_flight {
+        let descendant = b.pending_packets().unwrap()[0].clone();
+        let pause = a.pause_cut_with_in_flight().unwrap();
+        b.receive_packet(&pause).unwrap();
+        assert_eq!(a.receive_packet(&descendant), Err(ExternalError::Paused));
+        let pa = a.prepare_cut(100).unwrap();
+        let pb = b.prepare_cut(100).unwrap();
+
+        let mut inconsistent = b.auth(&pb).unwrap();
+        let Body::Prepare { received, .. } = &mut inconsistent.body else {
+            unreachable!()
+        };
+        received.push((0, [0x99; 32]));
+        received.sort_unstable();
+        let inconsistent = protocol::sign(&inconsistent, &b.key).unwrap();
+        let revision = a.revision().unwrap();
+        assert!(a.commit_cut(vec![pa.clone()]).is_err());
+        assert!(a.commit_cut(vec![pa.clone(), inconsistent]).is_err());
+        assert_eq!(a.revision().unwrap(), revision);
+        let decision = a.commit_cut(vec![pa, pb.clone()]).unwrap();
+        assert_eq!(a.gvt(), 25);
+        assert_eq!(b.prepare_cut(100).unwrap(), pb);
+        Some(decision)
+    } else {
+        None
+    };
     let saved = b.checkpoint().unwrap();
     drop(b);
     let mut b = open(&db, 1);
@@ -267,6 +368,14 @@ fn actual_old30_new25_waits_for_descendant_retirement_and_survives_restart() {
         b.image.processes,
         serde_json::from_slice::<Image>(&saved).unwrap().processes
     );
+    if let Some(decision) = &decision {
+        b.recover_cut(decision).unwrap();
+        assert_eq!(b.gvt(), 25);
+        assert!(!b.is_active());
+        let revision = b.revision().unwrap();
+        b.recover_cut(decision).unwrap();
+        assert_eq!(b.revision().unwrap(), revision);
+    }
     activate(&mut a, &mut b);
     let descendant = b
         .pending_packets()
@@ -356,6 +465,19 @@ fn actual_old30_new25_waits_for_descendant_retirement_and_survives_restart() {
 
     assert_eq!(&ma, serial.process_at(LpId(0)).unwrap());
     assert_eq!(&mb, serial.process_at(LpId(1)).unwrap());
+    if capture_in_flight {
+        assert!(b.image.outgoing.iter().any(|outgoing| {
+            outgoing.message.tick == 35 && outgoing.suppressed && !outgoing.admitted
+        }));
+        assert_eq!(b.minimum(), u128::MAX);
+        let pause = a.pause_cut_with_in_flight().unwrap();
+        b.receive_packet(&pause).unwrap();
+        let pa = a.prepare_cut(100).unwrap();
+        let pb = b.prepare_cut(100).unwrap();
+        let decision = a.commit_cut(vec![pa, pb]).unwrap();
+        b.receive_packet(&decision).unwrap();
+        assert_eq!((a.gvt(), b.gvt()), (100, 100));
+    }
 }
 
 #[test]

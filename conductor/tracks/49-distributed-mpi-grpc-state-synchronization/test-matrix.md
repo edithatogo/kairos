@@ -9,6 +9,7 @@ Current selected runtime: actual repository Python3.15.2 and Rust1.99.1.
 | Real Mac/Colab gRPC | `.venv/bin/python docs/distributed/qualify_track49_grpc.py --binary ABSOLUTE_BINARY --ssh-args PRIVATE_JSON --remote-repo /content/kairos-track49-full/kairos --output PRIVATE_ATTEMPT --cases all` | Three full real two-host cases, typed migration/IPC and actual failures |
 | PDES amendment | `cargo test --locked -p kairo-ecs-pdes --all-features` | 208 pass; corruption/proof/CAS/crash regressions |
 | Tonic synchronization | `cargo test --locked -p kairo-ecs-grpc --test track49_sync --all-features` | 9 pass; independent wire/schema/socket oracles |
+| Tonic listener handoff | `cargo test --locked -p kairo-ecs-grpc --test tonic_transport_oracles --all-features` | [Address ownership](../../../docs/distributed/grpc-listener-ownership.md), lifecycle, recovery, optimistic ordering, migration and GVT |
 | Strict lint | `cargo clippy --locked -p kairo-ecs-pdes -p kairo-ecs-mpi -p kairo-ecs-grpc --all-targets --all-features -- -D warnings` | Focused receipts and full hosted lane |
 | Full Rust quality | `just ci`, locked doctests and actual MPI2/4 API exchange in ci-core | Exact-source hosted result, distinct from native host proof |
 | Evidence and phase | `node scripts/validation/validate-hpc-parity-evidence.mjs`; phase/DAG/artifact validators | Manifest/claim structure, not substitute runtime proof |

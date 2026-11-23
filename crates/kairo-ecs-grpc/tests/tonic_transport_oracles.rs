@@ -18,21 +18,19 @@ use kairo_ecs_pdes::{
 use kairo_ecs_types::{EntityId, SimTime as Tick};
 use tonic::{Code, Request};
 
-fn get_available_port() -> u16 {
-    let listener = TcpListener::bind("127.0.0.1:0").expect("bind ephemeral port");
-    let port = listener.local_addr().unwrap().port();
-    drop(listener);
-    port
+fn bind_loopback_listener() -> TcpListener {
+    TcpListener::bind("127.0.0.1:0").expect("bind ephemeral port")
 }
 
 #[test]
 fn oracle_tonic_transport_clean_lifecycle_and_port_rebinding() {
-    let port = get_available_port();
-    let addr: SocketAddr = format!("127.0.0.1:{port}").parse().unwrap();
     let config = GrpcTransportConfig::default();
 
-    let transport = TonicTransport::bind(LpId(1), addr, vec![], config).expect("bind transport");
-    assert_eq!(transport.bound_addr().port(), port);
+    let listener = bind_loopback_listener();
+    let addr = listener.local_addr().unwrap();
+    let transport =
+        TonicTransport::from_listener(LpId(1), listener, vec![], config).expect("bind transport");
+    assert_eq!(transport.bound_addr(), addr);
 
     // Drop transport and verify immediate clean shutdown without hanging
     let start = Instant::now();
@@ -53,8 +51,7 @@ fn oracle_tonic_transport_clean_lifecycle_and_port_rebinding() {
 
 #[test]
 fn oracle_tonic_transport_independent_grpc_peer_rpc_interoperability() {
-    let port = get_available_port();
-    let addr: SocketAddr = format!("127.0.0.1:{port}").parse().unwrap();
+    let addr = "127.0.0.1:0".parse().unwrap();
     let config = GrpcTransportConfig::default();
 
     let mut transport =
@@ -67,7 +64,7 @@ fn oracle_tonic_transport_independent_grpc_peer_rpc_interoperability() {
         .expect("build client runtime");
 
     rt.block_on(async {
-        let endpoint_str = format!("http://127.0.0.1:{port}");
+        let endpoint_str = format!("http://{}", transport.bound_addr());
         let mut client = SimulationTransportClient::connect(endpoint_str)
             .await
             .expect("independent peer connect");
@@ -156,26 +153,32 @@ fn oracle_tonic_transport_independent_grpc_peer_rpc_interoperability() {
 
 #[test]
 fn oracle_tonic_transport_optimistic_envelope_full_roundtrip_and_pdes_ordering() {
-    let port1 = get_available_port();
-    let port2 = get_available_port();
-    let addr1: SocketAddr = format!("127.0.0.1:{port1}").parse().unwrap();
-    let addr2: SocketAddr = format!("127.0.0.1:{port2}").parse().unwrap();
+    let listener1 = bind_loopback_listener();
+    let listener2 = bind_loopback_listener();
 
     let peer_for_1 = vec![GrpcPeer {
         lp_id: LpId(2),
-        endpoint: format!("http://127.0.0.1:{port2}"),
+        endpoint: format!("http://{}", listener2.local_addr().unwrap()),
     }];
     let peer_for_2 = vec![GrpcPeer {
         lp_id: LpId(1),
-        endpoint: format!("http://127.0.0.1:{port1}"),
+        endpoint: format!("http://{}", listener1.local_addr().unwrap()),
     }];
 
-    let transport1 =
-        TonicTransport::bind(LpId(1), addr1, peer_for_1, GrpcTransportConfig::default())
-            .expect("bind transport 1");
-    let mut transport2 =
-        TonicTransport::bind(LpId(2), addr2, peer_for_2, GrpcTransportConfig::default())
-            .expect("bind transport 2");
+    let transport1 = TonicTransport::from_listener(
+        LpId(1),
+        listener1,
+        peer_for_1,
+        GrpcTransportConfig::default(),
+    )
+    .expect("bind transport 1");
+    let mut transport2 = TonicTransport::from_listener(
+        LpId(2),
+        listener2,
+        peer_for_2,
+        GrpcTransportConfig::default(),
+    )
+    .expect("bind transport 2");
 
     let authority = OptimisticAuthority::Scoped {
         simulation_namespace: 0x9999,
@@ -228,8 +231,7 @@ fn oracle_tonic_transport_optimistic_envelope_full_roundtrip_and_pdes_ordering()
 
 #[test]
 fn oracle_tonic_transport_wire_protocol_and_version_rejection() {
-    let port = get_available_port();
-    let addr: SocketAddr = format!("127.0.0.1:{port}").parse().unwrap();
+    let addr = "127.0.0.1:0".parse().unwrap();
     let config = GrpcTransportConfig::default();
 
     let transport = TonicTransport::bind(LpId(1), addr, vec![], config).expect("bind transport");
@@ -242,7 +244,7 @@ fn oracle_tonic_transport_wire_protocol_and_version_rejection() {
         .expect("client runtime");
 
     rt.block_on(async {
-        let endpoint_str = format!("http://127.0.0.1:{port}");
+        let endpoint_str = format!("http://{}", transport.bound_addr());
         let mut client = None;
         for _ in 0..20 {
             match SimulationTransportClient::connect(endpoint_str.clone()).await {
@@ -314,8 +316,10 @@ fn oracle_tonic_transport_wire_protocol_and_version_rejection() {
 
 #[test]
 fn oracle_tonic_transport_transient_failure_recovery_and_deadline_policy() {
-    let port = get_available_port();
-    let addr: SocketAddr = format!("127.0.0.1:{port}").parse().unwrap();
+    let peer_listener = bind_loopback_listener();
+    peer_listener
+        .set_nonblocking(true)
+        .expect("configure unserved listener");
     let config = GrpcTransportConfig {
         request_timeout: Duration::from_millis(200),
         heartbeat_interval: Duration::from_millis(50),
@@ -324,15 +328,13 @@ fn oracle_tonic_transport_transient_failure_recovery_and_deadline_policy() {
 
     let peer = vec![GrpcPeer {
         lp_id: LpId(2),
-        endpoint: format!("http://127.0.0.1:{port}"),
+        endpoint: format!("http://{}", peer_listener.local_addr().unwrap()),
     }];
 
     // 1. Client attempts to connect to peer before peer server is up
     let transport = TonicTransport::bind(
         LpId(1),
-        format!("127.0.0.1:{}", get_available_port())
-            .parse()
-            .unwrap(),
+        "127.0.0.1:0".parse().unwrap(),
         peer,
         config.clone(),
     )
@@ -349,9 +351,13 @@ fn oracle_tonic_transport_transient_failure_recovery_and_deadline_policy() {
         "must fail gracefully when peer server is not up"
     );
 
+    // Discard the expired connection before starting the peer service.
+    let (expired, _) = peer_listener.accept().expect("accept expired connection");
+    drop(expired);
+
     // 2. Bring up peer server on port
-    let peer_transport =
-        TonicTransport::bind(LpId(2), addr, vec![], config).expect("bind peer transport");
+    let peer_transport = TonicTransport::from_listener(LpId(2), peer_listener, vec![], config)
+        .expect("bind peer transport");
 
     // Retry sending heartbeat: client should successfully connect and deliver
     let mut success = false;
@@ -374,23 +380,21 @@ fn oracle_tonic_transport_transient_failure_recovery_and_deadline_policy() {
 
 #[test]
 fn oracle_tonic_transport_migration_and_gvt_consensus_round() {
-    let port1 = get_available_port();
-    let port2 = get_available_port();
-    let addr1: SocketAddr = format!("127.0.0.1:{port1}").parse().unwrap();
-    let addr2: SocketAddr = format!("127.0.0.1:{port2}").parse().unwrap();
+    let listener1 = bind_loopback_listener();
+    let listener2 = bind_loopback_listener();
 
     let peer1 = vec![GrpcPeer {
         lp_id: LpId(2),
-        endpoint: format!("http://127.0.0.1:{port2}"),
+        endpoint: format!("http://{}", listener2.local_addr().unwrap()),
     }];
     let peer2 = vec![GrpcPeer {
         lp_id: LpId(1),
-        endpoint: format!("http://127.0.0.1:{port1}"),
+        endpoint: format!("http://{}", listener1.local_addr().unwrap()),
     }];
 
-    let mut transport1 = TonicTransport::bind(
+    let mut transport1 = TonicTransport::from_listener(
         LpId(1),
-        addr1,
+        listener1,
         peer1,
         GrpcTransportConfig {
             request_timeout: Duration::from_millis(500),
@@ -399,7 +403,7 @@ fn oracle_tonic_transport_migration_and_gvt_consensus_round() {
     )
     .expect("bind transport 1");
     let mut transport2 =
-        TonicTransport::bind(LpId(2), addr2, peer2, GrpcTransportConfig::default())
+        TonicTransport::from_listener(LpId(2), listener2, peer2, GrpcTransportConfig::default())
             .expect("bind transport 2");
 
     // 1. Entity Migration over gRPC

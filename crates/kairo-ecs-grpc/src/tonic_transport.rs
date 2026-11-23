@@ -1,7 +1,7 @@
 #![forbid(unsafe_code)]
 
 use std::collections::{BTreeMap, HashMap, VecDeque};
-use std::net::SocketAddr;
+use std::net::{SocketAddr, TcpListener};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread::{self, JoinHandle};
@@ -383,8 +383,19 @@ impl TonicTransport {
         peers: Vec<GrpcPeer>,
         config: GrpcTransportConfig,
     ) -> Result<Self, std::io::Error> {
-        // Pre-bind a standard TCP listener to confirm port availability and obtain assigned ephemeral port
-        let std_listener = std::net::TcpListener::bind(bind_addr)?;
+        Self::from_listener(local_lp, TcpListener::bind(bind_addr)?, peers, config)
+    }
+
+    /// Starts the gRPC server on a bound TCP listener.
+    ///
+    /// Use this when peers need the address before their transports start.
+    /// The transport owns the listener through shutdown.
+    pub fn from_listener(
+        local_lp: LpId,
+        std_listener: TcpListener,
+        peers: Vec<GrpcPeer>,
+        config: GrpcTransportConfig,
+    ) -> Result<Self, std::io::Error> {
         std_listener.set_nonblocking(true)?;
         let bound_addr = std_listener.local_addr()?;
 

@@ -218,6 +218,9 @@ pub enum Body {
     Pause {
         cut: u64,
     },
+    PauseWithInFlight {
+        cut: u64,
+    },
     Prepare {
         cut: u64,
         pause: Hash,
@@ -334,7 +337,7 @@ impl Record {
                     return Err("external prepare bound".into());
                 }
             }
-            Body::Admission { .. } | Body::Pause { .. } => {}
+            Body::Admission { .. } | Body::Pause { .. } | Body::PauseWithInFlight { .. } => {}
         }
         Ok(())
     }
