@@ -611,3 +611,28 @@ port-zero listener while starting A; all50 assertions/deadlines stay. Seven
 affected tests and strict Clippy pass. Independent review accepts unchanged
 production/native evidence. Root owns final-head hosted readback only; no native
 operation or Colab session is active. The failure and focused success are archived.
+
+## In-flight cut qualification — 23 November 2026
+
+Chat `01a1fd18-51c7-7963-a3cc-d262d54582ba` owns this change in
+`/Users/doughnut/.codex/worktrees/kairos-ci-closeout/kairos`. Its scope is the
+PDES external runtime, protocol, regression fixtures and this track's evidence.
+The isolated Mac and NAS qualification workers and SSH tunnel have exited.
+
+The new signed pause freezes the current membership and retains unfinished
+deliveries. Reopening either participant permits control-plane cut recovery
+while model execution awaits complete activation. Both participants restarted
+before the NAS received the pause in the first mTLS case. The original
+delivery ran once at the common tick-40 floor. In the second case, the NAS
+restarted with a prepared cut and an outstanding descendant anti-message.
+The floor advanced from 25 to 100 after replay, with exact serial model parity.
+
+The fixture built the reviewed runtime on macOS ARM64 and Linux x86-64 with
+Rust 1.99.1, using the existing native worker with two test command selectors.
+The result and event log SHA-256 digests were
+`5f71d1cff5a8ea631d55a9acee00ab8ac994c947f866a84b77d81be02628ec21` and
+`faf2e600dc44f4f58da1d3815cb60ae6e0dd1ff2f2adc89d6c8fd7545a39912b`.
+All 212 PDES tests and strict Clippy passed. Independent review identified both
+restart cases and accepted their fixes. Hosted integration is the next gate.
+The [cut decision](adr-external-engine-20261103.md#cuts-with-retained-in-flight-work)
+defines the fixed-membership boundary.

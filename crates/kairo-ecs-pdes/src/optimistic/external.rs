@@ -1235,7 +1235,11 @@ impl<P: OptimisticProcess, C: PortableModelCodec<P>> ExternalOptimisticRuntime<P
             }
             return Ok(replies);
         }
-        if !self.image.active {
+        let is_pause = matches!(
+            &record.body,
+            Body::Pause { .. } | Body::PauseWithInFlight { .. }
+        );
+        if !self.image.active && !is_pause {
             return Err(ExternalError::Standby);
         }
         if (self.image.prepared.is_some() || self.image.paused.is_some())
@@ -1380,7 +1384,7 @@ impl<P: OptimisticProcess, C: PortableModelCodec<P>> ExternalOptimisticRuntime<P
                 o.admitted = true;
                 o.retired = true;
             }
-            Body::Pause { cut } => {
+            Body::Pause { cut } | Body::PauseWithInFlight { cut } => {
                 if record.issuer != 0
                     || next.paused.is_some()
                     || cut
@@ -1404,7 +1408,9 @@ impl<P: OptimisticProcess, C: PortableModelCodec<P>> ExternalOptimisticRuntime<P
             }
             _ => return Err(reject("unsupported live record")),
         }
-        self.complete_retirements(&mut next)?;
+        if !is_pause {
+            self.complete_retirements(&mut next)?;
+        }
         next.facts.push(Fact {
             packet: packet.to_vec(),
             responses: replies.clone(),
@@ -1710,8 +1716,7 @@ impl<P: OptimisticProcess, C: PortableModelCodec<P>> ExternalOptimisticRuntime<P
                     .outgoing
                     .iter()
                     .filter(|o| {
-                        (!o.admitted)
-                            || (o.message.anti && !o.retired)
+                        !self.delivery_settled(o)
                             || (!o.dependencies.iter().all(|d| finished(&self.image, d)))
                     })
                     .map(|o| o.message.tick),
@@ -1733,7 +1738,35 @@ impl<P: OptimisticProcess, C: PortableModelCodec<P>> ExternalOptimisticRuntime<P
             .min()
             .unwrap_or(u128::MAX)
     }
+
+    fn delivery_settled(&self, outgoing: &Outgoing) -> bool {
+        if outgoing.message.anti {
+            return outgoing.retired;
+        }
+        // A suppressed positive may never have an admission. Its exact
+        // anti-message's applied retirement resolves the remaining obligation.
+        outgoing.admitted
+            || (outgoing.suppressed
+                && self.image.outgoing.iter().any(|anti| {
+                    anti.retired && anti.message.anti && positive(&anti.message) == outgoing.message
+                }))
+    }
+
+    /// Freeze participants for a cut with matching sent and received deliveries.
     pub fn pause_cut(&mut self) -> Result<Vec<u8>> {
+        self.begin_cut(false)
+    }
+
+    /// Freeze participants while retaining unfinished deliveries for replay.
+    ///
+    /// The coordinator broadcasts the signed pause to every member. Each
+    /// prepare contributes its earliest pending event or retained delivery
+    /// to the common cut. Resume sends from the original durable outboxes.
+    pub fn pause_cut_with_in_flight(&mut self) -> Result<Vec<u8>> {
+        self.begin_cut(true)
+    }
+
+    fn begin_cut(&mut self, capture_in_flight: bool) -> Result<Vec<u8>> {
         self.runnable()?;
         if self.participant != 0 {
             return Err(reject("cut coordinator"));
@@ -1743,7 +1776,12 @@ impl<P: OptimisticProcess, C: PortableModelCodec<P>> ExternalOptimisticRuntime<P
             .cut
             .checked_add(1)
             .ok_or_else(|| reject("cut exhausted"))?;
-        let p = self.sign(&mut next, Body::Pause { cut })?;
+        let body = if capture_in_flight {
+            Body::PauseWithInFlight { cut }
+        } else {
+            Body::Pause { cut }
+        };
+        let p = self.sign(&mut next, body)?;
         next.paused = Some(cut);
         next.pause_packet = Some(p.clone());
         next.facts.push(Fact {
@@ -1753,6 +1791,25 @@ impl<P: OptimisticProcess, C: PortableModelCodec<P>> ExternalOptimisticRuntime<P
         self.commit(next, vec![p.clone()])?;
         Ok(p)
     }
+
+    fn bound_pause(&self, cut: u64) -> Result<(Hash, bool)> {
+        let packet = self
+            .image
+            .pause_packet
+            .as_deref()
+            .ok_or_else(|| reject("missing pause"))?;
+        let record = self.auth(packet)?;
+        let (paused_cut, capture_in_flight) = match record.body {
+            Body::Pause { cut } => (cut, false),
+            Body::PauseWithInFlight { cut } => (cut, true),
+            _ => return Err(reject("pause record")),
+        };
+        if record.issuer != 0 || record.generation != self.image.generation || paused_cut != cut {
+            return Err(reject("pause identity"));
+        }
+        Ok((packet_id(packet), capture_in_flight))
+    }
+
     pub fn prepare_cut(&mut self, finite_limit: u128) -> Result<Vec<u8>> {
         self.healthy()?;
         if let Some(p) = &self.image.prepared {
@@ -1762,13 +1819,14 @@ impl<P: OptimisticProcess, C: PortableModelCodec<P>> ExternalOptimisticRuntime<P
         if self.image.initial_open || finite_limit == u128::MAX || finite_limit < self.image.gvt {
             return Err(reject("initial inputs open or invalid finite cut limit"));
         }
+        let (pause, capture_in_flight) = self.bound_pause(cut)?;
         if self.image.joining.is_some()
-            || self.image.outgoing.iter().any(|o| {
-                (!o.admitted)
-                    || (o.message.anti && !o.retired)
-                    || o.dependencies.iter().any(|d| !finished(&self.image, d))
-            })
-            || self.image.reversals.iter().any(|r| r.receipt.is_none())
+            || (!capture_in_flight
+                && (self.image.outgoing.iter().any(|o| {
+                    !o.admitted
+                        || (o.message.anti && !o.retired)
+                        || o.dependencies.iter().any(|d| !finished(&self.image, d))
+                }) || self.image.reversals.iter().any(|r| r.receipt.is_none())))
         {
             return Err(reject("captured channels or reversal closure incomplete"));
         }
@@ -1804,12 +1862,7 @@ impl<P: OptimisticProcess, C: PortableModelCodec<P>> ExternalOptimisticRuntime<P
                 frontiers: self.frontiers(&self.image)?,
                 floor: self.image.gvt,
                 checkpoint: digest(&bytes(&self.image)?),
-                pause: packet_id(
-                    self.image
-                        .pause_packet
-                        .as_deref()
-                        .ok_or_else(|| reject("missing pause"))?,
-                ),
+                pause,
                 sent,
                 received,
             },
@@ -1826,12 +1879,7 @@ impl<P: OptimisticProcess, C: PortableModelCodec<P>> ExternalOptimisticRuntime<P
         let mut floor = u128::MAX;
         let mut sent_set = BTreeSet::new();
         let mut received_set = BTreeSet::new();
-        let expected_pause = packet_id(
-            self.image
-                .pause_packet
-                .as_deref()
-                .ok_or_else(|| reject("pause missing"))?,
-        );
+        let (expected_pause, capture_in_flight) = self.bound_pause(cut)?;
         for p in prepares {
             let r = self.auth(p)?;
             let Body::Prepare {
@@ -1880,7 +1928,9 @@ impl<P: OptimisticProcess, C: PortableModelCodec<P>> ExternalOptimisticRuntime<P
         if seen != self.config.members.iter().map(|m| m.participant).collect() {
             return Err(reject("prepare membership"));
         }
-        if sent_set != received_set {
+        // Every admitted packet must have a matching original send. Only
+        // the capture mode allows sends that are still in the durable outbox.
+        if !received_set.is_subset(&sent_set) || (!capture_in_flight && sent_set != received_set) {
             return Err(reject("captured channel set mismatch"));
         }
         Ok(floor)
@@ -1953,6 +2003,10 @@ impl<P: OptimisticProcess, C: PortableModelCodec<P>> ExternalOptimisticRuntime<P
             .activation
             .clone()
             .map(|p| (p, self.image.joins.clone()))
+    }
+    /// The current signed pause, available for rebroadcast after reopening.
+    pub fn retained_pause(&self) -> Option<&[u8]> {
+        self.image.paused.and(self.image.pause_packet.as_deref())
     }
     pub fn recover_cut(&mut self, packet: &[u8]) -> Result<()> {
         self.healthy()?;

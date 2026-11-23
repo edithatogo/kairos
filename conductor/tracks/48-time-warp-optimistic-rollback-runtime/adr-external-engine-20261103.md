@@ -116,3 +116,28 @@ compiler-artifact executable, freezes source/runner/workspace/toolchain hashes,
 and verifies stability through completion. Each isolated case gets a distinct
 simulation UUID. Complete native checkpoints and public configuration receipts
 are retained; fixture private TLS keys remain on their generating host.
+
+## Cuts with retained in-flight work
+
+The coordinator can issue `pause_cut_with_in_flight` for the fixed membership
+using the signed `PauseWithInFlight` record. Participants freeze model
+execution and admission on receipt. Each member prepares its exact sent and
+received packet identities and its minimum pending event, unresolved delivery,
+or reversal. The decision requires all members and a durable sender for every
+received packet. The common floor uses the minimum across those prepares and
+the requested finite limits. Events at the floor stay reversible.
+
+The durable outbox carries missing deliveries across the cut. The existing
+complete membership join authorizes replay of the exact retained packets after
+reopen. Applied retirement of an exact anti-message releases the bound held
+by its suppressed positive, including a positive whose admission was lost.
+`retained_pause` allows the coordinator to rebroadcast the original signed
+pause if it restarts before any peer receives it. A reopened member may
+persist the coordinator's pause for its current generation and next cut
+while in standby. It prepares and recovers the decision before the next
+complete activation permits model execution.
+
+The original `Pause` mode requires drained obligations and matching channel
+sets. Its wire encoding stays readable by existing participants. Every
+participant must support the new record kind for an in-flight cut. Rust
+consumers with exhaustive `Body` matches must handle the new variant.
