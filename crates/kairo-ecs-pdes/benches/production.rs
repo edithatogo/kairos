@@ -4,6 +4,8 @@ use std::time::Instant;
 use kairo_ecs_core::Scheduler;
 use kairo_ecs_pdes::{ConservativeProcess, ConservativeRuntime, LpId, PartitionPlan, RemoteEvent};
 use kairo_ecs_types::{EntityId, EventKind, ScheduleRequest, SimDuration, SimTime, StepOutcome};
+use serde_json::json;
+use sha2::{Digest, Sha256};
 
 const LP_COUNTS: [u32; 4] = [4, 8, 16, 32];
 const WARMUP_RUNS: usize = 1;
@@ -16,6 +18,7 @@ const WEAK_EVENTS_PER_LP: usize = 128;
 struct Config {
     seed: u64,
     repetitions: usize,
+    event_work: Option<u32>,
 }
 
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
@@ -27,13 +30,15 @@ struct ProcessState {
 #[derive(Debug)]
 struct WorkloadProcess {
     lp_count: u32,
+    event_work: u32,
     state: ProcessState,
 }
 
 impl WorkloadProcess {
-    fn new(lp_count: u32) -> Self {
+    fn new(lp_count: u32, event_work: u32) -> Self {
         Self {
             lp_count,
+            event_work,
             state: ProcessState::default(),
         }
     }
@@ -48,8 +53,13 @@ impl ConservativeProcess for WorkloadProcess {
             return Vec::new();
         }
         let value = u64::from_le_bytes(bytes.try_into().expect("eight-byte payload"));
+        let mut mixed = value;
+        for _ in 0..self.event_work {
+            mixed = splitmix64(&mut mixed);
+        }
         self.state.processed += 1;
-        self.state.checksum = self.state.checksum.wrapping_add(value);
+        let checksum = self.state.checksum.rotate_left(9).wrapping_add(mixed);
+        self.state.checksum = checksum ^ event.tick.ticks() as u64 ^ u64::from(kind);
 
         if kind == 0 {
             vec![RemoteEvent {
@@ -74,6 +84,7 @@ fn encode_payload(kind: u8, value: u64) -> Vec<u8> {
 fn config() -> Result<Config, String> {
     let mut seed = DEFAULT_SEED;
     let mut repetitions = DEFAULT_REPETITIONS;
+    let mut event_work = None;
     let mut args = std::env::args().skip(1);
     while let Some(arg) = args.next() {
         match arg.as_str() {
@@ -97,14 +108,28 @@ fn config() -> Result<Config, String> {
                     return Err("--repetitions must be between 1 and 100".to_string());
                 }
             }
+            "--event-work" => {
+                event_work = Some(
+                    args.next()
+                        .ok_or_else(|| "--event-work requires an integer".to_string())?
+                        .parse()
+                        .map_err(|_| {
+                            "--event-work must be an unsigned 32-bit integer".to_string()
+                        })?,
+                );
+            }
             "--help" | "-h" => {
-                println!("Usage: production [--seed N] [--repetitions N]");
+                println!("Usage: production [--seed N] [--repetitions N] [--event-work N]");
                 std::process::exit(0);
             }
             unknown => return Err(format!("unknown argument: {unknown}")),
         }
     }
-    Ok(Config { seed, repetitions })
+    Ok(Config {
+        seed,
+        repetitions,
+        event_work,
+    })
 }
 
 fn make_inputs(seed: u64, lp_count: u32, event_count: usize) -> Vec<RemoteEvent> {
@@ -131,6 +156,21 @@ fn splitmix64(state: &mut u64) -> u64 {
     value ^ (value >> 31)
 }
 
+fn tape_sha256(inputs: &[RemoteEvent]) -> String {
+    let mut hash = Sha256::new();
+    for event in inputs {
+        hash.update(event.source_lp.0.to_le_bytes());
+        hash.update(event.dest_lp.0.to_le_bytes());
+        hash.update(event.tick.ticks().to_le_bytes());
+        hash.update((event.event_payload.len() as u64).to_le_bytes());
+        hash.update(&event.event_payload);
+    }
+    hash.finalize()
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect()
+}
+
 fn topology(lp_count: u32) -> BTreeMap<LpId, Vec<LpId>> {
     (0..lp_count)
         .map(|index| (LpId(index), vec![LpId((index + 1) % lp_count)]))
@@ -145,10 +185,20 @@ fn partition(lp_count: u32) -> Result<PartitionPlan, String> {
         .map_err(|error| format!("partition setup failed: {error:?}"))
 }
 
-fn run_sequential(lp_count: u32, inputs: &[RemoteEvent]) -> Vec<ProcessState> {
+struct Phases {
+    setup_ns: u128,
+    dispatch_ns: u128,
+}
+
+fn run_sequential(
+    lp_count: u32,
+    inputs: &[RemoteEvent],
+    event_work: u32,
+) -> (Vec<ProcessState>, Phases) {
+    let setup = Instant::now();
     let mut scheduler = Scheduler::new();
     let mut processes = (0..lp_count)
-        .map(|_| WorkloadProcess::new(lp_count))
+        .map(|_| WorkloadProcess::new(lp_count, event_work))
         .collect::<Vec<_>>();
     for event in inputs {
         scheduler.schedule(ScheduleRequest {
@@ -158,6 +208,8 @@ fn run_sequential(lp_count: u32, inputs: &[RemoteEvent]) -> Vec<ProcessState> {
             kind: EventKind::custom(0),
         });
     }
+    let setup_ns = setup.elapsed().as_nanos();
+    let dispatch = Instant::now();
     while let StepOutcome::Dispatched(event) = scheduler.step() {
         let entity = event
             .entity
@@ -184,15 +236,25 @@ fn run_sequential(lp_count: u32, inputs: &[RemoteEvent]) -> Vec<ProcessState> {
             });
         }
     }
-    processes.into_iter().map(|process| process.state).collect()
+    let dispatch_ns = dispatch.elapsed().as_nanos();
+    let states = processes.into_iter().map(|process| process.state).collect();
+    (
+        states,
+        Phases {
+            setup_ns,
+            dispatch_ns,
+        },
+    )
 }
 
 fn run_pdes(
     lp_count: u32,
     inputs: &[RemoteEvent],
-) -> Result<(Vec<ProcessState>, serde_view::Counters), String> {
+    event_work: u32,
+) -> Result<(Vec<ProcessState>, serde_view::Counters, Phases), String> {
+    let setup = Instant::now();
     let processes = (0..lp_count)
-        .map(|index| (LpId(index), WorkloadProcess::new(lp_count)))
+        .map(|index| (LpId(index), WorkloadProcess::new(lp_count, event_work)))
         .collect();
     let mut runtime = ConservativeRuntime::new(partition(lp_count)?, topology(lp_count), processes)
         .map_err(|error| format!("runtime setup failed: {error:?}"))?;
@@ -201,9 +263,12 @@ fn run_pdes(
             .schedule_initial(event.clone())
             .map_err(|error| format!("initial scheduling failed: {error:?}"))?;
     }
+    let setup_ns = setup.elapsed().as_nanos();
+    let dispatch = Instant::now();
     let report = runtime
         .run_until(SimTime::from_ticks(1))
         .map_err(|error| format!("runtime failed: {error:?}"))?;
+    let dispatch_ns = dispatch.elapsed().as_nanos();
     let states = runtime
         .processes()
         .values()
@@ -218,7 +283,14 @@ fn run_pdes(
         gvt_ticks: report.gvt_history.last().map_or(0, |tick| tick.ticks()),
         worker_count: report.worker_count,
     };
-    Ok((states, counters))
+    Ok((
+        states,
+        counters,
+        Phases {
+            setup_ns,
+            dispatch_ns,
+        },
+    ))
 }
 
 fn payload_value(event: &RemoteEvent) -> u64 {
@@ -253,38 +325,50 @@ fn main() {
         eprintln!("{error}");
         std::process::exit(2);
     });
+    let event_work = config.event_work.unwrap_or(0);
+    let (profiles, lp_counts): (&[&str], &[u32]) = if config.event_work.is_some() {
+        (&["strong"], &[4])
+    } else {
+        (&["strong", "weak"], &LP_COUNTS)
+    };
     let mut rows = Vec::new();
-    for scaling in ["strong", "weak"] {
-        for lp_count in LP_COUNTS {
+    for &scaling in profiles {
+        for &lp_count in lp_counts {
             let event_count = if scaling == "strong" {
                 STRONG_TOTAL_EVENTS
             } else {
                 WEAK_EVENTS_PER_LP * lp_count as usize
             };
             let inputs = make_inputs(config.seed, lp_count, event_count);
+            let sequential = || run_sequential(lp_count, &inputs, event_work);
+            let parallel = || run_pdes(lp_count, &inputs, event_work);
             for _ in 0..WARMUP_RUNS {
-                let _ = run_sequential(lp_count, &inputs);
-                let _ = run_pdes(lp_count, &inputs).expect("benchmark warmup must complete");
+                let _ = sequential();
+                let _ = parallel().expect("benchmark warmup must complete");
             }
-            let sequential_expected = run_sequential(lp_count, &inputs);
+            let (sequential_expected, _) = sequential();
             let mut sequential_samples = Vec::with_capacity(config.repetitions);
             let mut pdes_samples = Vec::with_capacity(config.repetitions);
+            let mut sequential_setup = Vec::with_capacity(config.repetitions);
+            let mut pdes_setup = Vec::with_capacity(config.repetitions);
+            let mut sequential_dispatch = Vec::with_capacity(config.repetitions);
+            let mut pdes_dispatch = Vec::with_capacity(config.repetitions);
             let mut sequential_throughput = Vec::with_capacity(config.repetitions);
             let mut pdes_throughput = Vec::with_capacity(config.repetitions);
             let mut counters = serde_view::Counters::default();
             for sample in 0..config.repetitions {
                 let (sequential_ns, sequential, pdes_ns, result) = if sample % 2 == 0 {
-                    let (sequential_ns, sequential) =
-                        elapsed_ns(|| run_sequential(lp_count, &inputs));
-                    let (pdes_ns, result) = elapsed_ns(|| run_pdes(lp_count, &inputs));
+                    let (sequential_ns, sequential) = elapsed_ns(sequential);
+                    let (pdes_ns, result) = elapsed_ns(parallel);
                     (sequential_ns, sequential, pdes_ns, result)
                 } else {
-                    let (pdes_ns, result) = elapsed_ns(|| run_pdes(lp_count, &inputs));
-                    let (sequential_ns, sequential) =
-                        elapsed_ns(|| run_sequential(lp_count, &inputs));
+                    let (pdes_ns, result) = elapsed_ns(parallel);
+                    let (sequential_ns, sequential) = elapsed_ns(sequential);
                     (sequential_ns, sequential, pdes_ns, result)
                 };
-                let (observed, observed_counters) = result.expect("PDES run must complete");
+                let (sequential, sequential_phases) = sequential;
+                let (observed, observed_counters, pdes_phases) =
+                    result.expect("PDES run must complete");
                 assert_eq!(
                     sequential, sequential_expected,
                     "sequential baseline drifted"
@@ -292,58 +376,60 @@ fn main() {
                 assert_eq!(observed, sequential_expected, "final state parity failed");
                 sequential_samples.push(sequential_ns);
                 pdes_samples.push(pdes_ns);
+                sequential_setup.push(sequential_phases.setup_ns);
+                pdes_setup.push(pdes_phases.setup_ns);
+                sequential_dispatch.push(sequential_phases.dispatch_ns);
+                pdes_dispatch.push(pdes_phases.dispatch_ns);
                 let processed = (event_count * 2) as f64;
                 sequential_throughput.push(processed * 1_000_000_000.0 / sequential_ns as f64);
                 pdes_throughput.push(processed * 1_000_000_000.0 / pdes_ns as f64);
                 counters = observed_counters;
             }
-            rows.push(format!(
-                "{{\"scaling\":\"{scaling}\",\"lp_count\":{lp_count},\"initial_events\":{event_count},\"expected_processed_events\":{},\"seed\":{},\"sequential_ns\":{},\"pdes_ns\":{},\"sequential_events_per_second\":{},\"pdes_events_per_second\":{},\"parity\":true,\"runtime_counters\":{{\"processed_events\":{},\"remote_events\":{},\"emitted_events\":{},\"null_messages\":{},\"rounds\":{},\"gvt_ticks\":{},\"worker_count\":{}}}}}",
-                event_count * 2,
-                config.seed,
-                json_u128_array(&sequential_samples),
-                json_u128_array(&pdes_samples),
-                json_f64_array(&sequential_throughput),
-                json_f64_array(&pdes_throughput),
-                counters.processed,
-                counters.remote_events,
-                counters.emitted_events,
-                counters.null_messages,
-                counters.rounds,
-                counters.gvt_ticks,
-                counters.worker_count,
-            ));
+            rows.push(json!({
+                "scaling": scaling,
+                "lp_count": lp_count,
+                "initial_events": event_count,
+                "expected_processed_events": event_count * 2,
+                "seed": config.seed,
+                "event_work": event_work,
+                "input_tape_sha256": tape_sha256(&inputs),
+                "ordered_state": sequential_expected.iter().map(|state| [state.processed, state.checksum]).collect::<Vec<_>>(),
+                "sequential_ns": sequential_samples,
+                "pdes_ns": pdes_samples,
+                "sequential_setup_ns": sequential_setup,
+                "pdes_setup_ns": pdes_setup,
+                "sequential_dispatch_ns": sequential_dispatch,
+                "pdes_dispatch_ns": pdes_dispatch,
+                "sequential_events_per_second": sequential_throughput,
+                "pdes_events_per_second": pdes_throughput,
+                "parity": true,
+                "runtime_counters": {
+                    "processed_events": counters.processed,
+                    "remote_events": counters.remote_events,
+                    "emitted_events": counters.emitted_events,
+                    "null_messages": counters.null_messages,
+                    "rounds": counters.rounds,
+                    "gvt_ticks": counters.gvt_ticks,
+                    "worker_count": counters.worker_count,
+                },
+            }));
         }
     }
+    let schema = if config.event_work.is_some() {
+        "kairoecs.pdes.crossover.v1"
+    } else {
+        "kairoecs.pdes.benchmark.v1"
+    };
     println!(
-        "{{\"schema_version\":\"kairoecs.pdes.benchmark.v1\",\"seed\":{},\"repetitions\":{},\"warmup_runs\":{},\"strong_total_events\":{},\"weak_events_per_lp\":{},\"rows\":[{}]}}",
-        config.seed,
-        config.repetitions,
-        WARMUP_RUNS,
-        STRONG_TOTAL_EVENTS,
-        WEAK_EVENTS_PER_LP,
-        rows.join(",")
+        "{}",
+        json!({
+            "schema_version": schema,
+            "seed": config.seed,
+            "repetitions": config.repetitions,
+            "warmup_runs": WARMUP_RUNS,
+            "strong_total_events": STRONG_TOTAL_EVENTS,
+            "weak_events_per_lp": WEAK_EVENTS_PER_LP,
+            "rows": rows,
+        })
     );
-}
-
-fn json_u128_array(values: &[u128]) -> String {
-    format!(
-        "[{}]",
-        values
-            .iter()
-            .map(u128::to_string)
-            .collect::<Vec<_>>()
-            .join(",")
-    )
-}
-
-fn json_f64_array(values: &[f64]) -> String {
-    format!(
-        "[{}]",
-        values
-            .iter()
-            .map(|value| format!("{value:.3}"))
-            .collect::<Vec<_>>()
-            .join(",")
-    )
 }
