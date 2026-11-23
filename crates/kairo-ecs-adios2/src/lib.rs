@@ -127,6 +127,13 @@ struct Context(Handle);
 
 impl Context {
     fn new() -> io::Result<Self> {
+        // ADIOS2 2.12 uses HOME without a null check during initialization.
+        if std::env::var_os("HOME").is_none_or(|home| home.is_empty()) {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "ADIOS2 requires a nonempty HOME",
+            ));
+        }
         // SAFETY: This is the ownership entry point of the linked serial C API.
         Ok(Self(handle(
             unsafe { adios2_init_serial() },

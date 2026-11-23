@@ -47,6 +47,32 @@ fn manifest() -> CheckpointManifest {
 }
 
 #[test]
+fn missing_home_returns_an_error_before_native_initialization() {
+    const CHILD_PATH: &str = "KAIRO_ADIOS2_MISSING_HOME_TARGET";
+    if let Some(path) = std::env::var_os(CHILD_PATH) {
+        let result = Adios2CheckpointAdapter.write_manifest(Path::new(&path), &manifest());
+        assert!(matches!(
+            result,
+            Err(ArrowError::Io(reason)) if reason == "ADIOS2 requires a nonempty HOME"
+        ));
+        std::process::exit(73);
+    }
+
+    let scratch = tempfile::tempdir().unwrap();
+    let status = Command::new(std::env::current_exe().unwrap())
+        .args([
+            "--exact",
+            "missing_home_returns_an_error_before_native_initialization",
+        ])
+        .env(CHILD_PATH, scratch.path().join("no-home.bp"))
+        .env_remove("HOME")
+        .status()
+        .unwrap();
+    assert_eq!(status.code(), Some(73));
+    assert_eq!(fs::read_dir(scratch.path()).unwrap().count(), 0);
+}
+
+#[test]
 fn native_generation_replacement_preserves_permissions_and_recovers() {
     let scratch = tempfile::tempdir().unwrap();
     let path = scratch.path().join("restart.bp");

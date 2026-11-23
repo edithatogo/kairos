@@ -44,11 +44,11 @@ for the file schema and compatibility details.
 
 ## Native ADIOS2 directories
 
-Use `adios2` with the installed ADIOS2 2.12 C library on Linux or macOS. The
-adapter writes a single BP5 step with typed columns. Replacement exchanges a
-sibling directory atomically. After an error reported after publication, inspect
-the destination and retained stage before retrying. Use immutable generation
-names for external readers that run concurrently with publication.
+Use `adios2` with the installed ADIOS2 2.12 C library and a nonempty `HOME`
+on Linux or macOS. The adapter writes a single BP5 step with typed columns.
+Replacement uses an atomic exchange of sibling directories. After a sync or
+cleanup error, inspect the destination and retained stage before retrying. Use
+immutable generation names for external readers that run during publication.
 [ADR 0019](../adr/0019-native-adios2-checkpoints.md).
 
 ## Live proof required

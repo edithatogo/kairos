@@ -4,6 +4,8 @@ The Rust `adios2` feature uses serial BP5 on Linux and macOS. The optional
 `kairo-ecs-adios2` crate links to the installed ADIOS2 2.12 C library and
 owns the C handles and synchronous buffer transfers. Set `ADIOS2_LIB_DIR`
 to the native library directory and include it in the loader's search path.
+Set a nonempty `HOME` for ADIOS2 user configuration. The adapter returns an
+error before calling the library if the variable is missing or empty.
 Qualification uses ADIOS2 2.12.1. The main Arrow crate remains safe Rust.
 
 The public adapter and receipt retain their Rust shape. The destination is
