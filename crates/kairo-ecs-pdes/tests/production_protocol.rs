@@ -41,6 +41,7 @@ enum Mode {
     LocalChain,
     ZeroDelayLoop,
     Panic,
+    PanicWithDrop,
     OverflowEmit,
 }
 
@@ -120,6 +121,17 @@ impl ConservativeProcess for Recorder {
             }
             Mode::ZeroDelayLoop => vec![message(self.id, self.id, event.tick, Vec::new())],
             Mode::Panic => panic!("test handler panic"),
+            Mode::PanicWithDrop => {
+                struct PanickingPayload;
+
+                impl Drop for PanickingPayload {
+                    fn drop(&mut self) {
+                        panic!("test panic payload cleanup");
+                    }
+                }
+
+                std::panic::panic_any(PanickingPayload)
+            }
         }
     }
 }
@@ -288,23 +300,26 @@ fn mixed_valid_and_invalid_outputs_commit_none_of_the_round() {
 
 #[test]
 fn handler_panic_fails_closed_and_poisons_runtime() {
-    let mut runtime = ConservativeRuntime::new(
-        plan(1, 1),
-        BTreeMap::from([(LpId(0), Vec::new())]),
-        processes(1, |_| Mode::Panic),
-    )
-    .unwrap();
-    runtime
-        .schedule_initial(message(LpId(0), LpId(0), SimTime::ZERO, Vec::new()))
+    for mode in [Mode::Panic, Mode::PanicWithDrop] {
+        let mut runtime = ConservativeRuntime::new(
+            plan(1, 1),
+            BTreeMap::from([(LpId(0), Vec::new())]),
+            processes(1, |_| mode),
+        )
         .unwrap();
-    assert_eq!(
-        runtime.run_until(SimTime::ZERO),
-        Err(RuntimeError::HandlerPanicked(LpId(0)))
-    );
-    assert_eq!(
-        runtime.run_until(SimTime::ZERO),
-        Err(RuntimeError::Poisoned)
-    );
+        runtime
+            .schedule_initial(message(LpId(0), LpId(0), SimTime::ZERO, Vec::new()))
+            .unwrap();
+        assert_eq!(
+            runtime.run_until(SimTime::ZERO),
+            Err(RuntimeError::HandlerPanicked(LpId(0)))
+        );
+        assert_eq!(runtime.report().emitted_events, 0);
+        assert_eq!(
+            runtime.run_until(SimTime::ZERO),
+            Err(RuntimeError::Poisoned)
+        );
+    }
 }
 
 #[test]
@@ -439,6 +454,41 @@ fn eligible_process_batches_run_concurrently_across_logical_processes() {
     let report = runtime.run_until(SimTime::ZERO).unwrap();
     assert_eq!(report.processed_events, 8);
     assert_eq!(report.worker_count, 8);
+}
+
+#[test]
+#[cfg(feature = "pdes-worker-pool")]
+fn reuses_the_native_worker_across_rounds_and_horizons() {
+    #[derive(Default)]
+    struct ThreadRecorder(Vec<std::thread::ThreadId>);
+
+    impl ConservativeProcess for ThreadRecorder {
+        fn on_event(&mut self, _: &RemoteEvent) -> Vec<RemoteEvent> {
+            self.0.push(std::thread::current().id());
+            Vec::new()
+        }
+    }
+
+    let lp = LpId(0);
+    let mut runtime = ConservativeRuntime::new(
+        plan(1, 1),
+        BTreeMap::from([(lp, Vec::new())]),
+        BTreeMap::from([(lp, ThreadRecorder::default())]),
+    )
+    .unwrap();
+    for tick in 0..64 {
+        runtime
+            .schedule_initial(message(lp, lp, SimTime::from_ticks(tick), Vec::new()))
+            .unwrap();
+    }
+    runtime.run_until(SimTime::from_ticks(31)).unwrap();
+    runtime.run_until(SimTime::from_ticks(63)).unwrap();
+
+    let calls = &runtime.processes()[&lp].0;
+    assert_eq!(calls.len(), 64);
+    let ids = calls.iter().collect::<std::collections::HashSet<_>>();
+    assert_eq!(ids.len(), 1);
+    assert_ne!(calls[0], std::thread::current().id());
 }
 
 #[test]

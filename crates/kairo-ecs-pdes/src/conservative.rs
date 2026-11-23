@@ -10,6 +10,8 @@ use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::thread;
 
 use kairo_ecs_types::{SimDuration, SimTime};
+#[cfg(feature = "pdes-worker-pool")]
+use rayon::{prelude::*, ThreadPool, ThreadPoolBuilder};
 
 use super::{LpId, PartitionPlan, RemoteEvent, Tick};
 
@@ -107,8 +109,7 @@ pub struct RuntimeReport {
     pub rounds: u64,
     /// Monotonic global virtual time snapshots, beginning at zero.
     pub gvt_history: Vec<Tick>,
-    /// Maximum spawned LP worker cohort in one execution round.
-    /// This does not measure simultaneous CPU execution.
+    /// Maximum number of LPs with eligible work in one execution round.
     pub worker_count: usize,
 }
 
@@ -131,6 +132,28 @@ pub struct ConservativeRuntime<P: ConservativeProcess> {
     gvt: Tick,
     report: RuntimeReport,
     last_requested_horizon: Option<Tick>,
+    #[cfg(feature = "pdes-worker-pool")]
+    workers: Option<ThreadPool>,
+}
+
+fn run_batch<P: ConservativeProcess>(
+    lp_id: LpId,
+    process: &mut P,
+    batch: &[RemoteEvent],
+) -> Result<Vec<(Tick, RemoteEvent)>, RuntimeError> {
+    let mut outbound = Vec::new();
+    for event in batch {
+        let emitted =
+            catch_unwind(AssertUnwindSafe(|| process.on_event(event))).map_err(|payload| {
+                // Even cleanup of a user-defined panic payload can unwind.
+                if let Err(cleanup_panic) = catch_unwind(AssertUnwindSafe(|| drop(payload))) {
+                    std::mem::forget(cleanup_panic);
+                }
+                RuntimeError::HandlerPanicked(lp_id)
+            })?;
+        outbound.extend(emitted.into_iter().map(|out| (event.tick, out)));
+    }
+    Ok(outbound)
 }
 
 impl<P: ConservativeProcess> ConservativeRuntime<P> {
@@ -225,6 +248,8 @@ impl<P: ConservativeProcess> ConservativeRuntime<P> {
                 worker_count: 0,
             },
             last_requested_horizon: None,
+            #[cfg(feature = "pdes-worker-pool")]
+            workers: None,
         })
     }
 
@@ -423,6 +448,7 @@ impl<P: ConservativeProcess> ConservativeRuntime<P> {
         batches: BTreeMap<LpId, Vec<RemoteEvent>>,
     ) -> Result<(), RuntimeError> {
         let lookahead = self.partition.lookahead();
+        #[cfg(not(feature = "pdes-worker-pool"))]
         let (outcomes, spawn_error) = thread::scope(|scope| {
             let mut handles = Vec::new();
             let mut spawn_error = None;
@@ -433,16 +459,7 @@ impl<P: ConservativeProcess> ConservativeRuntime<P> {
                 }
                 let spawn = thread::Builder::new()
                     .name(format!("pdes-lp-{}", lp_id.0))
-                    .spawn_scoped(scope, move || {
-                        let mut outbound = Vec::new();
-                        for event in &batch {
-                            let emitted =
-                                catch_unwind(AssertUnwindSafe(|| process.on_event(event)))
-                                    .map_err(|_| RuntimeError::HandlerPanicked(lp_id))?;
-                            outbound.extend(emitted.into_iter().map(|out| (event.tick, out)));
-                        }
-                        Ok::<_, RuntimeError>(outbound)
-                    });
+                    .spawn_scoped(scope, move || run_batch(lp_id, process, &batch));
                 match spawn {
                     Ok(handle) => handles.push((lp_id, handle)),
                     Err(_) => spawn_error = Some(RuntimeError::SpawnFailed(lp_id)),
@@ -460,10 +477,50 @@ impl<P: ConservativeProcess> ConservativeRuntime<P> {
             (outcomes, spawn_error)
         });
 
+        #[cfg(not(feature = "pdes-worker-pool"))]
         if let Some(error) = spawn_error {
             self.poisoned = true;
             return Err(error);
         }
+
+        #[cfg(feature = "pdes-worker-pool")]
+        let outcomes = {
+            if self.workers.is_none() {
+                let first_lp = batches
+                    .iter()
+                    .find_map(|(&lp_id, batch)| (!batch.is_empty()).then_some(lp_id))
+                    .expect("only nonempty rounds execute");
+                let width = thread::available_parallelism().map_or(1, |count| count.get());
+                self.workers = Some(
+                    ThreadPoolBuilder::new()
+                        .num_threads(width.min(self.processes.len()))
+                        .thread_name(|index| format!("pdes-worker-{index}"))
+                        .build()
+                        .map_err(|_| {
+                            self.poisoned = true;
+                            RuntimeError::SpawnFailed(first_lp)
+                        })?,
+                );
+            }
+            let jobs = self
+                .processes
+                .iter_mut()
+                .filter_map(|(&lp_id, process)| {
+                    let batch = batches.get(&lp_id).filter(|batch| !batch.is_empty())?;
+                    Some((lp_id, process, batch.clone()))
+                })
+                .collect::<Vec<_>>();
+            // Indexed collection preserves the ascending LP order used to
+            // validate and commit the complete round.
+            self.workers
+                .as_ref()
+                .expect("pool initialized")
+                .install(|| {
+                    jobs.into_par_iter()
+                        .map(|(lp_id, process, batch)| (lp_id, run_batch(lp_id, process, &batch)))
+                        .collect::<Vec<_>>()
+                })
+        };
 
         let mut staged = Vec::new();
         for (lp_id, result) in outcomes {
