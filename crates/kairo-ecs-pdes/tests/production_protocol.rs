@@ -41,6 +41,7 @@ enum Mode {
     LocalChain,
     ZeroDelayLoop,
     Panic,
+    PanicWithDrop,
     OverflowEmit,
 }
 
@@ -120,6 +121,17 @@ impl ConservativeProcess for Recorder {
             }
             Mode::ZeroDelayLoop => vec![message(self.id, self.id, event.tick, Vec::new())],
             Mode::Panic => panic!("test handler panic"),
+            Mode::PanicWithDrop => {
+                struct PanickingPayload;
+
+                impl Drop for PanickingPayload {
+                    fn drop(&mut self) {
+                        panic!("test panic payload cleanup");
+                    }
+                }
+
+                std::panic::panic_any(PanickingPayload)
+            }
         }
     }
 }
@@ -288,23 +300,26 @@ fn mixed_valid_and_invalid_outputs_commit_none_of_the_round() {
 
 #[test]
 fn handler_panic_fails_closed_and_poisons_runtime() {
-    let mut runtime = ConservativeRuntime::new(
-        plan(1, 1),
-        BTreeMap::from([(LpId(0), Vec::new())]),
-        processes(1, |_| Mode::Panic),
-    )
-    .unwrap();
-    runtime
-        .schedule_initial(message(LpId(0), LpId(0), SimTime::ZERO, Vec::new()))
+    for mode in [Mode::Panic, Mode::PanicWithDrop] {
+        let mut runtime = ConservativeRuntime::new(
+            plan(1, 1),
+            BTreeMap::from([(LpId(0), Vec::new())]),
+            processes(1, |_| mode),
+        )
         .unwrap();
-    assert_eq!(
-        runtime.run_until(SimTime::ZERO),
-        Err(RuntimeError::HandlerPanicked(LpId(0)))
-    );
-    assert_eq!(
-        runtime.run_until(SimTime::ZERO),
-        Err(RuntimeError::Poisoned)
-    );
+        runtime
+            .schedule_initial(message(LpId(0), LpId(0), SimTime::ZERO, Vec::new()))
+            .unwrap();
+        assert_eq!(
+            runtime.run_until(SimTime::ZERO),
+            Err(RuntimeError::HandlerPanicked(LpId(0)))
+        );
+        assert_eq!(runtime.report().emitted_events, 0);
+        assert_eq!(
+            runtime.run_until(SimTime::ZERO),
+            Err(RuntimeError::Poisoned)
+        );
+    }
 }
 
 #[test]

@@ -143,8 +143,14 @@ fn run_batch<P: ConservativeProcess>(
 ) -> Result<Vec<(Tick, RemoteEvent)>, RuntimeError> {
     let mut outbound = Vec::new();
     for event in batch {
-        let emitted = catch_unwind(AssertUnwindSafe(|| process.on_event(event)))
-            .map_err(|_| RuntimeError::HandlerPanicked(lp_id))?;
+        let emitted =
+            catch_unwind(AssertUnwindSafe(|| process.on_event(event))).map_err(|payload| {
+                // Even cleanup of a user-defined panic payload can unwind.
+                if let Err(cleanup_panic) = catch_unwind(AssertUnwindSafe(|| drop(payload))) {
+                    std::mem::forget(cleanup_panic);
+                }
+                RuntimeError::HandlerPanicked(lp_id)
+            })?;
         outbound.extend(emitted.into_iter().map(|out| (event.tick, out)));
     }
     Ok(outbound)
