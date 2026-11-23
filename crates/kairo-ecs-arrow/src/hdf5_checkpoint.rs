@@ -3,7 +3,12 @@ use super::{
     publish_checkpoint_staged, ArrowError, CheckpointFormat, CheckpointManifest, ContiguousBlock,
 };
 use hdf5_metno::{dataset::Layout, File, H5Type, LinkType};
-use std::{fmt::Display, io::Read, mem::size_of, path::Path};
+use std::{
+    fmt::Display,
+    io::{ErrorKind, Read},
+    mem::size_of,
+    path::Path,
+};
 
 const SCHEMA: &[u8] = b"kairo-ecs-hdf5-checkpoint-v1";
 const ENGINE_SCHEMA: &[u8] = b"kairo-ecs-hdf5-checkpoint-v2";
@@ -23,13 +28,26 @@ pub(super) fn write(
         .map(BlockRow::from)
         .collect::<Vec<_>>();
 
+    let schema = if engine.is_some() {
+        ENGINE_SCHEMA
+    } else {
+        SCHEMA
+    };
     publish_checkpoint_staged(path, |stage| {
+        match has_hdf5_signature(path) {
+            Ok(true) => {
+                let existing = open_local_checkpoint(path)?;
+                if read_field::<u8>(&existing, "schema", Some(schema.len()))? != schema {
+                    return Err(ArrowError::InvalidArgument(
+                        "HDF5 checkpoint version would change",
+                    ));
+                }
+            }
+            Ok(false) => {}
+            Err(error) if error.kind() == ErrorKind::NotFound => {}
+            Err(error) => return Err(io(error)),
+        }
         let file = File::create(stage.path()).map_err(io)?;
-        let schema = if engine.is_some() {
-            ENGINE_SCHEMA
-        } else {
-            SCHEMA
-        };
         write_field(&file, "schema", schema)?;
         write_field(&file, "checkpoint_id", manifest.checkpoint_id.as_bytes())?;
         write_field(&file, "run_id", manifest.run_id.as_bytes())?;
@@ -55,28 +73,13 @@ pub(super) fn read(
     require_engine: bool,
 ) -> Result<(CheckpointManifest, Option<Vec<u8>>), ArrowError> {
     require_utf8_path(path)?;
-    let mut signature = [0; 8];
-    std::fs::File::open(path)
-        .map_err(io)?
-        .read_exact(&mut signature)
-        .map_err(io)?;
-    if signature != SIGNATURE {
+    if !has_hdf5_signature(path).map_err(io)? {
         return Err(ArrowError::InvalidCheckpointFormat {
             expected: "native hdf5",
             actual: "unrecognized file signature".into(),
         });
     }
-    let file = File::open(path).map_err(io)?;
-    file.iter_visit_default(|_, info| {
-        if info.link_type == LinkType::Hard {
-            Ok(())
-        } else {
-            Err(hdf5_metno::Error::Internal(
-                "checkpoint datasets must be local hard links".into(),
-            ))
-        }
-    })
-    .map_err(io)?;
+    let file = open_local_checkpoint(path)?;
     let schema = if require_engine {
         ENGINE_SCHEMA
     } else {
@@ -113,6 +116,31 @@ pub(super) fn read(
         return Err(ArrowError::InvalidNumber("checkpoint sha256"));
     }
     Ok((manifest, engine))
+}
+
+fn has_hdf5_signature(path: &Path) -> std::io::Result<bool> {
+    let mut file = std::fs::File::open(path)?;
+    let mut signature = [0; 8];
+    match file.read_exact(&mut signature) {
+        Ok(()) => Ok(signature == SIGNATURE),
+        Err(error) if error.kind() == ErrorKind::UnexpectedEof => Ok(false),
+        Err(error) => Err(error),
+    }
+}
+
+fn open_local_checkpoint(path: &Path) -> Result<File, ArrowError> {
+    let file = File::open(path).map_err(io)?;
+    file.iter_visit_default(|_, info| {
+        if info.link_type == LinkType::Hard {
+            Ok(())
+        } else {
+            Err(hdf5_metno::Error::Internal(
+                "checkpoint datasets must be local hard links".into(),
+            ))
+        }
+    })
+    .map_err(io)?;
+    Ok(file)
 }
 
 fn write_field<T: H5Type>(file: &File, name: &str, values: &[T]) -> Result<(), ArrowError> {

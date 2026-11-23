@@ -4,12 +4,12 @@
   "source_input_sha256": {
     "Cargo.lock": "38970a6fe699dafebb720188530d88c022b53fd563bbe0cc9ad5dc7aa4167e07",
     "crates/kairo-ecs-arrow/Cargo.toml": "24be7eb0aca841a75e0ae727b57c471f6eb51d22e1d66af916902694337e3eef",
-    "crates/kairo-ecs-arrow/tests/engine_checkpoint_restart.rs": "e17b74c7c2ca5c1ffca666988b5e8fc17311a4d331ca32583f974815d6cb3a3f",
+    "crates/kairo-ecs-arrow/tests/engine_checkpoint_restart.rs": "789e607bd6d13c41f7ca302c5616d4a4be121d6038e5d7830f680d2ed1693a73",
     "crates/kairo-ecs-arrow/src/lib.rs": "6a8aeabeec5c92d3cfb1898122e828f1eb9c7ad5439f44aabb2442a4de089e5a",
     "crates/kairo-ecs-arrow/src/checkpoint_data.rs": "cd58c2242223b098e36265b718e080f8788fb080823ab19e87b82e9de2ac63d9",
     "crates/kairo-ecs-arrow/src/engine_checkpoint.rs": "1b67b92fb9dd9bd4820f68bfa2665af5009cb39768b6d47e9021a07f43cd824b",
     "crates/kairo-ecs-arrow/src/adios2_checkpoint.rs": "b974070eb2d82494b2ceac0a2e142d4ac0de8068fb5c0a38884b9656b4e27c5c",
-    "crates/kairo-ecs-arrow/src/hdf5_checkpoint.rs": "f173ecd050aa3f5c6f25606487c8d32829ef30db39c2ed37245793975464b010"
+    "crates/kairo-ecs-arrow/src/hdf5_checkpoint.rs": "ff433bad1faf090f6d0a4b5d1bb025e8627d8aa13897e918e8f0d926f48a13ea"
   },
   "platform": "27.2.1 macOS arm64",
   "toolchain": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
@@ -45,20 +45,22 @@
     "bpls -d service.bp schema"
   ],
   "native_artifact_and_log_sha256": {
-    "vendor-sample/adios2-resume.log": "05fd9926bc985db31a2853a129acfa877655f8451c3be6d22c6fc251a24d7737",
-    "vendor-sample/adios2-write.log": "12797fa63ed59eba06d1ed180818b38efba8677f149069570a4fe978e2d1aeca",
-    "vendor-sample/bp5-schema.log": "1c117fb52d13f62fde9f63765e232615dc7cf3424886b4aac87598ebce9f17b6",
-    "vendor-sample/bpls.log": "e67026133c99f8438f9d9f523207045896ae3cf4116f947f04f501c9b4402222",
-    "vendor-sample/h5dump.log": "533552cbbfe2f48d72dbefecc01e0eca3c6efd71bfbf9a2eb4f924db834dceed",
-    "vendor-sample/hdf5-resume.log": "05fd9926bc985db31a2853a129acfa877655f8451c3be6d22c6fc251a24d7737",
-    "vendor-sample/hdf5-schema.log": "c16e396f0b0d661f985fddbdf02083d5ce49c6d318c28d59511d40710eb8e1bd",
-    "vendor-sample/hdf5-write.log": "49c0f6411c405346c9ff22151030277c58362dfa234d31194c7afe15c825e206",
-    "vendor-sample/service.bp/data.0": "ddc597e2d098b2f50a53592157942680ec2506f0a77d7e9ed580eb648d87e25c",
-    "vendor-sample/service.bp/md.0": "02f0ebdef682e2f0d3f79546449e8e19ef2b63a74db1a669178c798b5980dc4a",
-    "vendor-sample/service.bp/md.idx": "fdf9dfe5a6e7b1d92041d931c274695eb64511c0cd1241584bba7076bcda8529",
-    "vendor-sample/service.bp/mmd.0": "d9b6936a1a8551307ee04bd05fe683e59ff58b1ae2ca2af9f71b724b0d11b63d",
-    "vendor-sample/service.bp/profiling.json": "cc870c9de69e47376ab9b8fd4fb056aa558dccb5e003c851ac561b7a0ef728db",
-    "vendor-sample/service.h5": "b7e1dcb54ffc36b42a5b05cfd223897653f9300d556a0d6979490f0db79a86e1"
+    "vendor-final/adios2-resume.log": "05fd9926bc985db31a2853a129acfa877655f8451c3be6d22c6fc251a24d7737",
+    "vendor-final/adios2-write.log": "603f5c5ff2ff2f1db8a469b162e9b2020eb139b65084fe07b469822de3ad0c23",
+    "vendor-final/bp5-schema.log": "1c117fb52d13f62fde9f63765e232615dc7cf3424886b4aac87598ebce9f17b6",
+    "vendor-final/bpls.log": "e67026133c99f8438f9d9f523207045896ae3cf4116f947f04f501c9b4402222",
+    "vendor-final/h5dump.log": "dba2612e4c5c350408636e8752dec9d3b4098a73ed4f5fd986dcb7a2743112ca",
+    "vendor-final/hdf5-resume.log": "05fd9926bc985db31a2853a129acfa877655f8451c3be6d22c6fc251a24d7737",
+    "vendor-final/hdf5-schema.log": "a0b904873598d6cae38bd8c6f691ed3418da9dcb643fab499cc5a72ce7e0371d",
+    "vendor-final/hdf5-write.log": "cadcf43847995b0797fc041461d03c9a0ba69966fa236cbad806d8ad2774a317",
+    "vendor-final/service.bp/data.0": "ddc597e2d098b2f50a53592157942680ec2506f0a77d7e9ed580eb648d87e25c",
+    "vendor-final/service.bp/md.0": "02f0ebdef682e2f0d3f79546449e8e19ef2b63a74db1a669178c798b5980dc4a",
+    "vendor-final/service.bp/md.idx": "fdf9dfe5a6e7b1d92041d931c274695eb64511c0cd1241584bba7076bcda8529",
+    "vendor-final/service.bp/mmd.0": "d9b6936a1a8551307ee04bd05fe683e59ff58b1ae2ca2af9f71b724b0d11b63d",
+    "vendor-final/service.bp/profiling.json": "4732d636bb0a8776cc2a0dfa31aee49c7c87cbbf5e8f499face04fc5b29345f5",
+    "vendor-final/service.h5": "fba7734b5662409aa7af99759b5d50caa54847e90e7957d87df2e9e8bfb20238"
   },
-  "nextest_log_sha256": "c85432f3c107db91f096b064870df10bc84b6aac5d84135ccdd9b9087ef0562c"
+  "nextest_log_sha256": "b7f6d2c2d577c9a33072ed97e39a403785b66018255c61c7c3f678b7986c3a7c",
+  "mixed_hdf5_replacement_red_sha256": "9999b88e42d0cf4bb5e50d97ace021bb58ca7fa09a830be1ea25bc5e1cd8de0e",
+  "tested_native_replacement": "HDF5 v2 replacement passes. Both cross-version replacements are rejected and preserve the existing bytes."
 }

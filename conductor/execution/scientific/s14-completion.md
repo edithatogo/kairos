@@ -124,8 +124,10 @@ An uninterrupted process and each fresh restart completed the same
 128-job workload. Both restarts matched the 228 dispatched suffix events,
 44 completed jobs, 84 deadline expirations, 41 cancellations and the next
 RNG draw. The clock exceeded 64 bits throughout the restarted work.
-Each native reader rejected modified model bytes. The HDF Group and ADIOS2
-tools independently read the 11,936-byte state field and exact v2 schema.
+Each native reader rejected modified model bytes, and HDF5 rejected
+replacement across versions with both destinations preserved byte for byte.
+The HDF Group and ADIOS2 tools independently confirmed the unsigned byte
+type, 11,936-element extent and exact v2 schema identifiers.
 
 The selected macOS ARM64 suite passed 66 tests on Rust 1.99.1. Two vendor
 reader cases use separate commands. The recorded parity uses a local volume

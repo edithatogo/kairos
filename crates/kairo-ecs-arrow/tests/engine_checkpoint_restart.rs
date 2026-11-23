@@ -270,6 +270,38 @@ fn hdf5_restarts_the_complete_queue_and_rejects_corrupted_model_state() {
         Hdf5CheckpointAdapter.restore_manifest(&path),
         Err(ArrowError::UnexpectedStreamHeader)
     ));
+    let saved = restore_engine_checkpoint(&path, CheckpointFormat::Hdf5, SCHEMA).unwrap();
+    write_engine_checkpoint(
+        &path,
+        &saved.manifest,
+        &saved.scheduler,
+        SCHEMA,
+        &saved.model_state,
+    )
+    .unwrap();
+    let engine_bytes = std::fs::read(&path).unwrap();
+    let mismatch = ArrowError::InvalidArgument("HDF5 checkpoint version would change");
+    assert_eq!(
+        Hdf5CheckpointAdapter.write_manifest(&path, &saved.manifest),
+        Err(mismatch.clone())
+    );
+    assert_eq!(std::fs::read(&path).unwrap(), engine_bytes);
+    let legacy_path = root.path().join("legacy.h5");
+    Hdf5CheckpointAdapter
+        .write_manifest(&legacy_path, &saved.manifest)
+        .unwrap();
+    let legacy_bytes = std::fs::read(&legacy_path).unwrap();
+    assert_eq!(
+        write_engine_checkpoint(
+            &legacy_path,
+            &saved.manifest,
+            &saved.scheduler,
+            SCHEMA,
+            &saved.model_state,
+        ),
+        Err(mismatch)
+    );
+    assert_eq!(std::fs::read(&legacy_path).unwrap(), legacy_bytes);
     let file = hdf5_metno::File::open_rw(&path).unwrap();
     let dataset = file.dataset("engine_state").unwrap();
     let mut bytes = dataset.read_raw::<u8>().unwrap();

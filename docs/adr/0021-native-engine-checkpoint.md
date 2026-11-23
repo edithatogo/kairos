@@ -27,7 +27,8 @@ schema marker, manifest, state length and every byte of engine state.
 Use the v1 methods for telemetry checkpoints and the engine methods for v2.
 Each reader checks its expected schema marker. The new methods reuse atomic
 publication in their respective backends. Use a new destination when moving
-between file versions. Use the application's checkpoint identity and
+between file versions. Native writers reject a replacement across versions.
+Use the application's checkpoint identity and
 provenance to select a trusted checkpoint. The digest checks corruption.
 
 ## Conformance and review
