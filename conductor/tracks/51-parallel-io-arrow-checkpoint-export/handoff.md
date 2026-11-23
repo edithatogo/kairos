@@ -10,9 +10,12 @@ HDF5 paths share the record codec.
 
 The Mac ARM64 Rust suite passed 61 tests. Separate `bpls` and `h5dump`
 invocations passed. Review accepted the sibling-directory exchange and checked
-the observed cleanup failure after publication. The next operation is hosted
-Linux qualification. Production Arrow batches, representative engine restart
-and live parallel filesystem evidence remain open.
+the observed cleanup failure after publication. Revision `cfd620a` also
+returns a Rust error when ADIOS2 cannot initialize without `HOME`. The updated
+suite passed 62 tests. A standalone installation resumed the BP5 queue fixture
+in a fresh process with the same 17-dispatch suffix as the HDF5 case. The next
+operation is hosted Linux qualification. Production Arrow batches, restart
+across additional scenarios and live parallel filesystem evidence remain open.
 [Commands, hashes and review](../../execution/scientific/s14-completion.md) ·
 [File contract](../../../docs/adr/0019-native-adios2-checkpoints.md).
 

@@ -94,7 +94,7 @@ OpenModelica case uses an independently compiled model with a time event.
 
 The HDF5 and ADIOS2 adapters write typed native checkpoints and restore the
 complete logical sequence. `h5dump` and `bpls` read the timestamp limbs and
-signed priority from the generated files. The installed HDF5 restart case
-matched the uninterrupted run's remaining dispatches. Representative restart
-across backends, production Arrow batches, NUMA and live filesystem evidence
-remain open. [Evidence](execution/scientific/s14-completion.md).
+signed priority from the generated files. The installed HDF5 and BP5 service
+queue cases matched the uninterrupted run's 17 remaining dispatches.
+Additional restart scenarios, production Arrow batches, NUMA and live
+filesystem evidence remain open. [Evidence](execution/scientific/s14-completion.md).

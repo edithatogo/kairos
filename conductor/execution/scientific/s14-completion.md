@@ -92,3 +92,27 @@ resumed suffix digest was
 `a1e087ced01885e557901bbce3e443118e386cd9ed3c55310e9e01576b578246`.
 The receipt SHA-256 is
 `14429288151e9122919240b98625cfd07ac21388f8a6a78690266ad7a6c33d50`.
+
+## Installed ADIOS2 scheduler restart
+
+Provider revision `cfd620a5cfa9aab5bdd13b414abc67c25f00ad77` was extracted
+into a clean directory. The standalone client installed with Rust 1.99.1 and
+ran with the installed ADIOS2 2.12.1 C library on macOS ARM64. The writer stored
+five dispatched records in BP5 and the pending scheduler and model/RNG state
+in JSON sidecars. A fresh process verified the generation and matched the
+uninterrupted trace and every final counter. The HDF5 case produced the same
+result with the same seed and suffix digest. The installed BP5 receipt SHA-256
+is `d0d7a4caf54e742f0a28b1ebca2ab2ad2bf47eb1f85029ce2a4a47aac7af0cb1`.
+
+The installed consumer first exposed a crash in ADIOS2 user-configuration
+initialization when `HOME` was absent. The final adapter checks the variable
+before opening the library context. The same installed client returned exit 1
+and left the output directory empty when run without `HOME`.
+
+The final `cargo nextest run --locked --offline -p kairo-ecs-arrow -p kairo-ecs-adios2 --features kairo-ecs-arrow/hdf5,kairo-ecs-arrow/adios2`
+passed 62 tests. Its log SHA-256 is
+`1799eecd68522e05c20840cebfcb0d41f1e1937ea3aa64a6781b02e40b31f7bd`.
+Both vendor readers passed again using the commands above. The `bpls` log
+SHA-256 is `c7aed373a3a04580bf27ec83960b58008ccddb6d82f9e86aac99bcaf2525ddbf`.
+The `h5dump` log SHA-256 is
+`c9c43c9d96140515c4fb9eb656dca5bb7cd738866189a6e4ea05a55d67c6cd0d`.
