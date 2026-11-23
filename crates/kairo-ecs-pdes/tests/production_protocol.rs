@@ -442,6 +442,41 @@ fn eligible_process_batches_run_concurrently_across_logical_processes() {
 }
 
 #[test]
+#[cfg(feature = "pdes-worker-pool")]
+fn reuses_the_native_worker_across_rounds_and_horizons() {
+    #[derive(Default)]
+    struct ThreadRecorder(Vec<std::thread::ThreadId>);
+
+    impl ConservativeProcess for ThreadRecorder {
+        fn on_event(&mut self, _: &RemoteEvent) -> Vec<RemoteEvent> {
+            self.0.push(std::thread::current().id());
+            Vec::new()
+        }
+    }
+
+    let lp = LpId(0);
+    let mut runtime = ConservativeRuntime::new(
+        plan(1, 1),
+        BTreeMap::from([(lp, Vec::new())]),
+        BTreeMap::from([(lp, ThreadRecorder::default())]),
+    )
+    .unwrap();
+    for tick in 0..64 {
+        runtime
+            .schedule_initial(message(lp, lp, SimTime::from_ticks(tick), Vec::new()))
+            .unwrap();
+    }
+    runtime.run_until(SimTime::from_ticks(31)).unwrap();
+    runtime.run_until(SimTime::from_ticks(63)).unwrap();
+
+    let calls = &runtime.processes()[&lp].0;
+    assert_eq!(calls.len(), 64);
+    let ids = calls.iter().collect::<std::collections::HashSet<_>>();
+    assert_eq!(ids.len(), 1);
+    assert_ne!(calls[0], std::thread::current().id());
+}
+
+#[test]
 fn adversarial_minimum_lookahead_cycle_executes_every_tick_on_eight_lps() {
     let mut runtime = ConservativeRuntime::new(
         plan(8, 1),
