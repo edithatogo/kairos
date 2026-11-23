@@ -150,3 +150,32 @@ cargo test --locked -p kairo-ecs-gpu -p kairo-ecs-cuda --all-features --lib --te
 | `local-default.log` | `d6df5a3ecd7e32cd74e01b59ab125c56ab751e2a692f1dc86b2f1e9a8d1e9bf8` |
 | `local-clippy.log` | `18cb4e329715f084a78175932d236f4fa064f4981ff9d8d7e043add98cad5442` |
 | `local-docs.log` | `489c33a0e712811becc0b859edf3586fed04e749da7ece9d04ec61bb3510fd32` |
+
+## Portable recovery coverage and hardware recheck
+
+The first hosted run passed the workspace tests and reported project line
+coverage of 87.42% against the exact base's 87.87%. The resident model now
+keeps staging, synchronization, and failure recovery in the same Rust
+code exercised by the CUDA driver and a host-side recorded stream. The
+CUDA launch and copy calls stay in the driver adapter. The host tests
+exercise rejected replacements, dispatch failures, and readback failures.
+The facade tests exercise typed errors, native transfer accounting, and
+the existing compatibility and host paths.
+
+The RTX 4060 rerun passed the explicit recovery, mixed model, and timing
+fixtures, plus 40 ordinary package tests. The final portable assertion
+also verifies that an ABM failure invalidates a previously resident
+entity buffer. It passed in the 49-test local all-feature package run.
+The Nsight trace above belongs to the first measured source.
+
+The Windows rerun used the same workload and 12 paired runs per case.
+The 65,536-particle case passed parity and replay, with CPU and CUDA medians
+of 4.9567 ms and 2.3125 ms. The median paired speed ratio was 2.149
+(95% percentile interval 2.062–2.203). CUDA finished first in all 12 large
+cases. CPU finished first in all 24 smaller cases.
+
+| Source or run log | SHA-256 |
+| --- | --- |
+| `host-coverage-source.zip` applied after the two preceding archives | `fedce6f77c55b1d773be0c3744333fe2bacdab0554b37112493556f2604e7eef` |
+| `host-coverage-native-execution.log` | `d51160fcbbdf49102b11d0492110faf8b25ac8a0cc49f8e844710ab08732e4d8` |
+| `cuda-host-final-local.lcov` | `5e7c8305c346c75e8fcb0779c74d18ba3c0365247af19ad445791d6f8010e50d` |
