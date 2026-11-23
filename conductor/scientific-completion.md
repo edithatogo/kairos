@@ -98,3 +98,33 @@ signed priority from the generated files. The installed HDF5 and BP5 service
 queue cases matched the uninterrupted run's 17 remaining dispatches.
 Additional restart scenarios, production Arrow batches, NUMA and live
 filesystem evidence remain open. [Evidence](execution/scientific/s14-completion.md).
+
+## S15 native debugger qualification
+
+The Rust replay fixture restored same-tick state and the exact dispatch/RNG
+suffix after cancellation. Forks retained independent queue, model and RNG
+state. A caught model unwind required restoring the last recorded boundary.
+A release build of the CLI replayed one million events, restored position
+zero and dispatched them again with identical final state and scheduler output.
+The process peaked at 80.8 MiB RSS.
+
+On macOS ARM64, both retention configurations kept the last 1,024 events
+of a 65,536-event model with a 64 KiB state and eight pending events during
+steady execution. The final state checksum agreed across runs.
+
+| Configuration | Live heap after subtracting baseline | Peak RSS | Median restore | Median fork |
+| --- | ---: | ---: | ---: | ---: |
+| Full copy at every event | 82.63 MiB | 87.63 MiB | 0.71 µs | 3.21 µs |
+| 64-event checkpoints with copy-on-write model pages | 1.51 MiB | 3.86 MiB | 8.38 µs | 0.54 µs |
+
+The heap values come from live `heap` reports. Peak RSS is the median of three
+fresh `time -l` runs. Restore and fork times are medians of those runs' 101-sample
+medians. Restoring the 63rd event in an interval exercised the periodic case's
+longest replay. Each fork edited one model page and scheduled a new event.
+These measurements apply to the linked model and settings.
+[Receipt](tracks/110-scientific-method-completion/evidence/s15-native-debugger-macos-arm64.json) ·
+[Reproduction example](../crates/kairo-ecs-debug/examples/replay_memory.rs) ·
+[Checkpoint contract](../docs/adr/0020-native-debugger-replay.md).
+
+Arrow IPC trace serialization, production model qualification and browser
+integration remain open.

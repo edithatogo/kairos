@@ -1,0 +1,211 @@
+{
+  "date_utc": "2026-11-23T06:19:51Z",
+  "baseline": "316492c1d8ee86d5e61fd4640d13350242618536",
+  "working_directory": "kairos",
+  "host": {
+    "os_version": "27.2.1",
+    "arch": "arm64",
+    "model": "MacBookPro18,4",
+    "memory_bytes": 34359738368,
+    "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+    "cargo": "cargo 1.99.1 (5f94df478 2026-08-27)"
+  },
+  "build_command": "cargo build --locked --release -p kairo-ecs-debug --bin kairo-ecs-debug --example replay_memory",
+  "source_input_sha256": {
+    "Cargo.lock": "b8122a068608e24a1de8b23bfca7048a3281f34646561a0ffc2ccd284fb6b3a5",
+    "crates/kairo-ecs-debug/Cargo.toml": "e1a3f3fb5f03a85331e02bf75d54fb3e84752a330775e7105ee8879f80630536",
+    "crates/kairo-ecs-debug/examples/replay_memory.rs": "967c424fdad57ff0707c5cc600de0dd6f8b86fcfaaf07ad5deccfd8fbc853c4a",
+    "crates/kairo-ecs-debug/src/lib.rs": "f31932f60b708a8f484de658b1335c6a7987d58d8a8834d8e5a9dfa4c5add646",
+    "crates/kairo-ecs-debug/src/main.rs": "18a616d1491189136cfde5a5f7c8d2981f0752e3d6b2783d234a9ff4deee4252",
+    "crates/kairo-ecs-debug/src/replay.rs": "a301d591a41027680126fe6049a71f62138ca52d0f1b9f35b799c574a173fdd0",
+    "crates/kairo-ecs-core/src/lib.rs": "8264636f35fed90568689ca35cbdd01e226bcd04461c9aae9f7df9ade2e3673c",
+    "crates/kairo-ecs-rng/src/lib.rs": "6b7307aa1772acd954aff267b30b03b1f23422d31ad4e3a60126eab485eb7315"
+  },
+  "binary_sha256": {
+    "replay_memory": "1a8ce327dbbaace836301adeefaae27b0aabe72f34bd27f417e51fe21a600ce4",
+    "kairo-ecs-debug": "bc36143d0703f6ca8ad98b15e1aa27749490703300a550b860b5f89b0ce91bae"
+  },
+  "workload": {
+    "seed": 7,
+    "events": 65536,
+    "rewind_events": 1024,
+    "model_state_bytes": 65536,
+    "queue_width": 8,
+    "branch_and_restore_samples": 101,
+    "restore_position": 64575,
+    "dense_checkpoint_interval": 1,
+    "periodic_checkpoint_interval": 64
+  },
+  "allocation_command": "/usr/bin/heap RELEASE_EXAMPLE_PID at baseline and final retained cursor",
+  "runtime_command": "/usr/bin/time -l replay_memory MODE",
+  "measurements": {
+    "dense": {
+      "live_heap": {
+        "mode": "dense",
+        "events": 65536,
+        "window": 1024,
+        "checksum": 12164566038898488159,
+        "forward_ns": 419152916,
+        "restore_p50_ns": 709,
+        "restore_p95_ns": 792,
+        "branch_p50_ns": 3125,
+        "branch_p95_ns": 3333,
+        "peak_rss_bytes": 91963392,
+        "exit": 0,
+        "live_heap_baseline_bytes": 20272,
+        "live_heap_retained_bytes": 86659376,
+        "live_heap_delta_bytes": 86639104
+      },
+      "process_runs": [
+        {
+          "mode": "dense",
+          "events": 65536,
+          "window": 1024,
+          "checksum": 12164566038898488159,
+          "forward_ns": 420428416,
+          "restore_p50_ns": 709,
+          "restore_p95_ns": 750,
+          "branch_p50_ns": 3209,
+          "branch_p95_ns": 4500,
+          "peak_rss_bytes": 91865088,
+          "exit": 0
+        },
+        {
+          "mode": "dense",
+          "events": 65536,
+          "window": 1024,
+          "checksum": 12164566038898488159,
+          "forward_ns": 442135750,
+          "restore_p50_ns": 708,
+          "restore_p95_ns": 792,
+          "branch_p50_ns": 3167,
+          "branch_p95_ns": 4167,
+          "peak_rss_bytes": 91930624,
+          "exit": 0
+        },
+        {
+          "mode": "dense",
+          "events": 65536,
+          "window": 1024,
+          "checksum": 12164566038898488159,
+          "forward_ns": 424688625,
+          "restore_p50_ns": 709,
+          "restore_p95_ns": 792,
+          "branch_p50_ns": 3208,
+          "branch_p95_ns": 3584,
+          "peak_rss_bytes": 91881472,
+          "exit": 0
+        }
+      ]
+    },
+    "periodic": {
+      "live_heap": {
+        "mode": "periodic",
+        "events": 65536,
+        "window": 1024,
+        "checksum": 12164566038898488159,
+        "forward_ns": 8762125,
+        "restore_p50_ns": 8458,
+        "restore_p95_ns": 8791,
+        "branch_p50_ns": 583,
+        "branch_p95_ns": 1792,
+        "peak_rss_bytes": 4096000,
+        "exit": 0,
+        "live_heap_baseline_bytes": 20272,
+        "live_heap_retained_bytes": 1608256,
+        "live_heap_delta_bytes": 1587984
+      },
+      "process_runs": [
+        {
+          "mode": "periodic",
+          "events": 65536,
+          "window": 1024,
+          "checksum": 12164566038898488159,
+          "forward_ns": 9171875,
+          "restore_p50_ns": 8375,
+          "restore_p95_ns": 9084,
+          "branch_p50_ns": 583,
+          "branch_p95_ns": 1750,
+          "peak_rss_bytes": 4079616,
+          "exit": 0
+        },
+        {
+          "mode": "periodic",
+          "events": 65536,
+          "window": 1024,
+          "checksum": 12164566038898488159,
+          "forward_ns": 9054625,
+          "restore_p50_ns": 8375,
+          "restore_p95_ns": 8584,
+          "branch_p50_ns": 542,
+          "branch_p95_ns": 792,
+          "peak_rss_bytes": 4046848,
+          "exit": 0
+        },
+        {
+          "mode": "periodic",
+          "events": 65536,
+          "window": 1024,
+          "checksum": 12164566038898488159,
+          "forward_ns": 8733750,
+          "restore_p50_ns": 8417,
+          "restore_p95_ns": 8667,
+          "branch_p50_ns": 542,
+          "branch_p95_ns": 917,
+          "peak_rss_bytes": 4046848,
+          "exit": 0
+        }
+      ]
+    }
+  },
+  "million_event_replay": {
+    "command": "/usr/bin/time -l kairo-ecs-debug replay --events 1000000 --seed 7 --checkpoint-every 1024 --checkpoints 977",
+    "stdin": [
+      "continue",
+      "inspect applied",
+      "inspect total",
+      "inspect rng-words",
+      "inspect pending",
+      "seek 0",
+      "continue",
+      "inspect applied",
+      "inspect total",
+      "inspect rng-words",
+      "inspect pending"
+    ],
+    "exit": 0,
+    "stdout": [
+      "queue empty",
+      "position=1000000 tick=499999 event=999999:999999 sequence=999999 kind=0",
+      "applied=1000000",
+      "total=9226181414080546905461012",
+      "rng-words=2000000",
+      "pending=0",
+      "position=0 initial",
+      "queue empty",
+      "position=1000000 tick=499999 event=999999:999999 sequence=999999 kind=0",
+      "applied=1000000",
+      "total=9226181414080546905461012",
+      "rng-words=2000000",
+      "pending=0"
+    ],
+    "stdout_sha256": "e9f19f5ce41241cdacb0e7cd4c3cac41e6a2752e05fe172c1f81eaa335dba4fa",
+    "peak_rss_bytes": 84672512
+  },
+  "raw_log_sha256": {
+    "cargo-build-release.log": "9c6884d7a1bd523d174f5089fd77e8bc4234a0607b8661197554e965af1c97e0",
+    "dense-1.log": "3163a88eb88c140b68b24e5a7684c57a1e1497d887f61c95e3c9264d4744595c",
+    "dense-2.log": "6f3ad7b3957b2ae19792c68f2eb8af76ccaa79fedc099c879b75b3b7d3b2ca4f",
+    "dense-3.log": "8cd6032f71741eb9ea9ba6910c666a92fda348d18819a3c32c3aa544f4b2f63d",
+    "dense-baseline.heap.log": "4e3189030bb7612e0190e42f3861bd18e3e5703291a5d5283b4f27160b61ad2f",
+    "dense-heap.log": "77fa8cbc10ca10820ee0218851b5cd1c8a5d7227245f86d5a21f00b927f2eedc",
+    "dense-retained.heap.log": "5fef66e7630a53408a548851e627b241e379916bc105e282c0ad6297e57532d4",
+    "million-event.log": "f35710932d6f68eab006876ebb4d43cdf17f428fe4bfcd607334e60e77b91da5",
+    "periodic-1.log": "917162c0e84c8d8bba001418f1ac3384ba7c6c40501e45509548d2e58375d00d",
+    "periodic-2.log": "570d0f3391c9b678d33f51b6702b9acf817b8f0421087f121ba71f7230bc1d7a",
+    "periodic-3.log": "feade13fb39557f644e10affdc2aff798bbc225718c2afd6772769b77efac162",
+    "periodic-baseline.heap.log": "773f87023c42b5b6b0b54b6f86d7bb9ba0192b1963da72d116ba0301b012e8f7",
+    "periodic-heap.log": "c5eb2a4ecf86b610f0c1f9da13b84ba122bc4b52a25b41bd4b5c5d600ca1d608",
+    "periodic-retained.heap.log": "5cd8e7a024826a9070b78faa8361f438ff4d702a065653ea49c4d4f374ab1d5e"
+  }
+}
