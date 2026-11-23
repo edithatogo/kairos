@@ -1,5 +1,18 @@
 # S14 Native checkpoint and HPC evidence
 
+## Native Arrow IPC
+
+`NativeIpcBatch` uses the existing Polars Arrow types to publish real IPC
+streams with contiguous byte receipts. PyArrow 26.0.1 on Python 3.15.2 read
+all three fixture streams and verified their field order, types, nullability
+and values. This includes both limbs of the event clock, caller-ordered
+snapshot rows and the synthetic checkpoint's nested source block layout.
+The independent reader rejected the historical text output at the audited
+base while reading a native IPC positive control. The selected Rust suite
+passed 116 tests. The results cover the local writer on APFS.
+[Source and artifact hashes](../../tracks/51-parallel-io-arrow-checkpoint-export/evidence/native-ipc-macos-arm64.json) ·
+[API contract](../../../docs/adr/0022-native-parallel-arrow-ipc.md).
+
 ## Native file boundary
 
 Track 51's HDF5 feature uses the existing `Hdf5CheckpointAdapter` and the

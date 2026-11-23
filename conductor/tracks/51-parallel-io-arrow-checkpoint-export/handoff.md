@@ -1,5 +1,22 @@
 # Track 51 Handoff
 
+## Native Arrow IPC
+
+Chat `01a1fd18-51c7-7963-a3cc-d262d54582ba` owns the Kairos closeout
+worktree on `codex/native-parallel-arrow-20261123` for the Arrow crate,
+stream contract and local qualification. The platform matrix and hosted
+closeout are the next operations. PyArrow independently checked the exact
+typed event fields, caller-supplied snapshot rows and synthetic two-block
+checkpoint descriptor. The older v1 event bytes and source block accounting
+retain their historical meaning.
+
+Independent Conductor review accepted the local CAP-51.3 evidence. It asked
+for the writer-relative block offset and the remedy after an error at the
+Unix parent-directory sync. Both are covered by the API contract. Track 51
+still requires live parallel volume evidence.
+[Stream contract](../../../docs/adr/0022-native-parallel-arrow-ipc.md) ·
+[Local receipt](evidence/native-ipc-macos-arm64.json).
+
 ## Self-contained native engine restart
 
 Chat `01a1fd18-51c7-7963-a3cc-d262d54582ba` owns the Kairos closeout

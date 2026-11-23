@@ -1,0 +1,56 @@
+{
+  "base_revision": "35f588a16ed789e197cfc66f40449dc2fd6bc2c3",
+  "repository_cwd": "/Users/doughnut/.codex/worktrees/kairos-ci-closeout/kairos",
+  "platform": "macOS ARM64, local APFS",
+  "rust": "1.99.1 (58cf8f9c35b355199727627d07ae34a4e2846d67)",
+  "python": "3.15.2",
+  "pyarrow": "26.0.1, separately installed",
+  "fixture": "Fixed three-event log with 128-bit times and nullable handles, two caller-provided snapshot rows, and one synthetic checkpoint descriptor with two in-memory source blocks",
+  "input_sha256": {
+    "Cargo.lock": "38970a6fe699dafebb720188530d88c022b53fd563bbe0cc9ad5dc7aa4167e07",
+    "crates/kairo-ecs-arrow/tests/native_parallel_ipc.rs": "14544e7717da2cee90e00ec1a4700a1b49b3584dfcd45b0bb6a146b099224fd7",
+    "crates/kairo-ecs-arrow/src/lib.rs": "19d8d1a52514ba8e88b72cdaeb1f8ad1ea7a607cacb90605f17aba9025ad28cf",
+    "crates/kairo-ecs-arrow/src/native_ipc.rs": "fb3c4d039f2d403d35cba0357be2659f4f15eea66c820f3f3fe4521d8f8adc63",
+    "verify-native-ipc.py": "1a0601bcbd5f4fa3ea240677d1a748540b85995414f35e9ca6cc6955b982320e"
+  },
+  "commands": [
+    {
+      "command": "KAIROS_NATIVE_IPC_DIR=<artifact-dir> cargo test --locked --offline -p kairo-ecs-arrow --features parallel-io,polars-native --test native_parallel_ipc",
+      "exit_code": 0,
+      "passed": 2,
+      "log_sha256": "09dcd911835baac090e55f5eb1fd3aa54c4683a195ca10c28c61ee591d574cff"
+    },
+    {
+      "command": "<pyarrow-venv>/bin/python conductor/tracks/51-parallel-io-arrow-checkpoint-export/evidence/verify-native-ipc.py <artifact-dir>",
+      "exit_code": 0,
+      "log_sha256": "d8e71596fc95ce43672e7b7cb4f2265a11d0816266ac49fae9e7400273f25616"
+    },
+    {
+      "command": "cargo nextest run --locked --offline -p kairo-ecs-arrow --features parallel-io,polars-native",
+      "exit_code": 0,
+      "passed": 116,
+      "log_sha256": "306932d10eb95e294cded3e0bda3ea350cdedd651ca3fa5aa1d093c924523a37"
+    }
+  ],
+  "artifact_dir": "/Volumes/PortableSSD/kairos-native-parallel-arrow.J7KJaZ/fixtures",
+  "artifacts": {
+    "events.arrows": {
+      "rows": 3,
+      "bytes": 3184,
+      "sha256": "d62146f748686c1361c389b099f8b41677608d1bd133e15825f95251949e0b76"
+    },
+    "world.arrows": {
+      "rows": 2,
+      "bytes": 752,
+      "sha256": "ee0353cdc8182a4d2bab383a91623003fdc5e9dd5b8104064965290edc60b353"
+    },
+    "checkpoint.arrows": {
+      "rows": 1,
+      "bytes": 2640,
+      "sha256": "56c7821e69ed8773c10a197526cbc5663afea3ebc927046d8a0187f8330397a8"
+    },
+    "checkpoint.contract": {
+      "sha256": "c5c9b9fd7838f8eb37df54a130de225caf4214fa039e8df27d4c9007e0f7fb4f"
+    }
+  }
+}
