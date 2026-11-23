@@ -7,6 +7,8 @@ license.workspace = true
 repository = "https://github.com/edithatogo/kairos"
 publish = false # Git Polars closure: crates.io publication awaits a separately qualified release.
 description = "Arrow telemetry and event log serialization for KairoECS"
+# This workspace integration test uses the local staged allocator.
+exclude = ["tests/staged_checkpoint_restart.rs"]
 
 [dependencies]
 kairo-ecs-core = { path = "../kairo-ecs-core", version = "0.0.0", features = ["checkpoint-json"], optional = true }
@@ -67,6 +69,7 @@ hdf5 = ["parallel-io", "dep:hdf5-metno"]
 adios2 = ["parallel-io", "dep:kairo-ecs-adios2", "dep:rustix"]
 
 [dev-dependencies]
+kairo-ecs-des = { path = "../kairo-ecs-des", features = ["checkpoint-json"] }
 kairo-ecs-rng = { path = "../kairo-ecs-rng", version = "0.0.0" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
