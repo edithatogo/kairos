@@ -279,13 +279,16 @@
     {
       "id": "local-pleiades-cuda",
       "provider": "Maintainer separate Pleiades computer",
-      "access_model": "User-reported NVIDIA CUDA GPU; OS/model/driver/access unverified; SSH probe timed out. Existing bare pleiades SSH alias routes NAS, not this computer.",
+      "access_model": "Distinct maintainer Windows workstation reached through its configured SSH profile. The verified host runs an NVIDIA GeForce RTX 4060 with driver 617.14, CUDA toolkit 12.6.77 and Rust 1.99.1.",
       "source_url": "https://docs.nvidia.com/cuda/",
       "repo_entrypoints": [
-        "conductor/capability-reconciliation-20261020.md"
+        "crates/kairo-ecs-gpu/tests/cuda_native_model.rs",
+        "crates/kairo-ecs-gpu/tests/cuda_mixed_profile.rs",
+        "conductor/execution/scientific/s11-cuda-completion.md"
       ],
       "blockers_reduced": [
-        "Track 52 CUDA qualification after access and backend implementation"
+        "Track 52 native CUDA mixed particle and additive DES parity",
+        "Local matched CPU and CUDA timings with independent kernel and copy trace"
       ],
       "required_evidence": [
         "Verified distinct host GPU/driver/toolkit identity",

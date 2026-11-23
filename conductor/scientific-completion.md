@@ -74,14 +74,22 @@ Errors on unsupported inputs must be explicit. Numerical changes require an algo
 
 The evidence concerns numerical correctness and model execution inside these contracts. See [ADR 0014](../docs/adr/0014-versioned-scientific-methods.md) for API migration.
 
-## S11 Apple Metal particle qualification
+## S11 Apple Metal and CUDA model qualification
 
 An Apple M1 Max ran the resident particle kernel across two workgroups.
 Positions agreed with an independent scalar reference within `2e-6` and two
 same-device runs produced bitwise identical positions. Empty replacement,
 concurrent readback and native validation recovery passed. CPU was faster
-in all 60 paired timings for this particle model.
-[Evidence](execution/scientific/s11-completion.md) · [Raw timings](execution/scientific/s11-metal-timings.tsv).
+in all 60 paired timings for this particle model. The later mixed model
+exercised resident additive DES values, signed overflow, snapshots and
+device failure recovery. CPU finished first in all 36 matched pairs.
+[Metal results](execution/scientific/s11-completion.md) · [Particle timings](execution/scientific/s11-metal-timings.tsv).
+
+The Windows RTX 4060 ran the hardware-only CUDA particle and additive DES
+model. Nsight recorded four particle kernels, five DES kernels and both
+readbacks after the last kernel. At 65,536 particles and entities with
+eight 65,536-event batches, the CPU and CUDA medians were 4.90 ms and 2.26 ms.
+Both smaller cases favored the CPU. [CUDA results](execution/scientific/s11-cuda-completion.md).
 
 ## S13 native co-simulation qualification
 
