@@ -1,10 +1,10 @@
 # Track 51 Plan: Parallel I/O, Arrow Record Batches & Checkpoint Export
 
-## Native HDF5 progress
+## Native file progress
 
-The HDF5 adapter writes and reads native checkpoint records. The physical
-format passed the vendor reader. CAP-51.2 remains open for ADIOS2 integration.
-The scheduler state and parallel filesystem gates remain listed below.
+The adapters write native HDF5 and serial ADIOS2 BP5 checkpoints. Both vendor
+readers checked the physical formats and full-width timestamp fields. The
+engine restart and parallel filesystem gates remain open.
 [Native format evidence](../../execution/scientific/s14-completion.md).
 
 ## Acceptance correction — 3 November 2026
@@ -15,7 +15,7 @@ Both adapters originally wrote labelled v1 contract bytes. The existing
 restart restores records and a maximum tick rather than a resumed engine, and
 the filesystem manifest is a template. The following acceptance work remains:
 
-- [ ] CAP-51.2: Implement and independently read native HDF5 and ADIOS2 checkpoints.
+- [x] CAP-51.2: Implement and independently read native HDF5 and ADIOS2 checkpoints.
 - [ ] CAP-51.3: Qualify real Arrow record batches for the track's specified outputs.
 - [ ] CAP-51.4: Prove representative engine restart and final-state parity.
 - [ ] CAP-51.5: Execute and retain contiguous-write benchmarks and live parallel-filesystem evidence.

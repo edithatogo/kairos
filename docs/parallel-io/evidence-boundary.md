@@ -29,9 +29,9 @@ the storage or transport integrity contract requires it.
 
 The [Track 51 handoff](../../conductor/tracks/51-parallel-io-arrow-checkpoint-export/handoff.md)
 records the separate native Polars IPC/ZSTD Parquet interchange test and
-independent Apache PyArrow readback. The HDF5 adapter now uses an installed
-HDF5 library. ADIOS2 file integration remains open and the labelled ADIOS2
-adapter writes v1 contract bytes.
+independent Apache PyArrow readback. The HDF5 and ADIOS2 adapters use installed
+native libraries. The legacy text format remains available through the explicit
+contract reader and writer.
 
 ## Native HDF5 files
 
@@ -41,6 +41,15 @@ requires UTF-8 paths and direct contiguous datasets. It stores both time
 limbs, payload presence and block metadata. Use the explicit legacy reader
 to migrate text files. See [ADR 0018](../adr/0018-native-hdf5-checkpoints.md)
 for the file schema and compatibility details.
+
+## Native ADIOS2 directories
+
+Use `adios2` with the installed ADIOS2 2.12 C library on Linux or macOS. The
+adapter writes a single BP5 step with typed columns. Replacement exchanges a
+sibling directory atomically. After an error reported after publication, inspect
+the destination and retained stage before retrying. Use immutable generation
+names for external readers that run concurrently with publication.
+[ADR 0019](../adr/0019-native-adios2-checkpoints.md).
 
 ## Live proof required
 

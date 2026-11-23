@@ -65,6 +65,10 @@
           "path": "crates/kairo-ecs-abm/Cargo.toml"
         },
         {
+          "package": "kairo-ecs-adios2",
+          "path": "crates/kairo-ecs-adios2/Cargo.toml"
+        },
+        {
           "package": "kairo-ecs-arrow",
           "path": "crates/kairo-ecs-arrow/Cargo.toml"
         },

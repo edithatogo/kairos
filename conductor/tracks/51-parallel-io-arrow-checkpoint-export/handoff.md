@@ -1,5 +1,21 @@
 # Track 51 Handoff
 
+## Native ADIOS2 checkpoint slice — 23 November 2026
+
+Chat `01a1fd18-51c7-7963-a3cc-d262d54582ba` owns the Kairos closeout worktree
+on `codex/native-adios2-checkpoint-20261123`. Source `e7de3f9` writes and
+restores serial BP5 directories through the installed ADIOS2 C library. The
+existing Arrow adapter and manifest carry the same logical rows. The BP5 and
+HDF5 paths share the record codec.
+
+The Mac ARM64 Rust suite passed 61 tests. Separate `bpls` and `h5dump`
+invocations passed. Review accepted the sibling-directory exchange and checked
+the observed cleanup failure after publication. The next operation is hosted
+Linux qualification. Production Arrow batches, representative engine restart
+and live parallel filesystem evidence remain open.
+[Commands, hashes and review](../../execution/scientific/s14-completion.md) ·
+[File contract](../../../docs/adr/0019-native-adios2-checkpoints.md).
+
 ## Native HDF5 checkpoint slice — 23 November 2026
 
 The integration owner is chat `01a1fd18-51c7-7963-a3cc-d262d54582ba` in the

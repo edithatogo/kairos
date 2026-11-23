@@ -908,7 +908,7 @@ entries:
     git_status: "contract-baseline implementation and evidence commits pushed; strict git closeout passed"
     commit_sha: "245a5ccaed7ae9a522e1fb887511232f6bed73d2"
     pushed_ref: "origin/codex/kairos-hpc-parity-wave"
-    next_phase_decision: "Track 51 is In Progress after the first checkpoint/restart contract baseline; native Arrow, HDF5, ADIOS2, parallel filesystem evidence, and throughput benchmark work remain required before In Review."
+    next_phase_decision: "Track 51 is In Progress. Native HDF5 and serial ADIOS2 files passed local vendor readback. Production Arrow batches, representative engine restart, parallel filesystem evidence, throughput benchmarks, and phase closeout remain required."
   - track_id: "52"
     phase: "native-gpu-acceleration-persistent-device-memory"
     state: closed

@@ -808,6 +808,7 @@ tracks:
     owner: arrow-agent + cloud-agent + performance-agent
     depends_on: ["04", "39", "46"]
     owned_paths:
+      - crates/kairo-ecs-adios2/
       - crates/kairo-ecs-arrow/
       - schemas/arrow/
       - examples/telemetry/

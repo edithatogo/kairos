@@ -90,10 +90,11 @@ analytical height, velocity and exact checkpoint replay. The Linux
 OpenModelica case uses an independently compiled model with a time event.
 [Inputs and qualification commands](execution/scientific/s13-completion.md)
 
-## S14 native HDF5 checkpoint qualification
+## S14 native checkpoint qualification
 
-The HDF5 adapter writes a typed compound event table and restores the complete
-logical record sequence. The HDF Group reader checked unequal full-width time
-limbs and the Rust tests rejected corruption and indirect links. The track
-retains native ADIOS2 integration, engine restart and parallel filesystem
-acceptance. [Evidence](execution/scientific/s14-completion.md).
+The HDF5 and ADIOS2 adapters write typed native checkpoints and restore the
+complete logical sequence. `h5dump` and `bpls` read the timestamp limbs and
+signed priority from the generated files. The installed HDF5 restart case
+matched the uninterrupted run's remaining dispatches. Representative restart
+across backends, production Arrow batches, NUMA and live filesystem evidence
+remain open. [Evidence](execution/scientific/s14-completion.md).

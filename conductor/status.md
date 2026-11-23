@@ -431,9 +431,10 @@ Track 49 is `In Progress` with a first MPI/gRPC launch-contract and migration
 metadata baseline in `kairo-ecs-mpi` and `kairo-ecs-grpc`. Track 50 is `In
 Progress` with a first `numa` feature-gated topology, affinity, event-pool,
 component-locality, and FFI zero-copy layout contract baseline. Track 51 is
-`In Progress` with a first `parallel-io` feature-gated checkpoint/restart and
-contiguous-block contract baseline in `kairo-ecs-arrow`; native Arrow arrays,
-HDF5/ADIOS2 writers, and parallel filesystem evidence remain incomplete. Track
+`In Progress` with native HDF5 and serial ADIOS2 BP5 checkpoint files.
+The vendor readers and the local Rust roundtrips passed. Production Arrow
+record batches, representative engine restart and live parallel filesystem
+evidence remain open. Track
 52 is `In Progress` with a first persistent device-memory contract slice in
 `kairo-ecs-gpu` that records resident buffers, copy boundaries, and deterministic
 ABM/DES CPU parity; real wgpu/CUDA device execution and hardware benchmark
