@@ -144,6 +144,18 @@ impl Scheduler {
         let removed = self.pending.remove(&id);
         if removed {
             self.cancelled_events += 1;
+            // Keep extra room so a small queue can absorb bursts without rebuilding.
+            let retained_limit = self.pending.len().saturating_mul(2).saturating_add(1024);
+            if self.heap.len() > retained_limit {
+                self.heap.retain(|entry| self.pending.contains(&entry.id));
+                let shrink_threshold = retained_limit.saturating_mul(2);
+                if self.heap.capacity() > shrink_threshold {
+                    self.heap.shrink_to(retained_limit);
+                }
+                if self.pending.capacity() > shrink_threshold {
+                    self.pending.shrink_to(retained_limit);
+                }
+            }
         }
         removed
     }
@@ -824,6 +836,42 @@ mod tests {
             priority,
             entity: None,
             kind: EventKind::Custom(kind),
+        }
+    }
+
+    #[test]
+    fn cancelled_queue_storage_shrinks_and_checkpoint_keeps_order() {
+        let mut scheduler = Scheduler::new();
+        let cutoff = u128::from(u64::MAX) + 50;
+        let first = scheduler.schedule(request(cutoff, 0, 1));
+        let second = scheduler.schedule(request(cutoff, 0, 1));
+        let priority = scheduler.schedule(request(cutoff, -1, 2));
+        let cancelled: Vec<_> = (1..=8192)
+            .map(|offset| scheduler.schedule(request(cutoff + offset, 0, 3)))
+            .collect();
+        let peak_heap = scheduler.heap.capacity();
+        let peak_pending = scheduler.pending.capacity();
+        for &id in &cancelled {
+            assert!(scheduler.cancel(id));
+        }
+        assert_eq!(scheduler.pending_events(), 3);
+        assert!(scheduler.heap.capacity() < peak_heap / 2);
+        assert!(scheduler.pending.capacity() < peak_pending / 2);
+        assert_eq!(scheduler.peek_next().unwrap().id, priority);
+
+        let restored = Scheduler::from_checkpoint(&scheduler.checkpoint()).unwrap();
+        for mut scheduler in [scheduler, restored] {
+            assert!(!scheduler.cancel(cancelled[0]));
+            for expected in [priority, first, second] {
+                assert_eq!(scheduler.step().into_dispatched().unwrap().id, expected);
+            }
+            assert!(matches!(scheduler.step(), StepOutcome::Empty));
+            assert_eq!(scheduler.stats().cancelled_events, 8192);
+            assert_eq!(scheduler.stats().dispatched_events, 3);
+            assert_eq!(
+                scheduler.schedule(request(cutoff + 8193, 0, 4)),
+                EventId::new(8195, 8195)
+            );
         }
     }
 
