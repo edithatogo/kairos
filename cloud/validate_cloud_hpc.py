@@ -320,12 +320,14 @@ def validate_slurm_scripts() -> None:
         assert "set -euo pipefail" in text, path
 
     assert "#SBATCH --signal=B:SIGTERM@120" in single
-    assert 'KAIRO_CHECKPOINT_DIR="\\${KAIRO_CHECKPOINT_DIR:-${TMPDIR:-/tmp}/kairo/checkpoints}"' in single
+    assert 'KAIRO_CHECKPOINT_DIR="${KAIRO_CHECKPOINT_DIR:-${TMPDIR:-/tmp}/kairo/checkpoints}"' in single
     assert "kairo-ecs-cli checkpoint" in single
-    assert "#SBATCH --array=0-${last_index}" in sweep
+    assert 'run+=(--seed-manifest "$seed_manifest")' in single
+    assert 'sbatch --partition="$partition" --array="0-${last_index}"' in sweep
     assert "#SBATCH --signal=B:SIGTERM@120" in sweep
     assert "SLURM_ARRAY_TASK_ID" in sweep
-    assert 'kairo-ecs-cli run --scenario "${scenario_prefix}/variant-\\${variant}.yaml" --output "\\$KAIRO_OUTPUT_URI"' in sweep
+    assert '--scenario "${scenario_prefix}/variant-${variant}.scenario.toml"' in sweep
+    assert '--seed-manifest "${seed_manifest_prefix}/variant-${variant}.seeds.toml"' in sweep
     assert "kairo-ecs-cli resume --checkpoint" in resume
 
     bash = shutil.which("bash")
@@ -341,6 +343,11 @@ def validate_slurm_scripts() -> None:
             return
         for script in SHELL_SCRIPTS:
             subprocess.run([bash, "-n", script], cwd=ROOT, check=True)
+        for script in ("hpc/slurm/submit-experiment.sh", "hpc/slurm/submit-sweep.sh"):
+            _, heredocs = _shell_text_without_heredoc_bodies(script, read(script).splitlines())
+            for marker, _, body in heredocs:
+                if marker == "SLURM":
+                    subprocess.run([bash, "-n"], input=body.encode("utf-8"), cwd=ROOT, check=True)
     else:
         fallback_static_shell_validation("bash was not found on PATH")
 

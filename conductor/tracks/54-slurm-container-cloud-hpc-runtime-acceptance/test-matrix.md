@@ -8,7 +8,7 @@
 | Free compute route boundary | `node scripts/validation/validate-free-compute-routes.mjs` | Review |
 | Docker runtime | `docker build -t kairo-ecs:hpc . && docker run --rm kairo-ecs:hpc kairo-ecs-cli --version` | Done |
 | Kubernetes runtime | `kubectl apply --dry-run=server -f k8s/` | Done |
-| Slurm runtime | `sbatch hpc/slurm/kairo-ecs-smoke.sbatch` | Done |
+| Slurm single job and seeded array | Run both wrappers with the [Slurm inputs](../../../docs/cloud-hpc/slurm.md#live-validation). Check terminal job IDs and compare replay artifacts with direct CLI runs. | Single-node scheduler acceptance |
 | Phase gates | `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` | Phase movement |
 | Git closeout | `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` | Closeout |
 

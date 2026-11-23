@@ -43,9 +43,14 @@ node scripts/evidence/capture-hpc-evidence.mjs \
   --scheduler "Slurm <version>" \
   --filesystem "Lustre <mount and stripe config>" \
   --reviewer "<reviewer>" \
-  -- hpc/slurm/submit-experiment.sh --scenario scenarios/factory_bottleneck_v1.yaml --output /scratch/kairo-ecs-runs --partition gpu --nodes 1 \
-  -- hpc/slurm/submit-experiment.sh --scenario scenarios/factory_bottleneck_v1.yaml --output /scratch/kairo-ecs-runs --partition gpu --nodes 1
+  -- bash hpc/slurm/submit-experiment.sh \
+  --scenario examples/experiments/factory_bottleneck_v1.scenario.toml \
+  --seed-manifest examples/experiments/factory_bottleneck_v1.seeds.toml \
+  --output /scratch/kairo-ecs-runs --partition cpu --nodes 1
 ```
+
+The wrapper returns the submission ID. After the job finishes, retain the
+terminal accounting record, job stdout, and replay output checksums.
 
 After reviewing the generated JSON, move accepted live manifests into
 `conductor/hpc-evidence/manifests/` and run:
