@@ -1,0 +1,157 @@
+{
+  "status": "below-threshold",
+  "cases": {
+    "pooled:0": {
+      "pdes_ns": {
+        "base_median": 17566229.0,
+        "candidate_median": 16317792.0,
+        "median_paired_ratio": 1.0933948322293008,
+        "ratio_interval_95": [
+          0.9923809188829866,
+          1.1179107833089086
+        ]
+      },
+      "pdes_setup_ns": {
+        "base_median": 209417.0,
+        "candidate_median": 207542.0,
+        "median_paired_ratio": 0.9777893021306687,
+        "ratio_interval_95": [
+          0.9659675722766679,
+          1.0339417771719899
+        ]
+      },
+      "pdes_dispatch_ns": {
+        "base_median": 17358458.5,
+        "candidate_median": 16106979.0,
+        "median_paired_ratio": 1.0941721925605417,
+        "ratio_interval_95": [
+          0.9930978061790121,
+          1.1193164402719513
+        ]
+      },
+      "sequential_ns": {
+        "base_median": 828979.5,
+        "candidate_median": 812688.0,
+        "median_paired_ratio": 1.011846476821161,
+        "ratio_interval_95": [
+          0.9866508461129677,
+          1.0268207334051853
+        ]
+      }
+    },
+    "pooled:8192": {
+      "pdes_ns": {
+        "base_median": 73224750.0,
+        "candidate_median": 73040583.5,
+        "median_paired_ratio": 0.9985741032728894,
+        "ratio_interval_95": [
+          0.9277156836944244,
+          1.0305168344862545
+        ]
+      },
+      "pdes_setup_ns": {
+        "base_median": 207895.5,
+        "candidate_median": 212812.5,
+        "median_paired_ratio": 1.003380392313235,
+        "ratio_interval_95": [
+          0.9509859232297908,
+          1.037735392140274
+        ]
+      },
+      "pdes_dispatch_ns": {
+        "base_median": 73001729.0,
+        "candidate_median": 72817916.5,
+        "median_paired_ratio": 0.9984379529315232,
+        "ratio_interval_95": [
+          0.9276145525257793,
+          1.0305654385757501
+        ]
+      },
+      "sequential_ns": {
+        "base_median": 137033291.5,
+        "candidate_median": 136907417.0,
+        "median_paired_ratio": 0.9988460958703593,
+        "ratio_interval_95": [
+          0.9856552668488003,
+          1.0036261437699387
+        ]
+      }
+    },
+    "scoped:0": {
+      "pdes_ns": {
+        "base_median": 73402458.5,
+        "candidate_median": 73371896.0,
+        "median_paired_ratio": 0.9981237269404348,
+        "ratio_interval_95": [
+          0.9763871102514354,
+          1.0183699547747627
+        ]
+      },
+      "pdes_setup_ns": {
+        "base_median": 208395.5,
+        "candidate_median": 205271.0,
+        "median_paired_ratio": 1.0076619405337943,
+        "ratio_interval_95": [
+          0.9901454443097223,
+          1.0282119662099816
+        ]
+      },
+      "pdes_dispatch_ns": {
+        "base_median": 73191542.0,
+        "candidate_median": 73163083.5,
+        "median_paired_ratio": 0.9980671770092844,
+        "ratio_interval_95": [
+          0.9763447448375453,
+          1.0183410315205288
+        ]
+      },
+      "sequential_ns": {
+        "base_median": 836687.5,
+        "candidate_median": 819750.0,
+        "median_paired_ratio": 1.0263598364077775,
+        "ratio_interval_95": [
+          1.0043548388061234,
+          1.0420778240197268
+        ]
+      }
+    },
+    "scoped:8192": {
+      "pdes_ns": {
+        "base_median": 111155917.0,
+        "candidate_median": 112452104.0,
+        "median_paired_ratio": 0.9995686838645117,
+        "ratio_interval_95": [
+          0.9427051015137804,
+          1.0377793392985701
+        ]
+      },
+      "pdes_setup_ns": {
+        "base_median": 203083.5,
+        "candidate_median": 210312.0,
+        "median_paired_ratio": 0.9671221759814654,
+        "ratio_interval_95": [
+          0.9556473787278853,
+          0.9837130968425861
+        ]
+      },
+      "pdes_dispatch_ns": {
+        "base_median": 110947187.5,
+        "candidate_median": 112234437.5,
+        "median_paired_ratio": 0.9996395974597552,
+        "ratio_interval_95": [
+          0.9426287463552211,
+          1.0379045134357345
+        ]
+      },
+      "sequential_ns": {
+        "base_median": 138200645.5,
+        "candidate_median": 138324333.0,
+        "median_paired_ratio": 0.9996763837317539,
+        "ratio_interval_95": [
+          0.9958534006061246,
+          1.0075516667303206
+        ]
+      }
+    }
+  }
+}

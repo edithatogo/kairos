@@ -1,5 +1,48 @@
 # Handoff
 
+## Direct event handoff experiment
+
+The profile used the same 2,048-input tape and 4,096 dispatches on four
+logical processes. Separate allocator builds counted successful Rust
+allocation and reallocation requests during setup and dispatch. One warm-up
+preceded ten measured repetitions per configuration. At both event costs,
+the median pooled dispatch count fell from 24,504 to 11,190 allocations.
+Median requested bytes fell from 2,728,632 to 2,248,760. Scoped dispatches
+fell from 45,912 to 32,598 allocations. These counts measure allocator
+traffic across the dispatch phase.
+
+The timing builds used the existing serial scheduler and both conservative
+executors on the Apple M1 Max. Ten fresh process pairs per case split the
+base-first and candidate-first orders equally. Each process used one
+warm-up and two measured repetitions. Final state and reported runtime
+counters matched across pairs. Setup, dispatch and total time are retained.
+Dispatch includes worker initialization and RSS covers the whole process.
+
+| Executor | Mixes per event | Baseline median ms | Candidate median ms | Paired baseline/candidate ratio with 95% interval |
+| --- | ---: | ---: | ---: | ---: |
+| Pooled | 0 | 17.566 | 16.318 | 1.093 [0.992, 1.118] |
+| Pooled | 8,192 | 73.225 | 73.041 | 0.999 [0.928, 1.031] |
+| Scoped | 0 | 73.402 | 73.372 | 0.998 [0.976, 1.018] |
+| Scoped | 8,192 | 111.156 | 112.452 | 1.000 [0.943, 1.038] |
+
+The 8.5% pooled zero-work point estimate fell below the predeclared
+20% time reduction for adoption. The candidate is retained as an
+experimental patch. Its 15 scoped and 16 pooled parity and protocol tests
+passed. The intervals describe this shared host and workload.
+[Receipt](evidence/round-dispatch/receipt.json) ·
+[Timing samples](evidence/round-dispatch/paired.jsonl) ·
+[Allocation samples](evidence/round-dispatch/allocation-counts.csv) ·
+[Candidate patch](evidence/round-dispatch/candidate.patch).
+
+Use the source, toolchain and features in the receipt to build the baseline
+and candidate benchmark binaries. On a scratch checkout at that exact source,
+apply the candidate patch with `git apply --unidiff-zero`. Run the Python
+comparison with the directory containing `base-scoped`, `base-pooled`,
+`candidate-scoped`, and `candidate-pooled`. The separate allocation patch
+instruments the benchmark for the allocator counts.
+[Comparison script](evidence/round-dispatch/compare.py) ·
+[Allocation patch](evidence/round-dispatch/allocation-profile.patch).
+
 ## Matched ring and worker reuse
 
 Chat `01a1fd18-51c7-7963-a3cc-d262d54582ba` owns the Kairos closeout worktree
@@ -52,10 +95,10 @@ reproduced it, and the shared handler now poisons the runtime before any
 outbound commit. The final tests passed 210 cases with all features and 19
 scoped runtime cases. The existing collector accepted the historical format.
 
-The current slice completes the historical reproduction and the bounded
-worker-pool comparison. Allocation and steady-state profiling, safe event
-batching, additional model classes and dedicated-runner qualification remain
-open in the plan. The next integration operation is exact-head hosted CI.
+The original slice completed the historical reproduction and the bounded
+worker-pool comparison. The direct event handoff experiment adds allocation
+evidence. Steady-state profiling, safe event batching, additional model
+classes and dedicated-runner qualification remain open in the plan.
 
 ## Registration — 7 November 2026
 
