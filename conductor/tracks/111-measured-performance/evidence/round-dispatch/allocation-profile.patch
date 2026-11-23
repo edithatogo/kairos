@@ -1,0 +1,78 @@
+--- a/crates/kairo-ecs-pdes/benches/production.rs
++++ b/crates/kairo-ecs-pdes/benches/production.rs
+@@ -1,0 +1 @@
++#![deny(unsafe_op_in_unsafe_fn)]
+@@ -197,0 +199 @@
++    let setup_counters = allocation_profile::snapshot();
+@@ -211,0 +214,2 @@
++    allocation_profile::finish("serial", "setup", setup_counters);
++    let dispatch_counters = allocation_profile::snapshot();
+@@ -239,0 +244 @@
++    allocation_profile::finish("serial", "dispatch", dispatch_counters);
+@@ -254,0 +260 @@
++    let setup_counters = allocation_profile::snapshot();
+@@ -266,0 +273,2 @@
++    allocation_profile::finish("pdes", "setup", setup_counters);
++    let dispatch_counters = allocation_profile::snapshot();
+@@ -271,0 +280 @@
++    allocation_profile::finish("pdes", "dispatch", dispatch_counters);
+@@ -441,0 +451,59 @@
++}
++
++mod allocation_profile {
++    use std::alloc::{GlobalAlloc, Layout, System};
++    use std::sync::atomic::{AtomicU64, Ordering::Relaxed};
++
++    static ALLOCS: AtomicU64 = AtomicU64::new(0);
++    static ALLOC_BYTES: AtomicU64 = AtomicU64::new(0);
++    static REALLOCS: AtomicU64 = AtomicU64::new(0);
++    static REALLOC_BYTES: AtomicU64 = AtomicU64::new(0);
++
++    #[global_allocator]
++    static ALLOCATOR: ProfiledSystem = ProfiledSystem;
++    struct ProfiledSystem;
++
++    // Each operation forwards the exact caller's pointer and layout to System.
++    // Counters record successful allocation requests without allocating memory.
++    unsafe impl GlobalAlloc for ProfiledSystem {
++        unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
++            let ptr = unsafe { System.alloc(layout) };
++            if !ptr.is_null() {
++                ALLOCS.fetch_add(1, Relaxed);
++                ALLOC_BYTES.fetch_add(layout.size() as u64, Relaxed);
++            }
++            ptr
++        }
++
++        unsafe fn alloc_zeroed(&self, layout: Layout) -> *mut u8 {
++            let ptr = unsafe { System.alloc_zeroed(layout) };
++            if !ptr.is_null() {
++                ALLOCS.fetch_add(1, Relaxed);
++                ALLOC_BYTES.fetch_add(layout.size() as u64, Relaxed);
++            }
++            ptr
++        }
++
++        unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
++            unsafe { System.dealloc(ptr, layout) };
++        }
++
++        unsafe fn realloc(&self, ptr: *mut u8, layout: Layout, new_size: usize) -> *mut u8 {
++            let ptr = unsafe { System.realloc(ptr, layout, new_size) };
++            if !ptr.is_null() {
++                REALLOCS.fetch_add(1, Relaxed);
++                REALLOC_BYTES.fetch_add(new_size as u64, Relaxed);
++            }
++            ptr
++        }
++    }
++
++    pub fn snapshot() -> [u64; 4] {
++        [ALLOCS.load(Relaxed), ALLOC_BYTES.load(Relaxed), REALLOCS.load(Relaxed), REALLOC_BYTES.load(Relaxed)]
++    }
++
++    pub fn finish(executor: &str, phase: &str, before: [u64; 4]) {
++        let after = snapshot();
++        let counts = std::array::from_fn::<_, 4, _>(|index| after[index] - before[index]);
++        eprintln!("allocation,{executor},{phase},{},{},{},{}", counts[0], counts[1], counts[2], counts[3]);
++    }

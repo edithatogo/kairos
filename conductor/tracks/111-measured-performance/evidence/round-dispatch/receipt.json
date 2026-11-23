@@ -1,0 +1,116 @@
+{
+  "status": "experimental candidate below timing threshold",
+  "source_commit": "372429ca80a77849f598acf8c543c435e167360b",
+  "base_allocation_source_commit": "4021dac665d68b70bcba423e10c758bb0fb775f5",
+  "candidate_path": "crates/kairo-ecs-pdes/src/conservative.rs",
+  "candidate_source_sha256": "8ea7e0f5cb234c441ef69a05951a93cdd74784f9fb772b0da3f593d38fc460ca",
+  "bench_source_sha256": "27d4100d4e81a1008af73dfadc3b34109c15c447b32fd25b8cc02a74582c3053",
+  "lock_sha256": "38970a6fe699dafebb720188530d88c022b53fd563bbe0cc9ad5dc7aa4167e07",
+  "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+  "host": {
+    "cpu": "Apple M1 Max",
+    "logical_cpus": 10,
+    "memory_bytes": 34359738368,
+    "os": "macOS 27.2.1 26B131 arm64"
+  },
+  "load_average_1m_before_after": [
+    12.94,
+    9.04
+  ],
+  "seed": 472026,
+  "input_tape_sha256": "adee4ec4de909a8ed64a07c25c04ebdedca2b9baa270bdbc7a3a56af26954225",
+  "initial_events": 2048,
+  "dispatched_events": 4096,
+  "logical_processes": 4,
+  "fresh_pairs_per_case": 10,
+  "warmups_per_process": 1,
+  "timed_repetitions_per_process": 2,
+  "base_first_pairs_per_case": 5,
+  "adoption_gate": {
+    "minimum_target_time_reduction": 0.2,
+    "maximum_comparator_time_increase": 0.05
+  },
+  "features": {
+    "scoped": "pdes",
+    "pooled": "pdes-worker-pool"
+  },
+  "commands": [
+    "cargo bench --locked -p kairo-ecs-pdes --features <features> --bench production --no-run --message-format=json",
+    "/usr/bin/time -l <binary> --seed 472026 --repetitions 2 --event-work <cost>",
+    "cargo build --locked --release --manifest-path <instrumented-manifest> [--features pdes-worker-pool]",
+    "<instrumented-binary> --seed 472026 --repetitions 10 --event-work <cost>",
+    "cargo test --locked -p kairo-ecs-pdes --features <features> --test production_parity --test production_protocol"
+  ],
+  "test_counts": {
+    "scoped": 15,
+    "pooled": 16
+  },
+  "timed_binaries_sha256": {
+    "base-pooled": "d7a191f45623c4506574d22e476d385f4989ba4c951dfe653a2c8d458a5bf74b",
+    "base-scoped": "769701a000a232a23f35b81852a4826c4ebe1c9d37ea19cb8cedef6e49dc4a8e",
+    "candidate-pooled": "a8ebe2e54cd09b86fb6d750ab9c688d057fda789f27d6c9a888c508ef76c73b2",
+    "candidate-scoped": "661218386293b98437cc85a74270c26294c2954ceb21367279bd2d03e19e10eb"
+  },
+  "base_allocation_receipt_sha256": "2597d71ab61ce6492fc7685bcc65d42ffc942cc311423d3071c64a2556eb5338",
+  "allocation_harness_sha256": "b622783bcfaa4cfc8892455d3d23b974e8928819477f7f6a5efc9bfcc12f6b2d",
+  "allocation_lock_sha256": "f19a35548259006dbabca6ba6c92073473265b531bf70f277c3574ffbf76541c",
+  "allocation_dispatch_medians": {
+    "base/pooled/0": {
+      "alloc_calls": 24504.0,
+      "requested_bytes": 2728632.0,
+      "realloc_calls": 5.0,
+      "realloc_requested_bytes": 120.0
+    },
+    "base/pooled/8192": {
+      "alloc_calls": 24504.0,
+      "requested_bytes": 2728632.0,
+      "realloc_calls": 5.0,
+      "realloc_requested_bytes": 120.0
+    },
+    "base/scoped/0": {
+      "alloc_calls": 45912.0,
+      "requested_bytes": 3602048.0,
+      "realloc_calls": 4097.0,
+      "realloc_requested_bytes": 41024.0
+    },
+    "base/scoped/8192": {
+      "alloc_calls": 45912.0,
+      "requested_bytes": 3602048.0,
+      "realloc_calls": 4097.0,
+      "realloc_requested_bytes": 41024.0
+    },
+    "candidate/pooled/0": {
+      "alloc_calls": 11190.0,
+      "requested_bytes": 2248760.0,
+      "realloc_calls": 5.0,
+      "realloc_requested_bytes": 120.0
+    },
+    "candidate/pooled/8192": {
+      "alloc_calls": 11190.0,
+      "requested_bytes": 2248760.0,
+      "realloc_calls": 5.0,
+      "realloc_requested_bytes": 120.0
+    },
+    "candidate/scoped/0": {
+      "alloc_calls": 32598.0,
+      "requested_bytes": 3122176.0,
+      "realloc_calls": 4097.0,
+      "realloc_requested_bytes": 41024.0
+    },
+    "candidate/scoped/8192": {
+      "alloc_calls": 32598.0,
+      "requested_bytes": 3122176.0,
+      "realloc_calls": 4097.0,
+      "realloc_requested_bytes": 41024.0
+    }
+  },
+  "artifact_sha256": {
+    "allocation-counts.csv": "ac41580a3f392bb613afd197199ec0e7b57719fbb3e86089c4b5135a6eb16067",
+    "allocation-profile.patch": "e40a210d669ba088c75ce5bde070a47516400d1047d8570dc59e71214431d98b",
+    "candidate.patch": "7de822b7de6163a01fe84865c00276f7814bb844716914a9d72ff9ee32b77b53",
+    "compare.py": "4a0d24232d352c5c7d7c92dc6e6d6d85c2244be2ce10598619391b518e4c3bc0",
+    "comparison.json": "d2fb873c5e84f1b1352295f90e30e4cffed35a68e3d10c4c28e3327b359c2f7b",
+    "measurement-plan.md": "91ea3f27481d8ef5a2e4996c0d1d6500adb38adba3e8cf71bce428f5fb23de91",
+    "paired.jsonl": "11f2ce630979d5ad6db2df61513634eb2b803ec36c3dc056be1078baa924ef6c"
+  }
+}

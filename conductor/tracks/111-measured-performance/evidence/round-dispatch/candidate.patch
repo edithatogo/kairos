@@ -1,0 +1,135 @@
+--- a/crates/kairo-ecs-pdes/src/conservative.rs
++++ b/crates/kairo-ecs-pdes/src/conservative.rs
+@@ -139 +139 @@
+-fn run_batch<P: ConservativeProcess>(
++fn run_event<P: ConservativeProcess>(
+@@ -142,15 +142,11 @@
+-    batch: &[RemoteEvent],
+-) -> Result<Vec<(Tick, RemoteEvent)>, RuntimeError> {
+-    let mut outbound = Vec::new();
+-    for event in batch {
+-        let emitted =
+-            catch_unwind(AssertUnwindSafe(|| process.on_event(event))).map_err(|payload| {
+-                // Even cleanup of a user-defined panic payload can unwind.
+-                if let Err(cleanup_panic) = catch_unwind(AssertUnwindSafe(|| drop(payload))) {
+-                    std::mem::forget(cleanup_panic);
+-                }
+-                RuntimeError::HandlerPanicked(lp_id)
+-            })?;
+-        outbound.extend(emitted.into_iter().map(|out| (event.tick, out)));
+-    }
+-    Ok(outbound)
++    event: &RemoteEvent,
++) -> Result<(Tick, Vec<RemoteEvent>), RuntimeError> {
++    catch_unwind(AssertUnwindSafe(|| process.on_event(event)))
++        .map(|outbound| (event.tick, outbound))
++        .map_err(|payload| {
++            // Even cleanup of a user-defined panic payload can unwind.
++            if let Err(cleanup_panic) = catch_unwind(AssertUnwindSafe(|| drop(payload))) {
++                std::mem::forget(cleanup_panic);
++            }
++            RuntimeError::HandlerPanicked(lp_id)
++        })
+@@ -312,2 +308,2 @@
+-            let batches = self.take_eligible_batches(&safe, remaining);
+-            let has_work = batches.values().any(|batch| !batch.is_empty());
++            let events = self.take_eligible_events(&safe, remaining);
++            let has_work = !events.is_empty();
+@@ -316,3 +312,2 @@
+-                let count = batches.values().map(Vec::len).sum::<usize>();
+-                self.execute_round(batches)?;
+-                events_this_call += count;
++                self.execute_round(&events)?;
++                events_this_call += events.len();
+@@ -412 +407 @@
+-    fn take_eligible_batches(
++    fn take_eligible_events(
+@@ -416,19 +411,13 @@
+-    ) -> BTreeMap<LpId, Vec<RemoteEvent>> {
+-        let mut batches = BTreeMap::new();
+-        let mut remaining = limit;
+-        for (&lp_id, queue) in &mut self.queues {
+-            let bound = safe[&lp_id];
+-            let keys = queue
+-                .keys()
+-                .next()
+-                .copied()
+-                .filter(|(tick, _, _)| *tick < bound);
+-            let events = keys
+-                .filter(|_| remaining > 0)
+-                .and_then(|key| queue.remove(&key))
+-                .into_iter()
+-                .collect::<Vec<_>>();
+-            remaining = remaining.saturating_sub(events.len());
+-            batches.insert(lp_id, events);
+-        }
+-        batches
++    ) -> BTreeMap<LpId, RemoteEvent> {
++        self.queues
++            .iter_mut()
++            .filter_map(|(&lp_id, queue)| {
++                let ((tick, _, _), _) = queue.first_key_value()?;
++                if *tick >= safe[&lp_id] {
++                    return None;
++                }
++                let (_, event) = queue.pop_first().expect("eligible event is queued");
++                Some((lp_id, event))
++            })
++            .take(limit)
++            .collect()
+@@ -446,4 +435 @@
+-    fn execute_round(
+-        &mut self,
+-        batches: BTreeMap<LpId, Vec<RemoteEvent>>,
+-    ) -> Result<(), RuntimeError> {
++    fn execute_round(&mut self, events: &BTreeMap<LpId, RemoteEvent>) -> Result<(), RuntimeError> {
+@@ -456,2 +442 @@
+-                let batch = batches.get(&lp_id).cloned().unwrap_or_default();
+-                if batch.is_empty() {
++                let Some(event) = events.get(&lp_id) else {
+@@ -459 +444 @@
+-                }
++                };
+@@ -462 +447 @@
+-                    .spawn_scoped(scope, move || run_batch(lp_id, process, &batch));
++                    .spawn_scoped(scope, move || run_event(lp_id, process, event));
+@@ -489,4 +474 @@
+-                let first_lp = batches
+-                    .iter()
+-                    .find_map(|(&lp_id, batch)| (!batch.is_empty()).then_some(lp_id))
+-                    .expect("only nonempty rounds execute");
++                let &first_lp = events.keys().next().expect("only nonempty rounds execute");
+@@ -508,4 +490 @@
+-                .filter_map(|(&lp_id, process)| {
+-                    let batch = batches.get(&lp_id).filter(|batch| !batch.is_empty())?;
+-                    Some((lp_id, process, batch.clone()))
+-                })
++                .filter_map(|(&lp_id, process)| Some((lp_id, process, events.get(&lp_id)?)))
+@@ -520 +499 @@
+-                        .map(|(lp_id, process, batch)| (lp_id, run_batch(lp_id, process, &batch)))
++                        .map(|(lp_id, process, event)| (lp_id, run_event(lp_id, process, event)))
+@@ -527,2 +506,2 @@
+-            let outbound = match result {
+-                Ok(outbound) => outbound,
++            let (event_tick, outbound) = match result {
++                Ok(result) => result,
+@@ -534 +513 @@
+-            for (event_tick, event) in outbound {
++            for event in outbound {
+@@ -607,6 +586,4 @@
+-        self.report.processed_events = self.report.processed_events.saturating_add(
+-            batches
+-                .values()
+-                .map(|batch| batch.len() as u64)
+-                .sum::<u64>(),
+-        );
++        self.report.processed_events = self
++            .report
++            .processed_events
++            .saturating_add(events.len() as u64);
+@@ -615,4 +592 @@
+-        self.report.worker_count = self
+-            .report
+-            .worker_count
+-            .max(batches.values().filter(|batch| !batch.is_empty()).count());
++        self.report.worker_count = self.report.worker_count.max(events.len());

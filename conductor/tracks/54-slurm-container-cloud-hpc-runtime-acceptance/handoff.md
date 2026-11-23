@@ -1,12 +1,26 @@
 # Track 54 Handoff
 
-Last updated: 2026-06-23
+Last updated: 2026-11-23
+
+## Single-node Slurm replay
+
+The single-job wrapper forwards an optional seed manifest. The seeded array
+wrapper pairs scenario and seed inputs by index. Both submit arguments
+directly to Slurm and preserve the legacy request-capture path.
+
+Slurm 24.11.5 on a containerized Linux x86-64 NAS worker ran the single job
+and two array tasks. All replay artifacts matched the direct CLI runs byte
+for byte. An invalid scenario/seed pair failed without creating output.
+Both legacy paths completed and emitted request captures. This qualifies
+seed-manifest validation and scheduler-order replay on a local CPU worker.
+Multi-node scheduling, Apptainer runtime qualification, live model restart,
+and production storage remain open.
+[Commands and checksums](evidence/slurm-single-node-replay.json)
 
 ## Summary
 
 Track 54 owns live container, Slurm, Kubernetes, and provider runtime
-acceptance. The current implementation adds a local runtime-evidence validator
-and blocked-scope manifest; it does not claim live runtime acceptance.
+acceptance. The archive below records the June offline baseline.
 
 ## Files changed
 
@@ -36,7 +50,7 @@ Local validator coverage added:
 - Negative fixture:
   `conductor/tracks/54-slurm-container-cloud-hpc-runtime-acceptance/negative/missing-checksum.json`
 
-## Known risks
+## Known risks from the June archive
 
 No Docker, Kubernetes, Slurm, AWS, GCP, or Azure live KairoECS scenario proof
 exists yet. The manifest records these as blocked scopes with owners,

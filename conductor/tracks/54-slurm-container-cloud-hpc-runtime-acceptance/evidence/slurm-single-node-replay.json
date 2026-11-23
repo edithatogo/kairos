@@ -1,0 +1,166 @@
+{
+  "scope": "Containerized single-node Slurm CPU scheduler-order replay",
+  "date_utc": "2026-11-23",
+  "engine_source_commit": "372429ca80a77849f598acf8c543c435e167360b",
+  "engine_source_archive_sha256": "47b7571a423605f250eb158a62375b0d2b0222d0b5989ad63f3bb3d5458c5b78",
+  "wrapper_sha256": {
+    "submit-experiment.sh": "71b02c67671bc03d71d513aaec0554ed85c784ecefad93baf8a4c1137669a072",
+    "submit-sweep.sh": "9d40678017179d3cb0c618efdf349927df7aca21e48cd67bfd81b7d70a1a7b8f"
+  },
+  "cli_sha256": "59fbe3f270312085618bc18a6c188d69a1b9aa80de320bdc81e0e5f60cf7306f",
+  "rust": "1.99.1 (58cf8f9c3 2026-10-13), x86_64-unknown-linux-musl",
+  "build_image": "rust:1.99.1-alpine@sha256:b1d5dd5a22a09404d3e798c0cf051b689077360374eb505fa5bb93c479693d87",
+  "scheduler_image": "debian:13-slim@sha256:7378260c0a098d27ac206225db5e7d92b8c7c84ea7afccc86eeb513756bbd392",
+  "scheduler": {
+    "version": "24.11.5-4+deb13u1",
+    "host": "Linux x86-64 NAS",
+    "partition": "cpu",
+    "nodes": 1,
+    "docker_cpus": 2,
+    "docker_memory_gib": 4,
+    "process_tracking": "pgid",
+    "cgroup_plugin": "disabled",
+    "config_sha256": "df89541dbddf8ce9423a3991c3d4f6f67d262fab2b17342bdb6201e2ce09b8af"
+  },
+  "commands": [
+    "cargo build --locked -p kairo-ecs-cli",
+    "bash hpc/slurm/submit-experiment.sh --partition cpu --nodes 1 --scenario <variant-0.scenario.toml> --seed-manifest <variant-0.seeds.toml> --output <single-output>",
+    "KAIRO_SCENARIO_PREFIX=<cases> KAIRO_SEED_MANIFEST_PREFIX=<cases> KAIRO_OUTPUT_URI=<array-output> KAIRO_SWEEP_SIZE=2 bash hpc/slurm/submit-sweep.sh",
+    "kairo-ecs-cli run --scenario <scenario> --seed-manifest <seed-manifest> --output <direct-output>",
+    "scontrol -o show job <job-id>"
+  ],
+  "input_sha256": {
+    "variant-0.scenario.toml": "1074d9d9ab557168b5121825c1083316480ae9d102a06b751310ecf14d113655",
+    "variant-0.seeds.toml": "92cb48e9997c9ad75562deca51b2fdf821747084e306905dd61a456385f102ca",
+    "variant-1.scenario.toml": "cd7bbb828ab2b42a1b4d8b7ff51b20d32415e6e0861bcaf8019d16a6bcf3d955",
+    "variant-1.seeds.toml": "a39ddd3a097c7c3ae4bb30af00c4506375d1419a100fd4b73acdf2579e26450a"
+  },
+  "single": {
+    "job_id": "1",
+    "scheduler_job_id": "1",
+    "state": "COMPLETED",
+    "exit_code": "0:0",
+    "started": "2026-11-23T13:44:12",
+    "ended": "2026-11-23T13:44:12",
+    "accounting_sha256": "2336baaa2f78b6239c5090d87706a6c9396e4e5ec1317bf793b174105564f1fd",
+    "log_sha256": "122775b1239114062ba7f8a89ab3c87fb47b87e1846fc5e90ce7a5c805a2ecdc",
+    "direct_artifacts_byte_equal": true,
+    "artifacts_sha256": {
+      "manifest.json": "e4ccdd6cdf60c7cb16013a7d69ea7dc0dedcbdf8b837d2dc142ec125297dfd7f",
+      "replay-comparison.json": "e3adfc3ad099773e5cc0339081eb3bc7c2ebebb2e1a169cc4d4f04e99416cee1",
+      "resumability-plan.json": "514cd9cf4a69151cc031419dc5ff26efe46f9b3e4266bd33d49cabcfb1d5b6ce",
+      "summary.json": "c09629ab9c2e3ff261dbd17ad94eb9e9aec9596fb453a1bdf498eefd6f157b00"
+    },
+    "summary": {
+      "scenario_id": "slurm-canary-0",
+      "event_count": 4,
+      "observed_kind_order": [
+        1,
+        2,
+        4,
+        3
+      ],
+      "summary_hash": "32971d44c04f8237"
+    }
+  },
+  "array": [
+    {
+      "job_id": "2_0",
+      "scheduler_job_id": "3",
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "started": "2026-11-23T13:44:15",
+      "ended": "2026-11-23T13:44:15",
+      "accounting_sha256": "46d3ec2c7f4786ca76658ea189d178c9e8954808f7391b2e816e5a7f077959e2",
+      "log_sha256": "8a31c008bfa542cd2effe09d49edaa97e712eea069391917989c3d3893cbd78c",
+      "direct_artifacts_byte_equal": true,
+      "artifacts_sha256": {
+        "manifest.json": "e4ccdd6cdf60c7cb16013a7d69ea7dc0dedcbdf8b837d2dc142ec125297dfd7f",
+        "replay-comparison.json": "e3adfc3ad099773e5cc0339081eb3bc7c2ebebb2e1a169cc4d4f04e99416cee1",
+        "resumability-plan.json": "514cd9cf4a69151cc031419dc5ff26efe46f9b3e4266bd33d49cabcfb1d5b6ce",
+        "summary.json": "c09629ab9c2e3ff261dbd17ad94eb9e9aec9596fb453a1bdf498eefd6f157b00"
+      },
+      "summary": {
+        "scenario_id": "slurm-canary-0",
+        "event_count": 4,
+        "observed_kind_order": [
+          1,
+          2,
+          4,
+          3
+        ],
+        "summary_hash": "32971d44c04f8237"
+      }
+    },
+    {
+      "job_id": "2_1",
+      "scheduler_job_id": "2",
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "started": "2026-11-23T13:44:15",
+      "ended": "2026-11-23T13:44:15",
+      "accounting_sha256": "2db281be20e5f2608c14c48b03cbabe5c339670bf555b115c5504805adadb297",
+      "log_sha256": "34e2b6a94aa3c98ac99cf9ffbeeb8b537d7ea6360a5ce725d6d7c8c7d2fd95e3",
+      "direct_artifacts_byte_equal": true,
+      "artifacts_sha256": {
+        "manifest.json": "b00f0f4bd65330845062f420bc1763c044d4fd4af157f5e4d969785cc858106b",
+        "replay-comparison.json": "a1aa4e4a2725a4467a5c95934a435c5749efa6e618cb58823ef480fa776eecb7",
+        "resumability-plan.json": "1fc28608c1b24fde14ebb261c6d8d304ffe6c9aadc34bc20e9a9b23b24692f6e",
+        "summary.json": "974f51f39f1a7cd2e5713514ea6df5a2663605b410f9ddd44cd73230e172ca16"
+      },
+      "summary": {
+        "scenario_id": "slurm-canary-1",
+        "event_count": 3,
+        "observed_kind_order": [
+          1,
+          2,
+          4
+        ],
+        "summary_hash": "8be98d3366d66750"
+      }
+    }
+  ],
+  "invalid_seed_pair": {
+    "job_id": "4",
+    "scheduler_job_id": "4",
+    "state": "FAILED",
+    "exit_code": "1:0",
+    "started": "2026-11-23T13:44:18",
+    "ended": "2026-11-23T13:44:19",
+    "accounting_sha256": "59c037236072c5472127f4513bddbe7d04b4549efc8f50d60a9727adaae1db89",
+    "log_sha256": "406412f6583c4c3a548dcceee5bb58b61917e3b2017b44080fbf9ca3443c30a7",
+    "observed_failure": "scenario_id mismatch, no output created"
+  },
+  "legacy_request_capture": [
+    {
+      "job_id": "5",
+      "scheduler_job_id": "5",
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "started": "2026-11-23T13:44:21",
+      "ended": "2026-11-23T13:44:21",
+      "accounting_sha256": "6ce07c87430bbef11a1183e84ad3decfac0bfeb2641acf0160cbb055f37ac95b",
+      "log_sha256": "6fc63a2a83c3f1d3e35549298c49622eb03dff3bcc60c42d26a0b8a552f47f7e",
+      "artifacts_sha256": {
+        "run-request.json": "3d5185ee04dbe70604d61a2420b6b22b03a935c52cbbc84dea4d777f68293715"
+      }
+    },
+    {
+      "job_id": "6_0",
+      "scheduler_job_id": "6",
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "started": "2026-11-23T13:44:24",
+      "ended": "2026-11-23T13:44:24",
+      "accounting_sha256": "10dd25452a50bb358449d3ccf12a5d7d5978bcaa5ca56911766251a4aae8f3cc",
+      "log_sha256": "e047117107a24e97762dd7e2f2b394838b2c44c34f8c780fbc5561497b411cc8",
+      "artifacts_sha256": {
+        "run-request.json": "57bba410c03fff8abb23541b8bbaca1745dd6e842e7c737b447ebb922c8af3aa"
+      }
+    }
+  ],
+  "overflow_rejection": "KAIRO_SWEEP_SIZE must be a positive integer in range",
+  "canary_script_sha256": "4fe6e9dfb712882204ca29f177fc3d71fdc314c055b4c1ce87515f4db6d5bff7",
+  "canary_log_sha256": "a4257ad49d99b82019376899aed938114e046945644d5e6b1b4b592db2994379",
+  "containers_terminal": true
+}

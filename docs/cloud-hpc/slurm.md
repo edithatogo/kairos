@@ -1,36 +1,58 @@
 # Slurm Batch Execution
 
-See `runtime-evidence-boundary.md` for the live evidence gate and pending blocker status before any readiness claim.
+See the [runtime evidence boundary](runtime-evidence-boundary.md) for qualified scheduler configurations.
 
 ## Offline validation
 
-Run `python cloud\validate_cloud_hpc.py` from the repository root. The offline validator checks Slurm script syntax with `bash -n` when Bash starts successfully, confirms `--signal=B:SIGTERM@120`, validates job-array index wiring, and confirms checkpoint/resume command wiring. On Windows hosts where Bash is present but cannot start, the validator runs a limited static fallback over the shell scripts for quoting, heredoc closure, shebangs, line endings, and common block balance; this is useful as a guardrail but is not equivalent to `bash -n`.
+Activate the repository's Python environment and run
+`python cloud/validate_cloud_hpc.py` from the repository root. The validator
+checks the wrappers and generated batch scripts with `bash -n`, plus the
+signal, job-array, and checkpoint command wiring. Where Bash cannot start,
+the validator checks quoting, heredoc closure, shebangs, line endings, and
+common shell block balance.
 
 ## Live validation
 
 The offline check does not prove a site scheduler accepts the generated scripts. Before marking a cluster ready, run `sbatch --test-only` if supported, otherwise submit a one-task canary to a short/debug partition and record the cluster, partition, job id, terminal status, and checkpoint/output paths.
 
-Submit a single experiment by running the wrapper, which writes a temporary
-batch script and invokes `sbatch` internally:
+Submit a single experiment with a TOML scenario and its seed manifest. Both
+inputs and the output directory must be accessible to the batch task.
 
 ```bash
-hpc/slurm/submit-experiment.sh --scenario scenarios/factory.yaml --output /scratch/$USER/kairo/run-001 --partition cpu --nodes 1
+KAIRO_CHECKPOINT_DIR="/scratch/$USER/kairo/run-001/checkpoints" \
+  bash hpc/slurm/submit-experiment.sh \
+    --scenario examples/experiments/factory_bottleneck_v1.scenario.toml \
+    --seed-manifest examples/experiments/factory_bottleneck_v1.seeds.toml \
+    --output "/scratch/$USER/kairo/run-001" --partition cpu --nodes 1
 ```
 
-For GPU queues, pass the site-specific GPU partition:
+With a seed manifest the CLI validates the pair and writes replay outputs,
+including `summary.json`. A submission without a seed manifest writes the
+legacy `run-request.json` capture. Use the site's partition and make
+`kairo-ecs-cli` available on the worker. On sites with Apptainer, the single-job
+wrapper uses the configured `--image`. Make the inputs and output path
+accessible inside the container.
+
+Use a seeded Slurm array for parameter sweeps. Each array task reads
+`variant-<index>.scenario.toml` from `KAIRO_SCENARIO_PREFIX` and
+`variant-<index>.seeds.toml` from `KAIRO_SEED_MANIFEST_PREFIX`. It writes to
+`variant-<index>` inside the output directory.
 
 ```bash
-hpc/slurm/submit-experiment.sh --scenario scenarios/factory.yaml --output /scratch/$USER/kairo/gpu-run --partition gpu --nodes 1
+KAIRO_SCENARIO_PREFIX=scenarios/sweep KAIRO_SEED_MANIFEST_PREFIX=scenarios/sweep \
+  KAIRO_OUTPUT_URI="/scratch/$USER/kairo/sweep-001" KAIRO_SWEEP_SIZE=2 \
+  bash hpc/slurm/submit-sweep.sh
 ```
 
-Parameter sweeps use Slurm job arrays. Set `KAIRO_SCENARIO_PREFIX`, `KAIRO_OUTPUT_URI`, and `KAIRO_SWEEP_SIZE`, then run `hpc/slurm/submit-sweep.sh`; the wrapper writes an array script and invokes `sbatch` internally. Each array task reads `variant-$SLURM_ARRAY_TASK_ID.yaml`.
+Without `KAIRO_SEED_MANIFEST_PREFIX`, the array uses the legacy
+`variant-<index>.yaml` request path.
 
-The generated batch script requests `--signal=B:SIGTERM@120`. On preemption, the job traps `SIGTERM` and calls `kairo-ecs-cli checkpoint` before Slurm terminates the allocation. Resume with:
+The batch scripts request `--signal=B:SIGTERM@120` and call the CLI checkpoint
+command when the batch shell handles the signal. The CLI records checkpoint
+and resume requests. A model-owned checkpoint is required to restore live
+simulation state.
 
 ```bash
-KAIRO_OUTPUT_URI=/scratch/$USER/kairo/resumed hpc/slurm/resume.sh /scratch/$USER/kairo/run-001/checkpoints/checkpoint-manifest.json
+KAIRO_OUTPUT_URI="/scratch/$USER/kairo/resumed" \
+  bash hpc/slurm/resume.sh "/scratch/$USER/kairo/run-001/checkpoints/checkpoint-manifest.json"
 ```
-
-### Runtime evidence status
-
-- This doc is paired with `runtime-evidence-boundary.md` for the explicit "not-yet-run" blocker records.

@@ -4,6 +4,7 @@
 |---|---|---|
 | Semantic identity | Same tape and ordered per-LP state, with `production_parity` and `production_protocol` on both executors. | Matched ring and conservative semantics passed locally. |
 | Overhead | Thread identity across two horizons and a native stack sample of the original scoped runtime. | 64 distinct callback threads before the change and one with the pool. Broader profiling remains open. |
+| Allocation traffic | Allocator counts for matched setup and dispatch, plus separate uninstrumented timings with balanced order. | [Direct handoff experiment](handoff.md#direct-event-handoff-experiment) and recorded adoption decision. |
 | Performance | Raw paired wall-clock and process RSS from the matched ring on named hardware. | Five event costs and eight historical cases recorded on Apple M1 Max. |
 | Regression | Dedicated comparable runners evaluate declared thresholds; noisy shared-runner smoke is not performance certification. | Pending for this track |
 | Capability/claim consistency | node scripts/validation/validate-frontier-evidence.mjs and node --test tests/conformance/frontier-evidence-check.mjs | Structural check only; no new runtime claim |
