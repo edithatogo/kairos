@@ -26,14 +26,45 @@ Height must match to 0.015 m and velocity to 0.03 m/s. Velocity samples
 within 2 ms of the discontinuity are excluded because the native solver
 localizes impact on a 1 ms grid. Both trajectories save at 0.4 s and replay
 bit for bit across the impact to 0.6 s. They continue after the Rust loader
-object is dropped. The target executes both binary FMUs on macOS ARM64
-with Rust 1.99.1. The existing lifecycle tests cover native errors, warning
-transitions and ownership across cleanup.
+object is dropped. The target executes both vendor archives and both
+Kairos packages of their extracted files. It compares XML, the current
+platform's native binary and the complete trajectory bit for bit. The
+fixture passed on macOS ARM64 and Windows x86-64 with Rust 1.99.1. The
+existing lifecycle tests cover native errors, warning transitions and
+ownership across cleanup.
 
 ```sh
 KAIRO_REFERENCE_FMUS_DIR=/absolute/path/to/verified/reference \
   cargo test --locked -p kairo-ecs-fmi --features fmi2,fmi3 \
     --test maturity_external_fmu bouncing_ball -- --ignored
+```
+
+## Independent reader for repackaged FMI 2 and 3
+
+Modelica Association fmusim 0.16.0 validated both original and repackaged
+archives and ran their native co-simulation libraries on macOS ARM64. It
+sampled height and velocity at 0.01 s intervals from 0 to 0.6 s. The four
+61-row CSV files matched byte for byte. The maximum height error against
+the analytical oracle was below 0.004361 m. The maximum velocity error
+outside the 2 ms impact window was below 0.024622 m/s. Independent ZIP CRC and file
+digests matched 18 original members for FMI 2 and 22 for FMI 3.
+[Modelica Association fmusim release](https://github.com/modelica/fmusim/releases/tag/v0.16.0).
+
+| Input or output | SHA-256 |
+| --- | --- |
+| fmusim 0.16.0 macOS ARM64 release archive | `d7d56088cc4a05d1f3fa057ac59e4c1ef31db10cd8dd095c106d9bf623d9fa12` |
+| Kairos-repackaged FMI 2 archive | `806019ccf34e0557d2765f6f0bfe51a2a4b5f23c2fae47091cf8ecad4d8a93c8` |
+| Kairos-repackaged FMI 3 archive | `7c587f8be566db4afac658e10da9d33eabfa2b97d102630008843d4b9b6822ce` |
+| fmusim trajectory CSV | `c941606f0c354bb9579c45d18947df3eba6e4f995b81862ccadb5f8f7025bfe4` |
+| Revised Rust native fixture | `ac7ee91dddc1d9dec172e583488097d0af7c83df34a7e6ddf5221d861197f326` |
+| macOS fixture log | `63b113087223ac22a83e32264af150fab67276b3358f3a98e628f2e4b0866b42` |
+| Windows fixture log | `77f8a58e969843f1db3f8c5f69808f196d0a2b2d725783fea961b3751cb12be8` |
+
+```sh
+fmusim validate BouncingBall.fmu
+fmusim simulate BouncingBall.fmu --interface-type cs --library-kind native \
+  --start-time 0 --stop-time 0.6 --output-interval 0.01 \
+  --output-variable h --output-variable v --output-file trajectory.csv
 ```
 
 ## Independent OpenModelica model
@@ -54,5 +85,5 @@ KAIRO_OPENMODELICA_FMU=/absolute/path/to/KairosDecay.fmu \
 
 The test target and exact input acquisition are wired to the existing
 [Rust CI workflow](../../../.github/workflows/ci-core.yml).
-Additional exporters, Model Exchange, Scheduled Execution and an export
-roundtrip have separate qualification work.
+Remaining qualification covers generating a native FMU from a Kairos model,
+additional exporters, Model Exchange and Scheduled Execution.
