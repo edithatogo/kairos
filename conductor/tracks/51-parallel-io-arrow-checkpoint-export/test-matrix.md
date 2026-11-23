@@ -16,6 +16,7 @@ process with an uninterrupted reference.
 | ADIOS2 native roundtrip | `cargo test --locked -p kairo-ecs-arrow --features adios2 --test maturity_native_adios2` | Native file qualification |
 | ADIOS2 independent reader | With `KAIROS_BPLS` set, run `cargo test --locked -p kairo-ecs-arrow --features adios2 --test maturity_native_adios2 bpls -- --ignored --nocapture` | Native file qualification |
 | Restart parity | `rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-arrow --features parallel-io --test checkpoint_restart` | Review |
+| Checkpoint interruption and replacement | `cargo test --locked -p kairo-ecs-arrow --features cohort-native,parallel-io --lib` in the Arrow platform matrix | macOS, Linux and Windows file publication |
 | Self-contained engine restart | `cargo test --locked -p kairo-ecs-arrow --features engine-checkpoint,hdf5,adios2 --test engine_checkpoint_restart` | Native final-state parity |
 | Staged resource checkpoint | `cargo test --locked -p kairo-ecs-des --features checkpoint-json,optimistic-usage --test staged_checkpoint --test optimistic_usage` | Restore invariants and in-process rollback compatibility |
 | Staged resource engine restart | `cargo test --locked -p kairo-ecs-bench --features hdf5,adios2 --test staged_checkpoint_restart` | Native final-state and sealed occupancy parity |
