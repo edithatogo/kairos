@@ -1184,6 +1184,10 @@ impl<P: OptimisticProcess, C: PortableModelCodec<P>> ExternalOptimisticRuntime<P
             .map(|o| o.packet.clone())
             .collect())
     }
+    /// Authenticate a packet against the transport peer's certificate hash.
+    ///
+    /// A reopened participant can apply its prepared cut over the same
+    /// transport. Execution resumes after a complete successor activation.
     pub fn receive_from(&mut self, certificate: Hash, packet: &[u8]) -> Result<Vec<Vec<u8>>> {
         let r = self.auth(packet)?;
         if !self
@@ -1194,11 +1198,19 @@ impl<P: OptimisticProcess, C: PortableModelCodec<P>> ExternalOptimisticRuntime<P
         {
             return Err(reject("TLS/signing member mismatch"));
         }
-        // The fresh complete membership explicitly authorizes these exact
-        // historical packets; this is recovery ingress, not a stale live bypass.
         if matches!(r.body, Body::Activation { .. }) {
             return self.join_activation(packet).map(|p| vec![p]);
         }
+        if !self.image.active
+            && r.generation == self.image.generation
+            && matches!(&r.body, Body::Cut { cut, .. }
+                if self.image.paused == Some(*cut)
+                    || self.image.cut_decision.as_deref() == Some(packet))
+        {
+            self.recover_cut(packet)?;
+            return Ok(Vec::new());
+        }
+        // The complete successor membership authorizes these exact retained deliveries.
         if matches!(r.body, Body::Delivery { .. })
             && r.generation < self.image.generation
             && self

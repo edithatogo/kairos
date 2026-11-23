@@ -268,9 +268,25 @@ fn in_flight_delivery_at_the_floor_survives_restart() {
         .unwrap();
     assert!(!b.is_active());
     let pb = b.prepare_cut(100).unwrap();
+    let prepared_revision = b.revision().unwrap();
+    drop(b);
+    let mut b = open(&db, 1);
+    assert_eq!(b.prepare_cut(100).unwrap(), pb);
+    assert_eq!(b.revision().unwrap(), prepared_revision);
     let cut = a.commit_cut(vec![pa, pb]).unwrap();
-    b.recover_cut(&cut).unwrap();
+    assert_eq!(
+        b.receive_from([2; 32], &cut),
+        Err(reject("TLS/signing member mismatch"))
+    );
+    assert_eq!(b.revision().unwrap(), prepared_revision);
+    assert_eq!(b.gvt(), 0);
+    assert!(b.receive_from([1; 32], &cut).unwrap().is_empty());
     assert_eq!((a.gvt(), b.gvt()), (40, 40));
+    assert!(!b.is_active());
+    let applied_revision = b.revision().unwrap();
+    assert!(b.receive_from([1; 32], &cut).unwrap().is_empty());
+    assert_eq!(b.revision().unwrap(), applied_revision);
+    assert_eq!(b.retained_cut_decision(), Some(cut.as_slice()));
     assert_eq!(a.retained_pause(), None);
     assert_eq!(b.retained_pause(), None);
     activate(&mut a, &mut b);

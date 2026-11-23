@@ -141,3 +141,18 @@ The original `Pause` mode requires drained obligations and matching channel
 sets. Its wire encoding stays readable by existing participants. Every
 participant must support the new record kind for an in-flight cut. Rust
 consumers with exhaustive `Body` matches must handle the new variant.
+
+## Authenticated recovery of a prepared cut
+
+A participant that reopens in standby can receive its coordinator's cut through
+`receive_from`. The caller supplies the peer certificate hash and the engine
+checks the packet's signing identity. The decision must match the current
+generation, the saved pause and the participant's durable prepare. A retry of
+the retained decision returns success without applying it again. The
+participant stays in standby until the complete successor membership activates.
+
+The qualification worker accepts explicit routes keyed by participant ID.
+Each route uses the configured member's leaf fingerprint and the existing
+TLS transport. The three-member case restarts the coordinator and straggler
+sender, recovers the cut over mTLS, and compares the post-rollback model bytes
+with serial execution.

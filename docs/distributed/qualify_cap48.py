@@ -165,6 +165,113 @@ def send(sender,packet,accept=True):return sender.call('send',packet=packet,acce
 def root(a,seq,t,op):
     a.call('root',sequence=seq,source=0,destination=0,tick=t,payload=[op]);return choose(a,lambda m:m['root_sequence']==seq and not m['ancestry'])
 def models(a,b):return [bytes(a.call('snapshot',lp=0)['model']),bytes(b.call('snapshot',lp=1)['model'])]
+
+
+def recover_group_in_flight(nodes, restart):
+    """Run the three-member case on configured native workers and private stores.
+
+    Members 0 and 1 use their default mTLS route to each other. Member 0 also
+    has an explicit route to member 2, whose default route returns to 0.
+    Restart kills and reopens the selected worker with the same settings.
+    """
+    a, b, c = nodes
+
+    def join_all():
+        proposal = a.call("propose")["packet"]
+        joins = [
+            a.call("join", packet=proposal)["packet"],
+            send(a, proposal, False)[0],
+            a.call("send", peer=2, packet=proposal, accept=False)["replies"][0],
+        ]
+        incomplete = a.call("activate", expect=False, packet=proposal, joins=joins[:2])
+        assert incomplete["ok"] is False, incomplete
+        for node in (a, b, c):
+            node.call("activate", packet=proposal, joins=joins)
+
+    def finish_cut(packet):
+        send(a, packet, False)
+        a.call("send", peer=2, packet=packet, accept=False)
+        return [int(node.call("snapshot")["gvt"], 16) for node in (a, b, c)]
+
+    join_all()
+    receive_local(a, root(a, 0, 20, 1))
+    a.call("run", horizon=100, budget=1)
+    send(a, choose(a, lambda event: tick(event) == 30 and not event["anti"]))
+    b.call("run", horizon=100, budget=1)
+    send(b, choose(b, lambda event: tick(event) == 35 and not event["anti"]))
+    a.call("run", horizon=100, budget=1)
+    c.call("root", sequence=0, source=2, destination=0, tick=10, payload=[2])
+    [straggler] = pending(c)
+    for node in (a, b, c):
+        node.call("close")
+
+    pause = a.call("pause_capture")["packet"]
+    send(a, pause, False)
+    prepares = [node.call("prepare", limit=100)["packet"] for node in (a, b)]
+    before = a.call("snapshot")
+    partial = a.call("cut", expect=False, prepares=prepares)
+    assert partial["ok"] is False and "incomplete prepares" in partial["error"], partial
+    after = a.call("snapshot")
+    assert before["revision"] == after["revision"] and int(after["gvt"], 16) == 0
+
+    a, c = restart(a), restart(c)
+    assert a.call("prepare", limit=100)["packet"] == prepares[0]
+    assert a.call("retained_pause")["packet"] == pause
+    a.call("send", peer=2, packet=pause, accept=False)
+    prepares.append(c.call("prepare", limit=100)["packet"])
+    decision = a.call("cut", prepares=prepares)["packet"]
+    prepared_revision = c.call("snapshot")["revision"]
+    c = restart(c)
+    assert c.call("prepare", limit=100)["packet"] == prepares[2]
+    assert c.call("snapshot")["revision"] == prepared_revision
+    floors = finish_cut(decision)
+    assert floors == [10, 10, 10], floors
+    standby = c.call("snapshot")
+    assert standby["active"] is False
+    a.call("send", peer=2, packet=decision, accept=False)
+    assert c.call("snapshot")["revision"] == standby["revision"]
+    assert c.call("run", expect=False, horizon=100, budget=1)["ok"] is False
+    join_all()
+
+    receipts = send(c, straggler)
+    admitted = a.call("snapshot")["revision"]
+    assert receipts and send(c, straggler) == receipts
+    assert a.call("snapshot")["revision"] == admitted
+    a.call("run", horizon=100, budget=3)
+    anti = choose(a, lambda event: tick(event) == 30 and event["anti"])
+    send(a, anti)
+    b.call("run", horizon=100, budget=1)
+    descendant = choose(b, lambda event: tick(event) == 35 and event["anti"])
+    send(b, descendant)
+    a.call("run", horizon=100, budget=4)
+    send(b, descendant)
+    send(a, anti)
+    replacement = choose(a, lambda event: tick(event) == 25 and not event["anti"])
+    send(a, replacement)
+    b.call("run", horizon=100, budget=4)
+    send(b, choose(b, lambda event: tick(event) == 30 and not event["anti"]))
+    a.call("run", horizon=100, budget=4)
+    final_models = models(a, b) + [bytes(c.call("snapshot", lp=2)["model"])]
+    assert final_models[:2] == [bytes(model) for model in a.call("serial")["models"]]
+    assert json.loads(final_models[2]) == {"value": 0, "rng": 48, "generation": 1, "trace": []}
+    assert all(not pending(node) for node in (a, b, c))
+    rollbacks = [image(node)["rollbacks"] for node in (a, b, c)]
+    assert rollbacks == [1, 1, 0], rollbacks
+
+    pause = a.call("pause_capture")["packet"]
+    send(a, pause, False)
+    a.call("send", peer=2, packet=pause, accept=False)
+    prepares = [node.call("prepare", limit=100)["packet"] for node in (a, b, c)]
+    final_floors = finish_cut(a.call("cut", prepares=prepares)["packet"])
+    assert final_floors == [100, 100, 100], final_floors
+    return {
+        "floors_after_restart": floors,
+        "final_floors": final_floors,
+        "model_sha256": [hashlib.sha256(model).hexdigest() for model in final_models],
+        "rollback_counts": rollbacks,
+    }
+
+
 def fault_local(owner,node,op,after,**kw):
     node.call('fault',after=after);result=[]
     def run():
