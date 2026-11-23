@@ -103,9 +103,10 @@ filesystem evidence remain open. [Evidence](execution/scientific/s14-completion.
 
 The Rust replay fixture restored same-tick state and the exact dispatch/RNG
 suffix after cancellation. Forks retained independent queue, model and RNG
-state. A release build of the CLI replayed one million events, restored position
+state. A caught model unwind required restoring the last recorded boundary.
+A release build of the CLI replayed one million events, restored position
 zero and dispatched them again with identical final state and scheduler output.
-The process peaked at 80.7 MiB RSS.
+The process peaked at 80.8 MiB RSS.
 
 On macOS ARM64, both retention configurations kept the last 1,024 events
 of a 65,536-event model with a 64 KiB state and eight pending events during
@@ -113,8 +114,8 @@ steady execution. The final state checksum agreed across runs.
 
 | Configuration | Live heap after subtracting baseline | Peak RSS | Median restore | Median fork |
 | --- | ---: | ---: | ---: | ---: |
-| Full copy at every event | 82.63 MiB | 87.63 MiB | 0.75 µs | 3.29 µs |
-| 64-event checkpoints with copy-on-write model pages | 1.51 MiB | 3.83 MiB | 8.58 µs | 0.58 µs |
+| Full copy at every event | 82.63 MiB | 87.63 MiB | 0.71 µs | 3.21 µs |
+| 64-event checkpoints with copy-on-write model pages | 1.51 MiB | 3.86 MiB | 8.38 µs | 0.54 µs |
 
 The heap values come from live `heap` reports. Peak RSS is the median of three
 fresh `time -l` runs. Restore and fork times are medians of those runs' 101-sample

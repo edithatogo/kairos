@@ -17,6 +17,11 @@ scheduler event leaves the current state in place. The event comparison
 checks scheduler replay. Model correctness also depends on the dispatch
 function and its snapshot contract.
 
+If a step unwinds during a transition or model clone, the session requires a
+seek to a retained position before continuing. The interrupted model and
+scheduler stay inaccessible until restore. Seeking to the same position is
+enough to restore the last recorded boundary.
+
 The caller selects a nonzero checkpoint interval and count. Replay between
 retained positions executes fewer events than one interval. A session holds at
 most the selected count of scheduler and model checkpoints. Retained event

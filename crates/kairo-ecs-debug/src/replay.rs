@@ -17,6 +17,8 @@ pub enum ReplayError {
     },
     #[error("scheduler diverged from the recorded event at position {0}")]
     Diverged(usize),
+    #[error("the last step was interrupted. Restore a retained position before dispatching")]
+    Interrupted,
 }
 
 struct Checkpoint<M> {
@@ -41,6 +43,7 @@ pub struct ReplaySession<M> {
     model: Arc<M>,
     transition: fn(&mut M, &mut Scheduler, DispatchedEvent),
     position: usize,
+    interrupted: bool,
     interval: NonZeroUsize,
     checkpoint_limit: NonZeroUsize,
     checkpoints: VecDeque<Checkpoint<M>>,
@@ -63,6 +66,7 @@ impl<M: Clone> ReplaySession<M> {
             model: Arc::new(model),
             transition,
             position: 0,
+            interrupted: false,
             interval,
             checkpoint_limit,
             checkpoints: VecDeque::new(),
@@ -81,11 +85,25 @@ impl<M: Clone> ReplaySession<M> {
         oldest..=oldest + self.history.len()
     }
 
+    /// # Panics
+    ///
+    /// Panics after an interrupted step until [`Self::seek`] restores the state.
     pub fn model(&self) -> &M {
+        assert!(
+            !self.interrupted,
+            "restore a retained position after interruption"
+        );
         &self.model
     }
 
+    /// # Panics
+    ///
+    /// Panics after an interrupted step until [`Self::seek`] restores the state.
     pub fn scheduler(&self) -> &Scheduler {
+        assert!(
+            !self.interrupted,
+            "restore a retained position after interruption"
+        );
         &self.scheduler
     }
 
@@ -104,12 +122,18 @@ impl<M: Clone> ReplaySession<M> {
     /// # Errors
     ///
     /// Returns `Diverged` if the restored scheduler would dispatch a different
-    /// event from the retained history.
+    /// event from the retained history. Returns `Interrupted` if a previous
+    /// step panicked and the caller has yet to restore a retained position.
     pub fn step(&mut self) -> Result<Option<DispatchedEvent>, ReplayError> {
+        if self.interrupted {
+            return Err(ReplayError::Interrupted);
+        }
         let offset = self.position - self.checkpoints[0].position;
         let expected = self.history.get(offset);
         Self::verify_next(&mut self.scheduler, expected, self.position + 1)?;
+        self.interrupted = true;
         let Some(event) = self.scheduler.step().into_dispatched() else {
+            self.interrupted = false;
             return Ok(None);
         };
         (self.transition)(Arc::make_mut(&mut self.model), &mut self.scheduler, event);
@@ -127,6 +151,7 @@ impl<M: Clone> ReplaySession<M> {
                 self.capture(Some(event));
             }
         }
+        self.interrupted = false;
         Ok(Some(event))
     }
 
@@ -146,7 +171,7 @@ impl<M: Clone> ReplaySession<M> {
                 newest: *retained.end(),
             });
         }
-        if position == self.position {
+        if position == self.position && !self.interrupted {
             return Ok(());
         }
         let checkpoint = self
@@ -170,8 +195,10 @@ impl<M: Clone> ReplaySession<M> {
             (self.transition)(Arc::make_mut(&mut model), &mut scheduler, event);
         }
         self.scheduler = scheduler;
-        self.model = model;
+        let previous_model = std::mem::replace(&mut self.model, model);
         self.position = position;
+        self.interrupted = false;
+        drop(previous_model);
         Ok(())
     }
 
@@ -196,6 +223,10 @@ impl<M: Clone> ReplaySession<M> {
 
     /// Create an independent timeline at the current event boundary. The
     /// edit is applied to the branch before capturing its first checkpoint.
+    ///
+    /// # Panics
+    ///
+    /// Panics after an interrupted step until [`Self::seek`] restores the state.
     pub fn fork(&self, edit: impl FnOnce(&mut M, &mut Scheduler)) -> Self {
         let mut model = self.model().clone();
         let mut scheduler = Self::restore_scheduler(&self.scheduler.checkpoint());
@@ -205,6 +236,7 @@ impl<M: Clone> ReplaySession<M> {
             model: Arc::new(model),
             transition: self.transition,
             position: self.position,
+            interrupted: false,
             interval: self.interval,
             checkpoint_limit: self.checkpoint_limit,
             checkpoints: VecDeque::new(),
@@ -222,13 +254,10 @@ impl<M: Clone> ReplaySession<M> {
             model: Arc::clone(&self.model),
         });
         if self.checkpoints.len() > self.checkpoint_limit.get() {
-            let previous = self
-                .checkpoints
-                .pop_front()
-                .expect("checkpoint limit")
-                .position;
+            let previous = self.checkpoints.pop_front().expect("checkpoint limit");
             self.history
-                .drain(..self.checkpoints[0].position - previous);
+                .drain(..self.checkpoints[0].position - previous.position);
+            drop(previous);
         }
     }
 

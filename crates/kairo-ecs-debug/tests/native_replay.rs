@@ -1,5 +1,6 @@
 use std::collections::BTreeMap;
 use std::num::NonZeroUsize;
+use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::sync::Arc;
 
 use kairo_ecs_core::Scheduler;
@@ -197,6 +198,49 @@ fn fork_has_an_independent_queue_state_and_rng_with_bounded_history() {
     assert_eq!(parent.position(), 2);
     assert_eq!(parent.model().rng.word_pos(), 2);
     assert_eq!(branch.retained_positions(), 1..=2);
+}
+
+#[test]
+fn panicking_transition_requires_restore_before_dispatch_resumes() {
+    let mut scheduler = Scheduler::new();
+    let entity = EntityId {
+        index: 42,
+        generation: 0,
+    };
+    scheduler.schedule(request(0, 0, entity, 1));
+    scheduler.schedule(request(1, 0, entity, 2));
+    let mut session = ReplaySession::new(
+        scheduler,
+        0,
+        |model, scheduler, event| {
+            *model += 1;
+            if event.kind == EventKind::custom(2) {
+                scheduler.schedule(request(2, 0, event.entity.unwrap(), 3));
+                panic!("transition interrupted after changing model and queue");
+            }
+        },
+        NonZeroUsize::new(2).unwrap(),
+        NonZeroUsize::new(2).unwrap(),
+    );
+    let first = session.step().unwrap();
+    let stats = session.scheduler().stats();
+    assert!(catch_unwind(AssertUnwindSafe(|| session.step())).is_err());
+    assert_eq!(session.current_event(), first);
+    assert_eq!(session.step(), Err(ReplayError::Interrupted));
+    assert!(catch_unwind(AssertUnwindSafe(|| session.model())).is_err());
+    assert!(catch_unwind(AssertUnwindSafe(|| session.scheduler())).is_err());
+    session.seek(1).unwrap();
+    assert_eq!(session.current_event(), first);
+    assert_eq!(*session.model(), 1);
+    assert_eq!(session.scheduler().stats(), stats);
+    let mut branch = session.fork(|_, scheduler| {
+        assert!(scheduler.cancel(EventId {
+            index: 1,
+            generation: 1,
+        }));
+    });
+    assert_eq!(branch.step(), Ok(None));
+    assert_eq!(session.scheduler().pending_events(), 1);
 }
 
 #[test]

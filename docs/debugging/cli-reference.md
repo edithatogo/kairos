@@ -3,7 +3,8 @@
 `kairo-ecs-debug replay` runs a seeded Rust model and reads one command per
 line from standard input. The model dispatches two events per tick, schedules
 work during dispatch, and updates a running total with the repository's
-deterministic RNG. A replay session lasts until end of input.
+deterministic RNG. End of input closes the session. An invalid command or an
+unavailable position ends it with an error.
 
 ```bash
 printf 'step\ninspect total\nstep\nback\ninspect total\nbreak 2\ncontinue\n' |

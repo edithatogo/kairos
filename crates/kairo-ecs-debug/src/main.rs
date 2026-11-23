@@ -40,12 +40,6 @@ enum Command {
 
 #[derive(Parser)]
 #[command(name = "replay")]
-struct ReplayInput {
-    #[command(subcommand)]
-    command: ReplayCommand,
-}
-
-#[derive(Subcommand)]
 enum ReplayCommand {
     /// Dispatch an event
     Step,
@@ -142,9 +136,9 @@ fn run_replay(
         if line.trim().is_empty() {
             continue;
         }
-        let input =
-            ReplayInput::parse_from(std::iter::once("replay").chain(line.split_whitespace()));
-        match input.command {
+        let command =
+            ReplayCommand::parse_from(std::iter::once("replay").chain(line.split_whitespace()));
+        match command {
             ReplayCommand::Step => {
                 if replay.step()?.is_some() {
                     show_cursor(&replay);
