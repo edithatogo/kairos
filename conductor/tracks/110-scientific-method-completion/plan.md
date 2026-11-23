@@ -57,6 +57,9 @@ Close every stated scientific/advanced method with a correct implementation and 
 - [ ] 110.2.1: Complete S09 genuine inference and S10 real Rust VecEnv/Gymnasium/PettingZoo integration.
 - [ ] 110.2.2: Route S11 GPU, S12 distributed recovery, S13 external FMI and S14 native I/O/HPC completion through existing owners.
 - [ ] 110.2.3: Complete S15 actual state branching/debugging, S16 real streaming/browser transport and S17 hybrid/resource semantics.
+  - S15 native Rust increment added checkpoint-backed replay, branch isolation,
+    a working CLI and [measured bounded retention](../../scientific-completion.md#s15-native-debugger-qualification).
+    Browser integration and Arrow IPC trace export remain open.
 - [ ] 110.2.4: Record analytical correctness, native execution, comparative performance and empirical validity separately for each capability.
 - [ ] 110.2.review: Independently review this phase, apply accepted fixes, execute the named oracles and record the next-phase decision.
 

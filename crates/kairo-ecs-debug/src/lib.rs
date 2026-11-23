@@ -1,6 +1,8 @@
 #![forbid(unsafe_code)]
 
 pub mod contracts;
+mod replay;
+pub use replay::{ReplayError, ReplaySession};
 
 use std::collections::BTreeMap;
 use thiserror::Error;
@@ -35,7 +37,7 @@ pub struct TraceDelta {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct EventTrace {
     pub schema: &'static str,
-    /// Snapshots in nondecreasing tick order; use [`EventTrace::snapshot`] to add them.
+    /// End-of-tick snapshots in nondecreasing tick order.
     pub snapshots: Vec<TraceSnapshot>,
     /// Deltas in `(tick, priority, sequence)` order; use
     /// [`EventTrace::record_event`] to add them.
@@ -46,10 +48,7 @@ impl Default for EventTrace {
     fn default() -> Self {
         Self {
             schema: TRACE_SCHEMA,
-            snapshots: vec![TraceSnapshot {
-                tick: 0,
-                state: BTreeMap::new(),
-            }],
+            snapshots: Vec::new(),
             deltas: Vec::new(),
         }
     }
@@ -70,6 +69,7 @@ impl EventTrace {
             .sort_by_key(|delta| (delta.tick, delta.priority, delta.sequence));
     }
 
+    /// Record the state after all deltas at `tick`.
     pub fn snapshot(&mut self, tick: SimTime, state: BTreeMap<String, String>) {
         self.snapshots.push(TraceSnapshot {
             tick: tick.ticks(),
@@ -79,39 +79,27 @@ impl EventTrace {
     }
 
     pub fn reconstruct_at(&self, tick: u128) -> BTreeMap<String, String> {
-        let snapshot_idx = self
+        let snapshot_end = self
             .snapshots
             .partition_point(|snapshot| snapshot.tick <= tick);
-        if self.deltas.is_empty() {
-            return if snapshot_idx > 0 {
-                self.snapshots[snapshot_idx - 1].state.clone()
-            } else {
-                BTreeMap::new()
-            };
-        }
-        let (snapshot, snapshot_tick) = if snapshot_idx > 0 {
-            let snapshot = &self.snapshots[snapshot_idx - 1];
-            (Some(snapshot), snapshot.tick)
-        } else {
-            (None, 0)
-        };
+        let delta_end = self.deltas.partition_point(|delta| delta.tick <= tick);
+        self.reconstruct_prefix(snapshot_end, delta_end)
+    }
 
-        let delta_start_idx = self
-            .deltas
-            .partition_point(|delta| delta.tick <= snapshot_tick);
-        let delta_end_idx = self.deltas.partition_point(|delta| delta.tick <= tick);
-
-        if delta_start_idx == delta_end_idx {
-            return snapshot
-                .map(|snapshot| snapshot.state.clone())
-                .unwrap_or_default();
-        }
-
+    fn reconstruct_prefix(
+        &self,
+        snapshot_end: usize,
+        delta_end: usize,
+    ) -> BTreeMap<String, String> {
+        let snapshot = self.snapshots[..snapshot_end].last();
+        let delta_start = snapshot.map_or(0, |snapshot| {
+            self.deltas[..delta_end].partition_point(|delta| delta.tick <= snapshot.tick)
+        });
         let mut state: BTreeMap<&String, &String> = snapshot
             .map(|snapshot| snapshot.state.iter().collect())
             .unwrap_or_default();
 
-        for delta in &self.deltas[delta_start_idx..delta_end_idx] {
+        for delta in &self.deltas[delta_start..delta_end] {
             for (key, value) in &delta.changes {
                 state.insert(key, value);
             }
@@ -272,12 +260,7 @@ impl Debugger {
     }
 
     pub fn inspect(&self, key: &str) -> Option<String> {
-        let tick = self
-            .cursor
-            .and_then(|cursor| self.trace.deltas.get(cursor))
-            .map(|delta| delta.tick)
-            .unwrap_or(0);
-        self.trace.reconstruct_at(tick).get(key).cloned()
+        self.current_state().remove(key)
     }
 
     pub fn cursor_tick(&self) -> u128 {
@@ -288,7 +271,28 @@ impl Debugger {
     }
 
     pub fn current_state(&self) -> BTreeMap<String, String> {
-        self.trace.reconstruct_at(self.cursor_tick())
+        let Some(cursor) = self.cursor else {
+            return if self
+                .trace
+                .deltas
+                .first()
+                .is_some_and(|delta| delta.tick == 0)
+            {
+                BTreeMap::new()
+            } else {
+                self.trace.reconstruct_at(0)
+            };
+        };
+        let tick = self.trace.deltas[cursor].tick;
+        let end_of_tick = self
+            .trace
+            .deltas
+            .get(cursor + 1)
+            .is_none_or(|delta| delta.tick > tick);
+        let snapshot_end = self.trace.snapshots.partition_point(|snapshot| {
+            snapshot.tick < tick || (end_of_tick && snapshot.tick == tick)
+        });
+        self.trace.reconstruct_prefix(snapshot_end, cursor + 1)
     }
 
     pub fn add_breakpoint(&mut self, breakpoint: Breakpoint) {

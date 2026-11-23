@@ -1,38 +1,37 @@
-# Debugger CLI Reference
+# Debugger CLI
 
-Planned commands:
-
-- `step`: move the cursor to the next event delta.
-- `back`: move the cursor to the previous event delta.
-- `goto <tick>`: move to the first event at or after a tick.
-- `inspect <entity-or-key>`: print reconstructed state at the cursor.
-- `break on <event-kind>`: add an event-kind breakpoint.
-- `list-breakpoints`: show active breakpoints.
-
-Current scaffold status:
-
-- The binary accepts the command names and prints a scaffold message.
-- The library starts at the initial snapshot; the first `step` moves to the first delta.
-- `back`, `goto <tick>`, `inspect`, event-kind/entity breakpoints, and `run_until_breakpoint` are covered by crate smoke tests.
-- Full trace-file CLI execution remains deferred until the Track 22 runner integration is available.
-
-## Tutorial: local trace smoke
-
-Use these checks for docs examples and demo changes:
+`kairo-ecs-debug replay` runs a seeded Rust model and reads one command per
+line from standard input. The model dispatches two events per tick, schedules
+work during dispatch, and updates a running total with the repository's
+deterministic RNG. A replay session lasts until end of input.
 
 ```bash
-cargo check --manifest-path crates/kairo-ecs-debug/Cargo.toml --tests
-node website\time-travel-demo\validate-demo.mjs
+printf 'step\ninspect total\nstep\nback\ninspect total\nbreak 2\ncontinue\n' |
+  cargo run --locked -p kairo-ecs-debug -- replay --events 8 --seed 7
 ```
 
-The Rust command proves the library and CLI scaffold compile against the trace
-types. The Node command executes the static timeline demo in a minimal DOM
-harness, validates the fixture schema, steps forward and back, selects an event
-dot, and verifies the state inspector refreshes.
+| Command | Behaviour |
+| --- | --- |
+| `step` | Dispatch the next event, apply its transition and print its cursor. |
+| `back` | Restore the state immediately before the current event. |
+| `seek <position>` | Restore an observed event position. Position zero is the initial state. |
+| `goto <tick>` | Restore the first retained event dispatched at or after this tick. |
+| `inspect <applied\|total\|rng-words\|pending>` | Read model state, RNG position or pending scheduler count at the cursor. |
+| `break <kind>` | Add a custom event-kind breakpoint. |
+| `list-breakpoints` | Print the active event kinds. |
+| `continue` | Dispatch until a breakpoint fires or the queue is empty. |
 
-## Evidence boundary
+The cursor identifies a specific event when several events share a tick.
+Change the retention with `--checkpoint-every` and `--checkpoints`.
+Seek and back return errors outside the retained history. `continue` ends
+at a matching breakpoint after its transition runs.
 
-Current evidence proves offline trace reconstruction, cursor behavior,
-breakpoint matching, line-format validation, and static demo rendering. It does
-not prove scheduler hook integration, Arrow IPC trace files, Track 12 fixture
-parity, large-trace virtualization, or Track 22 debugger subcommands.
+`kairo-ecs-debug record --events 8` prints the existing scheduler statistics
+example. Rust applications can use [`ReplaySession`][adr] to supply their
+own deterministic model and fork independent timelines in process.
+
+The hosted debug crate tests exercise the executable and Rust library.
+The [browser timeline demo](../../website/time-travel-demo/index.html)
+plays a checked-in trace fixture.
+
+[adr]: ../adr/0020-native-debugger-replay.md

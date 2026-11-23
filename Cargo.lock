@@ -2311,6 +2311,7 @@ dependencies = [
  "clap",
  "criterion",
  "kairo-ecs-core",
+ "kairo-ecs-rng",
  "kairo-ecs-types",
  "serde",
  "serde_json",
