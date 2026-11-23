@@ -2228,6 +2228,7 @@ dependencies = [
  "hdf5-metno",
  "kairo-ecs-adios2",
  "kairo-ecs-core",
+ "kairo-ecs-des",
  "kairo-ecs-fs-guard",
  "kairo-ecs-rng",
  "kairo-ecs-types",
@@ -2328,6 +2329,8 @@ dependencies = [
  "kairo-ecs-rng",
  "kairo-ecs-state",
  "kairo-ecs-types",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

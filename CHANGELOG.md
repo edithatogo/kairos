@@ -16,6 +16,8 @@ Format:
 
 ### Added
 
+- The opt-in `checkpoint-json` feature in `kairo-ecs-des` restores staged resource allocations, queued requests, scheduled releases and occupancy history in a fresh process. HDF5 and BP5 restart tests save the allocator alongside model events and RNG state. [ADR 0025](docs/adr/0025-staged-resource-checkpoint.md).
+
 - The opt-in `kairo-ecs-gpu` hardware-only CUDA constructor runs seeded particle and additive DES steps using resident buffers. The bridge reports the selected device's driver properties and completes copies before returning state. [ADR 0024](docs/adr/0024-native-cuda-mixed-model.md).
 
 - The `kairo-ecs-gpu` hardware-only Apple Metal backend runs additive DES batches on resident entity buffers alongside particle steps. CPU and device batches use explicit 32-bit wrapping arithmetic. [ADR 0023](docs/adr/0023-native-metal-additive-des.md).

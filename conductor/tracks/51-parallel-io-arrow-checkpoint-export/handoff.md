@@ -291,3 +291,19 @@ backends unavailable on other hosts. No physical backend or live-filesystem
 execution is claimed. Independent read-only reviewer `track51_review`
 identified the false-completion language and the stale PR #352 handoff; this
 packet records their disposition.
+
+## Staged resource restart
+
+Chat `01a1fd18-51c7-7963-a3cc-d262d54582ba` owns the Track 51 integration
+in `/Users/doughnut/.codex/worktrees/kairos-ci-closeout/kairos` on
+`codex/staged-resource-restart-20261124` from `796f0a9aa`. The change covers
+the DES checkpoint codec and tests, the Arrow workspace restart fixture,
+its development dependency, and the track evidence. No remote native
+object is mutated. The next operation is protected PR integration.
+
+[ADR 0025](../../../docs/adr/0025-staged-resource-checkpoint.md) specifies how
+to capture the allocator and rebind saved handles. The HDF5 and BP5 fixtures
+compare uninterrupted execution with fresh-process restoration of active
+leases, FIFO waits, withdrawal and release events, sealed occupancy, the
+outer scheduler, and the RNG position. Live parallel-filesystem evidence
+remains a Track 51 gate.

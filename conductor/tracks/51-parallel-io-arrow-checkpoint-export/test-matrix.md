@@ -17,6 +17,8 @@ process with an uninterrupted reference.
 | ADIOS2 independent reader | With `KAIROS_BPLS` set, run `cargo test --locked -p kairo-ecs-arrow --features adios2 --test maturity_native_adios2 bpls -- --ignored --nocapture` | Native file qualification |
 | Restart parity | `rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-arrow --features parallel-io --test checkpoint_restart` | Review |
 | Self-contained engine restart | `cargo test --locked -p kairo-ecs-arrow --features engine-checkpoint,hdf5,adios2 --test engine_checkpoint_restart` | Native final-state parity |
+| Staged resource checkpoint | `cargo test --locked -p kairo-ecs-des --features checkpoint-json,optimistic-usage --test staged_checkpoint --test optimistic_usage` | Restore invariants and in-process rollback compatibility |
+| Staged resource engine restart | `cargo test --locked -p kairo-ecs-arrow --features engine-checkpoint,hdf5,adios2 --test staged_checkpoint_restart` | Native final-state and sealed occupancy parity |
 | Live-template blocker guard | `node scripts/validation/validate-hpc-live-template-blockers.mjs` | Review and Done |
 | Free compute route boundary | `node scripts/validation/validate-free-compute-routes.mjs` | Review |
 | Full workspace | `rustup run stable-x86_64-pc-windows-gnu cargo test --workspace --all-features` | Phase closeout |

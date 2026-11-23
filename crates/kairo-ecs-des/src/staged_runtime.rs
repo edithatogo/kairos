@@ -12,6 +12,11 @@ use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::fmt;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
+#[cfg(feature = "checkpoint-json")]
+mod checkpoint;
+#[cfg(feature = "checkpoint-json")]
+pub use checkpoint::StagedCheckpointError;
+
 #[cfg(feature = "optimistic-usage")]
 mod usage_replay;
 #[cfg(feature = "optimistic-usage")]
@@ -98,6 +103,11 @@ impl StagedLeaseId {
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[cfg_attr(
+    feature = "checkpoint-json",
+    derive(serde::Serialize, serde::Deserialize),
+    serde(rename_all = "snake_case")
+)]
 pub enum StagedRequestState {
     Scheduled,
     Queued,

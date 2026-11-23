@@ -8,6 +8,7 @@ repository = "https://github.com/edithatogo/kairos"
 description = "Discrete Event Simulation trajectory API for KairoECS"
 
 [features]
+checkpoint-json = ["kairo-ecs-core/checkpoint-json", "dep:serde", "dep:serde_json"]
 optimistic-usage = ["dep:kairo-ecs-pdes"]
 
 [dependencies]
@@ -16,3 +17,5 @@ kairo-ecs-core = { path = "../kairo-ecs-core", version = "0.0.0" }
 kairo-ecs-state = { path = "../kairo-ecs-state", version = "0.0.0" }
 kairo-ecs-rng = { path = "../kairo-ecs-rng", version = "0.0.0" }
 kairo-ecs-pdes = { path = "../kairo-ecs-pdes", version = "0.0.0", features = ["time-warp"], optional = true }
+serde = { version = "1", features = ["derive"], optional = true }
+serde_json = { version = "1", optional = true }

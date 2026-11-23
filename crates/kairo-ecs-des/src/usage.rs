@@ -9,6 +9,11 @@ pub const STAGED_USAGE_VERSION: u16 = 1;
 
 /// Provenance and clock scale declared when the runtime is created.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(
+    feature = "checkpoint-json",
+    derive(serde::Serialize, serde::Deserialize),
+    serde(deny_unknown_fields)
+)]
 pub struct StagedUsageSource {
     /// Stable run identifier.
     pub run: String,
