@@ -8,8 +8,8 @@ validation suitable for Lustre, GPFS, and MPI-I/O environments.
 
 ## Maturity
 
-Spec Approved planning track. The current implementation remains the Track 04
-schema/smoke surface until this track's runtime I/O work closes.
+In Progress. The HDF5 and serial ADIOS2 BP5 formats have passed native reader
+checks. Production Arrow and parallel filesystem qualification remain open.
 
 ## Inputs
 
@@ -27,6 +27,7 @@ schema/smoke surface until this track's runtime I/O work closes.
 
 ## Owned paths
 
+- `crates/kairo-ecs-adios2/`
 - `crates/kairo-ecs-arrow/`
 - `schemas/arrow/`
 - `examples/telemetry/`

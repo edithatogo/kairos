@@ -19,10 +19,9 @@ typed historical-state readback and an independent native reader.
 
 ## Remaining evidence
 
-- Apply the same native format distinction to ADIOS2 BP5, with the vendor
-  `bpls` reader, full-width field tests and directory publication recovery.
 - Qualify the real Arrow record batches used by Track 51. Prove restart with
-  queued Rust scheduler state and equal final traces, counters and identities.
+  representative scheduler workloads and both native backends. Compare final
+  traces, counters and identities.
 - Exercise allocator lifetime and affinity on a representative NUMA workload.
   Retain exact native filesystem and scheduler receipts for ranks, transfer
   costs, block layout and final state parity.
@@ -58,3 +57,62 @@ upstream library. The workspace Rust license check passes with the dynamic
 dependency graph and the policy file is unchanged.
 [HDF Group 2.2.0](https://github.com/HDFGroup/hdf5/releases/tag/2.2.0) ·
 [Rust binding 0.15.1](https://crates.io/crates/hdf5-metno/0.15.1).
+
+## ADIOS2 execution on macOS ARM64
+
+The original adapter wrote text and failed the native directory assertion.
+Source `e7de3f9da2244969bb6045db0a293790d2042436` uses installed ADIOS2 2.12.1
+with Rust 1.99.1. Run these commands from the Kairos closeout worktree with
+both native libraries and their reader binaries selected.
+
+| Command | Result | Log SHA-256 |
+| --- | --- | --- |
+| `cargo test --locked --offline -p kairo-ecs-arrow --features hdf5,adios2` | 61 passed, exit 0. Two independent readers ran separately. | `cd67e7f1ddc4198c344743d5872d59fc1be2dbdc5de327e0211761b1f491bc08` |
+| `cargo test --locked --offline -p kairo-ecs-arrow --features hdf5,adios2 --test maturity_native_adios2 bpls -- --ignored --nocapture` | One passed, exit 0. The native reader printed timestamp limbs 3046884995180589254 and 9223372036854775813 and priority −7. It rejected the old text file. | `936271a1fb75cba8c7b77f9177e9da08d90320a18de5b09440302febb52ed4a1` |
+| `cargo test --locked --offline -p kairo-ecs-arrow --features hdf5 --test maturity_native_io_format h5dump -- --ignored --nocapture` | One passed, exit 0. The original HDF5 layout and values survived the shared codec extraction. | `5dea8f6d88f574301ab421b12ae296a4ac90eacf7acb125a7718b72c45e7201f` |
+| `cargo test --locked --offline -p kairo-ecs-arrow --features parallel-io --test checkpoint_restart` | 11 passed, exit 0. Includes both feature-disabled adapter errors. | `6ee0f1d61e0b3bc4dc917b8bbb98a695ca6ac246aeac82963436e7f50fb2f752` |
+
+Workspace lock SHA-256 is
+`5906b8a5bc3c9e43ab1b429618600e4bc95a37b438a8241a1050a8921798ea0e`.
+Review matched the C declarations to the installed headers, checked the
+bounded synchronous buffer transfers and verified the HDF5 digest and layout.
+The mode-0555 fixture verified the reported cleanup error after publication
+and the new generation restored successfully. Nextest passed all 61 tests
+with isolated processes after a threaded coverage run encountered an HDF5
+file lock while the interruption test spawned its child.
+[BP5 schema and publication contract](../../../docs/adr/0019-native-adios2-checkpoints.md).
+
+## Installed HDF5 scheduler restart
+
+From provider revision `1f0fbcd3abbec3138f27c68396ae5a10e027a5e6`, a separate
+Rust consumer using installed HDF5 2.2.0 and seed `20261123` resumed across
+processes. It matched the 17 remaining dispatches, completed 11 jobs, reported
+one cancelled event and finished with no pending work. The uninterrupted and
+resumed suffix digest was
+`a1e087ced01885e557901bbce3e443118e386cd9ed3c55310e9e01576b578246`.
+The receipt SHA-256 is
+`14429288151e9122919240b98625cfd07ac21388f8a6a78690266ad7a6c33d50`.
+
+## Installed ADIOS2 scheduler restart
+
+Provider revision `cfd620a5cfa9aab5bdd13b414abc67c25f00ad77` was extracted
+into a clean directory. The standalone client installed with Rust 1.99.1 and
+ran with the installed ADIOS2 2.12.1 C library on macOS ARM64. The writer stored
+five dispatched records in BP5 and the pending scheduler and model/RNG state
+in JSON sidecars. A fresh process verified the generation and matched the
+uninterrupted trace and every final counter. The HDF5 case produced the same
+result with the same seed and suffix digest. The installed BP5 receipt SHA-256
+is `d0d7a4caf54e742f0a28b1ebca2ab2ad2bf47eb1f85029ce2a4a47aac7af0cb1`.
+
+The installed consumer first exposed a crash in ADIOS2 user-configuration
+initialization when `HOME` was absent. The final adapter checks the variable
+before opening the library context. The same installed client returned exit 1
+and left the output directory empty when run without `HOME`.
+
+The final `cargo nextest run --locked --offline -p kairo-ecs-arrow -p kairo-ecs-adios2 --features kairo-ecs-arrow/hdf5,kairo-ecs-arrow/adios2`
+passed 62 tests. Its log SHA-256 is
+`1799eecd68522e05c20840cebfcb0d41f1e1937ea3aa64a6781b02e40b31f7bd`.
+Both vendor readers passed again using the commands above. The `bpls` log
+SHA-256 is `c7aed373a3a04580bf27ec83960b58008ccddb6d82f9e86aac99bcaf2525ddbf`.
+The `h5dump` log SHA-256 is
+`c9c43c9d96140515c4fb9eb656dca5bb7cd738866189a6e4ea05a55d67c6cd0d`.

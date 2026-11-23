@@ -61,7 +61,8 @@ jobs:
         run: rustup toolchain install 1.99.1 --profile minimal --component clippy
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
         with:
-          key: arrow-platform
+          # Refresh macOS build artifacts after a restored metadata read failure.
+          key: ${{ matrix.os == 'macos-latest' && 'arrow-platform-macos-v2' || 'arrow-platform' }}
       - name: Shared trusted import boundary and normal graphs
         run: |
           node --version
@@ -98,9 +99,11 @@ jobs:
           cargo clippy --locked -p kairo-ecs-arrow -p kairo-ecs-arrow-ffi -p kairo-ecs-fs-guard -p kairo-ecs-ffi
           --features kairo-ecs-arrow/polars-native,kairo-ecs-arrow-ffi/native-data,kairo-ecs-ffi/native-data --all-targets -- -D warnings
       - name: Create source packages
+        # Cargo omits private packages from its temporary registry overlay.
         run: >-
           cargo package --locked --no-verify
-          -p kairo-ecs-types -p kairo-ecs-rng -p kairo-ecs-fs-guard -p kairo-ecs-arrow
+          --config 'patch.crates-io.kairo-ecs-adios2.path = "crates/kairo-ecs-adios2"'
+          -p kairo-ecs-types -p kairo-ecs-rng -p kairo-ecs-fs-guard -p kairo-ecs-adios2 -p kairo-ecs-arrow
       - name: Compile clean committed Git source with native consumers
         run: |
           set -euo pipefail

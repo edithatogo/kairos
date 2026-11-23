@@ -177,7 +177,7 @@ fn hdf5_checkpoint_native_roundtrip_preserves_manifest() {
     assert_ne!(checkpoint.checksum, 0);
 }
 
-#[cfg(not(feature = "adios2"))]
+#[cfg(not(all(feature = "adios2", any(target_os = "linux", target_os = "macos"))))]
 #[test]
 fn adios2_adapter_returns_disabled_without_feature() {
     let batch = ParallelIoRecordBatch::from_dispatched("adios2-disabled", [event(8, 30, 0)])
@@ -198,27 +198,29 @@ fn adios2_adapter_returns_disabled_without_feature() {
     );
 }
 
-#[cfg(feature = "adios2")]
+#[cfg(all(feature = "adios2", any(target_os = "linux", target_os = "macos")))]
 #[test]
-fn adios2_checkpoint_contract_records_format_and_checksum() {
+fn adios2_checkpoint_writes_a_native_directory() {
     let batch = ParallelIoRecordBatch::from_dispatched("adios2-run", [event(8, 30, 0)])
         .expect("record batch");
     let checkpoint =
         CheckpointManifest::from_batch("adios2-0001", CheckpointFormat::Adios2, &batch)
             .expect("adios2 checkpoint");
     let adapter = Adios2CheckpointAdapter;
-    let path = temp_path("adios2");
+    let directory = tempfile::tempdir().unwrap();
+    let path = directory.path().join("restart.bp");
 
     let receipt = adapter
         .write_manifest(&path, &checkpoint)
-        .expect("adios2 contract write");
+        .expect("ADIOS2 checkpoint write");
+    assert!(!receipt.contract_only, "expected native ADIOS2 BP5");
+    let header = fs::read(path.join("md.idx")).expect("ADIOS2 BP5 index");
+    assert!(header.starts_with(b"ADIOS-BP "));
     let restored = adapter
         .restore_manifest(&path)
-        .expect("adios2 contract restore");
-    let _ = fs::remove_file(&path);
+        .expect("ADIOS2 checkpoint restore");
 
     assert_eq!(receipt.format, CheckpointFormat::Adios2);
-    assert!(receipt.contract_only);
     assert_eq!(checkpoint.format, CheckpointFormat::Adios2);
     assert_eq!(checkpoint.records[0].time_ticks, 30);
     assert_eq!(restored.final_tick, 30);

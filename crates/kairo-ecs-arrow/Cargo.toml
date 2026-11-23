@@ -40,6 +40,10 @@ cap-fs-ext = { version = "4.0.3", default-features = false, optional = true }
 same-file = { version = "1.0.6", optional = true }
 kairo-ecs-fs-guard = { path = "../kairo-ecs-fs-guard", version = "0.1.0", optional = true }
 
+[target.'cfg(any(target_os = "linux", target_os = "macos"))'.dependencies]
+kairo-ecs-adios2 = { path = "../kairo-ecs-adios2", version = "0.1.0", features = ["native"], optional = true }
+rustix = { version = "1.1.6", features = ["fs"], optional = true }
+
 [features]
 default = []
 # Real from Phase 0: official arrow_schema::Schema parity for EVENT_LOG_FIELDS.
@@ -58,7 +62,7 @@ cohort-native = ["polars-native", "dep:kairo-ecs-rng"]
 parquet-native = []
 parallel-io = []
 hdf5 = ["parallel-io", "dep:hdf5-metno"]
-adios2 = ["parallel-io"]
+adios2 = ["parallel-io", "dep:kairo-ecs-adios2", "dep:rustix"]
 
 [dev-dependencies]
 # Track 70 Phase 3 Task 3.3: run-output publication benchmarks. Criterion is

@@ -238,6 +238,8 @@ jobs:
           mpiexec --version
       - name: Prepare pinned HDF5 library
         run: bash scripts/prepare-hdf5-ci.sh
+      - name: Prepare pinned ADIOS2 library
+        run: bash scripts/prepare-adios2-ci.sh
       - name: Validate release checklist
         env:
           DRY_RUN: ${{ github.event.inputs.dry_run }}
@@ -258,7 +260,8 @@ jobs:
           cargo metadata --no-deps --format-version 1 >/dev/null
           python packaging/scripts/build_release_manifest.py --check
           cargo test --workspace --all-features --no-run
-          cargo package --allow-dirty --workspace
+          cargo package --allow-dirty --workspace \
+            --config 'patch.crates-io.kairo-ecs-adios2.path = "crates/kairo-ecs-adios2"'
           cargo publish --dry-run --workspace
       - name: Build release manifest
         env:

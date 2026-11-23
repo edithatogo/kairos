@@ -53,7 +53,7 @@
       "fallback": "GitHub Releases source archive",
       "dry_run_commands": [
         "cargo metadata --no-deps --format-version 1",
-        "cargo package --allow-dirty --workspace"
+        "cargo package --allow-dirty --workspace --config 'patch.crates-io.kairo-ecs-adios2.path = \"crates/kairo-ecs-adios2\"'"
       ],
       "manifests": [
         {
@@ -63,6 +63,10 @@
         {
           "package": "kairo-ecs-abm",
           "path": "crates/kairo-ecs-abm/Cargo.toml"
+        },
+        {
+          "package": "kairo-ecs-adios2",
+          "path": "crates/kairo-ecs-adios2/Cargo.toml"
         },
         {
           "package": "kairo-ecs-arrow",

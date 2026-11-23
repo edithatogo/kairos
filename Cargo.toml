@@ -12,6 +12,7 @@ members = [
   "crates/kairo-ecs-diplomat",
   "crates/kairo-ecs-arrow",
   "crates/kairo-ecs-arrow-ffi",
+  "crates/kairo-ecs-adios2",
   "crates/kairo-ecs-fs-guard",
   "crates/kairo-ecs-bench",
   "crates/kairo-ecs-cli",
