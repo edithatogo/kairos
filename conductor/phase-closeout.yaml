@@ -908,7 +908,7 @@ entries:
     git_status: "contract-baseline implementation and evidence commits pushed; strict git closeout passed"
     commit_sha: "245a5ccaed7ae9a522e1fb887511232f6bed73d2"
     pushed_ref: "origin/codex/kairos-hpc-parity-wave"
-    next_phase_decision: "Track 51 is In Progress. Native HDF5 and serial ADIOS2 files passed local vendor readback. Production Arrow batches, representative engine restart, parallel filesystem evidence, throughput benchmarks, and phase closeout remain required."
+    next_phase_decision: "Track 51 is In Progress. Native Arrow IPC passed independent readback. The service queue restarted from HDF5 and serial ADIOS2, and local contiguous publication was measured. Live parallel filesystem evidence and full phase closeout remain required."
   - track_id: "52"
     phase: "native-gpu-acceleration-persistent-device-memory"
     state: closed
@@ -926,7 +926,7 @@ entries:
     git_status: "Track 52 native Metal and CUDA bridge implementations merged into main; closeout validation clean"
     commit_sha: "6b22fe3ec2ca30e3eca8735d88cfbc944b39241b"
     pushed_ref: "origin/main"
-    next_phase_decision: "Track 52 is Completed; ready for archive."
+    next_phase_decision: "Track 52 is In Progress for broader device acceptance. The closed record preserves the initial implementation phase. Apple Metal and the Windows RTX 4060 verify particle and additive DES batches, with additional backends and live hardware benchmark qualification open."
   - track_id: "53"
     phase: "fmu-cosimulation-master-runtime"
     state: closed
@@ -979,7 +979,7 @@ entries:
     git_status: "scaling certification harness and report merged via PR #279; track archived as Done"
     commit_sha: "3fcd6771ef31591bf9eb49990956d85cb358431a"
     pushed_ref: "origin/main"
-    next_phase_decision: "Track 55 is Done; track archived."
+    next_phase_decision: "Track 55 is In Progress for integrated live scaling. The archived contract phase provides the harness. Weak and strong scaling certification each require raw results from the target runtime."
   - track_id: "56"
     phase: "phase-1-charter-and-claim-boundary-closeout"
     state: closed

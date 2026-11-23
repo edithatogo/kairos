@@ -8,8 +8,11 @@
 | Local CPU parity evidence manifest | `node scripts/validation/validate-hpc-parity-evidence.mjs` | Phase 4 scaffold evidence |
 | Live-template blocker guard | `node scripts/validation/validate-hpc-live-template-blockers.mjs` | Review and Done |
 | Free compute route boundary | `node scripts/validation/validate-free-compute-routes.mjs` | Review |
-| Real wgpu dispatch | `rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-gpu --features wgpu-backend --test real_wgpu_device` | Done |
-| Real CUDA dispatch | `rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-gpu --features cuda-backend --test real_cuda_device` | Done |
+| Real Metal dispatch | On Apple Metal with Rust 1.99.1, `cargo test --locked -p kairo-ecs-gpu --features wgpu-backend --test maturity_device_model --test native_metal_des` | Local native model qualification |
+| Real CUDA dispatch | On the Windows CUDA host with Rust 1.99.1, `cargo test --locked -p kairo-ecs-gpu --features cuda-backend --test cuda_native_model -- --ignored --nocapture` | Local native model qualification |
+| CUDA bridge recovery | `cargo test --locked -p kairo-ecs-cuda --features cuda-12000 --lib -- --ignored --nocapture` | Native particle recovery |
+| Matched CUDA timing | `cargo test --locked -p kairo-ecs-gpu --features cuda-backend --release --test cuda_mixed_profile -- --ignored --nocapture` | Local timing and replay evidence |
+| CUDA device trace | [Nsight capture and copy counts](../../execution/scientific/s11-cuda-completion.md#device-kernel-and-copy-trace) | Local kernel and transfer evidence |
 | Live wgpu hardware manifest | Completed `conductor/hpc-evidence/manifests/track52-live-gpu-hardware-template.json` copy promoted to `evidence_class: live-hpc`, with raw artifact checksum, adapter/device metadata, and `waiver.status: none`; validate with `node scripts/validation/validate-hpc-parity-evidence.mjs` | Done |
 | Live CUDA hardware manifest | Completed `conductor/hpc-evidence/manifests/track52-live-gpu-hardware-template.json` copy promoted to `evidence_class: live-hpc`, with raw artifact checksum, CUDA device/runtime metadata, and `waiver.status: none`; validate with `node scripts/validation/validate-hpc-parity-evidence.mjs` | Done |
 | Full workspace | `rustup run stable-x86_64-pc-windows-gnu cargo test --workspace --all-features` | Phase closeout |

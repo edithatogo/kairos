@@ -58,10 +58,10 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 49 | Distributed MPI/gRPC State Synchronization | Done | `distributed-agent + pdes-agent` | Actual MPI2/4 six cases and Mac/Colab three cases accepted; see native-runtime-qualification-20261103.md. NAS/cluster/scaling remain unqualified. |
 | 50 | NUMA Topology, Affinity & HPC Memory Lifecycle | In Progress | `core-scheduler-agent + ecs-agent + ffi-agent` | See `conductor/tracks/50-*/spec.md` |
 | 51 | Parallel I/O, Arrow Record Batches & Checkpoint Export | In Progress | `arrow-agent + cloud-agent + performance-agent` | See `conductor/tracks/51-*/spec.md` |
-| 52 | Native GPU Acceleration with Persistent Device Memory | Done | `gpu-compute-agent + performance-agent` | See `conductor/tracks/52-*/spec.md` |
+| 52 | Native GPU Acceleration with Persistent Device Memory | In Progress | `gpu-compute-agent + performance-agent` | See `conductor/tracks/52-*/spec.md` |
 | 53 | FMI 2/3 Co-Simulation Master Runtime | Done | `fmi-agent + ffi-agent + interop-agent` | See `conductor/tracks/53-*/spec.md` |
 | 54 | Slurm, Container & Cloud HPC Runtime Acceptance | Done | `cloud-agent + distributed-agent + gpu-compute-agent + release-agent` | See `conductor/tracks/54-*/spec.md` |
-| 55 | End-to-End Weak/Strong Scaling Certification | Done | `performance-agent + benchmark-agent + cloud-agent + release-agent` | See `conductor/tracks/55-*/spec.md` |
+| 55 | End-to-End Weak/Strong Scaling Certification | In Progress | `performance-agent + benchmark-agent + cloud-agent + release-agent` | See `conductor/tracks/55-*/spec.md` |
 | 56 | Game Theory Ontology Wave Charter and Evidence Gates | Done | `ontology-agent + game-theory-agent + wave-manager-agent` | See `conductor/tracks/56-*/spec.md` |
 | 57 | Open Game Theory Ontology Subrepo and Schema Ingestion | Done | `ontology-agent + rust-agent` | See `conductor/tracks/57-*/spec.md` |
 | 58 | Ontology-to-Rust Component Code Generation | Done | `ontology-agent + ecs-agent + api-governance-agent` | See `conductor/tracks/58-*/spec.md` |

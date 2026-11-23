@@ -8,8 +8,9 @@ Slurm/cloud runtime scenarios.
 
 ## Maturity
 
-Spec Approved planning track. No weak or strong scaling certification is
-claimed until upstream Tracks 47-54 close and this track records raw evidence.
+In Progress. The scenario and evidence harness is merged. Weak and strong
+scaling certification requires the upstream runtime gates and raw results
+from the target hardware and scheduler.
 
 ## Inputs
 

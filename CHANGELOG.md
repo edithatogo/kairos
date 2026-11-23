@@ -16,6 +16,8 @@ Format:
 
 ### Added
 
+- The opt-in `kairo-ecs-gpu` hardware-only CUDA constructor runs seeded particle and additive DES steps using resident buffers. The bridge reports the selected device's driver properties and completes copies before returning state. [ADR 0024](docs/adr/0024-native-cuda-mixed-model.md).
+
 - The `kairo-ecs-gpu` hardware-only Apple Metal backend runs additive DES batches on resident entity buffers alongside particle steps. CPU and device batches use explicit 32-bit wrapping arithmetic. [ADR 0023](docs/adr/0023-native-metal-additive-des.md).
 
 - `kairo-ecs-arrow` adds native Arrow IPC streams for event logs, world snapshots and checkpoint metadata with contiguous byte receipts. Enable `parallel-io` and `polars-native`. [ADR 0022](docs/adr/0022-native-parallel-arrow-ipc.md).

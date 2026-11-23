@@ -1,5 +1,18 @@
 # Track 52 Handoff
 
+## Windows CUDA particle and DES
+
+Chat `01a1fd18-51c7-7963-a3cc-d262d54582ba` owns the CUDA slice in the
+Kairos closeout worktree on `codex/native-cuda-model-20261123`. The Windows
+RTX 4060 ran the hardware-only particle and additive DES path with verified
+driver properties, explicit readback, and matched integer and motion outputs.
+The timed largest case used 65,536 particles and entities and eight batches
+of 65,536 events. CUDA finished first in all twelve pairs for that case.
+The CPU finished first in both smaller cases. Integrated scaling and other
+hardware configurations remain open.
+[API contract](../../../docs/adr/0024-native-cuda-mixed-model.md) ·
+[Native results](../../execution/scientific/s11-cuda-completion.md).
+
 ## Apple Metal additive DES
 
 Chat `01a1fd18-51c7-7963-a3cc-d262d54582ba` owns this slice in the Kairos

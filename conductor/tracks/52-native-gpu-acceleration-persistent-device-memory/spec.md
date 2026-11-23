@@ -8,8 +8,9 @@ evidence.
 
 ## Maturity
 
-Spec Approved planning track. The current implementation remains the Track 32
-and Track 33 fallback/placeholder surfaces until real hardware proof closes.
+In Progress. Apple Metal and a Windows RTX 4060 run particle and additive
+DES batches with device residency. Broader backend and live hardware
+benchmark qualification remains open.
 
 ## Inputs
 

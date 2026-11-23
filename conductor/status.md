@@ -39,6 +39,17 @@ serial-to-pool crossover was between the 2,048 and 8,192 mixes-per-event
 samples. The paired runs checked ordered state and counters.
 [Method and raw measurements](tracks/111-measured-performance/handoff.md#matched-ring-and-worker-reuse).
 
+## Native I/O and hardware evidence — 23 November 2026
+
+Track 51 has native Arrow IPC, local write measurements and a self-contained
+HDF5/BP5 service-queue restart. Track 52 has verified particle and additive DES
+execution on Apple Metal and an RTX 4060. Tracks 51, 52 and 55 are In Progress.
+Additional device platforms, live parallel storage and integrated weak/strong
+scaling still require target evidence.
+[Native I/O results](execution/scientific/s14-completion.md) ·
+[Metal results](execution/scientific/s11-completion.md) ·
+[CUDA results](execution/scientific/s11-cuda-completion.md).
+
 ## Historical status records
 
 ## Current Track48/49 acceptance — 3 November 2026
