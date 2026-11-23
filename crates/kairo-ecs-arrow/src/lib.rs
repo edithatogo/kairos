@@ -14,6 +14,10 @@ pub mod native_schema;
 #[cfg(feature = "polars-native")]
 pub mod polars_interop;
 
+/// Native Arrow IPC batches and atomic publication for parallel-I/O outputs.
+#[cfg(all(feature = "parallel-io", feature = "polars-native"))]
+pub mod native_ipc;
+
 /// Track 70 Phase 2: owned Arrow C Data Interface exports (populated arrays
 /// and bounded multi-batch streams) for Schema v2 event logs. Same Polars
 /// isolation as `polars_interop`: default-off, absent from minimal-core and
@@ -519,12 +523,15 @@ impl ParallelIoRecordBatch {
         })
     }
 
+    /// Encode the legacy event-log text contract used by v1 checkpoint manifests.
+    /// The native IPC writer is available with `polars-native` and `parallel-io`.
     pub fn to_record_batch_bytes(&self) -> Vec<u8> {
         EventLogBatch::new(self.records.clone())
             .expect("parallel I/O records are validated at construction")
             .to_smoke_bytes()
     }
 
+    /// Write the legacy text contract with a contiguous byte-range receipt.
     pub fn write_contiguous_blocks<W: std::io::Write>(
         &self,
         mut writer: W,
@@ -545,6 +552,7 @@ impl ParallelIoRecordBatch {
         })
     }
 
+    /// Atomically publish the legacy text contract.
     pub fn write_contiguous_blocks_to_path(
         &self,
         path: impl AsRef<std::path::Path>,
@@ -1146,7 +1154,13 @@ fn stable_hash(value: &str) -> u64 {
 /// (FNV-1a 64), shared with the run-output publication module's file
 /// attestation. Cryptographic digests are Track 93's qualification scope.
 pub(crate) fn stable_hash_bytes(bytes: &[u8]) -> u64 {
-    bytes.iter().fold(0xcbf29ce484222325, |hash, byte| {
+    extend_stable_hash(FNV_OFFSET_BASIS, bytes)
+}
+
+const FNV_OFFSET_BASIS: u64 = 0xcbf29ce484222325;
+
+fn extend_stable_hash(initial: u64, bytes: &[u8]) -> u64 {
+    bytes.iter().fold(initial, |hash, byte| {
         (hash ^ u64::from(*byte)).wrapping_mul(0x100000001b3)
     })
 }

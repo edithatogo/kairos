@@ -8,6 +8,14 @@ The local evidence record is `conductor/hpc-evidence/manifests/track51-local-arr
 
 This evidence is `scaffold` class only. It must not be used for claims about native Apache Arrow arrays, native HDF5 or ADIOS2 files, MPI-I/O, Lustre, GPFS, or parallel filesystem throughput.
 
+## Native Arrow streams
+
+With `parallel-io` and `polars-native`, `NativeIpcBatch` creates typed event
+logs, world snapshots and checkpoint metadata. It publishes an Arrow IPC
+stream and returns the physical byte length, checksum and contiguous block
+range. The existing v1 event and checkpoint contract methods retain their
+original text layout. [Stream schemas and write receipts](../adr/0022-native-parallel-arrow-ipc.md).
+
 ## Checkpoint replacement and recovery
 
 The v1 local checkpoint writer validates that its bytes decode to the exact

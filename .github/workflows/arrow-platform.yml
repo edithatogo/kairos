@@ -76,7 +76,8 @@ jobs:
         run: cargo test --locked -p kairo-ecs-fs-guard
       - name: Arrow publication, recovery and IPC checks
         run: >-
-          cargo test --locked -p kairo-ecs-arrow --features polars-native
+          cargo test --locked -p kairo-ecs-arrow --features polars-native,parallel-io
+          --test native_parallel_ipc
           --test relative_atomic_publication
           --test track70_phase3_durable_publication
           --test track70_phase3_durability
@@ -99,7 +100,8 @@ jobs:
       - name: Focused lint checks
         run: >-
           cargo clippy --locked -p kairo-ecs-arrow -p kairo-ecs-arrow-ffi -p kairo-ecs-fs-guard -p kairo-ecs-ffi
-          --features kairo-ecs-arrow/polars-native,kairo-ecs-arrow-ffi/native-data,kairo-ecs-ffi/native-data --all-targets -- -D warnings
+          --features kairo-ecs-arrow/polars-native,kairo-ecs-arrow/parallel-io,kairo-ecs-arrow-ffi/native-data,kairo-ecs-ffi/native-data
+          --all-targets -- -D warnings
       - name: Create source packages
         # Cargo omits private packages from its temporary registry overlay.
         run: >-

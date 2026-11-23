@@ -217,6 +217,8 @@ fn bench_concurrent_publication(c: &mut Criterion) {
         );
     });
     group.finish();
+    #[cfg(feature = "parallel-io")]
+    bench_contiguous_ipc(c);
 }
 
 fn completed_large_run() -> (PathBuf, PathBuf) {
@@ -232,6 +234,66 @@ fn completed_large_run() -> (PathBuf, PathBuf) {
         .collect();
     publish(&parent, &config(LARGE_ROWS_PER_BATCH, 1), &batches);
     (parent, run_dir)
+}
+
+#[cfg(feature = "parallel-io")]
+fn bench_contiguous_ipc(c: &mut Criterion) {
+    use kairo_ecs_arrow::native_ipc::NativeIpcBatch;
+    use kairo_ecs_arrow::{ParallelIoRecordBatch, SCHEMA_VERSION};
+
+    const WRITERS: u64 = 4;
+    const ROWS_PER_STREAM: u64 = 16_384;
+    let batches: Vec<_> = (0..WRITERS)
+        .map(|writer| {
+            let start = writer * ROWS_PER_STREAM;
+            let mut records = records(start..start + ROWS_PER_STREAM, 512);
+            for record in &mut records {
+                record.schema_version = SCHEMA_VERSION;
+            }
+            let batch = ParallelIoRecordBatch::from_records(records).expect("validated event rows");
+            NativeIpcBatch::from_event_log(&batch).expect("native IPC batch")
+        })
+        .collect();
+    let expected: Vec<_> = batches
+        .iter()
+        .map(|batch| {
+            batch
+                .write_contiguous(std::io::sink())
+                .expect("encode reference stream")
+        })
+        .collect();
+    let write = |idx: usize, batch: &NativeIpcBatch, dir: &Path| {
+        let receipt = batch
+            .write_contiguous_to_path(dir.join(format!("part-{idx}.arrows")))
+            .expect("publish IPC stream");
+        assert_eq!(receipt, expected[idx]);
+        black_box(receipt);
+    };
+    let mut group = c.benchmark_group("contiguous_ipc_publication");
+    group.throughput(Throughput::Elements(WRITERS * ROWS_PER_STREAM));
+    for (name, parallel) in [("serial", false), ("parallel_4", true)] {
+        group.bench_function(name, |b| {
+            b.iter_batched_ref(
+                || tempfile::tempdir().expect("private benchmark directory"),
+                |dir| {
+                    let path = dir.path();
+                    if parallel {
+                        thread::scope(|scope| {
+                            for (idx, batch) in batches.iter().enumerate() {
+                                scope.spawn(move || write(idx, batch, path));
+                            }
+                        });
+                    } else {
+                        for (idx, batch) in batches.iter().enumerate() {
+                            write(idx, batch, path);
+                        }
+                    }
+                },
+                BatchSize::PerIteration,
+            );
+        });
+    }
+    group.finish();
 }
 
 fn bench_validate_completed_run(c: &mut Criterion) {

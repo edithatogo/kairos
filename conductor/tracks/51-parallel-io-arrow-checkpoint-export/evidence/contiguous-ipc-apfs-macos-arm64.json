@@ -1,0 +1,113 @@
+{
+  "source_revision": "79f015a72564ba99376dac01fc9f1298b0de0be5",
+  "cwd": "/Users/doughnut/.codex/worktrees/kairos-ci-closeout/kairos",
+  "command": "cargo bench --locked --offline -p kairo-ecs-arrow --features parallel-io,polars-native --bench run_output -- contiguous_ipc_publication --noplot",
+  "exit_code": 0,
+  "toolchain": {
+    "rust": "1.99.1",
+    "criterion": "0.8.2"
+  },
+  "profile": "Cargo default bench profile, 500ms warm-up, 10 Criterion samples per case",
+  "host": {
+    "arch": "aarch64",
+    "cpu": "Apple M1 Max",
+    "model": "MacBookPro18,4",
+    "ram_bytes": 34359738368
+  },
+  "storage": {
+    "mount": "/Volumes/PortableSSD",
+    "type": "APFS",
+    "writer_ranks": "one local process",
+    "stripe_geometry": null
+  },
+  "workload": {
+    "rows": 65536,
+    "streams_per_trial": 4,
+    "rows_per_stream": 16384,
+    "branches": [
+      "one writer",
+      "four scoped writers"
+    ],
+    "construction": "Fixed input and array construction outside the measurement",
+    "timed": "IPC encoding, hashing, writing, staging-file sync, publication, Unix parent-directory sync and any scoped thread spawn/join",
+    "correctness": "Verify all four physical write receipts against the same pre-encoded references in both cases"
+  },
+  "input_sha256": {
+    "Cargo.lock": "38970a6fe699dafebb720188530d88c022b53fd563bbe0cc9ad5dc7aa4167e07",
+    "crates/kairo-ecs-arrow/benches/run_output.rs": "61164f797e3880fc0dad3f679f966e3e73ad5d01270c3730c3db68785ba663ec",
+    "crates/kairo-ecs-arrow/src/native_ipc.rs": "1b8c2283b31b89843e460d19aa18df9c22f0bbaa6a0b053bb599da0d67753d4a"
+  },
+  "output_log": "/Volumes/PortableSSD/kairos-native-parallel-arrow.J7KJaZ/bench-ipc.log",
+  "output_log_sha256": "6d026c955064630a462ea05a92a5b428346a01f1f2d7395f73a5ced6db59b39c",
+  "criterion_samples_root": "/Volumes/PortableSSD/kairos-native-parallel-arrow.J7KJaZ/target/criterion/contiguous_ipc_publication",
+  "cases": {
+    "serial": {
+      "median_ms": 80.27834375,
+      "median_confidence_interval_ms": [
+        77.8625625,
+        88.38665625
+      ],
+      "criterion_samples": {
+        "sampling_mode": "Flat",
+        "iters": [
+          2.0,
+          2.0,
+          2.0,
+          2.0,
+          2.0,
+          2.0,
+          2.0,
+          2.0,
+          2.0,
+          2.0
+        ],
+        "times": [
+          156169875.0,
+          160909124.0,
+          168575584.0,
+          207243041.0,
+          189158417.0,
+          164388208.0,
+          150341833.0,
+          155280375.0,
+          160204251.0,
+          155749875.0
+        ]
+      }
+    },
+    "parallel_4": {
+      "median_ms": 76.52367366666665,
+      "median_confidence_interval_ms": [
+        74.4660835,
+        82.457028
+      ],
+      "criterion_samples": {
+        "sampling_mode": "Flat",
+        "iters": [
+          3.0,
+          3.0,
+          3.0,
+          3.0,
+          3.0,
+          3.0,
+          3.0,
+          3.0,
+          3.0,
+          3.0
+        ],
+        "times": [
+          254636209.0,
+          279423250.0,
+          233105917.0,
+          194301126.0,
+          224106624.0,
+          224685334.0,
+          247371084.0,
+          226036125.0,
+          235523043.0,
+          222111167.0
+        ]
+      }
+    }
+  }
+}

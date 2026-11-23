@@ -5,7 +5,10 @@
 The adapters write native HDF5 and serial ADIOS2 BP5 checkpoints. Both vendor
 readers checked the physical formats and full-width timestamp fields. The
 v2 checkpoint restarts the scheduler and service model from a single artifact.
-Production Arrow output and live parallel filesystem qualification remain open.
+Native Arrow IPC exports cover the event log, world snapshot and checkpoint
+metadata. Live parallel filesystem qualification remains open.
+The local matched write benchmark covers four 16,384-row IPC streams.
+[Raw samples](evidence/contiguous-ipc-apfs-macos-arm64.json).
 [Native format evidence](../../execution/scientific/s14-completion.md).
 
 ## Acceptance correction — 3 November 2026
@@ -17,7 +20,7 @@ historical records and their maximum tick. The filesystem manifest remains a
 template. The native acceptance checklist tracks the subsequent work.
 
 - [x] CAP-51.2: Implement and independently read native HDF5 and ADIOS2 checkpoints.
-- [ ] CAP-51.3: Qualify real Arrow record batches for the track's specified outputs.
+- [x] CAP-51.3: Qualify real Arrow record batches for the track's specified outputs.
 - [x] CAP-51.4: Prove representative engine restart and final-state parity with the self-contained HDF5 and BP5 service queue.
 - [ ] CAP-51.5: Execute and retain contiguous-write benchmarks and live parallel-filesystem evidence.
 - [ ] CAP-51.6: Complete independent review, exact-source hosted gates and integrator closeout.

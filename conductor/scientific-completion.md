@@ -90,14 +90,15 @@ analytical height, velocity and exact checkpoint replay. The Linux
 OpenModelica case uses an independently compiled model with a time event.
 [Inputs and qualification commands](execution/scientific/s13-completion.md)
 
-## S14 native checkpoint qualification
+## S14 native Arrow and checkpoint qualification
 
 The HDF5 and ADIOS2 adapters write typed native checkpoints and restore the
 complete logical sequence. `h5dump` and `bpls` read the timestamp limbs and
-signed priority from the generated files. The installed HDF5 and BP5 service
-queue cases matched the uninterrupted run's 17 remaining dispatches.
-Additional restart scenarios, production Arrow batches, NUMA and live
-filesystem evidence remain open. [Evidence](execution/scientific/s14-completion.md).
+signed priority. Self-contained HDF5 and BP5 service queue restarts matched
+the uninterrupted run's 228 remaining dispatches and final counters. PyArrow
+independently read the typed IPC event, snapshot and checkpoint metadata
+streams. Additional restart scenarios, NUMA and live filesystem evidence
+remain open. [Evidence](execution/scientific/s14-completion.md).
 
 ## S15 native debugger qualification
 

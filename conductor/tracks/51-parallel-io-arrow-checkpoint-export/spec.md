@@ -8,8 +8,8 @@ validation suitable for Lustre, GPFS, and MPI-I/O environments.
 
 ## Maturity
 
-In Progress. The HDF5 and serial ADIOS2 BP5 formats have passed native reader
-checks. Production Arrow and parallel filesystem qualification remain open.
+In Progress. Native Arrow IPC, HDF5 and serial ADIOS2 BP5 have passed
+independent reader checks. Live parallel filesystem qualification remains open.
 
 ## Inputs
 

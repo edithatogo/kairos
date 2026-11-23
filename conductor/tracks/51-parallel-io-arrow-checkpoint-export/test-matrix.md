@@ -8,6 +8,9 @@ process with an uninterrupted reference.
 | Gate | Command | Required for |
 |---|---|---|
 | Arrow tests | `rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-arrow --features parallel-io` | Implementation |
+| Native Arrow IPC | `cargo test --locked -p kairo-ecs-arrow --features parallel-io,polars-native --test native_parallel_ipc` | Native stream qualification |
+| Independent IPC reader | Set `KAIROS_NATIVE_IPC_DIR` to an existing scratch directory for the native fixture, then run the [PyArrow reader](evidence/verify-native-ipc.py) on that directory | Native stream qualification |
+| Matched contiguous writes | `cargo bench --locked -p kairo-ecs-arrow --features parallel-io,polars-native --bench run_output -- contiguous_ipc_publication --noplot` | Local throughput and physical receipt parity on the selected filesystem |
 | HDF5 native roundtrip | `cargo test --locked -p kairo-ecs-arrow --features hdf5 --test maturity_native_io_format` | Native file qualification |
 | HDF5 independent reader | With `KAIROS_H5DUMP` set, run `cargo test --locked -p kairo-ecs-arrow --features hdf5 --test maturity_native_io_format h5dump -- --ignored --nocapture` | Native file qualification |
 | ADIOS2 native roundtrip | `cargo test --locked -p kairo-ecs-arrow --features adios2 --test maturity_native_adios2` | Native file qualification |
