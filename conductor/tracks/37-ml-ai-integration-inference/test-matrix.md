@@ -7,7 +7,7 @@
 | `kairo-ecs-ml` compiles with `--features tensorrt` | no | yes | yes |
 | `kairo-ecs-ml` compiles with `--features burn` | no | yes | yes |
 | `kairo-ecs-ml` compiles with `--all-features` | yes | yes | yes |
-| ONNX-facing scaffold validates metadata, tensor shapes, and backend-not-configured status without runtime dependencies | yes | yes | yes |
+| Featureless ONNX descriptor validates metadata, tensor shapes, and unavailable status | yes | yes | yes |
 | Real ONNX model loads and infers inside simulation tick | no | yes | yes |
 | Real ONNX inference does not deadlock under 1000 consecutive ticks | no | yes | yes |
 | Consecutive inference runs without memory leak | no | yes | yes |
@@ -26,9 +26,11 @@
 
 **Current policy (7 November 2026):** [capability-scoped release gates](../../release-gates.md) supersede the blanket beta/1.0 feature inclusion above. All positive ML/Gym checks remain mandatory before that capability can be advertised. The Python host environment is retired immediately; its current tests prove explicit unavailability only. Real native Gym support remains open in Tracks 109/110.
 
-Alpha scope note: current `OrtSession` is a dependency-free contract double. It
-must not be reported as evidence that ONNX Runtime, TensorRT, Burn, or surrogate
-accuracy validation has been integrated.
+The optional ONNX CPU test uses an installed runtime, static float32 ports
+and a synthetic 1,000-tick decay model. The broader numerical, provider,
+training and long-run gates apply to their corresponding capabilities.
+[Native test evidence](../../execution/scientific/s09-completion.md) ·
+[Queue adapter evidence](../../execution/scientific/s10-completion.md).
 
 Local aggregate validator:
 
@@ -36,7 +38,7 @@ Local aggregate validator:
 powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/36-streaming-real-time-processing/validate-track36-40.ps1 -SkipCargoTests
 ```
 
-This validator checks the dependency-free ML crate, the `kairo_gym` contract
+This validator checks the ML crate without optional features, the `kairo_gym` contract
 tests with `PYTHONPATH` set to the package source tree, and bounded-claim docs.
 ## Phase closeout gate
 

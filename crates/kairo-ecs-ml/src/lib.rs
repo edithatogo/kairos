@@ -7,6 +7,8 @@ use std::path::Path;
 use std::sync::Arc;
 
 mod affine;
+#[cfg(all(feature = "onnx", any(target_os = "linux", target_os = "macos")))]
+mod onnx_runtime;
 mod vecenv;
 pub use affine::AffineSurrogate;
 pub use vecenv::{ParallelVecEnv, QueueEnvironment, QueueObservation, QueueStep};
@@ -156,11 +158,13 @@ impl Default for InferenceTickHook {
 
 const ONNX_UNAVAILABLE: &str = "no qualified ONNX Runtime is configured";
 
-/// ONNX model metadata and bytes for an unavailable execution backend.
+/// ONNX model metadata, bytes and an optional native CPU session.
 #[derive(Clone, Debug)]
 pub struct OrtSession {
     metadata: ModelMetadata,
-    model_bytes: Vec<u8>,
+    model_bytes: Arc<[u8]>,
+    #[cfg(all(feature = "onnx", any(target_os = "linux", target_os = "macos")))]
+    runtime: Option<onnx_runtime::CpuSession>,
 }
 
 impl OrtSession {
@@ -186,7 +190,9 @@ impl OrtSession {
 
         Ok(Self {
             metadata,
-            model_bytes,
+            model_bytes: model_bytes.into(),
+            #[cfg(all(feature = "onnx", any(target_os = "linux", target_os = "macos")))]
+            runtime: None,
         })
     }
 
@@ -211,9 +217,28 @@ impl OrtSession {
         Self::from_bytes(name, "unversioned", bytes, input_shape, output_shape)
     }
 
-    /// The model descriptor has no executable backend in this build.
+    /// Bind a trusted ONNX model to the application's initialized environment.
+    ///
+    /// The session uses the CPU provider and retains the environment.
+    /// The model must declare one fixed-shape `f32` input and output matching
+    /// its metadata.
+    #[cfg(all(feature = "onnx", any(target_os = "linux", target_os = "macos")))]
+    pub fn with_cpu_runtime(mut self, environment: &onnx::Environment) -> Result<Self, MlError> {
+        self.runtime = Some(onnx_runtime::CpuSession::open(
+            environment,
+            &self.model_bytes,
+            &self.metadata,
+        )?);
+        Ok(self)
+    }
+
+    /// Evaluate the model using its configured backend.
     pub fn run(&self, input: &Tensor) -> Result<Tensor, MlError> {
         self.validate_input(input)?;
+        #[cfg(all(feature = "onnx", any(target_os = "linux", target_os = "macos")))]
+        if let Some(runtime) = &self.runtime {
+            return runtime.run(input, &self.metadata.output_shape);
+        }
         Err(MlError::new(ONNX_UNAVAILABLE))
     }
 
@@ -234,6 +259,12 @@ impl OrtSession {
     }
 
     pub fn runtime_status(&self) -> BackendStatus {
+        #[cfg(all(feature = "onnx", any(target_os = "linux", target_os = "macos")))]
+        if self.runtime.is_some() {
+            return BackendStatus::Configured {
+                backend: Backend::OnnxRuntime,
+            };
+        }
         BackendStatus::NotConfigured {
             backend: Backend::OnnxRuntime,
             reason: ONNX_UNAVAILABLE,
@@ -364,6 +395,10 @@ pub enum BackendStatus {
     },
 }
 
+/// Check for a process-wide default backend.
+///
+/// ONNX environments are supplied per session. Use [`OrtSession::runtime_status`]
+/// to check whether a specific model is bound to one.
 pub fn ensure_backend_configured(backend: Backend) -> Result<(), MlError> {
     Err(MlError::new(format!(
         "{backend:?} backend is not configured in the dependency-free Track 37 scaffold"
@@ -373,6 +408,9 @@ pub fn ensure_backend_configured(backend: Backend) -> Result<(), MlError> {
 #[cfg(feature = "onnx")]
 pub mod onnx {
     pub type Session = crate::OrtSession;
+
+    #[cfg(any(target_os = "linux", target_os = "macos"))]
+    pub use ort::{environment::Environment, init_from};
 }
 
 #[cfg(feature = "tensorrt")]
