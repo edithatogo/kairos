@@ -11,6 +11,10 @@ confirmed the unsigned byte dataset and v2 format identifiers.
 [Contract](../../../docs/adr/0021-native-engine-checkpoint.md) ·
 [Local receipt](evidence/native-engine-restart-macos-arm64.json).
 
+The Track 13 Arrow qualification packages Core in the same temporary source
+registry as Arrow. The extracted source check compiles the engine feature
+alongside existing native consumers.
+
 ## Native ADIOS2 checkpoint slice — 23 November 2026
 
 Chat `01a1fd18-51c7-7963-a3cc-d262d54582ba` owns the Kairos closeout worktree
