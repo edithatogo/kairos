@@ -260,9 +260,13 @@ jobs:
           cargo metadata --no-deps --format-version 1 >/dev/null
           python packaging/scripts/build_release_manifest.py --check
           cargo test --workspace --all-features --no-run
-          cargo package --allow-dirty --workspace \
+          package_sources=(
             --config 'patch.crates-io.kairo-ecs-adios2.path = "crates/kairo-ecs-adios2"'
-          cargo publish --dry-run --workspace
+            --config 'patch.crates-io.kairo-ecs-arrow.path = "crates/kairo-ecs-arrow"'
+            --config 'patch.crates-io.kairo-ecs-arrow-ffi.path = "crates/kairo-ecs-arrow-ffi"'
+          )
+          cargo package --allow-dirty --workspace "${package_sources[@]}"
+          cargo publish --dry-run --workspace "${package_sources[@]}"
       - name: Build release manifest
         env:
           RELEASE_VERSION: ${{ github.event.inputs.version }}

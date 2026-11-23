@@ -153,3 +153,34 @@ reader cases use separate commands. The recorded parity uses a local volume
 and the service model's exact schema.
 [Source and artifact hashes](../../tracks/51-parallel-io-arrow-checkpoint-export/evidence/native-engine-restart-macos-arm64.json) ·
 [Native checkpoint contract](../../../docs/adr/0021-native-engine-checkpoint.md).
+
+## Bidirectional macOS and Linux engine restart
+
+A macOS ARM64 writer and a Linux x86-64 writer each saved the same service
+queue in HDF5 and BP5 at source `ca2d11de1aa69d727b5174d721ce6fc40c95e369`.
+The readers in both directions verified the transferred file hashes, started a
+fresh process for each format and reproduced all 228 suffix dispatches. Both
+formats matched both uninterrupted references byte for byte, including 44
+completed jobs, 84 expirations, 41 cancellations and the next RNG draw.
+Independent `h5dump` and `bpls` invocations read the imported engine state.
+
+Both hosts used Rust 1.99.1, HDF5 2.2.0 and ADIOS2 2.12.1. These runs covered
+APFS on macOS and tmpfs in a native Linux container. The receipt records the
+build and replay commands, archive hashes, filesystem scope and exact counters.
+[Cross-host receipt](../../tracks/51-parallel-io-arrow-checkpoint-export/evidence/engine-restart-macos-linux.json).
+
+## Cross-host staged resource restart
+
+The staged allocator fixture saved the scheduler, model and RNG state with
+an active two-unit grant, a two-unit request at the head of the queue and
+a one-unit request behind it. HDF5 and BP5 each restored that cut on macOS
+ARM64 and Linux x86-64 after receiving the other host's checkpoint. The tests
+matched both uninterrupted references byte for byte, including three
+occupancy intervals, 13 occupied unit-ticks and the next RNG draw.
+`h5dump` and `bpls` each read the imported `engine_state`.
+
+The first BP5 transfer encountered AppleDouble sidecar files added by macOS
+`tar`. The Linux importer reported the unexpected BP5 directory entries.
+Packaging with `COPYFILE_DISABLE=1` omitted those files and preserved each
+checkpoint member's digest across the transfer.
+[Staged restart receipt](../../tracks/51-parallel-io-arrow-checkpoint-export/evidence/staged-engine-restart-macos-linux.json).

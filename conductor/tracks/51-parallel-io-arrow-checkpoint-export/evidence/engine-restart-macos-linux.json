@@ -1,0 +1,106 @@
+{
+  "scope": "Bidirectional transfer and fresh-process restart of the existing service-queue model",
+  "source_commit": "ca2d11de1aa69d727b5174d721ce6fc40c95e369",
+  "source_archive_sha256": "030809f1b61af6db1e2c8712a6672cb56ceac22782c667cf51a7f062292dda31",
+  "features": [
+    "engine-checkpoint",
+    "hdf5",
+    "adios2"
+  ],
+  "build": "cargo test --locked -p kairo-ecs-arrow --features engine-checkpoint,hdf5,adios2 --test engine_checkpoint_restart --no-run",
+  "test": "KAIRO_ENGINE_TEST_MODE=<reference|write|resume> KAIRO_ENGINE_TEST_FORMAT=<hdf5|adios2> KAIRO_ENGINE_TEST_PATH=<artifact-path> <test-exe> --exact checkpoint_process --nocapture",
+  "mac": {
+    "host": "macOS ARM64 Apple M1 Max",
+    "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+    "hdf5": "h5dump: Version 2.2.0",
+    "adios2": "2.12.1",
+    "binary_sha256": "dcfc3b85925affeb29d4ee4bbe23e0d024144a6122ae7f5cbc63748a040b4f4e",
+    "artifact_archive_sha256": "a26afb115f5c039e707750fc4c5364bc5f935779c832797be7f21ab84b2836e9",
+    "filesystem": "APFS"
+  },
+  "linux": {
+    "host": "Linux x86-64 NAS, native architecture Docker container",
+    "image": "rust:1.99.1-trixie@sha256:3ddd9771c00ed2c214d75ba497ad28691ebeaf2279476068dd191cf39b4be033",
+    "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+    "hdf5": "h5dump: Version 2.2.0",
+    "adios2": "2.12.1",
+    "binary_sha256": "809367d6396a1b1968b6cff09ea6e6dda718d619261037741621408af0affd98",
+    "artifact_archive_sha256": "da01ebce4f99bd2efb5003130d6ff3f175d7e6487a7570d41d14a47c59745536",
+    "filesystem": "tmpfs"
+  },
+  "cases": {
+    "hdf5": {
+      "reference_mac_and_linux_equal": true,
+      "mac_to_linux_resume_matches_reference": true,
+      "linux_to_mac_resume_matches_reference": true,
+      "suffix_dispatches_per_run": 228,
+      "complete_result_sha256": "b55ac18a3f4cc1384cf744afe316a339d0fe7d4ed13148881e5625cfb1625f3b",
+      "final_model": {
+        "completed": 44,
+        "expired": 84,
+        "active": 0,
+        "waiting": 0,
+        "rng_word_position": 44
+      },
+      "scheduler": {
+        "tick": 18446744073709551749,
+        "scheduled": 297,
+        "dispatched": 256,
+        "cancelled": 41,
+        "pending": 0
+      },
+      "next_rng_u64": 17380526180340474709,
+      "mac_checkpoint_files_sha256": {
+        "hdf5": "42fb5be6b011955bf51ff1926c581c2272e44132f217e6ffe30d90948e4cecba"
+      },
+      "linux_checkpoint_files_sha256": {
+        "hdf5": "24a6932a67bb5ca6bff86d11105b7a9a751696caadc6abd61e7341c55f6ef961"
+      },
+      "native_layout_sha256": {
+        "mac_reads_linux": "62be6892c7a645247ee55a333cdac41c0d6ee556ccf96930a2014a2ed38f9178",
+        "linux_reads_mac": "2f8c09a1dc3b0934163c255295ddbdd003188b7ac489353ccc641e64aa62c442"
+      }
+    },
+    "adios2": {
+      "reference_mac_and_linux_equal": true,
+      "mac_to_linux_resume_matches_reference": true,
+      "linux_to_mac_resume_matches_reference": true,
+      "suffix_dispatches_per_run": 228,
+      "complete_result_sha256": "b55ac18a3f4cc1384cf744afe316a339d0fe7d4ed13148881e5625cfb1625f3b",
+      "final_model": {
+        "completed": 44,
+        "expired": 84,
+        "active": 0,
+        "waiting": 0,
+        "rng_word_position": 44
+      },
+      "scheduler": {
+        "tick": 18446744073709551749,
+        "scheduled": 297,
+        "dispatched": 256,
+        "cancelled": 41,
+        "pending": 0
+      },
+      "next_rng_u64": 17380526180340474709,
+      "mac_checkpoint_files_sha256": {
+        "data.0": "ddc597e2d098b2f50a53592157942680ec2506f0a77d7e9ed580eb648d87e25c",
+        "md.0": "02f0ebdef682e2f0d3f79546449e8e19ef2b63a74db1a669178c798b5980dc4a",
+        "md.idx": "fdf9dfe5a6e7b1d92041d931c274695eb64511c0cd1241584bba7076bcda8529",
+        "mmd.0": "d9b6936a1a8551307ee04bd05fe683e59ff58b1ae2ca2af9f71b724b0d11b63d",
+        "profiling.json": "34837ef6effad95586d7fe858f730834135e739e4584cdd550eefc2463084138"
+      },
+      "linux_checkpoint_files_sha256": {
+        "data.0": "ddc597e2d098b2f50a53592157942680ec2506f0a77d7e9ed580eb648d87e25c",
+        "md.0": "02f0ebdef682e2f0d3f79546449e8e19ef2b63a74db1a669178c798b5980dc4a",
+        "md.idx": "fdf9dfe5a6e7b1d92041d931c274695eb64511c0cd1241584bba7076bcda8529",
+        "mmd.0": "d9b6936a1a8551307ee04bd05fe683e59ff58b1ae2ca2af9f71b724b0d11b63d",
+        "profiling.json": "e673ac023347cdeb4d97803c118ce3c2bd7dab911526eb167732546c981e6c4b"
+      },
+      "native_layout_sha256": {
+        "mac_reads_linux": "e67026133c99f8438f9d9f523207045896ae3cf4116f947f04f501c9b4402222",
+        "linux_reads_mac": "e67026133c99f8438f9d9f523207045896ae3cf4116f947f04f501c9b4402222"
+      }
+    }
+  },
+  "container_terminal": true
+}

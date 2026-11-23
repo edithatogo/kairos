@@ -1,0 +1,105 @@
+{
+  "scope": "Fresh-process restart of a staged resource allocator, scheduler and RNG after bidirectional checkpoint transfer",
+  "source_commit": "e06e476a4becab9fdafb7c9652dc2a1e53c266fd",
+  "source_archive_sha256": "2d5ea3278e896ec8b52283844e84d8f75b41af889b1a6334561bf4fe1c7a2152",
+  "fixture_sha256": "0209ef10708a8572c9916b1098934cdcca0d8dbc4b4ff0fa23a8e59a792ec909",
+  "seed": 20261124,
+  "build": "cargo test --locked -p kairo-ecs-arrow --features engine-checkpoint,hdf5,adios2 --test staged_checkpoint_restart --no-run",
+  "run": "KAIRO_STAGED_RESTART_ROLE=<reference|write|resume> KAIRO_STAGED_RESTART_FORMAT=<hdf5|adios2> KAIRO_STAGED_RESTART_PATH=<checkpoint> <test-exe> --exact staged_checkpoint_process --nocapture",
+  "mac": {
+    "host": "Apple M1 Max, macOS ARM64",
+    "filesystem": "APFS",
+    "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+    "hdf5": "h5dump: Version 2.2.0",
+    "adios2": "2.12.1",
+    "binary_sha256": "4bd8b39120ae2122635857b54552501a284dbc7e0590d04c5ef25b298ca5b8d2",
+    "transfer_archive_sha256": "d693c9ddfe36980fcf59957931fc11eeac2432b98ac5981b9e23f6aaf321ffc2"
+  },
+  "linux": {
+    "host": "x86-64 Linux NAS, native Docker container",
+    "filesystem": "tmpfs",
+    "image": "rust:1.99.1-trixie@sha256:3ddd9771c00ed2c214d75ba497ad28691ebeaf2279476068dd191cf39b4be033",
+    "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+    "hdf5": "h5dump: Version 2.2.0",
+    "adios2": "2.12.1",
+    "binary_sha256": "060e3694ab1e8db0a0dae14948d9b496b2ea7450af958bcc008a4ec6e8457d00",
+    "transfer_archive_sha256": "be6784db4c260bdaf9e79c9d643970fc332da5df9d28ad63124980a1b26d0669"
+  },
+  "mac_archive_control": {
+    "failure": "unexpected file in serial BP5 directory",
+    "cause": "AppleDouble sidecars added by macOS tar",
+    "original_archive_sha256": "ddae2fdc211aa61d298a1d722fe9eeec4d209e1e6520af008fb955ef422fc4c5",
+    "negative_log_sha256": "6c2cb002f8da7a710f71b535ac08c1dfa90dbadcf254c569ad380b89e9bb05e1",
+    "qualified_packaging": "COPYFILE_DISABLE=1 tar -C mac -czf mac-checkpoints-portable.tar.gz hdf5 adios2 hdf5-reference.jsonline adios2-reference.jsonline"
+  },
+  "formats": {
+    "hdf5": {
+      "uninterrupted_and_restored_results_equal": true,
+      "mac_to_linux_input_hashes_preserved": true,
+      "linux_to_mac_input_hashes_preserved": true,
+      "result_sha256": "ee19e138289b21b8aa9df33f80e8800095617d29d4cd27a6091f8bdd617db2f3",
+      "scheduler_dispatch_sequence": [
+        1,
+        3
+      ],
+      "scheduler_cancellations": 1,
+      "allocator_cancellations": 2,
+      "restored_clock_ticks": 18446744073709551672,
+      "occupied_unit_ticks": 13,
+      "restored_occupancy_intervals": 3,
+      "available_capacity": 3,
+      "rng_word_position": 4,
+      "next_rng_u64": 14788899804660648850,
+      "writer_file_sha256": {
+        "mac": {
+          "hdf5": "aaa599c66a27c190f07bed63825b1cd3e3374e01214577a5f82a2dc29536b6bf"
+        },
+        "linux": {
+          "hdf5": "5cdd69643a4d3de900da3517117d296d16f3c5670b9128f678cd2ea67670dac1"
+        }
+      },
+      "native_layout_sha256": {
+        "mac_reads_linux": "db34ed2abcecab60d7eb18c17157a2a94138570541ad69beae968281d5331797",
+        "linux_reads_mac": "2253c2377dd6e2e018081542ab9833b0223c0438fb9f862551c35f5542324f9f"
+      }
+    },
+    "adios2": {
+      "uninterrupted_and_restored_results_equal": true,
+      "mac_to_linux_input_hashes_preserved": true,
+      "linux_to_mac_input_hashes_preserved": true,
+      "result_sha256": "ee19e138289b21b8aa9df33f80e8800095617d29d4cd27a6091f8bdd617db2f3",
+      "scheduler_dispatch_sequence": [
+        1,
+        3
+      ],
+      "scheduler_cancellations": 1,
+      "allocator_cancellations": 2,
+      "restored_clock_ticks": 18446744073709551672,
+      "occupied_unit_ticks": 13,
+      "restored_occupancy_intervals": 3,
+      "available_capacity": 3,
+      "rng_word_position": 4,
+      "next_rng_u64": 14788899804660648850,
+      "writer_file_sha256": {
+        "mac": {
+          "data.0": "2730284ab7c799005e5ca04752c69ae38b19097b7a81021bd6ec644775cce8ca",
+          "md.0": "3103de77adef6ca2dabe511a165bbf3a236526fd80f985df9a7e7a9f5d71498e",
+          "md.idx": "fdf9dfe5a6e7b1d92041d931c274695eb64511c0cd1241584bba7076bcda8529",
+          "mmd.0": "d9b6936a1a8551307ee04bd05fe683e59ff58b1ae2ca2af9f71b724b0d11b63d",
+          "profiling.json": "51dfcaf5c4db3238d7e6c7d0b7c18cf1c936257defb1854ed0b445e5e865c28d"
+        },
+        "linux": {
+          "data.0": "2730284ab7c799005e5ca04752c69ae38b19097b7a81021bd6ec644775cce8ca",
+          "md.0": "3103de77adef6ca2dabe511a165bbf3a236526fd80f985df9a7e7a9f5d71498e",
+          "md.idx": "fdf9dfe5a6e7b1d92041d931c274695eb64511c0cd1241584bba7076bcda8529",
+          "mmd.0": "d9b6936a1a8551307ee04bd05fe683e59ff58b1ae2ca2af9f71b724b0d11b63d",
+          "profiling.json": "2e7dad78ab4dceaf19dc139e6e2844837b1adc154ffb1f3db35c9a9ce68f2d03"
+        }
+      },
+      "native_layout_sha256": {
+        "mac_reads_linux": "ed2cc203263a04ba9af73a5beeaa9c9f052b6587f954d04dbe81077443d245ae",
+        "linux_reads_mac": "ed2cc203263a04ba9af73a5beeaa9c9f052b6587f954d04dbe81077443d245ae"
+      }
+    }
+  }
+}

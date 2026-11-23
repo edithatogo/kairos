@@ -55,6 +55,7 @@ Format:
 
 ### Fixed
 
+- The Rust release dry run resolves the private Arrow crates from the same workspace revision for packaging and upload verification.
 - `kairo-ecs-core` compacts scheduler storage when cancelled entries accumulate, preserving event order and checkpoint replay.
 - `kairo-ecs-arrow` writes typed native HDF5 checkpoints behind `hdf5`. The adapter restores full-width event records and verifies an integrity digest. See [ADR 0018](docs/adr/0018-native-hdf5-checkpoints.md).
 
