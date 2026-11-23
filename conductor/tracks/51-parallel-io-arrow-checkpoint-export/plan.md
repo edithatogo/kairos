@@ -7,6 +7,8 @@ readers checked the physical formats and full-width timestamp fields. The
 v2 checkpoint restarts the scheduler and service model from a single artifact.
 Native Arrow IPC exports cover the event log, world snapshot and checkpoint
 metadata. Live parallel filesystem qualification remains open.
+The local matched write benchmark covers four 16,384-row IPC streams.
+[Raw samples](evidence/contiguous-ipc-apfs-macos-arm64.json).
 [Native format evidence](../../execution/scientific/s14-completion.md).
 
 ## Acceptance correction — 3 November 2026

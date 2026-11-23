@@ -13,6 +13,13 @@ passed 116 tests. The results cover the local writer on APFS.
 [Source and artifact hashes](../../tracks/51-parallel-io-arrow-checkpoint-export/evidence/native-ipc-macos-arm64.json) ·
 [API contract](../../../docs/adr/0022-native-parallel-arrow-ipc.md).
 
+The matched Criterion cases published 65,536 rows on the same local APFS
+volume using identical typed batches and physical receipts. Ten samples
+per case gave medians of 80.3 ms for serial and 76.5 ms for four writers.
+The 95% median intervals overlapped at 77.9–88.4 ms and 74.5–82.5 ms,
+respectively. The local experiment supports a descriptive timing comparison.
+[Raw measurements](../../tracks/51-parallel-io-arrow-checkpoint-export/evidence/contiguous-ipc-apfs-macos-arm64.json).
+
 ## Native file boundary
 
 Track 51's HDF5 feature uses the existing `Hdf5CheckpointAdapter` and the
@@ -32,8 +39,7 @@ typed historical-state readback and an independent native reader.
 
 ## Remaining evidence
 
-- Qualify the real Arrow record batches used by Track 51 and measure the
-  native backends on additional workloads.
+- Measure native I/O and restart on additional representative workloads.
 - Exercise allocator lifetime and affinity on a representative NUMA workload.
   Retain exact native filesystem and scheduler receipts for ranks, transfer
   costs, block layout and final state parity.

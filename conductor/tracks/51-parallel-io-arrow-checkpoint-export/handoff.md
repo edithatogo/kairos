@@ -4,8 +4,8 @@
 
 Chat `01a1fd18-51c7-7963-a3cc-d262d54582ba` owns the Kairos closeout
 worktree on `codex/native-parallel-arrow-20261123` for the Arrow crate,
-stream contract and local qualification. The platform matrix and hosted
-closeout are the next operations. PyArrow independently checked the exact
+stream contract and local qualification. The source and matrix review
+accepted `79f015a72564ba99376dac01fc9f1298b0de0be5`. PyArrow independently checked the exact
 typed event fields, caller-supplied snapshot rows and synthetic two-block
 checkpoint descriptor. The older v1 event bytes and source block accounting
 retain their historical meaning.
@@ -16,6 +16,13 @@ Unix parent-directory sync. Both are covered by the API contract. Track 51
 still requires live parallel volume evidence.
 [Stream contract](../../../docs/adr/0022-native-parallel-arrow-ipc.md) ·
 [Local receipt](evidence/native-ipc-macos-arm64.json).
+
+The optimized local APFS benchmark published the same four 16,384-row
+streams per trial. The serial median was 80.3 ms and the four-writer median
+was 76.5 ms. The 95% confidence intervals for the medians overlapped. Every
+trial matched the pre-encoded write receipts. The existing publisher keeps
+its caller-directed execution. The next operation is exact-head hosted CI.
+[Command, raw samples and intervals](evidence/contiguous-ipc-apfs-macos-arm64.json).
 
 ## Self-contained native engine restart
 
