@@ -2227,6 +2227,7 @@ dependencies = [
  "criterion",
  "hdf5-metno",
  "kairo-ecs-adios2",
+ "kairo-ecs-core",
  "kairo-ecs-fs-guard",
  "kairo-ecs-rng",
  "kairo-ecs-types",

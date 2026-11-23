@@ -51,6 +51,19 @@ cleanup error, inspect the destination and retained stage before retrying. Use
 immutable generation names for external readers that run during publication.
 [ADR 0019](../adr/0019-native-adios2-checkpoints.md).
 
+## Restarting a native engine checkpoint
+
+Enable `engine-checkpoint` together with `hdf5` or `adios2`.
+`write_engine_checkpoint` captures a Rust scheduler and caller-owned model
+bytes at one event boundary alongside the event manifest. A fresh process uses
+`restore_engine_checkpoint` with the same model schema, reconstructs its
+model from the returned bytes, and resumes dispatch on the restored scheduler.
+Use a v2 destination for the engine checkpoint.
+
+The service-queue fixture exercises active service, queued jobs, cancelled
+deadlines and the RNG position with both native backends.
+[Native layout and conformance](../adr/0021-native-engine-checkpoint.md).
+
 ## Live proof required
 
 Before Track 51 can support production parallel filesystem claims, replace `conductor/hpc-evidence/manifests/track51-live-parallel-filesystem-template.json` with a reviewed `live-hpc` manifest that records:

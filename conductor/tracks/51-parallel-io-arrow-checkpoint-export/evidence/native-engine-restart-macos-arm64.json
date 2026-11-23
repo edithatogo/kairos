@@ -1,0 +1,64 @@
+{
+  "baseline_sha": "bebb65c45b3055d5f743566631de12061bac4e78",
+  "working_directory": "kairos",
+  "source_input_sha256": {
+    "Cargo.lock": "38970a6fe699dafebb720188530d88c022b53fd563bbe0cc9ad5dc7aa4167e07",
+    "crates/kairo-ecs-arrow/Cargo.toml": "24be7eb0aca841a75e0ae727b57c471f6eb51d22e1d66af916902694337e3eef",
+    "crates/kairo-ecs-arrow/tests/engine_checkpoint_restart.rs": "e17b74c7c2ca5c1ffca666988b5e8fc17311a4d331ca32583f974815d6cb3a3f",
+    "crates/kairo-ecs-arrow/src/lib.rs": "6a8aeabeec5c92d3cfb1898122e828f1eb9c7ad5439f44aabb2442a4de089e5a",
+    "crates/kairo-ecs-arrow/src/checkpoint_data.rs": "cd58c2242223b098e36265b718e080f8788fb080823ab19e87b82e9de2ac63d9",
+    "crates/kairo-ecs-arrow/src/engine_checkpoint.rs": "1b67b92fb9dd9bd4820f68bfa2665af5009cb39768b6d47e9021a07f43cd824b",
+    "crates/kairo-ecs-arrow/src/adios2_checkpoint.rs": "b974070eb2d82494b2ceac0a2e142d4ac0de8068fb5c0a38884b9656b4e27c5c",
+    "crates/kairo-ecs-arrow/src/hdf5_checkpoint.rs": "f173ecd050aa3f5c6f25606487c8d32829ef30db39c2ed37245793975464b010"
+  },
+  "platform": "27.2.1 macOS arm64",
+  "toolchain": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+  "native_libraries": {
+    "hdf5": "2.2.0",
+    "adios2": "2.12.1"
+  },
+  "command": "cargo nextest run --locked --offline -p kairo-ecs-arrow -p kairo-ecs-adios2 --features kairo-ecs-arrow/engine-checkpoint,kairo-ecs-arrow/hdf5,kairo-ecs-arrow/adios2",
+  "exit": 0,
+  "passed": 66,
+  "conditional_vendor_reader_cases": 2,
+  "engine_queue": {
+    "jobs": 128,
+    "servers": 3,
+    "seed": 20261123,
+    "checkpoint_dispatches": 28,
+    "suffix_dispatches": 228,
+    "completed": 44,
+    "expired": 84,
+    "final_clock_ticks": "18446744073709551749",
+    "scheduled": 297,
+    "dispatched": 256,
+    "cancelled": 41,
+    "pending": 0,
+    "next_rng_draw": "17380526180340474709",
+    "result_sha256": "b55ac18a3f4cc1384cf744afe316a339d0fe7d4ed13148881e5625cfb1625f3b"
+  },
+  "vendor_state_bytes": 11936,
+  "vendor_commands": [
+    "h5dump -H -d /engine_state -d /schema service.h5",
+    "h5dump -d /schema service.h5",
+    "bpls -l service.bp",
+    "bpls -d service.bp schema"
+  ],
+  "native_artifact_and_log_sha256": {
+    "vendor-sample/adios2-resume.log": "05fd9926bc985db31a2853a129acfa877655f8451c3be6d22c6fc251a24d7737",
+    "vendor-sample/adios2-write.log": "12797fa63ed59eba06d1ed180818b38efba8677f149069570a4fe978e2d1aeca",
+    "vendor-sample/bp5-schema.log": "1c117fb52d13f62fde9f63765e232615dc7cf3424886b4aac87598ebce9f17b6",
+    "vendor-sample/bpls.log": "e67026133c99f8438f9d9f523207045896ae3cf4116f947f04f501c9b4402222",
+    "vendor-sample/h5dump.log": "533552cbbfe2f48d72dbefecc01e0eca3c6efd71bfbf9a2eb4f924db834dceed",
+    "vendor-sample/hdf5-resume.log": "05fd9926bc985db31a2853a129acfa877655f8451c3be6d22c6fc251a24d7737",
+    "vendor-sample/hdf5-schema.log": "c16e396f0b0d661f985fddbdf02083d5ce49c6d318c28d59511d40710eb8e1bd",
+    "vendor-sample/hdf5-write.log": "49c0f6411c405346c9ff22151030277c58362dfa234d31194c7afe15c825e206",
+    "vendor-sample/service.bp/data.0": "ddc597e2d098b2f50a53592157942680ec2506f0a77d7e9ed580eb648d87e25c",
+    "vendor-sample/service.bp/md.0": "02f0ebdef682e2f0d3f79546449e8e19ef2b63a74db1a669178c798b5980dc4a",
+    "vendor-sample/service.bp/md.idx": "fdf9dfe5a6e7b1d92041d931c274695eb64511c0cd1241584bba7076bcda8529",
+    "vendor-sample/service.bp/mmd.0": "d9b6936a1a8551307ee04bd05fe683e59ff58b1ae2ca2af9f71b724b0d11b63d",
+    "vendor-sample/service.bp/profiling.json": "cc870c9de69e47376ab9b8fd4fb056aa558dccb5e003c851ac561b7a0ef728db",
+    "vendor-sample/service.h5": "b7e1dcb54ffc36b42a5b05cfd223897653f9300d556a0d6979490f0db79a86e1"
+  },
+  "nextest_log_sha256": "c85432f3c107db91f096b064870df10bc84b6aac5d84135ccdd9b9087ef0562c"
+}
