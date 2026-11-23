@@ -65,7 +65,7 @@ pub(super) fn write(path: &Path, manifest: &CheckpointManifest) -> Result<(), Ar
 
     let parent = publication_parent(path);
     let parent_file = File::open(parent)?;
-    let staging = tempfile::tempdir_in(parent)?;
+    let staging = create_staging_directory(parent)?;
     let staged_path = staging.path().to_path_buf();
     let (rows, text) = encode_records(&manifest.records);
     let blocks: Vec<_> = manifest.blocks.iter().map(BlockRow::from).collect();
@@ -188,6 +188,12 @@ pub(super) fn write(path: &Path, manifest: &CheckpointManifest) -> Result<(), Ar
     })
 }
 
+fn create_staging_directory(parent: &Path) -> io::Result<tempfile::TempDir> {
+    tempfile::Builder::new()
+        .permissions(Permissions::from_mode(0o700))
+        .tempdir_in(parent)
+}
+
 pub(super) fn read(path: &Path) -> Result<CheckpointManifest, ArrowError> {
     read_bp5(&Session::acquire()?, path)
 }
@@ -299,6 +305,14 @@ fn sync_with_mode(file: &File, previous: Option<&Metadata>, mode: u32) -> Result
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn staging_starts_with_owner_only_permissions() {
+        let scratch = tempfile::tempdir().unwrap();
+        let staging = create_staging_directory(scratch.path()).unwrap();
+        let mode = fs::symlink_metadata(staging.path()).unwrap().mode();
+        assert_eq!(mode & 0o077, 0);
+    }
 
     #[test]
     fn native_empty_generation_preserves_empty_arrays_and_metadata() {

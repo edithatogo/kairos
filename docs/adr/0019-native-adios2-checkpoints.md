@@ -33,10 +33,11 @@ artifact and validate its origin separately when authentication matters.
 
 ## Publication and recovery
 
-Write and read back the complete generation in a private sibling staging
-directory, then sync the files and directory. Linux and macOS provide the
-atomic no-clobber rename and directory exchange used for publication. Existing
-destinations must be valid Kairos BP5 checkpoints. A replacement preserves
+Create the sibling staging directory with mode `0700` before writing any
+checkpoint bytes. Read back the generation, then sync the files and directory.
+Linux and macOS provide the atomic no-clobber rename and directory exchange
+used for publication. Existing destinations must be valid Kairos BP5
+checkpoints. A replacement preserves
 ordinary permission bits and checks owner and group. ACL and special mode-bit
 preservation require separate qualification.
 
