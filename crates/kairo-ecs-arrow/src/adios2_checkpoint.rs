@@ -13,6 +13,7 @@ use std::{
 };
 
 const SCHEMA: &[u8] = b"kairo-ecs-adios2-bp5-checkpoint-v1";
+const ENGINE_SCHEMA: &[u8] = b"kairo-ecs-adios2-bp5-checkpoint-v2";
 const FILES: [&str; 4] = ["data.0", "md.0", "md.idx", "mmd.0"];
 
 macro_rules! table {
@@ -49,14 +50,18 @@ table!(write_blocks, read_blocks, BlockRow;
     row_count: u64 => c"block_row_count",
 );
 
-pub(super) fn write(path: &Path, manifest: &CheckpointManifest) -> Result<(), ArrowError> {
+pub(super) fn write(
+    path: &Path,
+    manifest: &CheckpointManifest,
+    engine: Option<&[u8]>,
+) -> Result<(), ArrowError> {
     let session = Session::acquire()?;
     manifest.validate_for_restore()?;
     let normalized = checked_path(path)?;
     let path = normalized.as_path();
     let existing = match fs::symlink_metadata(path) {
         Ok(metadata) => {
-            read_bp5(&session, path)?;
+            read_bp5(&session, path, engine.is_some())?;
             Some(metadata)
         }
         Err(error) if error.kind() == io::ErrorKind::NotFound => None,
@@ -69,8 +74,24 @@ pub(super) fn write(path: &Path, manifest: &CheckpointManifest) -> Result<(), Ar
     let staged_path = staging.path().to_path_buf();
     let (rows, text) = encode_records(&manifest.records);
     let blocks: Vec<_> = manifest.blocks.iter().map(BlockRow::from).collect();
+    let schema = if engine.is_some() {
+        ENGINE_SCHEMA
+    } else {
+        SCHEMA
+    };
+    let mut counts = vec![
+        rows.len() as u64,
+        blocks.len() as u64,
+        text.len() as u64,
+        manifest.checkpoint_id.len() as u64,
+        manifest.run_id.len() as u64,
+        manifest.schema_fingerprint.len() as u64,
+    ];
+    if let Some(state) = engine {
+        counts.push(state.len() as u64);
+    }
     let mut columns = vec![
-        (c"schema", SCHEMA.to_vec().into()),
+        (c"schema", schema.to_vec().into()),
         (
             c"checkpoint_id",
             manifest.checkpoint_id.as_bytes().to_vec().into(),
@@ -80,26 +101,19 @@ pub(super) fn write(path: &Path, manifest: &CheckpointManifest) -> Result<(), Ar
             c"schema_fingerprint",
             manifest.schema_fingerprint.as_bytes().to_vec().into(),
         ),
-        (
-            c"counts",
-            vec![
-                rows.len() as u64,
-                blocks.len() as u64,
-                text.len() as u64,
-                manifest.checkpoint_id.len() as u64,
-                manifest.run_id.len() as u64,
-                manifest.schema_fingerprint.len() as u64,
-            ]
-            .into(),
-        ),
+        (c"counts", counts.into()),
         (c"text", text.into()),
         (c"legacy_checksum", vec![manifest.checksum].into()),
-        (c"sha256", digest(SCHEMA, manifest).to_vec().into()),
+        (c"sha256", digest(schema, manifest, engine).to_vec().into()),
     ];
+    if let Some(state) = engine {
+        columns.push((c"engine_state", state.to_vec().into()));
+    }
     write_events(&rows, &mut columns);
     write_blocks(&blocks, &mut columns);
     session.write(&staged_path, &columns)?;
-    if read_bp5(&session, &staged_path)? != *manifest {
+    let (stored_manifest, stored_engine) = read_bp5(&session, &staged_path, engine.is_some())?;
+    if stored_manifest != *manifest || stored_engine.as_deref() != engine {
         return Err(ArrowError::InvalidArgument(
             "staged BP5 checkpoint differs from input",
         ));
@@ -194,18 +208,30 @@ fn create_staging_directory(parent: &Path) -> io::Result<tempfile::TempDir> {
         .tempdir_in(parent)
 }
 
-pub(super) fn read(path: &Path) -> Result<CheckpointManifest, ArrowError> {
-    read_bp5(&Session::acquire()?, path)
+pub(super) fn read(
+    path: &Path,
+    require_engine: bool,
+) -> Result<(CheckpointManifest, Option<Vec<u8>>), ArrowError> {
+    read_bp5(&Session::acquire()?, path, require_engine)
 }
 
-fn read_bp5(session: &Session, path: &Path) -> Result<CheckpointManifest, ArrowError> {
+fn read_bp5(
+    session: &Session,
+    path: &Path,
+    require_engine: bool,
+) -> Result<(CheckpointManifest, Option<Vec<u8>>), ArrowError> {
     let normalized = checked_path(path)?;
     let path = normalized.as_path();
     session.read(path, validate_directory(path)?, |reader| {
-        if reader.array::<u8>(c"schema", SCHEMA.len())? != SCHEMA {
+        let schema = if require_engine {
+            ENGINE_SCHEMA
+        } else {
+            SCHEMA
+        };
+        if reader.array::<u8>(c"schema", schema.len())? != schema {
             return Err(ArrowError::UnexpectedStreamHeader);
         }
-        let counts = reader.array::<u64>(c"counts", 6)?;
+        let counts = reader.array::<u64>(c"counts", if require_engine { 7 } else { 6 })?;
         let count = |index: usize| {
             usize::try_from(counts[index]).map_err(|_| ArrowError::InvalidNumber("BP5 count"))
         };
@@ -230,11 +256,18 @@ fn read_bp5(session: &Session, path: &Path) -> Result<CheckpointManifest, ArrowE
             records,
             checksum: reader.array::<u64>(c"legacy_checksum", 1)?[0],
         };
-        if reader.array::<u8>(c"sha256", 32)? != digest(SCHEMA, &manifest) {
+        let engine = require_engine
+            .then(|| {
+                reader
+                    .array::<u8>(c"engine_state", count(6)?)
+                    .map_err(ArrowError::from)
+            })
+            .transpose()?;
+        if reader.array::<u8>(c"sha256", 32)? != digest(schema, &manifest, engine.as_deref()) {
             return Err(ArrowError::InvalidNumber("checkpoint sha256"));
         }
         manifest.validate_for_restore()?;
-        Ok(manifest)
+        Ok((manifest, engine))
     })
 }
 
@@ -329,8 +362,10 @@ mod tests {
             checksum: 0,
         };
         manifest.checksum = manifest.calculate_checksum();
-        write(&path, &manifest).unwrap();
-        assert_eq!(read(&path).unwrap(), manifest);
+        write(&path, &manifest, None).unwrap();
+        let (actual, engine) = read(&path, false).unwrap();
+        assert_eq!(actual, manifest);
+        assert!(engine.is_none());
 
         manifest.records.push(crate::CheckpointRecord {
             event_id: kairo_ecs_types::EventId::new(1, 0),
@@ -349,7 +384,7 @@ mod tests {
         });
         manifest.row_count = 1;
         manifest.checksum = manifest.calculate_checksum();
-        write(&path, &manifest).unwrap();
-        assert_eq!(read(&path).unwrap(), manifest);
+        write(&path, &manifest, None).unwrap();
+        assert_eq!(read(&path, false).unwrap(), (manifest, None));
     }
 }

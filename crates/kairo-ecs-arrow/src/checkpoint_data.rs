@@ -147,7 +147,11 @@ impl TryFrom<BlockRow> for ContiguousBlock {
     }
 }
 
-pub(super) fn digest(schema: &[u8], manifest: &CheckpointManifest) -> [u8; 32] {
+pub(super) fn digest(
+    schema: &[u8],
+    manifest: &CheckpointManifest,
+    engine: Option<&[u8]>,
+) -> [u8; 32] {
     let mut hash = Sha256::new();
     hash.update(schema);
     for value in [
@@ -182,6 +186,10 @@ pub(super) fn digest(schema: &[u8], manifest: &CheckpointManifest) -> [u8; 32] {
         if let Some(payload) = &row.payload_ref {
             hash_text(&mut hash, payload);
         }
+    }
+    if let Some(state) = engine {
+        hash.update((state.len() as u64).to_le_bytes());
+        hash.update(state);
     }
     hash.finalize().into()
 }

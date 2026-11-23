@@ -5,6 +5,7 @@ on:
     paths:
       - 'crates/kairo-ecs-arrow/**'
       - 'crates/kairo-ecs-arrow-ffi/**'
+      - 'crates/kairo-ecs-core/**'
       - 'crates/kairo-ecs-fs-guard/**'
       - 'crates/kairo-ecs-ffi/**'
       - 'crates/kairo-ecs-types/**'
@@ -20,6 +21,7 @@ on:
     paths:
       - 'crates/kairo-ecs-arrow/**'
       - 'crates/kairo-ecs-arrow-ffi/**'
+      - 'crates/kairo-ecs-core/**'
       - 'crates/kairo-ecs-fs-guard/**'
       - 'crates/kairo-ecs-ffi/**'
       - 'tests/fixtures/cohort-consumer/**'
@@ -103,7 +105,7 @@ jobs:
         run: >-
           cargo package --locked --no-verify
           --config 'patch.crates-io.kairo-ecs-adios2.path = "crates/kairo-ecs-adios2"'
-          -p kairo-ecs-types -p kairo-ecs-rng -p kairo-ecs-fs-guard -p kairo-ecs-adios2 -p kairo-ecs-arrow
+          -p kairo-ecs-types -p kairo-ecs-core -p kairo-ecs-rng -p kairo-ecs-fs-guard -p kairo-ecs-adios2 -p kairo-ecs-arrow
       - name: Compile clean committed Git source with native consumers
         run: |
           set -euo pipefail
@@ -113,4 +115,4 @@ jobs:
           CARGO_TARGET_DIR="$GITHUB_WORKSPACE/target" cargo check --locked \
             --manifest-path "$source_root/Cargo.toml" \
             -p kairo-ecs-arrow -p kairo-ecs-arrow-ffi -p kairo-ecs-ffi \
-            --features kairo-ecs-arrow/polars-native,kairo-ecs-arrow-ffi/native-data,kairo-ecs-ffi/native-data
+            --features kairo-ecs-arrow/engine-checkpoint,kairo-ecs-arrow/polars-native,kairo-ecs-arrow-ffi/native-data,kairo-ecs-ffi/native-data

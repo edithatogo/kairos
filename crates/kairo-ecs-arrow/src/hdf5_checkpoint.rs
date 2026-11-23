@@ -3,12 +3,22 @@ use super::{
     publish_checkpoint_staged, ArrowError, CheckpointFormat, CheckpointManifest, ContiguousBlock,
 };
 use hdf5_metno::{dataset::Layout, File, H5Type, LinkType};
-use std::{fmt::Display, io::Read, mem::size_of, path::Path};
+use std::{
+    fmt::Display,
+    io::{ErrorKind, Read},
+    mem::size_of,
+    path::Path,
+};
 
 const SCHEMA: &[u8] = b"kairo-ecs-hdf5-checkpoint-v1";
+const ENGINE_SCHEMA: &[u8] = b"kairo-ecs-hdf5-checkpoint-v2";
 const SIGNATURE: [u8; 8] = *b"\x89HDF\r\n\x1a\n";
 
-pub(super) fn write(path: &Path, manifest: &CheckpointManifest) -> Result<(), ArrowError> {
+pub(super) fn write(
+    path: &Path,
+    manifest: &CheckpointManifest,
+    engine: Option<&[u8]>,
+) -> Result<(), ArrowError> {
     require_utf8_path(path)?;
     manifest.validate_for_restore()?;
     let (rows, text) = encode_records(&manifest.records);
@@ -18,9 +28,27 @@ pub(super) fn write(path: &Path, manifest: &CheckpointManifest) -> Result<(), Ar
         .map(BlockRow::from)
         .collect::<Vec<_>>();
 
+    let schema = if engine.is_some() {
+        ENGINE_SCHEMA
+    } else {
+        SCHEMA
+    };
     publish_checkpoint_staged(path, |stage| {
+        match has_hdf5_signature(path) {
+            Ok(true) => {
+                let existing = open_local_checkpoint(path)?;
+                if read_field::<u8>(&existing, "schema", Some(schema.len()))? != schema {
+                    return Err(ArrowError::InvalidArgument(
+                        "HDF5 checkpoint version would change",
+                    ));
+                }
+            }
+            Ok(false) => {}
+            Err(error) if error.kind() == ErrorKind::NotFound => {}
+            Err(error) => return Err(io(error)),
+        }
         let file = File::create(stage.path()).map_err(io)?;
-        write_field(&file, "schema", SCHEMA)?;
+        write_field(&file, "schema", schema)?;
         write_field(&file, "checkpoint_id", manifest.checkpoint_id.as_bytes())?;
         write_field(&file, "run_id", manifest.run_id.as_bytes())?;
         write_field(
@@ -32,36 +60,32 @@ pub(super) fn write(path: &Path, manifest: &CheckpointManifest) -> Result<(), Ar
         write_field(&file, "records", &rows)?;
         write_field(&file, "text", &text)?;
         write_field(&file, "legacy_checksum", &[manifest.checksum])?;
-        write_field(&file, "sha256", &digest(SCHEMA, manifest))?;
+        if let Some(state) = engine {
+            write_field(&file, "engine_state", state)?;
+        }
+        write_field(&file, "sha256", &digest(schema, manifest, engine))?;
         file.close().map_err(io)
     })
 }
 
-pub(super) fn read(path: &Path) -> Result<CheckpointManifest, ArrowError> {
+pub(super) fn read(
+    path: &Path,
+    require_engine: bool,
+) -> Result<(CheckpointManifest, Option<Vec<u8>>), ArrowError> {
     require_utf8_path(path)?;
-    let mut signature = [0; 8];
-    std::fs::File::open(path)
-        .map_err(io)?
-        .read_exact(&mut signature)
-        .map_err(io)?;
-    if signature != SIGNATURE {
+    if !has_hdf5_signature(path).map_err(io)? {
         return Err(ArrowError::InvalidCheckpointFormat {
             expected: "native hdf5",
             actual: "unrecognized file signature".into(),
         });
     }
-    let file = File::open(path).map_err(io)?;
-    file.iter_visit_default(|_, info| {
-        if info.link_type == LinkType::Hard {
-            Ok(())
-        } else {
-            Err(hdf5_metno::Error::Internal(
-                "checkpoint datasets must be local hard links".into(),
-            ))
-        }
-    })
-    .map_err(io)?;
-    if read_field::<u8>(&file, "schema", Some(SCHEMA.len()))? != SCHEMA {
+    let file = open_local_checkpoint(path)?;
+    let schema = if require_engine {
+        ENGINE_SCHEMA
+    } else {
+        SCHEMA
+    };
+    if read_field::<u8>(&file, "schema", Some(schema.len()))? != schema {
         return Err(ArrowError::UnexpectedStreamHeader);
     }
     let rows = read_field::<EventRow>(&file, "records", None)?;
@@ -84,10 +108,39 @@ pub(super) fn read(path: &Path) -> Result<CheckpointManifest, ArrowError> {
         records,
         checksum,
     };
-    if read_field::<u8>(&file, "sha256", Some(32))? != digest(SCHEMA, &manifest) {
+    let engine = require_engine
+        .then(|| read_field::<u8>(&file, "engine_state", None))
+        .transpose()?;
+    if read_field::<u8>(&file, "sha256", Some(32))? != digest(schema, &manifest, engine.as_deref())
+    {
         return Err(ArrowError::InvalidNumber("checkpoint sha256"));
     }
-    Ok(manifest)
+    Ok((manifest, engine))
+}
+
+fn has_hdf5_signature(path: &Path) -> std::io::Result<bool> {
+    let mut file = std::fs::File::open(path)?;
+    let mut signature = [0; 8];
+    match file.read_exact(&mut signature) {
+        Ok(()) => Ok(signature == SIGNATURE),
+        Err(error) if error.kind() == ErrorKind::UnexpectedEof => Ok(false),
+        Err(error) => Err(error),
+    }
+}
+
+fn open_local_checkpoint(path: &Path) -> Result<File, ArrowError> {
+    let file = File::open(path).map_err(io)?;
+    file.iter_visit_default(|_, info| {
+        if info.link_type == LinkType::Hard {
+            Ok(())
+        } else {
+            Err(hdf5_metno::Error::Internal(
+                "checkpoint datasets must be local hard links".into(),
+            ))
+        }
+    })
+    .map_err(io)?;
+    Ok(file)
 }
 
 fn write_field<T: H5Type>(file: &File, name: &str, values: &[T]) -> Result<(), ArrowError> {
@@ -169,8 +222,10 @@ mod tests {
             checksum: 0,
         };
         manifest.checksum = manifest.calculate_checksum();
-        write(&path, &manifest).unwrap();
-        assert_eq!(read(&path).unwrap(), manifest);
+        write(&path, &manifest, None).unwrap();
+        let (actual, engine) = read(&path, false).unwrap();
+        assert_eq!(actual, manifest);
+        assert!(engine.is_none());
 
         manifest.records.push(CheckpointRecord {
             event_id: EventId::new(1, 0),
@@ -189,7 +244,7 @@ mod tests {
         });
         manifest.row_count = 1;
         manifest.checksum = manifest.calculate_checksum();
-        write(&path, &manifest).unwrap();
-        assert_eq!(read(&path).unwrap(), manifest);
+        write(&path, &manifest, None).unwrap();
+        assert_eq!(read(&path, false).unwrap(), (manifest, None));
     }
 }

@@ -1,5 +1,20 @@
 # Track 51 Handoff
 
+## Self-contained native engine restart
+
+Chat `01a1fd18-51c7-7963-a3cc-d262d54582ba` owns the Kairos closeout
+worktree on `codex/native-engine-restart-20261123`. The v2 API stores
+pending scheduler state, event records and the versioned model/RNG payload
+together in HDF5 or BP5. The three-process oracle matched all 228 remaining
+dispatches and final model state across both libraries. Independent readers
+confirmed the unsigned byte dataset and v2 format identifiers.
+[Contract](../../../docs/adr/0021-native-engine-checkpoint.md) ·
+[Local receipt](evidence/native-engine-restart-macos-arm64.json).
+
+The Track 13 Arrow qualification packages Core in the same temporary source
+registry as Arrow. The extracted source check compiles the engine feature
+alongside existing native consumers.
+
 ## Native ADIOS2 checkpoint slice — 23 November 2026
 
 Chat `01a1fd18-51c7-7963-a3cc-d262d54582ba` owns the Kairos closeout worktree

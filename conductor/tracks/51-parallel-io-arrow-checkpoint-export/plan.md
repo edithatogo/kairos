@@ -4,20 +4,21 @@
 
 The adapters write native HDF5 and serial ADIOS2 BP5 checkpoints. Both vendor
 readers checked the physical formats and full-width timestamp fields. The
-engine restart and parallel filesystem gates remain open.
+v2 checkpoint restarts the scheduler and service model from a single artifact.
+Production Arrow output and live parallel filesystem qualification remain open.
 [Native format evidence](../../execution/scientific/s14-completion.md).
 
 ## Acceptance correction — 3 November 2026
 
 The checked historical tasks below record the contract-baseline work and its
 then-reported review; they do not establish this track's native acceptance.
-Both adapters originally wrote labelled v1 contract bytes. The existing
-restart restores records and a maximum tick rather than a resumed engine, and
-the filesystem manifest is a template. The following acceptance work remains:
+Both adapters originally wrote labelled v1 contract bytes and restored
+historical records and their maximum tick. The filesystem manifest remains a
+template. The native acceptance checklist tracks the subsequent work.
 
 - [x] CAP-51.2: Implement and independently read native HDF5 and ADIOS2 checkpoints.
 - [ ] CAP-51.3: Qualify real Arrow record batches for the track's specified outputs.
-- [ ] CAP-51.4: Prove representative engine restart and final-state parity.
+- [x] CAP-51.4: Prove representative engine restart and final-state parity with the self-contained HDF5 and BP5 service queue.
 - [ ] CAP-51.5: Execute and retain contiguous-write benchmarks and live parallel-filesystem evidence.
 - [ ] CAP-51.6: Complete independent review, exact-source hosted gates and integrator closeout.
 

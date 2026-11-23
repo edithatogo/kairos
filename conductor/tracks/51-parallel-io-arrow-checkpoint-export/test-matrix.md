@@ -2,8 +2,8 @@
 
 The native cases use installed HDF5 2.2.0 and ADIOS2 2.12.1 libraries on macOS
 ARM64 and the pinned Linux CI libraries. The Windows commands cover the
-indicated contract baselines. Representative engine restart still requires a
-final-state oracle.
+indicated contract baselines. The engine restart fixture compares a fresh
+process with an uninterrupted reference.
 
 | Gate | Command | Required for |
 |---|---|---|
@@ -13,6 +13,7 @@ final-state oracle.
 | ADIOS2 native roundtrip | `cargo test --locked -p kairo-ecs-arrow --features adios2 --test maturity_native_adios2` | Native file qualification |
 | ADIOS2 independent reader | With `KAIROS_BPLS` set, run `cargo test --locked -p kairo-ecs-arrow --features adios2 --test maturity_native_adios2 bpls -- --ignored --nocapture` | Native file qualification |
 | Restart parity | `rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-arrow --features parallel-io --test checkpoint_restart` | Review |
+| Self-contained engine restart | `cargo test --locked -p kairo-ecs-arrow --features engine-checkpoint,hdf5,adios2 --test engine_checkpoint_restart` | Native final-state parity |
 | Live-template blocker guard | `node scripts/validation/validate-hpc-live-template-blockers.mjs` | Review and Done |
 | Free compute route boundary | `node scripts/validation/validate-free-compute-routes.mjs` | Review |
 | Full workspace | `rustup run stable-x86_64-pc-windows-gnu cargo test --workspace --all-features` | Phase closeout |

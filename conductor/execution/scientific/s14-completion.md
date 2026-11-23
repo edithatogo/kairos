@@ -19,9 +19,8 @@ typed historical-state readback and an independent native reader.
 
 ## Remaining evidence
 
-- Qualify the real Arrow record batches used by Track 51. Prove restart with
-  representative scheduler workloads and both native backends. Compare final
-  traces, counters and identities.
+- Qualify the real Arrow record batches used by Track 51 and measure the
+  native backends on additional workloads.
 - Exercise allocator lifetime and affinity on a representative NUMA workload.
   Retain exact native filesystem and scheduler receipts for ranks, transfer
   costs, block layout and final state parity.
@@ -116,3 +115,22 @@ Both vendor readers passed again using the commands above. The `bpls` log
 SHA-256 is `c7aed373a3a04580bf27ec83960b58008ccddb6d82f9e86aac99bcaf2525ddbf`.
 The `h5dump` log SHA-256 is
 `c9c43c9d96140515c4fb9eb656dca5bb7cd738866189a6e4ea05a55d67c6cd0d`.
+
+## Self-contained native engine restart
+
+The opt-in v2 checkpoint stores event records, the live scheduler and the
+model's waiting queue, active service, counters and RNG position together.
+An uninterrupted process and each fresh restart completed the same
+128-job workload. Both restarts matched the 228 dispatched suffix events,
+44 completed jobs, 84 deadline expirations, 41 cancellations and the next
+RNG draw. The clock exceeded 64 bits throughout the restarted work.
+Each native reader rejected modified model bytes, and HDF5 rejected
+replacement across versions with both destinations preserved byte for byte.
+The HDF Group and ADIOS2 tools independently confirmed the unsigned byte
+type, 11,936-element extent and exact v2 schema identifiers.
+
+The selected macOS ARM64 suite passed 66 tests on Rust 1.99.1. Two vendor
+reader cases use separate commands. The recorded parity uses a local volume
+and the service model's exact schema.
+[Source and artifact hashes](../../tracks/51-parallel-io-arrow-checkpoint-export/evidence/native-engine-restart-macos-arm64.json) ·
+[Native checkpoint contract](../../../docs/adr/0021-native-engine-checkpoint.md).

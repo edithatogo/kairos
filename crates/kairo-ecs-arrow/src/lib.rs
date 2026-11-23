@@ -32,6 +32,8 @@ mod adios2_checkpoint;
     all(feature = "adios2", any(target_os = "linux", target_os = "macos"))
 ))]
 mod checkpoint_data;
+#[cfg(feature = "engine-checkpoint")]
+pub mod engine_checkpoint;
 #[cfg(feature = "hdf5")]
 mod hdf5_checkpoint;
 
@@ -957,7 +959,7 @@ impl CheckpointAdapter for Hdf5CheckpointAdapter {
         {
             let path = path.as_ref();
             require_checkpoint_format(manifest, CheckpointFormat::Hdf5)?;
-            hdf5_checkpoint::write(path, manifest)?;
+            hdf5_checkpoint::write(path, manifest, None)?;
             Ok(CheckpointAdapterReceipt {
                 format: CheckpointFormat::Hdf5,
                 path: path.display().to_string(),
@@ -979,7 +981,7 @@ impl CheckpointAdapter for Hdf5CheckpointAdapter {
     ) -> Result<RestoredCheckpoint, ArrowError> {
         #[cfg(feature = "hdf5")]
         {
-            hdf5_checkpoint::read(path.as_ref())?.restore()
+            hdf5_checkpoint::read(path.as_ref(), false)?.0.restore()
         }
         #[cfg(not(feature = "hdf5"))]
         {
@@ -1004,7 +1006,7 @@ impl CheckpointAdapter for Adios2CheckpointAdapter {
         {
             let path = path.as_ref();
             require_checkpoint_format(manifest, CheckpointFormat::Adios2)?;
-            adios2_checkpoint::write(path, manifest)?;
+            adios2_checkpoint::write(path, manifest, None)?;
             Ok(CheckpointAdapterReceipt {
                 format: CheckpointFormat::Adios2,
                 path: path.display().to_string(),
@@ -1026,7 +1028,7 @@ impl CheckpointAdapter for Adios2CheckpointAdapter {
     ) -> Result<RestoredCheckpoint, ArrowError> {
         #[cfg(all(feature = "adios2", any(target_os = "linux", target_os = "macos")))]
         {
-            adios2_checkpoint::read(path.as_ref())?.restore()
+            adios2_checkpoint::read(path.as_ref(), false)?.0.restore()
         }
         #[cfg(not(all(feature = "adios2", any(target_os = "linux", target_os = "macos"))))]
         {
