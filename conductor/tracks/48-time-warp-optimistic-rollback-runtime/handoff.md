@@ -636,3 +636,25 @@ All 212 PDES tests and strict Clippy passed. Independent review identified both
 restart cases and accepted their fixes. Hosted integration is the next gate.
 The [cut decision](adr-external-engine-20261103.md#cuts-with-retained-in-flight-work)
 defines the fixed-membership boundary.
+
+## Three-member cut recovery
+
+Chat `01a1fd18-51c7-7963-a3cc-d262d54582ba` owns this branch in the
+`kairos-ci-closeout` worktree. The patch covers the prepared standby ingress,
+its Rust regression, the native qualification worker's routes and the
+three-member scenario. The next operation is protected PR integration.
+
+Rust 1.99.1 built a macOS ARM64 coordinator and two Linux x86-64 NAS workers.
+The native driver provisions separate SQLite stores and TLS identities, then
+calls `recover_group_in_flight` in
+[`qualify_cap48.py`](../../../docs/distributed/qualify_cap48.py).
+Each inter-host exchange uses real Tonic mTLS.
+
+The coordinator rejected a cut with two prepares and left its revision and
+floor intact. The coordinator and third worker restarted before delivery of the
+pause. The third worker then persisted its prepare and restarted again before
+receiving the decision over mTLS. Each floor became 10. The duplicate decision
+preserved the reopened worker's revision. A complete activation restored live
+execution, the tick-10 delivery replayed once, and the coordinator and first
+worker each rolled back once. Their model, RNG and trace bytes matched the
+serial reference. The next cut advanced all three floors to 100.

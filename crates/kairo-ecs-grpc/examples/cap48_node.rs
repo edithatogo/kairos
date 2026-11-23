@@ -103,6 +103,15 @@ mod native {
     type Runtime = ExternalOptimisticRuntime<Model, Codec>;
     #[derive(Deserialize)]
     #[serde(deny_unknown_fields)]
+    struct PeerSettings {
+        endpoint: String,
+        domain: String,
+        ca: String,
+        certificate_hash: Hash,
+    }
+
+    #[derive(Deserialize)]
+    #[serde(deny_unknown_fields)]
     struct Settings {
         configuration: ExternalConfiguration,
         participant: u32,
@@ -115,6 +124,8 @@ mod native {
         peer_domain: String,
         peer_ca: String,
         peer_certificate_hash: Hash,
+        #[serde(default)]
+        peers: BTreeMap<u32, PeerSettings>,
     }
     fn field<T: serde::de::DeserializeOwned>(v: &Value, k: &str) -> Result<T, String> {
         serde_json::from_value(v.get(k).cloned().ok_or_else(|| format!("missing {k}"))?)
@@ -198,9 +209,16 @@ mod native {
         runtime: &Arc<Mutex<Runtime>>,
         identity: &ExternalTlsIdentity,
         peer: &ExternalTlsPeer,
+        peers: &BTreeMap<u32, ExternalTlsPeer>,
     ) -> Result<Value, String> {
         let op = v.get("op").and_then(Value::as_str).ok_or("op")?;
         if op == "send" {
+            let peer = match v.get("peer") {
+                Some(_) => peers
+                    .get(&field::<u32>(&v, "peer")?)
+                    .ok_or("unknown peer")?,
+                None => peer,
+            };
             let packet: Vec<u8> = field(&v, "packet")?;
             let replies = external_exchange(identity, peer, packet)
                 .await
@@ -272,6 +290,10 @@ mod native {
                 json!({})
             }
             "pause" => json!({"packet":r.pause_cut().map_err(|e|format!("{e:?}"))?}),
+            "pause_capture" => {
+                json!({"packet":r.pause_cut_with_in_flight().map_err(|e|format!("{e:?}"))?})
+            }
+            "retained_pause" => json!({"packet":r.retained_pause()}),
             "prepare" => {
                 json!({"packet":r.prepare_cut(number(&v,"limit")?).map_err(|e|format!("{e:?}"))?})
             }
@@ -293,11 +315,24 @@ mod native {
         Ok(result)
     }
     pub async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        let path = std::env::args().nth(1).ok_or("settings path required")?;
+        let mut arguments = std::env::args().skip(1);
+        let path = arguments.next().ok_or("settings path required")?;
         if path == "--describe" {
+            let count = arguments
+                .next()
+                .map(|value| value.parse::<std::num::NonZeroU8>())
+                .transpose()?
+                .map_or(2, std::num::NonZeroU8::get);
+            let public_keys: Vec<_> = (1..=count)
+                .map(|seed| {
+                    SigningKey::from_bytes(&[seed; 32])
+                        .verifying_key()
+                        .to_bytes()
+                })
+                .collect();
             println!(
                 "{}",
-                json!({"model":Codec.identity(),"public_keys":[SigningKey::from_bytes(&[1;32]).verifying_key().to_bytes().to_vec(),SigningKey::from_bytes(&[2;32]).verifying_key().to_bytes().to_vec()]})
+                json!({"model":Codec.identity(),"public_keys":public_keys})
             );
             return Ok(());
         }
@@ -339,6 +374,26 @@ mod native {
             ca_pem: std::fs::read(&settings.peer_ca)?,
             certificate_hash: settings.peer_certificate_hash,
         };
+        let mut peers = BTreeMap::new();
+        for (participant, route) in settings.peers {
+            if participant == settings.participant
+                || !settings.configuration.members.iter().any(|member| {
+                    member.participant == participant
+                        && member.certificate_hash == route.certificate_hash
+                })
+            {
+                return Err("peer route does not match a remote member".into());
+            }
+            peers.insert(
+                participant,
+                ExternalTlsPeer {
+                    endpoint: route.endpoint,
+                    domain: route.domain,
+                    ca_pem: std::fs::read(route.ca)?,
+                    certificate_hash: route.certificate_hash,
+                },
+            );
+        }
         let listener = tokio::net::TcpListener::bind(&settings.listen).await?;
         let address = listener.local_addr()?;
         let allowed = settings
@@ -374,7 +429,7 @@ mod native {
             if value.get("op").and_then(Value::as_str) == Some("stop") {
                 break;
             }
-            let result = command(value, &runtime, &identity, &peer).await;
+            let result = command(value, &runtime, &identity, &peer, &peers).await;
             match result {
                 Ok(result) => println!("{}", json!({"ok":true,"result":result})),
                 Err(error) => println!("{}", json!({"ok":false,"error":error})),
