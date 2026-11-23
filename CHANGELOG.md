@@ -16,6 +16,8 @@ Format:
 
 ### Added
 
+- `kairo-ecs-arrow` adds native Arrow IPC streams for event logs, world snapshots and checkpoint metadata with contiguous byte receipts. Enable `parallel-io` and `polars-native`. [ADR 0022](docs/adr/0022-native-parallel-arrow-ipc.md).
+
 - The opt-in `engine-checkpoint` feature in `kairo-ecs-arrow` saves the Rust scheduler, caller-owned model state and event records together in one HDF5 or ADIOS2 BP5 artifact. See [ADR 0021](docs/adr/0021-native-engine-checkpoint.md).
 
 - The optional `pdes-worker-pool` feature reuses native threads across conservative PDES rounds while keeping the ordered round commit.
