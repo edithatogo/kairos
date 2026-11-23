@@ -16,6 +16,7 @@ Format:
 
 ### Added
 
+- The optional `onnx` feature in `kairo-ecs-ml` runs fixed-shape float32 models on CPU through the Rust inference tick hook. Applications supply an initialized ONNX Runtime environment. See [ADR 0026](docs/adr/0026-onnx-cpu-inference.md).
 - Reopened Time Warp participants can recover a prepared cut directly over authenticated gRPC. The native qualification worker supports multiple pinned peers for testing retained deliveries and rollback across three participants.
 
 - The opt-in `checkpoint-json` feature in `kairo-ecs-des` restores staged resource allocations, queued requests, scheduled releases and occupancy history in a fresh process. HDF5 and BP5 restart tests save the allocator alongside model events and RNG state. [ADR 0025](docs/adr/0025-staged-resource-checkpoint.md).

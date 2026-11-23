@@ -1,6 +1,16 @@
 # Handoff: Track 37 ML/AI Integration & Inference
 
-## Summary
+## Native CPU inference
+
+`OrtSession::with_cpu_runtime` takes the application's initialized ONNX
+environment. The optional CPU session validates the declared tensor ports,
+executes the model through the scheduler tick hook, and returns owned output
+values. The standalone decay example uses an installed runtime. The Rust
+coverage job executes the native fixture with a checksum-pinned library.
+[Decision and compatibility](../../../docs/adr/0026-onnx-cpu-inference.md) ·
+[S09 evidence](../../execution/scientific/s09-completion.md).
+
+## Original scaffold
 
 Track 37 now has the first concrete ML scaffold. `kairo-ecs-ml` defines shape-checked tensors, dependency-free model metadata and tick-boundary input/output-shape validation, finite tensor-value validation, an ONNX-facing session wrapper surface, explicit backend-not-configured status, `NeuralSystem`, phase-filtered `InferenceTickHook`, feature-gated backend modules, a DE surrogate example, and a Gymnasium-compatible Python wrapper that can import without optional Gymnasium installed.
 

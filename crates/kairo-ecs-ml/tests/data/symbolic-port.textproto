@@ -1,0 +1,9 @@
+ir_version: 8
+producer_name: "KairoECS"
+opset_import { version: 13 }
+graph {
+  name: "symbolic-port"
+  input { name: "state" type { tensor_type { elem_type: 1 shape { dim { dim_param: "n" } } } } }
+  node { op_type: "Identity" input: "state" output: "next" }
+  output { name: "next" type { tensor_type { elem_type: 1 shape { dim { dim_param: "n" } } } } }
+}

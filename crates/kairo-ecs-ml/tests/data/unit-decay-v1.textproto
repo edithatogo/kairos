@@ -1,0 +1,11 @@
+ir_version: 8
+producer_name: "KairoECS"
+model_version: 1
+opset_import { version: 13 }
+graph {
+  name: "unit-decay-dt-0.001"
+  input { name: "state" type { tensor_type { elem_type: 1 shape { dim { dim_value: 1 } } } } }
+  initializer { name: "factor" dims: 1 data_type: 1 float_data: 0.999000499833375 }
+  node { op_type: "Mul" input: "state" input: "factor" output: "next" }
+  output { name: "next" type { tensor_type { elem_type: 1 shape { dim { dim_value: 1 } } } } }
+}

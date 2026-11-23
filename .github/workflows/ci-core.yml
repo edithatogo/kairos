@@ -75,6 +75,8 @@ jobs:
         run: bash scripts/prepare-hdf5-ci.sh
       - name: Prepare pinned ADIOS2 library and independent reader
         run: bash scripts/prepare-adios2-ci.sh
+      - name: Prepare pinned ONNX Runtime library
+        run: bash scripts/prepare-onnx-ci.sh
       - name: Verify workspace readiness
         run: |
           test -f Cargo.toml
@@ -113,6 +115,9 @@ jobs:
           cargo llvm-cov test --no-report --locked -p kairo-ecs-arrow --features adios2 \
             --test maturity_native_adios2 bpls -- --ignored --nocapture | tee "$RUNNER_TEMP/kairo-bpls.log"
           grep -Fq 'test result: ok. 1 passed; 0 failed; 0 ignored' "$RUNNER_TEMP/kairo-bpls.log"
+          cargo llvm-cov test --no-report --locked -p kairo-ecs-ml --features onnx \
+            --test maturity_native_inference installed_onnx -- --ignored --nocapture | tee "$RUNNER_TEMP/kairo-onnx.log"
+          grep -Fq 'test result: ok. 1 passed; 0 failed; 0 ignored' "$RUNNER_TEMP/kairo-onnx.log"
           cargo llvm-cov nextest --workspace --all-features --lcov --output-path lcov.info --no-clean
           node scripts/validation/check-core-coverage.mjs lcov.info
       - name: Capture runner resources after coverage

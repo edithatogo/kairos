@@ -7,10 +7,17 @@ repository = "https://github.com/edithatogo/kairos"
 rust-version.workspace = true
 [features]
 default = []
-onnx = []
+onnx = ["dep:ort"]
 tensorrt = []
 burn = []
 gymnasium = []
 
 [dependencies]
 kairo-ecs-rng = { path = "../kairo-ecs-rng", version = "0.0.0" }
+
+[target.'cfg(any(target_os = "linux", target_os = "macos"))'.dependencies]
+ort = { version = "=2.0.0-rc.15", default-features = false, features = ["load-dynamic", "api-31"], optional = true }
+
+[dev-dependencies]
+kairo-ecs-core = { path = "../kairo-ecs-core", version = "0.0.0" }
+kairo-ecs-types = { path = "../kairo-ecs-types", version = "0.0.0" }
