@@ -1,7 +1,7 @@
 #![forbid(unsafe_code)]
 
 #[cfg(all(target_os = "macos", feature = "wgpu-backend"))]
-use crate::compute::AgentParticle;
+use crate::compute::{validate_des_events, AgentParticle};
 use crate::compute::{
     DesEvent, GpuBackendAvailability, GpuBackendCapabilities, GpuCompute, GpuComputeError,
     GpuState, GpuStepStats, PersistentGpuSession, DEFAULT_WORKGROUP_SIZE,
@@ -29,6 +29,7 @@ struct NativeMetalDeviceContext {
     bind_group_layout: wgpu::BindGroupLayout,
     adapter_name: String,
     particles: NativeParticleState,
+    des: Option<NativeDes>,
 }
 
 #[cfg(all(target_os = "macos", feature = "wgpu-backend"))]
@@ -36,6 +37,33 @@ enum NativeParticleState {
     Empty,
     Resident(NativeParticles),
     Indeterminate,
+}
+
+#[cfg(all(target_os = "macos", feature = "wgpu-backend"))]
+struct NativeDes {
+    pipeline: wgpu::ComputePipeline,
+    layout: wgpu::BindGroupLayout,
+    entities: NativeDesState,
+}
+
+#[cfg(all(target_os = "macos", feature = "wgpu-backend"))]
+enum NativeDesState {
+    AwaitingUpload,
+    Resident(Option<wgpu::Buffer>),
+    Indeterminate,
+}
+
+#[cfg(all(target_os = "macos", feature = "wgpu-backend"))]
+impl NativeDesState {
+    fn buffer(&self) -> Result<Option<&wgpu::Buffer>, GpuComputeError> {
+        match self {
+            Self::AwaitingUpload => Err(GpuComputeError::StateNotResident),
+            Self::Resident(buffer) => Ok(buffer.as_ref()),
+            Self::Indeterminate => Err(metal_error(
+                "upload entity state after a failed Metal submission",
+            )),
+        }
+    }
 }
 
 #[cfg(all(target_os = "macos", feature = "wgpu-backend"))]
@@ -98,39 +126,73 @@ struct NativeParticles {
 
 #[cfg(all(target_os = "macos", feature = "wgpu-backend"))]
 impl NativeMetalDeviceContext {
-    fn replace_particles(&mut self, particles: &[AgentParticle]) -> Result<usize, GpuComputeError> {
-        let bytes = std::mem::size_of_val(particles);
-        let count =
-            u32::try_from(particles.len()).map_err(|_| GpuComputeError::DispatchSizeOverflow)?;
-        let workgroups = count.div_ceil(METAL_KERNEL_WIDTH);
-        let limits = self.device.limits();
-        if workgroups > limits.max_compute_workgroups_per_dimension {
+    fn dispatch_shape(&self, count: usize) -> Result<(u32, u32), GpuComputeError> {
+        let count = u32::try_from(count).map_err(|_| GpuComputeError::DispatchSizeOverflow)?;
+        let groups = count.div_ceil(METAL_KERNEL_WIDTH);
+        if groups > self.device.limits().max_compute_workgroups_per_dimension {
             return Err(GpuComputeError::DispatchSizeOverflow);
         }
-        if bytes as u64
-            > limits
-                .max_buffer_size
-                .min(limits.max_storage_buffer_binding_size)
-        {
-            return Err(GpuComputeError::MemorySizeOverflow);
-        }
+        Ok((count, groups))
+    }
 
-        self.particles = if count == 0 {
-            NativeParticleState::Empty
+    fn replace_state(
+        &mut self,
+        particles: &[AgentParticle],
+        entity_values: &[i32],
+    ) -> Result<usize, GpuComputeError> {
+        let (count, workgroups) = self.dispatch_shape(particles.len())?;
+        u32::try_from(entity_values.len()).map_err(|_| GpuComputeError::MemorySizeOverflow)?;
+        let particle_bytes = bytemuck::cast_slice(particles);
+        let entity_bytes = bytemuck::cast_slice(entity_values);
+        self.validate_storage_size(particle_bytes.len())?;
+        self.validate_storage_size(entity_bytes.len())?;
+        let bytes = particle_bytes
+            .len()
+            .checked_add(entity_bytes.len())
+            .ok_or(GpuComputeError::MemorySizeOverflow)?;
+
+        let (particles, entities) = if bytes == 0 {
+            (NativeParticleState::Empty, None)
         } else {
-            device_operation(&self.device, "Metal particle upload failed", || {
-                Ok(NativeParticleState::Resident(NativeParticles {
-                    buffer: upload_buffer(
-                        &self.device,
-                        "metal_persistent_particles",
-                        bytemuck::cast_slice(particles),
-                        wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_SRC,
-                    )?,
-                    count,
-                    workgroups,
-                }))
+            device_operation(&self.device, "Metal state upload failed", || {
+                let usage = wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_SRC;
+                let staged = (|| {
+                    let particles = if particle_bytes.is_empty() {
+                        NativeParticleState::Empty
+                    } else {
+                        NativeParticleState::Resident(NativeParticles {
+                            buffer: upload_buffer(
+                                &self.device,
+                                "metal_particles",
+                                particle_bytes,
+                                usage,
+                            )?,
+                            count,
+                            workgroups,
+                        })
+                    };
+                    let entities = if entity_bytes.is_empty() {
+                        None
+                    } else {
+                        Some(upload_buffer(
+                            &self.device,
+                            "metal_entities",
+                            entity_bytes,
+                            usage,
+                        )?)
+                    };
+                    Ok((particles, entities))
+                })();
+                // Unmapping a staged buffer queues a copy. Retire those copies
+                // even when a later allocation failed, before replacing state.
+                self.wait_for_submission(self.queue.submit([]))?;
+                staged
             })?
         };
+        self.particles = particles;
+        if let Some(des) = &mut self.des {
+            des.entities = NativeDesState::Resident(entities);
+        }
         Ok(bytes)
     }
 
@@ -147,33 +209,46 @@ impl NativeMetalDeviceContext {
         Ok(())
     }
 
-    fn read_particles(
+    fn dispatch(
         &self,
-        particles: &NativeParticles,
-    ) -> Result<Vec<AgentParticle>, GpuComputeError> {
-        device_operation(&self.device, "Metal particle readback failed", || {
-            const FAILURE: GpuComputeError = GpuComputeError::DeviceUnavailable {
-                backend: METAL_BACKEND_NAME,
-                reason: "Metal particle readback failed",
-            };
+        pipeline: &wgpu::ComputePipeline,
+        bindings: &wgpu::BindGroup,
+        workgroups: u32,
+        label: &'static str,
+    ) -> Result<(), GpuComputeError> {
+        let mut encoder = self
+            .device
+            .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some(label) });
+        {
+            let mut pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
+                label: Some(label),
+                timestamp_writes: None,
+            });
+            pass.set_pipeline(pipeline);
+            pass.set_bind_group(0, bindings, &[]);
+            pass.dispatch_workgroups(workgroups, 1, 1);
+        }
+        self.wait_for_submission(self.queue.submit(Some(encoder.finish())))
+    }
+
+    fn read_buffer<T: bytemuck::Pod>(
+        &self,
+        buffer: &wgpu::Buffer,
+        reason: &'static str,
+    ) -> Result<Vec<T>, GpuComputeError> {
+        device_operation(&self.device, reason, || {
             let staging = self.device.create_buffer(&wgpu::BufferDescriptor {
-                label: Some("metal_particle_readback"),
-                size: particles.buffer.size(),
+                label: Some("metal_state_readback"),
+                size: buffer.size(),
                 usage: wgpu::BufferUsages::MAP_READ | wgpu::BufferUsages::COPY_DST,
                 mapped_at_creation: false,
             });
             let mut encoder = self
                 .device
                 .create_command_encoder(&wgpu::CommandEncoderDescriptor {
-                    label: Some("metal_particle_readback"),
+                    label: Some("metal_state_readback"),
                 });
-            encoder.copy_buffer_to_buffer(
-                &particles.buffer,
-                0,
-                &staging,
-                0,
-                particles.buffer.size(),
-            );
+            encoder.copy_buffer_to_buffer(buffer, 0, &staging, 0, buffer.size());
             let submitted = self.queue.submit(Some(encoder.finish()));
             let slice = staging.slice(..);
             let (sender, receiver) = std::sync::mpsc::channel();
@@ -183,16 +258,136 @@ impl NativeMetalDeviceContext {
             self.wait_for_submission(submitted)?;
             receiver
                 .recv_timeout(std::time::Duration::from_secs(30))
-                .map_err(|_| FAILURE)?
-                .map_err(|_| FAILURE)?;
-            let view = slice.get_mapped_range().map_err(|_| FAILURE)?;
-            let particles = bytemuck::try_cast_slice::<_, AgentParticle>(&view)
-                .map_err(|_| FAILURE)?
+                .map_err(|_| metal_error(reason))?
+                .map_err(|_| metal_error(reason))?;
+            let view = slice.get_mapped_range().map_err(|_| metal_error(reason))?;
+            let values = bytemuck::try_cast_slice::<_, T>(&view)
+                .map_err(|_| metal_error(reason))?
                 .to_vec();
             drop(view);
             staging.unmap();
-            Ok(particles)
+            Ok(values)
         })
+    }
+
+    fn initialize_des(&mut self) -> Result<(), GpuComputeError> {
+        self.des = Some(device_operation(
+            &self.device,
+            "Metal DES pipeline setup failed",
+            || {
+                let shader = self
+                    .device
+                    .create_shader_module(wgpu::ShaderModuleDescriptor {
+                        label: Some("metal_des_kernel"),
+                        source: wgpu::ShaderSource::Wgsl(
+                            r#"
+                    struct Event {
+                        entity: u32,
+                        delta: i32,
+                    };
+
+                    @group(0) @binding(0) var<storage, read_write> values: array<atomic<i32>>;
+                    @group(0) @binding(1) var<storage, read> events: array<Event>;
+
+                    @compute @workgroup_size(64)
+                    fn main(@builtin(global_invocation_id) id: vec3<u32>) {
+                        if (id.x < arrayLength(&events)) {
+                            let event = events[id.x];
+                            atomicAdd(&values[event.entity], event.delta);
+                        }
+                    }
+                "#
+                            .into(),
+                        ),
+                    });
+                let pipeline =
+                    self.device
+                        .create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
+                            label: Some("metal_des_pipeline"),
+                            layout: None,
+                            module: &shader,
+                            entry_point: Some("main"),
+                            compilation_options: Default::default(),
+                            cache: None,
+                        });
+                let layout = pipeline.get_bind_group_layout(0);
+                Ok(NativeDes {
+                    pipeline,
+                    layout,
+                    entities: NativeDesState::AwaitingUpload,
+                })
+            },
+        )?);
+        Ok(())
+    }
+
+    fn validate_storage_size(&self, len: usize) -> Result<(), GpuComputeError> {
+        let limits = self.device.limits();
+        if len as u64
+            > limits
+                .max_buffer_size
+                .min(limits.max_storage_buffer_binding_size)
+        {
+            return Err(GpuComputeError::MemorySizeOverflow);
+        }
+        Ok(())
+    }
+
+    fn dispatch_des(&mut self, events: &[DesEvent]) -> Result<GpuStepStats, GpuComputeError> {
+        let des = self.des.as_ref().expect("native DES initialized");
+        let state = des.entities.buffer()?;
+        let entity_count = state
+            .as_ref()
+            .map_or(0, |buffer| buffer.size() as usize / size_of::<i32>());
+        validate_des_events(events, entity_count)?;
+        if events.is_empty() {
+            return Ok(GpuStepStats::default());
+        }
+        let values = state.as_ref().expect("nonempty validated entity state");
+        let (_, workgroups) = self.dispatch_shape(events.len())?;
+        let bytes = events
+            .len()
+            .checked_mul(size_of::<[u32; 2]>())
+            .ok_or(GpuComputeError::MemorySizeOverflow)?;
+        self.validate_storage_size(bytes)?;
+
+        let events: Vec<[u32; 2]> = events
+            .iter()
+            .map(|event| [event.entity_id as u32, event.delta as u32])
+            .collect();
+        let result = device_operation(&self.device, "Metal DES dispatch failed", || {
+            let uploaded = upload_buffer(
+                &self.device,
+                "metal_des_events",
+                bytemuck::cast_slice(&events),
+                wgpu::BufferUsages::STORAGE,
+            )?;
+            let bind_group = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
+                label: Some("metal_des_bind_group"),
+                layout: &des.layout,
+                entries: &[
+                    wgpu::BindGroupEntry {
+                        binding: 0,
+                        resource: values.as_entire_binding(),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 1,
+                        resource: uploaded.as_entire_binding(),
+                    },
+                ],
+            });
+            self.dispatch(&des.pipeline, &bind_group, workgroups, "metal_des")?;
+            Ok(GpuStepStats {
+                uploaded_bytes: bytes,
+                downloaded_bytes: 0,
+                dispatched_workgroups: workgroups,
+            })
+        });
+        if result.is_err() {
+            self.des.as_mut().expect("native DES initialized").entities =
+                NativeDesState::Indeterminate;
+        }
+        result
     }
 
     fn dispatch_particles(
@@ -237,22 +432,12 @@ impl NativeMetalDeviceContext {
                     },
                 ],
             });
-            let mut encoder = self
-                .device
-                .create_command_encoder(&wgpu::CommandEncoderDescriptor {
-                    label: Some("metal_abm_encoder"),
-                });
-            {
-                let mut pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
-                    label: Some("metal_abm_pass"),
-                    timestamp_writes: None,
-                });
-                pass.set_pipeline(&self.abm_pipeline);
-                pass.set_bind_group(0, &bind_group, &[]);
-                pass.dispatch_workgroups(particles.workgroups, 1, 1);
-            }
-            let submitted = self.queue.submit(Some(encoder.finish()));
-            self.wait_for_submission(submitted)?;
+            self.dispatch(
+                &self.abm_pipeline,
+                &bind_group,
+                particles.workgroups,
+                "metal_abm",
+            )?;
             Ok(GpuStepStats {
                 uploaded_bytes: std::mem::size_of::<Uniforms>(),
                 downloaded_bytes: 0,
@@ -269,7 +454,6 @@ impl NativeMetalDeviceContext {
 /// to obtain a snapshot with a typed error on readback failure.
 pub struct MetalBackend {
     worker_threads: usize,
-    hardware_only: bool,
     session: PersistentGpuSession,
     adapter_info: MetalAdapterInfo,
     #[cfg(all(target_os = "macos", feature = "wgpu-backend"))]
@@ -294,11 +478,13 @@ impl Clone for MetalBackend {
         )]
         let mut session = self.session.clone();
         #[cfg(all(target_os = "macos", feature = "wgpu-backend"))]
-        if self
-            .native_ctx
-            .as_ref()
-            .is_some_and(|ctx| !matches!(ctx.particles, NativeParticleState::Empty))
-        {
+        if self.native_ctx.as_ref().is_some_and(|ctx| {
+            !matches!(ctx.particles, NativeParticleState::Empty)
+                || (ctx
+                    .des
+                    .as_ref()
+                    .is_some_and(|des| !matches!(des.entities, NativeDesState::AwaitingUpload)))
+        }) {
             let state = self
                 .download_state()
                 .expect("could not snapshot Metal particles for clone");
@@ -308,7 +494,6 @@ impl Clone for MetalBackend {
         }
         Self {
             worker_threads: self.worker_threads,
-            hardware_only: false,
             session,
             adapter_info: MetalAdapterInfo {
                 adapter_name: "CPU fallback".into(),
@@ -363,7 +548,6 @@ impl MetalBackend {
 
         Self {
             worker_threads,
-            hardware_only: false,
             session: PersistentGpuSession::new(METAL_BACKEND_NAME),
             adapter_info,
             #[cfg(all(target_os = "macos", feature = "wgpu-backend"))]
@@ -495,6 +679,7 @@ impl MetalBackend {
             bind_group_layout,
             adapter_name: info.name,
             particles: NativeParticleState::Empty,
+            des: None,
         })
     }
 
@@ -505,14 +690,13 @@ impl MetalBackend {
 
     /// Select native Apple Metal or return a typed device error.
     ///
-    /// This constructor provides particle ABM on the device. DES is
-    /// unavailable in hardware-only sessions.
+    /// Particle state and additive DES entity values stay on the device.
     pub fn initialize_macos_hardware_only() -> Result<Self, GpuComputeError> {
         #[cfg(all(target_os = "macos", feature = "wgpu-backend"))]
         {
             let mut backend = Self::new();
-            if backend.native_ctx.is_some() {
-                backend.hardware_only = true;
+            if let Some(ctx) = &mut backend.native_ctx {
+                ctx.initialize_des()?;
                 return Ok(backend);
             }
         }
@@ -595,10 +779,19 @@ impl GpuCompute for MetalBackend {
     fn upload_state(&mut self, state: &GpuState) -> Result<GpuStepStats, GpuComputeError> {
         #[cfg(all(target_os = "macos", feature = "wgpu-backend"))]
         if let Some(ctx) = &mut self.native_ctx {
-            let uploaded_bytes = ctx.replace_particles(&state.particles)?;
+            let entity_values = if ctx.des.is_some() {
+                &state.entity_values[..]
+            } else {
+                &[]
+            };
+            let uploaded_bytes = ctx.replace_state(&state.particles, entity_values)?;
             self.session.upload_once(&GpuState {
                 particles: Vec::new(),
-                entity_values: state.entity_values.clone(),
+                entity_values: if ctx.des.is_some() {
+                    Vec::new()
+                } else {
+                    state.entity_values.clone()
+                },
             })?;
             return Ok(GpuStepStats {
                 uploaded_bytes,
@@ -634,8 +827,11 @@ impl GpuCompute for MetalBackend {
     }
 
     fn run_des_step(&mut self, events: &[DesEvent]) -> Result<GpuStepStats, GpuComputeError> {
-        if self.hardware_only {
-            return Err(GpuComputeError::UnsupportedBackend(METAL_BACKEND_NAME));
+        #[cfg(all(target_os = "macos", feature = "wgpu-backend"))]
+        if let Some(ctx) = &mut self.native_ctx {
+            if ctx.des.is_some() {
+                return ctx.dispatch_des(events);
+            }
         }
         self.session.run_des_tick(events)?;
         Ok(GpuStepStats::default())
@@ -652,7 +848,8 @@ impl GpuCompute for MetalBackend {
         if let Some(ctx) = &self.native_ctx {
             match &ctx.particles {
                 NativeParticleState::Resident(particles) => {
-                    state.particles = ctx.read_particles(particles)?
+                    state.particles =
+                        ctx.read_buffer(&particles.buffer, "Metal particle readback failed")?
                 }
                 NativeParticleState::Indeterminate => {
                     return Err(metal_error(
@@ -660,6 +857,12 @@ impl GpuCompute for MetalBackend {
                     ));
                 }
                 NativeParticleState::Empty => {}
+            }
+            if let Some(des) = &ctx.des {
+                if let Some(buffer) = des.entities.buffer()? {
+                    state.entity_values =
+                        ctx.read_buffer(buffer, "Metal entity readback failed")?;
+                }
             }
         }
         Ok(state)
@@ -717,6 +920,46 @@ mod tests {
         );
     }
 
+    #[cfg(all(target_os = "macos", feature = "wgpu-backend"))]
+    #[test]
+    fn invalid_native_buffer_fences_des_until_reupload() {
+        let mut backend = MetalBackend::initialize_macos_hardware_only().unwrap();
+        let state = GpuState {
+            particles: Vec::new(),
+            entity_values: vec![20],
+        };
+        backend.upload_state(&state).unwrap();
+        let ctx = backend.native_ctx.as_mut().unwrap();
+        let des = ctx.des.as_mut().unwrap();
+        des.entities =
+            NativeDesState::Resident(Some(ctx.device.create_buffer(&wgpu::BufferDescriptor {
+                label: None,
+                size: size_of::<i32>() as u64,
+                usage: wgpu::BufferUsages::COPY_SRC,
+                mapped_at_creation: false,
+            })));
+        let event = DesEvent {
+            timestamp_ns: 0,
+            entity_id: 0,
+            delta: 3,
+        };
+        assert!(matches!(
+            backend.run_des_step(&[event]),
+            Err(GpuComputeError::DeviceUnavailable { .. })
+        ));
+        assert!(matches!(
+            backend.download_state(),
+            Err(GpuComputeError::DeviceUnavailable { .. })
+        ));
+        assert!(matches!(
+            backend.run_des_step(&[event]),
+            Err(GpuComputeError::DeviceUnavailable { .. })
+        ));
+        backend.upload_state(&state).unwrap();
+        backend.run_des_step(&[event]).unwrap();
+        assert_eq!(backend.download_state().unwrap().entity_values, [23]);
+    }
+
     #[test]
     fn test_metal_backend_capabilities() {
         let backend = MetalBackend::new();
@@ -727,6 +970,59 @@ mod tests {
             caps.availability == GpuBackendAvailability::Available
         );
         assert!(!caps.supports_zero_copy_borrow);
+    }
+
+    #[cfg(all(target_os = "macos", feature = "wgpu-backend"))]
+    #[test]
+    fn repeated_uploads_retire_native_mappings() {
+        let mut backend = MetalBackend::initialize_macos_hardware_only().unwrap();
+        let count_buffers = |backend: &MetalBackend| {
+            backend
+                .native_ctx
+                .as_ref()
+                .unwrap()
+                .device
+                .get_internal_counters()
+                .hal
+                .buffers
+                .read()
+        };
+        let ctx = backend.native_ctx.as_ref().unwrap();
+        ctx.wait_for_submission(ctx.queue.submit([])).unwrap();
+        let before = count_buffers(&backend);
+        let state = GpuState {
+            particles: vec![
+                AgentParticle {
+                    x: 1.0,
+                    y: 2.0,
+                    vx: 0.0,
+                    vy: 0.0
+                };
+                128
+            ],
+            entity_values: vec![41; 128],
+        };
+        backend.upload_state(&state).unwrap();
+        let first = count_buffers(&backend);
+        for generation in 0..32 {
+            if generation % 2 == 0 {
+                backend.upload_state(&GpuState::default()).unwrap();
+            }
+            backend.upload_state(&state).unwrap();
+        }
+        let final_count = count_buffers(&backend);
+        // wgpu reports zero when the optional counters feature is disabled.
+        if first != 0 {
+            println!(
+                "Metal HAL live buffers: initial={before}, first={first}, after_32={final_count}"
+            );
+            assert!(first >= before + 2);
+            assert!(
+                final_count <= first + 2,
+                "retired mapped uploads remain live"
+            );
+        }
+        assert_eq!(backend.download_state().unwrap(), state);
     }
 
     #[test]

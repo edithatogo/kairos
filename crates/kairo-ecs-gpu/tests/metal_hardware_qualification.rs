@@ -53,7 +53,7 @@ fn test_metal_persistent_particles_across_ticks() {
     let upload_stats = backend.upload_state(&state).expect("upload must succeed");
     assert_eq!(
         upload_stats.uploaded_bytes,
-        n_particles * std::mem::size_of::<AgentParticle>()
+        n_particles * std::mem::size_of::<AgentParticle>() + 3 * std::mem::size_of::<i32>()
     );
 
     // 2. Run 10 consecutive ticks without re-uploading from host RAM

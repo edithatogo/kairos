@@ -16,6 +16,8 @@ Format:
 
 ### Added
 
+- The `kairo-ecs-gpu` hardware-only Apple Metal backend runs additive DES batches on resident entity buffers alongside particle steps. CPU and device batches use explicit 32-bit wrapping arithmetic. [ADR 0023](docs/adr/0023-native-metal-additive-des.md).
+
 - `kairo-ecs-arrow` adds native Arrow IPC streams for event logs, world snapshots and checkpoint metadata with contiguous byte receipts. Enable `parallel-io` and `polars-native`. [ADR 0022](docs/adr/0022-native-parallel-arrow-ipc.md).
 
 - The opt-in `engine-checkpoint` feature in `kairo-ecs-arrow` saves the Rust scheduler, caller-owned model state and event records together in one HDF5 or ADIOS2 BP5 artifact. See [ADR 0021](docs/adr/0021-native-engine-checkpoint.md).
