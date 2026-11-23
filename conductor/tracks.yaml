@@ -1636,7 +1636,7 @@ tracks:
 
   - id: 111
     name: Measured performance and parallel execution improvement
-    status: Spec Approved
+    status: In Progress
     owner: performance-agent + pdes-agent
     depends_on: ["18", "31", "47", "48", "78", "101"]
     owned_paths:

@@ -4,14 +4,14 @@ Remove demonstrated overhead, establish a measured serial/parallel/GPU crossover
 
 ## Phase 0: Reproducible baseline
 
-- [ ] 111.0.1: Reproduce historical small-workload PDES measurements and freeze a common serial/parallel input tape.
+- [x] 111.0.1: Reproduce historical small-workload PDES measurements and freeze a common serial/parallel input tape. [Evidence](handoff.md#matched-ring-and-worker-reuse--23-november-2026).
 - [ ] 111.0.2: Profile thread startup/join, synchronization, allocation, queue, snapshots, serialization and transfer cost.
 - [ ] 111.0.3: Separate initialization, steady state and end-to-end timings; retain raw samples, hardware, inputs and exact source.
 - [ ] 111.0.review: Independently review this phase, apply accepted fixes, execute the named oracles and record the next-phase decision.
 
 ## Phase 1: Implement measured optimizations
 
-- [ ] 111.1.1: Benchmark persistent Rayon or fixed Rust workers; eliminate per-round OS-thread creation where accepted.
+- [x] 111.1.1: Benchmark persistent Rayon or fixed Rust workers; eliminate per-round OS-thread creation where accepted. The measured opt-in executor reuses a pool across rounds and horizons.
 - [ ] 111.1.2: Batch eligible events within safe logical-time bounds and reuse buffers without changing ordering or cancellation.
 - [ ] 111.1.3: Profile tight SoA versus aligned storage and queue alternatives; retain simpler layouts/heap when no net win.
 - [ ] 111.1.4: Keep independent-world ensembles distinct from parallel execution inside one model.

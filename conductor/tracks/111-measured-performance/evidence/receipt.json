@@ -1,0 +1,233 @@
+{
+  "source": "a0a9ae53e3a536309abe67269167ad730f7f44d2",
+  "tree": "a1903234548c9443f6a886e09e35efc731f79d2d",
+  "baseline_source": "ba58873e11299972efe55b9f4bbfdecef07b944f",
+  "baseline_tree": "998968bd85d4f59c9d9ec4381239ff7580e65e49",
+  "working_directory": ".",
+  "cargo_lock_sha256": "21db1cef161b1da871c8f78598adb47f0c03fe585430025858fb3fd3c0420fa5",
+  "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+  "cargo": "cargo 1.99.1 (5f94df478 2026-08-27)",
+  "python": "3.15.2",
+  "hardware": {
+    "cpu": "Apple M1 Max",
+    "model": "MacBookPro18,4",
+    "memory_bytes": 34359738368,
+    "physical_cores": 10,
+    "logical_cores": 10,
+    "os": "macOS 27.2.1 build 26B131"
+  },
+  "baseline_command": "/usr/bin/time -l SCOPED_BASELINE_BIN --seed 472026 --repetitions 10",
+  "baseline_exit": 0,
+  "benchmark_build_command": "cargo bench --locked --offline -p kairo-ecs-pdes --features FEATURE --bench production --no-run --message-format=json",
+  "comparison_features": {
+    "scoped": "pdes",
+    "pooled": "pdes-worker-pool"
+  },
+  "comparison_command": ".venv/bin/python -I -B conductor/tracks/111-measured-performance/evidence/compare.py SCOPED_BIN POOLED_BIN",
+  "comparison_exit": 0,
+  "comparison_started_utc": "2026-11-23T04:45:34Z",
+  "comparison_ended_utc": "2026-11-23T04:46:55Z",
+  "load_before": "vm.loadavg: { 21.25 19.48 16.73 }",
+  "load_after": "vm.loadavg: { 23.35 20.59 17.42 }",
+  "binary_sha256": {
+    "scoped": "769701a000a232a23f35b81852a4826c4ebe1c9d37ea19cb8cedef6e49dc4a8e",
+    "pooled": "d7a191f45623c4506574d22e476d385f4989ba4c951dfe653a2c8d458a5bf74b"
+  },
+  "artifacts_sha256": {
+    "compare.py": "be96d372239056fd829abed0be244d75ac5dc0331cf1c618f2449479237b89a7",
+    "historical-ring.json": "db3bf5af86e2064c7c3ee67cec4c0c3dc7acb3e53ca52ee35aed4388cd8af857",
+    "paired-runs.jsonl": "7267cf5aa22966a5a509ada818067d00c2af94b95c590a717802c6a8137656a9"
+  },
+  "profile_log_sha256": "44779b23ff52508c2c9ab43c50d89bdbefe0d29b14cb129eabed58ae1edbc279",
+  "test_logs_sha256": {
+    "pool-red.log": "425978bc4a588d7b73205efbae1b3f088f584b4b95200abe6ed53f3d949974cf",
+    "pool-green.log": "65866e9dec17cba0cc4ae8127bba419bd141b39de628a71b8cb307574c4bfdd1",
+    "pool-panic-red.log": "3f1c3ef780020063c727e92115d48d9eabc99122f231ca8c4db7f3ff8e1c5626",
+    "pool-final-tests.log": "356a1916cee41ee1828408a7e983cef196ad418fb49362c9e88f0acdc2b6ba08",
+    "scoped-final-tests.log": "7880197f90a44e476e829bde7f2ff6a8d0165329ad4c18e930c8f48e7fabd5ec"
+  },
+  "reviewed_summary": {
+    "tape": "adee4ec4de909a8ed64a07c25c04ebdedca2b9baa270bdbc7a3a56af26954225",
+    "sweep": [
+      {
+        "work": 0,
+        "serial_ns": 859979.5,
+        "scoped_ns": 75411646.0,
+        "pool_ns": 18062520.5,
+        "pool_setup_ns": 206937.5,
+        "pool_dispatch_ns": 17839021.0,
+        "scoped_over_pool": [
+          4.070880685589274,
+          3.9033671776101015,
+          4.281134725325831
+        ],
+        "serial_over_pool": [
+          0.04718603907555402,
+          0.04332671696606865,
+          0.04896664380725513
+        ],
+        "serial_over_scoped": [
+          0.011291663308199308,
+          0.011065243915861188,
+          0.011693971103441728
+        ],
+        "process_rss_bytes": {
+          "scoped": 3874816.0,
+          "pooled": 3883008.0
+        }
+      },
+      {
+        "work": 512,
+        "serial_ns": 9513416.5,
+        "scoped_ns": 76636271.0,
+        "pool_ns": 28031125.0,
+        "pool_setup_ns": 208874.5,
+        "pool_dispatch_ns": 27819291.5,
+        "scoped_over_pool": [
+          2.756782659172175,
+          2.6109835314814376,
+          2.9011442686554565
+        ],
+        "serial_over_pool": [
+          0.3392874030484633,
+          0.32765939753101986,
+          0.35253425184381515
+        ],
+        "serial_over_scoped": [
+          0.12509410780572755,
+          0.11842279848677562,
+          0.12726974181074466
+        ],
+        "process_rss_bytes": {
+          "scoped": 3825664.0,
+          "pooled": 3825664.0
+        }
+      },
+      {
+        "work": 2048,
+        "serial_ns": 35791958.5,
+        "scoped_ns": 83064125.0,
+        "pool_ns": 37458313.0,
+        "pool_setup_ns": 213625.0,
+        "pool_dispatch_ns": 37231708.5,
+        "scoped_over_pool": [
+          2.2002876854302476,
+          2.1540038330434275,
+          2.313359826553652
+        ],
+        "serial_over_pool": [
+          0.9509178070372108,
+          0.9231980763457053,
+          0.9615257948659982
+        ],
+        "serial_over_scoped": [
+          0.42910283113332964,
+          0.41990347271453177,
+          0.4350580902290674
+        ],
+        "process_rss_bytes": {
+          "scoped": 3850240.0,
+          "pooled": 3850240.0
+        }
+      },
+      {
+        "work": 8192,
+        "serial_ns": 139958125.0,
+        "scoped_ns": 109453959.0,
+        "pool_ns": 75184896.0,
+        "pool_setup_ns": 212062.5,
+        "pool_dispatch_ns": 74971916.5,
+        "scoped_over_pool": [
+          1.438964782088282,
+          1.395308026591074,
+          1.483218731819915
+        ],
+        "serial_over_pool": [
+          1.8524750270879906,
+          1.7468337789105894,
+          1.8851138646800851
+        ],
+        "serial_over_scoped": [
+          1.2866068465871552,
+          1.2603405117285147,
+          1.3064868530639904
+        ],
+        "process_rss_bytes": {
+          "scoped": 3702784.0,
+          "pooled": 3891200.0
+        }
+      },
+      {
+        "work": 32768,
+        "serial_ns": 556681979.0,
+        "scoped_ns": 227399896.0,
+        "pool_ns": 188136333.5,
+        "pool_setup_ns": 215521.0,
+        "pool_dispatch_ns": 187906604.0,
+        "scoped_over_pool": [
+          1.206367088048621,
+          1.1257934153497458,
+          1.2351199797981538
+        ],
+        "serial_over_pool": [
+          2.957243389221266,
+          2.831239746919751,
+          2.992219506788665
+        ],
+        "serial_over_scoped": [
+          2.4479267979916197,
+          2.386457249842697,
+          2.495909017337793
+        ],
+        "process_rss_bytes": {
+          "scoped": 3727360.0,
+          "pooled": 3883008.0
+        }
+      }
+    ],
+    "legacy": [
+      {
+        "profile": "strong",
+        "lps": 4,
+        "scoped_over_pool": 4.316239942453683
+      },
+      {
+        "profile": "strong",
+        "lps": 8,
+        "scoped_over_pool": 2.8163122515941583
+      },
+      {
+        "profile": "strong",
+        "lps": 16,
+        "scoped_over_pool": 3.7388131061519805
+      },
+      {
+        "profile": "strong",
+        "lps": 32,
+        "scoped_over_pool": 5.66395445518432
+      },
+      {
+        "profile": "weak",
+        "lps": 4,
+        "scoped_over_pool": 6.22830761965458
+      },
+      {
+        "profile": "weak",
+        "lps": 8,
+        "scoped_over_pool": 3.034318974483009
+      },
+      {
+        "profile": "weak",
+        "lps": 16,
+        "scoped_over_pool": 4.182696470285678
+      },
+      {
+        "profile": "weak",
+        "lps": 32,
+        "scoped_over_pool": 5.45550655881028
+      }
+    ]
+  },
+  "baseline_build_command": "cargo bench --locked --offline -p kairo-ecs-pdes --features pdes --bench production --no-run --message-format=json",
+  "stack_sample_command": "sample BASELINE_BENCHMARK_PID 2 1 -file baseline-stack-sample.txt"
+}

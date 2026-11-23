@@ -16,6 +16,8 @@ Format:
 
 ### Added
 
+- The optional `pdes-worker-pool` feature reuses native threads across conservative PDES rounds while keeping the ordered round commit.
+
 - The optional `checkpoint-json` feature of `kairo-ecs-core` saves and restores the Rust scheduler's pending events, clock and counters across processes.
 
 - Release Attestations reuses the selected native beta installation bundles and signs an SPDX inventory against the tested package digests.
