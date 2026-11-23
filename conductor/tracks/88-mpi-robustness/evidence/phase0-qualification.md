@@ -58,7 +58,7 @@
 
 ## 3. Value Gate Evaluation (Task 0.3)
 
-Pursuant to the mandatory rules in [dependency-value-policy.md](../../dependency-value-policy.md) and the track contract in [spec.md](../spec.md):
+Pursuant to the mandatory rules in [dependency-value-policy.md](../../../dependency-value-policy.md) and the track contract in [spec.md](../spec.md):
 
 1. **Stop Criterion Verification:**
    > *"Stop criterion: No installation for socket-only tests or absent HPC consumer; no CPU/socket fixture promoted to MPI acceptance."*

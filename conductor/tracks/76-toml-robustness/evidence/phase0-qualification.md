@@ -50,7 +50,7 @@
 | **License & Security Gates** | **PASS** | **PASS** (MIT OR Apache-2.0, zero security advisories) | Passes `cargo-deny` checks |
 
 ### Decision: **ADOPT**
-Pursuant to [dependency-value-policy.md](../../dependency-value-policy.md):
+Pursuant to [dependency-value-policy.md](../../../dependency-value-policy.md):
 Adopting `toml` 0.8.23 satisfies the value gate:
 1. Replaces buggy handwritten line-splitting in `scenario.rs`.
 2. Preserves all scenario and seed manifest fields, including `[streams]`.
