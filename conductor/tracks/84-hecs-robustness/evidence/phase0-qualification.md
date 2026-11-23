@@ -77,7 +77,7 @@ As required by the Track 84 specification:
 Pursuant to [spec.md](../spec.md):
 > *"Stop criterion: No adoption unless net maintained complexity falls and required replay/identity/rollback behaviour survives. Record no-go if mapping recreates most of current storage; retain working ECS."*
 
-And [dependency-value-policy.md](../../dependency-value-policy.md):
+And [dependency-value-policy.md](../../../dependency-value-policy.md):
 > *"If there is no production target/accepted consumer, no net benefit, unsupported contracts or excessive migration burden, record no-go/deferred with evidence. Keep Phase 1/2 unchecked, adoption_decision=deferred/rejected, and do not install a dependency merely to close a track. Close/archive a rejected evaluation only with an explicit outcome; never label it implemented."*
 
 Adopting `hecs` fails the safety gate, breaks 64-bit entity IDs, compromises deterministic replay, forfeits cache-line SIMD alignment, and increases net maintained complexity through required adapter layers.

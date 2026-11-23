@@ -62,7 +62,7 @@
 | **Code Maintainability** | **FAIL** (Fragile multiline string templates in `main.rs`) | **PASS** (Direct `serde_json::to_string_pretty` / `to_string` on typed DTOs) | Major maintainability win |
 
 ### Decision: **ADOPT**
-Pursuant to [dependency-value-policy.md](../../dependency-value-policy.md):
+Pursuant to [dependency-value-policy.md](../../../dependency-value-policy.md):
 Adopting `serde_json` satisfies the value gate:
 1. Replaces manual `format!` JSON construction and manual escaping across CLI and debug crates.
 2. Serializes strictly via the accepted Track 74 typed DTO contracts with schema validation.

@@ -113,7 +113,7 @@ compatibility, privacy or release question.
 - [Innovate manifest](https://github.com/edithatogo/innovate/blob/b9998addf32717438df92b23a306903e4db51620/bindings/rust/Cargo.toml) and [DES example](https://github.com/edithatogo/innovate/blob/b9998addf32717438df92b23a306903e4db51620/bindings/rust/examples/kairos_des_smoke.rs)
 - [Existing game boundary ADR](https://github.com/edithatogo/new-drug-reimbursement-game/blob/ab4ce37a905a8cf9bb54d1ad905de4b0f34b7165/docs/architecture/adr/0002-uogto-above-kairos.md)
 - [UOGTO execution bindings](https://github.com/edithatogo/UOGTO/blob/ac5b8e86c4a3547d008e83ba4cfcbb5f3ba95f25/ontologies/extensions/kg-execution-bindings.ttl)
-- [Voiage Cargo workspace](https://github.com/edithatogo/voiage/blob/a5d87a736fa9f0f876e44872d946b2170d2a0898/Cargo.toml)
+- [Voiage Cargo workspace](https://github.com/edithatogo/voiage/blob/a5d87a736fa9f0f876e44872d946b2170d2a0898/rust/Cargo.toml)
 - [NHRA manifest](https://github.com/edithatogo/nhra_game/blob/3fe4aaa08521d103ddffbedd58eaa9d7d5256a55/pyproject.toml), [monthly engine](https://github.com/edithatogo/nhra_game/blob/3fe4aaa08521d103ddffbedd58eaa9d7d5256a55/src/nhra_gt/engine.py) and [local solver surface](https://github.com/edithatogo/nhra_game/blob/3fe4aaa08521d103ddffbedd58eaa9d7d5256a55/src/nhra_gt/subgames/nash.py)
 - [Capacity envelope proposal](https://github.com/edithatogo/closer-to-whom/blob/main/upstream/issues/kairos-capacity-envelope-arrow.md)
 - [Playback page](https://github.com/edithatogo/gtpcnz/blob/91a6519f22f9390ba1c336e34c4305c0a66622e1/models/primarycare_model/pages/2_kairos_abm_playback.py)

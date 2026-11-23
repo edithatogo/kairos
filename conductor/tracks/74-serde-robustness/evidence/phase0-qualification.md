@@ -52,7 +52,7 @@
 | **Downstream Interoperability** | **POOR** (Fragile text outputs) | **PASS** (Typed contracts ready for standard JSON serialization in Track 75) | Clean bridge to Track 75 |
 
 ### Decision: **ADOPT**
-Pursuant to [dependency-value-policy.md](../../dependency-value-policy.md):
+Pursuant to [dependency-value-policy.md](../../../dependency-value-policy.md):
 Adopting `serde` with derive macros satisfies the value gate:
 1. Replaces manual control DTO conversion and escaping in scenario and debug paths.
 2. Derives typed serialization contracts while retaining semantic validation and deterministic field ordering.

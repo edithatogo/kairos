@@ -60,7 +60,7 @@
 | **Maintenance Activity** | **PASS** (Mainline `proptest` active and widely tested) | **CONCERN** (Secondary experimental crate, low adoption) | Plain proptest is superior |
 
 ### Stop Condition / Decision: **REJECT (NO-GO)**
-Pursuant to [dependency-value-policy.md](../../dependency-value-policy.md):
+Pursuant to [dependency-value-policy.md](../../../dependency-value-policy.md):
 > *"If there is no production target/accepted consumer, no net benefit, unsupported contracts or excessive migration burden, record no-go/deferred with evidence. Keep Phase 1/2 unchecked, adoption_decision=deferred/rejected, and do not install a dependency merely to close a track. Close/archive a rejected evaluation only with an explicit outcome; never label it implemented."*
 
 Adopting `proptest-state-machine` offers no net benefit over plain `proptest`, while adding substantial transitive dependencies (`fork`, `timeout`, `nix`) that compromise determinism and cross-platform compatibility.

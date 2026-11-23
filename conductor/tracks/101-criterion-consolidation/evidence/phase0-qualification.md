@@ -56,7 +56,7 @@
 | **New Dependency Cost** | **PASS** (0 new crates) | **PASS** (Criterion already locked in workspace) | Zero added maintenance burden |
 
 ### Decision: **CONSOLIDATE & RETAIN**
-Pursuant to [dependency-value-policy.md](../../dependency-value-policy.md):
+Pursuant to [dependency-value-policy.md](../../../dependency-value-policy.md):
 > *"Prefer reusing qualified existing tooling (Criterion, Python jsonschema) over another framework."*
 
 Criterion (v0.5.1) is confirmed as the workspace standard for microbenchmarking. Specialist multi-LP scaling harnesses in PDES are retained. No unnecessary crate churn is introduced.

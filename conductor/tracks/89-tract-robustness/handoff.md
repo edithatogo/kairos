@@ -72,9 +72,9 @@ PR #330 merged this closeout to `origin/main` as squash commit `4cd00e2de04ae6a0
 - **Working Directory:** `/Volumes/PortableSSD/github/kairos`
 - **Toolchain:** `rustc 1.99.1 (target: aarch64-apple-darwin), cargo 1.99.1`
 - **Command Receipts:**
-  - `cargo test -p kairo-ecs-ml` -> Exit Status: `0` (17 tests passed, 0 failed) -> [evidence/test-results.txt](file:///Volumes/PortableSSD/github/kairos/conductor/tracks/89-tract-robustness/evidence/test-results.txt)
-  - `cargo deny check advisories sources licenses bans` -> Exit Status: `0` (clean) -> [evidence/cargo-deny.txt](file:///Volumes/PortableSSD/github/kairos/conductor/tracks/89-tract-robustness/evidence/cargo-deny.txt)
-  - `cargo audit` -> Exit Status: `0` (0 vulnerabilities) -> [evidence/cargo-audit.txt](file:///Volumes/PortableSSD/github/kairos/conductor/tracks/89-tract-robustness/evidence/cargo-audit.txt)
+  - `cargo test -p kairo-ecs-ml` -> Exit Status: `0` (17 tests passed, 0 failed) -> [evidence/test-results.txt](evidence/test-results.txt)
+  - `cargo deny check advisories sources licenses bans` -> Exit Status: `0` (clean) -> [evidence/cargo-deny.txt](evidence/cargo-deny.txt)
+  - `cargo audit` -> Exit Status: `0` (0 vulnerabilities) -> [evidence/cargo-audit.txt](evidence/cargo-audit.txt)
   - `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1 -TrackDir conductor/tracks/89-tract-robustness` -> Exit Status: `0`
   - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1` -> Exit Status: `0`
   - `pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1` -> Exit Status: `0`

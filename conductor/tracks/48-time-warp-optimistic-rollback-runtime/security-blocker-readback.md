@@ -4,7 +4,7 @@
 
 ## Finding
 
-A cache-only, PR-specific audit exception does not clear the live Scorecard finding and is not a CodeQL exception. The current open [Code Scanning alert #482](https://github.com/edithatogo/kairos/security/code-scanning/482) is Scorecard `VulnerabilitiesID`, **High / error**, on `refs/heads/main` at `8ed3c9a`. Its message names both `GHSA-ch52-4w7c-c8xp` and `GHSA-vfj7-8cjw-p6xm`.
+A cache-only, PR-specific audit exception does not clear the live Scorecard finding and is not a CodeQL exception. The current open Code Scanning alert `482` (GitHub authentication required) is Scorecard `VulnerabilitiesID`, **High / error**, on `refs/heads/main` at `8ed3c9a`. Its message names both `GHSA-ch52-4w7c-c8xp` and `GHSA-vfj7-8cjw-p6xm`.
 
 The pinned `code-scanning-gate` action, called at the end of both `.github/workflows/scorecard.yml` and `.github/workflows/codeql.yml`, fetches open code-scanning alerts and fails on high/critical alerts whose `most_recent_instance.commit_sha` equals the workflow's `GITHUB_SHA`. Thus a Scorecard run for current `main` is blocked by #482. The CodeQL workflow also invokes that gate, but the existing alert is attached to the current main SHA, while a future PR run has its own analyzed SHA; the action's exact-SHA filter means I cannot infer from #482 alone that a future PR's CodeQL job will fail. Scorecard itself is configured for main pushes, schedule, and `branch_protection_rule`, not `pull_request`. Actual future PR and post-merge hosted results decide those checks. This distinction avoids claiming a branch-wide failure from a main-only alert.
 

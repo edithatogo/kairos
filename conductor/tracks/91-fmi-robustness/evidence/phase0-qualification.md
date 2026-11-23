@@ -36,7 +36,7 @@ Supply chain analysis executed via `cargo deny check advisories licenses sources
 
 ## 3. Mandatory Value Gate & Stop Criterion Analysis
 
-In accordance with [Robustness-first dependency acceptance policy](../../dependency-value-policy.md) and Track 91 [Specification](spec.md):
+In accordance with [Robustness-first dependency acceptance policy](../../../dependency-value-policy.md) and Track 91 [Specification](../spec.md):
 - **Stop Criterion**: *"Reject if modes/platforms or maintenance do not meet need; then use bounded zip/quick-xml replacements. If accepted, supersede their redundant direct-adoption scopes through documented owner handoff."*
 - **Value Policy Mandate**: *"If there is no production target/accepted consumer, no net benefit, unsupported contracts or excessive migration burden, record no-go/deferred with evidence. Keep Phase 1/2 unchecked, adoption_decision=deferred/rejected, and do not install a dependency merely to close a track. Close/archive a rejected evaluation only with an explicit outcome; never label it implemented."*
 
