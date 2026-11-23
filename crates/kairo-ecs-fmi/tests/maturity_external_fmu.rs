@@ -32,6 +32,24 @@ impl ReferenceArchive {
         )
     }
 
+    fn repackage(&self, label: &str) -> Self {
+        use kairo_ecs_fmi::export::packager::package_fmu_archive;
+
+        let path = self.0.root().join("roundtrip.fmu");
+        package_fmu_archive(self.0.root(), &path).unwrap();
+        let packaged = Self::extract(path, label);
+        for (original, copy) in [
+            (self.0.model_description(), packaged.0.model_description()),
+            (self.0.binary(), packaged.0.binary()),
+        ] {
+            assert_eq!(
+                std::fs::read(original).unwrap(),
+                std::fs::read(copy).unwrap()
+            );
+        }
+        packaged
+    }
+
     fn resources(&self) -> String {
         let resources = self.0.root().join("resources");
         std::fs::create_dir_all(&resources).unwrap();
@@ -144,7 +162,7 @@ macro_rules! check_bounce_and_replay {
             $model.restore_state(),
             Err(FmiError::InvalidInput(_))
         ));
-        trace(&mut $model, 0, 40);
+        let mut trajectory = trace(&mut $model, 0, 40);
         $model.save_state().unwrap();
         let first = trace(&mut $model, 40, 60);
         assert!(
@@ -160,6 +178,8 @@ macro_rules! check_bounce_and_replay {
         ));
         $model.save_state().unwrap();
         $model.terminate().unwrap();
+        trajectory.extend(first);
+        trajectory
     }};
 }
 
@@ -167,10 +187,16 @@ macro_rules! check_bounce_and_replay {
 #[test]
 #[ignore = "requires the separately verified Modelica Association binary FMUs"]
 fn fmi2_bouncing_ball_replays_a_native_impact() {
+    let original = ReferenceArchive::bouncing_ball("2.0");
+    let repackaged = original.repackage("2.0-repackaged");
+    assert_eq!(run_fmi2_bounce(&original), run_fmi2_bounce(&repackaged));
+}
+
+#[cfg(feature = "fmi2")]
+fn run_fmi2_bounce(archive: &ReferenceArchive) -> Vec<[u64; 2]> {
     use kairo_ecs_fmi::import::dynamic_loader::LoadedFmuLibrary;
     use kairo_ecs_fmi::import::instance::{Fmi2CoSimulationInstance, FmuInstance};
 
-    let archive = ReferenceArchive::bouncing_ball("2.0");
     let library = LoadedFmuLibrary::load_from_path(archive.0.binary()).unwrap();
     let mut instance = library
         .instantiate_checked("bounce", &format!("file://{}", archive.resources()))
@@ -179,17 +205,23 @@ fn fmi2_bouncing_ball_replays_a_native_impact() {
     instance.setup_experiment(None, 0.0, Some(0.8)).unwrap();
     instance.enter_initialization_mode().unwrap();
     instance.exit_initialization_mode().unwrap();
-    check_bounce_and_replay!(instance, Fmi2CoSimulationInstance, get_real);
+    check_bounce_and_replay!(instance, Fmi2CoSimulationInstance, get_real)
 }
 
 #[cfg(feature = "fmi3")]
 #[test]
 #[ignore = "requires the separately verified Modelica Association binary FMUs"]
 fn fmi3_bouncing_ball_replays_a_native_impact() {
+    let original = ReferenceArchive::bouncing_ball("3.0");
+    let repackaged = original.repackage("3.0-repackaged");
+    assert_eq!(run_fmi3_bounce(&original), run_fmi3_bounce(&repackaged));
+}
+
+#[cfg(feature = "fmi3")]
+fn run_fmi3_bounce(archive: &ReferenceArchive) -> Vec<[u64; 2]> {
     use kairo_ecs_fmi::import::dynamic_loader::LoadedFmi3Library;
     use kairo_ecs_fmi::import::fmi3::Fmi3CoSimulationInstance;
 
-    let archive = ReferenceArchive::bouncing_ball("3.0");
     let library = LoadedFmi3Library::load_from_path(archive.0.binary()).unwrap();
     let mut instance = library
         .instantiate_checked("bounce", &archive.resources())
@@ -199,7 +231,7 @@ fn fmi3_bouncing_ball_replays_a_native_impact() {
         .enter_initialization_mode(None, 0.0, Some(0.8))
         .unwrap();
     instance.exit_initialization_mode().unwrap();
-    check_bounce_and_replay!(instance, Fmi3CoSimulationInstance, get_float64);
+    check_bounce_and_replay!(instance, Fmi3CoSimulationInstance, get_float64)
 }
 
 #[cfg(feature = "fmi2")]
