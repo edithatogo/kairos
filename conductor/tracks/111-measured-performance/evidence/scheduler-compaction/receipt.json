@@ -1,0 +1,142 @@
+{
+  "date": "2026-11-24",
+  "baseline_commit": "bca823b0e6bb3b3409ed921cb6778b5b6734be5e",
+  "core_path": "crates/kairo-ecs-core/src/lib.rs",
+  "baseline_archive_sha256": "add0dd4f5d211e2b2e88eaa9cafd0186f74e5795a5da4f1f65989ddd0ca2b985",
+  "baseline_core_sha256": "8264636f35fed90568689ca35cbdd01e226bcd04461c9aae9f7df9ade2e3673c",
+  "compacted_core_sha256": "093c88701031074f62bd6e54a330ccd9ab79eb3fd4747df33d96cf6b04458985",
+  "workspace_lock_sha256": "72832baae0504d5c95a2a63957b85eec5cc3678fcd7d153d2abafd69846ee6ca",
+  "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+  "cargo_profile": "release with default features",
+  "fresh_pairs_per_workload": 10,
+  "warmups_per_variant_per_workload": 1,
+  "baseline_first_pairs_per_workload": 5,
+  "paired_bootstrap": {
+    "repetitions": 10000,
+    "seed": 111
+  },
+  "adoption_limits": {
+    "pressure_after_bytes": 1048576,
+    "burst_after_bytes": 2097152,
+    "mixed_median_ratio": 1.05
+  },
+  "artifact_sha256": {
+    "profile.sh": "79486d787206046deee19aa69ecbb6bb87dc6efbd96fe91ab2ebe09c59a20f9a",
+    "probe.rs": "c8814242a3d91b8887d107702e7d2b1a7de50359bab1bc0e8f7433dac5f53ac3",
+    "macos.csv": "0dcfcdc8842abcf8190a197b078e82b901ceca48c1a528c3ec2bda14f18fa3a5",
+    "linux.csv": "637638ac4375b2f67875bb525d99fefee0aa5a106ff27a46d5a6c7fbacbf9bd3"
+  },
+  "macos": {
+    "probe_lock_sha256": "ec3a2a1b43df6f2f49742136333de12809d13c364c28c63f4b256977e248b39a",
+    "load_1m_before_after": [
+      11.12,
+      10.8
+    ],
+    "binary_sha256": {
+      "baseline": "5ed22116e02253d284bd9b38ad2f411fd6517a92a0749f6e1bac3902177a3293",
+      "compacted": "d75d5f95e2fc9068dfe3637bf55c00ddb3a21897f39061e5dae11483ea3c2ee2"
+    },
+    "results": {
+      "pressure": {
+        "iterations": 1000000,
+        "dispatched": 1,
+        "baseline_retained_after_bytes_median": 83886156,
+        "compacted_retained_after_bytes_median": 163916,
+        "compacted_to_baseline_median_time_ratio": 0.253091,
+        "paired_bootstrap_95_percent_interval": [
+          0.251795,
+          0.255131
+        ],
+        "limit_passed": true
+      },
+      "burst": {
+        "iterations": 250000,
+        "dispatched": 1,
+        "baseline_retained_after_bytes_median": 29884424,
+        "compacted_retained_after_bytes_median": 301320,
+        "compacted_to_baseline_median_time_ratio": 0.631328,
+        "paired_bootstrap_95_percent_interval": [
+          0.612132,
+          0.641885
+        ],
+        "limit_passed": true
+      },
+      "mixed": {
+        "iterations": 1000000,
+        "dispatched": 937500,
+        "baseline_retained_after_bytes_median": 37896,
+        "compacted_retained_after_bytes_median": 37896,
+        "compacted_to_baseline_median_time_ratio": 0.963743,
+        "paired_bootstrap_95_percent_interval": [
+          0.959849,
+          0.969901
+        ],
+        "limit_passed": true
+      }
+    },
+    "host": {
+      "os": "macOS 27.2.1 26B131",
+      "target": "aarch64-apple-darwin",
+      "cpu": "Apple M1 Max",
+      "logical_cpus": 10,
+      "memory_bytes": 34359738368
+    }
+  },
+  "linux": {
+    "probe_lock_sha256": "ec3a2a1b43df6f2f49742136333de12809d13c364c28c63f4b256977e248b39a",
+    "load_1m_before_after": [
+      1.34,
+      1.56
+    ],
+    "binary_sha256": {
+      "baseline": "072cc7a167a9094a38f324fde8afbacbeb34df10234c930ade24f512c9532297",
+      "compacted": "280024f4a9a8a634ddbdc41aa9232069467a6e36aa4e5f19c92ffb7fe5bdaef9"
+    },
+    "results": {
+      "pressure": {
+        "iterations": 1000000,
+        "dispatched": 1,
+        "baseline_retained_after_bytes_median": 83886164,
+        "compacted_retained_after_bytes_median": 163924,
+        "compacted_to_baseline_median_time_ratio": 0.222603,
+        "paired_bootstrap_95_percent_interval": [
+          0.219074,
+          0.226869
+        ],
+        "limit_passed": true
+      },
+      "burst": {
+        "iterations": 250000,
+        "dispatched": 1,
+        "baseline_retained_after_bytes_median": 29884432,
+        "compacted_retained_after_bytes_median": 301328,
+        "compacted_to_baseline_median_time_ratio": 0.979475,
+        "paired_bootstrap_95_percent_interval": [
+          0.953377,
+          1.039654
+        ],
+        "limit_passed": true
+      },
+      "mixed": {
+        "iterations": 1000000,
+        "dispatched": 937500,
+        "baseline_retained_after_bytes_median": 37904,
+        "compacted_retained_after_bytes_median": 37904,
+        "compacted_to_baseline_median_time_ratio": 0.980024,
+        "paired_bootstrap_95_percent_interval": [
+          0.959009,
+          1.024989
+        ],
+        "limit_passed": true
+      }
+    },
+    "host": {
+      "os": "Linux 6.12.63+",
+      "target": "x86_64-unknown-linux-musl",
+      "cpu": "Intel Core i3-N300",
+      "cpu_quota": 2,
+      "memory_limit_bytes": 3221225472,
+      "container": "rust@sha256:b1d5dd5a22a09404d3e798c0cf051b689077360374eb505fa5bb93c479693d87"
+    }
+  }
+}

@@ -1,5 +1,46 @@
 # Handoff
 
+## Scheduler cancellation compaction
+
+The scheduler retains its binary heap and pending ID set. Successful
+cancellations compact the heap when its length exceeds twice the pending count
+plus 1,024 entries. The same pass shrinks either allocation when its capacity
+exceeds twice that threshold. The scheduler regression exercises this path
+with full-width timestamps, equal-time priority and sequence ordering,
+checkpoint replay, cancellation counters and the next event ID.
+
+Release builds used Rust 1.99.1 and ten matched pairs per workload on each
+host. One warm-up per variant preceded the pairs, which alternated execution
+order. Both variants checked dispatch order and counters on every run. The
+allocator probe records outstanding Rust allocation-request bytes after
+draining the queue. It forwards allocation and reallocation to the system
+allocator in both variants. Time is the scheduling and cancellation loop plus
+drain. Intervals use 10,000 bootstrap resamples of the pairs with seed 111.
+
+| Host | Workload | Baseline retained bytes | Compacted retained bytes | Paired compacted/baseline time ratio (95% interval) |
+| --- | --- | ---: | ---: | ---: |
+| macOS ARM64 | 1,000,000 successive cancellations | 83,886,156 | 163,916 | 0.253 [0.252, 0.255] |
+| Linux x86-64 | 1,000,000 successive cancellations | 83,886,164 | 163,924 | 0.223 [0.219, 0.227] |
+| macOS ARM64 | 250,000 cancellations after scheduling | 29,884,424 | 301,320 | 0.631 [0.612, 0.642] |
+| Linux x86-64 | 250,000 cancellations after scheduling | 29,884,432 | 301,328 | 0.979 [0.953, 1.040] |
+| macOS ARM64 | 1,000,000 schedules, 6.25% cancelled | 37,896 | 37,896 | 0.964 [0.960, 0.970] |
+| Linux x86-64 | 1,000,000 schedules, 6.25% cancelled | 37,904 | 37,904 | 0.980 [0.959, 1.025] |
+
+Both hosts met the predeclared limits of 1 MiB after successive cancellations,
+2 MiB after the burst and 5% maximum median slowdown for mixed work. The
+intervals include equal elapsed time for the Linux burst and mixed workloads.
+The runs used shared hosts and the Linux container had a two-CPU quota.
+[Receipt](evidence/scheduler-compaction/receipt.json) ·
+[macOS samples](evidence/scheduler-compaction/macos.csv) ·
+[Linux samples](evidence/scheduler-compaction/linux.csv).
+
+With Rust 1.99.1 on the path, run the profile with a gzip Git archive of the
+baseline commit from the receipt, the compacted version of
+`crates/kairo-ecs-core/src/lib.rs`, and a new scratch directory. It builds two
+locked standalone binaries and writes the samples to standard output.
+[Profile runner](evidence/scheduler-compaction/profile.sh) ·
+[Allocator and order probe](evidence/scheduler-compaction/probe.rs).
+
 ## Direct event handoff experiment
 
 The profile used the same 2,048-input tape and 4,096 dispatches on four

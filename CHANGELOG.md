@@ -54,6 +54,7 @@ Format:
 
 ### Fixed
 
+- `kairo-ecs-core` compacts scheduler storage when cancelled entries accumulate, preserving event order and checkpoint replay.
 - `kairo-ecs-arrow` writes typed native HDF5 checkpoints behind `hdf5`. The adapter restores full-width event records and verifies an integrity digest. See [ADR 0018](docs/adr/0018-native-hdf5-checkpoints.md).
 
 - `kairo-ecs-fmi` loads packaged FMI 2 and 3 co-simulation binaries using their declared identities and retains libraries through cleanup. It checks complete FMI 3 step advancement and supports in-process checkpoints for FMUs that advertise state access.
