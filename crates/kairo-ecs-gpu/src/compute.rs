@@ -376,6 +376,7 @@ pub trait GpuCompute {
     fn capabilities(&self) -> GpuBackendCapabilities;
     fn upload_state(&mut self, state: &GpuState) -> Result<GpuStepStats, GpuComputeError>;
     fn run_abm_step(&mut self, dt: f32, seed: u64) -> Result<GpuStepStats, GpuComputeError>;
+    /// Apply an additive DES batch using modular 32-bit signed addition.
     fn run_des_step(&mut self, events: &[DesEvent]) -> Result<GpuStepStats, GpuComputeError>;
     fn download_state(&self) -> Result<GpuState, GpuComputeError>;
 }
@@ -465,7 +466,7 @@ impl GpuCompute for CpuFallbackCompute {
                     entity_count,
                 });
             };
-            *value += event.delta;
+            *value = value.wrapping_add(event.delta);
         }
 
         Ok(GpuStepStats {
@@ -613,7 +614,7 @@ impl PersistentGpuSession {
                     entity_count,
                 });
             };
-            *value += event.delta;
+            *value = value.wrapping_add(event.delta);
         }
         self.resident_ticks += 1;
 

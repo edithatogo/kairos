@@ -72,7 +72,7 @@ fn resident_steps_match_independent_motion_and_replay() {
         let upload = backend.upload_state(&state).unwrap();
         assert_eq!(
             upload.uploaded_bytes,
-            65 * std::mem::size_of::<AgentParticle>()
+            65 * std::mem::size_of::<AgentParticle>() + 2 * std::mem::size_of::<i32>()
         );
         for (dt, seed) in steps {
             let dispatch = backend.run_abm_step(dt, seed).unwrap();
@@ -113,12 +113,13 @@ fn resident_steps_match_independent_motion_and_replay() {
         entity_id: 0,
         delta: 50,
     }];
-    assert_eq!(
-        backend.run_des_step(&events),
-        Err(kairo_ecs_gpu::GpuComputeError::UnsupportedBackend(
-            kairo_ecs_gpu::METAL_BACKEND_NAME
-        ))
-    );
+    let native_step = backend.run_des_step(&events).unwrap();
+    assert_eq!(native_step.uploaded_bytes, 8);
+    assert_eq!(native_step.downloaded_bytes, 0);
+    assert_eq!(native_step.dispatched_workgroups, 1);
+    let mut first = first;
+    first.entity_values[0] += 50;
+    assert_eq!(backend.download_state().unwrap(), first);
     let mut sibling = backend.clone();
     assert_eq!(
         sibling.capabilities().availability,
@@ -127,7 +128,7 @@ fn resident_steps_match_independent_motion_and_replay() {
     assert_eq!(sibling.download_state().unwrap(), first);
     let host_step = sibling.run_des_step(&events).unwrap();
     assert_eq!(host_step, kairo_ecs_gpu::GpuStepStats::default());
-    assert_eq!(sibling.download_state().unwrap().entity_values, [55, 9]);
+    assert_eq!(sibling.download_state().unwrap().entity_values, [105, 9]);
     assert_eq!(backend.download_state().unwrap(), first);
 }
 

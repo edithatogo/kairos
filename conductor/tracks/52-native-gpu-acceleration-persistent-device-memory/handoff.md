@@ -1,6 +1,23 @@
 # Track 52 Handoff
 
-Last updated: 2026-10-22
+## Apple Metal additive DES
+
+Chat `01a1fd18-51c7-7963-a3cc-d262d54582ba` owns this slice in the Kairos
+closeout worktree on `codex/native-metal-des-20261123`. The hardware-only
+constructor runs additive DES and particle updates using resident buffers.
+Native M1 Max readback matched the integer reference across repeated entity
+updates and both signed overflow boundaries. Native failure recovery and CPU
+snapshot isolation passed. The CPU was faster in all 36 matched local measurements.
+CUDA, browser execution and scaling qualification remain open.
+[API contract](../../../docs/adr/0023-native-metal-additive-des.md) ·
+[Commands, results and raw samples](../../execution/scientific/s11-completion.md).
+
+Independent review found that deferred device copies retained replaced buffers.
+State replacement now validates both shapes and completes the copies before
+publishing the handles. Native counters held at five live buffers after 32
+replacements. The next operation is hosted validation.
+
+## Historical handoff — 22 October 2026
 
 ## Summary
 
