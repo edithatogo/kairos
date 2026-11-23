@@ -8,10 +8,13 @@ pub const CUDA_BACKEND_NAME: &str = "nvidia-cuda-driver-compute";
 
 pub const CUDA_DEVICE_UNAVAILABLE_REASON: &str =
     "real CUDA context initialization is not linked in this build";
+#[cfg(feature = "cuda-backend")]
+const CUDA_DRIVER_UNAVAILABLE_REASON: &str = "CUDA driver or device initialization failed";
 
 /// Feature-gated CUDA backend contract and driver wrapper.
 pub struct CudaBackend {
     session: PersistentGpuSession,
+    hardware_only: bool,
     #[cfg(feature = "cuda-backend")]
     device_session: Option<kairo_ecs_cuda::CudaDeviceSession>,
     #[cfg(not(feature = "cuda-backend"))]
@@ -22,6 +25,7 @@ impl core::fmt::Debug for CudaBackend {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("CudaBackend")
             .field("session", &self.session)
+            .field("hardware_only", &self.hardware_only)
             .finish()
     }
 }
@@ -40,6 +44,7 @@ impl CudaBackend {
         let device_session = ();
 
         Self {
+            hardware_only: false,
             session: PersistentGpuSession::new(CUDA_BACKEND_NAME),
             device_session,
         }
@@ -52,6 +57,7 @@ impl CudaBackend {
         let device_session = ();
 
         Self {
+            hardware_only: false,
             session: PersistentGpuSession::new(CUDA_BACKEND_NAME),
             device_session,
         }
@@ -60,13 +66,10 @@ impl CudaBackend {
     pub fn initialize_required_context() -> Result<Self, GpuComputeError> {
         #[cfg(feature = "cuda-backend")]
         {
-            let session = kairo_ecs_cuda::CudaDeviceSession::new(0).map_err(|_e| {
-                GpuComputeError::DeviceUnavailable {
-                    backend: CUDA_BACKEND_NAME,
-                    reason: CUDA_DEVICE_UNAVAILABLE_REASON,
-                }
-            })?;
+            let session = kairo_ecs_cuda::CudaDeviceSession::new(0)
+                .map_err(|_| unavailable(CUDA_DRIVER_UNAVAILABLE_REASON))?;
             Ok(Self {
+                hardware_only: false,
                 session: PersistentGpuSession::new(CUDA_BACKEND_NAME),
                 device_session: Some(session),
             })
@@ -78,6 +81,13 @@ impl CudaBackend {
                 reason: CUDA_DEVICE_UNAVAILABLE_REASON,
             })
         }
+    }
+
+    /// Require CUDA for both particle and additive DES steps with explicit readback.
+    pub fn initialize_hardware_only() -> Result<Self, GpuComputeError> {
+        let mut backend = Self::initialize_required_context()?;
+        backend.hardware_only = true;
+        Ok(backend)
     }
 
     pub fn initialization_report() -> crate::compute::NativeGpuInitializationReport {
@@ -92,23 +102,27 @@ impl CudaBackend {
                 },
                 Err(_) => crate::compute::NativeGpuInitializationReport::unavailable(
                     crate::compute::NativeGpuBackendKind::Cuda,
-                    CUDA_DEVICE_UNAVAILABLE_REASON,
+                    CUDA_DRIVER_UNAVAILABLE_REASON,
                 ),
             }
         }
         #[cfg(not(feature = "cuda-backend"))]
         {
-            crate::compute::NativeGpuInitializationReport::unavailable(
-                crate::compute::NativeGpuBackendKind::Cuda,
-                CUDA_DEVICE_UNAVAILABLE_REASON,
-            )
+            crate::compute::NativeGpuInitializationReport {
+                backend: crate::compute::NativeGpuBackendKind::Cuda,
+                attempted_real_device: false,
+                available: false,
+                reason: CUDA_DEVICE_UNAVAILABLE_REASON,
+            }
         }
     }
 
+    /// Host state for the compatibility constructor.
     pub fn session(&self) -> &PersistentGpuSession {
         &self.session
     }
 
+    /// Mutable host state for the compatibility constructor.
     pub fn session_mut(&mut self) -> &mut PersistentGpuSession {
         &mut self.session
     }
@@ -126,6 +140,14 @@ impl CudaBackend {
         {
             GpuBackendAvailability::BackendNotConfigured(CUDA_BACKEND_NAME)
         }
+    }
+}
+
+#[cfg(feature = "cuda-backend")]
+fn unavailable(reason: &'static str) -> GpuComputeError {
+    GpuComputeError::DeviceUnavailable {
+        backend: CUDA_BACKEND_NAME,
+        reason,
     }
 }
 
@@ -158,14 +180,22 @@ impl GpuCompute for CudaBackend {
                         vy: p.vy,
                     })
                     .collect();
+                if self.hardware_only {
+                    let uploaded_bytes = session
+                        .upload_model(&cuda_particles, &state.entity_values)
+                        .map_err(|_| unavailable("CUDA model upload failed"))?;
+                    return Ok(GpuStepStats {
+                        uploaded_bytes,
+                        ..GpuStepStats::default()
+                    });
+                }
                 let bytes = session.upload_particles(&cuda_particles).map_err(|_| {
                     GpuComputeError::UnsupportedBackend("cuda particle upload failed")
                 })?;
                 let _ = self.session.upload_once(state);
                 return Ok(GpuStepStats {
                     uploaded_bytes: bytes,
-                    downloaded_bytes: 0,
-                    dispatched_workgroups: 1,
+                    ..GpuStepStats::default()
                 });
             }
         }
@@ -176,12 +206,25 @@ impl GpuCompute for CudaBackend {
         #[cfg(feature = "cuda-backend")]
         {
             if let Some(session) = &mut self.device_session {
+                if self.hardware_only {
+                    session
+                        .resident_entity_count()
+                        .ok_or(GpuComputeError::StateNotResident)?;
+                    let dispatched_workgroups = session
+                        .step_abm(dt, seed)
+                        .map_err(|_| unavailable("CUDA particle dispatch failed"))?;
+                    return Ok(GpuStepStats {
+                        dispatched_workgroups,
+                        ..GpuStepStats::default()
+                    });
+                }
                 let blocks = session
                     .step_abm(dt, seed)
                     .map_err(|_| GpuComputeError::UnsupportedBackend("cuda abm step failed"))?;
                 let downloaded = session
                     .download_particles()
                     .map_err(|_| GpuComputeError::UnsupportedBackend("cuda download failed"))?;
+                let downloaded_bytes = std::mem::size_of_val(downloaded.as_slice());
                 if let Ok(mut cur_state) = self.session.download_state() {
                     cur_state.particles = downloaded
                         .into_iter()
@@ -196,7 +239,7 @@ impl GpuCompute for CudaBackend {
                 }
                 return Ok(GpuStepStats {
                     uploaded_bytes: 0,
-                    downloaded_bytes: 0,
+                    downloaded_bytes,
                     dispatched_workgroups: blocks,
                 });
             }
@@ -205,10 +248,66 @@ impl GpuCompute for CudaBackend {
     }
 
     fn run_des_step(&mut self, events: &[DesEvent]) -> Result<GpuStepStats, GpuComputeError> {
+        #[cfg(feature = "cuda-backend")]
+        if let Some(device) = &mut self.device_session {
+            if self.hardware_only {
+                let entity_count = device
+                    .resident_entity_count()
+                    .ok_or(GpuComputeError::StateNotResident)?;
+                let mut deltas = Vec::with_capacity(events.len());
+                for event in events {
+                    if event.entity_id >= entity_count as u64 {
+                        return Err(GpuComputeError::EntityOutOfRange {
+                            entity_id: event.entity_id,
+                            entity_count,
+                        });
+                    }
+                    deltas.push(kairo_ecs_cuda::CudaEntityDelta {
+                        entity: event.entity_id as u32,
+                        delta: event.delta,
+                    });
+                }
+                let uploaded_bytes = std::mem::size_of_val(deltas.as_slice());
+                let dispatched_workgroups = device
+                    .step_des(&deltas)
+                    .map_err(|_| unavailable("CUDA DES dispatch failed"))?;
+                return Ok(GpuStepStats {
+                    uploaded_bytes,
+                    dispatched_workgroups,
+                    ..GpuStepStats::default()
+                });
+            }
+        }
         self.session.run_des_tick(events)
     }
 
     fn download_state(&self) -> Result<GpuState, GpuComputeError> {
+        #[cfg(feature = "cuda-backend")]
+        if let Some(device) = &self.device_session {
+            if self.hardware_only {
+                device
+                    .resident_entity_count()
+                    .ok_or(GpuComputeError::StateNotResident)?;
+                let entity_values = device
+                    .download_entities()
+                    .map_err(|_| unavailable("CUDA entity readback failed"))?;
+                let particles = device
+                    .download_particles()
+                    .map_err(|_| unavailable("CUDA particle readback failed"))?
+                    .into_iter()
+                    .map(|p| AgentParticle {
+                        x: p.x,
+                        y: p.y,
+                        vx: p.vx,
+                        vy: p.vy,
+                    })
+                    .collect();
+                return Ok(GpuState {
+                    particles,
+                    entity_values,
+                });
+            }
+        }
         let mut session_clone = self.session.clone();
         session_clone.download_state()
     }
@@ -217,6 +316,16 @@ impl GpuCompute for CudaBackend {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[cfg(not(feature = "cuda-backend"))]
+    #[test]
+    fn disabled_cuda_reports_no_native_attempt() {
+        let report = CudaBackend::initialization_report();
+        assert!(!report.available);
+        assert!(!report.attempted_real_device);
+        assert_eq!(report.reason, CUDA_DEVICE_UNAVAILABLE_REASON);
+        assert!(CudaBackend::initialize_hardware_only().is_err());
+    }
 
     #[test]
     fn cuda_backend_reports_not_configured_without_cuda_bindings() {

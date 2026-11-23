@@ -823,7 +823,7 @@ tracks:
       - checkpoint-restart-parity
   - id: 52
     name: Native GPU Acceleration with Persistent Device Memory
-    status: Done
+    status: In Progress
     owner: gpu-compute-agent + performance-agent
     depends_on: ["32", "33", "46", "50"]
     owned_paths:
@@ -877,7 +877,7 @@ tracks:
       - scheduler-runtime-evidence
   - id: 55
     name: End-to-End Weak/Strong Scaling Certification
-    status: Done
+    status: In Progress
     owner: performance-agent + benchmark-agent + cloud-agent + release-agent
     depends_on: ["47", "48", "49", "50", "51", "52", "53", "54"]
     owned_paths:
