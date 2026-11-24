@@ -50,6 +50,13 @@ scaling still require target evidence.
 [Metal results](execution/scientific/s11-completion.md) ·
 [CUDA results](execution/scientific/s11-cuda-completion.md).
 
+## Repository pull request reconciliation — 24 November 2026
+
+The maintained changes from nine original PRs are on main and passed hosted
+verification. Two security PRs await repository prerequisites. The registry
+records 97 of 117 tracks Done, ten In Progress, seven Planned and three Spec
+Approved. [PR, coverage and cleanup evidence](tracks/13-ci-cd-quality-supply-chain/handoff.md#pull-request-and-worktree-reconciliation--24-november-2026).
+
 ## Historical status records
 
 ## Current Track48/49 acceptance — 3 November 2026
