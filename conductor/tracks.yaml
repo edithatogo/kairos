@@ -1669,7 +1669,7 @@ tracks:
 
   - id: 114
     name: Maintained dependencies and independent consumer contracts
-    status: Spec Approved
+    status: In Progress
     owner: api-governance-agent + core-scheduler-agent
     depends_on: ["01", "02", "04", "25", "70", "108"]
     owned_paths:

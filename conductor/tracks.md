@@ -121,7 +121,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 111 | Measured performance and parallel execution improvement | In Progress | `performance-agent + pdes-agent` | [Plan](tracks/111-measured-performance/plan.md) |
 | 112 | Capability evidence and claim automation | Done | `conformance-agent + docs-agent + ci-agent` | Phases 0–2 accepted. [Published evidence](tracks/112-evidence-and-claim-automation/handoff.md#phase-closeout-evidence) |
 | 113 | Beta and stable release qualification | In Progress | `release-agent + api-governance-agent + security-agent` | [Installed candidate](tracks/113-beta-and-stable-release/handoff.md#native-core-v1-candidate--23-november-2026) |
-| 114 | Maintained dependencies and independent consumer contracts | Spec Approved | `api-governance-agent + core-scheduler-agent` | [Plan](tracks/114-dependency-and-consumer-contracts/plan.md) |
+| 114 | Maintained dependencies and independent consumer contracts | In Progress | `api-governance-agent + core-scheduler-agent` | [Plan](tracks/114-dependency-and-consumer-contracts/plan.md) |
 | 115 | Frontier research experiments and reproducible evidence | Spec Approved | `research-agent + vv-uq-agent + performance-agent` | [Plan](tracks/115-frontier-experiments/plan.md) |
 | 116 | Cohort and spatial tobacco/vaping microsimulation contracts for tobac | In Progress | `des-api-agent + abm-api-agent + vv-uq-agent` | [Provider and standalone fixture evidence](tracks/116-tobac-cohort-microsimulation-contracts/handoff.md#provider-and-standalone-fixture--23-november-2026) |
 
