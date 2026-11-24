@@ -61,6 +61,8 @@ Format:
 
 ### Fixed
 
+- The registry and HPC release helpers verify checkout-local Python 3.15.2. The Python package dry run builds and checks artifacts with the existing hashed packaging tool lock.
+
 - The Rust release dry run resolves the private Arrow crates from the same workspace revision for packaging and upload verification.
 - Arrow checkpoint replacement on Windows closes the destination check handle before staging the replacement.
 - `kairo-ecs-core` compacts scheduler storage when cancelled entries accumulate, preserving event order and checkpoint replay.

@@ -200,7 +200,8 @@ for (const marker of [
   '"--provenance=true"',
   '"--metadata-file"',
   "assertImageMetadata(metadataPath)",
-  '"python", ["cloud/validate_cloud_hpc.py"]',
+  'releasePython(repoRoot)',
+  'run(python, ["-I", "cloud/validate_cloud_hpc.py"])',
   "ghcr.io/edithatogo/kairo-ecs-cli",
 ]) {
   if (!helper.includes(marker)) fail(`hpc helper missing marker: ${marker}`);

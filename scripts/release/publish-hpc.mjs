@@ -3,6 +3,7 @@
 import path from "node:path";
 import fs from "node:fs";
 import { spawnSync } from "node:child_process";
+import { releasePython } from "./python-runtime.mjs";
 
 function parseArgs(argv) {
   const args = { mode: "", version: "", withDocker: false };
@@ -71,6 +72,8 @@ if (!version) {
 }
 assertVersion(version);
 
+const python = releasePython(repoRoot);
+
 run("node", ["scripts/validation/validate-code-health.mjs"]);
 const registryValidationArgs = [
   "scripts/validation/validate-hpc-registry-readiness.mjs",
@@ -82,7 +85,7 @@ if (mode === "publish") {
 run("node", registryValidationArgs);
 
 if (mode === "dry-run") {
-  run("python", ["cloud/validate_cloud_hpc.py"]);
+  run(python, ["-I", "cloud/validate_cloud_hpc.py"]);
   if (withDocker) {
     run("docker", ["build", "-t", "kairo-ecs-cli:local", "-f", "docker/Dockerfile", "."]);
   } else {
@@ -92,7 +95,7 @@ if (mode === "dry-run") {
   const metadataPath = path.join(repoRoot, ".tmp", "hpc-ghcr-metadata.json");
   fs.mkdirSync(path.dirname(metadataPath), { recursive: true });
   run("docker", ["build", "-t", "kairo-ecs-cli:local", "-f", "docker/Dockerfile", "."]);
-  run("python", ["cloud/validate_cloud_hpc.py"]);
+  run(python, ["-I", "cloud/validate_cloud_hpc.py"]);
   dockerLogin();
   run("docker", [
     "buildx",
