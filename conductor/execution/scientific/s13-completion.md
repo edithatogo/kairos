@@ -118,4 +118,4 @@ was `e22d4aff4cd34ab9c8bb7f60af1f88b43e70dae86e3d884fb5cd04ff29ca4ea6`.
 
 The remaining external qualification includes OMEdit and the authoring
 extensions for clocks, terminals, Model Exchange and Scheduled Execution.
-[FMI 3 reproduction commands](../../../docs/fmi-digital-twin/export-guide.md#fmi-30-scalar-co-simulation).
+[FMI 3 reproduction commands](../../../docs/fmi-digital-twin/export-guide.md#fmi-3-scalar-co-simulation).

@@ -50,7 +50,7 @@ fmusim simulate "$work/model/KairosCounter.fmu" --interface-type cs --library-ki
 cmp "$work/kairos.csv" "$work/fmusim.csv"
 ```
 
-## FMI 3.0 scalar co-simulation
+## FMI 3 scalar co-simulation
 
 Enable the `fmi3` Cargo feature and call `write_unpacked_fmi3_fmu` to create
 the description and package directories. The method takes the independent

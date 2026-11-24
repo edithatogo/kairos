@@ -29,7 +29,7 @@ parameters and constants. The generated structure lists outputs by value
 reference and includes the initialization unknowns for computed outputs.
 The exporter and binary use the same instantiation token, scalar types and
 references. The standalone counter exercises the emitted archive through
-two importers. [Export guide](../fmi-digital-twin/export-guide.md#fmi-30-scalar-co-simulation)
+two importers. [Export guide](../fmi-digital-twin/export-guide.md#fmi-3-scalar-co-simulation)
 
 ## Compatibility
 
