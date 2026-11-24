@@ -10,9 +10,12 @@ description = "State management and snapshot storage for KairoECS"
 [dependencies]
 kairo-ecs-types = { path = "../kairo-ecs-types", version = "0.0.0" }
 kairo-ecs-core = { path = "../kairo-ecs-core", version = "0.0.0" }
+serde = { version = "1", features = ["derive"], optional = true }
+serde_json = { version = "1", optional = true }
 
 [features]
 default = []
+checkpoint-json = ["dep:serde", "dep:serde_json"]
 numa = []
 
 [lib]

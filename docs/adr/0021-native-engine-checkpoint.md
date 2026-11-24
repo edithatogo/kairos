@@ -14,6 +14,21 @@ codec verifies the clock, pending queue, cancellation counter and next
 identities. The model decoder validates the state and domain-specific
 relationship to the scheduler.
 
+## ECS entity state
+
+The `checkpoint-json` feature of `kairo-ecs-state` exposes
+`World::checkpoint_json` and `World::from_checkpoint_json`. The JSON document
+has version `1`, a `generations` array indexed by entity slot, and a
+`free_indices` array in allocation-stack order. Restore rejects duplicate or
+out-of-range free indices and rebuilds the live set and its lookup positions.
+Pending events can still identify a retired generation, and future spawns
+reuse the same handles as an uninterrupted run.
+
+Capture the world checkpoint, model-owned component values and the RNG
+checkpoint at the same scheduler event boundary. Validate the component
+owners against the restored world before dispatch. The spatial-agents
+fixture uses this method to restore model state from both native formats.
+
 ## Native layout and compatibility
 
 V2 uses the v1 event and block representation plus a rank-one unsigned

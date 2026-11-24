@@ -184,3 +184,23 @@ The first BP5 transfer encountered AppleDouble sidecar files added by macOS
 Packaging with `COPYFILE_DISABLE=1` omitted those files and preserved each
 checkpoint member's digest across the transfer.
 [Staged restart receipt](../../tracks/51-parallel-io-arrow-checkpoint-export/evidence/staged-engine-restart-macos-linux.json).
+
+## ECS world restart
+
+The spatial-agents fixture stores the versioned entity allocator, typed position
+components and RNG state alongside the scheduler. Its observation starts after
+the first movement and ends after all pending dispatches. Both fresh-process
+restarts reproduced the six suffix dispatches, three recycled handles, one
+rejected stale-generation update and one cancellation. Their final positions
+and next RNG draw matched the uninterrupted run byte for byte.
+
+On macOS ARM64, Rust 1.99.1 ran both cases with HDF5 2.2.0 and ADIOS2 2.12.1.
+The respective vendor tools read the same 1,038-byte `engine_state` extent.
+The reference and both restart results had SHA-256
+`21befac02cb7d62b08783f848c26c12a24231f1eec15ea461cc9dd89028ef775`.
+[Engine checkpoint contract](../../../docs/adr/0021-native-engine-checkpoint.md#ecs-entity-state).
+
+```sh
+cargo test --locked -p kairo-ecs-state --features checkpoint-json --lib checkpoint_json::tests
+cargo test --locked -p kairo-ecs-bench --features hdf5,adios2 --test world_checkpoint_restart
+```

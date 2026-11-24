@@ -12,7 +12,11 @@ name = "kairo_ecs_bench"
 path = "src/lib.rs"
 
 [features]
-engine-checkpoint = ["kairo-ecs-arrow/engine-checkpoint", "kairo-ecs-des/checkpoint-json"]
+engine-checkpoint = [
+    "kairo-ecs-arrow/engine-checkpoint",
+    "kairo-ecs-des/checkpoint-json",
+    "kairo-ecs-state/checkpoint-json",
+]
 hdf5 = ["engine-checkpoint", "kairo-ecs-arrow/hdf5"]
 adios2 = ["engine-checkpoint", "kairo-ecs-arrow/adios2"]
 
