@@ -30,6 +30,11 @@
 pub mod hierarchy;
 pub use hierarchy::*;
 
+#[cfg(feature = "checkpoint-json")]
+mod checkpoint_json;
+#[cfg(feature = "checkpoint-json")]
+pub use checkpoint_json::WorldCheckpointError;
+
 use std::any::{type_name, Any, TypeId};
 use std::collections::BTreeMap;
 use std::fmt::{Display, Formatter};

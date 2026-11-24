@@ -152,3 +152,17 @@ The preview boundary is described in the
 [scheduler checkpoint ADR](../../../docs/adr/adr-k01-scheduler-checkpoint.md).
 Track 51 still owns integration with the native storage adapters and
 parallel filesystem qualification.
+
+## Durable entity identity — 24 November 2026
+
+Chat `01a1fd18-51c7-7963-a3cc-d262d54582ba` owns the opt-in world codec in
+`crates/kairo-ecs-state/` and the native restart fixture in `crates/kairo-ecs-bench/`
+through the `kairos-ci-closeout` worktree at
+`/Users/doughnut/.codex/worktrees/kairos-ci-closeout/kairos`.
+The local HDF5 and BP5 writers and fresh-process readers have exited. The
+next operation is integration of the reviewed patch through Actions.
+
+The codec preserves every slot generation and the order of the free-slot
+stack. The fixture saves positions and RNG state as model data, checks
+component owners after restore, and compares the pending replay against
+an uninterrupted run. [Runtime evidence](../../execution/scientific/s14-completion.md#ecs-world-restart).
