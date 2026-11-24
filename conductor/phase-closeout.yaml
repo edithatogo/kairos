@@ -1593,15 +1593,22 @@ entries:
 
   - track_id: "90"
     phase: "0"
-    state: pending
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Planning only; value and consumer gates unresolved"
-    fixes_applied: false
-    validation_commands: []
-    git_status: "planning worktree"
-    commit_sha: ""
-    pushed_ref: ""
-    next_phase_decision: "Verify prerequisites and value; conditional adoption is not automatically authorized"
+    review_result: "Independent consumer and evidence review. No Kairos objective optimiser consumer was found. Sequential ABC-SMC is now implemented and passed four current analytic and failure oracles. Its proposal and weighting work still belongs to the inference method."
+    fixes_applied: true
+    validation_commands:
+      - "Locked manifest and current caller readback. Selected native baseline commands and receipts in conductor/dependency-sequencing.md"
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_dag.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
+    git_status: "clean"
+    commit_sha: "2137475571423f2efbec4ffdddcb52da3136a619"
+    pushed_ref: "origin/main"
+    tested_head_sha: "ca00777512db29e846e458696244eb09686dda8e"
+    publication_pr: "https://github.com/edithatogo/kairos/pull/357"
+    publication_evidence: "Original evaluation merge retained on main. The decision was reviewed again against the tested source above."
+    next_phase_decision: "Close Phase 0 with adoption Deferred. A demonstrated consumer and the named oracles are required to reopen Phases 1 and 2."
 
   - track_id: "91"
     phase: "0"
@@ -1714,27 +1721,41 @@ entries:
 
   - track_id: "97"
     phase: "0"
-    state: pending
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Planning only; adoption unqualified"
-    fixes_applied: false
-    validation_commands: []
-    git_status: "planning worktree"
-    commit_sha: ""
-    pushed_ref: ""
-    next_phase_decision: "Verify value, prerequisites and owner handoffs"
+    review_result: "Independent consumer and evidence review. The original missing-peer diagnostic was useful, but a deliberate 40 ms sink exceeded the 5 ms budget. The current Tonic transport passed seven oracles, including the incomplete-round safety check."
+    fixes_applied: true
+    validation_commands:
+      - "Locked manifest and current caller readback. Selected native baseline commands and receipts in conductor/dependency-sequencing.md"
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_dag.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
+    git_status: "clean"
+    commit_sha: "085d132ac45203a2dd5aaf4dcff20f1b25e75c5c"
+    pushed_ref: "origin/main"
+    tested_head_sha: "ca00777512db29e846e458696244eb09686dda8e"
+    publication_pr: "https://github.com/edithatogo/kairos/pull/354"
+    publication_evidence: "Original evaluation merge retained on main. The decision was reviewed again against the tested source above."
+    next_phase_decision: "Close Phase 0 with adoption Deferred. A demonstrated consumer and the named oracles are required to reopen Phases 1 and 2."
 
   - track_id: "98"
     phase: "0"
-    state: pending
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Planning only; adoption unqualified"
-    fixes_applied: false
-    validation_commands: []
-    git_status: "planning worktree"
-    commit_sha: ""
-    pushed_ref: ""
-    next_phase_decision: "Verify value, prerequisites and owner handoffs"
+    review_result: "Independent consumer and evidence review. The standalone Loom 0.7.3 model detected the seeded mutant, passed seven bounded CAS executions and agreed with the native checks. Broader workspace adoption has no additional selected model consumer."
+    fixes_applied: true
+    validation_commands:
+      - "Locked manifest and current caller readback. Selected native baseline commands and receipts in conductor/dependency-sequencing.md"
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_dag.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
+    git_status: "clean"
+    commit_sha: "6920b813d23d75132fd5c28927782679101e3dd5"
+    pushed_ref: "origin/main"
+    tested_head_sha: "ca00777512db29e846e458696244eb09686dda8e"
+    publication_pr: "https://github.com/edithatogo/kairos/pull/353"
+    publication_evidence: "Original evaluation merge retained on main. The decision was reviewed again against the tested source above."
+    next_phase_decision: "Close Phase 0 with adoption Deferred. A demonstrated consumer and the named oracles are required to reopen Phases 1 and 2."
 
   - track_id: "99"
     phase: "0"
@@ -1758,15 +1779,22 @@ entries:
 
   - track_id: "100"
     phase: "0"
-    state: pending
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Planning only; adoption unqualified"
-    fixes_applied: false
-    validation_commands: []
-    git_status: "planning worktree"
-    commit_sha: ""
-    pushed_ref: ""
-    next_phase_decision: "Verify value, prerequisites and owner handoffs"
+    review_result: "Independent consumer and evidence review. Executable subscriber adoption has no accepted Track 97 emitter or named host contract. The standalone Loom dependency closure is a separate test scope."
+    fixes_applied: true
+    validation_commands:
+      - "Locked manifest and current caller readback. Selected native baseline commands and receipts in conductor/dependency-sequencing.md"
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_dag.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
+    git_status: "clean"
+    commit_sha: "41e58e0c012e3f2253559cbefb239db71ee7486c"
+    pushed_ref: "origin/main"
+    tested_head_sha: "ca00777512db29e846e458696244eb09686dda8e"
+    publication_pr: "https://github.com/edithatogo/kairos/pull/355"
+    publication_evidence: "Original evaluation merge retained on main. The decision was reviewed again against the tested source above."
+    next_phase_decision: "Close Phase 0 with adoption Deferred. A demonstrated consumer and the named oracles are required to reopen Phases 1 and 2."
 
   - track_id: "101"
     phase: "0"
@@ -1790,39 +1818,60 @@ entries:
 
   - track_id: "102"
     phase: "0"
-    state: pending
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Planning only; qualification pending"
-    fixes_applied: false
-    validation_commands: []
-    git_status: "planning worktree"
-    commit_sha: ""
-    pushed_ref: ""
-    next_phase_decision: "Verify value and current owners"
+    review_result: "Independent consumer and evidence review. The legacy Kairos RK4 export was retired. Paignia supplies the fixed-step methods and Innovate uses its own vendored adaptive Dopri5 consumer. The review found no accepted integration contract in Kairos."
+    fixes_applied: true
+    validation_commands:
+      - "Locked manifest and current caller readback. Selected native baseline commands and receipts in conductor/dependency-sequencing.md"
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_dag.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
+    git_status: "clean"
+    commit_sha: "a4506b65243fc4687556444ee366c0e6911fa663"
+    pushed_ref: "origin/main"
+    tested_head_sha: "ca00777512db29e846e458696244eb09686dda8e"
+    publication_pr: "https://github.com/edithatogo/kairos/pull/358"
+    publication_evidence: "Original evaluation merge retained on main. The decision was reviewed again against the tested source above."
+    next_phase_decision: "Close Phase 0 with adoption Deferred. A demonstrated consumer and the named oracles are required to reopen Phases 1 and 2."
 
   - track_id: "103"
     phase: "0"
-    state: pending
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Planning only; qualification pending"
-    fixes_applied: false
-    validation_commands: []
-    git_status: "planning worktree"
-    commit_sha: ""
-    pushed_ref: ""
-    next_phase_decision: "Verify value and current owners"
+    review_result: "Independent consumer and evidence review. Eight feature-matrix cases passed for the in-memory stream contract. The current CareOps protocol handler has no accepted live Kairos socket endpoint."
+    fixes_applied: true
+    validation_commands:
+      - "Locked manifest and current caller readback. Selected native baseline commands and receipts in conductor/dependency-sequencing.md"
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_dag.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
+    git_status: "clean"
+    commit_sha: "c22172ccbf2d155a28f481a656ff3f7b6d9592ba"
+    pushed_ref: "origin/main"
+    tested_head_sha: "ca00777512db29e846e458696244eb09686dda8e"
+    publication_pr: "https://github.com/edithatogo/kairos/pull/359"
+    publication_evidence: "Original evaluation merge retained on main. The decision was reviewed again against the tested source above."
+    next_phase_decision: "Close Phase 0 with adoption Deferred. A demonstrated consumer and the named oracles are required to reopen Phases 1 and 2."
 
   - track_id: "104"
     phase: "0"
-    state: pending
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Planning only; qualification pending"
-    fixes_applied: false
-    validation_commands: []
-    git_status: "planning worktree"
-    commit_sha: ""
-    pushed_ref: ""
-    next_phase_decision: "Verify value and current owners"
+    review_result: "Independent consumer and evidence review. Seven Tokio framed-TCP oracles passed. A qualified Track 103 transport and a measured concurrent WebSocket workload remain adoption prerequisites."
+    fixes_applied: true
+    validation_commands:
+      - "Locked manifest and current caller readback. Selected native baseline commands and receipts in conductor/dependency-sequencing.md"
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_dag.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
+    git_status: "clean"
+    commit_sha: "615b2e17cf97f39d1090b591061f193b2faf4cb3"
+    pushed_ref: "origin/main"
+    tested_head_sha: "ca00777512db29e846e458696244eb09686dda8e"
+    publication_pr: "https://github.com/edithatogo/kairos/pull/360"
+    publication_evidence: "Original evaluation merge retained on main. The decision was reviewed again against the tested source above."
+    next_phase_decision: "Close Phase 0 with adoption Deferred. A demonstrated consumer and the named oracles are required to reopen Phases 1 and 2."
 
   - track_id: "105"
     phase: "0"

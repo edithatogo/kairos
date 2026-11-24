@@ -1,6 +1,14 @@
 # Handoff
 
-Updated: 2026-10-22. Maturity: planned; adoption decision pending.
+Updated: 25 November 2026. Phase 0 closed with adoption deferred.
+
+## Phase 0 closeout — 25 November 2026
+
+The Kairos CLI produces machine output on stdout and errors on stderr. The Track 97 prototype remains deferred. The standalone Loom test resolves a subscriber transitively. Reopen when an executable owner needs a subscriber for accepted tracing instrumentation and can qualify redaction, filtering and bounded dispatch.
+
+The underlying evaluation is on main through [PR #355](https://github.com/edithatogo/kairos/pull/355). The [current source readback and command receipts](../../dependency-sequencing.md#conditional-evaluation-closeout--25-november-2026) support the Phase 0 decision. CareOps retains its separate impact review.
+
+## Registration and evaluation history
 
 ## Summary
 

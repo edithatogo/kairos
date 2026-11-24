@@ -1407,7 +1407,7 @@ tracks:
 
   - id: 90
     name: Argmin calibration optimiser qualification
-    status: Planned
+    status: Deferred
     owner: vv-uq-agent
     depends_on: ["78"]
     owned_paths:
@@ -1496,7 +1496,7 @@ tracks:
 
   - id: 97
     name: tracing qualification
-    status: Planned
+    status: Deferred
     owner: contracts-agent
     depends_on: ["78"]
     owned_paths:
@@ -1508,7 +1508,7 @@ tracks:
 
   - id: 98
     name: loom qualification
-    status: Planned
+    status: Deferred
     owner: conformance-agent
     depends_on: ["78"]
     owned_paths:
@@ -1532,7 +1532,7 @@ tracks:
 
   - id: 100
     name: tracing-subscriber qualification
-    status: Planned
+    status: Deferred
     owner: contracts-agent
     depends_on: ["97"]
     owned_paths:
@@ -1556,7 +1556,7 @@ tracks:
 
   - id: 102
     name: ode_solvers conditional
-    status: Planned
+    status: Deferred
     owner: vv-uq-agent
     depends_on: ["78"]
     owned_paths:
@@ -1568,7 +1568,7 @@ tracks:
 
   - id: 103
     name: tungstenite conditional
-    status: Planned
+    status: Deferred
     owner: streaming-agent
     depends_on: ["78"]
     owned_paths:
@@ -1580,7 +1580,7 @@ tracks:
 
   - id: 104
     name: tokio-tungstenite conditional
-    status: Planned
+    status: Deferred
     owner: streaming-agent
     depends_on: ["103", "82"]
     owned_paths:

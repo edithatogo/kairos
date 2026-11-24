@@ -1,6 +1,14 @@
 # Handoff
 
-Updated: 3 November 2026. Maturity: Phase 0 deferral integrated; adoption and formal phase acceptance remain pending.
+Updated: 25 November 2026. Phase 0 closed with adoption deferred.
+
+## Phase 0 closeout — 25 November 2026
+
+The current streaming feature-matrix tests passed for the in-memory stream alias. CareOps's inspected dashboard consumes supplied messages and constructs command envelopes. Reopen when a live client and endpoint have an accepted wire contract and a browser/native interoperability oracle.
+
+The underlying evaluation is on main through [PR #359](https://github.com/edithatogo/kairos/pull/359). The [current source readback and command receipts](../../dependency-sequencing.md#conditional-evaluation-closeout--25-november-2026) support the Phase 0 decision. CareOps retains its separate impact review.
+
+## Registration and evaluation history
 
 ## Summary
 

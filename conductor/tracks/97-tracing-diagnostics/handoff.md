@@ -1,6 +1,14 @@
 # Handoff
 
-Updated: 2026-10-22. Maturity: planned; adoption decision pending.
+Updated: 25 November 2026. Phase 0 closed with adoption deferred.
+
+## Phase 0 closeout — 25 November 2026
+
+The original missing-peer diagnostic reported the expected numeric context. Its deliberate 40 ms subscriber exceeded the 5 ms budget on the reducing thread. The current Tonic transport passed seven oracles including incomplete-round safety. Reopen with a named diagnostic consumer and a bounded application dispatch policy.
+
+The underlying evaluation is on main through [PR #354](https://github.com/edithatogo/kairos/pull/354). The [current source readback and command receipts](../../dependency-sequencing.md#conditional-evaluation-closeout--25-november-2026) support the Phase 0 decision. CareOps retains its separate impact review.
+
+## Registration and evaluation history
 
 ## Summary
 

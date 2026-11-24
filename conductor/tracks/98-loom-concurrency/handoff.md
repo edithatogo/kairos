@@ -1,6 +1,14 @@
 # Handoff
 
-Updated: 2026-10-22. Maturity: planned; adoption decision pending.
+Updated: 25 November 2026. Phase 0 closed with adoption deferred.
+
+## Phase 0 closeout — 25 November 2026
+
+The locked standalone Loom 0.7.3 crate passed three tests and detected the seeded split load/store mutant. The production CAS body passed seven modeled executions, and the native allocator suite passed 11 cases. Reopen workspace adoption when a concrete additional synchronization contract or regression warrants a maintained model.
+
+The underlying evaluation is on main through [PR #353](https://github.com/edithatogo/kairos/pull/353). The [current source readback and command receipts](../../dependency-sequencing.md#conditional-evaluation-closeout--25-november-2026) support the Phase 0 decision. CareOps retains its separate impact review.
+
+## Registration and evaluation history
 
 ## Summary
 

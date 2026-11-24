@@ -1,6 +1,6 @@
 # tungstenite: conditional
 
-Planning only; adoption pending. [Value policy](../../dependency-value-policy.md), [sequencing](../../dependency-sequencing.md).
+Phase 0 closed with adoption deferred. [Decision](handoff.md#phase-0-closeout--25-november-2026) · [Value policy](../../dependency-value-policy.md).
 
 ## Inputs
 

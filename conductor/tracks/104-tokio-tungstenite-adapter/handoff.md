@@ -1,6 +1,14 @@
 # Handoff
 
-Updated: 3 November 2026. Maturity: Phase 0 deferral integrated; adoption and formal phase acceptance remain pending.
+Updated: 25 November 2026. Phase 0 closed with adoption deferred.
+
+## Phase 0 closeout — 25 November 2026
+
+Seven existing Tokio framed-TCP transport oracles passed. The adapter still depends on a qualified Track 103 wire contract. Reopen with a named WebSocket endpoint and a concurrent workload whose cancellation, queueing and reconnect demands justify async adoption.
+
+The underlying evaluation is on main through [PR #360](https://github.com/edithatogo/kairos/pull/360). The [current source readback and command receipts](../../dependency-sequencing.md#conditional-evaluation-closeout--25-november-2026) support the Phase 0 decision. CareOps retains its separate impact review.
+
+## Registration and evaluation history
 
 ## Summary
 

@@ -1,6 +1,6 @@
 # Argmin calibration optimiser qualification
 
-Planned; conditional; no runtime adoption.
+Phase 0 closed with adoption deferred. [Decision](handoff.md#phase-0-closeout--25-november-2026).
 
 - [spec.md](spec.md)
 - [plan.md](plan.md)
