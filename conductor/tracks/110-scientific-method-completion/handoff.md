@@ -64,9 +64,12 @@ Hosted integration checks bind the final tree to the reviewed source.
 The independent `$conductor-review` matched the source and fixture hashes,
 logs, platform and Arrow bytes. The accepted fixes narrow the wording to
 the tested protocol and movement cases and count the nested TCP peer once.
-The runtime commit SHA is `c5959a9ce92dbbc8991ce4f54480b281099a8e34`. Record the durable pushed ref
-after integration. Run `scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`
-against the integrated tree. The next-phase decision keeps Phase 0 open
+The tested runtime commit SHA is `c5959a9ce92dbbc8991ce4f54480b281099a8e34`.
+The published commit SHA is `9b6921782e8c7fc9a82a7e3f1a6c0dd540c2ca60` on the pushed ref `origin/main`.
+Its tree matches the tested PR tree.
+`scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`
+passed against the integrated source. The next-phase decision keeps Phase 0 open
 for the remaining caller and version map and oracle identities. The later
 phases retain their downstream, wider native and held-out acceptance work.
+[Implementation and checks](https://github.com/edithatogo/kairos/pull/461/checks)
 

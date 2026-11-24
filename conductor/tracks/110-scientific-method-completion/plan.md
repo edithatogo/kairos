@@ -65,8 +65,7 @@ Close every stated scientific/advanced method with a correct implementation and 
   - S15 covers [checkpoint-backed replay, branch isolation and retained Arrow IPC export](../../scientific-completion.md#s15-native-debugger-qualification). Browser integration and production model replay remain open.
   - S16 covers [two OS process TCP and Tonic IPC](../../scientific-completion.md#s16-transport-and-telemetry-qualification). Browser and broker transports remain open.
   - S17 covers [DES and ABM boundary and movement cases](../../scientific-completion.md#s17-resource-and-boundary-qualification). General hybrid synchronization and empirical model validation remain open.
-- [ ] 110.2.4: Record analytical correctness, native execution, comparative performance and empirical validity separately for each capability.
-  - The register now links bounded analytical and native results and names the matched GPU timing cases. The full per-capability performance and empirical decisions remain open.
+- [x] 110.2.4: Record the distinct evidence limits for analytical correctness, native execution, comparative performance and empirical validity. [Current dispositions](../../scientific-completion.md#limits-on-performance-and-empirical-claims)
 - [ ] 110.2.review: Independently review this phase, apply accepted fixes, execute the named oracles and record the next-phase decision.
 
 ## Phase 3: Acceptance

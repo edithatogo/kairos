@@ -182,8 +182,10 @@ Eighteen cases passed for framed TCP between two OS processes, bounded
 queues and reconnect, and Tonic Arrow batch ordering, duplicates and
 corrupt input. The supported routes are framed TCP and the qualified Tonic
 profiles. Browser RFC 6455 and live Arrow Flight, Kafka and NATS brokers
-remain unavailable.
-[Transport receipt](tracks/110-scientific-method-completion/evidence/native-qualification-20261125.json)
+remain unavailable. The WebSocket decision awaits a live endpoint and an
+accepted application protocol for resynchronization and commands.
+[Transport receipt](tracks/110-scientific-method-completion/evidence/native-qualification-20261125.json) ·
+[WebSocket decision](tracks/103-tungstenite-transport/handoff.md#downstream-evidence-and-entry-decision)
 
 ## S17 resource and boundary qualification
 
@@ -194,3 +196,14 @@ General hybrid synchronization and empirical validation of specific models
 still require their own results.
 [DES and movement receipt](tracks/110-scientific-method-completion/evidence/native-qualification-20261125.json) ·
 [Movement contract](contracts/movement-resource-usage.md)
+
+## Limits on performance and empirical claims
+
+The method and native execution decisions follow the individual scopes above.
+Comparative performance evidence applies to S11's matched CPU and device
+runs, S12's matched conservative PDES ring, S14's local APFS Arrow IPC writes
+and S15's model-specific replay retention experiment. Performance comparisons
+remain open for S01–S10, S13 and S16–S17. Empirical model validity remains
+unassessed across these method and engineering fixtures.
+[PDES timing evidence](tracks/111-measured-performance/handoff.md#matched-ring-and-worker-reuse) ·
+[APFS timing evidence](execution/scientific/s14-completion.md#native-arrow-ipc)
