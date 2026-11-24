@@ -1,5 +1,36 @@
-use kairo_ecs_ffi::*;
+use std::alloc::{GlobalAlloc, Layout, System};
 use std::ffi::CStr;
+use std::sync::atomic::{AtomicUsize, Ordering};
+
+use kairo_ecs_ffi::*;
+
+struct AllocationObserver;
+
+static WATCHED_BUFFER: AtomicUsize = AtomicUsize::new(0);
+static RELEASED_BYTES: AtomicUsize = AtomicUsize::new(0);
+
+// SAFETY: The observer delegates allocation to System. It records only the
+// address and layout of a watched deallocation and never dereferences a pointer.
+unsafe impl GlobalAlloc for AllocationObserver {
+    unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
+        // SAFETY: The caller supplies a valid allocation layout.
+        unsafe { System.alloc(layout) }
+    }
+
+    unsafe fn dealloc(&self, pointer: *mut u8, layout: Layout) {
+        if WATCHED_BUFFER
+            .compare_exchange(pointer.addr(), 0, Ordering::Relaxed, Ordering::Relaxed)
+            .is_ok()
+        {
+            RELEASED_BYTES.store(layout.size(), Ordering::Relaxed);
+        }
+        // SAFETY: System allocated this pointer with the caller's original layout.
+        unsafe { System.dealloc(pointer, layout) };
+    }
+}
+
+#[global_allocator]
+static ALLOCATOR: AllocationObserver = AllocationObserver;
 
 #[test]
 fn test_arrow_c_schema_export_v2_and_children() {
@@ -55,6 +86,53 @@ fn test_arrow_c_schema_export_v2_and_children() {
         }
     }
     assert!(schema.release.is_none());
+}
+
+#[test]
+fn exported_value_buffer_is_reclaimed_by_its_array_owner() {
+    let mut engine = kairo_ecs_engine_new();
+    for tick in [10, 20, 30] {
+        kairo_ecs_schedule_at(engine, tick, 0, 1);
+        assert_eq!(kairo_ecs_step(engine), KairoEcsStatusCode::KAIRO_ECS_OK);
+    }
+    let mut array = KairoArrowArray::default();
+    // SAFETY: Both pointers refer to live, aligned locals with the required types.
+    let status = unsafe { kairo_ecs_export_event_log_arrow_array(&mut engine, &mut array) };
+    assert_eq!(status, KairoEcsStatusCode::KAIRO_ECS_OK);
+    assert_eq!(array.length, 3);
+    assert!(array.n_children > 7 && !array.children.is_null());
+    // SAFETY: The live EventLog v2 array owns its children through root release.
+    let times = unsafe { *array.children.add(7) }; // time_ticks_lo: UInt64
+    assert!(!times.is_null());
+    // SAFETY: The exported child is live until root release.
+    let times = unsafe { &*times };
+    assert_eq!(times.length, 3);
+    assert_eq!(times.n_buffers, 2);
+    assert_eq!(times.offset, 0);
+    assert!(!times.buffers.is_null());
+    // SAFETY: A primitive child with two buffers has its values in slot 1.
+    let values = unsafe { (*times.buffers.add(1)).cast::<u64>() };
+    assert!(!values.is_null());
+    assert!(values.is_aligned());
+    WATCHED_BUFFER.store(values.addr(), Ordering::Relaxed);
+
+    assert_eq!(
+        kairo_ecs_engine_free(engine),
+        KairoEcsStatusCode::KAIRO_ECS_OK
+    );
+    assert_eq!(RELEASED_BYTES.load(Ordering::Relaxed), 0);
+    // SAFETY: The root still owns three aligned u64 values at this address.
+    assert_eq!(
+        unsafe { std::slice::from_raw_parts(values, 3) },
+        [10, 20, 30]
+    );
+
+    let release = array.release.unwrap();
+    // SAFETY: This is the array's first release through its original callback.
+    unsafe { release(&mut array) };
+    assert_eq!(WATCHED_BUFFER.load(Ordering::Relaxed), 0);
+    assert!(array.release.is_none());
+    assert_eq!(RELEASED_BYTES.load(Ordering::Relaxed), 3 * size_of::<u64>());
 }
 
 #[test]

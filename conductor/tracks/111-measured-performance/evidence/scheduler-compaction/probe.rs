@@ -148,6 +148,43 @@ fn burst(count: u64) {
     );
 }
 
+fn lifecycle(count: u64) {
+    let baseline = LIVE.load(Ordering::Relaxed);
+    let mut source = Scheduler::new();
+    for tick in 0..count {
+        let event = source.schedule(request(u128::from(tick)));
+        if tick % 2 != 0 {
+            assert!(source.cancel(event));
+        }
+    }
+    let checkpoint = source.checkpoint();
+    let with_checkpoint = LIVE.load(Ordering::Relaxed) - baseline;
+    drop(source);
+    let checkpoint_only = LIVE.load(Ordering::Relaxed) - baseline;
+    assert!(checkpoint_only > 0 && checkpoint_only < with_checkpoint);
+
+    let mut resumed = Scheduler::from_checkpoint(&checkpoint).unwrap();
+    let with_resumed = LIVE.load(Ordering::Relaxed) - baseline;
+    assert!(with_resumed > checkpoint_only);
+    drop(checkpoint);
+    let resumed_only = LIVE.load(Ordering::Relaxed) - baseline;
+    assert!(resumed_only > 0 && resumed_only < with_resumed);
+    for expected in (0..count).step_by(2) {
+        let event = resumed.step().into_dispatched().unwrap();
+        assert_eq!(event.sequence, expected);
+        assert_eq!(event.at.ticks(), u128::from(expected));
+    }
+    assert!(matches!(resumed.step(), StepOutcome::Empty));
+    assert_eq!(resumed.stats().cancelled_events, count / 2);
+    let drained = LIVE.load(Ordering::Relaxed) - baseline;
+    drop(resumed);
+    let after_drop = LIVE.load(Ordering::Relaxed) - baseline;
+    assert_eq!(after_drop, 0);
+    println!(
+        "{count},{with_checkpoint},{checkpoint_only},{with_resumed},{resumed_only},{drained},{after_drop}"
+    );
+}
+
 fn main() {
     let mut args = std::env::args().skip(1);
     let mode = args.next().unwrap();
@@ -156,6 +193,7 @@ fn main() {
         "pressure" => pressure(count),
         "mixed" => mixed(count),
         "burst" => burst(count),
+        "lifecycle" => lifecycle(count),
         _ => panic!("workload mode"),
     }
 }
