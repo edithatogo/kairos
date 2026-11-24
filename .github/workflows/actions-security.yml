@@ -42,11 +42,33 @@ jobs:
           test -f .github/workflows/release.yml
       - name: Detect floating action refs
         run: |
-          if rg -n "uses:\s+[^@[:space:]]+@(main|master|latest|HEAD)\b" .github/workflows; then
-            exit 1
-          fi
-      - name: Run zizmor
-        uses: zizmorcore/zizmor-action@45d7276c9ca790aabd705e31ca99c6185c3e76dd # v0.8.1
+          result=0
+          git grep -nE 'uses:[[:space:]]+[^@[:space:]]+@(main|master|latest|HEAD)([^[:alnum:]_]|$)' -- .github/workflows || result=$?
+          test "$result" -eq 1
+      - name: Install pinned zizmor
+        uses: taiki-e/install-action@4a76afe23f9e08d2d9550fb56e556444e8611d21 # v2.90.4
         with:
-          persona: auditor
-          online-audits: false
+          tool: zizmor@1.32.0
+          fallback: none
+      - name: Audit runner workflows offline
+        run: |
+          scanner="$(command -v zizmor)"
+          env -i PATH=/usr/bin:/bin HOME="$RUNNER_TEMP" "$scanner" \
+            --offline --strict-collection --persona=auditor --format=sarif -- . > "$RUNNER_TEMP/zizmor.sarif"
+      - name: Upload zizmor SARIF
+        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          sarif_file: ${{ runner.temp }}/zizmor.sarif
+          category: zizmor
+      - name: Enforce workflow runner safeguards
+        run: |
+          jq --slurp --exit-status '
+            length == 1 and (.[0] |
+              .version == "2.1.0" and
+              (.runs | type == "array" and length > 0 and all(.[];
+                .tool.driver.name == "zizmor" and
+                (.results | type == "array" and all(.[];
+                  (.level == "warning" or .level == "note" or .level == "none") and
+                  (.ruleId | type == "string" and length > 0) and
+                  .ruleId != "zizmor/artipacked")))))
+          ' "$RUNNER_TEMP/zizmor.sarif" > /dev/null
