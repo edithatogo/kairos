@@ -1,8 +1,62 @@
 # Handoff
 
-Updated 23 November 2026. Both advertised targets passed the installed
-candidate gate. Phase 0 remains open for final candidate review and
-maintainer acceptance.
+## Native core v1 decision — 25 November 2026
+
+The independent engineering review accepts the `native-core-v1` qualification
+evidence for `e2875387ce45c34cd19716ea66f0102251a6aa6f`. Phase 0 is
+pending maintainer acceptance of the [scope and replay change](../../release/beta-scope.md).
+The selected profile uses Rust 1.99.1, C ABI v1 and CPython 3.15.2 on Linux
+x86-64 GNU and macOS ARM64. ChaCha8 changes the seeded alpha replay draws.
+The profiled core uses serial execution and preserves the documented boundary
+for other bindings, platforms and experimental capabilities.
+
+Integration chat `01a1fd18-51c7-7963-a3cc-d262d54582ba` records the Track 109
+and 113 decisions from `/Users/doughnut/.codex/worktrees/kairos-native-beta-closeout/kairos`
+on `codex/native-core-v1-acceptance-20261125`. The scope is both track records, the
+phase ledger and status. Hosted access covers installation, policy and
+provenance readback. The next operation is integration of the reviewed records.
+
+### Exact artifacts
+
+The two [installation receipts](metadata.json) match the retained archives
+from [run 45051171243](https://github.com/edithatogo/kairos/actions/runs/45051171243).
+The existing verifier matched all six archive paths to the receipts and to the
+attestation's signed subject inventory. GitHub attestation verification passed for
+all five distinct digests and the signed SPDX 2.3 document matched the retained
+SBOM. [Attestation run](https://github.com/edithatogo/kairos/actions/runs/45053462090).
+
+| Target | Package | SHA-256 |
+| --- | --- | --- |
+| Both | Rust SDK archive | `0060c934d7b5d9eb187387175fc4604184093823aedbfbb43fa52936b1a82240` |
+| Linux x86-64 GNU | C ABI archive | `73efab28c21ff0651df3e14775f3a62fbdb11b6d0ef304d903dca29851fbf41e` |
+| Linux x86-64 GNU | Python wheel | `7595df567c16dc5ced1bfdf866f93e552a5e8a187da2257d4e052512d3b10286` |
+| macOS ARM64 | C ABI archive | `4e31fbfcf28cfb472970af6be803137152170b8be4ae839cbf4834eda3e5b6a9` |
+| macOS ARM64 | Python wheel | `2ac30c0eb842de7f79be7beacfb6ad948f747dae396f2454f1a15316a3afe26f` |
+
+### Gate readback
+
+- The [Track 109 acceptance](../109-rust-only-runtime/handoff.md#native-runtime-acceptance--25-november-2026)
+  binds retirement, dispatch, ABI errors and ownership to the scoped packages.
+  Both installed targets ran the standalone Rust model, the C and Python
+  lifecycle checks, and the pinned CareOps case. The candidate compatibility
+  evidence below records analytical preemption, reproducible event ordering,
+  replay, schema and buffer checks.
+- Exact-source serial timing and memory samples are retained below. The matched
+  PDES comparison also preserved model parity. Serial remains the profiled path.
+- All 21 candidate push workflows passed. The exact [core mutation](https://github.com/edithatogo/kairos/actions/runs/45051175801)
+  and [property/fuzz](https://github.com/edithatogo/kairos/actions/runs/45051181965)
+  jobs passed. The hosted dependency check retained 14 policy-allowed advisory
+  warnings, including transitive heapless. A fresh Rust 1.99.1
+  `cargo deny --locked check advisories bans licenses sources` passed on
+  the exact candidate source. [Hosted core check](https://github.com/edithatogo/kairos/actions/runs/45051171359).
+- The selected SDK, C ABI and wheel passed clean install. The exact candidate
+  also passed `build_release_manifest.py --check`, Rust types crate packaging
+  and Python wheel/sdist build and Twine checks. Scope, compatibility
+  guidance and experimental capability labels follow the
+  [frozen manifest](../../../packaging/native-beta-scope.json) and
+  [capability register](../../capabilities.md).
+
+Stable qualification and registry publication follow the later release phases.
 
 ## Native core v1 candidate — 23 November 2026
 
@@ -178,5 +232,8 @@ Use isolated bounded worktrees. The root integration packet combines disjoint ch
 
 ## Phase closeout evidence
 
-No phase is closed. Record $conductor-review, accepted fixes, commit SHA, pushed ref, scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree and the next-phase decision only when they occur. Current planning status is not execution evidence.
+The `$conductor-review` evidence and accepted fixes are recorded above.
+The [phase ledger](../../phase-closeout.yaml) binds the candidate commit SHA
+to the pushed ref and records the next-phase decision. Integration of this
+record uses `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`.
 
