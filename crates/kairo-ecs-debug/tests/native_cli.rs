@@ -42,3 +42,76 @@ fn cli_dispatches_steps_restores_state_and_honours_the_breakpoint() {
     assert_eq!(lines[9], "position=3 tick=1 event=2:2 sequence=2 kind=2");
     assert_eq!(lines[10], "applied=3");
 }
+
+#[cfg(feature = "arrow-ipc")]
+#[test]
+fn cli_exports_only_retained_dispatches_through_the_cursor() {
+    use kairo_ecs_arrow::{native_ipc::NativeIpcBatch, ParallelIoRecordBatch};
+    use kairo_ecs_types::{DispatchedEvent, EventId, EventKind, SimTime};
+
+    let dir = tempfile::tempdir().unwrap();
+    let trace = dir.path().join("retained dispatches.arrow");
+    let mut process = Command::new(env!("CARGO_BIN_EXE_kairo-ecs-debug"))
+        .args([
+            "replay",
+            "--events",
+            "5",
+            "--checkpoint-every",
+            "2",
+            "--checkpoints",
+            "2",
+        ])
+        .arg("--dispatch-ipc")
+        .arg(&trace)
+        .args(["--run-id", "retained-window"])
+        .stdin(Stdio::piped())
+        .stdout(Stdio::null())
+        .spawn()
+        .unwrap();
+    process
+        .stdin
+        .take()
+        .unwrap()
+        .write_all(b"step\nstep\nstep\nstep\nback\n")
+        .unwrap();
+    assert!(process.wait().unwrap().success());
+
+    let expected = ParallelIoRecordBatch::from_dispatched(
+        "retained-window",
+        [DispatchedEvent {
+            id: EventId {
+                index: 2,
+                generation: 2,
+            },
+            at: SimTime::from_ticks(1),
+            priority: 0,
+            sequence: 2,
+            entity: None,
+            kind: EventKind::custom(2),
+        }],
+    )
+    .unwrap();
+    let mut expected_ipc = Vec::new();
+    NativeIpcBatch::from_event_log(&expected)
+        .unwrap()
+        .write_contiguous(&mut expected_ipc)
+        .unwrap();
+    assert_eq!(std::fs::read(trace).unwrap(), expected_ipc);
+}
+
+#[cfg(feature = "arrow-ipc")]
+#[test]
+fn cli_rejects_a_blank_run_id_even_for_an_empty_export() {
+    let dir = tempfile::tempdir().unwrap();
+    let trace = dir.path().join("empty.arrow");
+    let result = Command::new(env!("CARGO_BIN_EXE_kairo-ecs-debug"))
+        .args(["replay", "--events", "0", "--dispatch-ipc"])
+        .arg(&trace)
+        .args(["--run-id", " "])
+        .stdin(Stdio::null())
+        .output()
+        .unwrap();
+    assert!(!result.status.success());
+    assert!(String::from_utf8_lossy(&result.stderr).contains("run ID must not be blank"));
+    assert!(!trace.exists());
+}
