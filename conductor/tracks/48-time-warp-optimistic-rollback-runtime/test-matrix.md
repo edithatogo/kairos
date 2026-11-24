@@ -13,7 +13,7 @@ See [current qualification](../49-distributed-mpi-grpc-state-synchronization/nat
 |---|---|---|
 | Time Warp tests | `cargo test -p kairo-ecs-pdes --features time-warp` | Implementation |
 | In-flight cuts | `cargo test --locked -p kairo-ecs-pdes --all-features --lib in_flight_` | Coordinator and participant restart, rollback parity and delivery at the floor |
-| Three-member cut recovery | Build `cap48_node` with `cargo build --locked -p kairo-ecs-grpc --example cap48_node --features external-fault-injection`. Provision three pinned native workers across two hosts and run `recover_group_in_flight` from `docs/distributed/qualify_cap48.py` on repo-local Python 3.15.2 | Incomplete cut rejection, authenticated standby recovery, retained straggler and rollback parity |
+| Three-member cut recovery | With Rust 1.99.1 on PATH and an isolated `CARGO_TARGET_DIR`, run `.venv/bin/python docs/distributed/qualify_cap48.py --cases three-member-cut --output PRIVATE_OUTPUT`. Add `--ssh-args PRIVATE_JSON --remote-repo REMOTE_REPO` to use a provisioned pinned SSH route for the two peers. | Incomplete cut rejection, both partial-commit orders, exact decision replay and serial rollback parity |
 | Conservative regression | `cargo test -p kairo-ecs-pdes --features pdes` | Review |
 | Benchmark compile | `cargo check --benches -p kairo-ecs-pdes --features pdes,time-warp` | Review |
 | Local Time Warp evidence manifest | `node scripts/validation/validate-hpc-parity-evidence.mjs` | Evidence boundary |

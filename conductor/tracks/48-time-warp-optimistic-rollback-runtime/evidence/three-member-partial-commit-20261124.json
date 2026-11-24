@@ -1,0 +1,131 @@
+{
+  "status": "pass",
+  "scope": "Three fixed members across macOS ARM64 and Linux x86-64 using native Tonic mutual TLS over pinned SSH",
+  "native_source_commit": "e6688ea1f997e7fb213f9bc681fc029401c57fec",
+  "controller_sha256": "685e2a4a47c373979d79e55fa23cadfec2afbcfd52a2f6a7550d809f4c3cf617",
+  "rust": "1.99.1",
+  "python": "3.15.2",
+  "local_command": ".venv/bin/python docs/distributed/qualify_cap48.py --cases three-member-cut --output PRIVATE_OUTPUT",
+  "two_host_options": "--ssh-args PRIVATE_JSON --remote-repo REMOTE_REPO",
+  "oracle": "Byte-identical signed decision and retained prepare, idempotent revision, common floors, and model/RNG/ordered trace parity with native serial execution",
+  "runs": {
+    "local_group": {
+      "passed": 3,
+      "started_native_workers": 20,
+      "deliberate_worker_deaths": 11,
+      "receipt_sha256": "f68ff109e9c63dc2782bc86a3ba28e63e26bc42593c15ccb42bc7095134d729b",
+      "events_sha256": "3863a0cfe4eec4f0a41128fac90ba0128f756e1cf0e1ece6e6742804c7b80843",
+      "local_binary_sha256": "1158fb96767811399c042366771b2270009557f9220cc367fba2810827c732db"
+    },
+    "local_pair": {
+      "passed": 16,
+      "started_native_workers": 46,
+      "deliberate_worker_deaths": 14,
+      "receipt_sha256": "84d9ca515b7c0c2ecb4f153493e61ceb6e71496c1af0fdfb07cb5c610a1028ce",
+      "events_sha256": "9aff7d3c51b9638439f97ef9c2bedca43aaa29120ea20b5d041a8849bfb79fdb",
+      "local_binary_sha256": "1158fb96767811399c042366771b2270009557f9220cc367fba2810827c732db"
+    },
+    "two_hosts": {
+      "passed": 3,
+      "started_native_workers": 20,
+      "deliberate_worker_deaths": 11,
+      "receipt_sha256": "79eae8c3f3ec67353c3d6afa5f930fcae7424f8995ab9e717d70de5993d2bc49",
+      "events_sha256": "b32faa6e0d50a503394bac54d183da7e0e71574de4e1996b117a357cc23764fd",
+      "local_binary_sha256": "1158fb96767811399c042366771b2270009557f9220cc367fba2810827c732db",
+      "remote_binary_sha256": "cdb7ee4881aa2458892510797792010b354db69fd2599cee69e3e7f583d1cb91",
+      "remote_build_receipt_sha256": "2076b1b8550de1f7e59183fb80cc527bed1d82244ad6e216ee0dcc6c10d37df2",
+      "cases": [
+        {
+          "first_peer": null,
+          "floors_during_partial_commit": [
+            10,
+            0,
+            0
+          ],
+          "cut_decision_sha256": "9b72b3547d77ec912af8c779a19275ffc4290f02464706f3e4190d8b032b8c78",
+          "floors_after_restart": [
+            10,
+            10,
+            10
+          ],
+          "final_floors": [
+            100,
+            100,
+            100
+          ],
+          "model_sha256": [
+            "0ec6781ea803ca87e93a4e183824ea61e95b7fa07c8b32984957bfcbabcebb51",
+            "b16a9c0352cdff1f383e7c77de0b5f74fe58734526918140858db3b9a57e4591",
+            "14721d4d9397b47506f65b410f31830ced81f1a053f96ac6638ccd4b81542a26"
+          ],
+          "rollback_counts": [
+            1,
+            1,
+            0
+          ],
+          "name": "before-peer-apply"
+        },
+        {
+          "first_peer": 1,
+          "floors_during_partial_commit": [
+            10,
+            10,
+            0
+          ],
+          "cut_decision_sha256": "967b03fc8b2835b791b04b38c7d8878d50698368d43dcc4cc54c11c99b4cc3f9",
+          "floors_after_restart": [
+            10,
+            10,
+            10
+          ],
+          "final_floors": [
+            100,
+            100,
+            100
+          ],
+          "model_sha256": [
+            "0ec6781ea803ca87e93a4e183824ea61e95b7fa07c8b32984957bfcbabcebb51",
+            "b16a9c0352cdff1f383e7c77de0b5f74fe58734526918140858db3b9a57e4591",
+            "14721d4d9397b47506f65b410f31830ced81f1a053f96ac6638ccd4b81542a26"
+          ],
+          "rollback_counts": [
+            1,
+            1,
+            0
+          ],
+          "name": "peer-1-applied"
+        },
+        {
+          "first_peer": 2,
+          "floors_during_partial_commit": [
+            10,
+            0,
+            10
+          ],
+          "cut_decision_sha256": "e35cdc73f41ea80f9abbbba3403d131bd1f855efe24f8b5455cdb93bb27bc269",
+          "floors_after_restart": [
+            10,
+            10,
+            10
+          ],
+          "final_floors": [
+            100,
+            100,
+            100
+          ],
+          "model_sha256": [
+            "0ec6781ea803ca87e93a4e183824ea61e95b7fa07c8b32984957bfcbabcebb51",
+            "b16a9c0352cdff1f383e7c77de0b5f74fe58734526918140858db3b9a57e4591",
+            "14721d4d9397b47506f65b410f31830ced81f1a053f96ac6638ccd4b81542a26"
+          ],
+          "rollback_counts": [
+            1,
+            1,
+            0
+          ],
+          "name": "peer-2-applied"
+        }
+      ]
+    }
+  }
+}

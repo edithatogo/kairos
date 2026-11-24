@@ -639,10 +639,10 @@ defines the fixed-membership boundary.
 
 ## Three-member cut recovery
 
-Chat `01a1fd18-51c7-7963-a3cc-d262d54582ba` owns this branch in the
-`kairos-ci-closeout` worktree. The patch covers the prepared standby ingress,
+Chat `01a1fd18-51c7-7963-a3cc-d262d54582ba` owned this patch in the
+`kairos-ci-closeout` worktree. It covered the prepared standby ingress,
 its Rust regression, the native qualification worker's routes and the
-three-member scenario. The next operation is protected PR integration.
+three-member scenario. This work merged in PR #447.
 
 Rust 1.99.1 built a macOS ARM64 coordinator and two Linux x86-64 NAS workers.
 The native driver provisions separate SQLite stores and TLS identities, then
@@ -658,3 +658,25 @@ preserved the reopened worker's revision. A complete activation restored live
 execution, the tick-10 delivery replayed once, and the coordinator and first
 worker each rolled back once. Their model, RNG and trace bytes matched the
 serial reference. The next cut advanced all three floors to 100.
+
+## Partial-commit recovery
+
+Chat `01a1fd18-51c7-7963-a3cc-d262d54582ba` owns the qualification runner and
+evidence on `codex/three-member-cut-recovery-20261124` in the
+`kairos-ci-closeout` worktree. The next operation is protected PR integration.
+
+The `three-member-cut` selector runs the original case and both partial
+commit orders. Each new case kills the coordinator after one peer applies
+the decision. The coordinator reopens its store and recovers the exact signed
+decision, and the waiting peer recovers its original prepare. Resending the
+decision advances the waiting peer to tick 10 and preserves the revision of the
+peer that already applied it. After successor activation, final model, RNG,
+and trace bytes match the serial reference. The next cut reaches tick 100
+on all three workers.
+
+The integrated command passed all three cases with a macOS ARM64 coordinator
+and two Linux x86-64 workers using Rust 1.99.1 and Python 3.15.2. It exercised
+11 process deaths across the three cases. On Linux, fault injection opens a
+pidfd and verifies the executable and settings before signalling a worker. The
+same controller passed all three local cases and all 16 existing two-worker
+cases. [Native receipt](evidence/three-member-partial-commit-20261124.json).
