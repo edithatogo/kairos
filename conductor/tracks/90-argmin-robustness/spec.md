@@ -1,6 +1,6 @@
 # Argmin calibration optimiser qualification
 
-Maturity: planned experimental evaluation/adoption; no runtime work started. Priority class: conditional. Apply [value policy](../../dependency-value-policy.md).
+Phase 0 closed with adoption deferred. [Decision](handoff.md#phase-0-closeout--25-november-2026) · [Value policy](../../dependency-value-policy.md).
 
 ## Inputs
 

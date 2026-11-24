@@ -97,21 +97,21 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 87 | geo geometry and route-position primitives | Done | `abm-api-agent` | See `conductor/tracks/87-*/spec.md` |
 | 88 | rsmpi native MPI qualification | Done | `distributed-agent` | See `conductor/tracks/88-*/spec.md` |
 | 89 | Tract inference qualification | Done | `ml-integration-agent` | See `conductor/tracks/89-*/spec.md` |
-| 90 | Argmin calibration optimiser qualification | Planned | `vv-uq-agent` | See `conductor/tracks/90-*/spec.md` |
+| 90 | Argmin calibration optimiser qualification | Deferred | `vv-uq-agent` | See `conductor/tracks/90-*/spec.md` |
 | 91 | rust-fmi adapter qualification | Done | `fmi-agent` | See `conductor/tracks/91-*/spec.md` |
 | 92 | Sobol sequence qualification | Done | `experiment-agent` | [Declined dependency and qualified successor](tracks/92-sobol-burley-robustness/handoff.md#evaluation-closeout--23-november-2026) |
 | 93 | sha2 robustness | Done | `arrow-agent` | See `conductor/tracks/93-*/spec.md` |
 | 94 | tempfile robustness | Done | `arrow-agent` | See `conductor/tracks/94-*/spec.md` |
 | 95 | thiserror robustness | Done | `contracts-agent` | See `conductor/tracks/95-*/spec.md` |
 | 96 | proptest robustness | Done | `conformance-agent` | See `conductor/tracks/96-*/spec.md` |
-| 97 | tracing qualification | Planned | `contracts-agent` | See `conductor/tracks/97-*/spec.md` |
-| 98 | loom qualification | Planned | `conformance-agent` | See `conductor/tracks/98-*/spec.md` |
+| 97 | tracing qualification | Deferred | `contracts-agent` | See `conductor/tracks/97-*/spec.md` |
+| 98 | loom qualification | Deferred | `conformance-agent` | See `conductor/tracks/98-*/spec.md` |
 | 99 | proptest-state-machine qualification | Done | `conformance-agent` | See `conductor/tracks/99-*/spec.md` |
-| 100 | tracing-subscriber qualification | Planned | `contracts-agent` | See `conductor/tracks/100-*/spec.md` |
+| 100 | tracing-subscriber qualification | Deferred | `contracts-agent` | See `conductor/tracks/100-*/spec.md` |
 | 101 | criterion existing-tooling | Done | `benchmark-agent` | See `conductor/tracks/101-*/spec.md` |
-| 102 | ode_solvers conditional | Planned | `vv-uq-agent` | See `conductor/tracks/102-*/spec.md` |
-| 103 | tungstenite conditional | Planned | `streaming-agent` | See `conductor/tracks/103-*/spec.md` |
-| 104 | tokio-tungstenite conditional | Planned | `streaming-agent` | See `conductor/tracks/104-*/spec.md` |
+| 102 | ode_solvers conditional | Deferred | `vv-uq-agent` | See `conductor/tracks/102-*/spec.md` |
+| 103 | tungstenite conditional | Deferred | `streaming-agent` | See `conductor/tracks/103-*/spec.md` |
+| 104 | tokio-tungstenite conditional | Deferred | `streaming-agent` | See `conductor/tracks/104-*/spec.md` |
 | 105 | Python 3.15 Runtime Migration and Qualification | In Progress | `python-agent + ci-agent + dx-agent` | See `conductor/tracks/105-*/spec.md` |
 | 106 | Scheduler Preview API Compatibility | Done | `core-api-agent + conformance-agent + api-governance-agent` | See [archived record](archive/106-scheduler-preview-compatibility/index.md) |
 | 107 | CareOps staged allocation flow compatibility | Done | `des-api-agent + conformance-agent + api-governance-agent` | See `conductor/tracks/107-*/spec.md` |
@@ -214,7 +214,7 @@ Historical snapshot, superseded by the3November2026 accepted source/native packe
 - [x] **Track 89: Tract inference qualification** — Done; conditional evaluation completed with REJECT (NO-GO) decision. [Track](tracks/89-tract-robustness/index.md).
 
 ---
-- [ ] **Track 90: Argmin calibration optimiser qualification** — Planned; conditional; value gate pending. [Track](tracks/90-argmin-robustness/index.md).
+- [x] **Track 90: Argmin calibration optimiser qualification** — Phase 0 closed, adoption deferred. [Decision](tracks/90-argmin-robustness/handoff.md#phase-0-closeout--25-november-2026).
 
 ---
 - [x] **Track 91: rust-fmi adapter qualification** — Done; evaluation completed (rejected); value gate closed. [Track](tracks/91-fmi-robustness/index.md).
@@ -235,28 +235,28 @@ Historical snapshot, superseded by the3November2026 accepted source/native packe
 - [x] **Track 96: proptest robustness** — foundation; [plan](tracks/96-proptest-invariants/index.md).
 
 ---
-- [ ] **Track 97: tracing qualification** — conditional; [plan](tracks/97-tracing-diagnostics/index.md).
+- [x] **Track 97: tracing qualification** — Phase 0 closed, adoption deferred. [Decision](tracks/97-tracing-diagnostics/handoff.md#phase-0-closeout--25-november-2026).
 
 ---
-- [ ] **Track 98: loom qualification** — evaluation; [plan](tracks/98-loom-concurrency/index.md).
+- [x] **Track 98: loom qualification** — Phase 0 closed, adoption deferred. [Decision](tracks/98-loom-concurrency/handoff.md#phase-0-closeout--25-november-2026).
 
 ---
 - [x] **Track 99: proptest-state-machine qualification** — evaluation; [plan](tracks/99-proptest-state-machine/index.md).
 
 ---
-- [ ] **Track 100: tracing-subscriber qualification** — conditional; [plan](tracks/100-tracing-subscriber/index.md).
+- [x] **Track 100: tracing-subscriber qualification** — Phase 0 closed, adoption deferred. [Decision](tracks/100-tracing-subscriber/handoff.md#phase-0-closeout--25-november-2026).
 
 ---
 - [x] **Track 101: criterion existing-tooling** — [record](tracks/101-criterion-consolidation/index.md).
 
 ---
-- [ ] **Track 102: ode_solvers conditional** — [record](tracks/102-ode-solvers-qualification/index.md).
+- [x] **Track 102: ode_solvers conditional** — Phase 0 closed, adoption deferred. [Decision](tracks/102-ode-solvers-qualification/handoff.md#phase-0-closeout--25-november-2026).
 
 ---
-- [ ] **Track 103: tungstenite conditional** — [record](tracks/103-tungstenite-transport/index.md).
+- [x] **Track 103: tungstenite conditional** — Phase 0 closed, adoption deferred. [Decision](tracks/103-tungstenite-transport/handoff.md#phase-0-closeout--25-november-2026).
 
 ---
-- [ ] **Track 104: tokio-tungstenite conditional** — [record](tracks/104-tokio-tungstenite-adapter/index.md).
+- [x] **Track 104: tokio-tungstenite conditional** — Phase 0 closed, adoption deferred. [Decision](tracks/104-tokio-tungstenite-adapter/handoff.md#phase-0-closeout--25-november-2026).
 
 ## Inventory-first Polars sequencing — 23 October 2026
 

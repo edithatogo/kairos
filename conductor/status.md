@@ -20,6 +20,20 @@ The previously recorded PR 366 draft state is historical: PR 366 merged on 3 Nov
 
 The immediate packet is recorded in [PR 378](https://github.com/edithatogo/kairos/pull/378) and the [implementation record](frontier-implementation-20261107.md). Final merge/check status is read from that PR; no phase or release is inferred from a source commit.
 
+## Dependency evaluation closeout — 25 November 2026
+
+Tracks 90, 97, 98, 100, 102, 103 and 104 closed the consumer and value
+evaluations with adoption Deferred. Each decision has a named reopening
+condition. The isolated Loom allocator model remains reproducible. The
+inspected Innovate adaptive ODE consumer remains downstream-owned.
+[Decisions and verification](dependency-sequencing.md#conditional-evaluation-closeout--25-november-2026).
+
+Chat `01a1fd18-51c7-7963-a3cc-d262d54582ba` owns these track and shared
+Conductor entries in `/Users/doughnut/.codex/worktrees/kairos-scientific-evidence-closeout/kairos` on
+`codex/dependency-evaluation-closeout-20261125`. Native scope covers local
+Rust tests and read-only consumer inspection. Next operation is protected
+PR integration and exact-main verification.
+
 ## Scientific and claim qualification — 25 November 2026
 
 Track 110 records the exact scientific reference results and bounded native

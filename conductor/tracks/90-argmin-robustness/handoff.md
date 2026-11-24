@@ -1,6 +1,19 @@
 # Handoff
 
-Updated: 2026-10-22. Maturity: planned; adoption decision pending.
+Updated: 25 November 2026. Phase 0 closed with adoption deferred.
+
+## Phase 0 closeout — 25 November 2026
+
+The CLI crate's Rust ensemble API computes RMSE for caller-supplied inputs and
+implements sequential ABC-SMC with separate proposal and simulator RNG streams.
+The current oracles cover population weights, analytic posteriors and failure
+outcomes. Innovate owns its own least-squares fitting path. Reopen with a
+consuming objective-minimisation loop and defined bounds, seed, termination
+and restart contracts.
+
+The underlying evaluation is on main through [PR #357](https://github.com/edithatogo/kairos/pull/357). The [current source readback and command receipts](../../dependency-sequencing.md#conditional-evaluation-closeout--25-november-2026) support the Phase 0 decision. CareOps retains its separate impact review.
+
+## Registration and evaluation history
 
 ## Summary
 

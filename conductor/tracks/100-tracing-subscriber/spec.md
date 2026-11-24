@@ -1,6 +1,6 @@
 # tracing-subscriber qualification
 
-Planned; no runtime acceptance. Apply [value policy](../../dependency-value-policy.md) and [sequencing](../../dependency-sequencing.md).
+Phase 0 closed with adoption deferred. [Decision](handoff.md#phase-0-closeout--25-november-2026) · [Value policy](../../dependency-value-policy.md).
 
 ## Inputs
 

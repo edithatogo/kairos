@@ -1,17 +1,13 @@
 # Plan: ode_solvers conditional
 
-Phase 0 reached the conditional entry stop; see the [qualification decision](handoff.md#phase-0-decision--1-november-2026). Conditional/evaluation tracks may complete only a no-go report without dependency installation; do not mark adoption tasks done for that outcome.
-
-The local Phase 0 review and no-go packet merged in PR #358. Formal phase and
-shared-registry acceptance remain pending; the checked review task records the
-bounded review, not solver adoption or track closeout.
+Phase 0 closed with adoption deferred. See the [decision](handoff.md#phase-0-closeout--25-november-2026). The adoption phases reopen with the specified consumer and evidence.
 
 ## Phase 0 — Evidence and value gate
 
 - [x] Task 0.1: Verify local/external prerequisites, current ownership, actual consumer and source target; reconcile already replaced paths before starting.
 - [ ] Task 0.2 (deferred until a consumer is accepted): Qualify exact release/features, maintenance/security/licence/MSRV/targets; capture baseline code, failures, costs and independent behavioural fixtures.
-- [x] Task 0.3 (no-go path): Defer at the entry condition. Version, feature, security, MSRV, platform and cost qualification under Task 0.2 remains mandatory before any adoption.
-- [x] Task 0.4: Reviewed the numerical baseline and no-go decision, added a clipping control and portable reproduction, and passed phase, DAG and clean-worktree checks. No solver adoption phase is authorised.
+- [x] Task 0.3 (no-go path): Record the deferral against the current consumer and source evidence. Apply the remaining qualification gates before any adoption.
+- [x] Task 0.4: Review the exact current decision with the [shared reproduction and closeout evidence](../../dependency-sequencing.md#conditional-evaluation-closeout--25-november-2026). Close Phase 0.
 
 ## Phase 1 — Bounded replacement if justified
 

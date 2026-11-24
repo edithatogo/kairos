@@ -1,13 +1,13 @@
 # Plan: tracing qualification
 
-Phase 0 evaluation executed; see [qualification](qualification.md). Conditional/evaluation tracks may complete only a no-go report without dependency installation; do not mark adoption tasks done for that outcome.
+Phase 0 closed with adoption deferred. See the [decision](handoff.md#phase-0-closeout--25-november-2026). The adoption phases reopen with the specified consumer and evidence.
 
 ## Phase 0 — Evidence and value gate
 
 - [x] Task 0.1: Verify local/external prerequisites, current ownership, actual consumer and source target; reconcile already replaced paths before starting.
 - [x] Task 0.2: Qualify exact release/features, maintenance/security/licence/MSRV/targets; capture baseline code, failures, costs and independent behavioural fixtures.
-- [x] Task 0.3: Record adopt/defer/reject against value policy, freeze numerical/performance budgets and exact test commands; add failing independent tests before any replacement. Stop on the specified no-go condition.
-- [ ] Task 0.4: Conductor — review and verify phase (workflow.md); record accepted fixes, no-go/remaining blockers and explicit next-phase decision.
+- [x] Task 0.3 (no-go path): Record the deferral against the current consumer and source evidence. Apply the remaining qualification gates before any adoption.
+- [x] Task 0.4: Review the exact current decision with the [shared reproduction and closeout evidence](../../dependency-sequencing.md#conditional-evaluation-closeout--25-november-2026). Close Phase 0.
 
 ## Phase 1 — Bounded replacement if justified
 

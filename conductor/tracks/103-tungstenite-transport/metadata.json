@@ -5,10 +5,12 @@
   "type": "evaluation",
   "status": "deferred",
   "created_at": "2026-10-22",
-  "updated_at": "2026-11-01",
+  "updated_at": "2026-11-25",
   "spec_approved": true,
   "implementation_started": false,
-  "accepted_phases": [],
+  "accepted_phases": [
+    "0"
+  ],
   "priority_class": "conditional",
   "adoption_decision": "defer_until_live_transport_consumer_accepted",
   "external_dependencies": [],
