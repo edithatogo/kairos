@@ -1,6 +1,6 @@
 ---
 name: Conductor monthly continuous assessment
-description: Recurring monthly assessment of KairoECS project health (SOTA, toolchain, docs, security, contributors)
+about: Recurring monthly assessment of KairoECS project health (SOTA, toolchain, docs, security, contributors)
 title: "Monthly assessment — {{ date | date: '%B %Y' }}"
 labels: [conductor, assessment, recurring]
 assignees: []

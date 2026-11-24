@@ -52,3 +52,13 @@ A convenient framework can alter identities, order or build footprint. Preserve 
 
 Only accepted capabilities may appear in supported beta/stable scope. Historical Done records are not transferred to new algorithms, platforms, dependencies or consumers. See [release gates](../../release-gates.md).
 
+## Accepted Serde boundaries
+
+Tracks [74](../74-serde-robustness/index.md) and
+[75](../75-serde-json-robustness/index.md) cover the typed CLI and debugger
+JSON contracts. Reuse their control and replay types when CareOps or Innovate
+uses the same schema. For an affected boundary, verify full-width ticks,
+unknown fields and malformed JSONL against the existing contract. Tabular
+Arrow and Parquet, configuration TOML, XML and protobuf keep their own
+versioned contracts.
+

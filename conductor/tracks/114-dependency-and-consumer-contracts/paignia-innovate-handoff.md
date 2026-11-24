@@ -85,7 +85,7 @@ Keep native-core, data/binding and optional-integration acceptance separate. Eve
 
 ## Coordination
 
-Paignia provider extraction: [Paignia Conductor](https://github.com/edithatogo/paignia/tree/main/conductor), preserving T17 IDs. Reimbursement consumer handoff: issue #100 and PR #101. Innovation programme: Innovate PR #570. Decision outcomes/VOP promotion: Voiage issue #1286 and PR #1287. Central identity and policy: repository-standards PR #120, `docs/paignia-library-boundary.md` and `docs/scientific-result-contracts.md` (proposed until merged). Paignia PR #1's Conductor refinement maps these requirements onto T17; strategic-information handoffs remain coordinated with Kairos PR #383 and Voiage PR #1288 rather than a duplicate programme.
+Paignia provider extraction: [Paignia Conductor](https://github.com/edithatogo/paignia/tree/main/conductor), preserving T17 IDs. Reimbursement consumer handoff: issue #100 and PR #101. Innovation programme: Innovate PR #570. Decision outcomes/VOP promotion: Voiage issue #1286 and PR #1287. Central identity and policy: repository-standards PR #120, `docs/paignia-library-boundary.md` and `docs/scientific-result-contracts.md` (proposed until merged). Paignia PR #1's Conductor refinement maps these requirements onto T17. The strategic-information cases here coordinate with the [merged Voiage plan](https://github.com/edithatogo/voiage/pull/1288).
 
 CareOps's existing shared healthcare package and concrete generic mechanism
 handoffs are recorded in the [composition review](../../design/careops-composition-plan-20261020.md#paignia-and-careops-boundary-review).

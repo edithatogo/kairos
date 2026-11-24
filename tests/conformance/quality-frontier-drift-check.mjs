@@ -129,6 +129,17 @@ const complete = evaluateDrift({ source, hosted });
 assert.equal(complete.status, 'pass');
 assert.ok(complete.checks.every((check) => check.status === 'pass'));
 
+for (const enabled of [true, false]) {
+  const migrated = evaluateDrift({
+    source,
+    hosted: { ...hosted, mainRenovate: { ...hosted.mainRenovate, dependencyDashboard: { enabled } } },
+  });
+  assert.equal(
+    migrated.checks.find((check) => check.name === 'main_renovate_preset_and_dashboard').status,
+    enabled ? 'pass' : 'drift',
+  );
+}
+
 const editUnavailable = evaluateDrift({ source, hosted: { ...hosted,
   availability: { ...hosted.availability, renovateActivity: false } } });
 assert.equal(editUnavailable.checks.find(c => c.name === 'renovate_dashboard_present').status, 'pass');
