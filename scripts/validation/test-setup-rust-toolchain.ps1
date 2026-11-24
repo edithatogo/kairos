@@ -238,7 +238,7 @@ $expectedMise = @{
     tools = @{
         rust = "1.99.1"
         python = "3.15.2"
-        node = "24.22.1"
+        node = "26.13.1"
         go = "latest"
         julia = "latest"
         R = "latest"
@@ -282,6 +282,48 @@ try {
 }
 finally {
     Remove-Item -LiteralPath $childDirectory -Recurse -Force
+}
+
+# Exercise the workflow's actual switch expression against the real track
+# validator. Only the child shell and Cargo process are replaced by mocks.
+# Windows keeps its ambient-host pass in addition to the earlier GNU pass;
+# unrecognised/missing runner identities must also retain that pass.
+Assert-True ($workflow -match '(?m)^        run: pwsh -NoProfile -File scripts/validate_conductor_setup\.ps1\s*$') "Setup must retain the exact locked native workspace suite"
+$coverageCommands = [regex]::Matches($workflow, '(?m)^        run: (pwsh -NoProfile -File scripts/validate_track_coverage\.ps1[^\r\n]*)$')
+Assert-Equal $coverageCommands.Count 1 "Expected one track coverage invocation"
+$coverageCommand = $coverageCommands[0].Groups[1].Value
+Assert-True ($coverageCommands[0].Index -gt $setupIndex) "Track validation must follow successful native setup"
+$savedRunnerOS = $env:RUNNER_OS
+function pwsh {
+    param([switch]$NoProfile, [string]$File, [switch]$SkipCargo)
+    $ambientState = $script:MockState
+    function local:cargo {
+        $ambientState.CargoTestCalls++
+        $ambientState.CargoTestArgs = @($args)
+        $global:LASTEXITCODE = $ambientState.CargoTestExit
+    }
+    & (Join-Path $repoRoot $File) -SkipCargo:$SkipCargo
+}
+try {
+    foreach ($runnerOS in @('Linux', 'Windows', 'macOS', '')) {
+        $env:RUNNER_OS = $runnerOS
+        $script:MockState = New-MockState
+        Invoke-Expression $coverageCommand
+        $expectedCargoCalls = if ($runnerOS -eq 'Linux') { 0 } else { 1 }
+        Assert-Equal $script:MockState.CargoTestCalls $expectedCargoCalls "Incorrect ambient workspace test selection for runner '$runnerOS'"
+        if ($expectedCargoCalls -eq 1) {
+            Assert-Equal (@($script:MockState.CargoTestArgs) -join ' ') 'test --workspace' "Ambient workspace test arguments changed"
+        }
+    }
+
+    $env:RUNNER_OS = 'Windows'
+    $script:MockState = New-MockState -CargoTestExit 23
+    Assert-Throws { Invoke-Expression $coverageCommand } "Windows ambient workspace failure was hidden"
+    Assert-Equal $script:MockState.CargoTestCalls 1 "Windows failure fixture did not execute Cargo"
+}
+finally {
+    $env:RUNNER_OS = $savedRunnerOS
+    Remove-Item Function:\pwsh
 }
 
 Write-Host "Rust setup toolchain regression tests passed (mocked; no Rust process executed)."
