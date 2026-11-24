@@ -83,6 +83,7 @@ Format:
 
 ### Changed
 
+- The pedantic workflow audit runs without network access on GitHub-hosted Linux and uploads its SARIF report afterward.
 - Actions Security Lint fails on high-severity zizmor findings or unsafe checkout credential handling and checks floating refs with Git.
 - Apply all four existing Cargo dependency-policy checks in CI and the local CI recipe. Refresh reviewed action and runtime patches, retain reusable Rust dependencies, and remove the duplicate Linux Conductor workspace test pass. The native suites, exact-base coverage comparison, and 90% core floor still run.
 - Refresh the active Rust dependencies for ABM spatial queries, FMI, gRPC, SQLite-backed Time Warp, GPU builds and the Wasm adapter. Match wasm-bindgen CLI to the locked Rust crate and refresh the isolated Loom and fuzz manifests.
