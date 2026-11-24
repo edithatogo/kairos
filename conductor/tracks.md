@@ -117,7 +117,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 107 | CareOps staged allocation flow compatibility | Done | `des-api-agent + conformance-agent + api-governance-agent` | See `conductor/tracks/107-*/spec.md` |
 | 108 | Scientific ecosystem alignment | Done | `api-governance-agent` | [Installed candidate evidence](tracks/108-scientific-ecosystem-alignment/handoff.md#installed-consumer-qualification--23-november-2026) |
 | 109 | Rust-only runtime and native binding enforcement | In Progress | `ffi-agent + api-governance-agent` | [Plan](tracks/109-rust-only-runtime/plan.md) |
-| 110 | Scientific method and advanced capability completion | Spec Approved | `vv-uq-agent + game-theory-agent + ml-integration-agent` | [Plan](tracks/110-scientific-method-completion/plan.md) |
+| 110 | Scientific method and advanced capability completion | In Progress | `vv-uq-agent + game-theory-agent + ml-integration-agent` | [Plan](tracks/110-scientific-method-completion/plan.md) |
 | 111 | Measured performance and parallel execution improvement | In Progress | `performance-agent + pdes-agent` | [Plan](tracks/111-measured-performance/plan.md) |
 | 112 | Capability evidence and claim automation | In Progress | `conformance-agent + docs-agent + ci-agent` | [Plan](tracks/112-evidence-and-claim-automation/plan.md) |
 | 113 | Beta and stable release qualification | In Progress | `release-agent + api-governance-agent + security-agent` | [Installed candidate](tracks/113-beta-and-stable-release/handoff.md#native-core-v1-candidate--23-november-2026) |
