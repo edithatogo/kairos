@@ -6,7 +6,7 @@ Use Joe–Kuo D(6) directions for the checked 32-bit, 16-dimensional Sobol strea
 
 Use weighted sequential ABC for a bounded uniform prior, a decreasing tolerance schedule and diagonal Gaussian perturbations. Keep the fixed-batch scoring API under its own name. Pair stochastic scenarios by replicate, generational entity and purpose. Survival clocks keep active age and first crossing time through interruptions and hazard replacement.
 
-The optional Rust affine surrogate evaluates coefficients within a calibrated domain. `OrtSession::run` reports that the backend is unavailable. The queue model owns its state and observations in Rust. An opt-in CLI command drives the experimental Gymnasium and PettingZoo adapters over bounded local stdio on Linux and macOS.
+The optional Rust affine surrogate evaluates coefficients within a calibrated domain. `OrtSession::run` reports backend unavailability in builds without native ONNX support. [ADR 0026](0026-onnx-cpu-inference.md) specifies the later opt-in CPU execution profile. The queue model owns its state and observations in Rust. An opt-in CLI command drives the experimental Gymnasium and PettingZoo adapters over bounded local stdio on Linux and macOS.
 
 ## Compatibility
 

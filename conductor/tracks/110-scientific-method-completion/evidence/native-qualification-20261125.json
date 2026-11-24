@@ -1,0 +1,121 @@
+{
+  "schema": "kairoecs.qualification-run.v1",
+  "kind": "native-receipt",
+  "status": "pass",
+  "source_commit": "c5959a9ce92dbbc8991ce4f54480b281099a8e34",
+  "target": "aarch64-apple-darwin",
+  "toolchain": "Rust 1.99.1 (58cf8f9c3), CPython 3.15.2, PyArrow 26.0.1",
+  "environment": {
+    "working_directory": "/Users/doughnut/.codex/worktrees/kairos-scientific-evidence-closeout/kairos",
+    "cargo_profile_dev_debug": 0,
+    "os": [
+      "ProductName:\t\tmacOS",
+      "ProductVersion:\t\t27.2.1",
+      "BuildVersion:\t\t26B131"
+    ],
+    "metal_device": "Chipset Model: Apple M1 Max Metal Support: Metal 4"
+  },
+  "reviewer": "scientific_oracles",
+  "reviewed_debugger_diff_sha256": "3b691fc940b4b996c5d754ca466c4b3fe4c9963134f7247d49cac4ac5f3f4386",
+  "capabilities": [
+    "gpu",
+    "pdes",
+    "debugging",
+    "streaming",
+    "des-abm"
+  ],
+  "inputs_sha256": {
+    "Cargo.lock": "df26476d07b6323f89bb02819aaff00a12f00c15bdd0114c91d082cd088f0637",
+    "crates/kairo-ecs-debug/src/main.rs": "8460f04d9d46214d5aefe44bf74257965562234c6ed66ab86e6faaa7c5ea08bd",
+    "crates/kairo-ecs-debug/src/replay.rs": "d229d0e66feeeaa03b8e6837a7147186dd5ffdbdec106d1ecd48eb971c838cd7",
+    "crates/kairo-ecs-debug/tests/native_cli.rs": "12297d11776de76ee58a0e75aae7dd58dfc3bc9d1830a233184f6c1eea9265ec",
+    "crates/kairo-ecs-gpu/tests/native_metal_des.rs": "37f9f2ccf76b73ed6650d41b98b744401d1797f638387c36d699cf9a97dbeb81",
+    "crates/kairo-ecs-pdes/tests/production_protocol.rs": "d40dad086c292f2c5f50e92bcc5e23880094ff4df749fa997893f12179d9c2c6",
+    "crates/kairo-ecs-grpc/tests/two_process_smoke.rs": "296ed60c52b2aca140aaa25e3d5bbb4ff1b1d247250ac76d4c0898a11d571d83",
+    "crates/kairo-ecs-grpc/tests/tokio_transport_oracles.rs": "196179b5826ba35b05f5d9660c5732744d650cb0e90660169ffeb5007009f5b1",
+    "crates/kairo-ecs-grpc/tests/track49_sync.rs": "5e1cc5421cd8d6e764da5af4420e5dc000269781134a74ace3ec395531d1c457",
+    "crates/kairo-ecs-des/tests/boundary_channel_transit_delay.rs": "4e47d0accc13f54264b98e45cd5c1b4f1cd6dbfec62079beaf2d9dfba29ce5e5",
+    "crates/kairo-ecs-des/tests/inter_unit_entity_conservation.rs": "9848f5ec3ce9076f120550ebd538d367f686f88d8d26b3e79609c462d2d621f1",
+    "crates/kairo-ecs-des/tests/egress_sink_backpressure.rs": "8be6ec1c50d5f9a30c05ddfc7eb578a9cbc54ef4ba6617b51eec85b4bb012537",
+    "crates/kairo-ecs-abm/tests/movement_allocation.rs": "89d375ec0143aeef49e78b3c765ed38c42ade9a74e7f08136b904ce33dcd807e",
+    "stdin:step,step,step,step,back": "b41bfa0a2ee1fa1e7655761f3b18692963a9ae61add251e4e4d09a06f389c874"
+  },
+  "checks": [
+    {
+      "id": "s11-metal",
+      "command": "rustup run 1.99.1 cargo test --locked --offline -p kairo-ecs-gpu --features wgpu-backend --test native_metal_des",
+      "exit_code": 0,
+      "cases": 1,
+      "log_sha256": "d09c4ce68f088febe2dbeca272c934ce042748981abe50acc216cd3586d62f20"
+    },
+    {
+      "id": "s12-pdes",
+      "command": "rustup run 1.99.1 cargo test --locked --offline -p kairo-ecs-pdes --features pdes,time-warp --test production_protocol",
+      "exit_code": 0,
+      "cases": 14,
+      "log_sha256": "eebf297e372b601eb91d89cf88b60ad764ffe0ba7512704cb629f3bc5dfa3fa9"
+    },
+    {
+      "id": "s15-debug",
+      "command": "rustup run 1.99.1 cargo test --locked --offline -p kairo-ecs-debug --features arrow-ipc --tests",
+      "exit_code": 0,
+      "cases": 34,
+      "log_sha256": "672239a2b79d7a9d9a92ab3226bd7054d52345fcd213d5e9e3c3441661f46ac5"
+    },
+    {
+      "id": "s16-transport",
+      "command": "rustup run 1.99.1 cargo test --locked --offline -p kairo-ecs-grpc --features telemetry-ipc --test two_process_smoke --test tokio_transport_oracles --test track49_sync",
+      "exit_code": 0,
+      "cases": 18,
+      "note": "The two-process test starts a nested execution of its test case on the peer. The case is counted once.",
+      "log_sha256": "b0b7a2fa17ac816b5be47d780d63bffbb3178b8e89130b866079018a1872acc2"
+    },
+    {
+      "id": "s17-des",
+      "command": "rustup run 1.99.1 cargo test --locked --offline -p kairo-ecs-des --test boundary_channel_transit_delay --test inter_unit_entity_conservation --test egress_sink_backpressure",
+      "exit_code": 0,
+      "cases": 7,
+      "log_sha256": "518c3b426cc6c29baf36386e921a2b749e07c3b6d52bf227a5a9f1a5e62c1ebe"
+    },
+    {
+      "id": "s17-abm",
+      "command": "rustup run 1.99.1 cargo test --locked --offline -p kairo-ecs-abm --test movement_allocation",
+      "exit_code": 0,
+      "cases": 6,
+      "log_sha256": "6ee9b79e9d1ef0d9e4a14fc6bff2959105b46a105c320b827506b83ed1a6c1ba"
+    },
+    {
+      "id": "s15-independent-ipc",
+      "command": "kairo-ecs-debug replay --events 5 --checkpoint-every 2 --checkpoints 2 --dispatch-ipc <output> --run-id retained-window; CPython 3.15.2 with PyArrow 26.0.1 ipc.open_stream",
+      "exit_code": 0,
+      "cases": 1,
+      "log_sha256": "6e99c67408373d4c1f901357f2c8a647d1475ebb8cce6827bacf4daf45740aad"
+    }
+  ],
+  "outputs_sha256": {
+    "conductor/tracks/110-scientific-method-completion/evidence/s15-retained-dispatches.arrow": "f01b576d29bd596a853c62ecf5f29ee527da572a0394bc9cf8e1172653609b4b"
+  },
+  "independent_arrow_readback": {
+    "reader": "PyArrow",
+    "version": "26.0.1",
+    "python": "3.15.2",
+    "records": [
+      {
+        "schema_version": 2,
+        "run_id": "retained-window",
+        "event_id_index": 2,
+        "event_id_gen": 2,
+        "entity_id_index": null,
+        "entity_id_gen": null,
+        "time_ticks_hi": 0,
+        "time_ticks_lo": 1,
+        "time_scale": "ticks",
+        "priority": 0,
+        "sequence": 2,
+        "event_kind": "custom:2",
+        "status": "dispatched",
+        "payload_ref": null
+      }
+    ]
+  }
+}
