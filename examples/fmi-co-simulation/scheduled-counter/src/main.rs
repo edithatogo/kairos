@@ -9,7 +9,7 @@ use kairo_ecs_fmi::export::packager::{
     package_fmu_archive, write_unpacked_fmi3_fmu, write_unpacked_fmu,
 };
 use kairo_ecs_fmi::import::dynamic_loader::{LoadedFmi3Library, LoadedFmuLibrary};
-use kairo_ecs_fmi::import::fmu_loader::{current_fmi_platform, FmuArchive};
+use kairo_ecs_fmi::import::fmu_loader::{current_fmi3_platform, current_fmi_platform, FmuArchive};
 use kairo_ecs_fmi::import::instance::FmuInstance;
 use kairo_ecs_model::{DIGITS, MODEL_GUID, STEPS, TIME};
 
@@ -62,17 +62,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     let platform = if fmi3 || consts::ARCH == "aarch64" {
-        let os = if cfg!(target_os = "macos") {
-            "darwin"
-        } else {
-            consts::OS
-        };
-        let arch = if consts::ARCH == "arm" {
-            "aarch32"
-        } else {
-            consts::ARCH
-        };
-        format!("{arch}-{os}")
+        current_fmi3_platform()
     } else {
         current_fmi_platform()
     };

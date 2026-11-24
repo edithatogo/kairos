@@ -114,7 +114,10 @@ client used those headers and loaded the library directly from the archived
 bytes to verify token rejection, diagnostic callbacks,
 instance independence, reset, scalar output lengths and rejection of an
 unknown reference without a partial buffer write. The FMI 3 archive SHA-256
-was `e22d4aff4cd34ab9c8bb7f60af1f88b43e70dae86e3d884fb5cd04ff29ca4ea6`.
+was `d2e7a2d738edb4d627255a0534f324f776b2c22fb3d9260a42a1090978391fc1`.
+
+The importer and example use the same binary directory mapping. A unit test
+checks the `aarch32-linux` directory name for 32-bit ARM.
 
 The remaining external qualification includes OMEdit and the authoring
 extensions for clocks, terminals, Model Exchange and Scheduled Execution.
