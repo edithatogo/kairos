@@ -1,0 +1,17 @@
+Darwin 27.2.0 arm64
+ProductName:		macOS
+ProductVersion:		27.2.1
+BuildVersion:		26B131
+Apple M1 Max
+10
+10
+34359738368
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: aarch64-apple-darwin
+release: 1.99.1
+LLVM version: 23.1.1
+cargo 1.99.1 (5f94df478 2026-08-27)
+{ 25.02 25.17 23.08 }

@@ -135,12 +135,28 @@ fn fixed_event_log_export_baseline_control() {
 #[test]
 fn owned_batch_survives_source_mutation_and_drop() {
     let mut df = frame!();
+    let chunks = df
+        .column("time_ticks_lo")
+        .unwrap()
+        .as_materialized_series()
+        .chunks();
+    assert_eq!(chunks.len(), 1);
+    let source = chunks[0]
+        .as_any()
+        .downcast_ref::<PrimitiveArray<u64>>()
+        .unwrap();
+    let source_address = source.values().as_slice().as_ptr().addr();
     let export = domain::export_batch(&df, &contract(), None).unwrap();
     df = df.clear();
     assert_eq!(df.height(), 0);
     drop(df);
     let (_, array) = import_batch(export).unwrap();
     assert_eq!(array.len(), 5);
+    let imported = array.values()[2]
+        .as_any()
+        .downcast_ref::<PrimitiveArray<u64>>()
+        .unwrap();
+    assert_eq!(imported.values().as_slice().as_ptr().addr(), source_address);
     assert_eq!(u64_at(&array, 2, 4), u64::MAX);
 }
 #[test]

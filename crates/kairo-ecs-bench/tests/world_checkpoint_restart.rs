@@ -24,6 +24,8 @@ const MOVE: u32 = 1;
 const SPAWN: u32 = 2;
 const RETIRE: u32 = 3;
 
+type Update = (u64, u128, i32, Option<(u64, u32)>);
+
 #[derive(Serialize, Deserialize)]
 struct Model {
     world_json: String,
@@ -133,10 +135,15 @@ impl Run {
         }
     }
 
-    fn restore(path: &Path, format: CheckpointFormat) -> Self {
+    fn restore(
+        path: &Path,
+        format: CheckpointFormat,
+        checkpoint_id: &str,
+        cut_ticks: u128,
+    ) -> Self {
         let restored = restore_engine_checkpoint(path, format, SCHEMA).unwrap();
-        assert_eq!(restored.scheduler.now().ticks(), START + 2);
-        assert_eq!(restored.manifest.checkpoint_id, "spatial-agents-cut");
+        assert_eq!(restored.scheduler.now().ticks(), cut_ticks);
+        assert_eq!(restored.manifest.checkpoint_id, checkpoint_id);
         assert_eq!(restored.manifest.records.len(), 1);
         let model: Model = serde_json::from_slice(&restored.model_state).unwrap();
         let world = World::from_checkpoint_json(model.world_json.as_bytes()).unwrap();
@@ -154,26 +161,81 @@ impl Run {
         }
     }
 
-    fn finish(mut self) -> String {
-        let mut updates = Vec::new();
-        while let Some(event) = self.scheduler.step().into_dispatched() {
-            let actor = self.apply(event).map(|id| (id.index, id.generation));
-            updates.push((event.sequence, event.at.ticks(), event.priority, actor));
+    fn advance(&mut self) -> Option<(DispatchedEvent, Update)> {
+        let event = self.scheduler.step().into_dispatched()?;
+        let actor = self.apply(event);
+        if event.sequence == 3 {
+            // Exercise next-ID state while resumed, including a same-time tie in
+            // the second restart's suffix and a new cancelled event.
+            let added = self.scheduler.schedule(ScheduleRequest {
+                at: SimTime::from_ticks(START + 10),
+                priority: 0,
+                entity: actor,
+                kind: EventKind::custom(MOVE),
+            });
+            assert_eq!((added.index, added.generation), (8, 8));
+            let cancelled = self.scheduler.schedule(ScheduleRequest {
+                at: SimTime::from_ticks(START + 12),
+                priority: 0,
+                entity: None,
+                kind: EventKind::custom(SPAWN),
+            });
+            assert!(self.scheduler.cancel(cancelled));
         }
+        let update = (
+            event.sequence,
+            event.at.ticks(),
+            event.priority,
+            actor.map(|id| (id.index, id.generation)),
+        );
+        Some((event, update))
+    }
+
+    fn through_second_cut(&mut self) -> (DispatchedEvent, Vec<Update>) {
+        let (_, first) = self.advance().unwrap();
+        let (_, second) = self.advance().unwrap();
+        let (cut, third) = self.advance().unwrap();
+        let updates = vec![first, second, third];
         assert_eq!(
             updates,
             [
                 (2, START + 4, -1, Some((3, 1))),
                 (1, START + 4, 0, None),
                 (3, START + 6, 0, Some((1, 1))),
+            ]
+        );
+        (cut, updates)
+    }
+
+    fn finish(mut self) -> String {
+        let updates =
+            std::iter::from_fn(|| self.advance().map(|(_, update)| update)).collect::<Vec<_>>();
+        assert_eq!(
+            updates,
+            [
                 (4, START + 8, 0, Some((4, 1))),
                 (5, START + 9, 0, Some((0, 0))),
                 (6, START + 10, 0, Some((0, 1))),
+                (8, START + 10, 0, Some((1, 1))),
             ]
         );
-        assert_eq!(self.scheduler.stats().cancelled_events, 1);
-        assert_eq!(self.rng.word_pos(), 10);
+        assert_eq!(self.scheduler.stats().cancelled_events, 2);
+        assert_eq!(self.rng.word_pos(), 12);
         serde_json::to_string(&(updates, self.model(), self.rng.next_u64())).unwrap()
+    }
+
+    fn write(&self, path: &Path, format: CheckpointFormat, id: &str, cut: DispatchedEvent) {
+        let records = ParallelIoRecordBatch::from_dispatched("spatial-agents", [cut]).unwrap();
+        let manifest = CheckpointManifest::from_batch(id, format, &records).unwrap();
+        let receipt = write_engine_checkpoint(
+            path,
+            &manifest,
+            &self.scheduler,
+            SCHEMA,
+            &serde_json::to_vec(&self.model()).unwrap(),
+        )
+        .unwrap();
+        assert!(!receipt.contract_only);
     }
 }
 
@@ -191,27 +253,29 @@ fn world_checkpoint_process() {
     )
     .unwrap();
 
-    if role == "resume" {
-        println!("WORLD_RESULT={}", Run::restore(path, format).finish());
-        return;
+    match role.as_str() {
+        "reference" => {
+            let (mut run, _) = Run::at_cut();
+            let (_, updates) = run.through_second_cut();
+            println!("WORLD_RESULT={}", serde_json::to_string(&updates).unwrap());
+            println!("WORLD_RESULT={}", run.finish());
+        }
+        "write" => {
+            let (run, cut) = Run::at_cut();
+            run.write(path, format, "spatial-agents-cut", cut);
+        }
+        "recut" => {
+            let mut run = Run::restore(path, format, "spatial-agents-cut", START + 2);
+            let (cut, updates) = run.through_second_cut();
+            run.write(path, format, "spatial-agents-recut", cut);
+            println!("WORLD_RESULT={}", serde_json::to_string(&updates).unwrap());
+        }
+        "resume" => {
+            let run = Run::restore(path, format, "spatial-agents-recut", START + 6);
+            println!("WORLD_RESULT={}", run.finish());
+        }
+        other => panic!("unexpected worker role {other}"),
     }
-    let (run, cut) = Run::at_cut();
-    if role == "reference" {
-        println!("WORLD_RESULT={}", run.finish());
-        return;
-    }
-    assert_eq!(role, "write");
-    let records = ParallelIoRecordBatch::from_dispatched("spatial-agents", [cut]).unwrap();
-    let manifest = CheckpointManifest::from_batch("spatial-agents-cut", format, &records).unwrap();
-    let receipt = write_engine_checkpoint(
-        path,
-        &manifest,
-        &run.scheduler,
-        SCHEMA,
-        &serde_json::to_vec(&run.model()).unwrap(),
-    )
-    .unwrap();
-    assert!(!receipt.contract_only);
 }
 
 fn round_trip(format: CheckpointFormat) {
@@ -234,13 +298,17 @@ fn round_trip(format: CheckpointFormat) {
         String::from_utf8(output.stdout)
             .unwrap()
             .lines()
-            .find_map(|line| line.strip_prefix("WORLD_RESULT="))
+            .filter_map(|line| line.strip_prefix("WORLD_RESULT="))
             .map(str::to_owned)
+            .collect::<Vec<_>>()
     };
-    let reference = run("reference").unwrap();
-    assert!(run("write").is_none());
+    let reference = run("reference");
+    assert_eq!(reference.len(), 2);
+    assert!(run("write").is_empty());
     assert_eq!(std::fs::read_dir(temp.path()).unwrap().count(), 1);
-    assert_eq!(run("resume").unwrap(), reference);
+    assert_eq!(run("recut"), reference[..1]);
+    assert_eq!(std::fs::read_dir(temp.path()).unwrap().count(), 1);
+    assert_eq!(run("resume"), reference[1..]);
 }
 
 #[cfg(feature = "hdf5")]

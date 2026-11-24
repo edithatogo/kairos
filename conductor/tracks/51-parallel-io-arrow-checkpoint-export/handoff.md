@@ -1,5 +1,22 @@
 # Track 51 Handoff
 
+## Successive ECS checkpoint restores
+
+The ECS world fixture starts a separate process for each of four roles.
+It writes the first cut, resumes it, schedules and cancels additional work,
+replaces the artifact at a second cut and resumes that replacement in a new
+process. Both HDF5 2.2.0 and ADIOS2 2.12.1 BP5 matched uninterrupted
+execution on Apple Silicon. The oracle checks the full-width simulation
+clock, equal-time order, stale and reused entity generations, component
+values, cancellation statistics and the next RNG draw. The staged allocator
+restart also passed for both formats.
+
+Independent review accepted the repeated restart case. The Mac used local
+APFS. The available Linux NAS exposed no Lustre, GPFS or BeeGFS mount.
+CAP-51.5 still needs the contiguous-writer benchmark and physical readback
+on an actual parallel filesystem.
+[Commands and exact results](evidence/world-restart-20261125.json).
+
 ## Staged allocator restart and package verification
 
 Chat `01a1fd18-51c7-7963-a3cc-d262d54582ba` owns this slice in the

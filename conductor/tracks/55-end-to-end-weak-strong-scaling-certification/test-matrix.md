@@ -2,6 +2,7 @@
 
 | Gate | Command | Required for |
 |---|---|---|
+| Physical two-host ring | [Native run with independent CPython 3.15.2 replay](evidence/two-host-ring/README.md) | Bounded fixed-work and fixed-work-per-host evidence |
 | Benchmark smoke | `python benches/benchmark_smoke.py` | Review |
 | Regression threshold coverage | `python benches/regression/compare.py` | Review |
 | HPC evidence manifest shape | `node scripts/validation/validate-hpc-parity-evidence.mjs` | Review |

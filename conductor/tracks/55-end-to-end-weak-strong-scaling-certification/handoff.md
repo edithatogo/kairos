@@ -1,5 +1,24 @@
 # Track 55 Handoff
 
+## Two physical hosts and a matched ring
+
+The M1 Max Mac and the Intel i3-N300 Linux NAS dispatched the same Rust
+model through Kairos framed TCP over SSH. All 44 observations matched the
+native serial scheduler. The independent Python replay matched both seed
+tapes and final states. Ten alternating pairs per scaling mode were timed.
+
+With 4,096 total events, the one-host median was 144.214 ms and the two-host
+median was 156.026 ms. The median paired speed ratio was 0.929×. With 2,048
+events per host, the medians were 72.988 and 158.758 ms and paired weak
+efficiency was 46.2%. Two hosts took longer in both cases on this
+heterogeneous pair. Startup was outside the timed interval. The run
+recorded local queue work, wall time, application frames and per-process RSS.
+
+Independent review verified the hashes, event parity and measured ratios.
+The broader certification needs integrated failure and restart, live
+cluster storage and scheduler evidence on the intended allocation.
+[Raw observations and reproduction](evidence/two-host-ring/README.md).
+
 Last updated: 2026-10-23
 
 ## Summary

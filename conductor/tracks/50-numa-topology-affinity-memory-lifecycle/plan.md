@@ -16,6 +16,12 @@ Linux qualification, not full acceptance of this specification. Remaining work:
 The sysfs discovery, opt-in affinity and restoration on one Linux node remain
 valid bounded evidence. Their receipt is not a multi-node or hwloc result.
 
+The [native topology and allocation results](handoff.md#native-topology-and-allocation-lifetime)
+add independent hwloc node and cache readback, live scheduler reclamation and
+two real C Data lifetimes. The Kairos discovery API still uses sysfs. The
+remaining gates cover its richer topology, allocator contention, additional
+binding paths and placement across multiple NUMA nodes.
+
 ## Phase 0 - TDD baseline
 
 - [x] Task 0.1: Add failing topology detection tests with supported and unsupported

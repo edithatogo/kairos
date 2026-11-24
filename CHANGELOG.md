@@ -16,6 +16,8 @@ Format:
 
 ### Added
 
+- The conservative PDES benchmark adds an optional `--phold` case with matched serial and parallel inputs and reports for setup, dispatch and end-to-end time. `kairo-ecs-gpu` adds a hardware Vulkan qualification example for the shared resident compute shaders. [Performance programme](conductor/performance-programme.md)
+
 - `kairo-ecs-fmi` generates scalar FMI 3.0 co-simulation descriptions through the optional `fmi3` feature. The scheduled counter packages its Rust model as FMI 2 and FMI 3 archives. [Export guide](docs/fmi-digital-twin/export-guide.md)
 
 - The optional `onnx` feature in `kairo-ecs-ml` runs fixed-shape float32 models on CPU through the Rust inference tick hook. Applications supply an initialized ONNX Runtime environment. See [ADR 0026](docs/adr/0026-onnx-cpu-inference.md).

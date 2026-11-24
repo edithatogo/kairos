@@ -1,0 +1,38 @@
+{
+  "checks": {
+    "native_serial_parity_samples": 44,
+    "independent_python_tapes": 2
+  },
+  "rows": {
+    "strong": {
+      "pairs": 10,
+      "one_host_events": 4096,
+      "two_host_events": 4096,
+      "one_host_median_ms": 144.214271,
+      "two_host_median_ms": 156.026479,
+      "one_host_median_events_per_second": 28403.04855207268,
+      "two_host_median_events_per_second": 26253.542125960856,
+      "one_over_two_host_paired_ratio_median": 0.9287427928621158,
+      "one_over_two_host_paired_ratio_range": [
+        0.7814352278046764,
+        1.0326816293320085
+      ],
+      "nominal_efficiency": 0.4643713964310579
+    },
+    "weak": {
+      "pairs": 10,
+      "one_host_events": 2048,
+      "two_host_events": 4096,
+      "one_host_median_ms": 72.988063,
+      "two_host_median_ms": 158.7577295,
+      "one_host_median_events_per_second": 28059.386616417985,
+      "two_host_median_events_per_second": 25813.099462164857,
+      "one_over_two_host_paired_ratio_median": 0.46170542447695684,
+      "one_over_two_host_paired_ratio_range": [
+        0.42209066653451177,
+        0.49176441590336145
+      ],
+      "nominal_efficiency": 0.46170542447695684
+    }
+  }
+}

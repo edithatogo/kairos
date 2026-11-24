@@ -8,6 +8,20 @@ The retained [3 October conservative-PDES capture](../docs/pdes/benchmark-result
 
 The [local scaling runner](../benches/hpc-scaling-certification/local-runner.mjs) generates placeholders. Its 92%/84% efficiencies are aggregation fixtures, never performance evidence. Keep historical raw records, label them and generate new results from real executions.
 
+## Recent measured cases
+
+The matched PHOLD sweep retained 240 serial/parallel pairs. Serial led on
+cheap events. The eight-LP pool reached 2.097× serial throughput for the
+named expensive case on the shared M1 Max. The result leaves the
+dedicated-runner and held-out gates open.
+[PHOLD protocol and timings](tracks/111-measured-performance/evidence/phold/README.md).
+
+A separate physical Mac–NAS run matched the serial ring and had slower
+median two-host performance for both fixed work and fixed work per host.
+It exercised native event processing and application frames through SSH,
+with integrated restart, storage and cluster certification still open.
+[Two-host replay and results](tracks/55-end-to-end-weak-strong-scaling-certification/evidence/two-host-ring/README.md).
+
 ## Work packets and decision gates
 
 ### P1: profile the same computation
