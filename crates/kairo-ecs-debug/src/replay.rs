@@ -116,6 +116,23 @@ impl<M: Clone> ReplaySession<M> {
         }
     }
 
+    /// Read completed dispatches after the oldest retained checkpoint through
+    /// the current cursor. An inherited fork boundary and retained events
+    /// beyond the cursor are outside this interval.
+    ///
+    /// # Errors
+    /// Returns `Interrupted` until the caller restores a retained position.
+    #[cfg(feature = "arrow-ipc")]
+    pub fn retained_dispatches(
+        &self,
+    ) -> Result<impl ExactSizeIterator<Item = DispatchedEvent> + '_, ReplayError> {
+        if self.interrupted {
+            return Err(ReplayError::Interrupted);
+        }
+        let count = self.position - self.checkpoints[0].position;
+        Ok(self.history.iter().take(count).copied())
+    }
+
     /// Dispatch the next event and apply its model transition. When stepping
     /// through retained history, verify the next event before dispatch.
     ///

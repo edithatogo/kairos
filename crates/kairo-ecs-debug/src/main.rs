@@ -2,9 +2,13 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::error::Error;
 use std::io::{self, BufRead};
 use std::num::NonZeroUsize;
+#[cfg(feature = "arrow-ipc")]
+use std::path::PathBuf;
 
 use clap::{Parser, Subcommand, ValueEnum};
 
+#[cfg(feature = "arrow-ipc")]
+use kairo_ecs_arrow::{native_ipc::NativeIpcBatch, ParallelIoRecordBatch};
 use kairo_ecs_core::{RecordedEvent, Scheduler};
 use kairo_ecs_debug::ReplaySession;
 use kairo_ecs_rng::DeterministicStream;
@@ -29,6 +33,14 @@ enum Command {
         checkpoint_every: NonZeroUsize,
         #[arg(long, default_value = "32")]
         checkpoints: NonZeroUsize,
+        /// Publish the dispatch interval through the final cursor as Arrow IPC
+        #[cfg(feature = "arrow-ipc")]
+        #[arg(long, requires = "run_id", value_name = "PATH")]
+        dispatch_ipc: Option<PathBuf>,
+        /// Event-log run identity for the exported dispatches
+        #[cfg(feature = "arrow-ipc")]
+        #[arg(long, requires = "dispatch_ipc")]
+        run_id: Option<String>,
     },
     /// Run a sample simulation and print recorded trace stats
     Record {
@@ -118,7 +130,15 @@ fn run_replay(
     seed: u64,
     interval: NonZeroUsize,
     checkpoints: NonZeroUsize,
+    #[cfg(feature = "arrow-ipc")] dispatch_ipc: Option<(PathBuf, String)>,
 ) -> Result<(), Box<dyn Error>> {
+    #[cfg(feature = "arrow-ipc")]
+    if dispatch_ipc
+        .as_ref()
+        .is_some_and(|(_, run_id)| run_id.trim().is_empty())
+    {
+        return Err("run ID must not be blank".into());
+    }
     let mut scheduler = Scheduler::new();
     if limit != 0 {
         scheduler.schedule(Demo::request(0));
@@ -193,6 +213,12 @@ fn run_replay(
                 }
             },
         }
+    }
+    #[cfg(feature = "arrow-ipc")]
+    if let Some((path, run_id)) = dispatch_ipc {
+        let dispatches =
+            ParallelIoRecordBatch::from_dispatched(&run_id, replay.retained_dispatches()?)?;
+        NativeIpcBatch::from_event_log(&dispatches)?.write_contiguous_to_path(path)?;
     }
     Ok(())
 }
@@ -274,7 +300,18 @@ fn main() -> Result<(), Box<dyn Error>> {
             seed,
             checkpoint_every,
             checkpoints,
-        } => run_replay(events, seed, checkpoint_every, checkpoints)?,
+            #[cfg(feature = "arrow-ipc")]
+            dispatch_ipc,
+            #[cfg(feature = "arrow-ipc")]
+            run_id,
+        } => run_replay(
+            events,
+            seed,
+            checkpoint_every,
+            checkpoints,
+            #[cfg(feature = "arrow-ipc")]
+            dispatch_ipc.zip(run_id),
+        )?,
         Command::Record { events } => {
             let recorded = run_record(events);
             print_trace_stats(&recorded);

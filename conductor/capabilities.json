@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "reviewed_at": "2026-11-23",
-  "source_baseline": "431a629daed2a4a76f0aac23a719eb6727657303",
+  "reviewed_at": "2026-11-25",
+  "source_baseline": "c5959a9ce92dbbc8991ce4f54480b281099a8e34",
   "policy": {
     "simulation_core": "rust",
     "host_fallback": false,
@@ -69,15 +69,22 @@
     "native49": {
       "kind": "native-receipt",
       "path": "conductor/tracks/49-distributed-mpi-grpc-state-synchronization/native-runtime-qualification-20261103.md",
-      "source_ref": "5026d926",
+      "source_ref": "5026d926af1a937a7e58b9621b54c1ae3a3bfe3d",
       "scope": "Recorded MPI 2/4-rank cases and Mac ARM64/Colab Linux x86-64 gRPC cases; historical bounded acceptance.",
-      "sha256": "732caed139b2ad1d5390a872d7286220430cea2930ae526be36edef449e28247"
+      "sha256": "732caed139b2ad1d5390a872d7286220430cea2930ae526be36edef449e28247",
+      "schema": "kairoecs.reviewed-native-record.v1",
+      "supports": [
+        "pdes"
+      ]
     },
     "pdes_benchmark": {
       "kind": "benchmark",
       "path": "benches/pdes/evidence/20261003T023735Z-45f01c49be-534c5f9f/benchmark-result.json",
       "sha256": "69003d380f88dfe48249ca02d3beff8da18ae0f7c30f989976196a03c12e121c",
-      "schema": "kairoecs.pdes.benchmark.v1"
+      "schema": "kairoecs.pdes.benchmark.v1",
+      "supports": [
+        "pdes-performance"
+      ]
     },
     "synthetic_hpc": {
       "kind": "synthetic",
@@ -132,14 +139,30 @@
       "path": "conductor/tracks/112-evidence-and-claim-automation/evidence/installed-45051171243-x86_64-unknown-linux-gnu.json",
       "source_ref": "e2875387ce45c34cd19716ea66f0102251a6aa6f",
       "scope": "GitHub run 45051171243. Installed Rust SDK, C ABI v1, CPython 3.15.2 and CareOps contention on Linux x86-64 GNU.",
-      "sha256": "bdf06ca4ece1be84f63cda9793b9a9be5634e9b1e3dcd8a84aef3a50bb7ced88"
+      "sha256": "bdf06ca4ece1be84f63cda9793b9a9be5634e9b1e3dcd8a84aef3a50bb7ced88",
+      "schema": "kairoecs.native-install.v1",
+      "target": "x86_64-unknown-linux-gnu",
+      "supports": [
+        "rust-core",
+        "native-abi",
+        "python-native",
+        "careops"
+      ]
     },
     "native_macos": {
       "kind": "native-receipt",
       "path": "conductor/tracks/112-evidence-and-claim-automation/evidence/installed-45051171243-aarch64-apple-darwin.json",
       "source_ref": "e2875387ce45c34cd19716ea66f0102251a6aa6f",
       "scope": "GitHub run 45051171243. Installed Rust SDK, C ABI v1, CPython 3.15.2 and CareOps contention on macOS ARM64.",
-      "sha256": "3a871e601f5da415758ad3f47691853d5e39a67993295cd3a731256964bfd7b1"
+      "sha256": "3a871e601f5da415758ad3f47691853d5e39a67993295cd3a731256964bfd7b1",
+      "schema": "kairoecs.native-install.v1",
+      "target": "aarch64-apple-darwin",
+      "supports": [
+        "rust-core",
+        "native-abi",
+        "python-native",
+        "careops"
+      ]
     },
     "movement": {
       "kind": "source",
@@ -186,7 +209,128 @@
       "path": "conductor/tracks/113-beta-and-stable-release/evidence/paired-pdes-e287538.json",
       "schema": "kairoecs.pdes.benchmark.v1",
       "sha256": "acbeee268a6374e5dfdb44e79aae35da3b8beac59f04b5d12387a84980d661d6",
-      "source_ref": "e2875387ce45c34cd19716ea66f0102251a6aa6f"
+      "source_ref": "e2875387ce45c34cd19716ea66f0102251a6aa6f",
+      "supports": [
+        "pdes-performance"
+      ]
+    },
+    "native_science": {
+      "kind": "native-receipt",
+      "path": "conductor/tracks/110-scientific-method-completion/evidence/native-qualification-20261125.json",
+      "source_ref": "c5959a9ce92dbbc8991ce4f54480b281099a8e34",
+      "scope": "80 exact-source native Rust cases and one independent Arrow readback on Apple Silicon",
+      "schema": "kairoecs.qualification-run.v1",
+      "target": "aarch64-apple-darwin",
+      "sha256": "6dcc0a58ae891351c73d10abd2e379680ac057cf25b370a95d9b616feb2a1f45",
+      "supports": [
+        "gpu",
+        "pdes",
+        "debugging",
+        "streaming",
+        "des-abm"
+      ]
+    },
+    "s05_oracle": {
+      "kind": "review",
+      "path": "conductor/execution/scientific/s05-completion.md",
+      "source_ref": "7ff7eb6a9ec2cb8fa63a7e1a13f8355fc4aed638"
+    },
+    "s06_oracle": {
+      "kind": "review",
+      "path": "conductor/execution/scientific/s06-completion.md",
+      "source_ref": "7ff7eb6a9ec2cb8fa63a7e1a13f8355fc4aed638"
+    },
+    "s07_oracle": {
+      "kind": "review",
+      "path": "conductor/execution/scientific/s07-completion.md",
+      "source_ref": "7ff7eb6a9ec2cb8fa63a7e1a13f8355fc4aed638"
+    },
+    "s08_oracle": {
+      "kind": "review",
+      "path": "conductor/execution/scientific/s08-completion.md",
+      "source_ref": "7ff7eb6a9ec2cb8fa63a7e1a13f8355fc4aed638"
+    },
+    "s05_vectors": {
+      "kind": "regression",
+      "path": "crates/kairo-ecs-cli/tests/maturity_sobol_vectors.rs",
+      "source_ref": "7ff7eb6a9ec2cb8fa63a7e1a13f8355fc4aed638"
+    },
+    "s06_branching": {
+      "kind": "regression",
+      "path": "crates/kairo-ecs-cli/tests/maturity_crn_coupling.rs",
+      "source_ref": "7ff7eb6a9ec2cb8fa63a7e1a13f8355fc4aed638"
+    },
+    "s08_cohort": {
+      "kind": "regression",
+      "path": "tests/fixtures/cohort-consumer/src/tests.rs"
+    },
+    "s09_onnx": {
+      "kind": "source",
+      "path": "crates/kairo-ecs-ml/src/onnx_runtime.rs",
+      "source_ref": "273bf44956dfadd31336a9f9f645eba6b39779f9"
+    },
+    "s09_oracle": {
+      "kind": "review",
+      "path": "conductor/execution/scientific/s09-completion.md",
+      "source_ref": "273bf44956dfadd31336a9f9f645eba6b39779f9"
+    },
+    "s10_rust_queue": {
+      "kind": "source",
+      "path": "crates/kairo-ecs-cli/src/queue_env.rs",
+      "source_ref": "7ff7eb6a9ec2cb8fa63a7e1a13f8355fc4aed638"
+    },
+    "paignia_transfer": {
+      "kind": "review",
+      "path": "conductor/contracts/game-extraction-map.md"
+    },
+    "s11_metal": {
+      "kind": "review",
+      "path": "conductor/execution/scientific/s11-completion.md"
+    },
+    "s11_cuda": {
+      "kind": "review",
+      "path": "conductor/execution/scientific/s11-cuda-completion.md"
+    },
+    "s13_fmu": {
+      "kind": "review",
+      "path": "conductor/execution/scientific/s13-completion.md"
+    },
+    "s14_files": {
+      "kind": "review",
+      "path": "conductor/execution/scientific/s14-completion.md"
+    },
+    "s14_ipc_writer": {
+      "kind": "source",
+      "path": "crates/kairo-ecs-arrow/src/native_ipc.rs"
+    },
+    "s15_replay": {
+      "kind": "source",
+      "path": "crates/kairo-ecs-debug/src/replay.rs",
+      "source_ref": "c5959a9ce92dbbc8991ce4f54480b281099a8e34"
+    },
+    "s15_cli": {
+      "kind": "regression",
+      "path": "crates/kairo-ecs-debug/tests/native_cli.rs",
+      "source_ref": "c5959a9ce92dbbc8991ce4f54480b281099a8e34"
+    },
+    "s15_retention": {
+      "kind": "review",
+      "path": "conductor/tracks/110-scientific-method-completion/evidence/s15-native-debugger-macos-arm64.json"
+    },
+    "s16_socket": {
+      "kind": "source",
+      "path": "crates/kairo-ecs-grpc/src/socket.rs",
+      "source_ref": "c5959a9ce92dbbc8991ce4f54480b281099a8e34"
+    },
+    "s16_tonic": {
+      "kind": "source",
+      "path": "crates/kairo-ecs-grpc/src/tonic_transport.rs",
+      "source_ref": "c5959a9ce92dbbc8991ce4f54480b281099a8e34"
+    },
+    "s17_interaction": {
+      "kind": "regression",
+      "path": "crates/kairo-ecs-abm/tests/movement_allocation.rs",
+      "source_ref": "c5959a9ce92dbbc8991ce4f54480b281099a8e34"
     }
   },
   "capabilities": [
@@ -211,13 +355,15 @@
       "status": "implemented",
       "completion_track": "110",
       "scope": "Rust resources, agent behavior and routes include scheduled movement, cancellation, replanning, lease cleanup and committed occupancy export.",
-      "limitations": "S17 retains full hybrid boundary semantics, analytical scenarios and empirical model validation. The movement contract is a Rust preview.",
+      "limitations": "The verified cases cover tick order, conservation, transfer expiry, backpressure and movement lease cleanup. General hybrid coupling and empirical model validation remain S17 work.",
       "evidence": [
         "des",
         "abm",
         "science",
         "movement",
-        "movement_consumer"
+        "movement_consumer",
+        "s17_interaction",
+        "native_science"
       ]
     },
     {
@@ -295,7 +441,8 @@
         "native_policy",
         "science",
         "native_queue",
-        "s10_queue"
+        "s10_queue",
+        "s10_rust_queue"
       ]
     },
     {
@@ -307,7 +454,8 @@
       "limitations": "Historical acceptance applies to recorded sources and cases; no cross-host MPI, whole-LP relocation, cluster or scaling certification.",
       "evidence": [
         "pdes",
-        "native49"
+        "native49",
+        "native_science"
       ]
     },
     {
@@ -342,10 +490,12 @@
       "name": "GPU acceleration",
       "status": "experimental",
       "completion_track": "110",
-      "scope": "Native operation-specific GPU kernels have bounded evidence recorded in existing tracks.",
-      "limitations": "Full arbitrary-model execution, exactness/tolerance contracts and speed/energy advantages require S11.",
+      "scope": "Hardware execution covers bounded resident particle and additive DES cases on Apple Metal and RTX 4060 CUDA. Metal tests cover exact integer state, snapshots and recovery.",
+      "limitations": "Float comparisons use model-specific tolerances. Timings apply to the measured device, model and batch sizes. General models, browser GPU and scaling remain open.",
       "evidence": [
-        "science"
+        "s11_metal",
+        "s11_cuda",
+        "native_science"
       ]
     },
     {
@@ -372,7 +522,8 @@
       "limitations": "The Paignia qualification covers its declared replicator profile. General ODE integration remains conditional on Track 102.",
       "evidence": [
         "games",
-        "science"
+        "science",
+        "paignia_transfer"
       ]
     },
     {
@@ -384,7 +535,8 @@
       "limitations": "Paignia requires verified finite witnesses within its support search and reports Lemke–Howson as unsupported. Kairos retains pure-strategy and experimental zero-sum minimax helpers.",
       "evidence": [
         "games",
-        "science"
+        "science",
+        "paignia_transfer"
       ]
     },
     {
@@ -396,7 +548,8 @@
       "limitations": "Paignia admits complete two-player payoff tables and an explicit objective within the declared bounds. Kairos retains experimental zero-sum minimax.",
       "evidence": [
         "games",
-        "science"
+        "science",
+        "paignia_transfer"
       ]
     },
     {
@@ -408,7 +561,8 @@
       "limitations": "Historical Kuhn controls are test-only. Paignia supports its declared finite, perfect-recall information-set profile; legacy LinearCfr is unsupported.",
       "evidence": [
         "cfr",
-        "science"
+        "science",
+        "paignia_transfer"
       ]
     },
     {
@@ -422,7 +576,9 @@
         "ensemble",
         "sobol_review",
         "science",
-        "sobol"
+        "sobol",
+        "s05_oracle",
+        "s05_vectors"
       ]
     },
     {
@@ -435,19 +591,25 @@
       "evidence": [
         "rng",
         "ensemble",
-        "science"
+        "science",
+        "s06_oracle",
+        "s06_branching",
+        "s07_oracle",
+        "s08_oracle",
+        "s08_cohort"
       ]
     },
     {
       "id": "inference",
-      "name": "Rust affine surrogate inference",
+      "name": "Opt-in ONNX CPU and Rust affine inference",
       "status": "experimental",
       "completion_track": "110",
-      "scope": "The Rust affine surrogate runs real inference and reports held-out error.",
-      "limitations": "The qualified fixture covers one model. Extrapolation and unavailable ONNX execution return errors.",
+      "scope": "A bound ONNX Runtime CPU session executes fixed-shape float32 models from the Rust tick hook. The affine surrogate reports held-out error and rejects extrapolation.",
+      "limitations": "The recorded ONNX model has one fixed input and output. Broader ONNX port and operator profiles, TensorRT and Burn remain unsupported.",
       "evidence": [
         "ml",
-        "science"
+        "s09_onnx",
+        "s09_oracle"
       ]
     },
     {
@@ -455,45 +617,51 @@
       "name": "External FMI/FMU interoperability",
       "status": "experimental",
       "completion_track": "110",
-      "scope": "Native FMU loading and repository-controlled fixtures exist.",
-      "limitations": "Independent Reference-FMUs and external-tool roundtrips are required by S13.",
+      "scope": "Native FMI 2 and 3 Reference FMU co-simulation and archive round-trips passed independent trajectory and state-replay checks. An OpenModelica time-event model exercised the Linux importer.",
+      "limitations": "Qualification covers the admitted co-simulation models, events, targets and state capabilities. Other FMUs and model-exchange need their own evidence.",
       "evidence": [
         "fmi",
-        "science"
+        "s13_fmu"
       ]
     },
     {
       "id": "hpc-io",
       "name": "NUMA, parallel I/O and model restart",
-      "status": "experimental",
+      "status": "implemented",
       "completion_track": "110",
-      "scope": "Contracts and selected implementation pieces exist.",
-      "limitations": "Format-shaped bytes are not HDF5/ADIOS2 files; metadata/checkpoint export alone does not restore a model. S14 remains open.",
+      "scope": "The native Arrow IPC, HDF5 and ADIOS2 BP5 paths write typed files. The installed service-queue restart matched 228 remaining dispatches and final counters.",
+      "limitations": "Results cover local native files and the named restart fixture. Live parallel filesystems, additional workloads, NUMA and cross-host scaling remain open.",
       "evidence": [
-        "science"
+        "s14_ipc_writer",
+        "s14_files"
       ]
     },
     {
       "id": "debugging",
-      "name": "Reversible debugging and causal provenance",
-      "status": "experimental",
+      "name": "Native replay and Arrow dispatch export",
+      "status": "qualified-bounded",
       "completion_track": "110",
-      "scope": "Selected native checkpoint/inspection components exist.",
-      "limitations": "Constructed Wasm inspector provenance and constant bookkeeping do not prove rollback, historical inspection or time travel. S15 remains open.",
+      "scope": "The Rust debugger restores retained checkpoints and isolates forks. The source-built optional CLI exports the retained dispatch interval through its final cursor as Arrow event-log v2.",
+      "limitations": "The export carries dispatch metadata only. Model checkpoints, RNG state, full trace history, production model qualification and browser time travel are outside the export profile.",
       "evidence": [
-        "wasm",
-        "science"
+        "s15_replay",
+        "s15_cli",
+        "s15_retention",
+        "native_science"
       ]
     },
     {
       "id": "streaming",
-      "name": "WebSocket and streaming interoperability",
-      "status": "experimental",
+      "name": "Native telemetry transport",
+      "status": "qualified-bounded",
       "completion_track": "110",
-      "scope": "Transport components and dependency decisions exist.",
-      "limitations": "S16 requires actual interoperable protocols, ordering and backpressure; custom framed TCP is not WebSocket.",
+      "scope": "Loopback OS processes exchange typed framed-TCP messages. The Tonic telemetry RPC validates native Arrow IPC, orders merged records and rejects duplicate conflicts and invalid tails.",
+      "limitations": "The TCP suite checks bounded queues and protocol failures locally. Browser WebSocket, Kafka, NATS and Arrow Flight are unavailable as native adapters.",
       "evidence": [
-        "science"
+        "s16_socket",
+        "s16_tonic",
+        "native49",
+        "native_science"
       ]
     },
     {
@@ -534,7 +702,8 @@
       "limitations": "No universal leadership or scientific novelty is asserted before independent baselines, held-out evaluation and reproduction.",
       "evidence": [
         "frontier"
-      ]
+      ],
+      "claim_class": "frontier"
     }
   ]
 }

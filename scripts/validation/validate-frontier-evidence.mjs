@@ -1,21 +1,76 @@
 #!/usr/bin/env node
 import { createHash } from 'node:crypto';
-import { readFileSync, statSync, writeFileSync } from 'node:fs';
+import { readFileSync, realpathSync, statSync, writeFileSync } from 'node:fs';
 import { resolve, relative, isAbsolute } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const statuses = new Set(['implemented', 'qualified-bounded', 'experimental', 'known-defect', 'unsupported', 'planned']);
-const kinds = new Set(['source', 'regression', 'native-receipt', 'benchmark', 'synthetic', 'policy', 'review', 'plan']);
+const resultKinds = new Set(['native-receipt', 'empirical-result', 'frontier-result']);
+const kinds = new Set(['source', 'regression', 'benchmark', 'synthetic', 'policy', 'review', 'plan', ...resultKinds]);
+const claimEvidence = {
+  performance_evidence: 'benchmark',
+  empirical_evidence: 'empirical-result',
+  frontier_evidence: 'frontier-result',
+};
+const nativeCoreClaims = new Set(['rust-core', 'native-abi', 'python-native', 'careops']);
+const runSchema = 'kairoecs.qualification-run.v1';
 const check = (ok, message) => { if (!ok) throw new Error(message); };
 const nonempty = value => typeof value === 'string' && value.trim().length > 0;
+const hash = bytes => createHash('sha256').update(bytes).digest('hex');
+const digest = value => typeof value === 'string' && /^[0-9a-f]{64}$/.test(value);
+const revision = value => typeof value === 'string' && /^[0-9a-f]{40}$/.test(value);
 
 function localFile(root, path) {
   check(nonempty(path) && !isAbsolute(path), 'Evidence path must be repository-relative');
-  const absolute = resolve(root, path);
-  const rel = relative(root, absolute);
-  check(rel !== '..' && !rel.startsWith('../') && !rel.startsWith('..\\'), 'Evidence path escapes repository');
+  const absolute = realpathSync(resolve(root, path));
+  const rel = relative(realpathSync(root), absolute);
+  check(rel !== '..' && !rel.startsWith('../') && !rel.startsWith('..\\') && !isAbsolute(rel), 'Evidence path escapes repository');
   check(statSync(absolute).isFile(), 'Evidence is not a file: ' + path);
   return absolute;
+}
+
+function validateResult(bytes, evidence, root) {
+  check(revision(evidence.source_ref) && nonempty(evidence.scope), 'Result requires its exact source and bounded scope');
+  if (evidence.kind === 'native-receipt' && evidence.schema === 'kairoecs.reviewed-native-record.v1') {
+    check(evidence.path === 'conductor/tracks/49-distributed-mpi-grpc-state-synchronization/native-runtime-qualification-20261103.md' &&
+      evidence.source_ref === '5026d926af1a937a7e58b9621b54c1ae3a3bfe3d' &&
+      evidence.sha256 === '732caed139b2ad1d5390a872d7286220430cea2930ae526be36edef449e28247' &&
+      evidence.supports.length === 1 && evidence.supports[0] === 'pdes',
+    'Only the retained Track 49 record can supply legacy native qualification');
+    return;
+  }
+  const raw = JSON.parse(bytes);
+  check(raw.status === 'pass' && raw.source_commit === evidence.source_ref &&
+    nonempty(raw.target) && raw.target === evidence.target,
+    'Result status, source or target disagrees with its evidence record');
+  if (evidence.kind === 'native-receipt' && evidence.schema === 'kairoecs.native-install.v1') {
+    const archives = Object.values(raw.artifacts_sha256 ?? {});
+    check(raw.profile === 'native-core-v1' && raw.c_abi === 1 && evidence.supports.length === nativeCoreClaims.size &&
+      evidence.supports.every(id => nativeCoreClaims.has(id)), 'Installed native receipt exceeds its profile');
+    check(archives.length === 3 && archives.every(digest) && nonempty(raw.python) &&
+      digest(raw.rust_installed?.lock_sha256) && digest(raw.careops_installed?.case_sha256) &&
+      Array.isArray(raw.rustc) && raw.rustc.includes('host: ' + raw.target) && raw.rustc.every(nonempty),
+    'Incomplete installed native receipt');
+    return;
+  }
+  check(evidence.schema === runSchema && raw.schema === runSchema && raw.kind === evidence.kind,
+    'Qualification run schema or evidence class mismatch');
+  check(nonempty(raw.toolchain) && nonempty(raw.environment?.working_directory) && nonempty(raw.reviewer),
+    'Qualification run requires toolchain, environment and reviewer');
+  check(Array.isArray(raw.capabilities) &&
+    JSON.stringify([...raw.capabilities].sort()) === JSON.stringify([...evidence.supports].sort()),
+    'Qualification run does not name the claimed capabilities');
+  const inputs = Object.entries(raw.inputs_sha256 ?? {});
+  const outputs = Object.entries(raw.outputs_sha256 ?? {});
+  check(inputs.length > 0 && inputs.every(([path, sha]) => nonempty(path) && digest(sha)), 'Qualification input digests missing');
+  if (evidence.kind === 'native-receipt') check(digest(raw.inputs_sha256['Cargo.lock']), 'Native run requires its Cargo.lock digest');
+  check(outputs.length > 0 && outputs.every(([, sha]) => digest(sha)), 'Qualification output digests missing');
+  for (const [path, sha] of outputs) {
+    check(hash(readFileSync(localFile(root, path))) === sha, 'Qualification output digest mismatch: ' + path);
+  }
+  check(Array.isArray(raw.checks) && raw.checks.length > 0 && raw.checks.every(run =>
+    nonempty(run.command) && run.exit_code === 0 && Number.isSafeInteger(run.cases) &&
+    run.cases > 0 && digest(run.log_sha256)), 'Qualification run lacks executed checks');
 }
 
 export function validateBenchmark(raw, evidence) {
@@ -44,19 +99,27 @@ export function validateManifest(manifest, { root = process.cwd() } = {}) {
   check(p?.consumer === 'careops-sim' && p.provider === 'kairos' && p.provider_depends_on_consumer === false, 'Kairos must be the independent dependency of careops-sim');
   check(manifest.status_definitions && [...statuses].every(x => nonempty(manifest.status_definitions[x])), 'Status definitions missing');
   check(manifest.evidence && typeof manifest.evidence === 'object', 'Evidence inventory missing');
+  check(Array.isArray(manifest.capabilities) && manifest.capabilities.length > 0, 'Capability inventory empty');
+  const knownIds = new Set(manifest.capabilities.map(c => c.id));
   for (const [id, evidence] of Object.entries(manifest.evidence)) {
     check(kinds.has(evidence.kind), 'Unknown evidence kind: ' + id);
     const absolute = localFile(root, evidence.path);
-    if (evidence.sha256 !== undefined || evidence.kind === 'benchmark' || evidence.kind === 'native-receipt') {
-      check(/^[0-9a-f]{64}$/.test(evidence.sha256), 'Evidence digest required: ' + id);
-      check(createHash('sha256').update(readFileSync(absolute)).digest('hex') === evidence.sha256, 'Evidence digest mismatch: ' + id);
+    const scoped = resultKinds.has(evidence.kind) || evidence.kind === 'benchmark';
+    if (scoped) {
+      check(Array.isArray(evidence.supports) && evidence.supports.length > 0 &&
+        evidence.supports.every(c => knownIds.has(c)) &&
+        new Set(evidence.supports).size === evidence.supports.length,
+        'Evidence must name its supported capabilities: ' + id);
     }
-    if (evidence.kind === 'native-receipt') {
-      check(/^[0-9a-f]{7,40}$/.test(evidence.source_ref) && nonempty(evidence.scope), 'Native receipt requires its source and bounded scope');
+    if (scoped || evidence.sha256 !== undefined) {
+      check(digest(evidence.sha256), 'Evidence digest required: ' + id);
+      const bytes = readFileSync(absolute);
+      check(hash(bytes) === evidence.sha256, 'Evidence digest mismatch: ' + id);
+      if (resultKinds.has(evidence.kind)) validateResult(bytes, evidence, root);
+      if (evidence.kind === 'benchmark') validateBenchmark(JSON.parse(bytes), evidence);
     }
-    if (evidence.kind === 'benchmark') validateBenchmark(JSON.parse(readFileSync(absolute, 'utf8')), evidence);
+    if (evidence.source_ref !== undefined) check(revision(evidence.source_ref), 'Invalid evidence source: ' + id);
   }
-  check(Array.isArray(manifest.capabilities) && manifest.capabilities.length > 0, 'Capability inventory empty');
   const ids = new Set();
   const tracks = readFileSync(resolve(root, 'conductor/tracks.yaml'), 'utf8');
   for (const c of manifest.capabilities) {
@@ -70,13 +133,26 @@ export function validateManifest(manifest, { root = process.cwd() } = {}) {
       c.evidence.every(id => Object.hasOwn(manifest.evidence, id)), 'Capability has missing evidence: ' + c.id);
     const evidence = c.evidence.map(id => manifest.evidence[id]);
     if (c.status === 'qualified-bounded') {
-      check(evidence.some(e => e.kind === 'native-receipt') && evidence.some(e => e.kind === 'source'), 'Native qualification needs native receipt and source: ' + c.id);
+      check(evidence.some(e => e.kind === 'native-receipt' && e.supports.includes(c.id)) &&
+        evidence.some(e => e.kind === 'source'), 'Native qualification needs native receipt and source for this capability: ' + c.id);
       check(!evidence.some(e => e.kind === 'synthetic'), 'Synthetic evidence cannot qualify native capability: ' + c.id);
     }
     if (c.status === 'implemented') check(evidence.some(e => e.kind === 'source'), 'Implemented capability needs source: ' + c.id);
-    if (c.performance_evidence !== undefined) {
-      check(c.evidence.includes(c.performance_evidence) &&
-        manifest.evidence[c.performance_evidence]?.kind === 'benchmark', 'Performance claim needs measured raw benchmark evidence: ' + c.id);
+    if (c.id === 'pdes-performance') {
+      check(nonempty(c.performance_evidence), 'Measured PDES baseline requires benchmark evidence');
+    }
+    if (c.id === 'frontier') check(c.claim_class === 'frontier', 'Frontier capability requires its claim class');
+    if (c.claim_class !== undefined) {
+      check(['empirical', 'frontier'].includes(c.claim_class), 'Unknown claim class: ' + c.id);
+      if (['implemented', 'qualified-bounded'].includes(c.status)) {
+        check(nonempty(c[c.claim_class + '_evidence']), 'Result claim requires evidence in its class: ' + c.id);
+      }
+    }
+    for (const [field, kind] of Object.entries(claimEvidence)) {
+      if (c[field] === undefined) continue;
+      const result = manifest.evidence[c[field]];
+      const label = kind === 'benchmark' ? 'Performance claim needs measured raw benchmark evidence' : 'Result claim needs matching evidence class';
+      check(c.evidence.includes(c[field]) && result?.kind === kind && result.supports.includes(c.id), label + ': ' + c.id);
     }
   }
   return manifest;
@@ -87,7 +163,7 @@ export function renderManifest(manifest) {
   const lines = [
     '# Current capability register', '',
     '<!-- Generated by scripts/validation/validate-frontier-evidence.mjs --write; edit capabilities.json. -->', '',
-    'Reviewed ' + manifest.reviewed_at + ' against source `' + manifest.source_baseline + '`. This is a reviewed claims register, not an automatic proof of scientific correctness or a new runtime qualification. Historical receipts apply only to their recorded source and scope.', '',
+    'Reviewed ' + manifest.reviewed_at + ' against source `' + manifest.source_baseline + '`. This is a reviewed claims register, not an automatic proof of scientific correctness or a new runtime qualification. Evidence from earlier revisions is historical and applies only to its recorded source and scope.', '',
     'Simulation runs in Rust, including Rust compiled to Wasm. There is no supported host-language fallback. careops-sim consumes Kairos as an independent dependency.', '',
     '## Status meanings', '',
     ...Object.entries(manifest.status_definitions).map(([key,value]) => '- **' + key + '**: ' + value), '',
@@ -95,7 +171,11 @@ export function renderManifest(manifest) {
     '| Capability | Status | Current scope | Limits and completion obligation | Track | Evidence |',
     '|---|---|---|---|---|---|',
     ...manifest.capabilities.map(c => '| ' + [c.name,c.status,c.scope,c.limitations,c.completion_track,
-      c.evidence.map(id => '[' + id + '](../' + manifest.evidence[id].path + ')').join(', ')].map(cell).join(' | ') + ' |'),
+      c.evidence.map(id => {
+        const evidence = manifest.evidence[id];
+        const label = evidence.source_ref ? id + ' @ ' + evidence.source_ref.slice(0, 8) : id;
+        return '[' + label + '](../' + evidence.path + ')';
+      }).join(', ')].map(cell).join(' | ') + ' |'),
     '', '## Updating a claim', '',
     'Change the JSON register, retain exact raw evidence and its source/toolchain/input identity, then regenerate this table with `node scripts/validation/validate-frontier-evidence.mjs --write`. The ordinary command checks for drift. Qualification changes require independent review of the actual runtime/scientific evidence; the structural check cannot infer correctness from filenames, test counts or prose.', '',
     'See [release gates](release-gates.md), [scientific completion](scientific-completion.md), [native-only policy](native-only-policy.md) and the [programme](frontier-programme-20261107.md).', ''

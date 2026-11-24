@@ -1896,15 +1896,16 @@ entries:
     phase: "0"
     state: pending
     review_command: "$conductor-review"
-    review_result: "Programme approved; implementation and independent acceptance remain scoped to the track plan."
-    fixes_applied: false
+    review_result: "Independent review verified bounded S01–S17 claim links and the exact macOS run receipt. Accepted corrections distinguish 80 Rust cases from the nested TCP peer, narrow S12 to the observed conservative protocol cases and distinguish transfer expiry from movement lease cleanup."
+    fixes_applied: true
     validation_commands:
+      - "The seven exact commands in conductor/tracks/110-scientific-method-completion/evidence/native-qualification-20261125.json"
       - "node scripts/validation/validate-frontier-evidence.mjs"
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
-    git_status: "Implementation packet in progress; no phase acceptance claimed."
-    commit_sha: ""
+    git_status: "Exact reviewed runtime source is recorded here and in the retained run receipt."
+    commit_sha: "c5959a9ce92dbbc8991ce4f54480b281099a8e34"
     pushed_ref: ""
-    next_phase_decision: "Complete Phase 0 oracles and independent review before closing or promoting this track."
+    next_phase_decision: "Keep Phase 0 open for the wider API and caller map and oracle freeze. Continue downstream migration and advanced qualification under the named owners."
 
   - track_id: "111"
     phase: "0"
@@ -1923,18 +1924,22 @@ entries:
     next_phase_decision: "Keep Track 111 In Progress. Complete profiling and additional workload qualification before selecting an executor automatically."
 
   - track_id: "112"
-    phase: "0"
+    phase: "2"
     state: pending
     review_command: "$conductor-review"
-    review_result: "Programme approved; implementation and independent acceptance remain scoped to the track plan."
-    fixes_applied: false
+    review_result: "Independent review accepted Phases 0–2 after target and installed-profile binding, pinning the retained Track 49 import, and requiring typed evidence for the existing measured PDES and frontier claims."
+    fixes_applied: true
     validation_commands:
       - "node scripts/validation/validate-frontier-evidence.mjs"
+      - "node --test tests/conformance/frontier-evidence-check.mjs"
+      - "npm --prefix website run check:links"
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
-    git_status: "Implementation packet in progress; no phase acceptance claimed."
-    commit_sha: ""
+      - "pwsh -NoProfile -File scripts/validate_conductor_dag.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree"
+    git_status: "Exact source has been reviewed. Record acceptance against the merged commit after hosted validation and clean readback."
+    commit_sha: "f2f5197c7a1eaa05bb0f627292a2afd84f8d5c58"
     pushed_ref: ""
-    next_phase_decision: "Complete Phase 0 oracles and independent review before closing or promoting this track."
+    next_phase_decision: "Complete mainline publication and clean readback before accepting the reviewed phases."
 
   - track_id: "113"
     phase: "0"

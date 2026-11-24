@@ -1,10 +1,10 @@
 # Scientific and advanced-capability completion register
 
-Observation: 7 November 2026 at d56863505d938feb069af88a737eb7668113d14b. [Track 110](tracks/110-scientific-method-completion/index.md) owns the scientific claim inventory and follows the original capability owners. Historical Done labels describe accepted slices; they do not override this current evidence boundary.
+The obligation inventory dates to 7 November 2026 at `d56863505d938feb069af88a737eb7668113d14b`. The qualification results below were reconciled on 25 November 2026. [Track 110](tracks/110-scientific-method-completion/index.md) follows the original capability owners. Each accepted scope follows its own evidence.
 
 Every advertised method must end with an accurate supported implementation plus evidence, or an explicit unsupported/withdrawn API and documented replacement decision. A placeholder, fixture-shape test or renamed benchmark cannot close a scientific acceptance task. Exclusion from beta does not remove the completion obligation.
 
-| ID | Method/capability and existing owner | Required completion and independent oracle |
+| ID | Method/capability and existing owner | Original completion obligation and independent oracle |
 |---|---|---|
 | S01 | Continuous replicator/RK4 (65,102) | Preserve a named legacy Euler baseline; implement the promised four-stage method or explicitly version/rename a supported Euler API. Define time-varying fitness/model callbacks. Test analytic logistic replicator, step refinement, event discontinuities, positivity and conservation; clipping alone is not accuracy. |
 | S02 | Mixed Nash/support enumeration/Lemke–Howson (60,65) | Implement actual supported algorithms and reject unsupported dimensions. Test dominance, matching pennies, coordination, degeneracy, multiple equilibria and rectangular games against Gambit/OpenSpiel; report best-response residual/exploitability. Include the source-derived strictly dominant-action counterexample. |
@@ -60,6 +60,18 @@ Errors on unsupported inputs must be explicit. Numerical changes require an algo
 
 [Dataset and oracle catalogue](validation-datasets.md), [performance programme](performance-programme.md) and [release gates](release-gates.md) define the complementary evidence. Algorithmic correctness, software verification, performance and empirical model validity remain separate decisions.
 
+## S01–S04 Paignia transfer
+
+Kairos retired the four legacy public solver APIs. The extraction map records
+each removed API and receiving algorithm. Paignia qualifies bounded replicator,
+mixed Nash, correlated-equilibrium and CFR/CFR+ cases. Its independently trained
+C++ OpenSpiel checkpoints add a Leduc policy value and exploitability comparison
+to the Kuhn enumeration oracle. Native CI passed at
+`0389af46db4557494f465db2c584c80080e9f588`. Arbitrary games and downstream
+adapter acceptance remain with the receiving owners.
+[API and caller dispositions](contracts/game-extraction-map.md) ·
+[Leduc oracles](https://github.com/edithatogo/paignia/blob/0389af46db4557494f465db2c584c80080e9f588/docs/validation/cfr.md#independently-trained-leduc-checkpoints) ·
+[Paignia Native CI](https://github.com/edithatogo/paignia/actions/runs/45431955799)
 
 ## Qualified S05–S10 scopes
 
@@ -68,11 +80,18 @@ Errors on unsupported inputs must be explicit. Numerical changes require an algo
 | S05 | Joe–Kuo D(6) matched frozen SciPy 1.18.0 32-bit points across 16 dimensions. The final point and exhausted cursor have separate tests. Jansen first-order and total-effect intervals contained the Ishigami and Sobol-G analytical values in 36–40 of 40 trials per index. [Design and oracle](execution/scientific/s05-completion.md) |
 | S06 | The replicate, entity and purpose streams preserve paired draws through a scheduler branch. The observed paired and independent Bernoulli variances were 0.20865 and 0.45514. The paired interval included the true effect in 57 of 60 trials. [Design and oracle](execution/scientific/s06-completion.md) |
 | S07 | Sequential tolerance, Gaussian mixture weights and ESS are exercised against the exact beta posterior for two Bernoulli observations. Weighted posterior CDF rank RMSE was 0.02788 across 64 studies. [Design and oracle](execution/scientific/s07-completion.md) |
-| S08 | Conditional exponential and Weibull survival and incidence passed analytical bounds at three right-censor horizons. Piecewise inversion, frozen active age, checkpoint replay and cause/censor chronology have exact oracles. [Design and oracle](execution/scientific/s08-completion.md) |
+| S08 | Conditional exponential and Weibull survival and incidence passed analytical bounds at three right-censor horizons. Piecewise inversion, frozen active age, checkpoint replay and cause/censor chronology have exact oracles. The standalone cohort consumer also compares nonproportional piecewise cause incidence and survival at two horizons. [Design and oracle](execution/scientific/s08-completion.md) · [Cohort test](../tests/fixtures/cohort-consumer/src/tests.rs) |
 | S09 | The optional ONNX CPU session executes fixed-shape float32 models through the Rust tick hook. Its installed fixture checks a 1,000-tick trajectory against analytical decay. The Rust affine surrogate's maximum absolute error was 0.016443 on 39 interior points. It rejects extrapolation. [Design and oracles](execution/scientific/s09-completion.md) |
 | S10 | The native shared queue matched scalar and batched trajectories across 1,024 worlds. Both host checkers execute the queue through the opt-in `queue-env-v1` CLI. Installed Python 3.15.2 tests cover seed rejection, reset, termination, pipe lifetimes and malformed replies. [Design and oracle](execution/scientific/s10-completion.md) |
 
-The evidence concerns numerical correctness and model execution inside these contracts. See [ADR 0014](../docs/adr/0014-versioned-scientific-methods.md) for API migration.
+The S05–S08 core cases and S10 native queue were qualified at
+`7ff7eb6a9ec2cb8fa63a7e1a13f8355fc4aed638`. S09's opt-in ONNX qualification
+ran at `273bf44956dfadd31336a9f9f645eba6b39779f9`. These results cover
+numerical correctness and model execution inside the stated contracts.
+[Versioning and migration](../docs/adr/0014-versioned-scientific-methods.md) ·
+[Scientific CI](https://github.com/edithatogo/kairos/actions/runs/45026894936) ·
+[Installed queue checks](https://github.com/edithatogo/kairos/actions/runs/45026894947) ·
+[ONNX CPU CI](https://github.com/edithatogo/kairos/actions/runs/45260627526)
 
 ## S11 Apple Metal and CUDA model qualification
 
@@ -85,11 +104,25 @@ exercised resident additive DES values, signed overflow, snapshots and
 device failure recovery. CPU finished first in all 36 matched pairs.
 [Metal results](execution/scientific/s11-completion.md) · [Particle timings](execution/scientific/s11-metal-timings.tsv).
 
+The hardware-only integer DES test passed again on Apple M1 Max at
+`c5959a9ce92dbbc8991ce4f54480b281099a8e34`.
+[Native test receipt](tracks/110-scientific-method-completion/evidence/native-qualification-20261125.json)
+
 The Windows RTX 4060 ran the hardware-only CUDA particle and additive DES
 model. Nsight recorded four particle kernels, five DES kernels and both
 readbacks after the last kernel. At 65,536 particles and entities with
 eight 65,536-event batches, the CPU and CUDA medians were 4.90 ms and 2.26 ms.
 Both smaller cases favored the CPU. [CUDA results](execution/scientific/s11-cuda-completion.md).
+
+## S12 distributed protocol qualification
+
+Fourteen conservative protocol cases passed for causal ordering, lookahead,
+typed failure and concurrency on macOS ARM64. The cross-environment scope follows
+the earlier recorded MPI two/four-rank cases and bounded Mac–Colab gRPC
+rollback and crash recovery at `5026d926af1a937a7e58b9621b54c1ae3a3bfe3d`.
+Cross-host MPI, cluster scheduling and measured wider scaling remain open.
+[Protocol receipt](tracks/110-scientific-method-completion/evidence/native-qualification-20261125.json) ·
+[Native transport qualification](tracks/49-distributed-mpi-grpc-state-synchronization/native-runtime-qualification-20261103.md)
 
 ## S13 native co-simulation qualification
 
@@ -135,5 +168,29 @@ These measurements apply to the linked model and settings.
 [Reproduction example](../crates/kairo-ecs-debug/examples/replay_memory.rs) ·
 [Checkpoint contract](../docs/adr/0020-native-debugger-replay.md).
 
-Arrow IPC trace serialization, production model qualification and browser
-integration remain open.
+The opt-in Rust CLI exports retained dispatches through the replay cursor in
+event-log v2 IPC. PyArrow 26.0.1 independently decoded the stream produced
+after four steps and a rewind. It contained the single retained dispatch at
+sequence 2 and tick 1. This export covers completed dispatch records.
+Production model qualification and browser integration remain open.
+[Arrow stream](tracks/110-scientific-method-completion/evidence/s15-retained-dispatches.arrow) ·
+[Execution and readback receipt](tracks/110-scientific-method-completion/evidence/native-qualification-20261125.json)
+
+## S16 transport and telemetry qualification
+
+Eighteen cases passed for framed TCP between two OS processes, bounded
+queues and reconnect, and Tonic Arrow batch ordering, duplicates and
+corrupt input. The supported routes are framed TCP and the qualified Tonic
+profiles. Browser RFC 6455 and live Arrow Flight, Kafka and NATS brokers
+remain unavailable.
+[Transport receipt](tracks/110-scientific-method-completion/evidence/native-qualification-20261125.json)
+
+## S17 resource and boundary qualification
+
+Thirteen native DES and ABM cases passed for tick and tie ordering,
+conservation, idempotency, queue backpressure and transfer expiry. Movement
+cases cover arrival, replanning, cancellation and staged lease cleanup.
+General hybrid synchronization and empirical validation of specific models
+still require their own results.
+[DES and movement receipt](tracks/110-scientific-method-completion/evidence/native-qualification-20261125.json) ·
+[Movement contract](contracts/movement-resource-usage.md)

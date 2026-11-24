@@ -30,6 +30,18 @@ checkpoint depends on the model and scheduler. A fork captures its own
 scheduler and branch model at the current position, applies the caller's edit,
 and begins retaining a new timeline there.
 
+## Arrow dispatch export
+
+The opt-in `arrow-ipc` feature reuses the native Arrow event-log v2 writer.
+For example, `cargo run -p kairo-ecs-debug --features arrow-ipc -- replay
+--dispatch-ipc dispatches.arrow --run-id example` publishes the stream when
+the replay input ends successfully. The output contains completed dispatches
+after the oldest retained checkpoint through the final cursor. A rewind
+excludes later events, and an inherited fork boundary stays outside the
+branch's dispatch interval. The stream records event identities, full-width
+ticks and dispatch ordering. Its scope is dispatch records. Model snapshots,
+RNG state and browser replay use their own contracts.
+
 ## Compatibility
 
 `EventTrace` retains its in-memory types and v1 line format. Explicit
@@ -47,7 +59,9 @@ ordering, a cancelled event, a new event inserted during dispatch, a tick
 above 64 bits, retained-history limits and isolation of forked state, RNG
 and queues. It uses the existing canonical RNG vector. The [CLI test][cli-test]
 runs the compiled binary through the same-tick step, back, inspect and
-event-kind breakpoint commands. The [size and cost example][memory-example]
+event-kind breakpoint commands. The optional export test checks a retained
+window after eviction and rewind against an independently specified event.
+The [size and cost example][memory-example]
 compares periodic checkpoints with copy-on-write pages against full copies at
 every event over the same retained range.
 

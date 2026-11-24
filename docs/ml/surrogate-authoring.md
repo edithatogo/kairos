@@ -14,4 +14,7 @@ cargo run --manifest-path examples/ml-surrogate/de-surrogate/Cargo.toml
 cargo test --locked -p kairo-ecs-ml --test maturity_native_inference
 ```
 
-ONNX Runtime, TensorRT and Burn execution remain unavailable. Match any stronger accuracy claim to the model and held-out inputs that were qualified.
+The opt-in ONNX Runtime CPU adapter executes qualified fixed-shape float32 models.
+TensorRT and Burn execution remain unavailable. Match accuracy claims to the
+model and held-out inputs that were qualified.
+[ONNX CPU contract and native results](../adr/0026-onnx-cpu-inference.md)
