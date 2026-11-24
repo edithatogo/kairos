@@ -1,0 +1,47 @@
+{
+  "source_base": "2f01fd229d1896fdbc5a63695ac29ddadaa513a1",
+  "rustc": "1.99.1 (58cf8f9c3)",
+  "cargo_lock_sha256": "df26476d07b6323f89bb02819aaff00a12f00c15bdd0114c91d082cd088f0637",
+  "local_worktree": "/Users/doughnut/.codex/worktrees/kairos-scientific-evidence-closeout/kairos",
+  "source_sha256": {
+    "crates/kairo-ecs-gpu/src/metal.rs": "b31d0d4bfe76388fdd9a1a24931821a35f28892cc9842a842ca4071028ee93ce",
+    "crates/kairo-ecs-gpu/examples/vulkan_qualification.rs": "f81fc355b0ed217c2451e4eeaab7edfe06fbe5206a374fe71764128d6ce51c7e",
+    "crates/kairo-ecs-gpu/src/shaders/resident_abm.wgsl": "fae7f718c3eeb0a37f851556c2aad6c7d908edb61d18fe18dd37c43a5dbadb7b",
+    "crates/kairo-ecs-gpu/src/shaders/resident_des.wgsl": "a0fb46c32365d0ce8540812e832459292c13610f376118e9bdd5f87c4b5e3a00"
+  },
+  "linux_vulkan": {
+    "host": "Linux x86_64 6.12.63+ on Intel i3-N300",
+    "device": "Intel(R) Graphics (ADL-N)",
+    "device_type": "IntegratedGpu",
+    "vendor_device": "8086:46d0",
+    "drm_revision": "0x00",
+    "driver": "Intel open-source Mesa driver 23.2.1-1ubuntu3.1~22.04.2",
+    "build": "Apple Container amd64 Rosetta, rust:1.99.1-slim-trixie; cargo build --locked --offline -p kairo-ecs-gpu --features wgpu-backend --example vulkan_qualification",
+    "binary_sha256": "b27f7686648d84d53acc4ffdfdb42acb92058164d85aea00bbb2f524f764de50",
+    "run": "env -u VK_ICD_FILENAMES -u VK_DRIVER_FILES XDG_RUNTIME_DIR=\"$PWD\" ./vulkan_qualification",
+    "exit": 0,
+    "seed": 20261125,
+    "ticks": 4,
+    "particles": 67,
+    "des_events_per_tick": 131,
+    "integer_state": "exact",
+    "position_max_absolute_error": 0.0,
+    "position_absolute_tolerance": 2e-05,
+    "submissions": 1,
+    "state_readbacks": 1,
+    "local_log_sha256": "51b5cf2c5048d0cb557b4aed7c10a571db81f060e8cdd80c55a09dd31f391bcf"
+  },
+  "macos_metal": {
+    "host": "Apple M1 Max, macOS 27.2.1 arm64 build 26B131",
+    "command": "cargo test --locked --offline -p kairo-ecs-gpu --features metal-backend,wgpu/counters --lib --test native_metal_des --test metal_hardware_qualification --test maturity_device_model -- --nocapture",
+    "exit": 0,
+    "tests_passed": 24,
+    "ignored_manual_case": 1,
+    "hal_live_buffers": {
+      "initial": 3,
+      "first_upload": 5,
+      "after_32_replacements": 5
+    },
+    "local_log_sha256": "c58497ffb122fd746c06b45552cd5a05588433c9e7b995b7d6cc5039bf630e73"
+  }
+}

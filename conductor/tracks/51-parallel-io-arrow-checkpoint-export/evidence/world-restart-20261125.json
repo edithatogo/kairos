@@ -1,0 +1,44 @@
+{
+  "source_base": "2f01fd229d1896fdbc5a63695ac29ddadaa513a1",
+  "rustc": "1.99.1 (58cf8f9c3)",
+  "cargo_lock_sha256": "df26476d07b6323f89bb02819aaff00a12f00c15bdd0114c91d082cd088f0637",
+  "local_worktree": "/Users/doughnut/.codex/worktrees/kairos-scientific-evidence-closeout/kairos",
+  "source_sha256": {
+    "crates/kairo-ecs-bench/tests/world_checkpoint_restart.rs": "19e3f84daed76880e3f2740c8b6a57e0a1e7af938f3d1c1714c23985a0f46ea9",
+    "crates/kairo-ecs-bench/tests/staged_checkpoint_restart.rs": "0209ef10708a8572c9916b1098934cdcca0d8dbc4b4ff0fa23a8e59a792ec909"
+  },
+  "command": "cargo test --locked --offline -p kairo-ecs-bench --features hdf5,adios2 --test world_checkpoint_restart --test staged_checkpoint_restart",
+  "host": "Apple M1 Max, macOS 27.2.1 arm64 build 26B131",
+  "filesystem": "local APFS",
+  "hdf5": "2.2.0",
+  "adios2": "2.12.1",
+  "seed": 20261124,
+  "exit": 0,
+  "worker_roles": [
+    "reference",
+    "write",
+    "recut",
+    "resume"
+  ],
+  "test_binary_sha256": "0a1911057254a8b9677466498bad86eee742bd246197f6c7517fd10303a54a72",
+  "formats": [
+    {
+      "format": "HDF5",
+      "same_destination_replaced": true,
+      "reference_matched": true
+    },
+    {
+      "format": "ADIOS2 BP5",
+      "same_destination_replaced": true,
+      "reference_matched": true
+    }
+  ],
+  "matched": [
+    "exact ordered dispatch trace",
+    "entity generations and world free list",
+    "component values",
+    "two cancellations",
+    "RNG state and next draw"
+  ],
+  "local_log_sha256": "abff7fbde245c6d4377b94ce49160824921d1773d47ef24c1870d27e6d923f62"
+}

@@ -1,0 +1,11 @@
+Linux 6.12.63+ x86_64
+glibc 2.35
+Architecture:                            x86_64
+CPU(s):                                  8
+Model name:                              Intel(R) Core(TM) i3-N300
+Thread(s) per core:                      1
+Core(s) per socket:                      8
+Socket(s):                               1
+MemTotal:       32608892 kB
+1.35 1.39 1.36 3/1176 1353532
+time (GNU Time) UNKNOWN

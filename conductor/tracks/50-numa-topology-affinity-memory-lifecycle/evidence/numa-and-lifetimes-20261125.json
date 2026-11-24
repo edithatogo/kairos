@@ -1,0 +1,109 @@
+{
+  "source_base": "2f01fd229d1896fdbc5a63695ac29ddadaa513a1",
+  "rustc": "1.99.1 (58cf8f9c3)",
+  "cargo_lock_sha256": "df26476d07b6323f89bb02819aaff00a12f00c15bdd0114c91d082cd088f0637",
+  "local_worktree": "/Users/doughnut/.codex/worktrees/kairos-scientific-evidence-closeout/kairos",
+  "source_sha256": {
+    "conductor/tracks/111-measured-performance/evidence/scheduler-compaction/probe.rs": "d8c5a9b64a8573c89e9dd8356155d40909bc1b06011a0363874fc4c3ca2cf969",
+    "conductor/tracks/50-numa-topology-affinity-memory-lifecycle/evidence/hwloc_topology.c": "0aa719ba689d134fef39488edf757927ef53f6b4148454f532f475ba7f28f2a7",
+    "crates/kairo-ecs-ffi/tests/track70_phase2_ffi_polyglot.rs": "2667eccc71ecf585e8bc0ec5171dccee3b1e841dee9b6bc4b2173bfeffd1dc29",
+    "crates/kairo-ecs-ffi/tests/track70_domain_c_data_consumers.rs": "cafbe643988fd84b6c925d1238fe60b67c5c832e2188f43f1ce2b30638dc8a5c",
+    "crates/kairo-ecs-core/tests/linux_numa.rs": "80776b28492d652448341608f9411e4e37868b36c0697618eb91f1d67476338b",
+    "crates/kairo-ecs-core/src/linux_numa.rs": "7f27697658ad189bec24986aa93be30aa159275d2de10ec1094736165e0cbe44"
+  },
+  "linux_nas": {
+    "architecture": "x86_64",
+    "kernel": "6.12.63+",
+    "cpu": "Intel Core i3-N300",
+    "glibc": "2.35",
+    "build": "Apple Container amd64 Rosetta, rust:1.99.1-slim-trixie; cargo test --locked -p kairo-ecs-core --features numa --test linux_numa --no-run",
+    "run": "env -u KAIRO_NUMA_NODES ./linux_numa --nocapture",
+    "test_elf_sha256": "ea89b8fd5ec2cb8f8d307ca39d4baa258a6204040a1a3d493895c44fa081aed5",
+    "exit": 0,
+    "tests_passed": 2,
+    "observed": [
+      "node 0 logical CPUs 0-7 and 33391505408 bytes",
+      "original 0-7, bound 0, restored 0-7"
+    ],
+    "loader_warning": "Weak GLIBC_2.39 version missing; tests executed and passed on glibc 2.35."
+  },
+  "independent_hwloc": {
+    "version": "2.7.0",
+    "runtime_api": "0x00020500",
+    "build": "cc -std=c11 -Wall -Wextra -Werror hwloc_topology.c $(pkg-config --cflags --libs hwloc) -o hwloc_topology",
+    "run": "./hwloc_topology",
+    "exit": 0,
+    "binary_sha256": "d8a953aeaed1f5829c65692a54653e297438b8e1ead4d75d8b90b3a7a0418157",
+    "observed": [
+      "NUMANode=1",
+      "Package=1",
+      "Core=8",
+      "PU=8",
+      "L1Cache=8",
+      "L1iCache=8",
+      "L2Cache=2",
+      "L3Cache=1",
+      "node=0 cpus=0-7 memory_bytes=33391505408"
+    ]
+  },
+  "macos": {
+    "host": "Apple M1 Max, macOS 27.2.1 arm64 build 26B131",
+    "ffi": [
+      {
+        "command": "cargo test --locked --offline -p kairo-ecs-ffi --test track70_phase2_ffi_polyglot",
+        "exit": 0,
+        "tests_passed": 3,
+        "observed": "UInt64 values [10,20,30] remained live after engine destruction and root C Data release reclaimed their 24-byte allocation."
+      },
+      {
+        "command": "cargo test --locked --offline -p kairo-ecs-ffi --features native-data --test track70_domain_c_data_consumers",
+        "exit": 0,
+        "tests_passed": 10,
+        "observed": "One UInt64 Polars chunk kept its original address through C Data export and import after the source frame was cleared and dropped."
+      }
+    ],
+    "scheduler": {
+      "build": "Standalone release executable built from probe.rs with path dependencies kairo-ecs-core and kairo-ecs-types, cargo build --locked --offline --release",
+      "run": "scheduler-lifetime lifecycle <1|1024|65536>",
+      "exit": 0,
+      "samples": [
+        {
+          "scheduled": 1,
+          "source_plus_checkpoint_bytes": 552,
+          "checkpoint_bytes": 156,
+          "checkpoint_plus_restored_bytes": 312,
+          "restored_bytes": 156,
+          "drained_bytes": 156,
+          "after_drop_bytes": 0
+        },
+        {
+          "scheduled": 1024,
+          "source_plus_checkpoint_bytes": 198672,
+          "checkpoint_bytes": 99336,
+          "checkpoint_plus_restored_bytes": 198672,
+          "restored_bytes": 99336,
+          "drained_bytes": 99336,
+          "after_drop_bytes": 0
+        },
+        {
+          "scheduled": 65536,
+          "source_plus_checkpoint_bytes": 12714000,
+          "checkpoint_bytes": 6357000,
+          "checkpoint_plus_restored_bytes": 12714000,
+          "restored_bytes": 6357000,
+          "drained_bytes": 6357000,
+          "after_drop_bytes": 0
+        }
+      ],
+      "measurement": "Requested live bytes in the Rust allocator. Values exclude RSS and device memory."
+    }
+  },
+  "local_log_sha256": {
+    "nas-hardware.log": "51b5cf2c5048d0cb557b4aed7c10a571db81f060e8cdd80c55a09dd31f391bcf",
+    "nas-hwloc-final.log": "22d63b747b0a1f158801bc7a2fc54de3f8190b588e7db9698735d23f248665c4",
+    "native-focused-final.log": "abff7fbde245c6d4377b94ce49160824921d1773d47ef24c1870d27e6d923f62",
+    "ffi-zero-copy.log": "18bb03d948dca81abc89428bcfac0a47621725dc47e0af2f04030d3404074574",
+    "ffi-zero-copy-clippy.log": "695954e85c08ec70b0b985e249ba5464322e2fa4b8853b5dd6ed4c8e9d9c4a0e",
+    "scheduler-lifetime.csv": "9ea1896f6fcde4970bcb864031b27bac3e8531ac0a91779ffadf3c65bcc02de9"
+  }
+}

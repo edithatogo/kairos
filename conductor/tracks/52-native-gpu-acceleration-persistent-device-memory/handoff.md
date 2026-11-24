@@ -1,5 +1,26 @@
 # Track 52 Handoff
 
+## Intel Vulkan and Apple Metal qualification
+
+An Intel ADL-N integrated GPU on the Linux NAS ran the resident WGSL kernels
+used by Metal. The probe required a hardware Vulkan adapter and used the
+Intel Mesa 23.2.1 driver. Across four ticks it updated 67 particles and
+applied 524 additive DES events. Its final integer values matched exactly
+and its maximum particle-position error was zero. The device buffers stayed
+resident across eight dispatches in one submission with one final readback.
+
+The M1 Max Metal suites passed after the shared shader extraction. With
+wgpu counters enabled, live buffers went from three to five at upload and
+held at five after 32 replacements. Independent review verified the shader
+bodies and device qualification scope. The earlier Windows RTX 4060 CUDA
+record remains bound to its tested revision. The configured Windows peer
+was offline during this pass.
+
+The Vulkan result qualifies these kernels on the observed driver and GPU.
+Native Vulkan integration through the generic backend and wider DX12 and
+browser qualification remain open.
+[Hardware, commands and hashes](evidence/gpu-shader-targets-20261125.json).
+
 ## Windows CUDA particle and DES
 
 Chat `01a1fd18-51c7-7963-a3cc-d262d54582ba` owns the CUDA slice in the

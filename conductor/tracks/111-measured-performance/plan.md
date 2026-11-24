@@ -6,7 +6,7 @@ Remove demonstrated overhead, establish a measured serial/parallel/GPU crossover
 
 - [x] 111.0.1: Reproduce historical small-workload PDES measurements and freeze a common serial/parallel input tape. [Evidence](handoff.md#matched-ring-and-worker-reuse).
 - [ ] 111.0.2: Profile thread startup/join, synchronization, allocation, queue, snapshots, serialization and transfer cost.
-- [ ] 111.0.3: Separate initialization, steady state and end-to-end timings; retain raw samples, hardware, inputs and exact source.
+- [x] 111.0.3: Separate initialization, steady state and end-to-end timings; retain raw samples, hardware, inputs and exact source. [Matched PHOLD runs](evidence/phold/README.md) retain the first run and ten pairs with setup, dispatch and total times.
 - [ ] 111.0.review: Independently review this phase, apply accepted fixes, execute the named oracles and record the next-phase decision.
 
 ## Phase 1: Implement measured optimizations
@@ -23,6 +23,9 @@ Remove demonstrated overhead, establish a measured serial/parallel/GPU crossover
 - [ ] 111.2.2: Qualify actual GPU model work including setup/transfer and distributed recovery/communication overhead.
 - [ ] 111.2.3: Implement a recorded pre-run executor choice only after the crossover rule is independently validated.
 - [ ] 111.2.review: Independently review this phase, apply accepted fixes, execute the named oracles and record the next-phase decision.
+
+The PHOLD runs vary event cost, message density, lookahead and LP count.
+Queueing, spatial, held-out hybrid and wider scale comparisons remain open.
 
 ## Phase 3: Acceptance
 

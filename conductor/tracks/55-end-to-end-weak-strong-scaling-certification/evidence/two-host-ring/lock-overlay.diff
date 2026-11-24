@@ -1,0 +1,12 @@
+diff --git a/Cargo.lock b/Cargo.lock
+index 34597b5..da75e55 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -2415,6 +2415,7 @@ version = "0.0.0"
+ dependencies = [
+  "ed25519-dalek",
+  "kairo-ecs-arrow",
++ "kairo-ecs-core",
+  "kairo-ecs-pdes",
+  "kairo-ecs-types",
+  "prost",

@@ -1,5 +1,22 @@
 # Handoff
 
+## Matched multiround PHOLD
+
+The optional production benchmark mode uses one seeded tape for the serial
+scheduler and conservative executor. Across 24 cases with ten timed pairs
+each, both executors agreed on 2,048 events, ordered per-LP state and
+routing counters. The runs varied event cost, lookahead, message density
+and LP count. Both legacy benchmark modes retained their deterministic
+outputs. Independent review reproduced the reported medians and pair ratios.
+
+Serial was faster for all cheap cases. At eight LPs, eight-tick lookahead
+and the 75% remote target, the pool reached 2.097× serial throughput at
+8,192 mixes per event. The paired interval was 1.991–2.148× for this shared
+M1 Max run. The receipts retain cold runs, setup, dispatch and total time,
+and process RSS. Dedicated-runner regression thresholds, held-out
+workloads and crossover selection remain open.
+[Protocol, samples and intervals](evidence/phold/README.md).
+
 ## Scheduler cancellation compaction
 
 The scheduler retains its binary heap and pending ID set. Successful

@@ -74,4 +74,9 @@ Repository scope: **kairos** and its **careops-sim** consumer (`/Users/doughnut/
 
 - [ ] CAP-55.1: Run physically distinct hosts with actual transport and failure/restart parity; single-node Slurm validates scheduler integration only. Measure equal-workload wall-time speedup/efficiency and memory limits rather than deriving efficiency from node counts. Preserve usable CPU delivery while optional HPC gates remain open.
 
+The [two-host ring](handoff.md#two-physical-hosts-and-a-matched-ring)
+measures fixed work and fixed work per host on a Mac and a physical Linux
+NAS. This closes the bounded transport and timing experiment. The
+integrated failure, restart and live cluster acceptance remains open.
+
 Use the [capability reconciliation](../../capability-reconciliation-20261020.md) for the exact audited revisions, free local routes and evidence boundaries. Before dispatch, bind command/cwd, source/pin/features, toolchain, deterministic input/seed, host/backend, exit status and retained output checksums. A structural validator pass cannot close a runtime task.

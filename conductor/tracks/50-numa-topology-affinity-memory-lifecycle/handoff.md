@@ -1,5 +1,30 @@
 # Track 50 Handoff
 
+## Native topology and allocation lifetime
+
+On Linux x86-64 the Intel i3-N300 NAS exposed one NUMA node. The installed
+hwloc 2.7 library reported eight cores, eight processing units, eight L1
+data and eight L1 instruction caches, two L2 caches and one L3 cache. Its
+CPUs and memory total matched the kernel and Kairos node readback. The
+native thread affinity test changed the allowed mask from 0–7 to 0 and
+restored 0–7. The independent C probe and Rust readback passed on the NAS.
+
+On Apple Silicon, the scheduler replayed after dropping its source and
+checkpoint owners. Its allocator reported 6,357,000 bytes of requested live
+storage after draining the 65,536-event case and zero bytes above baseline
+after dropping the restored scheduler. The three sizes used the production
+scheduler and its ordinary allocator.
+
+The C Data array's copied UInt64 allocation remained readable after engine
+destruction. Its root release reclaimed the 24-byte allocation. The Polars
+domain case preserved a single UInt64 chunk's address through C Data import
+after clearing and dropping the source frame. Both targeted FFI suites passed.
+
+Independent review accepted the native readbacks and the bounded allocation
+claims. Kairos integration of hwloc cache and locality details, scheduler
+arena and contention evidence, and multi-node placement remain open.
+[Commands, source hashes and measurements](evidence/numa-and-lifetimes-20261125.json).
+
 Last updated: 2026-06-19
 
 ## Summary

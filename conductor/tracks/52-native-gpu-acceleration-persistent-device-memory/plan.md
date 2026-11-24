@@ -20,9 +20,14 @@
 
 ## Phase 1 - wgpu backend
 
-- [x] Task 1.1: Add real `wgpu` dependency behind `wgpu-backend` (exercising Apple Silicon Metal natively on macOS via `macos-local-apple-silicon-metal-mpi-hwloc` and Vulkan/DX12 on Linux/Windows).
-- [x] Task 1.2: Implement adapter/device/queue initialization with explicit hardware adapter metadata reporting.
-- [x] Task 1.3: Dispatch WGSL compute shaders and validate persistent buffer readback parity on local macOS Metal and GitHub Actions `macos-metal-smoke`.
+- [x] Task 1.1: Add the `wgpu` dependency behind `wgpu-backend`.
+- [x] Task 1.2: Implement adapter, device and queue initialization for Apple Metal with hardware metadata.
+- [x] Task 1.3: Validate native WGSL dispatch and persistent buffer readback on Apple Metal.
+
+The [hardware qualification](handoff.md#intel-vulkan-and-apple-metal-qualification)
+also covers the shared WGSL on Intel Vulkan with direct dispatch and readback.
+Vulkan product integration, DX12 and browser execution are separate targets.
+The hosted GPU smoke runs build and interoperability checks.
 
 ## Phase 2 - CUDA backend
 

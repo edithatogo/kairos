@@ -11,6 +11,12 @@ The local matched write benchmark covers four 16,384-row IPC streams.
 [Raw samples](evidence/contiguous-ipc-apfs-macos-arm64.json).
 [Native format evidence](../../execution/scientific/s14-completion.md).
 
+The [ECS restart extension](handoff.md#successive-ecs-checkpoint-restores)
+proves successive cuts, replacement and resume in separate processes for
+both formats. CAP-51.5 requires an available parallel volume for the
+existing contiguous IPC benchmark. Set `TMPDIR` to an isolated directory on
+the verified target mount when capturing that run.
+
 ## Acceptance correction — 3 November 2026
 
 The checked historical tasks below record the contract-baseline work and its

@@ -2,8 +2,10 @@
 
 The native cases use installed HDF5 2.2.0 and ADIOS2 2.12.1 libraries on macOS
 ARM64 and the pinned Linux CI libraries. The Windows commands cover the
-indicated contract baselines. The engine restart fixture compares a fresh
-process with an uninterrupted reference.
+indicated contract baselines. The engine restart fixtures compare fresh
+processes with uninterrupted references. The ECS case replaces a checkpoint
+between two restores and checks new work and cancellation across both cuts.
+[ECS and staged-resource runs](evidence/world-restart-20261125.json).
 
 | Gate | Command | Required for |
 |---|---|---|

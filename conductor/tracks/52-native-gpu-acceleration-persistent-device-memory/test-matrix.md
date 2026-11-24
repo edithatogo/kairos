@@ -2,6 +2,7 @@
 
 | Gate | Command | Required for |
 |---|---|---|
+| Linux Vulkan kernels | `cargo run --locked -p kairo-ecs-gpu --features wgpu-backend --example vulkan_qualification` on a hardware Vulkan GPU | Shared resident shader dispatch and readback |
 | Backend initialization contract | `rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-gpu --features wgpu-backend,cuda-backend --test backend_initialization` | Implementation |
 | GPU crate tests | `rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-gpu --features wgpu-backend,cuda-backend` | Implementation |
 | WebGPU crate tests | `rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-webgpu --features webgpu` | Review |

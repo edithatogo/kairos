@@ -6,6 +6,7 @@
 | Overhead | Thread identity across two horizons and a native stack sample of the original scoped runtime. | 64 distinct callback threads before the change and one with the pool. Broader profiling remains open. |
 | Allocation traffic | Allocator counts for matched setup and dispatch, plus separate uninstrumented timings with balanced order. | [Direct handoff experiment](handoff.md#direct-event-handoff-experiment) and recorded adoption decision. |
 | Performance | Raw paired wall-clock and process RSS from the matched ring on named hardware. | Five event costs and eight historical cases recorded on Apple M1 Max. |
+| Multiround PHOLD | Seeded tape, exact per-LP result and counter parity, cold and ten paired runs per profile with separate setup and dispatch. | [24 matched scoped and pooled cases on Apple M1 Max](evidence/phold/README.md). |
 | Regression | Dedicated comparable runners evaluate declared thresholds; noisy shared-runner smoke is not performance certification. | Pending for this track |
 | Capability/claim consistency | node scripts/validation/validate-frontier-evidence.mjs and node --test tests/conformance/frontier-evidence-check.mjs | Structural check only; no new runtime claim |
 | Phase registry | pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1 | Required before phase closure |
