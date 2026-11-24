@@ -30,38 +30,38 @@ does not change the 60-leaf workpack's pending statuses.
 
 ## Phase 0: Existing-state decisions
 
-- [ ] 114.0.1: Reconcile Tracks70–104 adoption/defer/no-go evidence; do not re-propose already adopted dependencies.
-- [ ] 114.0.2: Correct inaccurate dependency-safety rationale and retain valid semantic/identity objections.
-- [ ] 114.0.3: Record actual consumer/model need, eliminated code, build/runtime cost, licence/security and exit strategy for candidates.
-- [ ] 114.0.review: Independently review this phase, apply accepted fixes, execute the named oracles and record the next-phase decision.
+- [x] 114.0.1: Reconcile adoption, deferral and rejection across Tracks 70–104. [Disposition](../../dependency-and-consumer-contracts.md#tracks-70104-disposition--25-november-2026)
+- [x] 114.0.2: Correct the crate-local unsafe-lint rationale. Retain the ECS identity, iteration, snapshot and borrowing obligations. [Track 84 decision](../84-hecs-robustness/handoff.md)
+- [x] 114.0.3: Record the consumer, maintenance, build and runtime evidence and the conditions to reopen deferred dependencies. [Current assessment](handoff.md#consumer-contract-closeout--25-november-2026)
+- [x] 114.0.review: Independently accept the reconciled adoption, rejection and deferral decisions. [Review evidence](handoff.md#phase-closeout-evidence)
 
 ## Phase 1: Independent core and adapters
 
-- [ ] 114.1.1: Define the smallest public Rust crate/facade, ABI and schema contracts; keep heavyweight features optional.
+- [x] 114.1.1: Bind the minimal Rust fixture, native-core-v1 ABI and versioned data boundary to the existing public contracts. [Minimal Rust contract](../../contracts/minimal-consumer.md) · [Native profile](../../release/beta-scope.md)
 - [x] 114.1.2: Add a standalone installed downstream fixture that builds without CareOps or private paths/data. The [native install receipt](../113-beta-and-stable-release/handoff.md#native-core-v1-candidate--23-november-2026) covers the minimal Rust fixture.
-- [ ] 114.1.3: Define the CareOps-owned domain adapter and immutable dependency selection; preserve current accepted pins until qualification.
+- [x] 114.1.3: Accept the CareOps-owned adapter's immutable installed test pair and document shipping pin selection as a CareOps decision. [Receiving probe](handoff.md#installed-careops-movement--23-november-2026)
 - [x] 114.1.4: Connect installed-consumer gates to candidate native dispatch, replay, schema and lifetime acceptance. Reuse the [Track 108 receipts](../108-scientific-ecosystem-alignment/handoff.md#installed-consumer-qualification--23-november-2026).
-- [ ] 114.1.5: Complete the source/API extraction map into existing game core/solve and optional adapter; resolve identity/chance/payoff/tie differences, feature-enabled package closure and S01–S04 receiving acceptance. Keep solver diagnostics distinct from causal execution traces.
+- [x] 114.1.5: Record the S01–S04 retirements and Paignia solver receipts, feature closure, and identity, chance, payoff and tie rules. [Source disposition](../../contracts/game-extraction-map.md) · [Receiving methods](../../scientific-completion.md#s01s04-paignia-transfer)
 - [x] 114.1.6: Implement scheduled movement arrival, cancellation and topology-revision handling behind the neutral Rust contract. The movement and routing tests cover exact ticks, stale arrivals and native queue order.
 - [x] 114.1.7: Implement admission/release intervals, atomic quantities, observation windows and committed-only export under optimistic replay. The replay fixture verifies a late release against canonical event order.
 - [x] 114.1.8: Qualify the installed CareOps physical-movement case. The [receiving probe](handoff.md#installed-careops-movement--23-november-2026) combines the actual CareOps allocation coordinator with native movement, cancellation and measured porter occupancy.
 - [x] 114.1.9: Qualify Innovate's native event dispatch, state, seeded replay and optional data features in the [installed Track 108 receiving wheel](handoff.md#reused-installed-consumer-evidence).
-- [ ] 114.1.10: Hand off versioned game semantic and paired outcome contracts to UOGTO, the game library and Voiage; qualify lawful observation, stale-action/lifetime handling and separate solver/simulation RNG purposes through K01.port. Domain consumers own game/economic assumptions and provider pin changes.
-- [ ] 114.1.review: Independently review this phase, apply accepted fixes, execute the named oracles and record the next-phase decision.
+- [x] 114.1.10: Hand off the bounded native Paignia profile and the UOGTO and Voiage contracts. The receiving fixtures qualify owned observation, stale-action and lifetime rejection, separate randomness and checkpoint resume. [Exact handoff](../../contracts/game-port-acceptance.md#receiving-handoff--25-november-2026)
+- [x] 114.1.review: Independently accept the fixed-scope Rust, CareOps, Innovate and optional Paignia contracts. [Review evidence](handoff.md#phase-closeout-evidence)
 
 ## Phase 2: Qualified reuse
 
-- [ ] 114.2.1: Evaluate persistent pools, numerical/inference/FMI dependencies only for named accepted consumers.
-- [ ] 114.2.2: Prefer generated bindings and existing Arrow/spatial/optimization libraries over duplicate custom wrappers.
-- [ ] 114.2.3: Test default/minimal/optional feature closures and relevant native target build behaviour.
-- [ ] 114.2.4: Automate reviewable dependency updates while gating behaviour-changing RNG/numerical/ABI/schema changes.
-- [ ] 114.2.review: Independently review this phase, apply accepted fixes, execute the named oracles and record the next-phase decision.
+- [x] 114.2.1: Record the measured worker-pool decision, named inference and FMI profiles, and the integrator deferral. [Dependency dispositions](../../dependency-and-consumer-contracts.md#tracks-70104-disposition--25-november-2026)
+- [x] 114.2.2: Retain qualified Arrow, routing, optimization, serialization and native binding paths. Transfer the qualified reusable game methods to Paignia. [Reuse decisions](../../dependency-and-consumer-contracts.md#reuse-decisions)
+- [x] 114.2.3: Verify the standalone normal/build graph, the pinned installed SDK targets and the separate optional game adapter. [Feature checks](test-matrix.md)
+- [x] 114.2.4: Use the existing dependency PR workflow and version-specific compatibility gates. [Renovate](../../../renovate.json) · [Upgrade policy](../../dependency-value-policy.md#delivery-and-maintenance-refinements--24-october-2026)
+- [x] 114.2.review: Verify the minimal graph and reject seeded domain and build-only dependencies. [Review evidence](handoff.md#phase-closeout-evidence)
 
 ## Phase 3: Acceptance
 
-- [ ] 114.3.1: Measure net maintenance/runtime/build impact and independent consumer compatibility.
-- [ ] 114.3.2: Record adoption or no-go decisions with evidence; update package/support contracts and exact consumer receipts.
-- [ ] 114.3.review: Independently review this phase, apply accepted fixes, execute the named oracles and record the next-phase decision.
+- [x] 114.3.1: Measure scoped source retirement, resolved build footprint and matched runtime cost. Verify independent consumer compatibility. [Measured evidence](handoff.md#consumer-contract-closeout--25-november-2026)
+- [x] 114.3.2: Record supported profiles, reuse decisions and exact native, CareOps, Innovate and Paignia receipts. [Current assessment](handoff.md#consumer-contract-closeout--25-november-2026)
+- [x] 114.3.review: Close the bounded maintenance and independent-consumer decision with the measured costs and explicit limits. [Review evidence](handoff.md#phase-closeout-evidence)
 
 ## Phase closeout gate
 

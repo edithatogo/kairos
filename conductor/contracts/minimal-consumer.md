@@ -68,3 +68,28 @@ K05.package owns the clean beta package install and upgrade job design.
 K01.port owns adapter operations and errors, identity, lawful observation,
 separate RNG purposes, checkpoint semantics, and positive and negative fixtures.
 [Bounded task definitions](../execution/maturity-tasks.json)
+
+## Standalone Rust fixture — 25 November 2026
+
+The independent [Cargo fixture](../../tests/fixtures/minimal-consumer/Cargo.toml)
+resolves `core`, `des`, `rng`, `state` and `types` at the immutable
+`235e6a333ccc6e690f5b41f2c5eaa9a6784fe147` revision. Its build and normal graph
+has 24 distinct package names including the fixture on macOS ARM64.
+With cached dependencies, Cargo 1.99.1 built the fixture in 7.17 seconds
+with debug information disabled. Execution dispatched the service
+completion, released capacity and admitted the waiting job. The
+[installed SDK lanes](https://github.com/edithatogo/kairos/actions/runs/45051171243)
+separately exercise the release-candidate artifact on Linux x86-64 and macOS ARM64.
+
+```sh
+export PATH="$(dirname "$(rustup which --toolchain 1.99.1 cargo)"):$PATH"
+cargo --version
+.venv/bin/python scripts/check_minimal_features.py
+.venv/bin/python -m unittest discover -s tests -p test_minimal_features.py -v
+cargo run --locked --manifest-path tests/fixtures/minimal-consumer/Cargo.toml
+```
+
+The guard reads Cargo's resolved normal and build edges. Its negative case
+locks a direct CareOps dependency and a build helper that pulls in Polars and
+bindgen. The check rejects all three. The independently tested
+[optional game adapter](game-port-acceptance.md) uses its own lock.

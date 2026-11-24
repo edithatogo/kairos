@@ -35,6 +35,19 @@ The generated table links 27 capability entries to scoped evidence, and
 [Track 110 handoff](tracks/110-scientific-method-completion/handoff.md) ·
 [Track 112 closeout](tracks/112-evidence-and-claim-automation/handoff.md#phase-closeout-evidence)
 
+## Consumer contract closeout — 25 November 2026
+
+Track 114 accepted the independent native provider contracts, dependency
+dispositions and bounded Paignia execution handoff. The 24-package minimal
+normal/build graph and the seeded rejection test passed. Paignia retains
+its separate adapter lock and 12 native execution cases.
+Track 116 accepted the provider phases and recorded the locally passing
+Tobac installed reader. Its receiving PR awaits signed inventory renewal
+and green hosted checks.
+[Track 114 evidence](tracks/114-dependency-and-consumer-contracts/handoff.md#consumer-contract-closeout--25-november-2026) ·
+[Paignia contract](contracts/game-port-acceptance.md#receiving-handoff--25-november-2026) ·
+[Track 116 receiving gate](tracks/116-tobac-cohort-microsimulation-contracts/handoff.md#signed-inventory-renewal--25-november-2026)
+
 ## Data and downstream qualification — 23 November 2026
 
 The owned Arrow domain exports and native file metadata are on main through

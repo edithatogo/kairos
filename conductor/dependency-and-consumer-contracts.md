@@ -42,11 +42,34 @@ reuse a library layer, not CLI internals or an entire calibration stack.
 | ECS/storage | Existing custom storage; evaluate hecs/bevy_ecs only for a demonstrated maintenance or performance gain. | Test generational/full-width IDs, deterministic iteration, snapshots, borrow boundaries and adapter cost. A crate-local forbid(unsafe_code) does not automatically ban unsafe in dependencies; audit safety boundaries explicitly. Avoid a disruptive framework rewrite without evidence. |
 | ODE/numerical | Track102 deferred ode_solvers; Track110 owns the existing RK4 correctness defect. | Fix the numerical contract first. Qualify a maintained Rust solver when the derivative/event API and tolerances are specified; a dependency upgrade cannot repair an incorrectly specified method by itself. |
 | Optimization/game theory | Clarabel already integrated (85); argmin qualification is separate. | Use the supported solver for actual incentive/optimization constraints, with independent residual checks. Avoid bespoke general solvers where a compatible maintained Rust implementation is adequate. |
-| Inference | Tract/ort are candidates, not accepted native inference merely because a feature is named. | Check supported operators, licence, model fixtures, build artefacts, acceleration and measured error/latency. Rust adapter owns execution/error contracts. No Python core fallback. |
+| Inference | Track 89 rejected Tract for its evaluated scope. The opt-in Rust ONNX CPU profile has separate fixed-shape float32 qualification. | Reuse the named CPU profile within its tested model limits. [ONNX contract and evidence](../docs/adr/0026-onnx-cpu-inference.md) |
 | GPU | Existing wgpu/cudarc. | Consolidate GPU ownership/transfer abstractions; do not add another graphics stack without a model requiring it. |
 | FMI | Existing FMI loader and Track91 evaluation; consider maintained Rust FMI/fmusim tooling and Reference-FMUs. | Independent FMUs are oracles. Adopt a library only after checking supported FMI features, licence, lifecycle/error behaviour and maintenance; avoid duplicate native loading code if replacement passes. |
 | Transport/tracing | Tokio/tonic/prost already support accepted transport; tracing and WebSocket qualification tracks exist. | Enable only for concrete consumers; no automatic dependency adoption from a completed evaluation packet. |
 | Bindings | Existing C ABI, PyO3/maturin and wasm-bindgen surfaces. | Generate marshalling where practical; one authoritative Rust implementation. Package test each native artefact. Keep C ABI for languages where it reduces hand-maintained bridge logic. |
+
+## Tracks 70–104 disposition — 25 November 2026
+
+The [track records](tracks.md) and the decisions below were reconciled against
+`6316b4d7a2158865e0f3533ff3abe1cd4856099b`. Reopen an evaluation when an application demonstrates the
+required workload and supplies its acceptance oracle.
+
+| Tracks | Disposition and current boundary |
+| --- | --- |
+| 70–83, 85–87, 93–96 | Retain the adopted Polars, RNG, routing, serialization, CLI, Rayon, FMU archive/metadata, transport, solver, spatial, integrity and property-testing components in their qualified features. The owning track receipts retain versions and compatibility limits. |
+| 84, 88, 89, 91, 92, 99 | Keep the recorded rejections of the evaluated hecs, rsmpi replacement, Tract, rust-fmi, Sobol–Burley and proptest-state-machine migrations. The independently qualified MPI feature, ONNX CPU adapter and built-in Sobol sequence follow their own contracts. A crate's `forbid(unsafe_code)` applies to that crate. An ECS replacement would still need to preserve stable identity, iteration, snapshots and borrowing. [Native transport](tracks/49-distributed-mpi-grpc-state-synchronization/native-runtime-qualification-20261103.md) · [Scientific scope](scientific-completion.md) |
+| 90, 97, 98, 100, 102–104 | Defer Argmin, additional tracing and model checking, a generic ODE integrator and the WebSocket stack until their owning workloads and entry conditions are met. [Entry conditions](dependency-sequencing.md) |
+| 101 | Retain Criterion for microbenchmarks and the existing specialist scaling harnesses. [Consolidation result](tracks/101-criterion-consolidation/handoff.md) |
+
+The CareOps movement case uses the adopted routing and occupancy APIs. The
+paired PDES ring supplies the existing cost decision for persistent workers.
+The FMU importer reuses ZIP/XML handling with the accepted archive and
+metadata validation. Changing any of these choices requires the same locked
+consumer behavior, build and licence/security review from its owning track.
+[Movement evidence](tracks/114-dependency-and-consumer-contracts/handoff.md#installed-careops-movement--23-november-2026) ·
+[Worker measurements](tracks/111-measured-performance/handoff.md#matched-ring-and-worker-reuse) ·
+[Archive decision](tracks/79-zip-robustness/handoff.md) ·
+[Metadata decision](tracks/80-quick-xml-robustness/handoff.md)
 
 ## Adoption evidence and maintenance
 

@@ -1960,18 +1960,23 @@ entries:
     next_phase_decision: "Retain the verified native-core-v1 artifacts. Record maintainer acceptance of the concrete scope and replay break before advancing to Phase 1."
 
   - track_id: "114"
-    phase: "0"
-    state: pending
+    phase: "3"
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Programme approved; implementation and independent acceptance remain scoped to the track plan."
-    fixes_applied: false
+    review_result: "Independent review accepted Phases 0–3 for the bounded consumer scope, including the actual standalone Rust run, installed CareOps and Innovate receipts, the separate Paignia adapter, and the guarded minimal graph."
+    fixes_applied: true
     validation_commands:
+      - "cargo run --locked --offline from the independent minimal-consumer workspace"
+      - ".venv/bin/python scripts/check_minimal_features.py"
+      - ".venv/bin/python -m unittest discover -s tests -p test_minimal_features.py -v"
+      - "cargo test --locked --offline --manifest-path crates/paignia-kairos/Cargo.toml --all-targets in archived Paignia e675da1"
       - "node scripts/validation/validate-frontier-evidence.mjs"
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
-    git_status: "Implementation packet in progress; no phase acceptance claimed."
-    commit_sha: ""
-    pushed_ref: ""
-    next_phase_decision: "Complete Phase 0 oracles and independent review before closing or promoting this track."
+      - "pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree"
+    git_status: "Runtime evidence uses published source identities. The closeout PR carries the reviewed graph guard and exact receipts."
+    commit_sha: "6316b4d7a2158865e0f3533ff3abe1cd4856099b"
+    pushed_ref: "origin/main"
+    next_phase_decision: "Close the consumer contracts and reuse decisions. Application owners retain release, pin and wider workload acceptance."
 
   - track_id: "115"
     phase: "0"
@@ -2018,4 +2023,4 @@ entries:
     git_status: clean
     commit_sha: "6955d3f85c71b21889a6d3aec1ca006a436ed4bd"
     pushed_ref: "origin/main"
-    next_phase_decision: "Accept the standalone provider fixture and hand off the schema to receiving adapter owners for installed qualification."
+    next_phase_decision: "Retain accepted provider Phases 0–2 and the passing local Tobac candidate. Receiving PR #202 awaits exact signed inventory renewal and green hosted qualification."

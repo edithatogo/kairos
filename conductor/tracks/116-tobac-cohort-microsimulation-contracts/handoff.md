@@ -1,7 +1,7 @@
 # Handoff
 
-Updated 23 November 2026 (Australia/Brisbane). The provider contract and
-standalone fixture are qualified.
+Updated 25 November 2026 (Australia/Brisbane). The provider contract and
+standalone fixture are qualified. The installed Tobac candidate passed locally.
 
 ## Provider and standalone fixture — 23 November 2026
 
@@ -119,6 +119,30 @@ owner needs to renew the inventory for the added module before rerunning
 the checks and recording receiving-main acceptance.
 [Receiving Actions run](https://github.com/edithatogo/tobac/actions/runs/45377109838).
 
+## Signed inventory renewal — 25 November 2026
+
+The existing verifier's `inventory_identity` reproduced both hashes from
+Git-free archives of Tobac main `fe06ef5958ba0f218317a738fe8de95973300a12`
+and candidate `ce9b621fbd5c2123a695a83935f1462116d7401c` using CPython
+3.15.2. The signed inventory is
+`38102d5614683c0a65e260538b6823f58b4ed6365c8fe651e737c69e40d37dd7`.
+The candidate inventory is
+`5b8432a3cfd9632b0d7bc3a13a50b644acfe52f28906a1214d60c52f2e6500f9`.
+The source addition is `src/tobac_supply/kairos_cohort.py`, SHA-256
+`50965ab64af7eb8dd995c2e2c7ec5f63b24699fccd61e895eec282d53a57fe0d`.
+Every existing signed input pin still matches. The retained local installed
+receipt SHA-256 is
+`831b14570b3c78d62266fc9acfc0becf60063eeaedff1f5600b475714c59f14b`.
+
+PR #202 awaits inventory renewal by the signing and main-integration owner
+recorded in Tobac's workstream. The next receiving operation binds the
+candidate membership to the accepted signer, verifies the signed capsule on
+the receiving head, then runs all of its required hosted lanes. The local
+wheel result remains the prior candidate receipt. After publication, verify
+the receiving-main revision and evidence before closing the receiving gate.
+[Tobac #202](https://github.com/edithatogo/tobac/pull/202) ·
+[Tobac signing ownership](https://github.com/edithatogo/tobac/blob/fe06ef5958ba0f218317a738fe8de95973300a12/docs/WORKSTREAM_SYNC.md#conductor-and-ci-simplification--22-november-2026)
+
 ## Integration notes
 
 Use the versioned schema metadata and locked fixture for the receiving
@@ -133,7 +157,7 @@ adapter. Tobacco/vaping epidemiology and policy inputs belong to `tobac`.
 | commit SHA | [PR #420](https://github.com/edithatogo/kairos/pull/420) merged the reviewed provider as `6955d3f85c71b21889a6d3aec1ca006a436ed4bd`. |
 | pushed ref | `origin/main`. |
 | `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` | Required after pushing the closeout update. |
-| next-phase decision | Accept provider Phases 0–2 and hand off installed adapter qualification. |
+| next-phase decision | Accept provider Phases 0–2 and record the locally passing Tobac reader. Keep receiving publication open until signed inventory verification and hosted qualification pass. |
 
 ## Registration repair — 14 November 2026
 
