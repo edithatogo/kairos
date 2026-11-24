@@ -280,24 +280,7 @@ impl NativeMetalDeviceContext {
                     .create_shader_module(wgpu::ShaderModuleDescriptor {
                         label: Some("metal_des_kernel"),
                         source: wgpu::ShaderSource::Wgsl(
-                            r#"
-                    struct Event {
-                        entity: u32,
-                        delta: i32,
-                    };
-
-                    @group(0) @binding(0) var<storage, read_write> values: array<atomic<i32>>;
-                    @group(0) @binding(1) var<storage, read> events: array<Event>;
-
-                    @compute @workgroup_size(64)
-                    fn main(@builtin(global_invocation_id) id: vec3<u32>) {
-                        if (id.x < arrayLength(&events)) {
-                            let event = events[id.x];
-                            atomicAdd(&values[event.entity], event.delta);
-                        }
-                    }
-                "#
-                            .into(),
+                            include_str!("shaders/resident_des.wgsl").into(),
                         ),
                     });
                 let pipeline =
@@ -584,43 +567,7 @@ impl MetalBackend {
                 let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
                     label: Some("metal_abm_kernel"),
                     source: wgpu::ShaderSource::Wgsl(
-                        r#"
-                struct Particle {
-                    x: f32,
-                    y: f32,
-                    vx: f32,
-                    vy: f32,
-                };
-
-                struct Uniforms {
-                    dt: f32,
-                    seed_lo: u32,
-                    seed_hi: u32,
-                    count: u32,
-                };
-
-                @group(0) @binding(0) var<storage, read_write> particles: array<Particle>;
-                @group(0) @binding(1) var<uniform> uniforms: Uniforms;
-
-                fn deterministic_jitter(seed: u32, index: u32) -> f32 {
-                    var state = seed ^ (index * 747796405u);
-                    state = (((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u);
-                    state = (state >> 22u) ^ state;
-                    return (f32(state & 0xffffu) / 65535.0) - 0.5;
-                }
-
-                @compute @workgroup_size(64)
-                fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
-                    let idx = global_id.x;
-                    if (idx >= uniforms.count) {
-                        return;
-                    }
-                    let jitter = deterministic_jitter(uniforms.seed_lo, idx) * 0.001;
-                    particles[idx].x += (particles[idx].vx + jitter) * uniforms.dt;
-                    particles[idx].y += (particles[idx].vy - jitter) * uniforms.dt;
-                }
-            "#
-                        .into(),
+                        include_str!("shaders/resident_abm.wgsl").into(),
                     ),
                 });
 
