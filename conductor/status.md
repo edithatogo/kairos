@@ -26,13 +26,14 @@ Track 110 records the exact scientific reference results and bounded native
 qualification. Eighty Rust cases passed on Apple Silicon, and PyArrow
 independently decoded the debugger's retained dispatch export after rewind.
 The track remains In Progress for the wider API and oracle inventory,
-consumer migration and advanced cases. Track 112 closed all three phases.
+consumer migration and advanced cases. Track 112 reviewed all three phases
+and records final acceptance after clean integration.
 The generated table links 27 capability entries to scoped evidence, and
 20 guard tests cover evidence and generated-document drift.
 [Scientific register](scientific-completion.md) ·
 [Capability register](capabilities.md) ·
 [Track 110 handoff](tracks/110-scientific-method-completion/handoff.md) ·
-[Track 112 closeout](tracks/112-evidence-and-claim-automation/handoff.md#phase-closeout-evidence)
+[Track 112 review](tracks/112-evidence-and-claim-automation/handoff.md#phase-closeout-evidence)
 
 ## Data and downstream qualification — 23 November 2026
 

@@ -1904,7 +1904,7 @@ entries:
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
     git_status: "Exact reviewed runtime source is recorded here and in the retained run receipt."
     commit_sha: "c5959a9ce92dbbc8991ce4f54480b281099a8e34"
-    pushed_ref: "origin/codex/scientific-evidence-closeout-20261125"
+    pushed_ref: ""
     next_phase_decision: "Keep Phase 0 open for the wider API and caller map and oracle freeze. Continue downstream migration and advanced qualification under the named owners."
 
   - track_id: "111"
@@ -1925,7 +1925,7 @@ entries:
 
   - track_id: "112"
     phase: "2"
-    state: closed
+    state: pending
     review_command: "$conductor-review"
     review_result: "Independent review accepted Phases 0–2 after target and installed-profile binding, pinning the retained Track 49 import, and requiring typed evidence for the existing measured PDES and frontier claims."
     fixes_applied: true
@@ -1936,10 +1936,10 @@ entries:
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
       - "pwsh -NoProfile -File scripts/validate_conductor_dag.ps1"
       - "pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree"
-    git_status: "Reviewed guard implementation is reachable on the published evidence branch."
+    git_status: "Exact source has been reviewed. Record acceptance against the merged commit after hosted validation and clean readback."
     commit_sha: "f2f5197c7a1eaa05bb0f627292a2afd84f8d5c58"
-    pushed_ref: "origin/codex/scientific-evidence-closeout-20261125"
-    next_phase_decision: "Close Track 112. Use the generated register and typed receipts for future claims, with capability qualification and release decisions in their owning tracks."
+    pushed_ref: ""
+    next_phase_decision: "Complete mainline publication and clean readback before accepting the reviewed phases."
 
   - track_id: "113"
     phase: "0"

@@ -1,6 +1,6 @@
 # Handoff
 
-Updated 25 November 2026. Status **Done**.
+Updated 25 November 2026. Status **In Progress**.
 
 ## Qualification and claim validation — 25 November 2026
 
@@ -99,9 +99,9 @@ and installed receipt identities are retained above.
 Independent `$conductor-review` accepted Phases 0–2. The accepted fixes
 bind the native-core-v1 profile, restrict the historical Track 49 record
 to PDES and preserve the benchmark and frontier evidence requirements.
-The guard commit SHA is `f2f5197c7a1eaa05bb0f627292a2afd84f8d5c58`. The pushed
-ref is `origin/codex/scientific-evidence-closeout-20261125`.
+The reviewed guard commit SHA is `f2f5197c7a1eaa05bb0f627292a2afd84f8d5c58`.
+Record the durable pushed ref after integration.
 Run `scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`
-against the integrated tree. The next-phase decision closes this track.
-Future evidence uses the same receipt and generated-table path.
+against the integrated tree. The next-phase decision is to close the track
+on verification of the integrated source.
 

@@ -1647,7 +1647,7 @@ tracks:
 
   - id: 112
     name: Capability evidence and claim automation
-    status: Done
+    status: In Progress
     owner: conformance-agent + docs-agent + ci-agent
     depends_on: ["12", "13", "14", "18", "21"]
     owned_paths:
