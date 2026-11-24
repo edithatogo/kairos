@@ -1,20 +1,14 @@
 # FMU Export Guide
 
-The initial export surface writes an unpacked FMI 2.0 package layout:
+`write_unpacked_fmu` writes the FMI 2.0 model description and creates the
+`resources/` and `sources/` directories. Add a compiled component under the
+appropriate `binaries/` platform directory before calling `package_fmu_archive`.
 
-- `modelDescription.xml`
-- `resources/`
-- `sources/`
-
-This is enough to validate model metadata generation before introducing native compilation and `.fmu` archive packaging.
-
-Before writing, `ModelDescription::validate()` rejects empty identifiers, empty
-generation metadata, duplicate scalar-variable names, and duplicate FMI value
-references. `ModelDescription::validate_generated_fmi2_xml()` also checks that
-the generated XML includes the expected FMI 2.0 root markers, co-simulation
-marker, model-variable section, and output `ModelStructure` entries. After
-writing, `validate_unpacked_export_layout()` can be used as a dependency-free
-package-structure gate before a later archive step.
+`ModelDescription::validate()` rejects empty identifiers and generation metadata,
+duplicate names, and duplicate FMI value references. The generated XML check
+round-trips the description and checks the co-simulation declaration and ordered
+`ModelStructure` indexes. The generator lists every output in `Outputs` and
+includes outputs with calculated initialization in `InitialUnknowns`.
 
 ```rust
 use kairo_ecs_fmi::export::model_description::{ModelDescription, ScalarVariable};
@@ -29,12 +23,29 @@ println!("{}", layout.model_description.display());
 # Ok::<(), kairo_ecs_fmi::FmiError>(())
 ```
 
-## Deferred export tasks
+## Build and run the scheduled counter
 
-The following remain explicit beta/1.0 work:
+From the repository root, build the standalone example and give it a new output
+directory. The example builds a native library around the Kairos scheduler,
+packages it as `KairosCounter.fmu`, then loads and runs the archive through the
+Kairos importer. It checks `digits` and `steps` at quarter-second intervals
+from 0 to 3 seconds. The two events at 1 second produce `47` in priority order.
 
-- validate `modelDescription.xml` against the FMI 2.0 XSD
-- generate C stubs and Rust callback entry points
-- compile platform-specific shared libraries
-- zip the package into a deterministic `.fmu`
-- run OpenModelica round-trip trajectory comparison
+```sh
+work=$(mktemp -d)
+cargo build --locked --manifest-path examples/fmi-co-simulation/scheduled-counter/Cargo.toml \
+  --target-dir "$work/build"
+"$work/build/debug/kairo-fmi-scheduled-counter" "$work/model" > "$work/kairos.csv"
+```
+
+With Modelica Association fmusim 0.16.0 on `PATH`, validate the archive and run
+the same co-simulation independently. These commands were verified on macOS
+ARM64 with Rust 1.99.1. [fmusim release](https://github.com/modelica/fmusim/releases/tag/v0.16.0)
+
+```sh
+fmusim validate "$work/model/KairosCounter.fmu"
+fmusim simulate "$work/model/KairosCounter.fmu" --interface-type cs --library-kind native \
+  --start-time 0 --stop-time 3 --output-interval 0.25 \
+  --output-variable digits --output-variable steps --output-file "$work/fmusim.csv"
+cmp "$work/kairos.csv" "$work/fmusim.csv"
+```
