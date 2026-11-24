@@ -2,6 +2,8 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use crate::error::{io_error, validation_error};
+#[cfg(feature = "fmi3")]
+use crate::export::model_description::Fmi3StartValue;
 use crate::export::model_description::ModelDescription;
 use crate::FmiResult;
 
@@ -17,10 +19,24 @@ pub fn write_unpacked_fmu(
     root: impl AsRef<Path>,
     model_description: &ModelDescription,
 ) -> FmiResult<FmuPackageLayout> {
-    let root = root.as_ref().to_path_buf();
     model_description.validate()?;
     model_description.validate_generated_fmi2_xml()?;
+    write_unpacked_xml(root.as_ref(), &model_description.to_fmi2_xml())
+}
 
+/// Write the scalar FMI 3.0 description and prepare its package directories.
+#[cfg(feature = "fmi3")]
+pub fn write_unpacked_fmi3_fmu(
+    root: impl AsRef<Path>,
+    model_description: &ModelDescription,
+    time_reference: u32,
+    start_values: &[(u32, Fmi3StartValue<'_>)],
+) -> FmiResult<FmuPackageLayout> {
+    let xml = model_description.to_fmi3_co_simulation_xml(time_reference, start_values)?;
+    write_unpacked_xml(root.as_ref(), &xml)
+}
+
+fn write_unpacked_xml(root: &Path, xml: &str) -> FmiResult<FmuPackageLayout> {
     let resources_dir = root.join("resources");
     let sources_dir = root.join("sources");
     fs::create_dir_all(&resources_dir)
@@ -29,11 +45,7 @@ pub fn write_unpacked_fmu(
         .map_err(|error| io_error("create sources directory", sources_dir.clone(), error))?;
 
     let model_description_path = root.join("modelDescription.xml");
-    fs::write(
-        &model_description_path,
-        model_description.to_fmi2_xml().as_bytes(),
-    )
-    .map_err(|error| {
+    fs::write(&model_description_path, xml).map_err(|error| {
         io_error(
             "write modelDescription.xml",
             model_description_path.clone(),
@@ -42,7 +54,7 @@ pub fn write_unpacked_fmu(
     })?;
 
     Ok(FmuPackageLayout {
-        root,
+        root: root.to_path_buf(),
         model_description: model_description_path,
         resources_dir,
         sources_dir,
@@ -291,6 +303,33 @@ mod tests {
         assert!(layout.resources_dir.is_dir());
         assert!(layout.sources_dir.is_dir());
 
+        fs::remove_dir_all(root).expect("cleanup");
+    }
+
+    #[cfg(feature = "fmi3")]
+    #[test]
+    fn scalar_fmi3_package_validates_before_writing() {
+        let root = std::env::temp_dir().join(format!(
+            "kairo-fmi3-layout-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        let model = ModelDescription::new("oscillator", "opaque-token")
+            .with_variable(ScalarVariable::real_input("force", 1));
+        assert!(write_unpacked_fmi3_fmu(&root, &model, 0, &[]).is_err());
+        assert!(!root.exists());
+
+        let layout =
+            write_unpacked_fmi3_fmu(&root, &model, 0, &[(1, Fmi3StartValue::Float64(4.0))])
+                .expect("write FMI 3 package");
+        assert_eq!(validate_unpacked_export_layout(&root).unwrap(), layout);
+        let xml = fs::read_to_string(&layout.model_description).unwrap();
+        assert!(xml.contains("fmiVersion=\"3.0\""));
+        assert!(xml.contains("instantiationToken=\"opaque-token\""));
+        assert!(xml.contains("start=\"4\""));
         fs::remove_dir_all(root).expect("cleanup");
     }
 }

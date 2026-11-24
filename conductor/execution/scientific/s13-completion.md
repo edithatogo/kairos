@@ -98,5 +98,27 @@ The trajectory CSV SHA-256 was
 `0844711b4b0479932cc4362ffc8e2e84fac0ba5bbff1b04d2e39f8b4932bf2f5`.
 [Build and reproduction commands](../../../docs/fmi-digital-twin/export-guide.md).
 
-Remaining qualification includes OpenModelica as a reader of Kairos-authored
-archives, additional exporters, Model Exchange and Scheduled Execution.
+OpenModelica OMSimulator's C API also read the FMI 2 archive on Linux x86-64
+under Rosetta and reproduced the same output. [FMI 2 qualification](https://github.com/edithatogo/kairos/pull/453).
+
+## Kairos-authored FMI 3 co-simulation
+
+The same scheduler model now emits an FMI 3 archive. On macOS ARM64, Rust
+1.99.1 built both versions, and Kairos and fmusim 0.16.0 produced the same
+13-row trajectory for both. The archive's output hash matches the FMI 2
+trajectory above. The FMI 3.0.2 schema validated the emitted descriptor and
+a separate descriptor containing all four supported scalar types.
+
+The native library exposed all 75 symbols in the FMI 3.0.2 headers. A C
+client used those headers and loaded the library directly from the archived
+bytes to verify token rejection, diagnostic callbacks,
+instance independence, reset, scalar output lengths and rejection of an
+unknown reference without a partial buffer write. The FMI 3 archive SHA-256
+was `d2e7a2d738edb4d627255a0534f324f776b2c22fb3d9260a42a1090978391fc1`.
+
+The importer and example use the same binary directory mapping. A unit test
+checks the `aarch32-linux` directory name for 32-bit ARM.
+
+The remaining external qualification includes OMEdit and the authoring
+extensions for clocks, terminals, Model Exchange and Scheduled Execution.
+[FMI 3 reproduction commands](../../../docs/fmi-digital-twin/export-guide.md#fmi-3-scalar-co-simulation).

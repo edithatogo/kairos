@@ -14,6 +14,9 @@ use crate::{
 
 const FMI2_UNKNOWN_SECTIONS: [&str; 2] = ["Outputs", "InitialUnknowns"];
 
+#[cfg(feature = "fmi3")]
+pub use fmi3_xml::Fmi3StartValue;
+
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct ModelDescription {
     pub model_name: String,
@@ -855,6 +858,366 @@ impl VariableType {
                 "modelDescription.xml",
                 format!("unsupported VariableType: '{other}'"),
             )),
+        }
+    }
+}
+
+#[cfg(feature = "fmi3")]
+mod fmi3_xml {
+    use std::{borrow::Cow, collections::BTreeMap};
+
+    use super::*;
+
+    /// Scalar start value declared by an FMI 3.0 co-simulation model.
+    #[derive(Clone, Copy, Debug, PartialEq)]
+    pub enum Fmi3StartValue<'a> {
+        Float64(f64),
+        Int32(i32),
+        Boolean(bool),
+        String(&'a str),
+    }
+
+    impl ModelDescription {
+        /// Render an FMI 3.0 scalar co-simulation description.
+        ///
+        /// `guid` is the instantiation token. The binary must expose a
+        /// Float64 `time` variable with the given reference. Inputs, parameters
+        /// and constants require explicit start values keyed by value reference.
+        /// A start value on a calculated output or local is an initialization
+        /// guess. Floating-point start values must be finite.
+        pub fn to_fmi3_co_simulation_xml(
+            &self,
+            time_reference: u32,
+            start_values: &[(u32, Fmi3StartValue<'_>)],
+        ) -> FmiResult<String> {
+            self.validate()?;
+            let mut starts = BTreeMap::new();
+            for &(reference, value) in start_values {
+                if starts.insert(reference, value).is_some() {
+                    return Err(invalid(format!("duplicate start reference {reference}")));
+                }
+            }
+
+            let mut writer = Writer::new_with_indent(Vec::new(), b' ', 2);
+            write(
+                &mut writer,
+                Event::Decl(BytesDecl::new("1.0", Some("UTF-8"), None)),
+            );
+            let mut root = BytesStart::new("fmiModelDescription");
+            root.push_attribute(("fmiVersion", "3.0"));
+            push_text(&mut root, "modelName", &self.model_name)?;
+            push_normalized_text(
+                &mut root,
+                "instantiationToken",
+                &self.guid,
+                "instantiation token",
+            )?;
+            push_normalized_text(
+                &mut root,
+                "generationTool",
+                &self.generation_tool,
+                "generation tool",
+            )?;
+            write(&mut writer, Event::Start(root));
+
+            let mut cosim = BytesStart::new("CoSimulation");
+            cosim.push_attribute(("modelIdentifier", "kairo_ecs_model"));
+            write(&mut writer, Event::Empty(cosim));
+            write(&mut writer, Event::Start(BytesStart::new("ModelVariables")));
+            let mut time = BytesStart::new("Float64");
+            let reference = time_reference.to_string();
+            time.extend_attributes([
+                ("name", "time"),
+                ("valueReference", reference.as_str()),
+                ("causality", "independent"),
+                ("variability", "continuous"),
+            ]);
+            write(&mut writer, Event::Empty(time));
+            for variable in &self.variables {
+                if variable.name == "time" || variable.value_reference == time_reference {
+                    return Err(invalid("variable conflicts with independent time"));
+                }
+                let start = starts.remove(&variable.value_reference);
+                write_variable(&mut writer, variable, start)?;
+            }
+            if let Some((&reference, _)) = starts.first_key_value() {
+                return Err(invalid(format!("unknown start reference {reference}")));
+            }
+            write(&mut writer, Event::End(BytesEnd::new("ModelVariables")));
+
+            write(&mut writer, Event::Start(BytesStart::new("ModelStructure")));
+            for name in ["Output", "InitialUnknown"] {
+                for variable in self.variables.iter().filter(|variable| {
+                    variable.causality == Causality::Output
+                        && (name == "Output" || variable.variability != Variability::Constant)
+                }) {
+                    let mut entry = BytesStart::new(name);
+                    let reference = variable.value_reference.to_string();
+                    entry.push_attribute(("valueReference", reference.as_str()));
+                    write(&mut writer, Event::Empty(entry));
+                }
+            }
+            write(&mut writer, Event::End(BytesEnd::new("ModelStructure")));
+            write(
+                &mut writer,
+                Event::End(BytesEnd::new("fmiModelDescription")),
+            );
+            let mut xml = String::from_utf8(writer.into_inner()).expect("valid UTF-8 XML");
+            xml.push('\n');
+            Ok(xml)
+        }
+    }
+
+    fn write_variable(
+        writer: &mut Writer<Vec<u8>>,
+        variable: &ScalarVariable,
+        start: Option<Fmi3StartValue<'_>>,
+    ) -> FmiResult<()> {
+        use Causality::*;
+        use Variability::*;
+
+        if !matches!(
+            (variable.causality, variable.variability),
+            (Local, _)
+                | (Parameter, Fixed | Tunable)
+                | (Input, Discrete | Continuous)
+                | (Output, Constant | Discrete | Continuous)
+        ) || (variable.variability == Continuous && variable.variable_type != VariableType::Real)
+        {
+            return Err(invalid(format!(
+                "invalid FMI 3 variability for '{}'",
+                variable.name
+            )));
+        }
+        let exact =
+            matches!(variable.causality, Input | Parameter) || variable.variability == Constant;
+        let start = match (variable.variable_type, start) {
+            (VariableType::Real, Some(Fmi3StartValue::Float64(value))) if value.is_finite() => {
+                Some(Cow::Owned(value.to_string()))
+            }
+            (VariableType::Integer, Some(Fmi3StartValue::Int32(value))) => {
+                Some(Cow::Owned(value.to_string()))
+            }
+            (VariableType::Boolean, Some(Fmi3StartValue::Boolean(value))) => {
+                Some(Cow::Borrowed(if value { "true" } else { "false" }))
+            }
+            (VariableType::String, Some(Fmi3StartValue::String(value))) => {
+                Some(Cow::Borrowed(value))
+            }
+            (_, None) if !exact => None,
+            (_, None) => {
+                return Err(invalid(format!(
+                    "missing start value for '{}'",
+                    variable.name
+                )))
+            }
+            _ => {
+                return Err(invalid(format!(
+                    "invalid start value for '{}'",
+                    variable.name
+                )))
+            }
+        };
+
+        let name = match variable.variable_type {
+            VariableType::Real => "Float64",
+            VariableType::Integer => "Int32",
+            VariableType::Boolean => "Boolean",
+            VariableType::String => "String",
+        };
+        let mut element = BytesStart::new(name);
+        let reference = variable.value_reference.to_string();
+        push_normalized_text(&mut element, "name", &variable.name, "variable name")?;
+        element.extend_attributes([
+            ("valueReference", reference.as_str()),
+            ("causality", variable.causality.as_fmi2()),
+            ("variability", variable.variability.as_fmi2()),
+        ]);
+        if start.is_some() && !exact {
+            element.push_attribute(("initial", "approx"));
+        }
+        match (variable.variable_type, start) {
+            (VariableType::String, Some(value)) => {
+                write(writer, Event::Start(element));
+                let mut start = BytesStart::new("Start");
+                push_text(&mut start, "value", &value)?;
+                write(writer, Event::Empty(start));
+                write(writer, Event::End(BytesEnd::new(name)));
+            }
+            (_, start) => {
+                if let Some(value) = start {
+                    element.push_attribute(("start", value.as_ref()));
+                }
+                write(writer, Event::Empty(element));
+            }
+        }
+        Ok(())
+    }
+
+    fn push_text(element: &mut BytesStart<'_>, name: &str, value: &str) -> FmiResult<()> {
+        if value.chars().any(|c| {
+            !matches!(c, '\t' | '\n' | '\r' | '\u{20}'..='\u{d7ff}'
+            | '\u{e000}'..='\u{fffd}' | '\u{10000}'..='\u{10ffff}')
+        }) {
+            return Err(invalid("attribute contains an invalid XML 1.0 character"));
+        }
+        // Literal whitespace in an XML attribute is normalized by the parser.
+        let escaped = quick_xml::escape::escape(value)
+            .replace('\t', "&#9;")
+            .replace('\n', "&#10;")
+            .replace('\r', "&#13;");
+        element.push_attribute(quick_xml::events::attributes::Attribute {
+            key: quick_xml::name::QName(name),
+            value: Cow::Borrowed(escaped.as_str()),
+        });
+        Ok(())
+    }
+
+    fn push_normalized_text(
+        element: &mut BytesStart<'_>,
+        name: &str,
+        value: &str,
+        label: &str,
+    ) -> FmiResult<()> {
+        if value.contains(['\t', '\n', '\r']) {
+            return Err(invalid(format!(
+                "invalid FMI 3 {label} with a tab or line break"
+            )));
+        }
+        push_text(element, name, value)
+    }
+
+    fn invalid(message: impl Into<String>) -> FmiError {
+        validation_error("modelDescription.xml", message)
+    }
+
+    fn write(writer: &mut Writer<Vec<u8>>, event: Event<'_>) {
+        writer.write_event(event).expect("write to in-memory XML");
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn scalar_description_uses_fmi3_types_and_reference_order() {
+            let model = ModelDescription::new("counter & clock", "<counter>")
+                .with_variable(ScalarVariable::real_input("force", 17))
+                .with_variable(ScalarVariable::real_output("result", 42))
+                .with_variable(ScalarVariable {
+                    name: "count".into(),
+                    value_reference: 5,
+                    causality: Causality::Output,
+                    variability: Variability::Constant,
+                    variable_type: VariableType::Integer,
+                })
+                .with_variable(ScalarVariable {
+                    name: "enabled".into(),
+                    value_reference: 3,
+                    causality: Causality::Input,
+                    variability: Variability::Discrete,
+                    variable_type: VariableType::Boolean,
+                })
+                .with_variable(ScalarVariable {
+                    name: "label".into(),
+                    value_reference: 9,
+                    causality: Causality::Parameter,
+                    variability: Variability::Fixed,
+                    variable_type: VariableType::String,
+                });
+            let xml = model
+                .to_fmi3_co_simulation_xml(
+                    0,
+                    &[
+                        (17, Fmi3StartValue::Float64(2.5)),
+                        (3, Fmi3StartValue::Boolean(false)),
+                        (5, Fmi3StartValue::Int32(-3)),
+                        (42, Fmi3StartValue::Float64(7.0)),
+                        (9, Fmi3StartValue::String("A&\n\"B\"")),
+                    ],
+                )
+                .unwrap();
+            for expected in [
+                "fmiVersion=\"3.0\" modelName=\"counter &amp; clock\" instantiationToken=\"&lt;counter&gt;\"",
+                "<Float64 name=\"time\" valueReference=\"0\" causality=\"independent\"",
+                "<Float64 name=\"force\" valueReference=\"17\" causality=\"input\" variability=\"continuous\" start=\"2.5\"/>",
+                "initial=\"approx\" start=\"7\"/>",
+                "<Int32 name=\"count\" valueReference=\"5\" causality=\"output\" variability=\"constant\" start=\"-3\"/>",
+                "<Boolean name=\"enabled\" valueReference=\"3\" causality=\"input\" variability=\"discrete\" start=\"false\"/>",
+                "<Start value=\"A&amp;&#10;&quot;B&quot;\"/>",
+                "<Output valueReference=\"42\"/>\n    <Output valueReference=\"5\"/>\n    <InitialUnknown valueReference=\"42\"/>",
+            ] {
+                assert!(xml.contains(expected), "missing {expected} in {xml}");
+            }
+        }
+
+        #[test]
+        fn rejects_inconsistent_scalar_metadata() {
+            let model = ModelDescription::new("counter", "token")
+                .with_variable(ScalarVariable::real_input("input", 3));
+            let value = Fmi3StartValue::Float64(1.0);
+            for (time, starts, expected) in [
+                (0, &[][..], "missing start"),
+                (3, &[(3, value)][..], "conflicts with independent time"),
+                (
+                    0,
+                    &[(3, value), (3, value)][..],
+                    "duplicate start reference",
+                ),
+                (0, &[(3, value), (4, value)][..], "unknown start reference"),
+                (
+                    0,
+                    &[(3, Fmi3StartValue::Boolean(true))][..],
+                    "invalid start",
+                ),
+                (
+                    0,
+                    &[(3, Fmi3StartValue::Float64(f64::NAN))][..],
+                    "invalid start",
+                ),
+            ] {
+                assert!(model
+                    .to_fmi3_co_simulation_xml(time, starts)
+                    .unwrap_err()
+                    .to_string()
+                    .contains(expected));
+            }
+            let mut bad_variability = model.clone();
+            bad_variability.variables[0].variable_type = VariableType::Integer;
+            assert!(bad_variability
+                .to_fmi3_co_simulation_xml(0, &[(3, Fmi3StartValue::Int32(1))])
+                .unwrap_err()
+                .to_string()
+                .contains("invalid FMI 3 variability"));
+            let mut bad_name = model.clone();
+            for name in ["bad\tname", "bad\nname", "bad\rname"] {
+                bad_name.variables[0].name = name.into();
+                assert!(bad_name
+                    .to_fmi3_co_simulation_xml(0, &[(3, value)])
+                    .unwrap_err()
+                    .to_string()
+                    .contains("invalid FMI 3 variable name"));
+            }
+            let mut bad_token = model.clone();
+            bad_token.guid = "opaque\ttoken".into();
+            assert!(bad_token
+                .to_fmi3_co_simulation_xml(0, &[(3, value)])
+                .unwrap_err()
+                .to_string()
+                .contains("invalid FMI 3 instantiation token"));
+            bad_token.guid = "token\0".into();
+            assert!(bad_token
+                .to_fmi3_co_simulation_xml(0, &[(3, value)])
+                .unwrap_err()
+                .to_string()
+                .contains("invalid XML 1.0 character"));
+            let mut bad_tool = model;
+            bad_tool.generation_tool = "tool\nversion".into();
+            assert!(bad_tool
+                .to_fmi3_co_simulation_xml(0, &[(3, value)])
+                .unwrap_err()
+                .to_string()
+                .contains("invalid FMI 3 generation tool"));
         }
     }
 }

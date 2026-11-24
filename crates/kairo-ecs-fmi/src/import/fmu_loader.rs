@@ -125,6 +125,17 @@ pub fn current_fmi_platform() -> String {
     format!("{os}{arch}")
 }
 
+/// Returns the FMI 3 binary directory name for the current target.
+pub fn current_fmi3_platform() -> String {
+    fmi3_platform(std::env::consts::ARCH, std::env::consts::OS)
+}
+
+fn fmi3_platform(arch: &str, os: &str) -> String {
+    let arch = if arch == "arm" { "aarch32" } else { arch };
+    let os = if os == "macos" { "darwin" } else { os };
+    format!("{arch}-{os}")
+}
+
 pub fn validate_unpacked_fmu_layout(root: impl AsRef<Path>) -> FmiResult<FmuLayoutReport> {
     let root = root.as_ref();
     if !root.is_dir() {
@@ -258,12 +269,7 @@ fn platform_for_version(version: &str) -> String {
     if version == "2.0" && std::env::consts::ARCH != "aarch64" {
         return current_fmi_platform();
     }
-    let os = if cfg!(target_os = "macos") {
-        "darwin"
-    } else {
-        std::env::consts::OS
-    };
-    format!("{}-{os}", std::env::consts::ARCH)
+    current_fmi3_platform()
 }
 
 fn read_model_description(path: &Path) -> FmiResult<FmuDescription> {
@@ -682,6 +688,13 @@ mod tests {
     use std::time::{SystemTime, UNIX_EPOCH};
 
     use super::*;
+
+    #[test]
+    fn fmi3_platform_uses_fmi_architecture_and_system_names() {
+        assert_eq!(fmi3_platform("arm", "linux"), "aarch32-linux");
+        assert_eq!(fmi3_platform("aarch64", "macos"), "aarch64-darwin");
+        assert_eq!(fmi3_platform("x86_64", "linux"), "x86_64-linux");
+    }
 
     #[cfg(unix)]
     #[test]

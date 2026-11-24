@@ -14,5 +14,5 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 kairo-ecs-core = { path = "../../../crates/kairo-ecs-core" }
-kairo-ecs-fmi = { path = "../../../crates/kairo-ecs-fmi", features = ["fmi2"] }
+kairo-ecs-fmi = { path = "../../../crates/kairo-ecs-fmi", features = ["fmi2", "fmi3"] }
 kairo-ecs-types = { path = "../../../crates/kairo-ecs-types" }
