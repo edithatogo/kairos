@@ -57,9 +57,16 @@ cases with the named owners and explicit scopes in the [plan](plan.md).
 Integration chat `01a1fd18-51c7-7963-a3cc-d262d54582ba` owns this slice in
 `/Users/doughnut/.codex/worktrees/kairos-scientific-evidence-closeout/kairos` on `codex/scientific-evidence-closeout-20261125`. The changes cover the debugger export,
 scientific evidence and shared claim guard. The owned native run is complete.
-The next operation is hosted integration of the reviewed source.
+Hosted integration checks bind the final tree to the reviewed source.
 
 ## Phase closeout evidence
 
-No phase is closed. Record $conductor-review, accepted fixes, commit SHA, pushed ref, scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree and the next-phase decision only when they occur. Current planning status is not execution evidence.
+The independent `$conductor-review` matched the source and fixture hashes,
+logs, platform and Arrow bytes. The accepted fixes narrow the wording to
+the tested protocol and movement cases and count the nested TCP peer once.
+The runtime commit SHA is `c5959a9ce92dbbc8991ce4f54480b281099a8e34`. The pushed ref is
+`origin/main`. Run `scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`
+against the integrated tree. The next-phase decision keeps Phase 0 open
+for the remaining caller and version map and oracle identities. The later
+phases retain their downstream, wider native and held-out acceptance work.
 
