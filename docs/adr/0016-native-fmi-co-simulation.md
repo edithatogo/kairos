@@ -21,6 +21,16 @@ before the free call, because the handle output is indeterminate on
 failure. Ordinary errors allow explicit restoration of a known checkpoint.
 A fatal status disables calls through the affected loader and its instances.
 
+## Scalar co-simulation export
+
+The optional FMI 3 writer uses the scalar `ModelDescription` and an explicit
+independent time reference. It requires typed start values for inputs,
+parameters and constants. The generated structure lists outputs by value
+reference and includes the initialization unknowns for computed outputs.
+The exporter and binary use the same instantiation token, scalar types and
+references. The standalone counter exercises the emitted archive through
+two importers. [Export guide](../fmi-digital-twin/export-guide.md#fmi-30-scalar-co-simulation)
+
 ## Compatibility
 
 Packaged callers keep `instantiate_checked` and supply the archive's

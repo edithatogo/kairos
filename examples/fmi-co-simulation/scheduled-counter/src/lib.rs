@@ -1,7 +1,7 @@
-//! Native FMI 2.0 Co-Simulation counter driven by the Kairos scheduler.
+//! Native FMI 2.0 and FMI 3.0 co-simulation counter driven by the Kairos scheduler.
 //!
 //! Importers must serialize calls for an instance and pass a live handle from
-//! `fmi2Instantiate`. C strings must be NUL-terminated. Array arguments must
+//! the corresponding instantiation function. C strings must be NUL-terminated. Array arguments must
 //! describe aligned buffers of the stated length. The writable output buffer
 //! must be disjoint from the instance and the input buffer.
 
@@ -14,9 +14,12 @@ use kairo_ecs_core::Scheduler;
 use kairo_ecs_fmi::import::fmi2::Fmi2Status;
 use kairo_ecs_types::{EventKind, ScheduleRequest, SimTime, StepOutcome};
 
+mod fmi3;
+
 pub const MODEL_GUID: &str = "{4b25542a-0db9-486b-9324-c77d4326621d}";
 pub const DIGITS: u32 = 1;
 pub const STEPS: u32 = 2;
+pub const TIME: u32 = 0;
 
 const OK: c_int = Fmi2Status::Ok as c_int;
 const ERROR: c_int = Fmi2Status::Error as c_int;
@@ -82,6 +85,18 @@ impl State {
         OK
     }
 
+    fn configure(&mut self, start: f64, stop_defined: bool, stop: f64) -> c_int {
+        if !matches!(self.phase, Phase::Instantiated | Phase::Configured)
+            || start != 0.0
+            || stop_defined && (!stop.is_finite() || stop < start)
+        {
+            return ERROR;
+        }
+        self.stop = stop_defined.then_some(stop);
+        self.phase = Phase::Configured;
+        OK
+    }
+
     fn transition(&mut self, from: Phase, to: Phase) -> c_int {
         if self.phase != from {
             return ERROR;
@@ -141,15 +156,7 @@ unsafe extern "C" fn fmi2SetupExperiment(
     let Some(state) = (unsafe { state.as_mut() }) else {
         return ERROR;
     };
-    if !matches!(state.phase, Phase::Instantiated | Phase::Configured)
-        || start != 0.0
-        || stop_defined != 0 && (!stop.is_finite() || stop < start)
-    {
-        return ERROR;
-    }
-    state.stop = (stop_defined != 0).then_some(stop);
-    state.phase = Phase::Configured;
-    OK
+    state.configure(start, stop_defined != 0, stop)
 }
 
 #[unsafe(no_mangle)]
@@ -181,6 +188,16 @@ unsafe extern "C" fn fmi2GetReal(
     let Some(state) = (unsafe { state.as_ref() }) else {
         return ERROR;
     };
+    unsafe { read_reals(state, refs, count, values, false) }
+}
+
+unsafe fn read_reals(
+    state: &State,
+    refs: *const u32,
+    count: usize,
+    values: *mut f64,
+    expose_time: bool,
+) -> c_int {
     if count == 0 {
         return OK;
     }
@@ -194,18 +211,22 @@ unsafe extern "C" fn fmi2GetReal(
         return ERROR;
     }
     let refs = unsafe { slice::from_raw_parts(refs, count) };
-    if refs.iter().any(|value| !matches!(*value, DIGITS | STEPS)) {
+    if refs
+        .iter()
+        .any(|value| !matches!(*value, DIGITS | STEPS) && !(*value == TIME && expose_time))
+    {
         return ERROR;
     }
     let digits = f64::from(state.digits);
     let steps = state.queue.stats().dispatched_events as f64;
     for (offset, reference) in refs.iter().enumerate() {
         // The importer supplies writable storage that may be uninitialized.
-        unsafe {
-            values
-                .add(offset)
-                .write(if *reference == DIGITS { digits } else { steps })
+        let value = match *reference {
+            DIGITS => digits,
+            STEPS => steps,
+            _ => state.time,
         };
+        unsafe { values.add(offset).write(value) };
     }
     OK
 }

@@ -49,3 +49,29 @@ fmusim simulate "$work/model/KairosCounter.fmu" --interface-type cs --library-ki
   --output-variable digits --output-variable steps --output-file "$work/fmusim.csv"
 cmp "$work/kairos.csv" "$work/fmusim.csv"
 ```
+
+## FMI 3.0 scalar co-simulation
+
+Enable the `fmi3` Cargo feature and call `write_unpacked_fmi3_fmu` to create
+the description and package directories. The method takes the independent
+`time` variable's value reference and explicit `Fmi3StartValue` entries for
+inputs, parameters and constants. The descriptor uses the existing `guid`
+field as the FMI 3 instantiation token. It describes `Float64`, `Int32`,
+`Boolean` and `String` scalars. A supplied start on a computed output or
+local is an initialization guess.
+
+Build the same scheduled counter and pass `--fmi3` to generate an FMI 3
+archive. The importer checks the independent time variable at each sample.
+
+```sh
+"$work/build/debug/kairo-fmi-scheduled-counter" --fmi3 "$work/model-fmi3" > "$work/kairos-fmi3.csv"
+fmusim validate "$work/model-fmi3/KairosCounter.fmu"
+fmusim simulate "$work/model-fmi3/KairosCounter.fmu" --interface-type cs --library-kind native \
+  --start-time 0 --stop-time 3 --output-interval 0.25 \
+  --output-variable digits --output-variable steps --output-file "$work/fmusim-fmi3.csv"
+cmp "$work/kairos-fmi3.csv" "$work/fmusim-fmi3.csv"
+```
+
+The FMI 3 library exposes the full standard symbol table and executes the
+scalar Co-Simulation interface. Clocks, terminals and Scheduled Execution
+remain separate authoring work. [FMI 3.0.2 specification](https://fmi-standard.org/docs/3.0.2/)
