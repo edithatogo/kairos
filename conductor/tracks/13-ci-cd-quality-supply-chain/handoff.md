@@ -1,5 +1,46 @@
 # Handoff — 13 CI/CD, Code Quality & Supply Chain
 
+## Pull request and worktree reconciliation — 24 November 2026
+
+| Merged replacement | Superseded PRs read back closed | Successful PR workflows | Successful main workflows |
+| --- | --- | ---: | --- |
+| [#457](https://github.com/edithatogo/kairos/pull/457) | [#383](https://github.com/edithatogo/kairos/pull/383), [#387](https://github.com/edithatogo/kairos/pull/387), [#390](https://github.com/edithatogo/kairos/pull/390), [#396](https://github.com/edithatogo/kairos/pull/396), [#397](https://github.com/edithatogo/kairos/pull/397) | 15 | 18 at `4eff4799` ([core run](https://github.com/edithatogo/kairos/actions/runs/45389635756)) |
+| [#458](https://github.com/edithatogo/kairos/pull/458) | [#363](https://github.com/edithatogo/kairos/pull/363), [#365](https://github.com/edithatogo/kairos/pull/365), [#392](https://github.com/edithatogo/kairos/pull/392), [#449](https://github.com/edithatogo/kairos/pull/449) | 27 | 22 at `b7e138a4` ([core run](https://github.com/edithatogo/kairos/actions/runs/45395659128)) |
+
+PR #457 restores the Conductor issue template, migrates the Renovate
+dashboard configuration with a strict enabled-state check, and records the
+accepted dependency reuse and receiving handoff decisions. PR #458 applies
+the existing Cargo advisory, ban, license and source policy, refreshes the
+reviewed action and Rust dependency pins, and removes the duplicate Linux
+Conductor workspace run. Linux still runs its exact setup suite and Windows
+runs both existing suites. The first Arrow run exposed an outdated standalone
+cohort lock. The corrected head verified the cohort fixture on Linux, macOS and
+Windows. The refreshed standalone FMI example produced identical FMI 2 and FMI 3
+traces locally. [Corrected Arrow run](https://github.com/edithatogo/kairos/actions/runs/45392065640).
+
+The exact previous-main workspace comparison passed with 38,109 of 43,112
+lines covered on both commits. Core line coverage was 96.96% against the 90% floor.
+[Main coverage run](https://github.com/edithatogo/kairos/actions/runs/45395659128).
+
+- PR #386 needs a matching self-hosted Linux runner and its configured
+  offline image. The repository runner list was empty at readback and the
+  central workflow draft remains open. [PR #386](https://github.com/edithatogo/kairos/pull/386) ·
+  [Central workflow](https://github.com/edithatogo/repository-standards/pull/126).
+- PR #395 proposes a StepSecurity action outside the current repository
+  Actions allowlist. Its Dependabot and local hook additions duplicate
+  dependency update and static checks already maintained here. [#395](https://github.com/edithatogo/kairos/pull/395).
+
+The branch comparison covered 123 remote and 48 local refs beginning at
+`04ba57c4`. The cleanup removed 16 remote and five local tips after verifying
+recovery bundles. Live processes still hold the missing checkout for PR #456,
+so its Git registration and branch are retained. The active primary checkout,
+divergent local `main` and conflicting topic refs are preserved. [PR #456](https://github.com/edithatogo/kairos/pull/456).
+
+Chat `01a1fd18-51c7-7963-a3cc-d262d54582ba` coordinated GitHub PR and branch
+changes from the isolated standard worktree
+`/private/tmp/kairos-pr-reconcile.4W9foC/workspace`. The linked PRs identify
+the affected source paths and their hosted checks.
+
 ## Current Rust 1.99 policy reconciliation — 2026-10-05
 
 Current `ci-core.yml` policy uses Rust 1.99.0 for stable verification, workspace
