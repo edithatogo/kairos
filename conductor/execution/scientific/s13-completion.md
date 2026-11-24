@@ -85,5 +85,18 @@ KAIRO_OPENMODELICA_FMU=/absolute/path/to/KairosDecay.fmu \
 
 The test target and exact input acquisition are wired to the existing
 [Rust CI workflow](../../../.github/workflows/ci-core.yml).
-Remaining qualification covers generating a native FMU from a Kairos model,
-additional exporters, Model Exchange and Scheduled Execution.
+
+## Kairos-authored FMI 2 co-simulation
+
+The standalone scheduled counter builds a native FMU around `Scheduler`.
+Modelica Association fmusim 0.16.0 validated the archive and executed its
+native library on macOS ARM64. The internal importer and fmusim produced
+byte-identical CSVs across 13 samples from 0 to 3 seconds. At ticks 1, 2 and 3,
+the outputs were `(47, 2)`, `(472, 3)` and `(4729, 4)` for `(digits, steps)`.
+The first step to tick 1 exercised priority ordering for simultaneous events.
+The trajectory CSV SHA-256 was
+`0844711b4b0479932cc4362ffc8e2e84fac0ba5bbff1b04d2e39f8b4932bf2f5`.
+[Build and reproduction commands](../../../docs/fmi-digital-twin/export-guide.md).
+
+Remaining qualification includes OpenModelica as a reader of Kairos-authored
+archives, additional exporters, Model Exchange and Scheduled Execution.

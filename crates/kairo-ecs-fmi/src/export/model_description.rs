@@ -12,6 +12,8 @@ use crate::{
     FmiError,
 };
 
+const FMI2_UNKNOWN_SECTIONS: [&str; 2] = ["Outputs", "InitialUnknowns"];
+
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct ModelDescription {
     pub model_name: String,
@@ -98,6 +100,22 @@ impl ModelDescription {
         Ok(())
     }
 
+    fn fmi2_unknown_indexes(&self) -> [Vec<usize>; 2] {
+        let mut outputs = Vec::new();
+        let mut initial_unknowns = Vec::new();
+        for (position, variable) in self.variables.iter().enumerate() {
+            if variable.causality == Causality::Output {
+                let index = position + 1;
+                outputs.push(index);
+                // With no explicit initial attribute, constant outputs are exact.
+                if variable.variability != Variability::Constant {
+                    initial_unknowns.push(index);
+                }
+            }
+        }
+        [outputs, initial_unknowns]
+    }
+
     pub fn to_fmi2_xml(&self) -> String {
         debug_assert!(self.validate().is_ok());
         let mut buffer = Vec::new();
@@ -153,21 +171,17 @@ impl ModelDescription {
             .write_event(Event::Start(BytesStart::new("ModelStructure")))
             .expect("write ModelStructure");
 
-        let output_indexes = self
-            .variables
-            .iter()
-            .enumerate()
-            .filter_map(|(index, variable)| {
-                (variable.causality == Causality::Output).then_some(index + 1)
-            })
-            .collect::<Vec<_>>();
-
-        if !output_indexes.is_empty() {
+        for (name, indexes) in FMI2_UNKNOWN_SECTIONS
+            .into_iter()
+            .zip(self.fmi2_unknown_indexes())
+        {
+            if indexes.is_empty() {
+                continue;
+            }
             writer
-                .write_event(Event::Start(BytesStart::new("Outputs")))
-                .expect("write Outputs");
-
-            for index in output_indexes {
+                .write_event(Event::Start(BytesStart::new(name)))
+                .expect("write variable indexes");
+            for index in indexes {
                 let mut unknown = BytesStart::new("Unknown");
                 let idx_str = index.to_string();
                 unknown.push_attribute(("index", idx_str.as_str()));
@@ -175,10 +189,9 @@ impl ModelDescription {
                     .write_event(Event::Empty(unknown))
                     .expect("write Unknown");
             }
-
             writer
-                .write_event(Event::End(BytesEnd::new("Outputs")))
-                .expect("write Outputs end");
+                .write_event(Event::End(BytesEnd::new(name)))
+                .expect("write variable indexes end");
         }
 
         writer
@@ -658,8 +671,11 @@ impl ModelDescription {
 
     pub fn validate_generated_fmi2_xml(&self) -> FmiResult<()> {
         self.validate()?;
-        let xml = self.to_fmi2_xml();
-        let parsed = Self::from_xml_str(&xml)?;
+        self.validate_fmi2_xml(&self.to_fmi2_xml())
+    }
+
+    fn validate_fmi2_xml(&self, xml: &str) -> FmiResult<()> {
+        let parsed = Self::from_xml_str(xml)?;
         if parsed != *self {
             return Err(validation_error(
                 "modelDescription.xml",
@@ -667,25 +683,46 @@ impl ModelDescription {
             ));
         }
 
-        let output_count = self
-            .variables
-            .iter()
-            .filter(|variable| variable.causality == Causality::Output)
-            .count();
-
-        let mut reader = Reader::from_str(&xml);
-        reader.config_mut().trim_text(true);
-        let mut unknown_count = 0;
+        let mut reader = Reader::from_str(xml);
+        let mut actual = [Vec::new(), Vec::new()];
+        let mut section = None;
         let mut found_cosim = false;
         loop {
             match reader.read_event() {
-                Ok(Event::Empty(ref e)) => {
-                    if e.local_name().as_ref() == "CoSimulation" {
-                        found_cosim = true;
-                    } else if e.local_name().as_ref() == "Unknown" {
-                        unknown_count += 1;
-                    }
+                Ok(Event::Start(ref e)) => {
+                    section = FMI2_UNKNOWN_SECTIONS
+                        .iter()
+                        .position(|&name| name == e.local_name().as_ref());
                 }
+                Ok(Event::End(_)) => section = None,
+                Ok(Event::Empty(ref e)) => match e.local_name().as_ref() {
+                    "CoSimulation" => found_cosim = true,
+                    "Unknown" => {
+                        if let Some(group) = section {
+                            let index = e
+                                .try_get_attribute("index")
+                                .map_err(|err| {
+                                    validation_error("modelDescription.xml", err.to_string())
+                                })?
+                                .ok_or_else(|| {
+                                    validation_error(
+                                        "modelDescription.xml",
+                                        "missing Unknown index",
+                                    )
+                                })?
+                                .normalized_value(XmlVersion::Explicit1_0)
+                                .map_err(|err| {
+                                    validation_error("modelDescription.xml", err.to_string())
+                                })?
+                                .parse::<usize>()
+                                .map_err(|err| {
+                                    validation_error("modelDescription.xml", err.to_string())
+                                })?;
+                            actual[group].push(index);
+                        }
+                    }
+                    _ => {}
+                },
                 Ok(Event::Eof) => break,
                 Ok(_) => {}
                 Err(err) => {
@@ -704,13 +741,10 @@ impl ModelDescription {
             ));
         }
 
-        if unknown_count != output_count {
+        if actual != self.fmi2_unknown_indexes() {
             return Err(validation_error(
                 "modelDescription.xml",
-                format!(
-                    "generated ModelStructure has {} output Unknown entries for {} output variables",
-                    unknown_count, output_count
-                ),
+                "generated ModelStructure indexes differ from output and initialization variables",
             ));
         }
 
@@ -839,8 +873,14 @@ mod tests {
         assert!(xml.contains("fmiVersion=\"2.0\""));
         assert!(xml.contains("name=\"position\""));
         assert!(xml.contains("<Real/>") || xml.contains("<Real />"));
-        assert!(xml.contains("<Outputs>"));
-        assert!(xml.contains("<Unknown index=\"2\"/>") || xml.contains("<Unknown index=\"2\" />"));
+        let (_, structure) = xml.split_once("<ModelStructure>").unwrap();
+        let (outputs, initial) = structure
+            .split_once("<InitialUnknowns>")
+            .expect("the output uses the default calculated initialization");
+        assert!(outputs.contains("<Outputs>"));
+        assert!(outputs.contains("<Unknown index=\"2\"/>"));
+        let (initial, _) = initial.split_once("</InitialUnknowns>").unwrap();
+        assert_eq!(initial.trim(), "<Unknown index=\"2\"/>");
     }
 
     #[test]
@@ -854,6 +894,25 @@ mod tests {
         assert!(error
             .to_string()
             .contains("duplicate ScalarVariable valueReference 1"));
+    }
+
+    #[test]
+    fn generated_xml_requires_each_initial_unknown_index() {
+        let model = ModelDescription::new("oscillator", "{kairo-test}")
+            .with_variable(ScalarVariable::real_input("force", 1))
+            .with_variable(ScalarVariable::real_output("position", 2));
+        let xml = model.to_fmi2_xml();
+        let (prefix, initial) = xml.split_once("<InitialUnknowns>").unwrap();
+
+        for suffix in [
+            initial.replace("<Unknown index=\"2\"/>", ""),
+            initial.replace("index=\"2\"", "index=\"1\""),
+            initial.replace("index=\"2\"", "index=\"bad\""),
+            initial.replace(" index=\"2\"", ""),
+        ] {
+            let incomplete = format!("{prefix}<InitialUnknowns>{suffix}");
+            assert!(model.validate_fmi2_xml(&incomplete).is_err());
+        }
     }
 
     #[test]
