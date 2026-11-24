@@ -46,9 +46,11 @@ Unrelated worktrees, private credentials/data, external consumer implementation/
 
 Required common gates: phase-closeout-check, frontier-evidence-check, original owner-specific native/scientific/security checks and independent review. The test matrix specifies evidence boundaries.
 
-## Risks and release implications
+## Risks
 
 A convenient framework can alter identities, order or build footprint. Preserve public contracts; consumer pin changes require separate actual downstream qualification.
+
+## Release implications
 
 Only accepted capabilities may appear in supported beta/stable scope. Historical Done records are not transferred to new algorithms, platforms, dependencies or consumers. See [release gates](../../release-gates.md).
 

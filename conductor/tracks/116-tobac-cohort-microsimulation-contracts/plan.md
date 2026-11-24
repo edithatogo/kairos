@@ -21,7 +21,8 @@ Provide neutral DES/ABM cohort-trajectory, competing-risk, and spatial exposure 
 - [x] 116.2.1: Deliver the locked, fictional standalone consumer and prove execution from clean source.
 - [x] 116.2.2: Record the provider handoff for `edithatogo/tobac` in the existing handoff.
 - [x] 116.2.review: Independently review the standalone fixture and its acceptance evidence.
-- [ ] Qualify installed receiving adapters against the versioned schemas, including downstream cohort summaries.
+- [x] 116.2.3: Qualify the local installed Tobac candidate against the versioned schemas and inclusive cohort summaries. Verify replay, units and buffer lifetime. [Installed receipt](handoff.md#installed-tobac-candidate--24-november-2026)
+- [ ] 116.2.4: Obtain signed native acceptance for the exact receiving source and green hosted validation before promoting the Tobac adapter. Track the separate Dapane and Voiage round-trips with their owners. [Signed inventory blocker](handoff.md#signed-inventory-renewal--25-november-2026)
 
 ## Phase closeout gate
 

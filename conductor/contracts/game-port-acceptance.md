@@ -118,3 +118,29 @@ Track 114.1.10 retains the wider semantic and paired-outcome handoffs. Static
 game and runtime-only consumers retain their separate dependency contracts.
 Application adoption, pin promotion, resource composition and release
 qualification require their own receipts.
+
+## Receiving handoff — 25 November 2026
+
+On Paignia `e675da1a3a8bf9fbf88c43d25171643965aa05e7`, a Git-free source
+archive passed 12 locked adapter cases on macOS ARM64 with Rust and Cargo
+1.99.1. The adapter lock remains `f24c795046db5d403e393275f48d4d683623c252f77cf8de8baa67f6af9cac2c`
+and retains Kairos `235e6a333ccc6e690f5b41f2c5eaa9a6784fe147`.
+Hosted Linux stable and Rust 1.99.0 passed on that same Paignia revision.
+The resolved normal and build closure of `paignia-core` and
+`paignia-solve` has eight package names and excludes Kairos.
+[Native CI](https://github.com/edithatogo/paignia/actions/runs/45441909884) ·
+[Paignia adapter and lock](https://github.com/edithatogo/paignia/tree/e675da1a3a8bf9fbf88c43d25171643965aa05e7/crates/paignia-kairos)
+
+Use UOGTO's versioned semantic profile for identity and policy compatibility.
+The adapter accepts its bounded finite perfect-information execution profile.
+For a paired outcome, retain the game specification, scenario, paired draw,
+policy artifact, native stream ID and declared coupling from each arm.
+Voiage owns the receiving strategy and valuation contracts. Policies receive
+the owned observation, and their exploration leaves paired chance unchanged.
+The receiving fixtures cover stale turns, entity lifetime and exact
+in-process chance-boundary resume. Mixed workloads, resource effects,
+simultaneous moves, information-set dispatch and durable restore require
+their own qualification.
+[UOGTO executable profile](https://github.com/edithatogo/UOGTO/blob/3000c231b2c102e18bf7c3294bec498f00f1976c/docs/contracts/executable-information-set-profile-v1.md) ·
+[Voiage outcome handoff](https://github.com/edithatogo/voiage/pull/1287) ·
+[Paignia policy replay](https://github.com/edithatogo/paignia/blob/e675da1a3a8bf9fbf88c43d25171643965aa05e7/docs/validation/game-policy-resume.md)

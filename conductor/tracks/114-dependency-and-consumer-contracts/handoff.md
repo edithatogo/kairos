@@ -1,6 +1,54 @@
 # Handoff
 
-Updated 23 November 2026 (Australia/Brisbane). Status: Spec Approved. Phase acceptance is pending.
+Updated 25 November 2026 (Australia/Brisbane). Status **Done** for the bounded
+consumer contract and reuse scope.
+
+## Consumer contract closeout — 25 November 2026
+
+Chat `01a1fd18-51c7-7963-a3cc-d262d54582ba` owns this closeout in
+`/Users/doughnut/.codex/worktrees/kairos-scientific-evidence-closeout/kairos` on `codex/consumer-contract-closeout-20261125`. It covers the consumer contracts, resolved Rust
+feature guard, receiving evidence and Conductor records. The current operation
+is publication and verification of this scope.
+
+The standalone fixture at Kairos `6316b4d7a2158865e0f3533ff3abe1cd4856099b` ran with
+`cargo run --locked --offline` from its Git-free archived Cargo workspace on
+macOS ARM64, using Rust and Cargo 1.99.1. It dispatched a service completion
+and admitted the queued job. The lock SHA-256 is
+`85a5e4adcc83bbe4f6b2660c479e0f70ec0baf792e9609a3589bba44d04af8c1`.
+The independent graph guard and its seeded negative passed on CPython 3.15.2.
+The fixture compiled in 7.17 seconds with cached dependencies and debug
+information disabled, and the resulting binary was 624,656 bytes.
+[Public profile and commands](../../contracts/minimal-consumer.md#standalone-rust-fixture--25-november-2026)
+
+The four solver retirement PRs removed a net 274 lines from
+`crates/kairo-ecs-game-theory/src`, counting retained test-only code. Paignia
+owns the receiving algorithms. Its static core and solver have eight resolved
+package names on macOS ARM64. Its separate unpublished adapter ran 12 locked
+cases against Kairos `235e6a3`. Linux ran the same adapter at Paignia
+`e675da1a3a8bf9fbf88c43d25171643965aa05e7` on stable and Rust 1.99.0.
+[API withdrawals](../../scientific-completion.md#s01s04-paignia-transfer) ·
+[Native adapter handoff](../../contracts/game-port-acceptance.md#receiving-handoff--25-november-2026)
+
+Use the accepted CareOps and Innovate receipts for replay, lifetime and
+schema behavior. The selected SDK and movement probe exercise native
+allocation, asynchronous cancellation and committed occupancy. The existing
+worker comparison provides the runtime-cost boundary on its measured ring.
+At the pinned revision, the normal provider closure increases from 21 unique
+packages for the four game-port roots to 22 for DES and 50 for ABM.
+These counts measure build exposure. The elapsed compile and binary size
+above measure the standalone fixture. The source delta measures maintenance
+in Kairos. Ecosystem-wide maintenance and build-time comparisons, hardware
+scaling and broader dynamic models require separate workload evidence.
+[Consumer receipts](../108-scientific-ecosystem-alignment/handoff.md#installed-consumer-qualification--23-november-2026) ·
+[Measured ring](../111-measured-performance/handoff.md#matched-ring-and-worker-reuse) ·
+[Comparable dependency trees](../../contracts/minimal-consumer.md)
+
+The standalone execution log SHA-256 is
+`97582f149a7a1ac48d7a7be91b57670a5aed2ee6f752d8f9f735203ebe8b98ca`.
+The Paignia archive SHA-256 is
+`daa515b1bf7f0fb3c87288e4ff8a98bd116f280233e764edb33ccfc08b5b4beb`
+and the adapter test log SHA-256 is
+`63ac95b54cabe0e9c9dabe0aead0201a0d74f96b60307f5c16c9c086db448f35`.
 
 ## Installed CareOps movement — 23 November 2026
 
@@ -101,7 +149,17 @@ Use isolated bounded worktrees. The root integration packet combines disjoint ch
 
 ## Phase closeout evidence
 
-No phase is closed. Record $conductor-review, accepted fixes, commit SHA, pushed ref, scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree and the next-phase decision only when they occur. Current planning status is not execution evidence.
+Independent `$conductor-review` accepted Phases 0–3. The accepted fixes
+correct the static graph count, include generated-code and HTTP/binding/inference
+package families, test transitive bindgen resolution and distinguish measured
+footprint from an ecosystem cost comparison. The runtime evidence baseline
+commit SHA is `6316b4d7a2158865e0f3533ff3abe1cd4856099b` on the pushed
+ref `origin/main`. The closeout PR carries the new checked graph guard and
+preserves the exact receiving source IDs in the handoff above.
+`scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`
+verifies published source and retained ancestry. The next-phase decision closes
+the bounded provider contract. Receiving applications own their release and pin
+acceptance, including the signed Tobac inventory in Track 116.
 
 
 ## Ecosystem amendment verification
