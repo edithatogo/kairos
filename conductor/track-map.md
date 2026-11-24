@@ -531,8 +531,10 @@ See [current sequencing](dependency-sequencing.md): Polars inventory first, with
 
 [Sequencing](dependency-sequencing.md) registers Criterion reuse, schema-validation gates and conditional ODE/WebSocket work. No runtime acceptance.
 
-## Python runtime qualification — 23 October 2026
+## Python runtime qualification — 25 November 2026
 
-[Python 3.15 migration and qualification](tracks/105-python315-runtime-qualification/index.md) is In Progress. The preserved candidate is reconciled and local CI runtime guards are implemented; hosted/main/runtime handover acceptance remains pending. Track 30 retains version policy; bounded shared-path handoffs precede implementation.
+[Track 105](tracks/105-python315-runtime-qualification/handoff.md) is In
+Progress. The active checkout and Devbox start on Python 3.15.2. Track 30
+retains version policy. The handoff records current provider limits.
 
 Kairos PR #334 merged the reviewed staged allocation runtime at `8eafd77`. CareOps Sim PR #188 adopted bridge `0741026`, #189 accepted R10.3, and #190 closed R10.4. The staged implementation, DES export, compatibility test and fixture match the merged provider byte for byte. Mainline RNG adoption and Track 108 installed-consumer qualification remain separate.

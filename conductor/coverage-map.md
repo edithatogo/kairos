@@ -41,7 +41,7 @@ This file maps the “everything needed for a professional release” concerns t
 Required CI coverage:
 
 ```text
-CPython 3.15.1: current qualified default
+CPython 3.15.2: current qualified default
 Necessary alternate profiles: explicit consumer/reason and equivalent qualification before adoption
 ```
 
