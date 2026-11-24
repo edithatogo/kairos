@@ -83,6 +83,7 @@ Format:
 
 ### Changed
 
+- Apply all four existing Cargo dependency-policy checks in CI and the local CI recipe. Refresh reviewed action and runtime patches, retain reusable Rust dependencies, and remove the duplicate Linux Conductor workspace test pass. The native suites, exact-base coverage comparison, and 90% core floor still run.
 - The optional `kairo-ecs-arrow` ADIOS2 adapter writes native BP5 checkpoints on Linux and macOS with an installed ADIOS2 2.12 library. `CheckpointManifest` still reads legacy contract files for migration.
 
 - `kairo-ecs-gpu` keeps Apple Metal particles resident until explicit readback. Empty uploads retire old particles, and native counters report actual GPU transfers. See [ADR 0017](docs/adr/0017-metal-particle-residency.md).

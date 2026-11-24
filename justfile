@@ -60,7 +60,7 @@ ci: # Same core checks as the required Rust CI lane; run before opening a PR.
     cargo clippy --workspace --all-targets --all-features -- -D warnings
     just test
     RUSTDOCFLAGS="-D warnings" cargo doc --workspace --all-features --no-deps
-    cargo deny check advisories sources
+    cargo deny check advisories bans licenses sources
     cargo audit
 
 quality-drift:

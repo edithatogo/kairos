@@ -2,7 +2,7 @@ name: docs
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 on:
   pull_request:
@@ -38,7 +38,7 @@ jobs:
         run: python scripts/python_runtime.py --github
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: '26.13.0'
+          node-version: '26.13.1'
       - name: Build docs
         env:
           PYTHONDONTWRITEBYTECODE: '1'

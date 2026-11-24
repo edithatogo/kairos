@@ -168,10 +168,10 @@ $laneExpectations = @(
     @{ Matrix = 'CPython `3.15.2`'; Workflow = 'python-version: ["3.15.2"]' }
     @{ Matrix = 'CPython `3.15.2`'; Workflow = 'python-version: ["3.15.2"]' }
     @{ Matrix = 'R `4.6.x`'; Workflow = 'expected-prefix: "4.6"' }
-    @{ Matrix = 'Julia `1.10`'; Workflow = 'julia-version: ["1.10", "1.13.3"]' }
-    @{ Matrix = 'Julia `1.13.3`'; Workflow = 'julia-version: ["1.10", "1.13.3"]' }
-    @{ Matrix = 'Node `22`'; Workflow = 'node-version: ["22", "24", "26.13.0"]' }
-    @{ Matrix = 'Node `24`'; Workflow = 'node-version: ["22", "24", "26.13.0"]' }
+    @{ Matrix = 'Julia `1.10`'; Workflow = 'julia-version: ["1.10", "1.13.4"]' }
+    @{ Matrix = 'Julia `1.13.4`'; Workflow = 'julia-version: ["1.10", "1.13.4"]' }
+    @{ Matrix = 'Node `22`'; Workflow = 'node-version: ["22", "24", "26.13.1"]' }
+    @{ Matrix = 'Node `24`'; Workflow = 'node-version: ["22", "24", "26.13.1"]' }
     @{ Matrix = '.NET SDK `10.0.x`'; Workflow = 'dotnet-version: "10.0.x"' }
     @{ Matrix = '.NET SDK `11.0.x`'; Workflow = 'dotnet-version: "11.0.x"' }
     @{ Matrix = 'Go `1.26.x`'; Workflow = 'go-version: "1.26.x"' }
