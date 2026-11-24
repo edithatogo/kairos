@@ -19,7 +19,7 @@ const STEP: f64 = 0.25;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<PathBuf> = env::args_os().skip(1).map(PathBuf::from).collect();
     let (fmi3, output) = match args.as_slice() {
-        [output] => (false, output),
+        [output] if output.as_os_str() != "--fmi3" => (false, output),
         [flag, output] if flag.as_os_str() == "--fmi3" => (true, output),
         _ => {
             return Err("usage: kairo-fmi-scheduled-counter [--fmi3] <new-output-directory>".into())
@@ -98,7 +98,16 @@ fn verify(
     let layout = FmuArchive::new(archive).extract_to(destination)?;
     if fmi3 {
         let library = LoadedFmi3Library::load_from_path(layout.binary())?;
-        let mut instance = library.instantiate_checked("scheduled-counter", "")?;
+        let mut resources = layout
+            .root()
+            .join("resources")
+            .canonicalize()?
+            .into_os_string();
+        resources.push(std::path::MAIN_SEPARATOR_STR);
+        let resources = resources
+            .to_str()
+            .ok_or("FMI 3 resource path must be UTF-8")?;
+        let mut instance = library.instantiate_checked("scheduled-counter", resources)?;
         drop(library);
         instance.enter_initialization_mode(None, 0.0, Some(3.0))?;
         instance.exit_initialization_mode()?;

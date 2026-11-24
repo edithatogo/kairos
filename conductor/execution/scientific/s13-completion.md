@@ -110,10 +110,11 @@ trajectory above. The FMI 3.0.2 schema validated the emitted descriptor and
 a separate descriptor containing all four supported scalar types.
 
 The native library exposed all 75 symbols in the FMI 3.0.2 headers. A C
-client used those headers to verify token rejection, diagnostic callbacks,
+client used those headers and loaded the library directly from the archived
+bytes to verify token rejection, diagnostic callbacks,
 instance independence, reset, scalar output lengths and rejection of an
 unknown reference without a partial buffer write. The FMI 3 archive SHA-256
-was `42e369590b6e0b803a4bae3487bce0f5df8f074f88e744f5375b518c7fc3c385`.
+was `e22d4aff4cd34ab9c8bb7f60af1f88b43e70dae86e3d884fb5cd04ff29ca4ea6`.
 
 The remaining external qualification includes OMEdit and the authoring
 extensions for clocks, terminals, Model Exchange and Scheduled Execution.

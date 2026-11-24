@@ -906,8 +906,18 @@ mod fmi3_xml {
             let mut root = BytesStart::new("fmiModelDescription");
             root.push_attribute(("fmiVersion", "3.0"));
             push_text(&mut root, "modelName", &self.model_name)?;
-            push_text(&mut root, "instantiationToken", &self.guid)?;
-            push_text(&mut root, "generationTool", &self.generation_tool)?;
+            push_normalized_text(
+                &mut root,
+                "instantiationToken",
+                &self.guid,
+                "instantiation token",
+            )?;
+            push_normalized_text(
+                &mut root,
+                "generationTool",
+                &self.generation_tool,
+                "generation tool",
+            )?;
             write(&mut writer, Event::Start(root));
 
             let mut cosim = BytesStart::new("CoSimulation");
@@ -1017,7 +1027,7 @@ mod fmi3_xml {
         };
         let mut element = BytesStart::new(name);
         let reference = variable.value_reference.to_string();
-        push_text(&mut element, "name", &variable.name)?;
+        push_normalized_text(&mut element, "name", &variable.name, "variable name")?;
         element.extend_attributes([
             ("valueReference", reference.as_str()),
             ("causality", variable.causality.as_fmi2()),
@@ -1061,6 +1071,20 @@ mod fmi3_xml {
             value: Cow::Borrowed(escaped.as_str()),
         });
         Ok(())
+    }
+
+    fn push_normalized_text(
+        element: &mut BytesStart<'_>,
+        name: &str,
+        value: &str,
+        label: &str,
+    ) -> FmiResult<()> {
+        if value.contains(['\t', '\n', '\r']) {
+            return Err(invalid(format!(
+                "invalid FMI 3 {label} with a tab or line break"
+            )));
+        }
+        push_text(element, name, value)
     }
 
     fn invalid(message: impl Into<String>) -> FmiError {
@@ -1165,13 +1189,35 @@ mod fmi3_xml {
                 .unwrap_err()
                 .to_string()
                 .contains("invalid FMI 3 variability"));
-            let mut bad_token = model;
+            let mut bad_name = model.clone();
+            for name in ["bad\tname", "bad\nname", "bad\rname"] {
+                bad_name.variables[0].name = name.into();
+                assert!(bad_name
+                    .to_fmi3_co_simulation_xml(0, &[(3, value)])
+                    .unwrap_err()
+                    .to_string()
+                    .contains("invalid FMI 3 variable name"));
+            }
+            let mut bad_token = model.clone();
+            bad_token.guid = "opaque\ttoken".into();
+            assert!(bad_token
+                .to_fmi3_co_simulation_xml(0, &[(3, value)])
+                .unwrap_err()
+                .to_string()
+                .contains("invalid FMI 3 instantiation token"));
             bad_token.guid = "token\0".into();
             assert!(bad_token
                 .to_fmi3_co_simulation_xml(0, &[(3, value)])
                 .unwrap_err()
                 .to_string()
                 .contains("invalid XML 1.0 character"));
+            let mut bad_tool = model;
+            bad_tool.generation_tool = "tool\nversion".into();
+            assert!(bad_tool
+                .to_fmi3_co_simulation_xml(0, &[(3, value)])
+                .unwrap_err()
+                .to_string()
+                .contains("invalid FMI 3 generation tool"));
         }
     }
 }

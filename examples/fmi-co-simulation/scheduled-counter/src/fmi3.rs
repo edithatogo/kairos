@@ -22,7 +22,7 @@ impl Counter {
     fn report(&self, status: c_int, message: &CStr) -> c_int {
         if status != OK && self.logging {
             if let Some(log) = self.log {
-                unsafe { log(self.environment, status, c"".as_ptr(), message.as_ptr()) };
+                unsafe { log(self.environment, status, ptr::null(), message.as_ptr()) };
             }
         }
         status
@@ -64,7 +64,7 @@ unsafe extern "C" fn fmi3InstantiateCoSimulation(
                 log(
                     environment,
                     ERROR,
-                    c"".as_ptr(),
+                    ptr::null(),
                     c"invalid counter instantiation parameters".as_ptr(),
                 )
             };
