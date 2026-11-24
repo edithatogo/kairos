@@ -1,6 +1,6 @@
 # Handoff
 
-Updated 25 November 2026. Status **In Progress**.
+Updated 25 November 2026. Status **Done**.
 
 ## Qualification and claim validation — 25 November 2026
 
@@ -92,7 +92,8 @@ Require new capability claims to carry their own reviewed receipts. Tracks
 Integration chat `01a1fd18-51c7-7963-a3cc-d262d54582ba` owns the register, guard and documentation
 reconciliation in `/Users/doughnut/.codex/worktrees/kairos-scientific-evidence-closeout/kairos` on `codex/scientific-evidence-closeout-20261125`. Hosted integration checks
 bind the final tree to the reviewed guard. The earlier owner assignment
-and installed receipt identities are retained above.
+and installed receipt identities are retained above. Final acceptance uses
+the same checkout on `codex/scientific-acceptance-20261125`.
 
 ## Phase closeout evidence
 
@@ -100,8 +101,9 @@ Independent `$conductor-review` accepted Phases 0–2. The accepted fixes
 bind the native-core-v1 profile, restrict the historical Track 49 record
 to PDES and preserve the benchmark and frontier evidence requirements.
 The reviewed guard commit SHA is `f2f5197c7a1eaa05bb0f627292a2afd84f8d5c58`.
-Record the durable pushed ref after integration.
-Run `scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`
-against the integrated tree. The next-phase decision is to close the track
-on verification of the integrated source.
+The published commit SHA is `9b6921782e8c7fc9a82a7e3f1a6c0dd540c2ca60` on the pushed ref `origin/main`.
+Its tree matches the tested PR tree. All 22 PR workflows passed, along with
+`scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`
+against the published source. The next-phase decision closes the track.
+[Implementation and checks](https://github.com/edithatogo/kairos/pull/461/checks)
 
