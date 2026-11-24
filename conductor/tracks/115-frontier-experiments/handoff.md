@@ -1,5 +1,34 @@
 # Handoff
 
+## Claim validation experiment
+
+The protocol and harness were committed as `d8ba90e` before evaluation.
+The macOS ARM64 and Linux x86-64 runs of Node 26.13.1 produced identical
+decisions for all 22 cases against the frozen `077721d` validator. Linux
+ran in a network-disabled Apple Container with the source mounted read-only.
+Independent review accepted the protocol before execution and checked
+the resulting case decisions and digests.
+
+Both checks accepted six valid controls and rejected four file-integrity
+defects. The typed validator rejected eight additional defects, spanning
+installation, native execution and benchmarking. The SHA-256 baseline
+accepted those eight internally consistent bundles. Each typed rejection
+had its intended diagnostic. The result met the preregistered rule.
+
+Both checks accepted four false assertions when their metadata and file
+hashes agreed. Those cases changed a lock digest, relabelled a GPU,
+rehashed an empty Arrow output or claimed the legacy Sobol sequence
+matched the reference. Execution and scientific claims still require
+their source-bound evidence and independent oracles.
+
+The planner needs a frozen decision rule and held-out matched workloads.
+Branching needs shared checkpoint evidence across lifecycle and rollback
+cases with full-replay and conventional CRN comparators. Hybrid evaluation
+needs a coupling contract and an independent reference model. Track 115
+remains In Progress.
+[Protocol](claim-contract/protocol.md) · [Exact results](claim-contract/results.json) ·
+[Execution receipt](claim-contract/execution.json).
+
 Updated 7 November 2026. Status: Spec Approved; no implementation phase is accepted by this registration.
 
 ## Summary

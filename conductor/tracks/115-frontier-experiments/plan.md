@@ -13,7 +13,7 @@ Evaluate specific research advances beyond established ingredients with falsifia
 
 - [ ] 115.1.1: Implement recorded execution planning behind an experimental API after stable semantics exist.
 - [ ] 115.1.2: Implement real checkpoint branching and CRN variants with entity lifecycle/rollback adversarial cases.
-- [ ] 115.1.3: Evaluate claim-contract detection against held-out seeded method/backend/data/provenance defects.
+- [x] 115.1.3: Evaluate claim-contract detection against held-out method, backend, data and provenance defects. The [frozen 22-case corpus](claim-contract/results.json) measured typed detections and four authenticity limits on two runners.
 - [ ] 115.1.4: Run ablations showing which component contributes improvements and where the approach fails.
 - [ ] 115.1.review: Independently review this phase, apply accepted fixes, execute the named oracles and record the next-phase decision.
 

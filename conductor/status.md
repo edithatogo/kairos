@@ -1035,6 +1035,13 @@ See [current sequencing](dependency-sequencing.md): Polars inventory first, with
 active Python 3.15.2 handover, native Devbox and installed-inventory checks.
 Managed accelerator and dependency-graph qualification remain open.
 
+## Frontier experiment — 25 November 2026
+
+[Track 115](tracks/115-frontier-experiments/handoff.md) is In Progress.
+Two runs reproduced the frozen claim-validation corpus. Planning,
+checkpoint branching and hybrid experiments remain gated by their
+execution and evidence requirements.
+
 ## Track 76 Phase 0–2 implementation review (2026-10-24)
 
 Track 76 (`toml scenario configuration parsing`) completed Phase 0, 1, and 2:
