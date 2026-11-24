@@ -91,8 +91,33 @@ independent readback receipt SHA-256 is
 The installed `tobac` 0.2.0 importer at
 `fe06ef5958ba0f218317a738fe8de95973300a12` read its own positive Evidence
 control and rejected each neutral stream with its exact-schema error.
-Track 116 receiving acceptance still requires the dedicated adapter and
-downstream cohort summary checks.
+
+## Installed Tobac candidate — 24 November 2026
+
+Chat `01a1fd18-51c7-7963-a3cc-d262d54582ba` owns the isolated receiving
+checkout `/private/tmp/kairos-track116-tobac.sr6RjG/tobac` on
+`codex/kairos-cohort-admitted-20261124`. The source lane covers
+`src/tobac_supply/kairos_cohort.py`, its regression tests and their exact
+publication inventory entries. The existing Tobac integrator owns protected
+main and signed native acceptance. [Receiving PR #202](https://github.com/edithatogo/tobac/pull/202).
+
+A fresh macOS ARM64 Python 3.15.2 environment installed Tobac 0.2.0 from
+`ce9b621fbd5c2123a695a83935f1462116d7401c`. Wheel SHA-256
+`663e701587a7f8d0ba60cb02ea1b656256345f2884517289ab8e5bdcac7b3816`.
+The installed reader consumed the three fictional streams from Kairos
+`1e267e6c352277d8a3b2b13f019ee82b5aca8a69`. Both cohort summaries
+accounted for 4,096 members, including those with no recorded transition.
+The arms matched all 1,451 pre-intervention rows and all 3,323 shared RNG
+addresses. Polars retained the Arrow UInt64 RNG buffer after the input
+reader and table were released. The independent review covered full-width
+ticks, fixed strata and an inclusive cutoff.
+
+CodeQL and public boundary checks passed on the receiving PR. Its three
+native jobs stopped at signed inventory verification with
+`Scientific inventory differs from native acceptance`. The receiving
+owner needs to renew the inventory for the added module before rerunning
+the checks and recording receiving-main acceptance.
+[Receiving Actions run](https://github.com/edithatogo/tobac/actions/runs/45377109838).
 
 ## Integration notes
 
