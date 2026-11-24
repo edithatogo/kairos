@@ -1680,7 +1680,7 @@ tracks:
 
   - id: 115
     name: Frontier research experiments and reproducible evidence
-    status: Spec Approved
+    status: In Progress
     owner: research-agent + vv-uq-agent + performance-agent
     depends_on: ["110", "111", "112", "114"]
     owned_paths:

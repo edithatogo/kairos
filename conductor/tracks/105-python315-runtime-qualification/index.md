@@ -1,6 +1,9 @@
 # Python 3.15 migration
 
-Accepted 3.15.1 baseline through PRs #297/#301/#302; provider quality follow-through remains open. [Current dependency policy](../../dependency-value-policy.md) permits necessary qualified alternate profiles. Historical receipts are not rewritten.
+The selected runtime is CPython 3.15.2. The [handover record](handoff.md)
+links actual runtime and provider checks, alongside the earlier accepted
+3.15.1 receipts. Necessary alternate profiles follow the
+[dependency policy](../../dependency-value-policy.md).
 
 - [Specification](spec.md)
 - [Numbered plan](plan.md)

@@ -3,6 +3,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
+import { releasePython } from "./python-runtime.mjs";
 
 function parseArgs(argv) {
   const args = { mode: "", ecosystem: "", version: "" };
@@ -81,15 +82,21 @@ if (ecosystem !== "all" && !selected.has(ecosystem)) {
   throw new Error(`unknown ecosystem: ${ecosystem}`);
 }
 
+const python = laneSelected(ecosystem, "python") ? releasePython(repoRoot) : null;
+
 if (laneSelected(ecosystem, "rust")) {
   run(mode === "dry-run" ? "cargo publish --dry-run --workspace" : "cargo publish --workspace");
 }
 
-if (laneSelected(ecosystem, "python")) {
+if (python) {
   if (mode === "publish") assertTextVersion("bindings/python/pyproject.toml", /version\s*=\s*"([^"]+)"/, version);
-  run("python -m pip install --upgrade build twine", { cwd: path.join(repoRoot, "bindings", "python") });
-  run("python -m build", { cwd: path.join(repoRoot, "bindings", "python") });
-  run("python -m twine check dist/*", { cwd: path.join(repoRoot, "bindings", "python") });
+  runArgs(python, [
+    "-I", "-m", "pip", "--isolated", "install", "--index-url", "https://pypi.org/simple",
+    "--only-binary=:all:", "--require-hashes", "-r", "scripts/package-python-tools.lock",
+  ], { cwd: repoRoot });
+  const cwd = path.join(repoRoot, "bindings", "python");
+  runArgs(python, ["-I", "-m", "build", "--no-isolation"], { cwd });
+  runArgs(python, ["-I", "-m", "twine", "check", "dist/*"], { cwd });
   if (mode === "publish") {
     console.log("Python upload is delegated to the pinned pypa/gh-action-pypi-publish workflow step.");
   }

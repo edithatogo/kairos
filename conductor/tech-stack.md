@@ -96,7 +96,7 @@ Pin exact versions during implementation. Keep high-risk dependencies isolated b
 
 ## Language package plan
 
-### Python binding: qualified default Python 3.15.1
+### Python binding: qualified default Python 3.15.2
 
 Latest suitable qualified versions are preferred. Necessary compatibility profiles
 are permitted under [dependency policy](dependency-value-policy.md), with explicit
@@ -110,7 +110,7 @@ Python distribution: kairo-ecs
 Python import: kairo_ecs
 ```
 
-Use `maturin` with PyO3 only where Python-native objects are needed. Prefer an `abi3-py315` strategy if the API can remain within the stable ABI so one wheel family can cover Python 3.15.1 per platform.
+Use `maturin` with PyO3 only where Python-native objects are needed. Prefer an `abi3-py315` strategy if the API can remain within the stable ABI so one wheel family can cover Python 3.15 per platform.
 
 Runtime packages:
 

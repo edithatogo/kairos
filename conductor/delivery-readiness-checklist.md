@@ -13,11 +13,7 @@ Use this before every alpha, beta, release candidate, and stable release.
 
 ## Binding readiness
 
-- [ ] Python binding package surface exists and Python 3.10 green.
-- [ ] Python 3.11 green.
-- [ ] Python 3.12 green.
-- [ ] Python 3.13 green.
-- [ ] Python 3.14 green.
+- [ ] The Python binding installs and executes its native consumer checks with CPython 3.15.2 on the declared platform matrix.
 - [ ] R binding package surface exists and package check is green.
 - [ ] Julia binding package surface exists and package tests are green.
 - [ ] TypeScript/Wasm binding package surface exists and tests are green.

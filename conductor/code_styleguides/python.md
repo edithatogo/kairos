@@ -1,6 +1,6 @@
 # Python Style Guide
 
-- Use the qualified CPython 3.15.1 default and verify the actual repo-local interpreter.
+- Use the qualified CPython 3.15.2 default and verify the actual repo-local interpreter.
 - Prefer latest suitable qualified versions; necessary alternate profiles are permitted by the [dependency policy](../dependency-value-policy.md), with concrete scope/reason and equivalent qualification.
 - Do not imply older or free-threaded support from a planning entry; qualify native bindings and CI before promising that lane.
 - Use `ruff` for lint/format and `pytest` + `hypothesis` for tests.

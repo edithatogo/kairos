@@ -55,6 +55,11 @@ Use existing maintained dependencies where they reduce actual custom work: Rayon
 
 These are research proposals. Established comparators already include [krABMaga](https://github.com/krABMaga/krABMaga), [ROSS](https://ross-org.github.io/about.html), [FLAME GPU](https://github.com/FLAMEGPU/FLAMEGPU2), [Madrona](https://madrona-engine.github.io/) and [AgentTorch](https://github.com/AgentTorch/AgentTorch). Rust, GPU, ECS, Time Warp or differentiability alone is not a novelty claim.
 
+The executable-claims experiment met its preregistered rule for a fixed
+22-case corpus. The typed validator detected eight additional defects
+over file-fixity checking. Four internally consistent false assertions
+passed both checks. [Protocol and results](tracks/115-frontier-experiments/handoff.md#claim-validation-experiment).
+
 ## Maintenance and automation
 
 Generate current capability summaries from the same manifest used by docs/release checks. Tie evidence to source/dependency/input hashes, commands, hardware and raw results. Require actual native-artifact tests; metadata checks cannot substitute. Reuse existing dependency-update, security, coverage and provenance jobs. Add meaningful mutations for wrong-method/false-success claims. Run expensive cross-platform/performance/nightly jobs where they resolve concrete risks; retain focused PR checks.

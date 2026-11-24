@@ -4,6 +4,10 @@ See `runtime-evidence-boundary.md` for required live evidence and pending blocke
 
 `cloud/gcp/batch-job.json` defines a single task group using the KairoECS container image. `cloud/gcp/batch-array.json` is the array-run template; `cloud/gcp/submit-experiment.sh` renders its `taskCount` and `parallelism` from `KAIRO_SWEEP_SIZE` and `KAIRO_PARALLELISM` / `KAIRO_SWEEP_PARALLELISM` before submitting it. Use workload identity or a service account with write access to the configured GCS output prefix.
 
+Array rendering requires the verified checkout-local CPython 3.15.2
+interpreter at `.venv/bin/python`. The renderer checks it before preparing
+the submission. See the [local setup](../install.md).
+
 ## Offline validation
 
 Run `python cloud\validate_cloud_hpc.py` from the repository root. The offline validator parses the GCP JSON templates and checks image placeholders, `run --scenario` command wiring, output/checkpoint environment variables, task count shape, array index parameterization, and array submitter rendering for sweep sizing and parallelism.

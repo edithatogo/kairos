@@ -10,13 +10,13 @@ Prior candidate work is preserved in [the evidence snapshot](prior-qualification
 ## Phase 0 — Baseline and retained evidence
 
 - [ ] Task 0.1: Inventory every active Python entry point, subprocess, package, CI/container/helper path and live environment; classify historical or synthetic exceptions explicitly.
-- [ ] Task 0.2: Reconcile the retained candidate evidence and source hashes with current main and current owners; credit completed qualification without treating it as main acceptance.
+- [x] Task 0.2: Reconcile retained candidate evidence and source hashes with current main and current owners. See the [25 November handover](handoff.md#python-3152-handover-and-provider-readback).
 - [ ] Task 0.3: Freeze exact path ownership, interpreter/dependency targets, required platform checks and safe terminal handover criteria.
 - [ ] Task 0.4: Conductor — review and verify phase (workflow.md); record evidence, unresolved targets and next-phase decision.
 
 ## Phase 1 — Complete and qualify the candidate
 
-- [ ] Task 1.1: Add or reuse meaningful failure tests for selected-profile mismatch, unqualified discovery, environment preservation and native/package execution before changing affected paths.
+- [x] Task 1.1: Exercise selected-profile mismatch, unqualified discovery, environment preservation and native/package execution. The [handover record](runtime-handover-20261125.json) binds the release-entry and runtime checks.
 - [ ] Task 1.2: Complete the selected runtime (selected default 3.15.2), constraints, lock, CI, container, helper and current-instruction alignment in isolated environments; document/qualify necessary compatibility profiles and remove unexplained stale runners.
 - [ ] Task 1.3: Run the affected helper/package/binding/security and representative consumer checks with the explicit repo-local interpreter; retain raw outputs, hashes and concrete blockers.
 - [ ] Task 1.4: Conductor — review and verify phase (workflow.md); require actual runtime evidence and resolve in-scope findings.
@@ -32,6 +32,9 @@ Prior candidate work is preserved in [the evidence snapshot](prior-qualification
 - [ ] Task 3.1: Confirm old consumers have reached terminal states, hand over the qualified repo-local interpreter safely and verify its actual version in consuming commands.
 - [ ] Task 3.2: Re-audit all active entry points and unexplained stale defaults, reconcile remaining external/platform blockers, retain rollback/history and update evidence at the accepted main revision.
 - [ ] Task 3.3: Conductor — review and verify phase (workflow.md); complete only when every requirement and handover has evidence.
+
+The active checkout's environment handover is complete. The remaining
+provider cases and other owners' environments are listed in the handoff.
 
 ## Phase closeout gate
 

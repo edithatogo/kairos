@@ -7,8 +7,11 @@ The Python scheduler notebook requires the binding installed in its selected
 kernel and the actual Rust shared library built from the matching source.
 Set `KAIRO_ECS_FFI_LIBRARY` to that library's absolute path; missing or incompatible
 native capabilities fail explicitly. Follow [installation](../install.md).
-The regression notebook reads committed fixtures. Colab accelerator notebooks
-use provider-managed runtimes and may install JAX dependencies.
+The regression notebook reads committed fixtures. Both local tutorials
+verify the selected 3.15.2 kernel and its checkout-local prefix. The Colab
+accelerator notebooks use provider-managed Python and JAX. They are
+exploratory and require their own kernel, dependency and device qualification.
+[Colab runtime versions](https://research.google.com/colaboratory/runtime-version-faq.html).
 
 ## Available notebooks
 

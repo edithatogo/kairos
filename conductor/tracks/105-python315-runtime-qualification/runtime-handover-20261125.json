@@ -1,0 +1,114 @@
+{
+  "source_main": "077721da0bcb0dcb0bb2f2bc2b8d5cde9778601a",
+  "runtime": {
+    "test": "env -i PATH=/usr/bin:/bin .venv/bin/python -I <retained handover-test.py> <checkout> <verified C ABI dylib>",
+    "exit": 0,
+    "clean_environment": {
+      "backend": "rust-c-abi-v1",
+      "executable": "/Volumes/PortableSSD/kairos-python-frontier.O8S82A/handover/.venv/bin/python",
+      "prefix": "/Volumes/PortableSSD/kairos-python-frontier.O8S82A/handover/.venv",
+      "python": "3.15.2",
+      "stats": {
+        "cancelled_events": 1,
+        "current_time_ticks": 7,
+        "dispatched_events": 1,
+        "pending_events": 0,
+        "scheduled_events": 2
+      },
+      "version": "0.1.0"
+    },
+    "active_environment": {
+      "backend": "rust-c-abi-v1",
+      "executable": "/Users/doughnut/.codex/worktrees/kairos-scientific-evidence-closeout/kairos/.venv/bin/python",
+      "prefix": "/Users/doughnut/.codex/worktrees/kairos-scientific-evidence-closeout/kairos/.venv",
+      "python": "3.15.2",
+      "stats": {
+        "cancelled_events": 1,
+        "current_time_ticks": 7,
+        "dispatched_events": 1,
+        "pending_events": 0,
+        "scheduled_events": 2
+      },
+      "version": "0.1.0"
+    },
+    "child_prefix_matched": true,
+    "existing_environment_replaced": false,
+    "owner_process_check": "No open files in the active .venv before the single wheel install.",
+    "fixture_sha256": "3f748d5915bff2a1042f32c57fe1d215963e0b43dd9b34415e98de0862822dc7",
+    "wheel_sha256": "7f45c2494b1be387cfb479f2c0a50c7524a3c99981a796eec705a1e05f4f10dc",
+    "library_sha256": "9f7a94c506be431a94fed9c8a1dc51c79d9a13042172bb57d4eb6433354c9610",
+    "installed_artifact_run": 45475266794
+  },
+  "release_entrypoints": {
+    "source_commit": "942e3b3207aec22ee6e5b8cf397c083d96a3952f",
+    "checkout": "/Volumes/PortableSSD/kairos-python-frontier.O8S82A/release-runtime-final",
+    "python": "3.15.2",
+    "lock_sha256": "4d39d48e4f4af27ef036fb627d5afd78be94d1e99644bcc93744c8dd66e6b1f2",
+    "commands": [
+      "node scripts/release/publish-registry.mjs --mode dry-run --ecosystem python --version 0.1.0",
+      "node scripts/release/publish-hpc.mjs --mode dry-run --version 0.1.0"
+    ],
+    "positive_exit": 0,
+    "controls": "Both require the active checkout interpreter, reject its absence with Python on PATH, and pass despite a decoy pip module on PYTHONPATH."
+  },
+  "providers": {
+    "devbox": {
+      "run": 45479567466,
+      "startup": "fresh and repeat",
+      "python": "3.15.2",
+      "prefix": "/home/runner/work/kairos/kairos/.venv",
+      "conclusion": "success"
+    },
+    "installed_inventory": {
+      "run": 45475266490,
+      "package_identities": 52,
+      "missing": 0,
+      "scope": "Package presence only; no graph/edges/extras claims"
+    },
+    "managed_graph": {
+      "gym_run": 45026899759,
+      "gym_source": "7ff7eb6a9ec2cb8fa63a7e1a13f8355fc4aed638",
+      "same_gym_input_bytes_on_main": true,
+      "actual_python": "3.15.2",
+      "submission_http_status": 204,
+      "direct_packages": 4,
+      "dependency_edges_in_submitted_payload": 0,
+      "gym_log_sha256": "c1b43704058da5a40d306a1352862f01d64c3b9e9c25919434b487d8182fb6fc",
+      "historical_full_scope_failure_run": 40862183601,
+      "remaining": "Fresh qualification for the broader Python resolver scope, transitive edges and extras."
+    },
+    "codecov": {
+      "run": 45475266595,
+      "upload": "success",
+      "patch": "success",
+      "project_status": "absent",
+      "enforcement": "diagnostic"
+    },
+    "cloud_hpc": {
+      "previous_run": 45395659124,
+      "previous_source": "b7e138a44252b1c4ffa3b72e1015478a2f12fc44",
+      "scope": "The existing smoke now accepts a direct validation dispatch."
+    },
+    "gcp_batch": "Fictional gcloud render tests passed. Live Batch remains unqualified.",
+    "colab": {
+      "state": "unqualified",
+      "provider_catalogue": "https://research.google.com/colaboratory/runtime-version-faq.html",
+      "observed_catalogue_profile": "2026.10, Python 3.13.18",
+      "remaining": "Actual accelerator kernel, locked dependencies and device execution."
+    }
+  },
+  "runtime_guards": {
+    "tests_passed": 21,
+    "exit": 0
+  },
+  "retained_log_sha256": {
+    "devbox.log": "71f737c265a96c22398580661797f44315bc4d1cbdd857445f7b102713e99eb7",
+    "runtime-guards.log": "ec6df9e5cdad428ef62bbdde9980417b8c663105075e8b0816b3ef00008da7ed",
+    "registry-dry-run-final.log": "44621cc0ea66fbc8eb7a5174cb0f45c50656813b832eb61342225cca53e86054",
+    "hpc-dry-run-final.log": "a2eaf321494ce07dac2801da2c7bc48b71b3b6321e48371b09cfe62e643f5d22",
+    "release-validation-final.log": "a025f4a5292129ec28844d769185f6b64a5bf43d88479a09e753ecfe51c00ee6",
+    "release-missing-registry.log": "c82b56a9791f496ddff15b4e560dc02bd0de22b712367136d32f336cdac15e38",
+    "release-missing-hpc.log": "85fcda96508dc96d63e1b9a1f3c8add3f71610021874aef751ca0277266e6d08",
+    "inventory-readback/readback.json": "0ef94f08db1ac1e2102a2da64969ac68c43fdc7834e8dfc2fe7172adc7114ab8"
+  }
+}

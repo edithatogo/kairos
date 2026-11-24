@@ -1,5 +1,46 @@
 # Handoff
 
+## Python 3.15.2 handover and provider readback
+
+Integration chat `01a1fd18-51c7-7963-a3cc-d262d54582ba` owns the active
+Kairos checkout on `codex/python-frontier-qualification-20261125`. The
+selected `.venv/bin/python` reported final 3.15.2 and the active checkout
+prefix. A clean sibling environment installed the checksum-verified wheel
+and exercised the matching C ABI first. The active environment then ran
+the same scheduler and subprocess check after its process check was clear.
+Both dispatched at tick seven, retained one cancellation and returned
+the same interpreter prefix from the child process.
+
+The registry and HPC release helpers now resolve the checkout-local
+interpreter and verify it before work starts. The package dry run installs
+the existing hash lock and builds without dependency isolation. Both
+helpers reject a missing local environment even with Python on PATH.
+Locked wheel and source archive creation, Twine and the HPC dry run passed.
+Independent review verified the shared guard and the isolated Python
+invocations.
+
+Hosted Devbox passed fresh and repeat startup on `077721d`. The exact
+main dependency inventory read back all 52 expected package identities.
+That readback covers presence. The managed Gym job also used Python 3.15.2
+and submitted four direct package records with empty dependency lists.
+Its Gym inputs match current main. Fresh managed resolution for the other
+Python surfaces, transitive edges and extras remains open. Codecov reported
+a successful upload and patch status. GitHub still lacked a project status.
+[Devbox run](https://github.com/edithatogo/kairos/actions/runs/45479567466) ·
+[Inventory run](https://github.com/edithatogo/kairos/actions/runs/45475266490) ·
+[Gym graph job](https://github.com/edithatogo/kairos/actions/runs/45026899759).
+
+The Cloud/HPC smoke can be dispatched directly for fresh container
+evidence on a selected ref. GCP array rendering passed its fictional
+subprocess checks. Live Batch submission remains unqualified. The two
+local notebook receipts cover their exact 3.15.2 kernels. Colab's
+published managed profiles use their own interpreter and dependency
+versions. The accelerator notebooks still need a qualified provider
+kernel, dependencies and device run.
+[Cloud/HPC checks](https://github.com/edithatogo/kairos/actions/workflows/cloud-smoke.yml) ·
+[Managed runtime catalogue](https://research.google.com/colaboratory/runtime-version-faq.html) ·
+[Source and runtime receipts](runtime-handover-20261125.json).
+
 ## Local notebook kernels — 23 November 2026
 
 Integration chat `01a1fd18-51c7-7963-a3cc-d262d54582ba` owns the two local

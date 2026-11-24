@@ -1,0 +1,173 @@
+{
+  "source": "077721da0bcb0dcb0bb2f2bc2b8d5cde9778601a",
+  "node": "v26.13.1",
+  "successRuleMet": true,
+  "rows": [
+    {
+      "id": "V01",
+      "lineage": "installation",
+      "family": "valid",
+      "fixityAccepted": true,
+      "guardAccepted": true
+    },
+    {
+      "id": "V02",
+      "lineage": "installation",
+      "family": "valid",
+      "fixityAccepted": true,
+      "guardAccepted": true
+    },
+    {
+      "id": "V03",
+      "lineage": "native execution",
+      "family": "valid",
+      "fixityAccepted": true,
+      "guardAccepted": true
+    },
+    {
+      "id": "V04",
+      "lineage": "benchmark",
+      "family": "valid",
+      "fixityAccepted": true,
+      "guardAccepted": true
+    },
+    {
+      "id": "V05",
+      "lineage": "native execution",
+      "family": "valid",
+      "fixityAccepted": true,
+      "guardAccepted": true
+    },
+    {
+      "id": "V06",
+      "lineage": "benchmark",
+      "family": "valid",
+      "fixityAccepted": true,
+      "guardAccepted": true
+    },
+    {
+      "id": "I01",
+      "lineage": "native execution",
+      "family": "integrity",
+      "fixityAccepted": false,
+      "guardAccepted": false,
+      "reason": "Evidence digest mismatch: native_science"
+    },
+    {
+      "id": "I02",
+      "lineage": "benchmark",
+      "family": "integrity",
+      "fixityAccepted": false,
+      "guardAccepted": false,
+      "reason": "ENOENT"
+    },
+    {
+      "id": "I03",
+      "lineage": "native execution",
+      "family": "integrity",
+      "fixityAccepted": false,
+      "guardAccepted": false,
+      "reason": "Qualification output digest mismatch: conductor/tracks/110-scientific-method-completion/evidence/s15-retained-dispatches.arrow"
+    },
+    {
+      "id": "I04",
+      "lineage": "installation",
+      "family": "integrity",
+      "fixityAccepted": false,
+      "guardAccepted": false,
+      "reason": "Evidence digest mismatch: native_macos"
+    },
+    {
+      "id": "T01",
+      "lineage": "installation",
+      "family": "typed",
+      "fixityAccepted": true,
+      "guardAccepted": false,
+      "reason": "Installed native receipt exceeds its profile"
+    },
+    {
+      "id": "T02",
+      "lineage": "installation",
+      "family": "typed",
+      "fixityAccepted": true,
+      "guardAccepted": false,
+      "reason": "Incomplete installed native receipt"
+    },
+    {
+      "id": "T03",
+      "lineage": "native execution",
+      "family": "typed",
+      "fixityAccepted": true,
+      "guardAccepted": false,
+      "reason": "Qualification run lacks executed checks"
+    },
+    {
+      "id": "T04",
+      "lineage": "native execution",
+      "family": "typed",
+      "fixityAccepted": true,
+      "guardAccepted": false,
+      "reason": "Qualification run lacks executed checks"
+    },
+    {
+      "id": "T05",
+      "lineage": "native execution",
+      "family": "typed",
+      "fixityAccepted": true,
+      "guardAccepted": false,
+      "reason": "Qualification run does not name the claimed capabilities"
+    },
+    {
+      "id": "T06",
+      "lineage": "native execution",
+      "family": "typed",
+      "fixityAccepted": true,
+      "guardAccepted": false,
+      "reason": "Qualification run schema or evidence class mismatch"
+    },
+    {
+      "id": "T07",
+      "lineage": "benchmark",
+      "family": "typed",
+      "fixityAccepted": true,
+      "guardAccepted": false,
+      "reason": "Benchmark event counts disagree"
+    },
+    {
+      "id": "T08",
+      "lineage": "benchmark",
+      "family": "typed",
+      "fixityAccepted": true,
+      "guardAccepted": false,
+      "reason": "Benchmark raw timing repeats missing: pdes_ns"
+    },
+    {
+      "id": "A01",
+      "lineage": "native execution",
+      "family": "authenticity",
+      "fixityAccepted": true,
+      "guardAccepted": true
+    },
+    {
+      "id": "A02",
+      "lineage": "native execution",
+      "family": "authenticity",
+      "fixityAccepted": true,
+      "guardAccepted": true
+    },
+    {
+      "id": "A03",
+      "lineage": "native execution",
+      "family": "authenticity",
+      "fixityAccepted": true,
+      "guardAccepted": true
+    },
+    {
+      "id": "A04",
+      "lineage": "native execution",
+      "family": "authenticity",
+      "fixityAccepted": true,
+      "guardAccepted": true
+    }
+  ]
+}

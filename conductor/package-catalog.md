@@ -89,7 +89,7 @@ These tracks do not introduce package surfaces, but they do affect release readi
 
 ## Python package plan
 
-Qualified default: CPython 3.15.1. Necessary alternate profiles may be qualified under the [dependency policy](dependency-value-policy.md); the [support matrix](toolchain-matrix.md) remains authoritative for actual support.
+The qualified default is CPython 3.15.2. The [support matrix](toolchain-matrix.md) lists supported targets. Necessary alternate profiles follow the [dependency policy](dependency-value-policy.md).
 
 | Area | Tools/packages | Notes |
 |---|---|---|

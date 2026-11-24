@@ -53,4 +53,4 @@ A status label alone does not prove implementation or release acceptance.
 
 ## Python runtime migration
 
-[Python 3.15 migration and qualification](tracks/105-python315-runtime-qualification/index.md) records the accepted Python 3.15.1 baseline, current provider follow-through and [revised dependency policy](dependency-value-policy.md). Necessary qualified compatibility profiles are allowed; historical receipts are preserved.
+[Python 3.15 migration and qualification](tracks/105-python315-runtime-qualification/index.md) records the selected Python 3.15.2 runtime, current handover and provider checks. Necessary alternate profiles follow the [dependency policy](dependency-value-policy.md).

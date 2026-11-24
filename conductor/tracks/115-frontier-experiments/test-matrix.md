@@ -2,6 +2,7 @@
 
 | Gate | Required evidence | Current acceptance |
 |---|---|---|
+| Bounded claim validation | Predeclared case decisions, file-fixity comparison and exact second-run reproduction. | [22-case result](claim-contract/results.json) reproduced on macOS ARM64 and Linux x86-64. |
 | Novelty | Specific claim survives current primary-source comparator review; generic Rust/ECS/GPU/TimeWarp labels are insufficient. | Pending for this track |
 | Held-out effects | Independent cases support predeclared endpoints and uncertainty; ablation identifies mechanism. | Pending for this track |
 | Reproducibility | A second runner reproduces accepted bounded results from exact public permitted artefacts. | Pending for this track |

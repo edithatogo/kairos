@@ -1029,9 +1029,18 @@ See [current sequencing](dependency-sequencing.md): Polars inventory first, with
 
 [Sequencing](dependency-sequencing.md) registers Criterion reuse, schema-validation gates and conditional ODE/WebSocket work. No runtime acceptance.
 
-## Python runtime qualification — 23 October 2026
+## Python runtime qualification — 25 November 2026
 
-[Python 3.15 migration and qualification](tracks/105-python315-runtime-qualification/index.md) is In Progress. The preserved candidate is reconciled and local CI runtime guards are implemented; hosted/main/runtime handover acceptance remains pending. Track 30 retains version policy; bounded shared-path handoffs precede implementation.
+[Track 105](tracks/105-python315-runtime-qualification/handoff.md) records the
+active Python 3.15.2 handover, native Devbox and installed-inventory checks.
+Managed accelerator and dependency-graph qualification remain open.
+
+## Frontier experiment — 25 November 2026
+
+[Track 115](tracks/115-frontier-experiments/handoff.md) is In Progress.
+Two runs reproduced the frozen claim-validation corpus. Planning,
+checkpoint branching and hybrid experiments remain gated by their
+execution and evidence requirements.
 
 ## Track 76 Phase 0–2 implementation review (2026-10-24)
 

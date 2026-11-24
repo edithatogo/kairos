@@ -99,8 +99,13 @@ if (!preflightJob.includes("validate-publication-readiness.mjs")) fail("prefligh
 
 for (const marker of [
   "cargo publish --dry-run --workspace",
-  "python -m pip install --upgrade build twine",
-  "python -m twine check dist/*",
+  "releasePython(repoRoot)",
+  '"-I", "-m", "pip", "--isolated", "install"',
+  "--only-binary=:all:",
+  "--require-hashes",
+  "scripts/package-python-tools.lock",
+  'runArgs(python, ["-I", "-m", "build", "--no-isolation"]',
+  'runArgs(python, ["-I", "-m", "twine", "check", "dist/*"]',
   "R CMD build bindings/r",
   "_R_CHECK_FORCE_SUGGESTS_",
   "julia --project=bindings/julia",

@@ -1,0 +1,36 @@
+{
+  "source_commit": "077721da0bcb0dcb0bb2f2bc2b8d5cde9778601a",
+  "preregistered_commit": "d8ba90e88798e126359a94704b6d567abc2090e6",
+  "source_archive_sha256": "ce39856acac5fb48e5087863f6eb524451cb79bb21cff6da0801661583e04efb",
+  "protocol_sha256": "64c2a6d437c4a2c26aacdc5ef636c1cf0363159f07bba34d007768f7a99e4841",
+  "experiment_sha256": "d98085c55109648c06690fbffb31efc6416e33152dc51ffa9f6acd81d8cebf38",
+  "mac": {
+    "host": [
+      "Darwin arm64",
+      "sha256sum (Darwin) 1.0"
+    ],
+    "command": "/usr/bin/time -p timeout 120 node claim-contract/experiment.mjs <source archive>",
+    "working_directory": "/Users/doughnut/.codex/worktrees/kairos-scientific-evidence-closeout/kairos",
+    "exit": 0
+  },
+  "linux": {
+    "host": "Linux x86_64, Apple Container amd64 with Rosetta",
+    "image": "node:26.13.1-bookworm-slim@sha256:40168539433ce47c04c4106f8ca42aee6f493cff42c08dede9e1f2ca0398b05b",
+    "sha256sum": "GNU coreutils 9.1",
+    "command": "timeout 120 node /study/experiment.mjs /source",
+    "source_and_study_mounts": "read-only",
+    "network": "none",
+    "exit": 0
+  },
+  "node": "v26.13.1",
+  "result_sha256_each_runner": "4bf2a115e07acb39664939be9f4b5a06738f5b4006b122e94e67a989142d0ecf",
+  "result_bytes_equal": true,
+  "corpus": {
+    "valid_accepted_by_both": 6,
+    "integrity_rejected_by_both": 4,
+    "additional_intended_typed_rejections": 8,
+    "lineages_with_added_detection": 3,
+    "authenticity_failures_accepted_by_both": 4
+  },
+  "success_rule_met": true
+}

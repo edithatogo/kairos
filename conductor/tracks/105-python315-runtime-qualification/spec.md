@@ -1,6 +1,8 @@
 # Python 3.15 runtime migration and qualification
 
-Maturity: Python 3.15.1 baseline integrated and handed over through PRs #297/#301/#302; provider quality follow-through remains open. This policy amendment does not advance the phase-closeout ledger.
+Python 3.15.2 is active in the current checkout and selected provider lanes.
+The [handoff](handoff.md) records the remaining provider checks and the
+retained 3.15.1 baseline.
 
 ## Objective
 
