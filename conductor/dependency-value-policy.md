@@ -57,6 +57,12 @@ Geographic transport is later and consumer-gated. SUMO stays conditional on traf
 
 Prefer reusing qualified existing tooling (Criterion, Python jsonschema) over another framework. Schema libraries replace duplicated structural checks only; preserve domain validation. Capability placeholders and incorrectly named algorithms require truthful correction regardless of whether an alternative dependency is adopted.
 
+Reuse the accepted Rayon and Polars implementations for matching workloads. Check
+worker-count replay and reduction order for additional parallel work. Preserve
+versioned Arrow and Parquet contracts and qualify consumer pins in their owning repos.
+Evaluate direct Crossbeam use against an observed synchronous channel bottleneck.
+Measure tracing overhead on the dispatch path before expanding instrumentation.
+
 ## CareOps-Sim impact and opportunity review
 
 At dependency closeout (including defer/reject), the Kairos owner supplies the accepted immutable commit, decision, exact versions/features and relevant behavioural/compatibility receipts. The CareOps-Sim coordinator and actual consumer owner perform a small downstream review in `conductor/dependency-handoffs.json`, keyed by `owner_track`. Review already accepted tracks as follow-through; do not reopen historical implementation phases or rewrite their receipts.

@@ -92,6 +92,11 @@ function checkStatus(hosted, key) {
   return hosted.availability?.[key] === false ? 'unavailable' : undefined;
 }
 
+function dashboardEnabled(config) {
+  const dashboard = config.dependencyDashboard;
+  return dashboard === true || dashboard?.enabled === true;
+}
+
 function ciSkipGuardContract(text) {
   return {
     pullRequestTrigger: /^\s+pull_request:\s*$/m.test(text.slice(text.indexOf('\non:') + 1, text.indexOf('\npermissions:'))),
@@ -199,7 +204,7 @@ function evaluateDrift({ source, hosted }) {
     dashboard: true,
   }, hosted.mainRenovate ? {
     preset: hosted.mainRenovate.extends?.find((preset) => preset.startsWith('github>')) ?? null,
-    dashboard: Boolean(hosted.mainRenovate.dependencyDashboard),
+    dashboard: dashboardEnabled(hosted.mainRenovate),
   } : null, checkStatus(hosted, 'mainRenovate') ?? (hosted.mainRenovateStatus === 'pending' ? 'pending' : undefined),
   hosted.mainRenovateStatus === 'pending' ? 'The shared preset is present on the candidate branch and awaits integration.' : undefined);
 
@@ -376,7 +381,7 @@ function sourceSnapshot(root) {
     ciSkipGuardContract: ciSkipGuardContract(ciSkipGuardText),
     hasJustCiRecipe: /^ci:\s/m.test(justfile),
     renovatePreset: renovate.extends?.find((preset) => preset.startsWith('github>')) ?? null,
-    renovateDashboard: Boolean(renovate.dependencyDashboard),
+    renovateDashboard: dashboardEnabled(renovate),
   };
 }
 
