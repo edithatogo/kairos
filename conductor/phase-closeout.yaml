@@ -1877,17 +1877,20 @@ entries:
 
   - track_id: "109"
     phase: "0"
-    state: pending
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Programme approved; implementation and independent acceptance remain scoped to the track plan."
-    fixes_applied: false
+    review_result: "Independent native interface review accepted the retirement inventory, negative controls, and installed native-core-v1 API/lifetime evidence at e2875387. The handoff names the exact supported matrix and remaining adapter profiles."
+    fixes_applied: true
     validation_commands:
+      - "Exact hosted bindings 45051171197 and clean native installations 45051171243"
+      - "run_installed_c and run_installed_python on the downloaded macOS archives and hash-matched fixtures"
       - "node scripts/validation/validate-frontier-evidence.mjs"
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
-    git_status: "Implementation packet in progress; no phase acceptance claimed."
-    commit_sha: ""
-    pushed_ref: ""
-    next_phase_decision: "Complete Phase 0 oracles and independent review before closing or promoting this track."
+      - "pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree"
+    git_status: "Verified exact source on protected main."
+    commit_sha: "e2875387ce45c34cd19716ea66f0102251a6aa6f"
+    pushed_ref: "origin/main"
+    next_phase_decision: "Close host-core retirement. Proceed with Phase 1 for the remaining adapter profiles and retain the accepted native-core-v1 surface."
 
   - track_id: "110"
     phase: "0"
@@ -1937,16 +1940,19 @@ entries:
     phase: "0"
     state: pending
     review_command: "$conductor-review"
-    review_result: "The native-core-v1 candidate passed both hosted clean installs at exact main source. The retained macOS archives independently passed Rust, C ABI, Python and the installed CareOps case."
-    fixes_applied: false
+    review_result: "Independent review accepted the e2875387 scoped engineering evidence, including both installed CareOps receipts, exact package digests, signed SPDX, full Cargo policy and package dry runs. Maintainer acceptance of the support and replay boundary is pending."
+    fixes_applied: true
     validation_commands:
       - "node scripts/validation/validate-frontier-evidence.mjs"
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
-      - "packaging/scripts/qualify_native_beta.py against the exact candidate on both hosted targets"
-    git_status: clean
-    commit_sha: "3b3b8da0a7cdbd414e12a18722f189996a52c7ab"
+      - "verify_native_beta_evidence.py against installation run 45051171243 and both artifact bundles"
+      - "gh attestation verify on the five distinct package digests against SPDX from 45053462090"
+      - "cargo deny --locked check advisories bans licenses sources on exact candidate source"
+      - "build_release_manifest.py --check, Cargo types package verifier and Python build/Twine checks on exact candidate source"
+    git_status: "Verified exact source on protected main."
+    commit_sha: "e2875387ce45c34cd19716ea66f0102251a6aa6f"
     pushed_ref: "origin/main"
-    next_phase_decision: "Accept the installed-artifact gate. Complete the remaining alpha-to-beta evidence and maintainer review for this candidate."
+    next_phase_decision: "Retain the verified native-core-v1 artifacts. Record maintainer acceptance of the concrete scope and replay break before advancing to Phase 1."
 
   - track_id: "114"
     phase: "0"

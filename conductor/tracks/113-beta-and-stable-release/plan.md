@@ -6,8 +6,10 @@ Release a precisely scoped beta, then an independently reproducible and compatib
 
 - [x] 113.0.1: Freeze the native-core-v1 candidate APIs and platform profiles. Record excluded capabilities and their owners in the [beta scope](../../release/beta-scope.md).
 - [ ] 113.0.2: Complete every alpha-to-beta gate in release-gates.md, including immediate Rust-only enforcement.
+  The [exact candidate decision](handoff.md#native-core-v1-decision--25-november-2026)
+  records the passed engineering checks. Gate 9 awaits maintainer acceptance.
 - [x] 113.0.3: Qualify clean binary/package installation and an installed CareOps consumer against the [selected candidate artefacts](handoff.md#native-core-v1-candidate--23-november-2026).
-- [ ] 113.0.review: Independently review this phase, apply accepted fixes, execute the named oracles and record the next-phase decision.
+- [x] 113.0.review: Independently review the exact candidate evidence, apply accepted fixes and record the next-phase decision. [Review and evidence](handoff.md#native-core-v1-decision--25-november-2026).
 
 ## Phase 1: Beta and release candidate
 

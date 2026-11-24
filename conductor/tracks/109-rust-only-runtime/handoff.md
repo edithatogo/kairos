@@ -1,5 +1,35 @@
 # Handoff
 
+## Native runtime acceptance — 25 November 2026
+
+Phase 0 is closed. The binding inventory names each retired or unavailable
+host entry point. The native-only implementation packet and exact candidate
+binding CI exercised retirement controls and actual Rust-backed Python, C#
+and Wasm paths. Go, R and Julia retain their documented unavailable or
+data-only boundaries. [Runtime inventory](../../../bindings/runtime-policy.json) ·
+[Implementation](../../frontier-implementation-20261107.md) ·
+[Candidate binding CI](https://github.com/edithatogo/kairos/actions/runs/45051171197).
+
+The frozen `native-core-v1` Rust SDK, C ABI v1 and CPython 3.15.2 adapter
+are accepted on Linux x86-64 GNU and macOS ARM64 at
+`e2875387ce45c34cd19716ea66f0102251a6aa6f`. Installed checks covered dispatch,
+cancellation, wide ticks, foreign and retired handles, reset/free, buffer
+ownership, and typed loader failures. The standalone Rust fixture and
+installed CareOps executed against the same SDK. The downloaded macOS
+library and wheel independently repeated the installed C fixture, six
+Python lifecycle tests and four loader rejection controls.
+[Support and replay contract](../../release/beta-scope.md) ·
+[Installation receipts](../113-beta-and-stable-release/handoff.md#native-core-v1-decision--25-november-2026).
+
+The independent Conductor review checked the frozen header and adapter,
+retirement inventory, installed failure controls, and the scope of the
+receipts. Phase 1 continues with the remaining adapter and platform profiles.
+The [runtime inventory](../../../bindings/runtime-policy.json) states the
+current boundary for each. The release candidate decision is recorded in
+[Track 113](../113-beta-and-stable-release/handoff.md).
+
+## Registration history — 7 November 2026
+
 Updated 7 November 2026. Status: In Progress; no implementation phase is accepted by this registration.
 
 ## Summary

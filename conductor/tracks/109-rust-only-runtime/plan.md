@@ -4,18 +4,19 @@ Retire every executable non-Rust simulation core immediately and qualify support
 
 ## Phase 0: Immediate enforcement
 
-- [ ] 109.0.1: Inventory all production schedulers, RNGs, fake environment transitions and backend selectors; separate DTO/visualization/reference tooling.
-- [ ] 109.0.2: Remove executable host cores and make missing/unsupported native operations explicit typed errors; no opt-in fallback escape hatch.
-- [ ] 109.0.3: Add real Python C ABI operations where the current native contract supports them; keep richer unsupported APIs explicit.
-- [ ] 109.0.4: Replace synthetic success tests with negative retirement tests plus distinct actual-native execution tests.
-- [ ] 109.0.review: Independently review this phase, apply accepted fixes, execute the named oracles and record the next-phase decision.
+- [x] 109.0.1: Inventory all production schedulers, RNGs, fake environment transitions and backend selectors; separate DTO/visualization/reference tooling.
+- [x] 109.0.2: Remove executable host cores and make missing/unsupported native operations explicit typed errors; no opt-in fallback escape hatch.
+- [x] 109.0.3: Add real Python C ABI operations where the current native contract supports them; keep richer unsupported APIs explicit.
+- [x] 109.0.4: Replace synthetic success tests with negative retirement tests plus distinct actual-native execution tests.
+- [x] 109.0.review: Independently review this phase, apply accepted fixes, execute the named oracles and record the next-phase decision. [Retirement and native evidence](handoff.md#native-runtime-acceptance--25-november-2026).
 
 ## Phase 1: Native product surface
 
-- [ ] 109.1.1: Freeze native handle/event/RNG/error/schema contracts with ABI and lifetime tests; implement missing Rust exports before advertising host APIs.
+- [x] 109.1.1: Freeze native handle/event/RNG/error/schema contracts with ABI and lifetime tests for [native-core-v1](../../release/beta-scope.md).
 - [ ] 109.1.2: Generate or consolidate adapters using C ABI/PyO3/wasm-bindgen; qualify Python, TypeScript/Wasm, C#, R, Julia and Go separately.
-- [ ] 109.1.3: Package clean artefacts for each advertised platform and run installed-artifact dispatch/cancellation/replay/ownership tests.
-- [ ] 109.1.4: Ensure examples and package metadata name supported APIs and fail when native artefacts or model capabilities are absent.
+  The CPython 3.15.2 adapter is accepted for the two native-core-v1 targets.
+- [x] 109.1.3: Package clean artefacts and run installed-artifact dispatch, cancellation, replay and ownership tests for both native-core-v1 platforms.
+- [x] 109.1.4: Verify the candidate examples and package metadata name the scoped APIs and fail when required native artefacts or model capabilities are absent.
 - [ ] 109.1.review: Independently review this phase, apply accepted fixes, execute the named oracles and record the next-phase decision.
 
 ## Phase 2: Acceptance
