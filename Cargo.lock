@@ -2228,7 +2228,6 @@ dependencies = [
  "hdf5-metno",
  "kairo-ecs-adios2",
  "kairo-ecs-core",
- "kairo-ecs-des",
  "kairo-ecs-fs-guard",
  "kairo-ecs-rng",
  "kairo-ecs-types",
@@ -2255,12 +2254,15 @@ name = "kairo-ecs-bench"
 version = "0.1.0"
 dependencies = [
  "criterion",
+ "kairo-ecs-arrow",
  "kairo-ecs-core",
+ "kairo-ecs-des",
  "kairo-ecs-rng",
  "kairo-ecs-state",
  "kairo-ecs-types",
  "serde",
  "serde_json",
+ "tempfile",
 ]
 
 [[package]]

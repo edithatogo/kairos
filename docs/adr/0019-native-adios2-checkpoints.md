@@ -31,6 +31,11 @@ size. The shared record codec verifies the legacy checksum and a versioned
 SHA-256 digest over the complete logical rows and metadata. Use a trusted
 artifact and validate its origin separately when authentication matters.
 
+When copying a checkpoint to another host, keep the complete BP5 directory
+and verify the file hashes after transfer. On macOS, use
+`COPYFILE_DISABLE=1 tar -czf checkpoint.tar.gz checkpoint` to omit AppleDouble
+sidecar files. The importer rejects extra files inside the BP5 directory.
+
 ## Publication and recovery
 
 Create the sibling staging directory with mode `0700` before writing any

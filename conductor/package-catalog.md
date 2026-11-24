@@ -201,7 +201,7 @@ The following are the first non-destructive steps each ecosystem should support 
 
 | Ecosystem | Starter work | Dry-run or local check | Notes |
 |---|---|---|---|
-| Rust | Keep the workspace crates checked in and gate any new root/bridge crate on naming approval | `cargo metadata --no-deps --format-version 1`, `cargo package --allow-dirty --workspace`, `cargo publish --dry-run --workspace` | Keep `unsafe` isolated, verify crate naming early, and follow the manifest-backed dry-run order. |
+| Rust | Keep the workspace crates checked in and gate any new root/bridge crate on naming approval | [Workspace package command](../packaging/release-package-manifest.json) and [registry dry-run workflow](../.github/workflows/release.yml) | Keep `unsafe` isolated, verify crate naming early, and follow the manifest-backed dry-run order. |
 | Python | Package the checked-in `bindings/python/pyproject.toml` surface | `python -m build`, `twine check dist/*`, `pytest`, `python -c "import kairo_ecs; print(kairo_ecs.self_check())"` | Prefer a single backend path and keep Python 3.10-3.14 visible. |
 | R | Package the checked-in `bindings/r` surface | `R CMD build .`, `R CMD check --no-manual .`, `Rscript -e "testthat::test_dir('tests', reporter = 'summary')"` | Start with GitHub/R-universe style distribution and a CRAN-style package check. |
 | Julia | Package the checked-in `bindings/julia` surface | `julia --project -e "using Pkg; Pkg.test()"`, `julia --project -e "using Pkg; Pkg.build()"` | Keep General Registry and JLL as later-stage work. |

@@ -16,9 +16,10 @@ process with an uninterrupted reference.
 | ADIOS2 native roundtrip | `cargo test --locked -p kairo-ecs-arrow --features adios2 --test maturity_native_adios2` | Native file qualification |
 | ADIOS2 independent reader | With `KAIROS_BPLS` set, run `cargo test --locked -p kairo-ecs-arrow --features adios2 --test maturity_native_adios2 bpls -- --ignored --nocapture` | Native file qualification |
 | Restart parity | `rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-arrow --features parallel-io --test checkpoint_restart` | Review |
+| Checkpoint interruption and replacement | `cargo test --locked -p kairo-ecs-arrow --features cohort-native,parallel-io --lib` in the Arrow platform matrix | macOS, Linux and Windows file publication |
 | Self-contained engine restart | `cargo test --locked -p kairo-ecs-arrow --features engine-checkpoint,hdf5,adios2 --test engine_checkpoint_restart` | Native final-state parity |
 | Staged resource checkpoint | `cargo test --locked -p kairo-ecs-des --features checkpoint-json,optimistic-usage --test staged_checkpoint --test optimistic_usage` | Restore invariants and in-process rollback compatibility |
-| Staged resource engine restart | `cargo test --locked -p kairo-ecs-arrow --features engine-checkpoint,hdf5,adios2 --test staged_checkpoint_restart` | Native final-state and sealed occupancy parity |
+| Staged resource engine restart | `cargo test --locked -p kairo-ecs-bench --features hdf5,adios2 --test staged_checkpoint_restart` | Native final-state and sealed occupancy parity |
 | Live-template blocker guard | `node scripts/validation/validate-hpc-live-template-blockers.mjs` | Review and Done |
 | Free compute route boundary | `node scripts/validation/validate-free-compute-routes.mjs` | Review |
 | Full workspace | `rustup run stable-x86_64-pc-windows-gnu cargo test --workspace --all-features` | Phase closeout |
@@ -28,6 +29,12 @@ process with an uninterrupted reference.
 Strict closeout requires `RequireCleanWorkingTree` after each task commit.
 
 ## Evidence manifests
+
+- Bidirectional macOS ARM64 and Linux x86-64 engine restart uses the same
+  production fixture with the build, run modes, inputs and hashes in the
+  [cross-host receipt](evidence/engine-restart-macos-linux.json).
+- The staged resource allocator uses its own
+  [cross-host receipt](evidence/staged-engine-restart-macos-linux.json).
 
 - Local scaffold gate: run `node scripts/validation/validate-hpc-parity-evidence.mjs` and confirm `conductor/hpc-evidence/manifests/track51-local-arrow-checkpoint-scaffold.json` remains `evidence_class: scaffold`.
 - Done gate: replace `conductor/hpc-evidence/manifests/track51-live-parallel-filesystem-template.json` with a reviewed `live-hpc` manifest before claiming Lustre, GPFS, MPI-I/O, or parallel filesystem throughput proof.

@@ -2219,7 +2219,11 @@ fn publish_checkpoint_staged<T>(
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => None,
         Err(e) => return Err(ArrowError::Io(e.to_string())),
     };
-    publish_staged(dest, existing.is_some(), |staged| {
+    let allow_overwrite = existing.is_some();
+    // Windows replacement requires closing the destination handle first.
+    #[cfg(not(unix))]
+    drop(existing);
+    publish_staged(dest, allow_overwrite, |staged| {
         let result = write(staged)?;
         #[cfg(unix)]
         if let Some(original) = existing {
@@ -2244,8 +2248,6 @@ fn publish_checkpoint_staged<T>(
             file.set_permissions(std::fs::Permissions::from_mode(meta.mode() & 0o777))
                 .map_err(|e| ArrowError::Io(e.to_string()))?;
         }
-        #[cfg(not(unix))]
-        let _ = existing;
         Ok(result)
     })
 }

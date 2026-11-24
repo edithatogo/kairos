@@ -31,7 +31,7 @@ node tests/conformance/track12_20_evidence_check.mjs
 
 | Ecosystem | Manifest inventory | Registry target | Dry-run evidence |
 |---|---|---|---|
-| Rust crates | `Cargo.toml` and `crates/*/Cargo.toml` listed in `packaging/release-package-manifest.json` | crates.io | `cargo package --allow-dirty -p kairo-ecs-types`; broader workspace package remains blocked by path dependency versions |
+| Rust crates | `Cargo.toml` and `crates/*/Cargo.toml` listed in `packaging/release-package-manifest.json` | crates.io | [Recorded workspace source package command](../../../packaging/release-package-manifest.json) and the [Rust release dry run](../../../.github/workflows/release.yml) |
 | Python binding | `bindings/python/pyproject.toml` | TestPyPI | hashed build-tool install; `python -m build --no-isolation`; `twine check` |
 | R binding | `bindings/r/DESCRIPTION` | R-universe first | `R CMD build .`; `R CMD check --no-manual --no-tests *.tar.gz` |
 | Julia binding | `bindings/julia/Project.toml` | Julia dev registry first | commit-bound source archive; `Pkg.test()` remains in required binding CI |

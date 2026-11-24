@@ -1,5 +1,19 @@
 # Track 51 Handoff
 
+## Staged allocator restart and package verification
+
+Chat `01a1fd18-51c7-7963-a3cc-d262d54582ba` owns this slice in the
+`kairos-ci-closeout/kairos` worktree on
+`codex/arrow-checkpoint-package-20261124`. The coordinated paths cover the
+Arrow and benchmark manifests, the restart fixture and portability evidence,
+and the Rust release dry run.
+
+The workspace runs the staged allocator fixture through `kairo-ecs-bench`.
+Its development dependencies supply Arrow and DES. Both Cargo commands in
+the release dry run resolve the private Arrow crates from the selected
+source tree. The next operation is the pull request's hosted verification.
+[Fixture and portability checks](test-matrix.md).
+
 ## Native Arrow IPC
 
 Chat `01a1fd18-51c7-7963-a3cc-d262d54582ba` owns the Kairos closeout
