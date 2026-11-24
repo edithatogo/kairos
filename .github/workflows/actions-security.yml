@@ -42,11 +42,24 @@ jobs:
           test -f .github/workflows/release.yml
       - name: Detect floating action refs
         run: |
-          if rg -n "uses:\s+[^@[:space:]]+@(main|master|latest|HEAD)\b" .github/workflows; then
-            exit 1
-          fi
+          result=0
+          git grep -nE 'uses:[[:space:]]+[^@[:space:]]+@(main|master|latest|HEAD)([^[:alnum:]_]|$)' -- .github/workflows || result=$?
+          test "$result" -eq 1
       - name: Run zizmor
+        id: audit
         uses: zizmorcore/zizmor-action@45d7276c9ca790aabd705e31ca99c6185c3e76dd # v0.8.1
         with:
           persona: auditor
           online-audits: false
+          token: ""
+      - name: Enforce workflow runner safeguards
+        env:
+          SARIF: ${{ steps.audit.outputs.output-file }}
+        run: |
+          jq -e '
+            .version == "2.1.0" and
+            (.runs | type == "array" and length > 0 and all(.[];
+              .tool.driver.name == "zizmor" and
+              (.results | type == "array" and all(.[];
+                .level != "error" and .ruleId != "zizmor/artipacked"))))
+          ' "$SARIF" > /dev/null
