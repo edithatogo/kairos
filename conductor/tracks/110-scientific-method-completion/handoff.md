@@ -65,7 +65,7 @@ The independent `$conductor-review` matched the source and fixture hashes,
 logs, platform and Arrow bytes. The accepted fixes narrow the wording to
 the tested protocol and movement cases and count the nested TCP peer once.
 The runtime commit SHA is `c5959a9ce92dbbc8991ce4f54480b281099a8e34`. The pushed ref is
-`origin/main`. Run `scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`
+`origin/codex/scientific-evidence-closeout-20261125`. Run `scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`
 against the integrated tree. The next-phase decision keeps Phase 0 open
 for the remaining caller and version map and oracle identities. The later
 phases retain their downstream, wider native and held-out acceptance work.
