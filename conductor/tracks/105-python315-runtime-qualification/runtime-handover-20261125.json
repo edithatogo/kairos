@@ -65,7 +65,18 @@
       "missing": 0,
       "scope": "Package presence only; no graph/edges/extras claims"
     },
-    "managed_graph_edges": "Current installed presence is verified. Managed graph edges and extras remain unverified.",
+    "managed_graph": {
+      "gym_run": 45026899759,
+      "gym_source": "7ff7eb6a9ec2cb8fa63a7e1a13f8355fc4aed638",
+      "same_gym_input_bytes_on_main": true,
+      "actual_python": "3.15.2",
+      "submission_http_status": 204,
+      "direct_packages": 4,
+      "dependency_edges_in_submitted_payload": 0,
+      "gym_log_sha256": "c1b43704058da5a40d306a1352862f01d64c3b9e9c25919434b487d8182fb6fc",
+      "historical_full_scope_failure_run": 40862183601,
+      "remaining": "Fresh qualification for the broader Python resolver scope, transitive edges and extras."
+    },
     "codecov": {
       "run": 45475266595,
       "upload": "success",

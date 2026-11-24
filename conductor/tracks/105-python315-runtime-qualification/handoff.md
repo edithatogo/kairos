@@ -21,11 +21,14 @@ invocations.
 
 Hosted Devbox passed fresh and repeat startup on `077721d`. The exact
 main dependency inventory read back all 52 expected package identities.
-That readback covers presence. Managed Dependabot resolution of
-dependency edges remains open. Codecov reported a successful upload and
-patch status. GitHub still lacked a project status for that commit.
+That readback covers presence. The managed Gym job also used Python 3.15.2
+and submitted four direct package records with empty dependency lists.
+Its Gym inputs match current main. Fresh managed resolution for the other
+Python surfaces, transitive edges and extras remains open. Codecov reported
+a successful upload and patch status. GitHub still lacked a project status.
 [Devbox run](https://github.com/edithatogo/kairos/actions/runs/45479567466) ·
-[Inventory run](https://github.com/edithatogo/kairos/actions/runs/45475266490).
+[Inventory run](https://github.com/edithatogo/kairos/actions/runs/45475266490) ·
+[Gym graph job](https://github.com/edithatogo/kairos/actions/runs/45026899759).
 
 The Cloud/HPC smoke can be dispatched directly for fresh container
 evidence on a selected ref. GCP array rendering passed its fictional
