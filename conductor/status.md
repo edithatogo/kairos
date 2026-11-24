@@ -50,6 +50,13 @@ scaling still require target evidence.
 [Metal results](execution/scientific/s11-completion.md) ·
 [CUDA results](execution/scientific/s11-cuda-completion.md).
 
+## Security PR reconciliation — 25 November 2026
+
+The runner security PRs enforce workflow safeguards and isolate the
+existing pedantic audit on GitHub-hosted Linux. The wider four-layer
+offline profile retains its central qualification gates.
+[Security PR evidence](tracks/13-ci-cd-quality-supply-chain/handoff.md#security-pr-reconciliation--25-november-2026).
+
 ## Repository pull request reconciliation — 24 November 2026
 
 The maintained changes from nine original PRs are on main and passed hosted

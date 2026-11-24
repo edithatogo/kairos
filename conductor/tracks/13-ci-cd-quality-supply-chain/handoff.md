@@ -1,5 +1,26 @@
 # Handoff — 13 CI/CD, Code Quality & Supply Chain
 
+## Security PR reconciliation — 25 November 2026
+
+PR #395 adds a blocking check for high-severity zizmor findings and unsafe
+checkout credential handling. Git checks the common floating refs. The audit
+runs with the checksum-verified binary and an empty process environment apart
+from its path and home. SARIF publication remains a separate GitHub step.
+The tested tree merged as 161c0bfd. [PR #395](https://github.com/edithatogo/kairos/pull/395) ·
+[Hosted security check](https://github.com/edithatogo/kairos/actions/runs/45416572707).
+
+PR #386 applies network isolation to the existing pedantic workflow scan on
+GitHub-hosted Linux. The workflow checks that the scanner runs unprivileged in
+a fresh network namespace, then publishes the report from the runner. The
+central four-layer rollout still requires its own Kairos qualification. The
+published Apple Container workflow is scoped to Paignia. [PR #386](https://github.com/edithatogo/kairos/pull/386) ·
+[Central rollout](https://github.com/edithatogo/repository-standards/pull/126) ·
+[Published Paignia workflow](https://github.com/edithatogo/repository-standards/pull/182).
+
+Runner egress monitoring through StepSecurity remains a separate integration.
+Renovate and the existing CI checks cover dependency updates and static
+validation.
+
 ## Pull request and worktree reconciliation — 24 November 2026
 
 | Merged replacement | Superseded PRs read back closed | Successful PR workflows | Successful main workflows |

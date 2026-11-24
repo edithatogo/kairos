@@ -138,8 +138,29 @@ jobs:
           test -f .github/workflows/toolchain-check.yml
           test -f .github/workflows/validate-conductor.yml
           test -f .github/workflows/workflow-security.yml
-      - name: Run zizmor
-        uses: zizmorcore/zizmor-action@45d7276c9ca790aabd705e31ca99c6185c3e76dd # v0.8.1
+      - name: Install pinned zizmor
+        uses: taiki-e/install-action@4a76afe23f9e08d2d9550fb56e556444e8611d21 # v2.90.4
         with:
-          persona: pedantic
-          online-audits: false
+          tool: zizmor@1.32.0
+          fallback: none
+      - name: Audit workflows in a separate network namespace
+        shell: bash
+        run: |
+          set -euo pipefail
+          scanner="$(command -v zizmor)"
+          host_namespace="$(readlink /proc/self/ns/net)"
+          sudo --non-interactive /usr/bin/unshare --net -- /usr/bin/setpriv \
+            --reuid "$(id -u)" --regid "$(id -g)" --clear-groups --no-new-privs \
+            /usr/bin/env -i PATH=/usr/bin:/bin HOME="$RUNNER_TEMP" /bin/sh -eu -c '
+              test "$(id -u)" -ne 0
+              test "$(readlink /proc/self/ns/net)" != "$1"
+              test "$(wc -l < /proc/net/dev)" -eq 3
+              grep -q "^NoNewPrivs:[[:space:]]*1$" /proc/self/status
+              printf "Running zizmor as uid %s in an isolated network namespace\n" "$(id -u)" >&2
+              exec "$2" --offline --strict-collection --persona=pedantic --format=sarif -- .
+            ' sh "$host_namespace" "$scanner" | tee "$RUNNER_TEMP/zizmor.sarif" > /dev/null
+      - name: Upload zizmor SARIF
+        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          sarif_file: ${{ runner.temp }}/zizmor.sarif
+          category: zizmor
