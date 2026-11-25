@@ -17,6 +17,7 @@ Format:
 ### Added
 
 - `kairo-ecs-core` can reserve scheduler event and cancellation storage up front when the expected queue size is known.
+- The optional `kairo-ecs-core/numa` feature can read native NUMA nodes, physical core groups and shared caches from an installed hwloc tool.
 
 - The conservative PDES benchmark adds an optional `--phold` case with matched serial and parallel inputs and reports for setup, dispatch and end-to-end time. `kairo-ecs-gpu` adds a hardware Vulkan qualification example for the shared resident compute shaders. [Performance programme](conductor/performance-programme.md)
 
