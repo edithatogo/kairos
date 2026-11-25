@@ -44,6 +44,12 @@ qualified checkout-local CPython 3.15.2 and the verified SimPy 4.1.2 wheel.
 | `cargo fmt --all --check` | Exit 0 |
 | `just ci` | Exit 101 during workspace lint compilation because this Mac lacks the HDF5 headers |
 
+The exact-base hosted coverage check initially counted four fewer covered
+lines with the same uncovered count after the frontier simplification. The
+directed topology regression now asserts the typed errors for missing LP
+entries and unknown sources. A pinned Rust 1.99.1 instrumented run hit both
+constructor guards that the original hosted profile missed.
+
 The pinned queue-consumer rebuild ran the same three engines and returned
 the archived ordered result SHA-256
 `e6df5ef8bfc08969042d36d0de9cc74f5f42e791dfa542eaabca048a998d4dc9`.
