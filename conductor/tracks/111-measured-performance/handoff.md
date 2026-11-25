@@ -43,7 +43,7 @@ results support the bounded frontier change. Leave executor choice
 explicit until there is an independently validated crossover rule.
 
 The independent review and its fixes cover the integrated evidence.
-The owning checkout is
+The implementation used
 `/Users/doughnut/.codex/worktrees/kairos-scientific-evidence-closeout/kairos` on `codex/track111-measured-performance-20261125`
 under chat `01a1fd18-51c7-7963-a3cc-d262d54582ba`. The next empirical step is to
 run the frozen matched protocol on an available dedicated runner.
@@ -245,8 +245,7 @@ Use isolated bounded worktrees. The root integration packet combines disjoint ch
 
 ## Phase closeout evidence
 
-`$conductor-review` approved the Phase 0 evidence. The publication gate
-closes after the proof is verified on main. The [review report](review-report.md)
+`$conductor-review` accepted Phase 0 after the verified merge of [PR #470](https://github.com/edithatogo/kairos/pull/470). The [review report](review-report.md)
 records the accepted fixes, and the [phase ledger](../../phase-closeout.yaml)
 records the evidence commit SHA, pushed ref and next-phase decision.
 `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`
