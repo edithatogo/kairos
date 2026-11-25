@@ -299,6 +299,12 @@
       "kind": "review",
       "path": "conductor/execution/scientific/s14-completion.md"
     },
+    "s14_cephfs": {
+      "kind": "review",
+      "path": "conductor/archive/51-parallel-io-arrow-checkpoint-export/evidence/cephfs-20261125.json",
+      "source_ref": "df9fe1d76b4fbe0d2b32eda50d18d9f568243be1",
+      "sha256": "19aa44388a96fa558f3da1f8214735cf6ef7bbe9d2da54bab0526c3d1d06f26d"
+    },
     "s14_ipc_writer": {
       "kind": "source",
       "path": "crates/kairo-ecs-arrow/src/native_ipc.rs"
@@ -629,11 +635,12 @@
       "name": "NUMA, parallel I/O and model restart",
       "status": "implemented",
       "completion_track": "110",
-      "scope": "The native Arrow IPC, HDF5 and ADIOS2 BP5 paths write typed files. The installed service-queue restart matched 228 remaining dispatches and final counters.",
-      "limitations": "Results cover local native files and the named restart fixture. Live parallel filesystems, additional workloads, NUMA and cross-host scaling remain open.",
+      "scope": "The native Arrow IPC, HDF5 and ADIOS2 BP5 paths write typed files. The installed service-queue restart matched 228 remaining dispatches and final counters. Mounted CephFS passed Arrow publication, two-rank MPI-I/O and successive HDF5 restores.",
+      "limitations": "CephFS evidence covers the named workloads on one VM per run. Additional filesystems, restart workloads, NUMA and cross-host scaling require their own evidence.",
       "evidence": [
         "s14_ipc_writer",
-        "s14_files"
+        "s14_files",
+        "s14_cephfs"
       ]
     },
     {
