@@ -37,6 +37,11 @@ horizon.
 
 ## Reproduce
 
+The capture used the production crates and lockfile from baseline
+`9d76ca7f4b7f4b5898f2ec77515a7a7639f1478b` with the
+[conservative frontier patch](../frontier-fold/one-pass-frontiers.patch).
+The receipt records the equivalent source digest.
+
 From the repository root, use a fresh private Cargo target directory
 `target` and a fresh receipt path. Set up the repository-local CPython
 3.15.2 environment. Run

@@ -335,5 +335,11 @@
       "pooled"
     ],
     "pair": 0
+  },
+  "source_reconstruction": {
+    "published_base": "9d76ca7f4b7f4b5898f2ec77515a7a7639f1478b",
+    "patch_path": "conductor/tracks/111-measured-performance/evidence/frontier-fold/one-pass-frontiers.patch",
+    "patch_sha256": "eceabde057936fb7ce729e5652f9a9786fd628b7a5f351073f039d28bea96a5c",
+    "conservative_source_sha256": "3a7328c43b54596703eec5f5d36ffa0f7cc31c436c98490bda6700b9b8f98cb8"
   }
 }
