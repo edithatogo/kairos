@@ -25,9 +25,25 @@ measured profiles. Dedicated-host certification has its own test matrix.
 [Predeclared protocol](frontier-protocol.json) · [All intervals](frontier-summary.json) ·
 [Raw paired runs](paired.jsonl.gz) · [Execution receipt](receipt.json).
 
+## Pinned toolchain repeat
+
+Cargo 1.99.1 had selected Homebrew rustc 1.100.0 for both builds in the first
+capture. The executable paths embedded by the linked Rust standard library
+identify that compiler revision. A second capture explicitly selected rustc
+and rustdoc 1.99.1 before building both the baseline and the candidate.
+
+Across another ten process pairs at each event cost, the pinned build
+preserved exact input, state and counter parity. The cheap 32-LP profile
+reduced median paired total time by 23.4%. The candidate/baseline ratio
+was 0.766 [0.733, 0.835]. At 8,192 mixes its ratio was
+0.886 [0.839, 1.028]. The largest comparator median increase was 4.7%.
+Both captures met the preregistered local point-estimate and parity rule.
+[Pinned receipt](pinned-receipt.json) · [All pinned intervals](pinned-summary.json) ·
+[Pinned raw pairs](pinned-paired.jsonl.gz).
+
 ## Reproduction
 
-Run from the repository root with Rust 1.99.1, jq, the locked dependencies
+Run from the repository root with Cargo and Rust 1.99.1, jq, the locked dependencies
 cached and the verified repository-local CPython 3.15.2. The builder compiles
 the baseline before applying the frontier patch to the same scratch tree.
 
@@ -36,9 +52,14 @@ set -euo pipefail
 evidence="$PWD/conductor/tracks/111-measured-performance/evidence/frontier-fold"
 scratch=$(mktemp -d)
 mkdir "$scratch/frontier-source"
-git archive "$(jq -er .baseline "$evidence/receipt.json")" | tar -x -C "$scratch/frontier-source"
+git archive --format=tar --output "$scratch/source.tar" "$(jq -er .baseline "$evidence/receipt.json")"
+tar -xf "$scratch/source.tar" -C "$scratch/frontier-source"
 cp "$evidence/frontier-protocol.json" "$evidence/"*.patch "$scratch"
 git -C "$scratch/frontier-source" apply "$scratch/phold-32-lp.patch"
 bash "$evidence/build-frontier.sh" "$scratch"
 .venv/bin/python -I "$evidence/measure-frontiers.py" "$scratch"
 ```
+
+To reproduce the first capture, set `RUSTC` and `RUSTDOC` to the verified
+Homebrew 1.100.0 binaries before calling the builder. The default selects the
+pinned compiler explicitly.

@@ -2,6 +2,8 @@ set -euo pipefail
 stage=$(cd "$1" && pwd -P)
 cd "$stage/frontier-source"
 export CARGO_TARGET_DIR="$stage/frontier-target"
+export RUSTC="${RUSTC:-$(rustup which --toolchain 1.99.1 rustc)}"
+export RUSTDOC="${RUSTDOC:-$(rustup which --toolchain 1.99.1 rustdoc)}"
 export CARGO_PROFILE_RELEASE_DEBUG=1
 export CARGO_PROFILE_RELEASE_SPLIT_DEBUGINFO=unpacked
 build() {

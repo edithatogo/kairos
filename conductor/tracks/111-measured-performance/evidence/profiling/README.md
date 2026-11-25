@@ -1,6 +1,8 @@
 # Native CPU, storage and checkpoint profiles
 
-The captures use the Rust 1.99.1 release profile on a shared Apple M1 Max.
+The captures use Cargo 1.99.1 with Homebrew rustc 1.100.0 on a shared
+Apple M1 Max. The binaries identify the compiler through the linked Rust
+standard library source revision.
 The [receipt](receipt.json) identifies the source, binaries, commands and
 output digests. The earlier
 [allocator experiment](../../handoff.md#direct-event-handoff-experiment)
@@ -77,10 +79,14 @@ and use the receipt's Cargo build with a private output directory. Run the
 comparison on macOS with the qualified repository-local CPython 3.15.2.
 
 ```sh
+# Select the verified Homebrew rustc 1.100.0 and rustdoc before running.
+export RUSTC="$(command -v rustc)" RUSTDOC="$(command -v rustdoc)"
+"$RUSTC" -Vv
 repo="$PWD"
 evidence="$repo/conductor/tracks/111-measured-performance/evidence/profiling"
 scratch=$(mktemp -d)
-git archive "$(jq -er .baseline "$evidence/receipt.json")" | tar -x -C "$scratch"
+git archive --format=tar --output "$scratch/source.tar" "$(jq -er .baseline "$evidence/receipt.json")"
+tar -xf "$scratch/source.tar" -C "$scratch"
 mkdir -p "$scratch/crates/kairo-ecs-state/examples"
 cp "$evidence/layout-and-checkpoint.rs" "$scratch/crates/kairo-ecs-state/examples/track111_layout.rs"
 (

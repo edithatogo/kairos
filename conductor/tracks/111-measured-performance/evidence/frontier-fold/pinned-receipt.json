@@ -1,0 +1,46 @@
+{
+  "baseline": "9d76ca7f4b7f4b5898f2ec77515a7a7639f1478b",
+  "source_sha256": {
+    "conservative.rs": "3a7328c43b54596703eec5f5d36ffa0f7cc31c436c98490bda6700b9b8f98cb8",
+    "production.rs": "9ace001ad2b8cbfa3e2a5e2bfa04f680a33e6f773d4287262b93c6faa2ec89e1",
+    "Cargo.lock": "df26476d07b6323f89bb02819aaff00a12f00c15bdd0114c91d082cd088f0637"
+  },
+  "patches_sha256": {
+    "one-pass-frontiers.patch": "eceabde057936fb7ce729e5652f9a9786fd628b7a5f351073f039d28bea96a5c",
+    "phold-32-lp.patch": "bf433e0f25cbec8c7260c9adbc90731e7723b2423308e22960c8d1790b3049ba"
+  },
+  "protocol_sha256": "edd08c0d81895e38ed27e9d01cae1437e28268fdac05041b445ee6549f4e6618",
+  "protocol_reaffirmed_at_utc": "2026-11-25T10:06:55Z",
+  "build_cwd": "/Volumes/PortableSSD/kairos-track111-closeout.gzk4Uv/pinned-reproof/frontier-source",
+  "capture_cwd": "/Users/doughnut/.codex/worktrees/kairos-scientific-evidence-closeout/kairos",
+  "host": "Shared macOS 27.2.1 Apple M1 Max, 8 performance and 2 efficiency cores, 32 GiB",
+  "build": "cargo bench --locked --offline -p kairo-ecs-pdes --features pdes-worker-pool --bench production --no-run",
+  "build_environment": {
+    "RUSTC": "rustup which --toolchain 1.99.1 rustc",
+    "RUSTDOC": "rustup which --toolchain 1.99.1 rustdoc",
+    "CARGO_PROFILE_RELEASE_DEBUG": "1",
+    "CARGO_PROFILE_RELEASE_SPLIT_DEBUGINFO": "unpacked"
+  },
+  "toolchain": {
+    "cargo": "cargo 1.99.1 (5f94df478 2026-08-27)\nrelease: 1.99.1\ncommit-hash: 5f94df4789f005f9a352888e8355ffc645b7ed0e\ncommit-date: 2026-08-27\nhost: aarch64-apple-darwin\nlibgit2: 1.9.6 (sys:0.21.0 vendored)\nlibcurl: 8.7.1 (sys:0.4.90+curl-8.21.0 system ssl:(SecureTransport) LibreSSL/3.3.6)\nssl: OpenSSL 3.6.3 9 Jun 2026\nos: Mac OS 27.2.1 [64-bit]",
+    "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-apple-darwin\nrelease: 1.99.1\nLLVM version: 23.1.1",
+    "linked_std_revision": "58cf8f9c35b355199727627d07ae34a4e2846d67"
+  },
+  "analysis_python": "3.15.2",
+  "capture": ".venv/bin/python -I conductor/tracks/111-measured-performance/evidence/frontier-fold/measure-frontiers.py /Volumes/PortableSSD/kairos-track111-closeout.gzk4Uv/pinned-reproof",
+  "binaries_sha256": {
+    "frontier-base": "ea0df92acf717ef24c76baec05d48006b855d5f246c8ced661ce8eec2b815d4e",
+    "frontier-candidate": "37735b9704d75470e6d61481dd92af627787db2cf5d700ed06edab343ea6e8f4"
+  },
+  "load_samples": {
+    "before": "20:07  up 10:31, 2 users, load averages: 14.81 51.28 50.13",
+    "after": "20:07  up 10:32, 2 users, load averages: 14.71 47.20 48.69"
+  },
+  "evidence_sha256": {
+    "pinned-paired.jsonl.gz": "ccabde1a9f94fccc1ba09dda8d2ffbebf4fc37038d63a530b01e10b1da5beed6",
+    "pinned-summary.json": "de6cd354739401f2a7e95a37f215d89e7dd74c4dc3b90d5432f8017baeeaafca",
+    "measure-frontiers.py": "cdda49141c2280de8a5eac486e38411789b77c6751721a9fa206808fd8d138e8",
+    "build-frontier.sh": "8a5de3aa559b695c0d780ff19c89e016afd2091ec2f4f02b9a2d3938d5e61bd1"
+  },
+  "exit": 0
+}

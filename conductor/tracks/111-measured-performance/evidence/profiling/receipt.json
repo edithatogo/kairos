@@ -2,7 +2,6 @@
   "baseline": "9d76ca7f4b7f4b5898f2ec77515a7a7639f1478b",
   "captured_from": "/Users/doughnut/.codex/worktrees/kairos-scientific-evidence-closeout/kairos",
   "scratch_cwd": "/Volumes/PortableSSD/kairos-track111-closeout.gzk4Uv/frontier-source",
-  "host_toolchain": "Wed Nov 25 09:05:06 UTC 2026\nProductName:\t\tmacOS\nProductVersion:\t\t27.2.1\nBuildVersion:\t\t26B131\nDarwin arm64\nMacBookPro18,4\n10\n8\n34359738368\nrustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-apple-darwin\nrelease: 1.99.1\nLLVM version: 23.1.1",
   "analysis_python": "3.15.2",
   "cargo_lock_sha256": "df26476d07b6323f89bb02819aaff00a12f00c15bdd0114c91d082cd088f0637",
   "build_profile": "CARGO_PROFILE_RELEASE_DEBUG=1 CARGO_PROFILE_RELEASE_SPLIT_DEBUGINFO=unpacked for the native PDES benchmarks, default release for the layout example",
@@ -36,7 +35,7 @@
   ],
   "scope": "Shared-host CPU evidence. No dedicated runner, hardware cache counters or cross-host latency claim.",
   "sha256": {
-    "README.md": "089232bd4c007572bf2b86e1e0d3283d421fdad986ca187c3fb2a8ddc9d96e92",
+    "README.md": "0a99ddb374dc19e2126bb0088eb273b15c8b8717328413718da264246f477a0c",
     "batch-counterexample.log": "2097faf07890c66c287192d8820c14f7b5eb6f895062f4c884769ccd219bac13",
     "checkpoint.csv": "d37d56e31d4d989a49feb5e0c28a889bcc55a95fc2ddd9b94ba42eb341832567",
     "drain-safe-frontier.patch": "63797e6fb07a0d3d14a03092da85d205803c68f331d6b02370842fd758a0fd7e",
@@ -87,5 +86,11 @@
         ]
       }
     }
+  },
+  "host": "Wed Nov 25 09:05:06 UTC 2026\nProductName:\t\tmacOS\nProductVersion:\t\t27.2.1\nBuildVersion:\t\t26B131\nDarwin arm64\nMacBookPro18,4\n10\n8\n34359738368",
+  "toolchain": {
+    "cargo": "cargo 1.99.1 (5f94df478 2026-08-27)\nrelease: 1.99.1\ncommit-hash: 5f94df4789f005f9a352888e8355ffc645b7ed0e\ncommit-date: 2026-08-27\nhost: aarch64-apple-darwin\nlibgit2: 1.9.6 (sys:0.21.0 vendored)\nlibcurl: 8.7.1 (sys:0.4.90+curl-8.21.0 system ssl:(SecureTransport) LibreSSL/3.3.6)\nssl: OpenSSL 3.6.3 9 Jun 2026\nos: Mac OS 27.2.1 [64-bit]",
+    "rustc": "rustc 1.100.0 (0ef1bc386 2026-11-09) (Homebrew)\nbinary: rustc\ncommit-hash: 0ef1bc386059596dada8fb65b50425aab2ea637a\ncommit-date: 2026-11-09\nhost: aarch64-apple-darwin\nrelease: 1.100.0\nLLVM version: 23.1.6",
+    "linked_std_revision": "0ef1bc386059596dada8fb65b50425aab2ea637a"
   }
 }

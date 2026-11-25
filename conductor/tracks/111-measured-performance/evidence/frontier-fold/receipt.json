@@ -2,13 +2,18 @@
   "baseline": "9d76ca7f4b7f4b5898f2ec77515a7a7639f1478b",
   "capture_cwd": "/Users/doughnut/.codex/worktrees/kairos-scientific-evidence-closeout/kairos",
   "build_cwd": "/Volumes/PortableSSD/kairos-track111-closeout.gzk4Uv/frontier-source",
-  "host": "Wed Nov 25 09:05:06 UTC 2026\nProductName:\t\tmacOS\nProductVersion:\t\t27.2.1\nBuildVersion:\t\t26B131\nDarwin arm64\nMacBookPro18,4\n10\n8\n34359738368\nMach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                     3928.\nPages active:                                 408371.\nPages inactive:                               406153.\nPages speculative:                              1133.\nPages throttled:                                   0.\nPages wired down:                             289094.\nPages purgeable:                                   6.\n\"Translation faults\":                      436652044.\nPages copy-on-write:                        20018986.\nPages zero filled:                         298988415.\nPages reactivated:                          29310243.\nrustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-apple-darwin\nrelease: 1.99.1\nLLVM version: 23.1.1\n9d76ca7f4b7f4b5898f2ec77515a7a7639f1478b\n",
+  "host": "Wed Nov 25 09:05:06 UTC 2026\nProductName:\t\tmacOS\nProductVersion:\t\t27.2.1\nBuildVersion:\t\t26B131\nDarwin arm64\nMacBookPro18,4\n10\n8\n34359738368\nMach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                     3928.\nPages active:                                 408371.\nPages inactive:                               406153.\nPages speculative:                              1133.\nPages throttled:                                   0.\nPages wired down:                             289094.\nPages purgeable:                                   6.\n\"Translation faults\":                      436652044.\nPages copy-on-write:                        20018986.\nPages zero filled:                         298988415.\nPages reactivated:                          29310243.",
   "build": "cargo bench --locked --offline -p kairo-ecs-pdes --features pdes-worker-pool --bench production --no-run",
   "build_environment": {
     "CARGO_PROFILE_RELEASE_DEBUG": "1",
-    "CARGO_PROFILE_RELEASE_SPLIT_DEBUGINFO": "unpacked"
+    "CARGO_PROFILE_RELEASE_SPLIT_DEBUGINFO": "unpacked",
+    "compiler_selection": "Observed Homebrew rustc from initial PATH. Build reproduction requires explicit RUSTC for this capture."
   },
-  "toolchain": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-apple-darwin\nrelease: 1.99.1\nLLVM version: 23.1.1",
+  "toolchain": {
+    "cargo": "cargo 1.99.1 (5f94df478 2026-08-27)\nrelease: 1.99.1\ncommit-hash: 5f94df4789f005f9a352888e8355ffc645b7ed0e\ncommit-date: 2026-08-27\nhost: aarch64-apple-darwin\nlibgit2: 1.9.6 (sys:0.21.0 vendored)\nlibcurl: 8.7.1 (sys:0.4.90+curl-8.21.0 system ssl:(SecureTransport) LibreSSL/3.3.6)\nssl: OpenSSL 3.6.3 9 Jun 2026\nos: Mac OS 27.2.1 [64-bit]",
+    "rustc": "rustc 1.100.0 (0ef1bc386 2026-11-09) (Homebrew)\nbinary: rustc\ncommit-hash: 0ef1bc386059596dada8fb65b50425aab2ea637a\ncommit-date: 2026-11-09\nhost: aarch64-apple-darwin\nrelease: 1.100.0\nLLVM version: 23.1.6",
+    "linked_std_revision": "0ef1bc386059596dada8fb65b50425aab2ea637a"
+  },
   "analysis_python": "3.15.2",
   "cargo_lock_sha256": "df26476d07b6323f89bb02819aaff00a12f00c15bdd0114c91d082cd088f0637",
   "candidate_runtime_source_sha256": "3a7328c43b54596703eec5f5d36ffa0f7cc31c436c98490bda6700b9b8f98cb8",
@@ -20,8 +25,8 @@
   "exit": 0,
   "decision": "Adopt the one-pass frontier fold. All matched profiles retained exact tape, state and counters.",
   "evidence_sha256": {
-    "README.md": "95f418eb0efb8af351fb8cefd5a3441300ccae47b2c8c7e161d5a69f92bef608",
-    "build-frontier.sh": "1493494c45afb03e3de9e4108c8b916eab65e30765b01d0f54380dca664ae20d",
+    "README.md": "66b3a14d69f0810eee10049e59ae3ab5128e18692359e6f791d03f9bf7812241",
+    "build-frontier.sh": "8a5de3aa559b695c0d780ff19c89e016afd2091ec2f4f02b9a2d3938d5e61bd1",
     "frontier-checksums.txt": "9e5a0f24e337935565b38196b03a17f72d9c4bfeab263da4af974a3b15651750",
     "frontier-load-after.txt": "638db8fa885a053e09993148f43fd38272600f34998ed5ecd455e0e1a519cbf0",
     "frontier-load-before.txt": "f4288cdd79574a049af80e7ea21b93fa483880f2823db097061c498d1c49529f",
