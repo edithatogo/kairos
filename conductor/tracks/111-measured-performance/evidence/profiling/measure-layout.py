@@ -28,7 +28,7 @@ def measure(*command):
 for name, fields in columns.items():
     path = f"{args.output}/{name}.csv"
     with open(path, "w", newline="") as output:
-        writer = csv.writer(output)
+        writer = csv.writer(output, lineterminator='\n')
         writer.writerow(["pair", "mode", *fields, "rss_bytes"])
         for entities in (4096, 262144):
             modes = ("aligned", "tight") if name == "state" else ("checkpoint",)

@@ -15,9 +15,7 @@ On the matched PHOLD input at seed 472026 and zero mixes per event,
 at one-millisecond intervals. The scoped stack includes startup and join
 under the conservative round and shows 535 `__bsdthread_create`, 155
 `_pthread_create`, 813 `__ulock_wait` and 15 `_pthread_join` leaf samples.
-The pooled stack shows 2,685 `__psynch_cvwait` leaf samples. The counts
-span threads and refer to sampled stacks. They measure neither calls nor
-fractions of elapsed time. The prior thread-ID oracle isolates reuse across
+The pooled stack shows 2,685 `__psynch_cvwait` leaf samples. These are aggregate leaf counts across sampled threads. The prior thread-ID oracle isolates reuse across
 two horizons. [Scoped stacks](scoped-stack.txt.gz) · [Pooled stacks](pooled-stack.txt.gz).
 
 ## Storage and checkpoint boundaries
@@ -26,19 +24,20 @@ The layout comparison inserts the same generated `u64` components through
 both public stores, then scans the complete column 64 times. It runs one warmup
 per size and layout and ten fresh process pairs in alternating order. Each
 process verifies the wrapping sum and the comparison checks paired equality.
-The existing query oracle checks ordered rows. Column bytes include row
+The existing query oracle checks ordered rows. The table gives medians
+and descriptive 95% intervals from 10,000 paired bootstrap draws (seed 111).
+Column bytes include row
 padding. RSS is the whole process peak recorded by macOS `/usr/bin/time -l`.
 [Source](layout-and-checkpoint.rs) · [Runner](measure-layout.py) · [Samples](state.csv).
 
 | Rows | Tight/aligned scan time, median paired ratio | Tight/aligned peak RSS, median paired ratio | Aligned and tight column bytes |
 | ---: | ---: | ---: | ---: |
-| 4,096 | 0.135 | 0.916 | 262,144 / 32,768 |
-| 262,144 | 0.072 | 0.635 | 16,777,216 / 2,097,152 |
+| 4,096 | 0.135 [0.133, 0.287] | 0.916 [0.916, 0.916] | 262,144 / 32,768 |
+| 262,144 | 0.072 [0.065, 0.082] | 0.635 [0.630, 0.649] | 16,777,216 / 2,097,152 |
 
-The small component benefits from the existing opt-in tight layout. The
-aligned default serves workloads outside this profile. No layout or default
-changed. This run measures wall time and RSS. It has no hardware cache-miss
-counters.
+The small component benefits from the existing opt-in tight layout in this
+scan. Keep the aligned default for other workloads. This comparison uses
+wall time and RSS as its layout metrics.
 
 For the entity allocator, the same churned slot set is used for an ordered
 live snapshot, native JSON encoding, byte transfer via a local Unix socket

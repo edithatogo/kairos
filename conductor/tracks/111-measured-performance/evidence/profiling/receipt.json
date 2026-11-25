@@ -36,15 +36,56 @@
   ],
   "scope": "Shared-host CPU evidence. No dedicated runner, hardware cache counters or cross-host latency claim.",
   "sha256": {
-    "README.md": "4b15ba2052b7e39883bb79ac6a0a47fea246215861cf45e2b7ebee7fa6d7bcff",
+    "README.md": "089232bd4c007572bf2b86e1e0d3283d421fdad986ca187c3fb2a8ddc9d96e92",
     "batch-counterexample.log": "2097faf07890c66c287192d8820c14f7b5eb6f895062f4c884769ccd219bac13",
-    "checkpoint.csv": "4ec726368ad4325bf8faf2ba0943c83360cdbe7399ec9a63e6e43f1a6e6e0d26",
+    "checkpoint.csv": "d37d56e31d4d989a49feb5e0c28a889bcc55a95fc2ddd9b94ba42eb341832567",
     "drain-safe-frontier.patch": "63797e6fb07a0d3d14a03092da85d205803c68f331d6b02370842fd758a0fd7e",
     "layout-and-checkpoint.rs": "ae4c03d951702db0f2317ed88e20d3d6e7df89d11ce5a161aa62716597e078dc",
-    "measure-layout.py": "fe848135715874ff894e693e3fddcf5b6f140a0aef9d73353b2840d1c61b52fb",
+    "measure-layout.py": "a82a6b1597556fe641cfc288e35ed9381979a974188b57f07b34eb115917e274",
     "pooled-stack.txt.gz": "32f1de651fc1ea0526951f75d4684ab2904e045b84f6e1fae30a3eaf4513a093",
     "scoped-stack.txt.gz": "0065d85ca4f92699bd4f178eb9aae767945ddc3fdbf9c2d6f0dcfb55c7dce7b8",
-    "state.csv": "9ba19c5b41aece2cfb3b05044bb970837656ac7fec0c54efe24fc7e8c8dec97d",
+    "state.csv": "529dec1a12da122b8c7296ec45da4046127097d17f3cbb639c4d0e602b9f000f",
     "time-warp-raw.json": "73ea73d6e99c29b57f751236d019f39229ccf23acf061d4f812b3057e2067293"
+  },
+  "layout_bootstrap": {
+    "pair_ratios": "tight/aligned",
+    "resamples": 10000,
+    "seed": 111,
+    "results": {
+      "4096": {
+        "load_ns": [
+          0.6723809522259299,
+          0.6639211741247059,
+          0.7626648441210446
+        ],
+        "scan_ns": [
+          0.1347782625808805,
+          0.13345305538070376,
+          0.28661105296999967
+        ],
+        "rss_bytes": [
+          0.9156626506024096,
+          0.9156626506024096,
+          0.9156626506024096
+        ]
+      },
+      "262144": {
+        "load_ns": [
+          0.5907457505335756,
+          0.5340884615403836,
+          0.6402260392427652
+        ],
+        "scan_ns": [
+          0.07155276999944117,
+          0.06533033775254916,
+          0.08232180180999456
+        ],
+        "rss_bytes": [
+          0.6348751534997953,
+          0.629710487529066,
+          0.6492227140681529
+        ]
+      }
+    }
   }
 }
