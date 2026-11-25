@@ -9,10 +9,8 @@
   "title": "Measured performance and parallel execution improvement",
   "spec_approved": true,
   "implementation_started": true,
-  "accepted_phases": [
-    "0"
-  ],
-  "active_phase": "1",
+  "accepted_phases": [],
+  "active_phase": "0",
   "coordinating_programme": "frontier-programme-20261107",
   "depends_on": [
     "18",

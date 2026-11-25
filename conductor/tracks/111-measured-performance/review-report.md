@@ -22,7 +22,8 @@ The spatial model already used the pinned toolchain.
 The test that drains the whole eligible queue produced `[1, 7, 3]` in
 place of `[1, 3, 7]`. Keep one eligible event per LP and the ordered
 round commit. Track 111 remains In Progress for wider safe batching
-and the required dedicated regression run. Phase 0 is accepted.
+and the required dedicated regression run. Phase 0 review passed.
+Close the phase after the evidence is verified on main.
 
 ## Local validation
 

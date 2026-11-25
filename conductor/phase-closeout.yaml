@@ -1955,7 +1955,7 @@ entries:
 
   - track_id: "111"
     phase: "0"
-    state: closed
+    state: pending
     review_command: "$conductor-review"
     review_result: "An independent review verified the matched event and state oracle, worker and storage profiles, snapshot and transfer boundaries, raw paired samples and acceptance calculations. The compiler provenance and reproduction path fixes were applied. Wider batching failed its order control."
     fixes_applied: true
@@ -1965,10 +1965,10 @@ entries:
       - "cargo test --locked -p kairo-ecs-pdes --all-features"
       - "cargo test --locked -p kairo-ecs-pdes --features pdes --test production_parity --test production_protocol --test track47_conservative_runtime"
       - "cargo test --locked -p kairo-ecs-state --test query_determinism"
-    git_status: "The reviewed source and measurements are bound to this evidence commit. The accompanying status update records the scoped baseline decision."
+    git_status: "The reviewed source and measurements are bound to this evidence commit. The publication gate requires this evidence to reach main before the phase can close."
     commit_sha: "30ce055aa8cd1ffb403f4c40d8a9d1fab73b86b0"
-    pushed_ref: "origin/main"
-    next_phase_decision: "Phase 0 accepted. Keep Track 111 In Progress. Preserve the eligible-event ordering and qualify the dedicated regression gate before automatically selecting an executor."
+    pushed_ref: ""
+    next_phase_decision: "Phase 0 review passed. Record closure after the published evidence is verified on main. Keep Track 111 In Progress. Preserve the eligible-event ordering and qualify the dedicated regression gate before automatically selecting an executor."
 
   - track_id: "112"
     phase: "2"

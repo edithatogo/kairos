@@ -245,7 +245,8 @@ Use isolated bounded worktrees. The root integration packet combines disjoint ch
 
 ## Phase closeout evidence
 
-`$conductor-review` accepted Phase 0. The [review report](review-report.md)
+`$conductor-review` approved the Phase 0 evidence. The publication gate
+closes after the proof is verified on main. The [review report](review-report.md)
 records the accepted fixes, and the [phase ledger](../../phase-closeout.yaml)
 records the evidence commit SHA, pushed ref and next-phase decision.
 `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`
