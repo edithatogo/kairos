@@ -19,6 +19,9 @@
   },
   "calibration": {
     "input": "1,048,576 events per epoch in reverse tick order, cancel every eighth, two warmup epochs and eight timed epochs",
+    "runner_at_capture_sha256": "e43420c0ddafda4b3419ba5d8bbf9f9ba2c9756e275192b0728a21743d18139e",
+    "runner_at_capture_commit": "5ae3eff80e0b2d395ee5f66887b68550f31738e6",
+    "runner_revision_note": "The review fix changes the paired path only.",
     "apple_container": {
       "working_directory": "/",
       "command": "bash /session/run-linux.sh /session/scheduler-locality calibrate",
@@ -59,6 +62,18 @@
       "exit": 124
     },
     "active_sessions_at_closeout": 0
+  },
+  "paired_driver_review": {
+    "role": "Independent correctness reviewer",
+    "reviewed_source": "5ae3eff80e0b2d395ee5f66887b68550f31738e6",
+    "finding": "Each process rediscovers eligible nodes. Paired acceptance requires the same execution CPU and node across all samples and a fixed allocation CPU and node for each arm.",
+    "resolution": "The paired driver checks and preserves both placement identities before reporting a successful comparison.",
+    "fixture_checks": {
+      "platform": "Isolated Apple Container Linux x86-64 guest",
+      "stable_identities": "Ten complete pairs in alternating arm order",
+      "execution_drift": "Rejected with exit 1",
+      "allocation_drift": "Rejected with exit 1"
+    }
   },
   "paired_comparison": "Pending a Linux runtime with two online, allowed, CPU-bearing memory nodes."
 }

@@ -37,6 +37,8 @@ if [[ "$mode" == calibrate ]]; then
 fi
 
 "$probe" check
+execution_site=
+declare -A allocation_sites=()
 for ((pair=1; pair<=10; pair++)); do
     if ((pair % 2)); then
         arms=(local remote)
@@ -45,6 +47,16 @@ for ((pair=1; pair<=10; pair++)); do
     fi
     for arm in "${arms[@]}"; do
         result=$(timeout --kill-after=3 60 "$probe" "$arm")
+        read -r sample_mode execution_node execution_cpu allocation_node allocation_cpu _ <<< "$result"
+        execution="$execution_node $execution_cpu"
+        allocation="$allocation_node $allocation_cpu"
+        execution_site=${execution_site:-$execution}
+        allocation_sites[$arm]=${allocation_sites[$arm]:-$allocation}
+        if [[ "$sample_mode" != "mode=$arm" || "$execution" != "$execution_site" ||
+              "$allocation" != "${allocation_sites[$arm]}" ]]; then
+            printf 'Placement changed in pair %s, %s arm: %s\n' "$pair" "$arm" "$result" >&2
+            exit 1
+        fi
         printf 'pair=%s %s\n' "$pair" "$result"
     done
 done
