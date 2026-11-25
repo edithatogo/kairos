@@ -1,0 +1,186 @@
+{
+  "local_source_baseline": "9d76ca7f4b7f4b5898f2ec77515a7a7639f1478b",
+  "candidate_conservative_source_sha256": "3a7328c43b54596703eec5f5d36ffa0f7cc31c436c98490bda6700b9b8f98cb8",
+  "working_directory": "/Users/doughnut/.codex/worktrees/kairos-scientific-evidence-closeout/kairos",
+  "host": "Apple M1 Max on macOS 27.2.1, shared",
+  "toolchain": {
+    "cargo": "cargo 1.99.1 (5f94df478 2026-08-27)\nrelease: 1.99.1\ncommit-hash: 5f94df4789f005f9a352888e8355ffc645b7ed0e\ncommit-date: 2026-08-27\nhost: aarch64-apple-darwin\nlibgit2: 1.9.6 (sys:0.21.0 vendored)\nlibcurl: 8.7.1 (sys:0.4.90+curl-8.21.0 system ssl:(SecureTransport) LibreSSL/3.3.6)\nssl: OpenSSL 3.6.3 9 Jun 2026\nos: Mac OS 27.2.1 [64-bit]",
+    "rustc": "rustc 1.100.0 (0ef1bc386 2026-11-09) (Homebrew)\nbinary: rustc\ncommit-hash: 0ef1bc386059596dada8fb65b50425aab2ea637a\ncommit-date: 2026-11-09\nhost: aarch64-apple-darwin\nrelease: 1.100.0\nLLVM version: 23.1.6",
+    "linked_std_revision": "0ef1bc386059596dada8fb65b50425aab2ea637a",
+    "recovery_python": "3.15.2 (main, Oct 25 2026, 16:57:51) [Clang 21.0.0 (clang-2100.3.34.2)]"
+  },
+  "metal": {
+    "command": "cargo test --locked --offline -p kairo-ecs-gpu --features wgpu-backend --release --test metal_mixed_profile -- --ignored --nocapture",
+    "source_sha256": "4aa33b2fa40ec04357ec5d798d0066c443a6a8e1688e4256f5bf120ad5223db6",
+    "binary_sha256": "25f5d673a85318186a811944f995a0414d1f70e57583f5da60bfdc9e0f5f0d5a",
+    "raw_sha256": "b061fbe05b8f57d6e9fc0656321636f86dac4707aab56a7e73299f497454df07",
+    "stdout_sha256": "12f7cbc2308f5a93c6896060750fed121e890f2761cb8de5458fe216299f896e",
+    "seed_start": 20261123,
+    "exit": 0,
+    "adapter_setup": "adapter MetalAdapterInfo { adapter_name: \"Apple M1 Max\", unified_memory: true, max_threads_per_threadgroup: 256, worker_threads: 10, metal_toolchain_available: true } setup_ms 1261.738375",
+    "cpu_over_metal_bootstrap": {
+      "resamples": 10000,
+      "seed": 111
+    },
+    "summary": {
+      "65": {
+        "cpu_median_ms": 0.00825,
+        "metal_median_ms": 13.409438000000002,
+        "paired_cpu_over_metal": [
+          0.0006129915648746018,
+          0.0004898676607580547,
+          0.0007775002527096711
+        ]
+      },
+      "4096": {
+        "cpu_median_ms": 2.7551664999999996,
+        "metal_median_ms": 105.92964549999999,
+        "paired_cpu_over_metal": [
+          0.030462209096451223,
+          0.01994715030428621,
+          0.050856204162596466
+        ]
+      },
+      "65536": {
+        "cpu_median_ms": 8.7061875,
+        "metal_median_ms": 86.433458,
+        "paired_cpu_over_metal": [
+          0.11148501050109258,
+          0.07250037748560509,
+          0.19324074406989855
+        ]
+      }
+    }
+  },
+  "loopback_recovery": {
+    "command": "CARGO_NET_OFFLINE=true .venv/bin/python -I docs/distributed/qualify_cap48.py --cases effect --output <private-directory>",
+    "exit": 0,
+    "source_sha256": {
+      "Cargo.toml": "99a5ddd65cd06e07252a39c870c7125c4b648976136cb59fd0d3277c20676bbb",
+      "rust-toolchain.toml": "a7b2c61d6d08a76412b085d8425685eadaeed2427259d0a584c3dad954f0988b",
+      "Cargo.lock": "df26476d07b6323f89bb02819aaff00a12f00c15bdd0114c91d082cd088f0637",
+      "crates/kairo-ecs-pdes/Cargo.toml": "e7b77e9bfd6fc74cd06f347b37148b5269c67d538b31cb08a475bc8fe823e0b1",
+      "crates/kairo-ecs-pdes/src/lib.rs": "d7248086dc7125fa0f1781057685aa9e976a636a5f56a1f6d6b3caa75366dfce",
+      "crates/kairo-ecs-pdes/src/optimistic.rs": "8431a1da4633217be9bdbd9a1192a6765e5ac25309ab43de419a3feb9466cf91",
+      "crates/kairo-ecs-pdes/src/optimistic/external.rs": "4fb275b1232b8b4f6f0a01399007a54af7dcc322f012b6e69d653d7206d18860",
+      "crates/kairo-ecs-pdes/src/optimistic/external/protocol.rs": "2e62181ee0e20cc82d533aea2634c9b6eb61b17b5bff0eb3ba77cedf3fc23367",
+      "crates/kairo-ecs-pdes/src/optimistic/external/tests.rs": "ae7b6590d9fc307b8b6f5bc16005d800f181cfd25ca1357c0c97548c1ad67287",
+      "crates/kairo-ecs-pdes/src/optimistic/external_store.rs": "663dda2491d9c28e06c07cbbad4d8bd4d2268aef29221a134bd12d79dbef68d0",
+      "crates/kairo-ecs-pdes/src/optimistic/external_store/tests.rs": "45cfe2280e56b0d835e0f2577d032b01440949016a7da60e2058705f20f27eeb",
+      "crates/kairo-ecs-grpc/Cargo.toml": "2437df2bbe2684c882ff8b813a5d0cfd86f232ff5a646146b1871ba79b969362",
+      "crates/kairo-ecs-grpc/src/lib.rs": "4b33e84a03c0ece72090a4e8140b25f013ad5c061b38eee091ec4fe81611e0ba",
+      "crates/kairo-ecs-grpc/src/external_transport.rs": "8d68b3449d76ce4ee53a303af3bfd9b995c5a3c342b5eb2220b2dde05749dde4",
+      "crates/kairo-ecs-grpc/tests/external_tls.rs": "10b30076269ebc3c26282fc9f51d6717ab957c638b0b9952027cf577101f20e4",
+      "crates/kairo-ecs-grpc/examples/cap48_node.rs": "e895d56c388bbd0831b43a3aa4bfa65776981b8a4feeadee558770080c6d517f",
+      "docs/distributed/qualify_cap48.py": "685e2a4a47c373979d79e55fa23cadfec2afbcfd52a2f6a7550d809f4c3cf617"
+    },
+    "binary_sha256": "1a252e4246bae7d18e641e59ce7091ad7d56e6153c28c8397d99fec082c53219",
+    "raw_receipt_sha256": "2fbeb281c0495f17c671350a7e62885b228d315481fa6c78b920726d6b90e6b6",
+    "raw_events_sha256": "330317c4a254b861c2b4d2b25285b8b383aa0e16839deadb89eed4e48230650b",
+    "cases": [
+      {
+        "name": "reference",
+        "models_sha256": [
+          "0ec6781ea803ca87e93a4e183824ea61e95b7fa07c8b32984957bfcbabcebb51",
+          "b16a9c0352cdff1f383e7c77de0b5f74fe58734526918140858db3b9a57e4591"
+        ],
+        "generations": [
+          1,
+          1
+        ],
+        "floor": 40
+      },
+      {
+        "name": "effect-before",
+        "models_sha256": [
+          "0ec6781ea803ca87e93a4e183824ea61e95b7fa07c8b32984957bfcbabcebb51",
+          "b16a9c0352cdff1f383e7c77de0b5f74fe58734526918140858db3b9a57e4591"
+        ],
+        "generations": [
+          2,
+          2
+        ],
+        "floor": 40
+      },
+      {
+        "name": "effect-after",
+        "models_sha256": [
+          "0ec6781ea803ca87e93a4e183824ea61e95b7fa07c8b32984957bfcbabcebb51",
+          "b16a9c0352cdff1f383e7c77de0b5f74fe58734526918140858db3b9a57e4591"
+        ],
+        "generations": [
+          2,
+          2
+        ],
+        "floor": 40
+      }
+    ],
+    "observed_boundaries": [
+      {
+        "case": "reference",
+        "first_ready_monotonic_s": 35674.8457985,
+        "case_pass_monotonic_s": 35681.142770416
+      },
+      {
+        "case": "effect-before",
+        "first_ready_monotonic_s": 35681.186588208,
+        "case_pass_monotonic_s": 35689.998185041,
+        "kill_readback_monotonic_s": 35681.617810125,
+        "restart_ready_monotonic_s": 35682.64312425
+      },
+      {
+        "case": "effect-after",
+        "first_ready_monotonic_s": 35690.050563125,
+        "case_pass_monotonic_s": 35699.513205458,
+        "kill_readback_monotonic_s": 35690.488113166,
+        "restart_ready_monotonic_s": 35691.515913541
+      }
+    ]
+  },
+  "physical_ring": {
+    "source": "conductor/tracks/55-end-to-end-weak-strong-scaling-certification/evidence/two-host-ring/evidence/measurements.jsonl",
+    "samples_sha256": "f0c35cdb79d1be054f5efb0bd897acf73a83ed683843d443a881ed7b371f445a",
+    "summary": {
+      "strong": {
+        "1": {
+          "median_non_dispatch_ms": 1.7255205
+        },
+        "2": {
+          "median_non_dispatch_ms": 48.8667055
+        }
+      },
+      "weak": {
+        "1": {
+          "median_non_dispatch_ms": 1.4948325
+        },
+        "2": {
+          "median_non_dispatch_ms": 52.8536155
+        }
+      }
+    }
+  },
+  "historical_physical_recovery": {
+    "samples_sha256": {
+      "conductor/tracks/48-time-warp-optimistic-rollback-runtime/evidence/external-engine-20261103/two-host-final-activation/events.jsonl.gz": "3222e8c1e59918de60505de1792e5a2f20c5fb5c15c48f04508982e4c30f8813",
+      "conductor/tracks/48-time-warp-optimistic-rollback-runtime/evidence/external-engine-20261103/two-host-final-anti-first/events.jsonl.gz": "3a24f5dfbb7fc56366ebe7cd73ce9a02ecb268511dcbb4c51dde943e210ac638",
+      "conductor/tracks/48-time-warp-optimistic-rollback-runtime/evidence/external-engine-20261103/two-host-final-schema-fixed/events.jsonl.gz": "5d9aaabbf76f49914010b613e24cb4ba27429622170cf2ef9a817320889d5062"
+    },
+    "matched_kill_to_new_worker_ready_s": [
+      1.0283923329989193,
+      1.0209302910006954,
+      0.6600621249963297,
+      0.6281980830026441,
+      1.58379975000571,
+      1.6476264579978306,
+      1.92664104099822,
+      1.9880593749985565,
+      2.0130127080046805,
+      2.6230278329967405,
+      1.3676699999996345,
+      1.3961767090004287,
+      1.8710871660005068,
+      2.1027192500041565,
+      1.0184389999994892
+    ]
+  }
+}

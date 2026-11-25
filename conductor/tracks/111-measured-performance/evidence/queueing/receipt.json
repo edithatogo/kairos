@@ -1,0 +1,733 @@
+{
+  "exit_code": 0,
+  "machine": {
+    "cpu_count": 10,
+    "hw.model": "MacBookPro18,4",
+    "hw.perflevel0.physicalcpu": "8",
+    "hw.perflevel1.physicalcpu": "2",
+    "machdep.cpu.brand_string": "Apple M1 Max",
+    "platform": "macOS-27.2.1-arm64-arm-64bit-Mach-O"
+  },
+  "protocol": {
+    "cargo_features": [
+      "pdes-worker-pool"
+    ],
+    "seed": 11120261125,
+    "target_profile": "release",
+    "timed_triplets": 10,
+    "units": "ns",
+    "warmup_triplets": 1
+  },
+  "provenance_correction": {
+    "observation": "Rust compiler commit matched from source paths in the original release executable.",
+    "original_receipt_sha256": "9bfe75fc68552921a5a76ff4db4ded04366e0020c1e367f75c9cfc4733a85ff6",
+    "original_rustc_label": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-apple-darwin\nrelease: 1.99.1\nLLVM version: 23.1.1",
+    "utc": "2026-11-25T10:09:16+00:00"
+  },
+  "runtime": {
+    "cargo": "cargo 1.99.1 (5f94df478 2026-08-27)\nrelease: 1.99.1\ncommit-hash: 5f94df4789f005f9a352888e8355ffc645b7ed0e\ncommit-date: 2026-08-27\nhost: aarch64-apple-darwin\nlibgit2: 1.9.6 (sys:0.21.0 vendored)\nlibcurl: 8.7.1 (sys:0.4.90+curl-8.21.0 system ssl:(SecureTransport) LibreSSL/3.3.6)\nssl: OpenSSL 3.6.3 9 Jun 2026\nos: Mac OS 27.2.1 [64-bit]",
+    "python": "3.15.2 (main, Oct 25 2026, 16:57:51) [Clang 21.0.0 (clang-2100.3.34.2)]",
+    "rustc": "rustc 1.100.0 (0ef1bc386 2026-11-09) (Homebrew)\nbinary: rustc\ncommit-hash: 0ef1bc386059596dada8fb65b50425aab2ea637a\ncommit-date: 2026-11-09\nhost: aarch64-apple-darwin\nrelease: 1.100.0\nLLVM version: 23.1.6",
+    "rustc_executable_commit": "0ef1bc386059596dada8fb65b50425aab2ea637a",
+    "simpy": "4.1.2"
+  },
+  "samples": [
+    {
+      "diagnostics": {
+        "pdes": {
+          "dispatched": 2411,
+          "ignored_timers": 363,
+          "pooled": true,
+          "remote_events": 0,
+          "worker_count": 2
+        },
+        "serial": {
+          "cancelled_timers": 363,
+          "dispatched": 2048,
+          "scheduled": 2411
+        },
+        "simpy": {
+          "cancelled_requests": 654,
+          "ignored_timers": 363
+        }
+      },
+      "metrics": {
+        "pdes": {
+          "dispatch_ns": 8403459,
+          "setup_ns": 115791,
+          "total_ns": 8519250
+        },
+        "serial": {
+          "dispatch_ns": 482917,
+          "setup_ns": 92458,
+          "total_ns": 575375
+        },
+        "simpy": {
+          "dispatch_ns": 6605959,
+          "setup_ns": 849875,
+          "total_ns": 7455834
+        }
+      },
+      "order": [
+        "pdes",
+        "simpy",
+        "serial"
+      ],
+      "result": {
+        "counts": {
+          "abandoned": 654,
+          "arrivals": 1024,
+          "cancelled_patience_timers": 363,
+          "finished": 370,
+          "grants_at_queued_deadline": 97,
+          "max_waiting": 12,
+          "tied_arrivals": 267,
+          "trace_rows": 3435
+        },
+        "sha256": "e6df5ef8bfc08969042d36d0de9cc74f5f42e791dfa542eaabca048a998d4dc9"
+      },
+      "trial": 1
+    },
+    {
+      "diagnostics": {
+        "pdes": {
+          "dispatched": 2411,
+          "ignored_timers": 363,
+          "pooled": true,
+          "remote_events": 0,
+          "worker_count": 2
+        },
+        "serial": {
+          "cancelled_timers": 363,
+          "dispatched": 2048,
+          "scheduled": 2411
+        },
+        "simpy": {
+          "cancelled_requests": 654,
+          "ignored_timers": 363
+        }
+      },
+      "metrics": {
+        "pdes": {
+          "dispatch_ns": 9739458,
+          "setup_ns": 110917,
+          "total_ns": 9850375
+        },
+        "serial": {
+          "dispatch_ns": 479542,
+          "setup_ns": 87583,
+          "total_ns": 567125
+        },
+        "simpy": {
+          "dispatch_ns": 6360167,
+          "setup_ns": 988292,
+          "total_ns": 7348459
+        }
+      },
+      "order": [
+        "simpy",
+        "serial",
+        "pdes"
+      ],
+      "result": {
+        "counts": {
+          "abandoned": 654,
+          "arrivals": 1024,
+          "cancelled_patience_timers": 363,
+          "finished": 370,
+          "grants_at_queued_deadline": 97,
+          "max_waiting": 12,
+          "tied_arrivals": 267,
+          "trace_rows": 3435
+        },
+        "sha256": "e6df5ef8bfc08969042d36d0de9cc74f5f42e791dfa542eaabca048a998d4dc9"
+      },
+      "trial": 2
+    },
+    {
+      "diagnostics": {
+        "pdes": {
+          "dispatched": 2411,
+          "ignored_timers": 363,
+          "pooled": true,
+          "remote_events": 0,
+          "worker_count": 2
+        },
+        "serial": {
+          "cancelled_timers": 363,
+          "dispatched": 2048,
+          "scheduled": 2411
+        },
+        "simpy": {
+          "cancelled_requests": 654,
+          "ignored_timers": 363
+        }
+      },
+      "metrics": {
+        "pdes": {
+          "dispatch_ns": 10000791,
+          "setup_ns": 111792,
+          "total_ns": 10112583
+        },
+        "serial": {
+          "dispatch_ns": 475791,
+          "setup_ns": 96917,
+          "total_ns": 572708
+        },
+        "simpy": {
+          "dispatch_ns": 6240875,
+          "setup_ns": 1011750,
+          "total_ns": 7252625
+        }
+      },
+      "order": [
+        "serial",
+        "pdes",
+        "simpy"
+      ],
+      "result": {
+        "counts": {
+          "abandoned": 654,
+          "arrivals": 1024,
+          "cancelled_patience_timers": 363,
+          "finished": 370,
+          "grants_at_queued_deadline": 97,
+          "max_waiting": 12,
+          "tied_arrivals": 267,
+          "trace_rows": 3435
+        },
+        "sha256": "e6df5ef8bfc08969042d36d0de9cc74f5f42e791dfa542eaabca048a998d4dc9"
+      },
+      "trial": 3
+    },
+    {
+      "diagnostics": {
+        "pdes": {
+          "dispatched": 2411,
+          "ignored_timers": 363,
+          "pooled": true,
+          "remote_events": 0,
+          "worker_count": 2
+        },
+        "serial": {
+          "cancelled_timers": 363,
+          "dispatched": 2048,
+          "scheduled": 2411
+        },
+        "simpy": {
+          "cancelled_requests": 654,
+          "ignored_timers": 363
+        }
+      },
+      "metrics": {
+        "pdes": {
+          "dispatch_ns": 8920125,
+          "setup_ns": 122625,
+          "total_ns": 9042750
+        },
+        "serial": {
+          "dispatch_ns": 503959,
+          "setup_ns": 94916,
+          "total_ns": 598875
+        },
+        "simpy": {
+          "dispatch_ns": 6555875,
+          "setup_ns": 950208,
+          "total_ns": 7506083
+        }
+      },
+      "order": [
+        "pdes",
+        "simpy",
+        "serial"
+      ],
+      "result": {
+        "counts": {
+          "abandoned": 654,
+          "arrivals": 1024,
+          "cancelled_patience_timers": 363,
+          "finished": 370,
+          "grants_at_queued_deadline": 97,
+          "max_waiting": 12,
+          "tied_arrivals": 267,
+          "trace_rows": 3435
+        },
+        "sha256": "e6df5ef8bfc08969042d36d0de9cc74f5f42e791dfa542eaabca048a998d4dc9"
+      },
+      "trial": 4
+    },
+    {
+      "diagnostics": {
+        "pdes": {
+          "dispatched": 2411,
+          "ignored_timers": 363,
+          "pooled": true,
+          "remote_events": 0,
+          "worker_count": 2
+        },
+        "serial": {
+          "cancelled_timers": 363,
+          "dispatched": 2048,
+          "scheduled": 2411
+        },
+        "simpy": {
+          "cancelled_requests": 654,
+          "ignored_timers": 363
+        }
+      },
+      "metrics": {
+        "pdes": {
+          "dispatch_ns": 14534834,
+          "setup_ns": 115541,
+          "total_ns": 14650375
+        },
+        "serial": {
+          "dispatch_ns": 521959,
+          "setup_ns": 92375,
+          "total_ns": 614334
+        },
+        "simpy": {
+          "dispatch_ns": 6687459,
+          "setup_ns": 912791,
+          "total_ns": 7600250
+        }
+      },
+      "order": [
+        "simpy",
+        "serial",
+        "pdes"
+      ],
+      "result": {
+        "counts": {
+          "abandoned": 654,
+          "arrivals": 1024,
+          "cancelled_patience_timers": 363,
+          "finished": 370,
+          "grants_at_queued_deadline": 97,
+          "max_waiting": 12,
+          "tied_arrivals": 267,
+          "trace_rows": 3435
+        },
+        "sha256": "e6df5ef8bfc08969042d36d0de9cc74f5f42e791dfa542eaabca048a998d4dc9"
+      },
+      "trial": 5
+    },
+    {
+      "diagnostics": {
+        "pdes": {
+          "dispatched": 2411,
+          "ignored_timers": 363,
+          "pooled": true,
+          "remote_events": 0,
+          "worker_count": 2
+        },
+        "serial": {
+          "cancelled_timers": 363,
+          "dispatched": 2048,
+          "scheduled": 2411
+        },
+        "simpy": {
+          "cancelled_requests": 654,
+          "ignored_timers": 363
+        }
+      },
+      "metrics": {
+        "pdes": {
+          "dispatch_ns": 13375541,
+          "setup_ns": 161167,
+          "total_ns": 13536708
+        },
+        "serial": {
+          "dispatch_ns": 498250,
+          "setup_ns": 94208,
+          "total_ns": 592458
+        },
+        "simpy": {
+          "dispatch_ns": 6166166,
+          "setup_ns": 929959,
+          "total_ns": 7096125
+        }
+      },
+      "order": [
+        "serial",
+        "pdes",
+        "simpy"
+      ],
+      "result": {
+        "counts": {
+          "abandoned": 654,
+          "arrivals": 1024,
+          "cancelled_patience_timers": 363,
+          "finished": 370,
+          "grants_at_queued_deadline": 97,
+          "max_waiting": 12,
+          "tied_arrivals": 267,
+          "trace_rows": 3435
+        },
+        "sha256": "e6df5ef8bfc08969042d36d0de9cc74f5f42e791dfa542eaabca048a998d4dc9"
+      },
+      "trial": 6
+    },
+    {
+      "diagnostics": {
+        "pdes": {
+          "dispatched": 2411,
+          "ignored_timers": 363,
+          "pooled": true,
+          "remote_events": 0,
+          "worker_count": 2
+        },
+        "serial": {
+          "cancelled_timers": 363,
+          "dispatched": 2048,
+          "scheduled": 2411
+        },
+        "simpy": {
+          "cancelled_requests": 654,
+          "ignored_timers": 363
+        }
+      },
+      "metrics": {
+        "pdes": {
+          "dispatch_ns": 17924833,
+          "setup_ns": 117875,
+          "total_ns": 18042708
+        },
+        "serial": {
+          "dispatch_ns": 490041,
+          "setup_ns": 88084,
+          "total_ns": 578125
+        },
+        "simpy": {
+          "dispatch_ns": 6410333,
+          "setup_ns": 879542,
+          "total_ns": 7289875
+        }
+      },
+      "order": [
+        "pdes",
+        "simpy",
+        "serial"
+      ],
+      "result": {
+        "counts": {
+          "abandoned": 654,
+          "arrivals": 1024,
+          "cancelled_patience_timers": 363,
+          "finished": 370,
+          "grants_at_queued_deadline": 97,
+          "max_waiting": 12,
+          "tied_arrivals": 267,
+          "trace_rows": 3435
+        },
+        "sha256": "e6df5ef8bfc08969042d36d0de9cc74f5f42e791dfa542eaabca048a998d4dc9"
+      },
+      "trial": 7
+    },
+    {
+      "diagnostics": {
+        "pdes": {
+          "dispatched": 2411,
+          "ignored_timers": 363,
+          "pooled": true,
+          "remote_events": 0,
+          "worker_count": 2
+        },
+        "serial": {
+          "cancelled_timers": 363,
+          "dispatched": 2048,
+          "scheduled": 2411
+        },
+        "simpy": {
+          "cancelled_requests": 654,
+          "ignored_timers": 363
+        }
+      },
+      "metrics": {
+        "pdes": {
+          "dispatch_ns": 11189541,
+          "setup_ns": 133500,
+          "total_ns": 11323041
+        },
+        "serial": {
+          "dispatch_ns": 482750,
+          "setup_ns": 121875,
+          "total_ns": 604625
+        },
+        "simpy": {
+          "dispatch_ns": 6209833,
+          "setup_ns": 1076958,
+          "total_ns": 7286791
+        }
+      },
+      "order": [
+        "simpy",
+        "serial",
+        "pdes"
+      ],
+      "result": {
+        "counts": {
+          "abandoned": 654,
+          "arrivals": 1024,
+          "cancelled_patience_timers": 363,
+          "finished": 370,
+          "grants_at_queued_deadline": 97,
+          "max_waiting": 12,
+          "tied_arrivals": 267,
+          "trace_rows": 3435
+        },
+        "sha256": "e6df5ef8bfc08969042d36d0de9cc74f5f42e791dfa542eaabca048a998d4dc9"
+      },
+      "trial": 8
+    },
+    {
+      "diagnostics": {
+        "pdes": {
+          "dispatched": 2411,
+          "ignored_timers": 363,
+          "pooled": true,
+          "remote_events": 0,
+          "worker_count": 2
+        },
+        "serial": {
+          "cancelled_timers": 363,
+          "dispatched": 2048,
+          "scheduled": 2411
+        },
+        "simpy": {
+          "cancelled_requests": 654,
+          "ignored_timers": 363
+        }
+      },
+      "metrics": {
+        "pdes": {
+          "dispatch_ns": 27288500,
+          "setup_ns": 119000,
+          "total_ns": 27407500
+        },
+        "serial": {
+          "dispatch_ns": 495416,
+          "setup_ns": 91125,
+          "total_ns": 586541
+        },
+        "simpy": {
+          "dispatch_ns": 6465375,
+          "setup_ns": 1002416,
+          "total_ns": 7467791
+        }
+      },
+      "order": [
+        "serial",
+        "pdes",
+        "simpy"
+      ],
+      "result": {
+        "counts": {
+          "abandoned": 654,
+          "arrivals": 1024,
+          "cancelled_patience_timers": 363,
+          "finished": 370,
+          "grants_at_queued_deadline": 97,
+          "max_waiting": 12,
+          "tied_arrivals": 267,
+          "trace_rows": 3435
+        },
+        "sha256": "e6df5ef8bfc08969042d36d0de9cc74f5f42e791dfa542eaabca048a998d4dc9"
+      },
+      "trial": 9
+    },
+    {
+      "diagnostics": {
+        "pdes": {
+          "dispatched": 2411,
+          "ignored_timers": 363,
+          "pooled": true,
+          "remote_events": 0,
+          "worker_count": 2
+        },
+        "serial": {
+          "cancelled_timers": 363,
+          "dispatched": 2048,
+          "scheduled": 2411
+        },
+        "simpy": {
+          "cancelled_requests": 654,
+          "ignored_timers": 363
+        }
+      },
+      "metrics": {
+        "pdes": {
+          "dispatch_ns": 16412709,
+          "setup_ns": 112708,
+          "total_ns": 16525417
+        },
+        "serial": {
+          "dispatch_ns": 595625,
+          "setup_ns": 92208,
+          "total_ns": 687833
+        },
+        "simpy": {
+          "dispatch_ns": 6197792,
+          "setup_ns": 948708,
+          "total_ns": 7146500
+        }
+      },
+      "order": [
+        "pdes",
+        "simpy",
+        "serial"
+      ],
+      "result": {
+        "counts": {
+          "abandoned": 654,
+          "arrivals": 1024,
+          "cancelled_patience_timers": 363,
+          "finished": 370,
+          "grants_at_queued_deadline": 97,
+          "max_waiting": 12,
+          "tied_arrivals": 267,
+          "trace_rows": 3435
+        },
+        "sha256": "e6df5ef8bfc08969042d36d0de9cc74f5f42e791dfa542eaabca048a998d4dc9"
+      },
+      "trial": 10
+    }
+  ],
+  "sha256": {
+    "cargo_lock": "df26476d07b6323f89bb02819aaff00a12f00c15bdd0114c91d082cd088f0637",
+    "executable": "e57e936f94d86ad25e06335e5019008a8d621f8cc2f62adc4e9fc80f742723f9",
+    "oracle": "9c57fe353ffdecac7e121b73811f0d2aeb83663c6426216bf78b34e3e8ae7c0b",
+    "rust_example": "a4ba5149b2b9c846cc7bebc633602b5a113fb28295ef508d33164f8204214f8a",
+    "simpy_wheel": "43071f84b6512c9b4fcb33ef057f240ccb1d1f3b263f9b4f9229d072e310b372",
+    "tape": "d7071031457ee70f43b434730a3075992da1e32817bbdc4dd80bb23a14d15d04"
+  },
+  "source_base": "9d76ca7f4b7f4b5898f2ec77515a7a7639f1478b",
+  "summary": {
+    "pdes": {
+      "dispatch_ns": {
+        "bootstrap_95": [
+          9460458.0,
+          16412709.0
+        ],
+        "median": 12282541.0
+      },
+      "setup_ns": {
+        "bootstrap_95": [
+          112708.0,
+          125687.5
+        ],
+        "median": 116833.0
+      },
+      "total_ns": {
+        "bootstrap_95": [
+          9577666.5,
+          16525417.0
+        ],
+        "median": 12429874.5
+      }
+    },
+    "serial": {
+      "dispatch_ns": {
+        "bootstrap_95": [
+          481229.5,
+          510104.5
+        ],
+        "median": 492728.5
+      },
+      "setup_ns": {
+        "bootstrap_95": [
+          90146.0,
+          95562.5
+        ],
+        "median": 92416.5
+      },
+      "total_ns": {
+        "bootstrap_95": [
+          575375.0,
+          604625.0
+        ],
+        "median": 589499.5
+      }
+    },
+    "simpy": {
+      "dispatch_ns": {
+        "bootstrap_95": [
+          6209833.0,
+          6555875.0
+        ],
+        "median": 6385250.0
+      },
+      "setup_ns": {
+        "bootstrap_95": [
+          904750.5,
+          1002416.0
+        ],
+        "median": 949458.0
+      },
+      "total_ns": {
+        "bootstrap_95": [
+          7216645.5,
+          7480958.5
+        ],
+        "median": 7319167.0
+      }
+    }
+  },
+  "utc": "2026-11-25T09:22:40+00:00",
+  "warmup": {
+    "diagnostics": {
+      "pdes": {
+        "dispatched": 2411,
+        "ignored_timers": 363,
+        "pooled": true,
+        "remote_events": 0,
+        "worker_count": 2
+      },
+      "serial": {
+        "cancelled_timers": 363,
+        "dispatched": 2048,
+        "scheduled": 2411
+      },
+      "simpy": {
+        "cancelled_requests": 654,
+        "ignored_timers": 363
+      }
+    },
+    "metrics": {
+      "pdes": {
+        "dispatch_ns": 11312416,
+        "setup_ns": 114750,
+        "total_ns": 11427166
+      },
+      "serial": {
+        "dispatch_ns": 531958,
+        "setup_ns": 123250,
+        "total_ns": 655208
+      },
+      "simpy": {
+        "dispatch_ns": 6192958,
+        "setup_ns": 898917,
+        "total_ns": 7091875
+      }
+    },
+    "order": [
+      "serial",
+      "pdes",
+      "simpy"
+    ],
+    "result": {
+      "counts": {
+        "abandoned": 654,
+        "arrivals": 1024,
+        "cancelled_patience_timers": 363,
+        "finished": 370,
+        "grants_at_queued_deadline": 97,
+        "max_waiting": 12,
+        "tied_arrivals": 267,
+        "trace_rows": 3435
+      },
+      "sha256": "e6df5ef8bfc08969042d36d0de9cc74f5f42e791dfa542eaabca048a998d4dc9"
+    },
+    "trial": 0
+  }
+}

@@ -1,0 +1,11 @@
+--- a/crates/kairo-ecs-pdes/benches/production.rs
++++ b/crates/kairo-ecs-pdes/benches/production.rs
+@@ -422,7 +422,7 @@
+     });
+     let event_work = config.event_work.unwrap_or(0);
+     let cases = if config.phold {
+-        [(4, 1, 25), (4, 1, 75), (4, 8, 75), (8, 8, 75)]
++        [(4, 1, 25), (4, 1, 75), (4, 8, 75), (8, 8, 75), (32, 8, 75)]
+             .into_iter()
+             .map(|(lp_count, lookahead, remote_percent)| {
+                 (

@@ -524,6 +524,27 @@ fn partition_process_sets_and_directed_routes_are_validated_before_execution() {
             .err()
             .unwrap();
     assert!(matches!(error, RuntimeError::ProcessSetMismatch { .. }));
+
+    let incomplete_topology = BTreeMap::from([(LpId(0), vec![LpId(1)])]);
+    assert!(matches!(
+        ConservativeRuntime::new(
+            plan(2, 1),
+            incomplete_topology,
+            processes(2, |_| Mode::Record)
+        ),
+        Err(RuntimeError::MissingTopologyEntry(LpId(1)))
+    ));
+
+    let unknown_source = BTreeMap::from([
+        (LpId(0), vec![LpId(1)]),
+        (LpId(1), Vec::new()),
+        (LpId(9), vec![LpId(0)]),
+    ]);
+    assert!(matches!(
+        ConservativeRuntime::new(plan(2, 1), unknown_source, processes(2, |_| Mode::Record)),
+        Err(RuntimeError::UnknownTopologySource(LpId(9)))
+    ));
+
     let invalid_topology = BTreeMap::from([(LpId(0), vec![LpId(9)]), (LpId(1), Vec::new())]);
     assert!(matches!(
         ConservativeRuntime::new(plan(2, 1), invalid_topology, processes(2, |_| Mode::Record))

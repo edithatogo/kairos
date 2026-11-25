@@ -393,20 +393,16 @@ impl<P: ConservativeProcess> ConservativeRuntime<P> {
     }
 
     fn compute_safe_frontiers(&self, horizon: Tick) -> BTreeMap<LpId, Tick> {
-        self.processes
+        let mut safe: BTreeMap<_, _> = self
+            .processes
             .keys()
-            .copied()
-            .map(|destination| {
-                let inbound = self
-                    .outbound_bounds
-                    .iter()
-                    .filter(|((_, target), _)| *target == destination)
-                    .map(|(_, bound)| *bound)
-                    .min()
-                    .unwrap_or(horizon);
-                (destination, inbound.min(horizon))
-            })
-            .collect()
+            .map(|&destination| (destination, horizon))
+            .collect();
+        for (&(_, destination), &bound) in &self.outbound_bounds {
+            let frontier = safe.get_mut(&destination).expect("validated destination");
+            *frontier = (*frontier).min(bound);
+        }
+        safe
     }
 
     fn take_eligible_batches(

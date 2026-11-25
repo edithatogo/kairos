@@ -1,0 +1,24 @@
+   Compiling kairo-ecs-pdes v0.0.0 (/Volumes/PortableSSD/kairos-track111-closeout.gzk4Uv/frontier-source/crates/kairo-ecs-pdes)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 4.98s
+     Running tests/production_protocol.rs (/Volumes/PortableSSD/kairos-track111-closeout.gzk4Uv/target/debug/deps/production_protocol-83d2abe4719da093)
+
+running 1 test
+test same_lp_followups_are_ordered_by_timestamp_before_existing_events ... FAILED
+
+failures:
+
+---- same_lp_followups_are_ordered_by_timestamp_before_existing_events stdout ----
+
+thread 'same_lp_followups_are_ordered_by_timestamp_before_existing_events' (2170534) panicked at crates/kairo-ecs-pdes/tests/production_protocol.rs:228:5:
+assertion `left == right` failed
+  left: [1, 7, 3]
+ right: [1, 3, 7]
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    same_lp_followups_are_ordered_by_timestamp_before_existing_events
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p kairo-ecs-pdes --test production_protocol`
