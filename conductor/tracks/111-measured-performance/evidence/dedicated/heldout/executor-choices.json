@@ -1,0 +1,18 @@
+{
+  "rule": "Choose the faster executor before the independent run when the paired 95% interval excludes one for the exact profile. Require the same direction and an interval excluding one on the unseen tape.",
+  "calibration_seed": 472026,
+  "heldout_seed": 24301,
+  "qualified_scope": "Intel i3-N300, four exclusive Linux CPUs, matched PHOLD only",
+  "selected_executors": {
+    "mixes=0 lps=4 lookahead=1 remote=25": "serial",
+    "mixes=0 lps=4 lookahead=1 remote=75": "serial",
+    "mixes=0 lps=4 lookahead=8 remote=75": "serial",
+    "mixes=0 lps=8 lookahead=8 remote=75": "serial",
+    "mixes=0 lps=32 lookahead=8 remote=75": "serial",
+    "mixes=8192 lps=4 lookahead=1 remote=25": "pooled",
+    "mixes=8192 lps=4 lookahead=1 remote=75": "pooled",
+    "mixes=8192 lps=4 lookahead=8 remote=75": "pooled",
+    "mixes=8192 lps=8 lookahead=8 remote=75": "pooled",
+    "mixes=8192 lps=32 lookahead=8 remote=75": "pooled"
+  }
+}

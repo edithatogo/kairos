@@ -114,6 +114,7 @@ pub struct RuntimeReport {
 }
 
 type QueueKey = (Tick, LpId, u64);
+type RoundBatches = BTreeMap<LpId, Vec<RemoteEvent>>;
 
 /// A production in-process conservative runtime. Each logical process has one
 /// owned state value and one timestamp-ordered input queue.
@@ -304,17 +305,71 @@ impl<P: ConservativeProcess> ConservativeRuntime<P> {
             .ok_or(RuntimeError::HorizonOverflow(inclusive_horizon))?;
         self.initial_events_open = false;
         self.last_requested_horizon = Some(inclusive_horizon);
+        let safe = self
+            .processes
+            .keys()
+            .map(|&lp_id| (lp_id, exclusive_horizon))
+            .collect();
+        self.run_rounds(
+            inclusive_horizon,
+            exclusive_horizon,
+            event_budget,
+            safe,
+            &mut Vec::new(),
+            #[cfg(feature = "pdes-worker-pool")]
+            None,
+        )
+    }
+
+    fn run_rounds(
+        &mut self,
+        inclusive_horizon: Tick,
+        exclusive_horizon: Tick,
+        event_budget: usize,
+        mut safe: BTreeMap<LpId, Tick>,
+        staged: &mut Vec<RemoteEvent>,
+        #[cfg(feature = "pdes-worker-pool")] mut first_round: Option<RoundBatches>,
+    ) -> Result<RuntimeReport, RuntimeError> {
+        #[cfg(feature = "pdes-worker-pool")]
+        let in_pool = first_round.is_some();
         let mut events_this_call = 0usize;
 
         loop {
-            let safe = self.compute_safe_frontiers(exclusive_horizon);
+            self.update_safe_frontiers(exclusive_horizon, &mut safe);
             let remaining = event_budget.saturating_sub(events_this_call);
+            #[cfg(not(feature = "pdes-worker-pool"))]
             let batches = self.take_eligible_batches(&safe, remaining);
+            #[cfg(feature = "pdes-worker-pool")]
+            let batches = first_round
+                .take()
+                .unwrap_or_else(|| self.take_eligible_batches(&safe, remaining));
             let has_work = batches.values().any(|batch| !batch.is_empty());
             let mut advanced = false;
             if has_work {
+                #[cfg(feature = "pdes-worker-pool")]
+                if !in_pool {
+                    let first_lp = batches
+                        .iter()
+                        .find_map(|(&lp_id, batch)| (!batch.is_empty()).then_some(lp_id))
+                        .expect("only nonempty rounds execute");
+                    let workers = self.take_workers(first_lp)?;
+                    // Enter the pool at the first eligible round. Each later round
+                    // still selects inputs afresh after the previous commit.
+                    let report = workers.install(|| {
+                        self.run_rounds(
+                            inclusive_horizon,
+                            exclusive_horizon,
+                            event_budget,
+                            safe,
+                            staged,
+                            Some(batches),
+                        )
+                    });
+                    self.workers = Some(workers);
+                    return report;
+                }
                 let count = batches.values().map(Vec::len).sum::<usize>();
-                self.execute_round(batches)?;
+                self.execute_round(batches, staged)?;
                 events_this_call += count;
                 self.report.rounds = self.report.rounds.saturating_add(1);
             }
@@ -392,24 +447,17 @@ impl<P: ConservativeProcess> ConservativeRuntime<P> {
         Ok(())
     }
 
-    fn compute_safe_frontiers(&self, horizon: Tick) -> BTreeMap<LpId, Tick> {
-        let mut safe: BTreeMap<_, _> = self
-            .processes
-            .keys()
-            .map(|&destination| (destination, horizon))
-            .collect();
+    fn update_safe_frontiers(&self, horizon: Tick, safe: &mut BTreeMap<LpId, Tick>) {
+        for frontier in safe.values_mut() {
+            *frontier = horizon;
+        }
         for (&(_, destination), &bound) in &self.outbound_bounds {
             let frontier = safe.get_mut(&destination).expect("validated destination");
             *frontier = (*frontier).min(bound);
         }
-        safe
     }
 
-    fn take_eligible_batches(
-        &mut self,
-        safe: &BTreeMap<LpId, Tick>,
-        limit: usize,
-    ) -> BTreeMap<LpId, Vec<RemoteEvent>> {
+    fn take_eligible_batches(&mut self, safe: &BTreeMap<LpId, Tick>, limit: usize) -> RoundBatches {
         let mut batches = BTreeMap::new();
         let mut remaining = limit;
         for (&lp_id, queue) in &mut self.queues {
@@ -441,7 +489,8 @@ impl<P: ConservativeProcess> ConservativeRuntime<P> {
 
     fn execute_round(
         &mut self,
-        batches: BTreeMap<LpId, Vec<RemoteEvent>>,
+        batches: RoundBatches,
+        staged: &mut Vec<RemoteEvent>,
     ) -> Result<(), RuntimeError> {
         let lookahead = self.partition.lookahead();
         #[cfg(not(feature = "pdes-worker-pool"))]
@@ -481,23 +530,6 @@ impl<P: ConservativeProcess> ConservativeRuntime<P> {
 
         #[cfg(feature = "pdes-worker-pool")]
         let outcomes = {
-            if self.workers.is_none() {
-                let first_lp = batches
-                    .iter()
-                    .find_map(|(&lp_id, batch)| (!batch.is_empty()).then_some(lp_id))
-                    .expect("only nonempty rounds execute");
-                let width = thread::available_parallelism().map_or(1, |count| count.get());
-                self.workers = Some(
-                    ThreadPoolBuilder::new()
-                        .num_threads(width.min(self.processes.len()))
-                        .thread_name(|index| format!("pdes-worker-{index}"))
-                        .build()
-                        .map_err(|_| {
-                            self.poisoned = true;
-                            RuntimeError::SpawnFailed(first_lp)
-                        })?,
-                );
-            }
             let jobs = self
                 .processes
                 .iter_mut()
@@ -508,17 +540,11 @@ impl<P: ConservativeProcess> ConservativeRuntime<P> {
                 .collect::<Vec<_>>();
             // Indexed collection preserves the ascending LP order used to
             // validate and commit the complete round.
-            self.workers
-                .as_ref()
-                .expect("pool initialized")
-                .install(|| {
-                    jobs.into_par_iter()
-                        .map(|(lp_id, process, batch)| (lp_id, run_batch(lp_id, process, &batch)))
-                        .collect::<Vec<_>>()
-                })
+            jobs.into_par_iter()
+                .map(|(lp_id, process, batch)| (lp_id, run_batch(lp_id, process, &batch)))
+                .collect::<Vec<_>>()
         };
 
-        let mut staged = Vec::new();
         for (lp_id, result) in outcomes {
             let outbound = match result {
                 Ok(outbound) => outbound,
@@ -594,7 +620,7 @@ impl<P: ConservativeProcess> ConservativeRuntime<P> {
             self.poisoned = true;
             return Err(RuntimeError::EventSequenceOverflow);
         }
-        for event in staged {
+        for event in staged.drain(..) {
             if let Err(error) = self.enqueue(event) {
                 self.poisoned = true;
                 return Err(error);
@@ -613,6 +639,22 @@ impl<P: ConservativeProcess> ConservativeRuntime<P> {
             .worker_count
             .max(batches.values().filter(|batch| !batch.is_empty()).count());
         Ok(())
+    }
+
+    #[cfg(feature = "pdes-worker-pool")]
+    fn take_workers(&mut self, first_lp: LpId) -> Result<ThreadPool, RuntimeError> {
+        if let Some(workers) = self.workers.take() {
+            return Ok(workers);
+        }
+        let width = thread::available_parallelism().map_or(1, |count| count.get());
+        ThreadPoolBuilder::new()
+            .num_threads(width.min(self.processes.len()))
+            .thread_name(|index| format!("pdes-worker-{index}"))
+            .build()
+            .map_err(|_| {
+                self.poisoned = true;
+                RuntimeError::SpawnFailed(first_lp)
+            })
     }
 
     fn advance_bounds(&mut self, safe: &BTreeMap<LpId, Tick>, horizon: Tick) -> bool {

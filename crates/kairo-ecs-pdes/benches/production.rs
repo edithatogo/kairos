@@ -93,6 +93,22 @@ struct Config {
     repetitions: usize,
     event_work: Option<u32>,
     phold: bool,
+    executor: Option<Executor>,
+}
+
+#[derive(Clone, Copy, Debug)]
+enum Executor {
+    Serial,
+    Pooled,
+}
+
+impl Executor {
+    fn name(self) -> &'static str {
+        match self {
+            Self::Serial => "serial",
+            Self::Pooled => "pooled",
+        }
+    }
 }
 
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
@@ -166,6 +182,7 @@ fn config() -> Result<Config, String> {
     let mut repetitions = DEFAULT_REPETITIONS;
     let mut event_work = None;
     let mut phold = false;
+    let mut executor = None;
     let mut args = std::env::args().skip(1);
     while let Some(arg) = args.next() {
         match arg.as_str() {
@@ -173,6 +190,14 @@ fn config() -> Result<Config, String> {
             // with `harness = false`.
             "--bench" => {}
             "--phold" => phold = true,
+            "--executor" => {
+                executor = Some(match args.next().as_deref() {
+                    Some("serial") => Executor::Serial,
+                    Some("pooled") if cfg!(feature = "pdes-worker-pool") => Executor::Pooled,
+                    Some("pooled") => return Err("pooled requires pdes-worker-pool".to_string()),
+                    _ => return Err("--executor requires serial or pooled".to_string()),
+                });
+            }
             "--seed" => {
                 seed = args
                     .next()
@@ -202,18 +227,22 @@ fn config() -> Result<Config, String> {
             }
             "--help" | "-h" => {
                 println!(
-                    "Usage: production [--seed N] [--repetitions N] [--event-work N] [--phold]"
+                    "Usage: production [--seed N] [--repetitions N] [--event-work N] [--phold [--executor serial|pooled]]"
                 );
                 std::process::exit(0);
             }
             unknown => return Err(format!("unknown argument: {unknown}")),
         }
     }
+    if executor.is_some() && !phold {
+        return Err("--executor requires --phold".to_string());
+    }
     Ok(Config {
         seed,
         repetitions,
         event_work,
         phold,
+        executor,
     })
 }
 
@@ -415,6 +444,67 @@ fn elapsed_ns<F: FnOnce() -> R, R>(action: F) -> (u128, R) {
     (started.elapsed().as_nanos(), result)
 }
 
+fn selected_phold(
+    executor: Executor,
+    config: Config,
+    lp_count: u32,
+    inputs: &[RemoteEvent],
+    workload: Workload,
+) -> serde_json::Value {
+    let Workload::Phold {
+        lookahead,
+        remote_percent,
+    } = workload
+    else {
+        unreachable!("selected executor requires PHOLD");
+    };
+    let event_work = config.event_work.unwrap_or(0);
+    let run = || match executor {
+        Executor::Serial => {
+            let (states, phases) = run_sequential(lp_count, inputs, event_work, workload);
+            (states, phases, 1)
+        }
+        Executor::Pooled => {
+            let (states, counters, phases) = run_pdes(lp_count, inputs, event_work, workload)
+                .expect("pooled PHOLD must complete");
+            (states, phases, counters.worker_count)
+        }
+    };
+    let (first_ns, (expected, _, worker_count)) = elapsed_ns(run);
+    let processed = expected.iter().map(|state| state.processed).sum::<u64>();
+    assert_eq!(
+        processed,
+        (inputs.len() * usize::from(workload.generations())) as u64
+    );
+    let timed = (0..config.repetitions)
+        .map(|_| {
+            let (total_ns, (states, phases, workers)) = elapsed_ns(run);
+            assert_eq!(states, expected, "selected executor state drifted");
+            assert_eq!(
+                workers, worker_count,
+                "selected executor worker count drifted"
+            );
+            json!({
+                "total_ns": total_ns,
+                "setup_ns": phases.setup_ns,
+                "dispatch_ns": phases.dispatch_ns,
+            })
+        })
+        .collect::<Vec<_>>();
+    json!({
+        "lp_count": lp_count,
+        "lookahead_ticks": lookahead,
+        "remote_percent_target": remote_percent,
+        "event_work": event_work,
+        "input_tape_sha256": tape_sha256(inputs),
+        "ordered_state": expected.iter().map(|state| [state.processed, state.checksum]).collect::<Vec<_>>(),
+        "processed_events": processed,
+        "worker_count": worker_count,
+        "first_run_ns": first_ns,
+        "timed": timed,
+    })
+}
+
 fn main() {
     let config = config().unwrap_or_else(|error| {
         eprintln!("{error}");
@@ -424,6 +514,7 @@ fn main() {
     let cases = if config.phold {
         [(4, 1, 25), (4, 1, 75), (4, 8, 75), (8, 8, 75)]
             .into_iter()
+            .chain(config.executor.map(|_| (32, 8, 75)))
             .map(|(lp_count, lookahead, remote_percent)| {
                 (
                     "strong",
@@ -451,6 +542,12 @@ fn main() {
             Workload::Ring => WEAK_EVENTS_PER_LP * lp_count as usize,
         };
         let inputs = make_inputs(config.seed, lp_count, event_count);
+        if let Some(executor) = config.executor {
+            rows.push(selected_phold(
+                executor, config, lp_count, &inputs, workload,
+            ));
+            continue;
+        }
         let sequential = || run_sequential(lp_count, &inputs, event_work, workload);
         let parallel = || run_pdes(lp_count, &inputs, event_work, workload);
         let (sequence_warmup_ns, (sequential_expected, sequence_warmup)) = elapsed_ns(sequential);
@@ -559,6 +656,20 @@ fn main() {
             });
         }
         rows.push(row);
+    }
+    if let Some(executor) = config.executor {
+        println!(
+            "{}",
+            json!({
+                "schema_version": "kairoecs.pdes.phold.selected.v1",
+                "executor": executor.name(),
+                "seed": config.seed,
+                "repetitions": config.repetitions,
+                "warmup_runs": WARMUP_RUNS,
+                "rows": rows,
+            })
+        );
+        return;
     }
     let schema = if config.phold {
         "kairoecs.pdes.phold.v1"

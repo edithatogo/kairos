@@ -1,5 +1,26 @@
 # Handoff
 
+## Dedicated qualification
+
+The persistent pool executes consecutive logical rounds in one dispatch.
+Each round selects one eligible event per LP, validates and commits
+outbound work in order, and updates logical time independently. The
+frontier map and staged outbound vector keep their allocations within a
+run. The budget-error regression verifies that resumption uses the same
+workers and completes the same ordered work.
+
+The 32-LP target took 55.2% less median elapsed time than the frozen
+reference and 15.4% less than the previously published runtime. The
+independent tape also satisfied both declared timing gates. Both captures
+ran with four exclusive CPUs on the physical Linux host, and all 48
+triplets matched state and counters. [Dedicated raw results](evidence/dedicated/README.md).
+
+The independently confirmed choice is serial at zero mixes and pooled at
+8,192 mixes for the five tested PHOLD profiles. The benchmark records an
+explicit selection before execution, including a serial override at
+either cost. The independent spatial and SimPy models reproduced their
+archived result hashes on the final runtime. [Executor and model replay evidence](evidence/dedicated/README.md#explicit-executor-selection).
+
 ## Matched workload panel
 
 The conservative runtime now folds every advertised bound into its
@@ -30,24 +51,10 @@ Track 55. [CPU and storage profiles](evidence/profiling/README.md) ·
 
 ## Remaining acceptance
 
-Broader per-LP event batching needs a method that satisfies the tested
-ordering and round commit requirements. Draining all currently eligible
-events failed on a handler that inserts an earlier local follow-up.
-Keep the existing one-event selection per process per round.
-[Batching counterexample](evidence/profiling/README.md#event-batch-boundary).
-
-The predeclared comparable dedicated-runner regression run remains open.
-The GitHub repository runner inventory reported zero self-hosted runners
-and the existing NAS and Windows SSH routes timed out. The shared-host
-results support the bounded frontier change. Leave executor choice
-explicit until there is an independently validated crossover rule.
-
-The independent review and its fixes cover the integrated evidence.
-The implementation used
-`/Users/doughnut/.codex/worktrees/kairos-scientific-evidence-closeout/kairos` on `codex/track111-measured-performance-20261125`
-under chat `01a1fd18-51c7-7963-a3cc-d262d54582ba`. The next empirical step is to
-run the frozen matched protocol on an available dedicated runner.
-[Review and command results](review-report.md).
+The reviewed runtime and native evidence are ready for protected-main
+publication. The phase ledger and archive will record the exact tested
+merge. Track 55 owns wider scaling and cross-host restart qualification.
+[Review and command results](review-report.md#phases-13).
 
 ## Matched multiround PHOLD
 
@@ -62,8 +69,8 @@ Serial was faster for all cheap cases. At eight LPs, eight-tick lookahead
 and the 75% remote target, the pool reached 2.097× serial throughput at
 8,192 mixes per event. The paired interval was 1.991–2.148× for this shared
 M1 Max run. The receipts retain cold runs, setup, dispatch and total time,
-and process RSS. Dedicated-runner regression thresholds, held-out
-workloads and crossover selection remain open.
+and process RSS. The dedicated-runner and held-out results are recorded
+above.
 [Protocol, samples and intervals](evidence/phold/README.md).
 
 ## Scheduler cancellation compaction
@@ -237,7 +244,8 @@ Batching or work stealing can alter causality and stochastic order. Correctness 
 
 ## Follow-up issues
 
-Execute the unchecked tasks in plan.md with original owner handoffs. Keep unsupported capability claims and release gates blocked until their evidence exists.
+Track 50 owns allocator reclamation and scheduler throughput under
+contention. Track 55 owns the wider scale and restart matrix.
 
 ## Integration notes
 
@@ -249,6 +257,6 @@ Use isolated bounded worktrees. The root integration packet combines disjoint ch
 records the accepted fixes, and the [phase ledger](../../phase-closeout.yaml)
 records the evidence commit SHA, pushed ref and next-phase decision.
 `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`
-verifies the clean publication after integration. The remaining acceptance
-gates above keep the track In Progress.
+verifies the clean publication after integration. The reviewed results for
+Phases 1–3 are in the [final review](review-report.md#phases-13).
 

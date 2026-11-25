@@ -1,0 +1,46 @@
+{
+  "sources": {
+    "frozen": {
+      "commit": "9d76ca7f4b7f4b5898f2ec77515a7a7639f1478b",
+      "runtime_sha256": "188f9ffe1b5a9951107953813fc05b1554cfa2391e7bb3d417783d56675dcae6"
+    },
+    "published": {
+      "commit": "2d020a0c37cff6c23e246c9de4839eea12ec3251",
+      "runtime_sha256": "3a7328c43b54596703eec5f5d36ffa0f7cc31c436c98490bda6700b9b8f98cb8"
+    },
+    "candidate": {
+      "commit": "550330a454d0bc42d8dcbe20541e62060b4d0d9c",
+      "runtime_sha256": "c37e3a0c96247a35c9123a450b5afca5046eb2d07c78dc7d87feee6c99423ad3"
+    },
+    "lock_sha256": "df26476d07b6323f89bb02819aaff00a12f00c15bdd0114c91d082cd088f0637",
+    "heldout_model_commit": "5ab0c0e4a7ee639f10a41db403ddce89723d1083",
+    "selected_benchmark_commit": "55dd3fc30f59d475d97f6511d8c25365b45a224e"
+  },
+  "build": {
+    "target": "linux/amd64",
+    "image_tag": "rust:1.99.1-slim-trixie",
+    "image_manifest_digest": "sha256:e97df055c54a05160e7c67ba3b2963de6ddb95903911baf8922dbcd1b394f698",
+    "image_config_digest": "sha256:f6c4a35d21dbb3c89d7a8d056c193e94fc09037f2b58dd858b09c39a47dd02d7",
+    "build_runtime": "Apple Container with Rosetta",
+    "command": "bash /session/build-linux.sh",
+    "cwd": "/session",
+    "compiler": "linux-toolchain.txt",
+    "executables": "linux-binaries.sha256",
+    "exit_code": 0
+  },
+  "frozen": {
+    "calibration_protocol_sha256": "74bd47be2358ba3eb78807b34013e9ff4048cccf659da3f038416260584142de",
+    "capture_script_sha256": "15ceba0ac0ba157e8f8e8eddb703796912e63bc7df4a09fbfb179e17d24c56f5",
+    "heldout_protocol_sha256": "d3dc443c7a7f486463433d2f522116f4404520e5d586d88f71088c50d53ea46b",
+    "heldout_choices_sha256": "139f983af9cc097a2704c938cf340718c9c226eb7ef9e1929c00d204a3020cf4"
+  },
+  "capture": {
+    "command": "bash capture.sh",
+    "cwd": "one temporary capture directory per tape on the physical Linux host",
+    "exit_codes": {
+      "calibration": 0,
+      "heldout": 0
+    },
+    "cpu_cgroup_cleanup": "Both system.slice CPU sets were restored to 0-7"
+  }
+}

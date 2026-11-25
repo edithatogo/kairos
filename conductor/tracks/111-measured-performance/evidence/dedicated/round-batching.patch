@@ -1,0 +1,146 @@
+diff --git a/crates/kairo-ecs-pdes/src/conservative.rs b/crates/kairo-ecs-pdes/src/conservative.rs
+index 622f45a..5d319e1 100644
+--- a/crates/kairo-ecs-pdes/src/conservative.rs
++++ b/crates/kairo-ecs-pdes/src/conservative.rs
+@@ -116,0 +117 @@ type QueueKey = (Tick, LpId, u64);
++type RoundBatches = BTreeMap<LpId, Vec<RemoteEvent>>;
+@@ -306,0 +308,27 @@ impl<P: ConservativeProcess> ConservativeRuntime<P> {
++        let safe = self
++            .processes
++            .keys()
++            .map(|&lp_id| (lp_id, exclusive_horizon))
++            .collect();
++        self.run_rounds(
++            inclusive_horizon,
++            exclusive_horizon,
++            event_budget,
++            safe,
++            &mut Vec::new(),
++            #[cfg(feature = "pdes-worker-pool")]
++            None,
++        )
++    }
++
++    fn run_rounds(
++        &mut self,
++        inclusive_horizon: Tick,
++        exclusive_horizon: Tick,
++        event_budget: usize,
++        mut safe: BTreeMap<LpId, Tick>,
++        staged: &mut Vec<RemoteEvent>,
++        #[cfg(feature = "pdes-worker-pool")] mut first_round: Option<RoundBatches>,
++    ) -> Result<RuntimeReport, RuntimeError> {
++        #[cfg(feature = "pdes-worker-pool")]
++        let in_pool = first_round.is_some();
+@@ -310 +338 @@ impl<P: ConservativeProcess> ConservativeRuntime<P> {
+-            let safe = self.compute_safe_frontiers(exclusive_horizon);
++            self.update_safe_frontiers(exclusive_horizon, &mut safe);
+@@ -311,0 +340 @@ impl<P: ConservativeProcess> ConservativeRuntime<P> {
++            #[cfg(not(feature = "pdes-worker-pool"))]
+@@ -312,0 +342,4 @@ impl<P: ConservativeProcess> ConservativeRuntime<P> {
++            #[cfg(feature = "pdes-worker-pool")]
++            let batches = first_round
++                .take()
++                .unwrap_or_else(|| self.take_eligible_batches(&safe, remaining));
+@@ -315,0 +349,22 @@ impl<P: ConservativeProcess> ConservativeRuntime<P> {
++                #[cfg(feature = "pdes-worker-pool")]
++                if !in_pool {
++                    let first_lp = batches
++                        .iter()
++                        .find_map(|(&lp_id, batch)| (!batch.is_empty()).then_some(lp_id))
++                        .expect("only nonempty rounds execute");
++                    let workers = self.take_workers(first_lp)?;
++                    // Enter the pool at the first eligible round. Each later round
++                    // still selects inputs afresh after the previous commit.
++                    let report = workers.install(|| {
++                        self.run_rounds(
++                            inclusive_horizon,
++                            exclusive_horizon,
++                            event_budget,
++                            safe,
++                            staged,
++                            Some(batches),
++                        )
++                    });
++                    self.workers = Some(workers);
++                    return report;
++                }
+@@ -317 +372 @@ impl<P: ConservativeProcess> ConservativeRuntime<P> {
+-                self.execute_round(batches)?;
++                self.execute_round(batches, staged)?;
+@@ -395,6 +450,4 @@ impl<P: ConservativeProcess> ConservativeRuntime<P> {
+-    fn compute_safe_frontiers(&self, horizon: Tick) -> BTreeMap<LpId, Tick> {
+-        let mut safe: BTreeMap<_, _> = self
+-            .processes
+-            .keys()
+-            .map(|&destination| (destination, horizon))
+-            .collect();
++    fn update_safe_frontiers(&self, horizon: Tick, safe: &mut BTreeMap<LpId, Tick>) {
++        for frontier in safe.values_mut() {
++            *frontier = horizon;
++        }
+@@ -405 +457,0 @@ impl<P: ConservativeProcess> ConservativeRuntime<P> {
+-        safe
+@@ -408,5 +460 @@ impl<P: ConservativeProcess> ConservativeRuntime<P> {
+-    fn take_eligible_batches(
+-        &mut self,
+-        safe: &BTreeMap<LpId, Tick>,
+-        limit: usize,
+-    ) -> BTreeMap<LpId, Vec<RemoteEvent>> {
++    fn take_eligible_batches(&mut self, safe: &BTreeMap<LpId, Tick>, limit: usize) -> RoundBatches {
+@@ -444 +492,2 @@ impl<P: ConservativeProcess> ConservativeRuntime<P> {
+-        batches: BTreeMap<LpId, Vec<RemoteEvent>>,
++        batches: RoundBatches,
++        staged: &mut Vec<RemoteEvent>,
+@@ -484,17 +532,0 @@ impl<P: ConservativeProcess> ConservativeRuntime<P> {
+-            if self.workers.is_none() {
+-                let first_lp = batches
+-                    .iter()
+-                    .find_map(|(&lp_id, batch)| (!batch.is_empty()).then_some(lp_id))
+-                    .expect("only nonempty rounds execute");
+-                let width = thread::available_parallelism().map_or(1, |count| count.get());
+-                self.workers = Some(
+-                    ThreadPoolBuilder::new()
+-                        .num_threads(width.min(self.processes.len()))
+-                        .thread_name(|index| format!("pdes-worker-{index}"))
+-                        .build()
+-                        .map_err(|_| {
+-                            self.poisoned = true;
+-                            RuntimeError::SpawnFailed(first_lp)
+-                        })?,
+-                );
+-            }
+@@ -511,8 +543,3 @@ impl<P: ConservativeProcess> ConservativeRuntime<P> {
+-            self.workers
+-                .as_ref()
+-                .expect("pool initialized")
+-                .install(|| {
+-                    jobs.into_par_iter()
+-                        .map(|(lp_id, process, batch)| (lp_id, run_batch(lp_id, process, &batch)))
+-                        .collect::<Vec<_>>()
+-                })
++            jobs.into_par_iter()
++                .map(|(lp_id, process, batch)| (lp_id, run_batch(lp_id, process, &batch)))
++                .collect::<Vec<_>>()
+@@ -521 +547,0 @@ impl<P: ConservativeProcess> ConservativeRuntime<P> {
+-        let mut staged = Vec::new();
+@@ -597 +623 @@ impl<P: ConservativeProcess> ConservativeRuntime<P> {
+-        for event in staged {
++        for event in staged.drain(..) {
+@@ -617,0 +644,16 @@ impl<P: ConservativeProcess> ConservativeRuntime<P> {
++    #[cfg(feature = "pdes-worker-pool")]
++    fn take_workers(&mut self, first_lp: LpId) -> Result<ThreadPool, RuntimeError> {
++        if let Some(workers) = self.workers.take() {
++            return Ok(workers);
++        }
++        let width = thread::available_parallelism().map_or(1, |count| count.get());
++        ThreadPoolBuilder::new()
++            .num_threads(width.min(self.processes.len()))
++            .thread_name(|index| format!("pdes-worker-{index}"))
++            .build()
++            .map_err(|_| {
++                self.poisoned = true;
++                RuntimeError::SpawnFailed(first_lp)
++            })
++    }
++

@@ -1,0 +1,70 @@
+{
+  "rust": "1.99.1",
+  "working_directory": "/Users/doughnut/.codex/worktrees/kairos-scientific-evidence-closeout/kairos",
+  "seed": 24301,
+  "repetitions": 2,
+  "serial_override_at_8192": "matched in both feature builds",
+  "pdes_runtime_sha256": "c37e3a0c96247a35c9123a450b5afca5046eb2d07c78dc7d87feee6c99423ad3",
+  "benchmark_source_sha256": "41af5de17aa0d1bbcae0d0eb68905ea75cf5b193148e6ba4839a7c271dc46932",
+  "binaries_sha256": {
+    "pooled": "d21ee902275f7065399e34e0e27e8caba7c521a2046cbb89720bf0cc93f79a1c",
+    "scoped": "5e1738054533a938162ab55afc589ab40af68e9f475e7f477b18fda50fc7bd78"
+  },
+  "checks": [
+    {
+      "event_work": 0,
+      "executor": "serial",
+      "profile_count": 5,
+      "ordered_state_sha256": "bd27eb9117d6a6adc1026ab36f07d2e82d803bf0fd78bf078dc76dc9231d9bfc",
+      "heldout_sample": "samples/0-0-candidate.json",
+      "paired_output_parity": true
+    },
+    {
+      "event_work": 8192,
+      "executor": "pooled",
+      "profile_count": 5,
+      "ordered_state_sha256": "fd38cf6be1b245f6acd8333bd6ab6505665272688b4eb0e32930abf6493ac86a",
+      "heldout_sample": "samples/8192-0-candidate.json",
+      "paired_output_parity": true
+    },
+    {
+      "features": "scoped",
+      "args": [
+        "--phold",
+        "--executor",
+        "pooled"
+      ],
+      "stderr": "pooled requires pdes-worker-pool",
+      "exit_code": 2
+    },
+    {
+      "features": "pooled",
+      "args": [
+        "--executor",
+        "serial"
+      ],
+      "stderr": "--executor requires --phold",
+      "exit_code": 2
+    },
+    {
+      "features": "pooled",
+      "args": [
+        "--phold",
+        "--executor",
+        "auto"
+      ],
+      "stderr": "--executor requires serial or pooled",
+      "exit_code": 2
+    },
+    {
+      "features": "pooled",
+      "args": [
+        "--phold",
+        "--executor"
+      ],
+      "stderr": "--executor requires serial or pooled",
+      "exit_code": 2
+    }
+  ],
+  "exit_code": 0
+}

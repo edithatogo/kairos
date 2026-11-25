@@ -1,5 +1,42 @@
 # Track 111 review
 
+## Phases 1–3
+
+The independent review verified that the pooled batch recomputes
+readiness after every ordered round commit. Logical time, per-LP event
+limits, null messages and the event budget are evaluated each round.
+The review requested an explicit budget-stop recovery check. The
+extended worker identity test now exhausts its budget, resumes the same
+horizon and drains another horizon with the original worker.
+
+The reviewer recomputed both captures from 144 observed processes and
+720 exact semantic rows. Both baseline and incremental thresholds passed
+on both tapes, and all ten predeclared executor choices held on the unseen
+tape. The selected mode now includes the 32-LP primary profile, with its
+tape and state checked against the held-out sample. The serial override
+was exercised in both builds. The reviewer also independently reproduced
+the FIFO and spatial result hashes and verified the distinct queueing
+oracle and executable source identities.
+[Raw capture and provenance](evidence/dedicated/README.md).
+
+Final local validation ran in the owning worktree with Rust 1.99.1 and
+pinned Clippy. The focused commands are the same for `pdes` and
+`pdes-worker-pool`.
+
+| Check | Outcome |
+| --- | --- |
+| `cargo test --locked --offline -p kairo-ecs-pdes --features FEATURE --test production_parity --test production_protocol --test track47_conservative_runtime` | Exit 0, 19 scoped and 20 pooled cases |
+| `cargo clippy --locked --offline -p kairo-ecs-pdes --features FEATURE --bench production -- -D warnings` | Exit 0, both builds |
+| `cargo fmt --all --check` | Exit 0 |
+| Locked `cargo bench --no-run` and direct selected and paired runs | Exit 0, five selected cases per cost plus four negative inputs. [Receipt](evidence/dedicated/executor-verification.json) |
+| Extract both raw archives and rerun the analyzer with CPython 3.15.2 | Exit 0, both result JSON files reproduced byte for byte |
+
+The review accepts Phases 1–3 for publication. Keep the measured
+selection explicit and use the existing ownership for broader distributed,
+device and allocation claims.
+
+## Phase 0
+
 The independent reviewer verified the frontier reduction against the
 exclusive bound and event-budget tests, reconstructed the raw PHOLD
 statistics and checked the ordered state and reported counters. Both
@@ -21,8 +58,7 @@ The spatial model already used the pinned toolchain.
 
 The test that drains the whole eligible queue produced `[1, 7, 3]` in
 place of `[1, 3, 7]`. Keep one eligible event per LP and the ordered
-round commit. Track 111 remains In Progress for wider safe batching
-and the required dedicated regression run. Phase 0 is accepted against
+round commit. Phase 0 is accepted against
 [the verified publication in PR #470](https://github.com/edithatogo/kairos/pull/470).
 
 ## Local validation

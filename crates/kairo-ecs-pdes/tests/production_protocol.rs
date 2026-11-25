@@ -481,6 +481,11 @@ fn reuses_the_native_worker_across_rounds_and_horizons() {
             .schedule_initial(message(lp, lp, SimTime::from_ticks(tick), Vec::new()))
             .unwrap();
     }
+    assert_eq!(
+        runtime.run_until_with_budget(SimTime::from_ticks(31), 16),
+        Err(RuntimeError::EventBudgetExceeded { budget: 16 })
+    );
+    assert_eq!(runtime.report().processed_events, 16);
     runtime.run_until(SimTime::from_ticks(31)).unwrap();
     runtime.run_until(SimTime::from_ticks(63)).unwrap();
 

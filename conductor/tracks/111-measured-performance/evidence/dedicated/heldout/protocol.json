@@ -1,0 +1,54 @@
+{
+  "frozen_reference": "9d76ca7f4b7f4b5898f2ec77515a7a7639f1478b",
+  "published_reference": "2d020a0c37cff6c23e246c9de4839eea12ec3251",
+  "candidate_runtime": "550330a454d0bc42d8dcbe20541e62060b4d0d9c",
+  "seed": 24301,
+  "work_mixes": [
+    0,
+    8192
+  ],
+  "warmups_per_process": 1,
+  "timed_repeats_per_process": 2,
+  "triplets_per_cost": 12,
+  "order": [
+    [
+      "base",
+      "published",
+      "candidate"
+    ],
+    [
+      "candidate",
+      "published",
+      "base"
+    ],
+    [
+      "base",
+      "candidate",
+      "published"
+    ],
+    [
+      "candidate",
+      "base",
+      "published"
+    ],
+    [
+      "published",
+      "base",
+      "candidate"
+    ],
+    [
+      "published",
+      "candidate",
+      "base"
+    ]
+  ],
+  "order_rationale": "Twelve fresh triplets include each run order twice and keep the frozen base/candidate order balanced and alternating.",
+  "target": "mixes=0 lps=32 lookahead=8 remote=75",
+  "frozen_gate": "Candidate must reduce median paired elapsed time by at least 20% versus the frozen baseline in the target, with a 95% upper ratio below one and no other pooled profile above 5% median regression.",
+  "batch_gate": "Candidate must reduce time versus the published runtime in the target with a 95% upper ratio below one and no other pooled profile above 5% median regression.",
+  "parity": "Every paired variant must have identical ordered state and counters on the unchanged benchmark tape.",
+  "runner": "Physical Intel i3-N300 Linux with one exclusive non-SMT cache cluster of CPUs 4-7; same binaries, operating mode and partition in each triplet.",
+  "bootstrap_seed": 111,
+  "bootstrap_resamples": 10000,
+  "metrics": "Total and dispatch wall-clock nanoseconds from the executable; process peak RSS in KiB from GNU time."
+}
