@@ -1,6 +1,6 @@
 # Measured performance programme
 
-Owner: [Track 111](tracks/111-measured-performance/index.md), with existing Tracks 18/31/47/48/50/51/52/55/78/101. This is an implementation plan, not a speedup claim.
+Owner: [Track 111](archive/111-measured-performance/index.md), with existing Tracks 18/31/47/48/50/51/52/55/78/101. This is an implementation plan, not a speedup claim.
 
 ## Observed starting point
 
@@ -12,15 +12,21 @@ The [local scaling runner](../benches/hpc-scaling-certification/local-runner.mjs
 
 The matched PHOLD sweep retained 240 serial/parallel pairs. Serial led on
 cheap events. The eight-LP pool reached 2.097× serial throughput for the
-named expensive case on the shared M1 Max. The result leaves the
-dedicated-runner and held-out gates open.
-[PHOLD protocol and timings](tracks/111-measured-performance/evidence/phold/README.md).
+named expensive case on the shared M1 Max. This is the historical shared-host comparison.
+[PHOLD protocol and timings](archive/111-measured-performance/evidence/phold/README.md).
 
 A separate physical Mac–NAS run matched the serial ring and had slower
 median two-host performance for both fixed work and fixed work per host.
 It exercised native event processing and application frames through SSH,
 with integrated restart, storage and cluster certification still open.
 [Two-host replay and results](tracks/55-end-to-end-weak-strong-scaling-certification/evidence/two-host-ring/README.md).
+
+Both later Linux tapes passed the dedicated timing limits on four exclusive
+CPUs and matched all ordered states and counters. The held-out tape
+confirmed the recorded serial and pooled choices for the five PHOLD profiles
+at both costs. The opt-in benchmark records which executor runs. The wider
+performance programme uses these measured regimes as bounded evidence.
+[Dedicated measurements](archive/111-measured-performance/evidence/dedicated/README.md).
 
 ## Work packets and decision gates
 

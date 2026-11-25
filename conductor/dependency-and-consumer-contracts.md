@@ -67,7 +67,7 @@ The FMU importer reuses ZIP/XML handling with the accepted archive and
 metadata validation. Changing any of these choices requires the same locked
 consumer behavior, build and licence/security review from its owning track.
 [Movement evidence](tracks/114-dependency-and-consumer-contracts/handoff.md#installed-careops-movement--23-november-2026) ·
-[Worker measurements](tracks/111-measured-performance/handoff.md#matched-ring-and-worker-reuse) ·
+[Worker measurements](archive/111-measured-performance/handoff.md#matched-ring-and-worker-reuse) ·
 [Archive decision](tracks/79-zip-robustness/handoff.md) ·
 [Metadata decision](tracks/80-quick-xml-robustness/handoff.md)
 

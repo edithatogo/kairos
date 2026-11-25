@@ -1954,21 +1954,22 @@ entries:
     next_phase_decision: "Keep Phase 0 open for the wider API and caller map and oracle freeze. Continue downstream migration and advanced qualification under the named owners."
 
   - track_id: "111"
-    phase: "0"
+    phase: "3"
     state: closed
     review_command: "$conductor-review"
-    review_result: "An independent review verified the matched event and state oracle, worker and storage profiles, snapshot and transfer boundaries, raw paired samples and acceptance calculations. The compiler provenance and reproduction path fixes were applied. Wider batching failed its order control."
+    review_result: "Independent review accepted Phases 0–3. Recomputed both native captures and all ten held-out choices, checked resume ordering and worker reuse, and reproduced the spatial and SimPy result digests."
     fixes_applied: true
     validation_commands:
+      - "cargo test --locked --offline -p kairo-ecs-pdes --features pdes --test production_parity --test production_protocol --test track47_conservative_runtime"
+      - "cargo test --locked --offline -p kairo-ecs-pdes --features pdes-worker-pool --test production_parity --test production_protocol --test track47_conservative_runtime"
+      - "Reproduce both raw captures with the analyzer in conductor/archive/111-measured-performance/evidence/dedicated"
       - "node scripts/validation/validate-frontier-evidence.mjs"
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
-      - "cargo test --locked -p kairo-ecs-pdes --all-features"
-      - "cargo test --locked -p kairo-ecs-pdes --features pdes --test production_parity --test production_protocol --test track47_conservative_runtime"
-      - "cargo test --locked -p kairo-ecs-state --test query_determinism"
-    git_status: "PR #470 published the reviewed runtime and performance evidence to main. The clean closeout validator checks the published commit."
-    commit_sha: "c0fabbd3fe05dc670dd58263650851dbc7b293b2"
+      - "pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree"
+    git_status: "PR #472 passed 18 workflows on the tested tree published to main, including exact-base workspace coverage and the 90% core floor."
+    commit_sha: "6b2513c7d2901fc7edd7cdec6cc7b6854785ce13"
     pushed_ref: "origin/main"
-    next_phase_decision: "Phase 0 accepted. Keep Track 111 In Progress. Preserve the eligible-event ordering and qualify the dedicated regression gate before automatically selecting an executor."
+    next_phase_decision: "Archive Track 111 with Phases 0–3 accepted. Retain explicit executor selection in the measured scope. Track 50 owns scheduler allocation contention and Track 55 owns wider scaling and cross-host restart."
 
   - track_id: "112"
     phase: "2"

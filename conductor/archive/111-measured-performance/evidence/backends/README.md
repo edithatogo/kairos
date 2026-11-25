@@ -44,7 +44,7 @@ kill-to-new-process-ready boundaries, from 0.628 to 2.623 s. This extracts
 the next ready report for the same participant within each capture.
 The paired values include both local and remote participants. They cover
 process recovery within the previously verified two-host fixture.
-[Two-host recovery captures](../../../48-time-warp-optimistic-rollback-runtime/evidence/external-engine-20261103/receipt.json).
+[Two-host recovery captures](../../../../tracks/48-time-warp-optimistic-rollback-runtime/evidence/external-engine-20261103/receipt.json).
 
 The matched one-host and two-host Mac–NAS ring is a separate transport
 measurement. For each sample, subtract the longest worker dispatch in each
@@ -59,5 +59,5 @@ combined overhead measure for ten samples per configuration.
 
 The retained ring profiles matched exact event and state outputs at both
 host counts. The wider integrated crash-and-restart comparison remains
-part of Track 55. [Physical ring evidence](../../../55-end-to-end-weak-strong-scaling-certification/evidence/two-host-ring/README.md) ·
+part of Track 55. [Physical ring evidence](../../../../tracks/55-end-to-end-weak-strong-scaling-certification/evidence/two-host-ring/README.md) ·
 [Same-host optimistic rollback counters](../profiling/time-warp-raw.json).

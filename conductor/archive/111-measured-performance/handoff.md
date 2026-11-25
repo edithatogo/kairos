@@ -49,12 +49,21 @@ timers. The integrated distributed scale and restart matrix remains under
 Track 55. [CPU and storage profiles](evidence/profiling/README.md) ·
 [Device and transport receipts](evidence/backends/README.md).
 
-## Remaining acceptance
+## Publication
 
-The reviewed runtime and native evidence are ready for protected-main
-publication. The phase ledger and archive will record the exact tested
-merge. Track 55 owns wider scaling and cross-host restart qualification.
+Phases 0–3 are accepted. PR #472 merged at `6b2513c7d2901fc7edd7cdec6cc7b6854785ce13`. Its
+tested merge tree matches protected main. 18 workflows passed on
+that tree. The core lane verified the 90% floor and zero exact-base
+workspace coverage regression. [Implementation PR](https://github.com/edithatogo/kairos/pull/472) · [Rust CI](https://github.com/edithatogo/kairos/actions/runs/45609173022) ·
 [Review and command results](review-report.md#phases-13).
+
+Chat `01a1fd18-51c7-7963-a3cc-d262d54582ba` owned the Track 111 work in
+`/Users/doughnut/.codex/worktrees/kairos-scientific-evidence-closeout/kairos`.
+The baseline used `codex/track111-measured-performance-20261125`.
+The final implementation used `codex/track111-final-qualification-20261125`
+for the conservative runtime, protocol test, benchmark and this evidence.
+Its native work covered the two Linux captures and macOS model replays.
+Track 50 owns the next scheduler allocation and contention measurements.
 
 ## Matched multiround PHOLD
 

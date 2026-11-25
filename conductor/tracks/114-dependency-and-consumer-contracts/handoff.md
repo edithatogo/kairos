@@ -40,7 +40,7 @@ above measure the standalone fixture. The source delta measures maintenance
 in Kairos. Ecosystem-wide maintenance and build-time comparisons, hardware
 scaling and broader dynamic models require separate workload evidence.
 [Consumer receipts](../108-scientific-ecosystem-alignment/handoff.md#installed-consumer-qualification--23-november-2026) ·
-[Measured ring](../111-measured-performance/handoff.md#matched-ring-and-worker-reuse) ·
+[Measured ring](../../archive/111-measured-performance/handoff.md#matched-ring-and-worker-reuse) ·
 [Comparable dependency trees](../../contracts/minimal-consumer.md)
 
 The standalone execution log SHA-256 is

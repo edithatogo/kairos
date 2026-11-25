@@ -2,7 +2,11 @@
 
 Remove demonstrated overhead, establish a measured serial/parallel/GPU crossover and publish reproducible matched-workload results.
 
-Status: In Progress. Runtime and native qualification reviewed for publication.
+Status: Done. Phases 0–3 accepted and archived.
+
+The profiling and frontier evidence preserve their historical command paths
+and README bytes. When rerunning those fixtures from current main, use their
+directory locations under this archive.
 
 - [Specification](spec.md)
 - [Plan](plan.md)

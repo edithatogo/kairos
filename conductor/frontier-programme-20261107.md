@@ -20,7 +20,7 @@ Current strengths include deterministic Rust scheduling/state/RNG, resource and 
 |---|---|---|
 | [109](tracks/109-rust-only-runtime/index.md) | Immediate retirement of host cores; actual Rust adapters | Missing native support fails; supported installed packages execute Rust and prove lifetime/replay contracts. |
 | [110](tracks/110-scientific-method-completion/index.md) | Correct and complete every advertised scientific/advanced method | Independent oracle for every supported method; no identity inference, mislabeled RK4 or unqualified QMC. |
-| [111](tracks/111-measured-performance/index.md) | Profiling, persistent workers, batching and measured crossover | Equivalent work, raw measurements, useful speed regimes and regression limits. |
+| [111](archive/111-measured-performance/index.md) | Profiling, persistent workers, batching and measured crossover | Equivalent work, raw measurements, useful speed regimes and regression limits. |
 | [112](tracks/112-evidence-and-claim-automation/index.md) | Capability registry, generated status and false-claim rejection | Placeholder/historical/real evidence stays distinct; public summaries match qualified records. |
 | [113](tracks/113-beta-and-stable-release/index.md) | Beta, RC and stable gates | Exact published scope, clean installation, consumer acceptance, compatibility and supply-chain evidence. |
 | [114](tracks/114-dependency-and-consumer-contracts/index.md) | Maintained dependency reuse and consumer abstraction | Kairos builds independently; CareOps uses public immutable dependency contracts. |

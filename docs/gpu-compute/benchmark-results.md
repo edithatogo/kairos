@@ -46,6 +46,6 @@ the workload sizes at which GPU execution helps or loses.
 
 Use [Track 52's hardware manifest](../../conductor/hpc-evidence/manifests/track52-live-gpu-hardware-template.json)
 for the applicable source-bound qualification; use the
-[measured-performance programme](../../conductor/tracks/111-measured-performance/spec.md)
+[measured-performance programme](../../conductor/archive/111-measured-performance/spec.md)
 for complete-model comparisons. Distinguish exact integer/discrete replay,
 floating-point tolerance and statistical equivalence in every result.

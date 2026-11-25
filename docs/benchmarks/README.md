@@ -17,7 +17,7 @@ Broad comparative performance and HPC scaling certification remain incomplete.
 
 - [Benchmark policy](benchmark-policy.md) and [reproduction guide](reproduce-comparison.md).
 - [Raw-results policy](../../benches/raw-results-policy.json).
-- [Measured-performance work](../../conductor/tracks/111-measured-performance/spec.md).
+- [Measured-performance work](../../conductor/archive/111-measured-performance/spec.md).
 - [Datasets and independent analytical oracles](../../conductor/validation-datasets.md).
 
 Compare equivalent models and record exact inputs, software, hardware and raw

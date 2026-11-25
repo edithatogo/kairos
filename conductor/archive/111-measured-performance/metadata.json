@@ -1,18 +1,21 @@
 {
   "track_id": "111-measured-performance",
   "type": "refactor",
-  "status": "in_progress",
+  "status": "complete",
   "approved": true,
   "repository": "kairos",
   "created_at": "2026-11-07T00:00:00+10:00",
-  "updated_at": "2026-11-25T21:10:09+10:00",
+  "updated_at": "2026-11-25T22:16:22+10:00",
   "title": "Measured performance and parallel execution improvement",
   "spec_approved": true,
   "implementation_started": true,
   "accepted_phases": [
-    "0"
+    "0",
+    "1",
+    "2",
+    "3"
   ],
-  "active_phase": "1",
+  "active_phase": null,
   "coordinating_programme": "frontier-programme-20261107",
   "depends_on": [
     "18",

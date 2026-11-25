@@ -1634,11 +1634,11 @@ tracks:
 
   - id: 111
     name: Measured performance and parallel execution improvement
-    status: In Progress
+    status: Done
     owner: performance-agent + pdes-agent
     depends_on: ["18", "31", "47", "48", "78", "101"]
     owned_paths:
-      - conductor/tracks/111-measured-performance/
+      - conductor/archive/111-measured-performance/
     required_gates:
       - phase-closeout-check
       - frontier-evidence-check
