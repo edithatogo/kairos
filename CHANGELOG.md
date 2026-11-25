@@ -16,6 +16,8 @@ Format:
 
 ### Added
 
+- `kairo-ecs-core` can reserve scheduler event and cancellation storage up front when the expected queue size is known.
+
 - The conservative PDES benchmark adds an optional `--phold` case with matched serial and parallel inputs and reports for setup, dispatch and end-to-end time. `kairo-ecs-gpu` adds a hardware Vulkan qualification example for the shared resident compute shaders. [Performance programme](conductor/performance-programme.md)
 
 - `kairo-ecs-fmi` generates scalar FMI 3.0 co-simulation descriptions through the optional `fmi3` feature. The scheduled counter packages its Rust model as FMI 2 and FMI 3 archives. [Export guide](docs/fmi-digital-twin/export-guide.md)

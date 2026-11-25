@@ -79,6 +79,20 @@ impl Scheduler {
         Self::default()
     }
 
+    /// Create a scheduler with space for the expected peak number of queued events.
+    ///
+    /// Cancelled entries may remain queued until pruning or compaction. The
+    /// reservation is an initial size and the scheduler can grow beyond it.
+    #[must_use]
+    pub fn with_capacity(event_capacity: usize) -> Self {
+        Self {
+            heap: BinaryHeap::with_capacity(event_capacity),
+            // Leave room for the set to reuse buckets as events are removed.
+            pending: HashSet::with_capacity(event_capacity.saturating_mul(2)),
+            ..Self::default()
+        }
+    }
+
     pub fn now(&self) -> SimTime {
         self.now
     }
@@ -837,6 +851,34 @@ mod tests {
             entity: None,
             kind: EventKind::Custom(kind),
         }
+    }
+
+    #[test]
+    fn reserved_scheduler_preserves_dispatch_and_checkpoint_order() {
+        let mut reserved = Scheduler::with_capacity(4);
+        let mut default = Scheduler::new();
+        assert!(reserved.heap.capacity() >= 4);
+        assert!(reserved.pending.capacity() >= 8);
+        for (at, priority, kind) in [(8, 0, 1), (8, 1, 2), (6, 1, 3), (8, 0, 4), (8, -1, 5)] {
+            let expected = default.schedule(request(at, priority, kind));
+            assert_eq!(reserved.schedule(request(at, priority, kind)), expected);
+            if kind == 2 {
+                assert!(default.cancel(expected));
+                assert!(reserved.cancel(expected));
+            }
+        }
+        let mut restored = Scheduler::from_checkpoint(&reserved.checkpoint()).unwrap();
+        for _ in 0..5 {
+            let step = default.step();
+            assert_eq!(reserved.step(), step);
+            assert_eq!(restored.step(), step);
+        }
+        assert_eq!(reserved.stats(), default.stats());
+        assert_eq!(restored.stats(), default.stats());
+        assert_eq!(
+            Scheduler::with_capacity(0).stats(),
+            Scheduler::new().stats()
+        );
     }
 
     #[test]
