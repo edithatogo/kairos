@@ -190,18 +190,10 @@ fn parse(xml: &[u8]) -> io::Result<HwlocTopology> {
 mod tests {
     use super::*;
 
-    const XML: &str = r#"<topology version="2.0">
-          <object type="Machine" allowed_cpuset="0x00000002,,0x00000009">
-            <object type="NUMANode" os_index="0" local_memory="64" cpuset="0x00000002,,0x00000009"/>
-            <object type="NUMANode" os_index="2" local_memory="256" cpuset="0x0"/>
-            <object type="NUMANode" os_index="3" cpuset="0x00000002,,0x0"/>
-            <object type="L3Cache" depth="3" cache_size="4096" cache_linesize="64"
-                    cache_type="0" cpuset="0x00000009">
-              <object type="Core" cpuset="0x00000009"/>
-            </object>
-            <object type="Core" cpuset="0x00000002,,0x0"/>
-          </object>
-        </topology>"#;
+    const XML: &str = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../conformance/fixtures/track50-hwloc-v2.xml"
+    ));
 
     #[test]
     fn reads_shared_caches_and_memory_only_nodes_and_rejects_bad_topology() {

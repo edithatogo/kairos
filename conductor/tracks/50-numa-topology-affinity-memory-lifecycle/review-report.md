@@ -32,6 +32,11 @@ checkpoints and deterministic dispatch. The hwloc query uses a clean
 child environment and reports process or parse failures as I/O errors.
 The measured allocator and native topology checks qualify the explicit
 paths. Broader placement requires the CAP-50.5 evidence.
+The public API review records the decision, compatibility and red-team
+responses in [ADR 0028](../../../docs/adr/0028-opt-in-scheduler-reservation-and-hwloc.md).
+It binds the review to the
+[scheduler reservation fixture](../../../conformance/fixtures/track50_scheduler_reservation.json)
+and [native topology fixture](../../../conformance/fixtures/track50-hwloc-v2.xml).
 
 > **Current qualification correction, 3 November 2026:** This historical
 > review covers contract slices. Its complete-plan, cache locality, zero

@@ -860,24 +860,49 @@ mod tests {
 
     #[test]
     fn reserved_scheduler_preserves_dispatch_and_checkpoint_order() {
-        let mut reserved = Scheduler::with_capacity(4);
+        #[derive(serde::Deserialize)]
+        struct ReservationEvent {
+            at_ticks: u128,
+            priority: i32,
+            kind: u32,
+            cancel: Option<bool>,
+        }
+        #[derive(serde::Deserialize)]
+        struct ReservationFixture {
+            initial_capacity: usize,
+            events: Vec<ReservationEvent>,
+            expected_kind_order: Vec<u32>,
+        }
+
+        let fixture: ReservationFixture = serde_json::from_str(include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../conformance/fixtures/track50_scheduler_reservation.json"
+        )))
+        .unwrap();
+        let mut reserved = Scheduler::with_capacity(fixture.initial_capacity);
         let mut default = Scheduler::new();
-        assert!(reserved.heap.capacity() >= 4);
-        assert!(reserved.pending.capacity() >= 8);
-        for (at, priority, kind) in [(8, 0, 1), (8, 1, 2), (6, 1, 3), (8, 0, 4), (8, -1, 5)] {
-            let expected = default.schedule(request(at, priority, kind));
-            assert_eq!(reserved.schedule(request(at, priority, kind)), expected);
-            if kind == 2 {
+        assert!(reserved.heap.capacity() >= fixture.initial_capacity);
+        assert!(reserved.pending.capacity() >= fixture.initial_capacity * 2);
+        for event in fixture.events {
+            let req = request(event.at_ticks, event.priority, event.kind);
+            let expected = default.schedule(req);
+            assert_eq!(reserved.schedule(req), expected);
+            if event.cancel.unwrap_or(false) {
                 assert!(default.cancel(expected));
                 assert!(reserved.cancel(expected));
             }
         }
+        assert!(reserved.pending_events() > fixture.initial_capacity);
         let mut restored = Scheduler::from_checkpoint(&reserved.checkpoint()).unwrap();
-        for _ in 0..5 {
+        for expected_kind in fixture.expected_kind_order {
             let step = default.step();
             assert_eq!(reserved.step(), step);
             assert_eq!(restored.step(), step);
+            assert_eq!(step.into_dispatched().unwrap().kind.code(), expected_kind);
         }
+        assert_eq!(default.step(), StepOutcome::Empty);
+        assert_eq!(reserved.step(), StepOutcome::Empty);
+        assert_eq!(restored.step(), StepOutcome::Empty);
         assert_eq!(reserved.stats(), default.stats());
         assert_eq!(restored.stats(), default.stats());
         assert_eq!(

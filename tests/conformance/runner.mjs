@@ -10,6 +10,7 @@ export const REQUIRED_READY_FIXTURE_IDS = Object.freeze([
 ]);
 
 export const OPTIONAL_READY_FIXTURE_IDS = Object.freeze([
+  'scheduler_reservation_v1',
   'zero_delay_guard_v1',
   'pdes_conservative_parity_v1',
   'event_log_v2_conformance',
@@ -399,6 +400,10 @@ export function validateFixturePayload(fixture, root = process.cwd()) {
 
   if (fixture.id === 'scheduler_ordering_v1') assertOrderingPayload(payload, fixture);
   else if (fixture.id === 'scheduler_cancellation_v1') assertCancellationPayload(payload, fixture);
+  else if (fixture.id === 'scheduler_reservation_v1') {
+    assertCancellationPayload(payload, fixture);
+    assertNonNegativeSafeInteger(payload.initial_capacity, `${fixture.id}.initial_capacity`);
+  }
   else if (fixture.id === 'zero_delay_guard_v1') assertZeroDelayGuardPayload(payload, fixture);
   else if (fixture.id === 'rng_reproducibility_v1') assertRngPayload(payload, fixture);
   else if (fixture.id === 'vvuq_scenario_replay_v1') assertVvuqPayload(payload, fixture, root);
@@ -446,7 +451,7 @@ export function runFixture(fixture, payload) {
     return { observed_kind_order: observedKinds };
   }
 
-  if (fixture.id === 'scheduler_cancellation_v1') {
+  if (fixture.id === 'scheduler_cancellation_v1' || fixture.id === 'scheduler_reservation_v1') {
     const ordered = sortEvents(payload.events).filter((event) => !event.cancel);
     const observedKinds = ordered.map((event) => event.kind);
     assert(
