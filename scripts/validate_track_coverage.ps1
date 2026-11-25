@@ -96,8 +96,6 @@ foreach ($row in @(
 
 foreach ($row in @(
     "### Tracks 36-40 streaming, ML, FMI, cloud/HPC, and debugging gates",
-    "**kafka-smoke**",
-    "**arrow-flight-smoke**",
     "**realtime-wallclock-check**",
     "**onnx-inference-smoke**",
     "**gymnasium-env-smoke**",
@@ -110,7 +108,7 @@ foreach ($row in @(
     "**trace-record-replay**",
     "**fwd-back-parity**",
     "**breakpoint-smoke**",
-    "does not prove a live Kafka broker connection",
+    "does not establish live broker execution or latency",
     "does not prove ONNX Runtime execution",
     "does not prove shared-library FMU execution",
     "live container execution remains a later gate",
@@ -355,9 +353,8 @@ $trackChecks = @(
     @{
         Path = "conductor/tracks/36-streaming-real-time-processing/test-matrix.md"
         Needles = @(
-            'cargo test -p kairo-ecs-streaming --features kafka',
-            'cargo test -p kairo-ecs-streaming --features arrow-flight',
-            'cargo test -p kairo-ecs-streaming --no-default-features',
+            'cargo test --locked -p kairo-ecs-streaming',
+            'live broker or client',
             'pwsh -NoProfile -File scripts\validate_track_coverage.ps1 -SkipCargo'
         )
     },

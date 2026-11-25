@@ -24,7 +24,7 @@ Unrelated owners, cross-repository source, clinical policy, DES/resource semanti
 
 ## Contract
 
-Implement actual WebSocket transport only for a demonstrated live consumer. Current WebSocketBridge aliases InMemoryStream; do not describe this as deletion of a mature custom WebSocket stack. Use protocol machinery rather than hand-built framing; benchmark wrapper/build cost. Browser native WebSocket remains available without another browser transport library. Schema/protocol and payload limits must be qualified before accepting messages. Generic transport stays Kairos-owned; CareOps owns healthcare commands, frontend session policy and deployment.
+Implement actual WebSocket transport only for a demonstrated live consumer. The former in-memory alias is [retired](../../../docs/adr/0027-retire-streaming-aliases.md); it was never a WebSocket stack. Use protocol machinery rather than hand-built framing; benchmark wrapper/build cost. Browser native WebSocket remains available without another browser transport library. Schema/protocol and payload limits must be qualified before accepting messages. Generic transport stays Kairos-owned; CareOps owns healthcare commands, frontend session policy and deployment.
 
 ## Acceptance criteria
 

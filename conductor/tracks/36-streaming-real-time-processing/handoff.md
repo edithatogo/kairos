@@ -1,5 +1,10 @@
 # Handoff — 36 Streaming & Real-Time Processing
 
+The original implementation and validation below describe the historical
+broker-free scaffold. The broker-named aliases have since been withdrawn;
+see [ADR 0027](../../../docs/adr/0027-retire-streaming-aliases.md) and the
+[current test matrix](test-matrix.md). No network capability was withdrawn.
+
 ## Summary
 
 Track 36 now has a broker-free contract scaffold for `kairo-ecs-streaming`. The crate defines streaming adapter traits, an Arrow-aligned event-log message with explicit schema versioning, dependency-free event-log contract validation, feature-gated in-memory adapter aliases, in-memory contract tests, per-run sequence regression checks, unknown-stream snapshot rejection, and the real-time wall-clock pacing contract. All broker adapters remain optional and gated behind Cargo feature flags.

@@ -42,7 +42,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 33 | WebGPU Compute for Browser | Done | `webgpu-agent` | See `conductor/tracks/33-*/spec.md` |
 | 34 | PDES & Parallel Execution | Done | `pdes-agent` | See `conductor/tracks/34-*/spec.md` |
 | 35 | Distributed Simulation (MPI/gRPC) | Done | `distributed-agent` | See `conductor/tracks/35-*/spec.md` |
-| 36 | Streaming & Real-Time Processing | Done | `streaming-agent` | See `conductor/tracks/36-*/spec.md` |
+| 36 | Streaming & Real-Time Processing | Done | `streaming-agent` | [In-memory stream and pacing checks](tracks/36-streaming-real-time-processing/test-matrix.md); network adapters unavailable |
 | 37 | ML/AI Integration & Inference | Done | `ml-integration-agent` | See `conductor/tracks/37-*/spec.md` |
 | 38 | FMI/FMU & Digital Twin Bridge | Done | `fmi-agent` | See `conductor/tracks/38-*/spec.md` |
 | 39 | Cloud/HPC Batch Runners | Done | `cloud-agent` | See `conductor/tracks/39-*/spec.md` |

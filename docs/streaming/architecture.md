@@ -1,7 +1,6 @@
 # Streaming Architecture
 
-Track 36 starts with a contract-first crate that does not pull broker clients into
-the default build. The public surface is intentionally small:
+Track 36 provides an in-process stream contract without broker clients:
 
 - `EventSource` consumes stream messages into a running simulation.
 - `EventSink` publishes telemetry or deltas from a running simulation.
@@ -20,24 +19,9 @@ schema version. Broker-specific implementations must preserve the same field
 names and statuses so Arrow, WebSocket, Kafka, and NATS consumers see the same
 logical payload.
 
-## Current Scaffold Boundary
+## Evidence Boundary
 
-The crate does not currently implement network clients, broker acknowledgements,
-Arrow IPC, or Arrow Flight RPC. The feature modules expose in-memory aliases only
-so the feature matrix can be compiled and tested without external services.
-Runtime adapter work must replace those aliases behind the same feature flags and
-keep the dependency-free path intact.
-
-## Feature Flags
-
-| Feature | Purpose | Default |
-|---|---|---:|
-| `kafka` | Kafka producer and consumer adapter | off |
-| `nats` | NATS pub/sub adapter | off |
-| `websocket` | Browser dashboard bridge | off |
-| `arrow-flight` | Snapshot query endpoint | off |
-
-The current scaffold exposes in-memory adapter aliases for each feature so CI can
-prove feature isolation before broker dependencies are introduced. These aliases
-are contract test doubles only; they are not Kafka, NATS, WebSocket, or Arrow
-Flight runtime clients.
+Network adapters are unavailable. The crate implements neither broker
+acknowledgements nor Arrow IPC or Arrow Flight RPC. The retired transport
+aliases never connected to external services. See the
+[migration decision](../adr/0027-retire-streaming-aliases.md).

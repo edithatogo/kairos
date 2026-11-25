@@ -14,10 +14,11 @@ pub use socket::*;
 pub mod tonic_transport;
 pub use tonic_transport::*;
 
-use std::collections::{BTreeMap, VecDeque};
 use std::time::Duration;
 
-use kairo_ecs_pdes::{LpId, PdesMessage, PdesTransport, Tick, TransportError};
+use kairo_ecs_pdes::{
+    LpId, PdesMessage, PdesTransport, ThreadChannelTransport, Tick, TransportError,
+};
 use kairo_ecs_types::EntityId;
 
 /// Dependency-free placeholder protocol identity for the local gRPC contract.
@@ -606,25 +607,21 @@ pub struct GrpcTransport {
     local_lp: LpId,
     peers: Vec<GrpcPeer>,
     config: GrpcTransportConfig,
-    inboxes: BTreeMap<LpId, VecDeque<PdesMessage>>,
-    reduction_candidates: Vec<Tick>,
+    transport: ThreadChannelTransport,
     barrier_count: u64,
 }
 
 impl GrpcTransport {
     pub fn new(local_lp: LpId, peers: Vec<GrpcPeer>, config: GrpcTransportConfig) -> Self {
-        let mut inboxes = BTreeMap::new();
-        inboxes.insert(local_lp, VecDeque::new());
-        for peer in &peers {
-            inboxes.entry(peer.lp_id).or_insert_with(VecDeque::new);
-        }
+        let transport = ThreadChannelTransport::new(
+            std::iter::once(local_lp).chain(peers.iter().map(|peer| peer.lp_id)),
+        );
 
         Self {
             local_lp,
             peers,
             config,
-            inboxes,
-            reduction_candidates: Vec::new(),
+            transport,
             barrier_count: 0,
         }
     }
@@ -646,18 +643,7 @@ impl GrpcTransport {
     }
 
     pub fn pending_messages(&self) -> usize {
-        self.inboxes.values().map(VecDeque::len).sum()
-    }
-
-    fn pending_min_timestamp(&self) -> Option<Tick> {
-        self.inboxes
-            .values()
-            .flat_map(|messages| messages.iter())
-            .filter_map(|message| match message {
-                PdesMessage::Event(event) => Some(event.tick),
-                PdesMessage::Null(_) => None,
-            })
-            .min()
+        self.transport.pending_messages()
     }
 
     pub fn validate_protocol(&self) -> Result<(), ProtocolValidationError> {
@@ -668,37 +654,15 @@ impl GrpcTransport {
 
 impl PdesTransport for GrpcTransport {
     fn knows_lp(&self, lp_id: LpId) -> bool {
-        self.inboxes.contains_key(&lp_id)
+        self.transport.knows_lp(lp_id)
     }
 
     fn send(&mut self, dest: LpId, message: PdesMessage) -> Result<(), TransportError> {
-        if !self.inboxes.contains_key(&dest) {
-            return Err(TransportError::UnknownLogicalProcess(dest));
-        }
-        let (source_lp, message_dest) = match &message {
-            PdesMessage::Event(event) => (event.source_lp, event.dest_lp),
-            PdesMessage::Null(message) => (message.source_lp, message.dest_lp),
-        };
-        if !self.inboxes.contains_key(&source_lp) {
-            return Err(TransportError::UnknownLogicalProcess(source_lp));
-        }
-        if message_dest != dest {
-            return Err(TransportError::MessageDestinationMismatch {
-                send_dest: dest,
-                message_dest,
-            });
-        }
-
-        self.inboxes.entry(dest).or_default().push_back(message);
-        Ok(())
+        self.transport.send(dest, message)
     }
 
     fn recv(&mut self, lp_id: LpId) -> Result<Vec<PdesMessage>, TransportError> {
-        if !self.inboxes.contains_key(&lp_id) {
-            return Err(TransportError::UnknownLogicalProcess(lp_id));
-        }
-
-        Ok(self.inboxes.entry(lp_id).or_default().drain(..).collect())
+        self.transport.recv(lp_id)
     }
 
     fn barrier(&mut self) {
@@ -706,11 +670,7 @@ impl PdesTransport for GrpcTransport {
     }
 
     fn all_reduce_min(&mut self, timestamp: Tick) -> Tick {
-        self.reduction_candidates.clear();
-        self.reduction_candidates.push(timestamp);
-
-        self.pending_min_timestamp()
-            .map_or(timestamp, |pending_min| timestamp.min(pending_min))
+        self.transport.all_reduce_min(timestamp)
     }
 }
 

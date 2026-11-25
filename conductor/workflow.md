@@ -151,8 +151,9 @@ review operation, not a requirement for a separately installed command), inspect
 the diff and auto-apply accepted review fixes. Record unresolved findings once
 in the track handoff. Synchronize `conductor/tracks.yaml`, `conductor/tracks.md`,
 `conductor/phase-closeout.yaml` and `conductor/status.md` only when their state
-changes; do not edit every ledger for every leaf. Update track-map/readiness only
-when ownership/dependencies/readiness change.
+changes; do not edit every ledger for every leaf. Keep ownership and dependencies
+in the registry, readiness evidence in the track handoff, and release scope in
+the release gates and candidate profile. Do not copy them into the navigation pages.
 
 Run the affected test matrix and
 `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`,

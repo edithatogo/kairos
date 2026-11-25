@@ -557,8 +557,6 @@ tracks:
       - docs/streaming/
     required_gates:
       - phase-closeout-check
-      - kafka-smoke
-      - arrow-flight-smoke
       - realtime-wallclock-check
   - id: 37
     name: ML/AI Integration & Inference

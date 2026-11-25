@@ -81,7 +81,7 @@ $env:PYTHONPATH = (Join-Path $repo "python\kairo_gym\src")
 Push-Location $repo
 try {
     $commands = @(
-        @{ Name = "streaming check"; Command = @("cargo", "check", "--manifest-path", "crates\kairo-ecs-streaming\Cargo.toml", "--all-features", "--tests") },
+        @{ Name = "streaming check"; Command = @("cargo", "check", "--locked", "-p", "kairo-ecs-streaming", "--tests") },
         @{ Name = "ml check"; Command = @("cargo", "check", "--manifest-path", "crates\kairo-ecs-ml\Cargo.toml", "--all-features", "--tests") },
         @{ Name = "fmi check"; Command = @("cargo", "check", "--manifest-path", "crates\kairo-ecs-fmi\Cargo.toml", "--all-features", "--tests") },
         @{ Name = "debug check"; Command = @("cargo", "check", "--manifest-path", "crates\kairo-ecs-debug\Cargo.toml", "--tests") },
@@ -101,7 +101,7 @@ try {
     }
 
     $docs = @(
-        @{ Path = "docs\streaming\architecture.md"; Needles = @("contract test doubles only", "not Kafka, NATS, WebSocket") },
+        @{ Path = "docs\streaming\architecture.md"; Needles = @("InMemoryStream", "Network adapters are unavailable") },
         @{ Path = "docs\streaming\broker-setup.md"; Needles = @("Tutorial: local contract smoke", "Evidence boundary") },
         @{ Path = "docs\ml\architecture.md"; Needles = @("contract double", "does not load or execute a real ONNX graph") },
         @{ Path = "docs\ml\surrogate-authoring.md"; Needles = @("Tutorial: dependency-free surrogate scaffold", "Evidence boundary") },
@@ -146,7 +146,7 @@ try {
 
     if (-not $SkipCargoTests) {
         Write-Host "==> cargo test probes"
-        & cargo test --manifest-path crates\kairo-ecs-streaming\Cargo.toml --no-default-features
+        & cargo test --locked -p kairo-ecs-streaming
         if ($LASTEXITCODE -ne 0) { throw "streaming cargo test failed" }
         & cargo test --manifest-path crates\kairo-ecs-ml\Cargo.toml --no-default-features
         if ($LASTEXITCODE -ne 0) { throw "ml cargo test failed" }

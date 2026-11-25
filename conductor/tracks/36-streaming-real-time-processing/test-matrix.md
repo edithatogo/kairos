@@ -1,41 +1,20 @@
 # Test Matrix — 36 Streaming & Real-Time Processing
 
+The accepted Track 36 scope is in-process streaming and pacing logic. The
+original specification describes broader network goals, not supported
+operations. [ADR 0027](../../../docs/adr/0027-retire-streaming-aliases.md)
+records the withdrawal of the broker-named test aliases.
+
 ## Required tests
 
-- `cargo build --workspace` to verify core workspace compiles with no streaming features enabled.
-- `cargo test -p kairo-ecs-streaming --no-default-features` to confirm unit tests pass without any adapter.
-- `cargo test -p kairo-ecs-streaming --features kafka` for the Kafka feature-gate scaffold test. Current adapter is an in-memory test double.
-- `cargo test -p kairo-ecs-streaming --features nats` for the NATS feature-gate scaffold test. Current adapter is an in-memory test double.
-- `cargo test -p kairo-ecs-streaming --features websocket` for the WebSocket feature-gate scaffold test. Current adapter is an in-memory test double.
-- `cargo test -p kairo-ecs-streaming --features arrow-flight` for the Arrow Flight feature-gate scaffold test. Current endpoint is an in-memory test double.
-- `cargo test -p kairo-ecs-streaming --all-features` for the full feature-gate scaffold suite. This is not a broker integration test until real clients land.
-- `cargo fmt --all --check` before any crate or contract edit is handed off.
-- `cargo clippy -p kairo-ecs-streaming --all-targets -- -D warnings`.
-- `pwsh -NoProfile -File scripts\validate_conductor_setup.ps1 -SkipCargo` to confirm conductor setup remains intact.
-- `pwsh -NoProfile -File scripts\validate_track_coverage.ps1 -SkipCargo` to confirm Track 36 is registered.
+- `cargo test --locked -p kairo-ecs-streaming` exercises the complete event-log round trip, schema/version rejection, ordering, snapshots and pacing.
+- `cargo build --locked --workspace` verifies the workspace still compiles; neither command needs a live broker or client.
+- `cargo fmt --all --check` and `cargo clippy --locked -p kairo-ecs-streaming --all-targets -- -D warnings` check the crate and its tests.
+- `pwsh -NoProfile -File scripts\validate_conductor_setup.ps1 -SkipCargo` and `pwsh -NoProfile -File scripts\validate_track_coverage.ps1 -SkipCargo` verify Conductor registration.
 
-## Current CI commands
+The track-owned `validate-track36-40.ps1` also runs the broker-free checks.
+Network transport and real-time throughput require their own native evidence.
 
-```bash
-cargo build --workspace
-cargo fmt --all --check
-cargo clippy -p kairo-ecs-streaming --all-targets -- -D warnings
-cargo test -p kairo-ecs-streaming --no-default-features
-cargo test -p kairo-ecs-streaming --all-features
-pwsh -NoProfile -File scripts\validate_conductor_setup.ps1 -SkipCargo
-pwsh -NoProfile -File scripts\validate_track_coverage.ps1 -SkipCargo
-```
-
-## Local broker-free checks
-
-These checks are expected to remain runnable without external services:
-
-```bash
-cargo check -p kairo-ecs-streaming --no-default-features
-cargo check -p kairo-ecs-streaming --all-features --tests
-rustfmt --check crates/kairo-ecs-streaming/src/lib.rs crates/kairo-ecs-streaming/tests/feature_matrix.rs
-powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\36-streaming-real-time-processing\validate-track36-40.ps1 -SkipCargoTests
-```
 ## Phase closeout gate
 
 - `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` and `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, phase-closeout ledger evidence, cleaned commit/push evidence, and blocker recording. At actual closeout, run `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` after commit and push.

@@ -35,7 +35,7 @@ Additional crates listed in `conductor/tech-stack.md` should be added only when 
 | `kairo-ecs-arrow` | Data Spine & I/O | Apache Arrow 53 `RecordBatch`, Parquet Zstd, C Data Interface FFI, HDF5/ADIOS2 checkpoints |
 | `kairo-ecs-ml` | AI & RL | Multi-threaded `ParallelVecEnv`, `OrtSession`, `InferenceTickHook` |
 | `kairo-ecs-fmi` | Digital Twin | FMI 2.0/3.0 co-simulation master, `.fmu` extraction, AAS submodels |
-| `kairo-ecs-streaming` | Streaming | Real-time wallclock pacing, Kafka & Arrow Flight streaming contracts |
+| `kairo-ecs-streaming` | Streaming | In-memory event-log streams and wall-clock pacing logic; no network adapter |
 | `kairo-ecs-debug` | Debugging | `CowWorldSnapshot` delta snapshots, time-travel stepping, breakpoints |
 | `kairo-ecs-viz` | Visualization | Headless snapshot and trajectory summary exporters |
 | `kairo-ecs-cli` | Experimentation | `ParallelEnsembleRunner`, `SobolSensitivityAnalyzer`, `LatinHypercubeSampler`, `AbcSmcCalibrator` |

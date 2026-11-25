@@ -1,4 +1,38 @@
-# Current programme — 7 November 2026
+# KairoECS programme status
+
+Use the [track registry](tracks.yaml) for current statuses and owners, and the
+[release gates](release-gates.md) for candidate decisions. Dated entries retain
+their source and acceptance boundaries.
+
+## Simplification handoff — 25 November 2026
+
+Chat `01a21056-b5b2-7591-9981-88554b9d38ec` owns the scoped proposal in
+`/Users/doughnut/.codex/worktrees/kairos-ponytail-simplification/kairos` at
+`9d76ca7`: Conductor navigation and active Track 36 checks, the local MPI and
+gRPC emulators, and the streaming preview withdrawal and migration notes.
+Native scope is local test execution only. Independent API and behavior review
+on base `9d76ca7` found no code blocker. The patch records the published-alpha
+source break and marks the original Track 36 receipt as historical, as requested
+in review. Next operation: handoff to the main integrator for hosted checks.
+No phase, release, native binding, or downstream pin is promoted.
+
+- **109 / 113:** Reuse the frozen `e2875387` installation and provenance receipts.
+  The maintainer's target and replay decision is separate from publication.
+  Qualify additional adapters only for a named support target.
+- **105 / 116:** Reuse the qualified local Python 3.15.2 work; qualify remaining
+  managed graphs and accelerator targets on their actual provider. For Tobac,
+  wait for the receiving owner's signed inventory, green hosted lanes and
+  receiving-main verification; the provider fixture does not need repeating.
+- **110 / 111 / 115:** Finish advertised methods against independent oracles or
+  withdraw them explicitly. Keep serial as the default and retain negative
+  results. No automatic executor selection or broader research claim without
+  held-out comparisons and an independent oracle.
+- **50 / 52 / 55:** Retain the bounded NUMA, device and two-host receipts. Add
+  arenas, device targets or broader scaling only for a named workload and
+  measured need; keep native recovery and cluster certification gates intact.
+  Leave dependency adoptions deferred until their recorded reopening conditions.
+
+## Planning baseline — 7 November 2026
 
 Ecosystem scope is refined by [ADR 0011](../docs/adr/0011-ecosystem-boundaries.md),
 [consumer inventory](ecosystem-consumers.md) and the [bounded workpack](execution/README.md).
