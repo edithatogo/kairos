@@ -8,7 +8,7 @@
 | Shared conformance | `node tests/conformance/runner-self-test.mjs` and the same Rust core suite | [ADR 0028](../../../docs/adr/0028-opt-in-scheduler-reservation-and-hwloc.md#conformance) binds the scheduler and hwloc fixtures |
 | C Data ownership | `cargo test --release --locked -p kairo-ecs-ffi --features native-data --test track70_phase2_ffi_polyglot --test track70_domain_c_data_consumers` and [compiled C and installed PyArrow consumers](evidence/native-qualification/README.md#native-c-data-lifetime) | 13 Rust cases and two native consumers passed |
 | Miri safety | `cargo miri test -p kairo-ecs-core` when a configured Miri toolchain is available | Local nightly entry lacks its toolchain manifest |
-| Multi-node locality and performance | Actual two-node page-placement and local/remote timings | Open. [Runtime inventory](evidence/native-qualification/README.md#runtime-routes-for-the-remaining-placement-check) |
+| Multi-node locality and performance | `bash run-linux.sh ./scheduler-locality paired` on Linux with two allowed CPU-bearing memory nodes | Open. [Placement and one-node calibration](evidence/numa-locality/README.md) |
 | Full workspace | `just ci` and required exact-source GitHub Actions workflows | Phase closeout |
 | Phase gates | `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` | Phase movement |
 | Git closeout | `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` | Closeout |

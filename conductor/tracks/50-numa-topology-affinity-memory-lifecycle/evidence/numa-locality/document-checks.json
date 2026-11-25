@@ -1,0 +1,47 @@
+{
+  "document": "README.md",
+  "kind": "Engineering evidence and reproduction note",
+  "edition": "2026-11-26",
+  "catalogue_date": "2026-11-26",
+  "date_basis": "Australia/Brisbane date of the recorded calibration and review",
+  "document_sha256": "0c3c4f8e14924ccb15c281b5b69b27be1b2d766f4689f25f3ce6e89567cb41ff",
+  "citeweft": {
+    "version": "0.1.0",
+    "revision": "ab42daf5a68de93565d2ca2313e5cf4589ba4c50",
+    "configuration": "deterministic-baseline-v1, numbered entries and numeric callouts",
+    "references": 0,
+    "callouts": 0,
+    "diagnostic": "reference_section_not_found",
+    "disposition": "The Markdown uses six inline links and has no bibliography. Manual inspection resolved the five local links and the kernel documentation link."
+  },
+  "sourceright": {
+    "version": "0.1.20",
+    "command": "sourceright provenance README.md",
+    "unsupported_claim": 43,
+    "quote_without_citation": 1,
+    "disposition": "The provenance parser detected no sources in the inline links. Manual review traced placement and dispatch counts to both runtime logs, the Colab topology to its raw JSON, and workload and mapping details to the probe and the Linux 6.12 proc documentation.",
+    "external_source": {
+      "title": "Linux kernel 6.12 proc filesystem documentation",
+      "url": "https://docs.kernel.org/6.12/filesystems/proc.html",
+      "locator": "Description of /proc/pid/numa_maps",
+      "edition_basis": "Kernel documentation version in the published URL",
+      "accessed_date": "2026-11-26",
+      "sha256": "85ddf5a2fc0d2a3b6745f8ff52455546da77ccdc0b9b19a2e57accb392033641"
+    }
+  },
+  "authentext": {
+    "revision": "65c3af09a4ee6699b86e007c66b02c4a9d535b62",
+    "modules": ["technical", "reasoning-failures"],
+    "disposition": "Separated the one-node measurements from the outstanding comparison and described the accelerator outcomes as bounded provisioning attempts. Preserved counts, units and commands."
+  },
+  "textstat": {
+    "version": "0.7.13",
+    "python": "3.15.2",
+    "scope": "Paragraphs with headings and Markdown syntax excluded, retaining link labels and technical literals",
+    "language": "en_GB",
+    "words": 349,
+    "sentences": 34,
+    "flesch_reading_ease": 53.4,
+    "automated_readability_index": 10.53
+  }
+}

@@ -1,0 +1,22 @@
+2026-11-25T14:58:30Z
+Linux 6.12.63+ x86_64
+Model name:                              Intel(R) Core(TM) i3-N300
+NUMA node(s):                            1
+NUMA node0 CPU(s):                       0-7
+online=0
+has_cpu=0
+has_memory=0
+numa_balancing=0
+scheduler-locality sha256=8356a202544fe749e226199cb89a8f5a26261ce63b81a0a78ed82abc84a6afa0
+check exit=77
+local exit=77
+remote exit=77
+eligible (node, CPU) pairs: [(0, 0)]
+requested mode requires distinct allowed CPU-bearing memory nodes
+eligible (node, CPU) pairs: [(0, 0)]
+requested mode requires distinct allowed CPU-bearing memory nodes
+eligible (node, CPU) pairs: [(0, 0)]
+requested mode requires distinct allowed CPU-bearing memory nodes
+eligible (node, CPU) pairs: [(0, 0)]
+mode=calibrate execution_node=0 execution_cpu=0 allocation_node=0 allocation_cpu=0 page_size=4096 pages_initial=20479:17407 pages_before=20479:17407 pages_after=20479:17407 width=1048576 warmup=2 epochs=8 scheduled=10485760 cancelled=1310720 dispatched=9175040 pending=0 elapsed_ns=5782489075
+calibrate exit=0

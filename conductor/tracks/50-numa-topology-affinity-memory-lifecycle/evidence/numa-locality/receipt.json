@@ -1,0 +1,64 @@
+{
+  "packet": "CAP-50.5 scheduler page placement",
+  "edition_date": "2026-11-26",
+  "date_basis": "Australia/Brisbane date of the two final calibration runs",
+  "document_checks": "document-checks.json",
+  "source_commit": "ddd0f4bf36b985a1e1e3c1189728739640aa53d9",
+  "cargo_lock_sha256": "8c251878f26e96c87469bf28399e99fa2bd29b70a00bd5e5e0d845dc6266f3f6",
+  "build": {
+    "working_directory": "/session/source",
+    "command": "bash /session/build-linux.sh",
+    "image": "rust:1.99.1-slim-trixie@sha256:e97df055c54a05160e7c67ba3b2963de6ddb95903911baf8922dbcd1b394f698",
+    "platform": "Linux x86-64 in Apple Container 1.7.1 with Rosetta",
+    "rustc": "1.99.1 (58cf8f9c35b355199727627d07ae34a4e2846d67)",
+    "cargo": "1.99.1 (5f94df478 2026-08-27)",
+    "binary_sha256": "8356a202544fe749e226199cb89a8f5a26261ce63b81a0a78ed82abc84a6afa0",
+    "probe_sha256": "efc54fd69a0b08c42141bc884e982c34757134ead7ed57267df765f98a2b7dca",
+    "exit": 0,
+    "record": "build.log"
+  },
+  "calibration": {
+    "input": "1,048,576 events per epoch in reverse tick order, cancel every eighth, two warmup epochs and eight timed epochs",
+    "apple_container": {
+      "working_directory": "/",
+      "command": "bash /session/run-linux.sh /session/scheduler-locality calibrate",
+      "exit": 0,
+      "record": "apple-container.log"
+    },
+    "physical_linux": {
+      "working_directory": "dedicated remote scratch directory with the exact binary and runner",
+      "command": "bash run-linux.sh ./scheduler-locality calibrate",
+      "exit": 0,
+      "record": "native-linux.log"
+    },
+    "two_node_mode_exit": 77
+  },
+  "colab": {
+    "cli": "0.8.0",
+    "working_directory": "Kairos worktree root",
+    "probe": "../native-qualification/colab-numa-route.py",
+    "high_memory_cpu": {
+      "command": "colab run --high-mem --timeout 45 <probe>",
+      "exit": 0,
+      "record": "colab-highmem.json",
+      "provider_runtime_note": "The managed Python 3.13.18 runtime ran only the kernel inventory probe."
+    },
+    "g4": {
+      "command": "colab run --gpu G4 --timeout 45 <probe>",
+      "outcome": "Allocation returned Service Unavailable. A subsequent request ended at its 65-second client limit before assignment.",
+      "subsequent_request_exit": 124
+    },
+    "v6e1": {
+      "command": "colab run --tpu V6E1 --timeout 45 <probe>",
+      "outcome": "Stopped after five minutes pending allocation with no assignment.",
+      "exit": 130
+    },
+    "high_memory_a100": {
+      "command": "colab new --session cap50-5-a100-20261126 --gpu A100 --high-mem",
+      "outcome": "The 65-second client limit elapsed before assignment.",
+      "exit": 124
+    },
+    "active_sessions_at_closeout": 0
+  },
+  "paired_comparison": "Pending a Linux runtime with two online, allowed, CPU-bearing memory nodes."
+}
