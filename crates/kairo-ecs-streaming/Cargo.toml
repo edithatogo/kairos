@@ -5,11 +5,3 @@ edition = "2021"
 license.workspace = true
 repository = "https://github.com/edithatogo/kairos"
 rust-version.workspace = true
-[features]
-default = []
-kafka = []
-nats = []
-websocket = []
-arrow-flight = []
-
-[dependencies]

@@ -2,13 +2,13 @@ use kairo_ecs_streaming::adapters::InMemoryStream;
 use kairo_ecs_streaming::{EventSink, EventSource, SnapshotProvider, StreamMessage};
 
 #[test]
-fn base_featureless_stream_contract_round_trips() {
+fn in_memory_stream_round_trips_the_full_message() {
     let mut stream = InMemoryStream::default();
-    stream
-        .publish(StreamMessage::event_log("featureless", 10, 1))
-        .expect("publish");
+    let message = StreamMessage::event_log("featureless", 10, 1);
+    stream.publish(message.clone()).expect("publish");
 
-    assert!(stream.next_event().expect("next").is_some());
+    assert_eq!(stream.next_event().expect("next"), Some(message));
+    assert!(stream.next_event().expect("empty stream").is_none());
 }
 
 #[test]
@@ -102,32 +102,4 @@ fn snapshot_provider_rejects_unknown_stream_name() {
         .expect_err("unknown stream should be rejected");
 
     assert_eq!(error.to_string(), "unknown stream: kairo_ecs.unknown.v1");
-}
-
-#[cfg(feature = "kafka")]
-#[test]
-fn kafka_feature_exposes_adapter_type() {
-    let stream = kairo_ecs_streaming::kafka::KafkaStream::default();
-    assert!(stream.is_empty());
-}
-
-#[cfg(feature = "nats")]
-#[test]
-fn nats_feature_exposes_adapter_type() {
-    let stream = kairo_ecs_streaming::nats::NatsStream::default();
-    assert!(stream.is_empty());
-}
-
-#[cfg(feature = "websocket")]
-#[test]
-fn websocket_feature_exposes_adapter_type() {
-    let stream = kairo_ecs_streaming::websocket::WebSocketBridge::default();
-    assert!(stream.is_empty());
-}
-
-#[cfg(feature = "arrow-flight")]
-#[test]
-fn arrow_flight_feature_exposes_endpoint_type() {
-    let stream = kairo_ecs_streaming::arrow_flight::ArrowFlightEndpoint::default();
-    assert!(stream.is_empty());
 }

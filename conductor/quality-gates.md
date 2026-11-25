@@ -459,11 +459,7 @@ Every gate listed in `conductor/tracks.yaml` must appear here as a bold gate ID.
 
 ### Tracks 36-40 streaming, ML, FMI, cloud/HPC, and debugging gates
 
-**kafka-smoke**: `cargo test -p kairo-ecs-streaming --features kafka` - validates the dependency-free Kafka feature surface and adapter type alias exposed by the Track 36 R2 scaffold. It does not prove a live Kafka broker connection until a broker-backed integration harness is added.
-
-**arrow-flight-smoke**: `cargo test -p kairo-ecs-streaming --features arrow-flight` - validates the Arrow Flight feature surface and event-log stream contract exposed by the Track 36 R2 scaffold. It does not prove an Arrow Flight server/client runtime.
-
-**realtime-wallclock-check**: `cargo test -p kairo-ecs-streaming --no-default-features` - validates event-log message shape, wall-clock pacing contracts, and no-adapter operation for the Track 36 R2 scaffold. It does not claim production latency or broker throughput.
+**realtime-wallclock-check**: `cargo test --locked -p kairo-ecs-streaming` - validates event-log round trips, ordering, snapshot filtering and wall-clock pacing logic in process. It does not establish live broker execution or latency.
 
 **onnx-inference-smoke**: `cargo test -p kairo-ecs-ml --features onnx` and `cargo check --manifest-path examples/ml-surrogate/de-surrogate/Cargo.toml --features onnx` - validates model metadata, tensor shape checks, deterministic passthrough inference, and the ONNX feature alias in the Track 37 R2 scaffold. It does not prove ONNX Runtime execution or model accuracy.
 

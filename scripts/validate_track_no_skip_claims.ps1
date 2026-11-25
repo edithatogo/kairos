@@ -397,8 +397,6 @@ foreach ($gate in $requiredGateIds) {
 }
 
 foreach ($gate in @(
-    "kafka-smoke",
-    "arrow-flight-smoke",
     "realtime-wallclock-check",
     "onnx-inference-smoke",
     "gymnasium-env-smoke",
@@ -418,7 +416,7 @@ foreach ($gate in @(
 }
 
 foreach ($boundary in @(
-    "does not prove a live Kafka broker connection",
+    "does not establish live broker execution or latency",
     "does not prove ONNX Runtime execution",
     "does not prove shared-library FMU execution",
     "live container execution remains a later gate",

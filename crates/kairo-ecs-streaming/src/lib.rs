@@ -310,26 +310,6 @@ pub mod adapters {
     }
 }
 
-#[cfg(feature = "kafka")]
-pub mod kafka {
-    pub type KafkaStream = crate::adapters::InMemoryStream;
-}
-
-#[cfg(feature = "nats")]
-pub mod nats {
-    pub type NatsStream = crate::adapters::InMemoryStream;
-}
-
-#[cfg(feature = "websocket")]
-pub mod websocket {
-    pub type WebSocketBridge = crate::adapters::InMemoryStream;
-}
-
-#[cfg(feature = "arrow-flight")]
-pub mod arrow_flight {
-    pub type ArrowFlightEndpoint = crate::adapters::InMemoryStream;
-}
-
 #[cfg(test)]
 mod tests {
     use std::time::Duration;

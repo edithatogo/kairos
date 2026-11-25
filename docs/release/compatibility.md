@@ -30,8 +30,9 @@ This register stays aligned with the
 | Affected root | Removed support | Replacement | Notice and effect | Decision |
 | --- | --- | --- | --- | --- |
 | Host-language scheduler/model facades in Python, R, TypeScript, C# and Go; Julia engine-availability claims | Independent host-language simulation cores and synthetic simulation fallback | A qualified adapter to Rust native code or Rust-compiled Wasm; direct Rust APIs where an adapter is incomplete | 7 November 2026, immediate alpha breaking change explicitly requested by the project owner; no gradual migration or dual-support period | [ADR 0010](../adr/0010-rust-only-execution.md), [migration](migration.md), [Track 109](../../conductor/tracks/109-rust-only-runtime/plan.md) |
+| Rust `kairo-ecs-streaming` | Experimental `kafka`, `nats`, `websocket` and `arrow-flight` features and in-memory aliases | `adapters::InMemoryStream` for local tests only; an independently qualified transport for network use | Source-breaking upgrade from `v0.4.0-alpha.1` for callers of those flags or symbols; the published alpha source is unchanged | [ADR 0027 and migration](../adr/0027-retire-streaming-aliases.md) |
 
 Retained API names may raise an explicit unsupported-operation error. That is a
-migration aid, not continued support for the old engine. This removal does not
+migration aid, not continued support for the old engine. The host-core removal does not
 change the meaning of previously captured test results; it prevents them from
 being presented as Rust-native qualification.

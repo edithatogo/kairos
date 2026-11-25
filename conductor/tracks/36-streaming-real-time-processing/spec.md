@@ -1,5 +1,10 @@
 # 36 Streaming & Real-Time Processing — spec.md
 
+The accepted slice is in-process stream and pacing logic. The network
+requirements below are the original goals, not current support. See the
+[current test matrix](test-matrix.md) and
+[ADR 0027](../../../docs/adr/0027-retire-streaming-aliases.md).
+
 ## Mission
 
 Enable simulation engines to consume and produce live data streams via Kafka, NATS, WebSocket, and Arrow Flight. Support real-time mode for hardware-in-the-loop (HIL) and digital twin synchronization without sacrificing deterministic replay.
@@ -72,7 +77,9 @@ Most tracks are parallel-safe after their contract inputs are accepted. See cond
 
 ## Release implications
 
-Streaming is optional — every adapter is gated behind its own feature flag (`kafka`, `nats`, `websocket`, `arrow-flight`). Non-blocking for headless release. A feature-flag smoke test must verify that the core workspace compiles and passes all tests with no streaming features enabled.
+Streaming is non-blocking for headless releases. No broker-named features are
+available. Any future network adapter must be optional and independently
+qualified; the core workspace must keep compiling and passing without it.
 
 ## Non-goals
 

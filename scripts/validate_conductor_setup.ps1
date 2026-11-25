@@ -359,8 +359,6 @@ foreach ($row in @(
 
 foreach ($row in @(
     "### Tracks 36-40 streaming, ML, FMI, cloud/HPC, and debugging gates",
-    "**kafka-smoke**",
-    "**arrow-flight-smoke**",
     "**realtime-wallclock-check**",
     "**onnx-inference-smoke**",
     "**gymnasium-env-smoke**",
@@ -373,7 +371,7 @@ foreach ($row in @(
     "**trace-record-replay**",
     "**fwd-back-parity**",
     "**breakpoint-smoke**",
-    "does not prove a live Kafka broker connection",
+    "does not establish live broker execution or latency",
     "does not prove ONNX Runtime execution",
     "does not prove shared-library FMU execution",
     "live container execution remains a later gate",
