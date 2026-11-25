@@ -1,0 +1,7 @@
+running 2 tests
+test current_thread_binding_is_reversible_and_isolated ... original 0-7, bound 0, restored 0-7
+ok
+test kernel_topology_agrees_with_node_memory ... node 0 logical CPUs [0, 1, 2, 3, 4, 5, 6, 7], memory Some(33391505408)
+ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s

@@ -1,0 +1,6 @@
+Linux 6.12.63+ x86_64
+Model name:                              Intel(R) Core(TM) i3-N300
+Thread(s) per core:                      1
+NUMA node(s):                            1
+hwloc lstopo-no-graphics 2.7.0
+Cpus_allowed_list:	4-7

@@ -1,5 +1,43 @@
 # Review Report: Track 50 NUMA Topology, Affinity & HPC Memory Lifecycle
 
+## Review of the native qualification
+
+The independent reviewer checked the scheduler reservation at `c44a17b`
+and the hwloc and native validation packet at `6569d406`. Both APIs are
+additive. The review verified replay through cancellation, checkpoint and
+ordered dispatch, the allocator budget boundaries and the actual exported
+C tick buffer ownership.
+
+The parser now accepts a missing hwloc memory-size attribute and rejects a
+malformed value. The allocation runner checks the event generation along
+with the index and bounds the worker start gate. The saved CSV schema
+includes the trial field. The reviewer recomputed the 640 worker samples,
+matched all 29 Linux topology records and checked the loaded C library
+against the reproduced consumer artifact. The three bounded capabilities
+passed review. The cross-node performance gate remains open.
+[Native receipts](evidence/native-qualification/README.md).
+
+## API review
+
+| Surface | Change | Compatibility |
+| --- | --- | --- |
+| Rust `kairo-ecs-core` | `Scheduler::with_capacity(usize)` adds initial event storage reservation. | Existing construction and ordering remain available. The reservation is opt-in and consumes space for initial queue and cancellation storage. |
+| Rust `kairo-ecs-core/numa` | `HwlocTopology::discover(&Path)` adds explicit native machine discovery. | The existing `NumaTopology` API remains available. Callers supply a trusted absolute executable path. |
+| C ABI and Arrow schema | Consumer qualification exercises the existing `native-data` stream and release callbacks. | The published header and schema are reused. |
+| Host language | Installed PyArrow imports the C Data batch. | The consumer owns the import until the last view drops. |
+
+Each scheduler owns its queue. Provisioning capacity changes allocation
+timing and memory use while keeping event identity, cancellation,
+checkpoints and deterministic dispatch. The hwloc query uses a clean
+child environment and reports process or parse failures as I/O errors.
+The measured allocator and native topology checks qualify the explicit
+paths. Broader placement requires the CAP-50.5 evidence.
+The public API review records the decision, compatibility and red-team
+responses in [ADR 0028](../../../docs/adr/0028-opt-in-scheduler-reservation-and-hwloc.md).
+It binds the review to the
+[scheduler reservation fixture](../../../conformance/fixtures/track50_scheduler_reservation.json)
+and [native topology fixture](../../../conformance/fixtures/track50-hwloc-v2.xml).
+
 > **Current qualification correction, 3 November 2026:** This historical
 > review covers contract slices. Its complete-plan, cache locality, zero
 > contention and FFI lifetime claims are not established by those tests. The

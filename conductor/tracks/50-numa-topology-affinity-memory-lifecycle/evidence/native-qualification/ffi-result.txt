@@ -1,0 +1,4 @@
+C stream batch retained aligned ticks [10, 20] after both owners were released
+C root release callback ran once
+CPython 3.15.2, PyArrow 26.0.1
+Imported the original C buffer, retained ticks [10, 20], and released exactly once

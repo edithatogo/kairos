@@ -37,6 +37,18 @@
       ]
     },
     {
+      "id": "scheduler_reservation_v1",
+      "status": "ready",
+      "kind": "cancellation",
+      "source": "track50_scheduler_reservation.json",
+      "consumers": ["01", "50"],
+      "assertions": [
+        "the reserved scheduler grows past its initial capacity",
+        "cancellation, equal-time priority and insertion order match the default scheduler",
+        "checkpoint restoration preserves the same dispatch trace and counters"
+      ]
+    },
+    {
       "id": "rng_reproducibility_v1",
       "status": "ready",
       "kind": "rng",

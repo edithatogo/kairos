@@ -5,6 +5,11 @@ mod checkpoint_json;
 #[cfg(feature = "checkpoint-json")]
 pub use checkpoint_json::SchedulerCheckpointError;
 
+#[cfg(feature = "numa")]
+mod hwloc;
+#[cfg(feature = "numa")]
+pub use hwloc::{HwlocCache, HwlocCacheKind, HwlocTopology};
+
 #[cfg(all(feature = "numa", target_os = "linux"))]
 mod linux_numa;
 
@@ -77,6 +82,20 @@ pub struct SchedulerCheckpoint(Scheduler);
 impl Scheduler {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// Create a scheduler with space for the expected peak number of queued events.
+    ///
+    /// Cancelled entries may remain queued until pruning or compaction. The
+    /// reservation is an initial size and the scheduler can grow beyond it.
+    #[must_use]
+    pub fn with_capacity(event_capacity: usize) -> Self {
+        Self {
+            heap: BinaryHeap::with_capacity(event_capacity),
+            // Leave room for the set to reuse buckets as events are removed.
+            pending: HashSet::with_capacity(event_capacity.saturating_mul(2)),
+            ..Self::default()
+        }
     }
 
     pub fn now(&self) -> SimTime {
@@ -837,6 +856,59 @@ mod tests {
             entity: None,
             kind: EventKind::Custom(kind),
         }
+    }
+
+    #[test]
+    fn reserved_scheduler_preserves_dispatch_and_checkpoint_order() {
+        #[derive(serde::Deserialize)]
+        struct ReservationEvent {
+            at_ticks: u128,
+            priority: i32,
+            kind: u32,
+            cancel: Option<bool>,
+        }
+        #[derive(serde::Deserialize)]
+        struct ReservationFixture {
+            initial_capacity: usize,
+            events: Vec<ReservationEvent>,
+            expected_kind_order: Vec<u32>,
+        }
+
+        let fixture: ReservationFixture = serde_json::from_str(include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../conformance/fixtures/track50_scheduler_reservation.json"
+        )))
+        .unwrap();
+        let mut reserved = Scheduler::with_capacity(fixture.initial_capacity);
+        let mut default = Scheduler::new();
+        assert!(reserved.heap.capacity() >= fixture.initial_capacity);
+        assert!(reserved.pending.capacity() >= fixture.initial_capacity * 2);
+        for event in fixture.events {
+            let req = request(event.at_ticks, event.priority, event.kind);
+            let expected = default.schedule(req);
+            assert_eq!(reserved.schedule(req), expected);
+            if event.cancel.unwrap_or(false) {
+                assert!(default.cancel(expected));
+                assert!(reserved.cancel(expected));
+            }
+        }
+        assert!(reserved.pending_events() > fixture.initial_capacity);
+        let mut restored = Scheduler::from_checkpoint(&reserved.checkpoint()).unwrap();
+        for expected_kind in fixture.expected_kind_order {
+            let step = default.step();
+            assert_eq!(reserved.step(), step);
+            assert_eq!(restored.step(), step);
+            assert_eq!(step.into_dispatched().unwrap().kind.code(), expected_kind);
+        }
+        assert_eq!(default.step(), StepOutcome::Empty);
+        assert_eq!(reserved.step(), StepOutcome::Empty);
+        assert_eq!(restored.step(), StepOutcome::Empty);
+        assert_eq!(reserved.stats(), default.stats());
+        assert_eq!(restored.stats(), default.stats());
+        assert_eq!(
+            Scheduler::with_capacity(0).stats(),
+            Scheduler::new().stats()
+        );
     }
 
     #[test]

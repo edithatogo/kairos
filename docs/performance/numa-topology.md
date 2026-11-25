@@ -30,6 +30,21 @@ match topology.support {
 2. **Linux sysfs.** The runtime reads host node IDs, logical CPU lists and available node memory totals from `/sys/devices/system/node`. A node can have memory but no CPUs. A thread's permitted CPU set can be narrower than the host topology.
 3. **Fallback.** If the runtime cannot discover a topology, it returns `NumaSupport::Unsupported`.
 
+## Detailed hardware topology
+
+With `kairo-ecs-core/numa` enabled, call
+`HwlocTopology::discover(Path::new("/usr/bin/lstopo-no-graphics"))` with
+the trusted absolute path to the installed hwloc 2.x tool. The query
+returns physical core groups, cache sharing sets and sizes, and NUMA
+memory domains with their associated OS CPU IDs. `NumaNode::cores` lists
+OS processing-unit IDs associated with each node. The machine mask comes
+from the hwloc discovery. Thread affinity may be narrower.
+
+The child uses a clean environment and the query reports executable
+failures or incompatible XML as I/O errors. On the qualified Linux
+host, all 29 records matched sysfs. The same API ran on macOS.
+[Topology and affinity evidence](../../conductor/tracks/50-numa-topology-affinity-memory-lifecycle/evidence/native-qualification/README.md#topology-and-affinity).
+
 ## CPU affinity
 
 On Linux, binding uses `/usr/bin/taskset` and verifies the result against

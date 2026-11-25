@@ -1,0 +1,13 @@
+{
+  "fixture": "track50_scheduler_reservation",
+  "version": 1,
+  "initial_capacity": 3,
+  "events": [
+    { "at_ticks": 8, "priority": 0, "kind": 1 },
+    { "at_ticks": 8, "priority": 1, "kind": 2, "cancel": true },
+    { "at_ticks": 6, "priority": 1, "kind": 3 },
+    { "at_ticks": 8, "priority": 0, "kind": 4 },
+    { "at_ticks": 8, "priority": -1, "kind": 5 }
+  ],
+  "expected_kind_order": [3, 5, 1, 4]
+}

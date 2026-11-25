@@ -16,10 +16,11 @@ const ROOT_MANIFEST = JSON.parse(readFileSync(join(ROOT, 'conformance/fixtures/m
 
 const fullReport = runConformance(ROOT);
 assert.equal(fullReport.status, 'ok');
-assert.equal(fullReport.validated_fixtures, 9);
+assert.equal(fullReport.validated_fixtures, 10);
 assert.deepEqual(fullReport.selected_fixtures, [
   'scheduler_ordering_v1',
   'scheduler_cancellation_v1',
+  'scheduler_reservation_v1',
   'rng_reproducibility_v1',
   'vvuq_scenario_replay_v1',
   'optimistic_envelope_v2_conformance',
@@ -31,6 +32,8 @@ assert.deepEqual(fullReport.selected_fixtures, [
 const orderingResult = fullReport.results.find((result) => result.id === 'scheduler_ordering_v1');
 assert.equal(orderingResult.kind, 'ordering');
 assert.deepEqual(orderingResult.observed.observed_kind_order, [1, 2, 4, 3]);
+const reservationResult = fullReport.results.find((result) => result.id === 'scheduler_reservation_v1');
+assert.deepEqual(reservationResult.observed.observed_kind_order, [3, 5, 1, 4]);
 const zeroDelayResult = fullReport.results.find((result) => result.id === 'zero_delay_guard_v1');
 assert.deepEqual(zeroDelayResult.observed.observed_kind_order, [1, 2, 5, 10]);
 assert.equal(zeroDelayResult.observed.zero_delay_event_count, 4);

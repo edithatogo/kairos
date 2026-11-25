@@ -10,6 +10,7 @@ The target directory-backed runner shape remains the one in `conductor/contracts
 |---|---|---|---|
 | `scheduler_ordering_v1` | `deterministic_ordering.json` | Deterministic ordering by `time`, `priority`, and `sequence` | Track 01, Track 02, Tracks 06-11 |
 | `scheduler_cancellation_v1` | `cancellation.json` | Cancellation without reordering the remaining queue | Track 01, Track 02, Tracks 06-11 |
+| `scheduler_reservation_v1` | `track50_scheduler_reservation.json` | The Rust reservation and checkpoint paths preserve the reference dispatch order after growth and cancellation | Tracks 01 and 50 |
 | `rng_reproducibility_v1` | `rng_replay.json` | Reproducible entity-derived random streams | Track 01, Track 02, Tracks 06-11 |
 | `vvuq_scenario_replay_v1` | `vvuq_scenario_replay.json` | Scenario/seed replay evidence boundary for the local VVUQ smoke | Tracks 21-22 |
 | `optimistic_envelope_v2_conformance` | `optimistic_envelope_v2_conformance.json` | Independent protobuf wire compatibility for optimistic simulation envelopes | Tracks 81-83 |
@@ -35,6 +36,14 @@ Ready bootstrap fixtures must keep the following fields stable:
 - `requirement` when the fixture carries a plain-language contract note
 - `lp_counts`, `workloads`, `seeds`, `horizon_ticks`, `lookahead_ticks` and `consumer` for conservative PDES parity; the native consumer must exercise all three workload classes
 - `resource_capacity`, `requests`, `expected_after_submit_dispatch`, `release`, `expected_after_release_dispatch` and `ordering` for the Track107 staged-allocation contract
+- `initial_capacity` for the Track 50 scheduler reservation command
+
+## Native topology input
+
+The Rust `numa` tests use [the hwloc v2 XML fixture](track50-hwloc-v2.xml)
+for shared cache membership, a multiword CPU bitmap, and nodes without
+CPUs or a reported memory size. The fixture is synthetic. Native host
+readback is recorded in the [Track 50 evidence](../../conductor/tracks/50-numa-topology-affinity-memory-lifecycle/evidence/native-qualification/README.md).
 
 ## Consumption rules
 

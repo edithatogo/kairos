@@ -127,6 +127,16 @@ reproduced their archived result hashes. Track 55 owns wider scaling and
 cross-host restart. [Archived evidence](archive/111-measured-performance/handoff.md) ·
 [Verified implementation](https://github.com/edithatogo/kairos/pull/472).
 
+## Track 50 native qualification — 25 November 2026
+
+Explicit hwloc discovery matched Linux sysfs and ran on macOS. The
+production scheduler reservation met its allocator and lifetime budgets
+on both hosts. C and PyArrow retained the exported stream batch after
+releasing its original owners. The physical NAS, Apple Container and
+Colab CPU probes each exposed one NUMA memory node. Track 50 remains
+In Progress for the multi-node placement and performance check.
+[Qualification and remaining gate](tracks/50-numa-topology-affinity-memory-lifecycle/evidence/native-qualification/README.md).
+
 ## Native I/O and hardware evidence — 23 November 2026
 
 Track 51 has native Arrow IPC, local write measurements and a self-contained

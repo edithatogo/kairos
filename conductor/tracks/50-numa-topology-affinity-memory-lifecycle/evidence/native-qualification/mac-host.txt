@@ -1,0 +1,9 @@
+ProductName:		macOS
+ProductVersion:		27.2.1
+BuildVersion:		26B131
+Darwin arm64
+Apple M1 Max
+hw.physicalcpu: 10
+hw.logicalcpu: 10
+hw.memsize: 34359738368
+lstopo-no-graphics 2.16.0
