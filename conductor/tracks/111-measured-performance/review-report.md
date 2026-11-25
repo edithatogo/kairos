@@ -22,8 +22,8 @@ The spatial model already used the pinned toolchain.
 The test that drains the whole eligible queue produced `[1, 7, 3]` in
 place of `[1, 3, 7]`. Keep one eligible event per LP and the ordered
 round commit. Track 111 remains In Progress for wider safe batching
-and the required dedicated regression run. Phase 0 review passed.
-Close the phase after the evidence is verified on main.
+and the required dedicated regression run. Phase 0 is accepted against
+[the verified publication in PR #470](https://github.com/edithatogo/kairos/pull/470).
 
 ## Local validation
 
@@ -49,6 +49,9 @@ lines with the same uncovered count after the frontier simplification. The
 directed topology regression now asserts the typed errors for missing LP
 entries and unknown sources. A pinned Rust 1.99.1 instrumented run hit both
 constructor guards that the original hosted profile missed.
+The final hosted workspace comparison passed at 38,091 of 43,065 lines
+against 38,093 of 43,069 on the protected base. The tested merge tree
+matched the published commit.
 
 The pinned queue-consumer rebuild ran the same three engines and returned
 the archived ordered result SHA-256

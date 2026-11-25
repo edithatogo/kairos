@@ -117,8 +117,7 @@ Installed adapter qualification is tracked in the receiving repositories.
 
 ## Track 111 measured performance — 25 November 2026
 
-Phase 0 review passed and publication readback is pending. The pinned
-Rust 1.99.1 repeat measured a 23.4% reduction
+Phase 0 is accepted. The pinned Rust 1.99.1 repeat measured a 23.4% reduction
 in median paired total time for the 32-LP cheap PHOLD case. The FIFO and
 spatial/DES comparisons matched ordered outputs and favoured serial on the
 shared Mac. Native device and recovery receipts record the costs of the
