@@ -1,0 +1,15 @@
+--- a/crates/kairo-ecs-pdes/src/conservative.rs
++++ b/crates/kairo-ecs-pdes/src/conservative.rs
+@@ -419 +418,0 @@
+-                .next()
+@@ -421,4 +420,4 @@
+-                .filter(|(tick, _, _)| *tick < bound);
+-            let events = keys
+-                .filter(|_| remaining > 0)
+-                .and_then(|key| queue.remove(&key))
++                .take_while(|(tick, _, _)| *tick < bound)
++                .take(remaining)
++                .collect::<Vec<_>>();
++            let events = keys
+@@ -425,0 +425 @@
++                .map(|key| queue.remove(&key).expect("selected event"))
