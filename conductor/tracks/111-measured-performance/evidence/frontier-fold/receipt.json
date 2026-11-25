@@ -20,8 +20,8 @@
   "exit": 0,
   "decision": "Adopt the one-pass frontier fold. All matched profiles retained exact tape, state and counters.",
   "evidence_sha256": {
-    "README.md": "b6a2305c40d8dc6d74dc20394b9f1e125db091e4b1e7b27cd666cc8d56c9df32",
-    "build-frontier.sh": "b2892edeb5f3bce9e73f29b8d88b528673925b1f0683ce27756d1f53affaa2fd",
+    "README.md": "95f418eb0efb8af351fb8cefd5a3441300ccae47b2c8c7e161d5a69f92bef608",
+    "build-frontier.sh": "1493494c45afb03e3de9e4108c8b916eab65e30765b01d0f54380dca664ae20d",
     "frontier-checksums.txt": "9e5a0f24e337935565b38196b03a17f72d9c4bfeab263da4af974a3b15651750",
     "frontier-load-after.txt": "638db8fa885a053e09993148f43fd38272600f34998ed5ecd455e0e1a519cbf0",
     "frontier-load-before.txt": "f4288cdd79574a049af80e7ea21b93fa483880f2823db097061c498d1c49529f",

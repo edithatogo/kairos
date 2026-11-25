@@ -9,7 +9,7 @@ queue operations, worker order and counters in the matched workloads.
 
 Both builds used the existing four PHOLD profiles and a fifth 32-LP profile
 with eight-tick lookahead and a 75% remote target. Ten fresh process pairs at
-each of two event costs alternated build order, with a warm-up and two timed
+each of two event costs alternated execution order, with a warm-up and two timed
 runs inside each process. The full elapsed times include setup, dispatch and
 report extraction. The tape, ordered state and counters matched for all runs.
 
@@ -27,10 +27,18 @@ measured profiles. Dedicated-host certification has its own test matrix.
 
 ## Reproduction
 
-Use a new scratch directory, Rust 1.99.1, jq and the verified repository-local
-CPython 3.15.2. Extract the receipt's base with `git archive` into
-`<scratch>/frontier-source`. Copy `frontier-protocol.json` and both patches
-into scratch. Apply `phold-32-lp.patch` inside the extracted tree, then run
-`bash build-frontier.sh <scratch>`. The builder runs the baseline before applying
-the frontier patch. Run `.venv/bin/python -I measure-frontiers.py <scratch>`
-with the repository's interpreter to capture the paired results.
+Run from the repository root with Rust 1.99.1, jq, the locked dependencies
+cached and the verified repository-local CPython 3.15.2. The builder compiles
+the baseline before applying the frontier patch to the same scratch tree.
+
+```sh
+set -euo pipefail
+evidence="$PWD/conductor/tracks/111-measured-performance/evidence/frontier-fold"
+scratch=$(mktemp -d)
+mkdir "$scratch/frontier-source"
+git archive "$(jq -er .baseline "$evidence/receipt.json")" | tar -x -C "$scratch/frontier-source"
+cp "$evidence/frontier-protocol.json" "$evidence/"*.patch "$scratch"
+git -C "$scratch/frontier-source" apply "$scratch/phold-32-lp.patch"
+bash "$evidence/build-frontier.sh" "$scratch"
+.venv/bin/python -I "$evidence/measure-frontiers.py" "$scratch"
+```

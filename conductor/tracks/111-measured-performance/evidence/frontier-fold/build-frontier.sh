@@ -1,5 +1,5 @@
 set -euo pipefail
-stage=$1
+stage=$(cd "$1" && pwd -P)
 cd "$stage/frontier-source"
 export CARGO_TARGET_DIR="$stage/frontier-target"
 export CARGO_PROFILE_RELEASE_DEBUG=1
