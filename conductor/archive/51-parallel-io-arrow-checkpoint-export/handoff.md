@@ -1,5 +1,48 @@
 # Track 51 Handoff
 
+## CephFS qualification — 25 November 2026
+
+The existing contiguous IPC benchmark wrote four 16,384-row streams per
+iteration. The serial and four-writer cases each retained ten Criterion
+samples covering 110 iterations. Criterion's linear estimates were
+56.649 ms and 52.368 ms, with overlapping intervals on this VM.
+
+The kernel CephFS mount reported two 64 KiB units per stripe, 64 KiB objects
+and a 64 KiB preferred I/O block. Each retained IPC file comprised 34 objects
+assigned across both BlueStore OSDs. PyArrow verified all four streams.
+Two Open MPI ranks used collective operations to read, write and reopen
+their disjoint halves of the 2,179,696-byte first stream. The MPI output
+matched the original byte for byte.
+[Arrow and MPI-I/O job](https://github.com/edithatogo/kairos/actions/runs/45529298499/job/138920321750).
+
+On a second VM, the HDF5 test paused at two cuts and replaced the original
+checkpoint in place. `h5dump` read both generations. Three dispatches between
+cuts and four after the second restore matched uninterrupted execution,
+including full-width ticks, ECS state and the RNG position.
+[HDF5 job](https://github.com/edithatogo/kairos/actions/runs/45529919882/job/138922369231) ·
+[First cut](evidence/world-write.h5) · [Second cut](evidence/world-recut.h5).
+
+Each job used one Ubuntu VM and two file-backed OSDs in a private network
+namespace. The measurements apply to that CephFS layout and workload.
+Cluster scaling, fault tolerance, Lustre/GPFS and BP5 on CephFS require
+their own evidence. The earlier BP5 and cross-host restart receipts remain
+available below.
+[Raw samples, object placement, checksums and source](evidence/cephfs-20261125.json) ·
+[Independent review](review-report.md#mounted-filesystem-review--25-november-2026).
+
+For reproduction, use a disposable Ubuntu 24.04 Actions runner with the kernel
+Ceph module, native Ceph daemons, `attr`, Open MPI and Rust 1.99.1.
+Prepare pinned HDF5 with `scripts/prepare-hdf5-ci.sh` in the preceding workflow
+step. Create `$RUNNER_TEMP/track51/raw`, then run
+`bash conductor/archive/51-parallel-io-arrow-checkpoint-export/evidence/run-cephfs.sh`.
+The `restart-only` argument collects the HDF5 generations separately.
+The receipt links both exact historical invocations and artifact archives.
+
+Chat `01a1fd18-51c7-7963-a3cc-d262d54582ba` owns Track 51 closeout in
+`/Users/doughnut/.codex/worktrees/kairos-scientific-evidence-closeout/kairos` on
+`codex/track51-parallel-filesystem-20261125`. The runner and product-source scopes are recorded in the receipt.
+Protected PR integration is the closeout checkpoint.
+
 ## Successive ECS checkpoint restores
 
 The ECS world fixture starts a separate process for each of four roles.
@@ -12,9 +55,8 @@ values, cancellation statistics and the next RNG draw. The staged allocator
 restart also passed for both formats.
 
 Independent review accepted the repeated restart case. The Mac used local
-APFS. The available Linux NAS exposed no Lustre, GPFS or BeeGFS mount.
-CAP-51.5 still needs the contiguous-writer benchmark and physical readback
-on an actual parallel filesystem.
+APFS. The available Linux NAS exposed no Lustre, GPFS or BeeGFS mount at
+that milestone.
 [Commands and exact results](evidence/world-restart-20261125.json).
 
 ## Staged allocator restart and package verification
@@ -208,9 +250,10 @@ Strict closeout:
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`
 - result: passed after evidence commit `b5df195`.
 
-## Evidence manifest boundary
+## Evidence manifest boundary at the contract baseline
 
-Track 51 now has a Track 46-style local scaffold record and a live parallel-filesystem template:
+Track 51 established a Track 46-style local scaffold record and a template for
+live filesystem evidence. The mounted qualification above supplied that evidence.
 
 - `conductor/hpc-evidence/manifests/track51-local-arrow-checkpoint-scaffold.json` records local Arrow/checkpoint contract gates only. It is not native Arrow, native HDF5, native ADIOS2, Lustre, GPFS, MPI-I/O, or throughput proof.
 - `conductor/hpc-evidence/manifests/track51-live-parallel-filesystem-template.json` must be replaced by a reviewed `live-hpc` manifest before Track 51 can satisfy `parallel-filesystem-evidence`.

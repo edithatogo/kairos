@@ -8,8 +8,10 @@ validation suitable for Lustre, GPFS, and MPI-I/O environments.
 
 ## Maturity
 
-In Progress. Native Arrow IPC, HDF5 and serial ADIOS2 BP5 have passed
-independent reader checks. Live parallel filesystem qualification remains open.
+Done. Native Arrow IPC, HDF5 and serial ADIOS2 BP5 passed independent reader
+checks. Mounted CephFS qualification covers the named Arrow publication, MPI-I/O
+and HDF5 restart cases on one hosted VM per run.
+[Scope and receipt](handoff.md#cephfs-qualification--25-november-2026).
 
 ## Inputs
 
@@ -32,7 +34,7 @@ independent reader checks. Live parallel filesystem qualification remains open.
 - `schemas/arrow/`
 - `examples/telemetry/`
 - `docs/parallel-io/`
-- `conductor/tracks/51-parallel-io-arrow-checkpoint-export/`
+- `conductor/archive/51-parallel-io-arrow-checkpoint-export/`
 
 ## Blocked paths
 

@@ -892,23 +892,20 @@ entries:
     next_phase_decision: "Track 50 is In Progress after the feature-gated topology, affinity, allocator, and FFI layout contract baseline; strict git closeout passed, but real hwloc, OS affinity, production arenas, Miri/concurrency stress, and live NUMA evidence remain required before In Review."
   - track_id: "51"
     phase: "phase-5-checkpoint-export-and-evidence-closeout"
-    state: pending
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Track 51 Phase 0-5 local checkpoint/restart parity, HDF5/ADIOS2 envelope writers, review report, and handoff evidence are reconciled on main. Upstream official Arrow/Parquet crates are scheduled in Track 62 and live parallel filesystem (Lustre/GPFS) evidence remains gated by `track51-live-parallel-filesystem-template.json`."
+    review_result: "Independent review verified mounted CephFS Arrow, collective MPI-I/O and both HDF5 restart generations. Runs 45529298499 and 45529919882 retain source, timings, stripe and block size, two ranks, per-file placement and checksums."
     fixes_applied: true
     validation_commands:
+      - "node scripts/validation/validate-hpc-parity-evidence.mjs"
+      - "node scripts/validation/validate-hpc-live-template-blockers.mjs --self-test"
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
-      - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
-      - "CARGO_INCREMENTAL=0 rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-arrow --features parallel-io"
-      - "CARGO_INCREMENTAL=0 rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-arrow --features hdf5"
-      - "CARGO_INCREMENTAL=0 rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-arrow --features adios2"
-      - "CARGO_INCREMENTAL=0 rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-arrow --test checkpoint_restart --features parallel-io,hdf5,adios2"
-      - "CARGO_INCREMENTAL=0 rustup run stable-x86_64-pc-windows-gnu cargo clippy -p kairo-ecs-arrow --all-targets --all-features -- -D warnings"
-      - "CARGO_INCREMENTAL=0 rustup run stable-x86_64-pc-windows-gnu cargo test --workspace --all-features --jobs 1"
-    git_status: "contract-baseline implementation and evidence commits pushed; strict git closeout passed"
-    commit_sha: "245a5ccaed7ae9a522e1fb887511232f6bed73d2"
-    pushed_ref: "origin/codex/kairos-hpc-parity-wave"
-    next_phase_decision: "Track 51 is In Progress. Native Arrow IPC passed independent readback. The service queue restarted from HDF5 and serial ADIOS2, and local contiguous publication was measured. Live parallel filesystem evidence and full phase closeout remain required."
+      - "pwsh -NoProfile -File scripts/validate_conductor_dag.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree"
+    git_status: "Production restart changes are integrated. The mounted runs bind to pushed heads recorded in the archive. The closeout uses protected PR checks."
+    commit_sha: "077721da0bcb0dcb0bb2f2bc2b8d5cde9778601a"
+    pushed_ref: "origin/main"
+    next_phase_decision: "Track 51 is Done and archived. Acceptance covers the native file paths and the named single-runner CephFS fixtures. Cross-host scaling remains with Track 55."
   - track_id: "52"
     phase: "native-gpu-acceleration-persistent-device-memory"
     state: closed

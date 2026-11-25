@@ -10,7 +10,7 @@ snapshot rows and the synthetic checkpoint's nested source block layout.
 The independent reader rejected the historical text output at the audited
 base while reading a native IPC positive control. The selected Rust suite
 passed 116 tests. The results cover the local writer on APFS.
-[Source and artifact hashes](../../tracks/51-parallel-io-arrow-checkpoint-export/evidence/native-ipc-macos-arm64.json) ·
+[Source and artifact hashes](../../archive/51-parallel-io-arrow-checkpoint-export/evidence/native-ipc-macos-arm64.json) ·
 [API contract](../../../docs/adr/0022-native-parallel-arrow-ipc.md).
 
 The matched Criterion cases published 65,536 rows on the same local APFS
@@ -18,7 +18,7 @@ volume using identical typed batches and physical receipts. Ten samples
 per case gave medians of 80.3 ms for serial and 76.5 ms for four writers.
 The 95% median intervals overlapped at 77.9–88.4 ms and 74.5–82.5 ms,
 respectively. The local experiment supports a descriptive timing comparison.
-[Raw measurements](../../tracks/51-parallel-io-arrow-checkpoint-export/evidence/contiguous-ipc-apfs-macos-arm64.json).
+[Raw measurements](../../archive/51-parallel-io-arrow-checkpoint-export/evidence/contiguous-ipc-apfs-macos-arm64.json).
 
 ## Native file boundary
 
@@ -151,7 +151,7 @@ type, 11,936-element extent and exact v2 schema identifiers.
 The selected macOS ARM64 suite passed 66 tests on Rust 1.99.1. Two vendor
 reader cases use separate commands. The recorded parity uses a local volume
 and the service model's exact schema.
-[Source and artifact hashes](../../tracks/51-parallel-io-arrow-checkpoint-export/evidence/native-engine-restart-macos-arm64.json) ·
+[Source and artifact hashes](../../archive/51-parallel-io-arrow-checkpoint-export/evidence/native-engine-restart-macos-arm64.json) ·
 [Native checkpoint contract](../../../docs/adr/0021-native-engine-checkpoint.md).
 
 ## Bidirectional macOS and Linux engine restart
@@ -167,7 +167,7 @@ Independent `h5dump` and `bpls` invocations read the imported engine state.
 Both hosts used Rust 1.99.1, HDF5 2.2.0 and ADIOS2 2.12.1. These runs covered
 APFS on macOS and tmpfs in a native Linux container. The receipt records the
 build and replay commands, archive hashes, filesystem scope and exact counters.
-[Cross-host receipt](../../tracks/51-parallel-io-arrow-checkpoint-export/evidence/engine-restart-macos-linux.json).
+[Cross-host receipt](../../archive/51-parallel-io-arrow-checkpoint-export/evidence/engine-restart-macos-linux.json).
 
 ## Cross-host staged resource restart
 
@@ -183,7 +183,7 @@ The first BP5 transfer encountered AppleDouble sidecar files added by macOS
 `tar`. The Linux importer reported the unexpected BP5 directory entries.
 Packaging with `COPYFILE_DISABLE=1` omitted those files and preserved each
 checkpoint member's digest across the transfer.
-[Staged restart receipt](../../tracks/51-parallel-io-arrow-checkpoint-export/evidence/staged-engine-restart-macos-linux.json).
+[Staged restart receipt](../../archive/51-parallel-io-arrow-checkpoint-export/evidence/staged-engine-restart-macos-linux.json).
 
 ## ECS world restart
 

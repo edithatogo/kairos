@@ -57,7 +57,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 48 | Time Warp Optimistic Rollback Runtime | Done | `pdes-agent + timetravel-agent + ecs-agent` | CAP48 sixteen-case baseline plus reviewed208-test amendment and fresh Track49 native acceptance; source5026d926 hosted green. |
 | 49 | Distributed MPI/gRPC State Synchronization | Done | `distributed-agent + pdes-agent` | Actual MPI2/4 six cases and Mac/Colab three cases accepted; see native-runtime-qualification-20261103.md. NAS/cluster/scaling remain unqualified. |
 | 50 | NUMA Topology, Affinity & HPC Memory Lifecycle | In Progress | `core-scheduler-agent + ecs-agent + ffi-agent` | See `conductor/tracks/50-*/spec.md` |
-| 51 | Parallel I/O, Arrow Record Batches & Checkpoint Export | In Progress | `arrow-agent + cloud-agent + performance-agent` | See `conductor/tracks/51-*/spec.md` |
+| 51 | Parallel I/O, Arrow Record Batches & Checkpoint Export | Done | `arrow-agent + cloud-agent + performance-agent` | [Archived evidence](archive/51-parallel-io-arrow-checkpoint-export/handoff.md) |
 | 52 | Native GPU Acceleration with Persistent Device Memory | In Progress | `gpu-compute-agent + performance-agent` | See `conductor/tracks/52-*/spec.md` |
 | 53 | FMI 2/3 Co-Simulation Master Runtime | Done | `fmi-agent + ffi-agent + interop-agent` | See `conductor/tracks/53-*/spec.md` |
 | 54 | Slurm, Container & Cloud HPC Runtime Acceptance | Done | `cloud-agent + distributed-agent + gpu-compute-agent + release-agent` | See `conductor/tracks/54-*/spec.md` |

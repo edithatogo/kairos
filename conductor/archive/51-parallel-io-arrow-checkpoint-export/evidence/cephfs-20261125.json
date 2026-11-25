@@ -1,0 +1,441 @@
+{
+  "source_base": "57136dd97a62686c724b5ecd282788802b2f4496",
+  "runtime_source_delta": "The two probe heads have identical crates, Cargo files and HDF5 setup. Compared with the integrated base, only the benchmark adds optional capture.",
+  "arrow_and_mpi_io": {
+    "tested_head": "df9fe1d76b4fbe0d2b32eda50d18d9f568243be1",
+    "actions_run": 45529298499,
+    "actions_job": 138920321750,
+    "runtime": "df9fe1d76b4fbe0d2b32eda50d18d9f568243be1\nLinux 7.0.0-1014-aws x86_64 GNU/Linux\nPRETTY_NAME=\"Ubuntu 24.04.5 LTS\"\nNAME=\"Ubuntu\"\nVERSION_ID=\"24.04\"\nVERSION=\"24.04.5 LTS (Noble Numbat)\"\nVERSION_CODENAME=noble\nID=ubuntu\nID_LIKE=debian\nHOME_URL=\"https://www.ubuntu.com/\"\nSUPPORT_URL=\"https://help.ubuntu.com/\"\nBUG_REPORT_URL=\"https://bugs.launchpad.net/ubuntu/\"\nPRIVACY_POLICY_URL=\"https://www.ubuntu.com/legal/terms-and-policies/privacy-policy\"\nUBUNTU_CODENAME=noble\nLOGO=ubuntu-logo\nrustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\ncargo 1.99.1 (5f94df478 2026-08-27)\ncc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\nArchitecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               GenuineIntel\nModel name:                              Intel(R) Xeon(R) 6975P-C\nCPU family:                              6\nModel:                                   173\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                5400.00\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq monitor vmx ssse3 fma cx16 pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch cpuid_fault ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves avx_vnni avx512_bf16 wbnoinvd ida arat vnmi avx512vbmi umip pku ospke waitpkg avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg tme avx512_vpopcntdq rdpid bus_lock_detect cldemote movdiri movdir64b md_clear serialize amx_bf16 avx512_fp16 amx_tile amx_int8 flush_l1d arch_capabilities\nVirtualization:                          VT-x\nHypervisor vendor:                       KVM\nVirtualization type:                     full\nL1d cache:                               96 KiB (2 instances)\nL1i cache:                               128 KiB (2 instances)\nL2 cache:                                4 MiB (2 instances)\nL3 cache:                                480 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Enhanced / Automatic IBRS; IBPB conditional; PBRSB-eIBRS Not affected; BHI BHI_DIS_S\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n               total        used        free      shared  buff/cache   available\nMem:     16464306176  1423003648 12459569152    47226880  2955309056 15041302528\nSwap:     3221221376           0  3221221376\nceph version 19.2.3 (c92aebb279828e9c3c1f5d24613efca272649e62) squid (stable)\nmpirun (Open MPI) 4.1.6\n\nReport bugs to http://www.open-mpi.org/community/help/\nh5dump: Version 2.2.0\n",
+    "kernel_mount": "SOURCE           FSTYPE TARGET                                OPTIONS\n127.0.0.1:6789:/ ceph   /home/runner/work/_temp/track51/mount rw,relatime,fsid=7f35d729-17be-48a4-9095-8d798cf47d86,acl,mds_namespace=track51\n",
+    "osd_state": {
+      "epoch": 12,
+      "num_osds": 2,
+      "num_up_osds": 2,
+      "osd_up_since": 1795571840,
+      "num_in_osds": 2,
+      "osd_in_since": 1795571830,
+      "num_remapped_pgs": 0
+    },
+    "osd_tree": "ID  CLASS  WEIGHT   TYPE NAME                STATUS  REWEIGHT  PRI-AFF\n-1         0.00400  root default                                      \n-3         0.00400      host ip-10-0-141-33                           \n 0    ssd  0.00200          osd.0                up   1.00000  1.00000\n 1    ssd  0.00200          osd.1                up   1.00000  1.00000\n",
+    "file_layout": "/home/runner/work/_temp/track51/mount/qualification/retained/part-0.arrows 2179696 bytes, preferred I/O block 65536 bytes\n# file: /home/runner/work/_temp/track51/mount/qualification/retained/part-0.arrows\nceph.file.layout=\"stripe_unit=65536 stripe_count=2 object_size=65536 pool=track51_data\"\n\n/home/runner/work/_temp/track51/mount/qualification/retained/part-1.arrows 2179696 bytes, preferred I/O block 65536 bytes\n# file: /home/runner/work/_temp/track51/mount/qualification/retained/part-1.arrows\nceph.file.layout=\"stripe_unit=65536 stripe_count=2 object_size=65536 pool=track51_data\"\n\n/home/runner/work/_temp/track51/mount/qualification/retained/part-2.arrows 2179696 bytes, preferred I/O block 65536 bytes\n# file: /home/runner/work/_temp/track51/mount/qualification/retained/part-2.arrows\nceph.file.layout=\"stripe_unit=65536 stripe_count=2 object_size=65536 pool=track51_data\"\n\n/home/runner/work/_temp/track51/mount/qualification/retained/part-3.arrows 2179696 bytes, preferred I/O block 65536 bytes\n# file: /home/runner/work/_temp/track51/mount/qualification/retained/part-3.arrows\nceph.file.layout=\"stripe_unit=65536 stripe_count=2 object_size=65536 pool=track51_data\"\n\n/home/runner/work/_temp/track51/mount/qualification/mpi-copy.arrows 2179696 bytes, preferred I/O block 65536 bytes\n# file: /home/runner/work/_temp/track51/mount/qualification/mpi-copy.arrows\nceph.file.layout=\"stripe_unit=65536 stripe_count=2 object_size=65536 pool=track51_data\"\n\n",
+    "pyarrow_independent_reader": "26.0.1",
+    "files": {
+      "part-0.arrows": {
+        "bytes": 2179696,
+        "sha256": "08590f8033aaccb04ade77223be30b20ccaff2d4170135a920c1f75d3e855cb4",
+        "rows": 16384,
+        "preferred_io_block_bytes": 65536,
+        "object_targets": {
+          "100000001f9.00000000": "0",
+          "100000001f9.00000001": "0",
+          "100000001f9.00000002": "1",
+          "100000001f9.00000003": "0",
+          "100000001f9.00000004": "1",
+          "100000001f9.00000005": "0",
+          "100000001f9.00000006": "0",
+          "100000001f9.00000007": "1",
+          "100000001f9.00000008": "1",
+          "100000001f9.00000009": "0",
+          "100000001f9.0000000a": "0",
+          "100000001f9.0000000b": "0",
+          "100000001f9.0000000c": "0",
+          "100000001f9.0000000d": "0",
+          "100000001f9.0000000e": "0",
+          "100000001f9.0000000f": "0",
+          "100000001f9.00000010": "0",
+          "100000001f9.00000011": "1",
+          "100000001f9.00000012": "0",
+          "100000001f9.00000013": "0",
+          "100000001f9.00000014": "0",
+          "100000001f9.00000015": "1",
+          "100000001f9.00000016": "1",
+          "100000001f9.00000017": "1",
+          "100000001f9.00000018": "1",
+          "100000001f9.00000019": "0",
+          "100000001f9.0000001a": "1",
+          "100000001f9.0000001b": "1",
+          "100000001f9.0000001c": "0",
+          "100000001f9.0000001d": "0",
+          "100000001f9.0000001e": "0",
+          "100000001f9.0000001f": "0",
+          "100000001f9.00000020": "1",
+          "100000001f9.00000021": "0"
+        }
+      },
+      "part-1.arrows": {
+        "bytes": 2179696,
+        "sha256": "e540f46837cb1c419faeb65e47951d439e0f3a351f18056ce0575554338c9628",
+        "rows": 16384,
+        "preferred_io_block_bytes": 65536,
+        "object_targets": {
+          "100000001fa.00000000": "0",
+          "100000001fa.00000001": "0",
+          "100000001fa.00000002": "1",
+          "100000001fa.00000003": "1",
+          "100000001fa.00000004": "0",
+          "100000001fa.00000005": "1",
+          "100000001fa.00000006": "1",
+          "100000001fa.00000007": "0",
+          "100000001fa.00000008": "1",
+          "100000001fa.00000009": "0",
+          "100000001fa.0000000a": "0",
+          "100000001fa.0000000b": "1",
+          "100000001fa.0000000c": "1",
+          "100000001fa.0000000d": "1",
+          "100000001fa.0000000e": "0",
+          "100000001fa.0000000f": "0",
+          "100000001fa.00000010": "1",
+          "100000001fa.00000011": "0",
+          "100000001fa.00000012": "0",
+          "100000001fa.00000013": "0",
+          "100000001fa.00000014": "1",
+          "100000001fa.00000015": "1",
+          "100000001fa.00000016": "1",
+          "100000001fa.00000017": "0",
+          "100000001fa.00000018": "1",
+          "100000001fa.00000019": "1",
+          "100000001fa.0000001a": "1",
+          "100000001fa.0000001b": "1",
+          "100000001fa.0000001c": "1",
+          "100000001fa.0000001d": "1",
+          "100000001fa.0000001e": "0",
+          "100000001fa.0000001f": "0",
+          "100000001fa.00000020": "1",
+          "100000001fa.00000021": "1"
+        }
+      },
+      "part-2.arrows": {
+        "bytes": 2179696,
+        "sha256": "0830755c8b55c1a51dec6a120e7fcd9b1837f6123003166b758c5993e97d110d",
+        "rows": 16384,
+        "preferred_io_block_bytes": 65536,
+        "object_targets": {
+          "100000001fb.00000000": "0",
+          "100000001fb.00000001": "1",
+          "100000001fb.00000002": "0",
+          "100000001fb.00000003": "1",
+          "100000001fb.00000004": "1",
+          "100000001fb.00000005": "0",
+          "100000001fb.00000006": "1",
+          "100000001fb.00000007": "0",
+          "100000001fb.00000008": "0",
+          "100000001fb.00000009": "1",
+          "100000001fb.0000000a": "1",
+          "100000001fb.0000000b": "1",
+          "100000001fb.0000000c": "1",
+          "100000001fb.0000000d": "1",
+          "100000001fb.0000000e": "1",
+          "100000001fb.0000000f": "1",
+          "100000001fb.00000010": "1",
+          "100000001fb.00000011": "0",
+          "100000001fb.00000012": "1",
+          "100000001fb.00000013": "0",
+          "100000001fb.00000014": "1",
+          "100000001fb.00000015": "1",
+          "100000001fb.00000016": "1",
+          "100000001fb.00000017": "0",
+          "100000001fb.00000018": "0",
+          "100000001fb.00000019": "0",
+          "100000001fb.0000001a": "1",
+          "100000001fb.0000001b": "0",
+          "100000001fb.0000001c": "1",
+          "100000001fb.0000001d": "0",
+          "100000001fb.0000001e": "1",
+          "100000001fb.0000001f": "0",
+          "100000001fb.00000020": "1",
+          "100000001fb.00000021": "1"
+        }
+      },
+      "part-3.arrows": {
+        "bytes": 2179696,
+        "sha256": "2e1e40c464d381ddfe90e37bf17c4b95d457341b64601547d4881009f5cd3e9c",
+        "rows": 16384,
+        "preferred_io_block_bytes": 65536,
+        "object_targets": {
+          "100000001fc.00000000": "1",
+          "100000001fc.00000001": "0",
+          "100000001fc.00000002": "1",
+          "100000001fc.00000003": "1",
+          "100000001fc.00000004": "0",
+          "100000001fc.00000005": "1",
+          "100000001fc.00000006": "0",
+          "100000001fc.00000007": "0",
+          "100000001fc.00000008": "0",
+          "100000001fc.00000009": "0",
+          "100000001fc.0000000a": "0",
+          "100000001fc.0000000b": "0",
+          "100000001fc.0000000c": "1",
+          "100000001fc.0000000d": "0",
+          "100000001fc.0000000e": "1",
+          "100000001fc.0000000f": "1",
+          "100000001fc.00000010": "0",
+          "100000001fc.00000011": "0",
+          "100000001fc.00000012": "0",
+          "100000001fc.00000013": "0",
+          "100000001fc.00000014": "1",
+          "100000001fc.00000015": "0",
+          "100000001fc.00000016": "1",
+          "100000001fc.00000017": "0",
+          "100000001fc.00000018": "1",
+          "100000001fc.00000019": "0",
+          "100000001fc.0000001a": "1",
+          "100000001fc.0000001b": "0",
+          "100000001fc.0000001c": "0",
+          "100000001fc.0000001d": "1",
+          "100000001fc.0000001e": "1",
+          "100000001fc.0000001f": "0",
+          "100000001fc.00000020": "1",
+          "100000001fc.00000021": "1"
+        }
+      },
+      "mpi-copy.arrows": {
+        "bytes": 2179696,
+        "sha256": "08590f8033aaccb04ade77223be30b20ccaff2d4170135a920c1f75d3e855cb4",
+        "rows": 16384,
+        "preferred_io_block_bytes": 65536,
+        "object_targets": {
+          "10000000783.00000000": "1",
+          "10000000783.00000001": "0",
+          "10000000783.00000002": "0",
+          "10000000783.00000003": "0",
+          "10000000783.00000004": "0",
+          "10000000783.00000005": "0",
+          "10000000783.00000006": "0",
+          "10000000783.00000007": "0",
+          "10000000783.00000008": "1",
+          "10000000783.00000009": "1",
+          "10000000783.0000000a": "1",
+          "10000000783.0000000b": "1",
+          "10000000783.0000000c": "1",
+          "10000000783.0000000d": "1",
+          "10000000783.0000000e": "1",
+          "10000000783.0000000f": "0",
+          "10000000783.00000010": "0",
+          "10000000783.00000011": "0",
+          "10000000783.00000012": "0",
+          "10000000783.00000013": "1",
+          "10000000783.00000014": "1",
+          "10000000783.00000015": "1",
+          "10000000783.00000016": "1",
+          "10000000783.00000017": "0",
+          "10000000783.00000018": "0",
+          "10000000783.00000019": "1",
+          "10000000783.0000001a": "0",
+          "10000000783.0000001b": "0",
+          "10000000783.0000001c": "1",
+          "10000000783.0000001d": "0",
+          "10000000783.0000001e": "0",
+          "10000000783.0000001f": "1",
+          "10000000783.00000020": "1",
+          "10000000783.00000021": "0"
+        }
+      }
+    },
+    "mpi_log": "rank 1/2 read, wrote and reread 1089848 bytes at 1089848\nrank 0/2 read, wrote and reread 1089848 bytes at 0\n",
+    "restart_log": "\nrunning 1 test\ntest hdf5_restores_the_ecs_world_in_a_fresh_process ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.03s\n\n",
+    "benchmark_log": "Gnuplot not found, using plotters backend\nBenchmarking contiguous_ipc_publication/serial\nBenchmarking contiguous_ipc_publication/serial: Warming up for 1.0000 s\nBenchmarking contiguous_ipc_publication/serial: Collecting 10 samples in estimated 4.0493 s (110 iterations)\nBenchmarking contiguous_ipc_publication/serial: Analyzing\ncontiguous_ipc_publication/serial\n                        time:   [41.635 ms 56.649 ms 70.323 ms]\n                        thrpt:  [931.93 Kelem/s 1.1569 Melem/s 1.5741 Melem/s]\nFound 1 outliers among 10 measurements (10.00%)\n  1 (10.00%) high mild\nBenchmarking contiguous_ipc_publication/parallel_4\nBenchmarking contiguous_ipc_publication/parallel_4: Warming up for 1.0000 s\nBenchmarking contiguous_ipc_publication/parallel_4: Collecting 10 samples in estimated 5.5588 s (110 iterations)\nBenchmarking contiguous_ipc_publication/parallel_4: Analyzing\ncontiguous_ipc_publication/parallel_4\n                        time:   [46.999 ms 52.368 ms 68.835 ms]\n                        thrpt:  [952.08 Kelem/s 1.2515 Melem/s 1.3944 Melem/s]\nFound 1 outliers among 10 measurements (10.00%)\n  1 (10.00%) high severe\n\n",
+    "criterion_results": {
+      "serial": {
+        "samples": {
+          "sampling_mode": "Linear",
+          "iters": [
+            2.0,
+            4.0,
+            6.0,
+            8.0,
+            10.0,
+            12.0,
+            14.0,
+            16.0,
+            18.0,
+            20.0
+          ],
+          "times": [
+            68038965.0,
+            129535950.0,
+            235171491.0,
+            345772791.0,
+            406565715.0,
+            392947793.0,
+            627658149.0,
+            1424993028.0,
+            1216321621.0,
+            1007326993.0
+          ]
+        },
+        "estimates": {
+          "mean": {
+            "confidence_interval": {
+              "confidence_level": 0.95,
+              "lower_bound": 38260783.687321424,
+              "upper_bound": 59153991.04009819
+            },
+            "point_estimate": 47405710.05091269,
+            "standard_error": 5380957.1632926045
+          },
+          "median": {
+            "confidence_interval": {
+              "confidence_level": 0.95,
+              "lower_bound": 34019482.5,
+              "upper_bound": 56203074.158730164
+            },
+            "point_estimate": 41939085.1875,
+            "standard_error": 4845323.754174783
+          },
+          "median_abs_dev": {
+            "confidence_interval": {
+              "confidence_level": 0.95,
+              "lower_bound": 1480492.3960410096,
+              "upper_bound": 25249865.60646612
+            },
+            "point_estimate": 12117932.403158693,
+            "standard_error": 5737893.286501341
+          },
+          "slope": {
+            "confidence_interval": {
+              "confidence_level": 0.95,
+              "lower_bound": 41634986.12937063,
+              "upper_bound": 70322799.10666667
+            },
+            "point_estimate": 56649282.624675326,
+            "standard_error": 7200947.225803494
+          },
+          "std_dev": {
+            "confidence_interval": {
+              "confidence_level": 0.95,
+              "lower_bound": 5119842.383258254,
+              "upper_bound": 24756965.28629106
+            },
+            "point_estimate": 17974068.037499923,
+            "standard_error": 5333632.171967716
+          }
+        }
+      },
+      "parallel_4": {
+        "samples": {
+          "sampling_mode": "Linear",
+          "iters": [
+            2.0,
+            4.0,
+            6.0,
+            8.0,
+            10.0,
+            12.0,
+            14.0,
+            16.0,
+            18.0,
+            20.0
+          ],
+          "times": [
+            99224524.0,
+            193696793.0,
+            290357151.0,
+            1290753258.0,
+            488639934.0,
+            599624756.0,
+            690364751.0,
+            765159717.0,
+            838838061.0,
+            925802734.0
+          ]
+        },
+        "estimates": {
+          "mean": {
+            "confidence_interval": {
+              "confidence_level": 0.95,
+              "lower_bound": 47804588.719290175,
+              "upper_bound": 82507432.88026042
+            },
+            "point_estimate": 59663270.050773814,
+            "standard_error": 10680337.784490356
+          },
+          "median": {
+            "confidence_interval": {
+              "confidence_level": 0.95,
+              "lower_bound": 47497486.5,
+              "upper_bound": 49640248.797619045
+            },
+            "point_estimate": 48644095.825,
+            "standard_error": 2633418.9394109454
+          },
+          "median_abs_dev": {
+            "confidence_interval": {
+              "confidence_level": 0.95,
+              "lower_bound": 349252.2951695312,
+              "upper_bound": 3043927.7202157304
+            },
+            "point_estimate": 1326763.6587889865,
+            "standard_error": 3208946.5034369077
+          },
+          "slope": {
+            "confidence_interval": {
+              "confidence_level": 0.95,
+              "lower_bound": 46998612.820964746,
+              "upper_bound": 68834525.1194571
+            },
+            "point_estimate": 52367599.58831169,
+            "standard_error": 6181879.392631123
+          },
+          "std_dev": {
+            "confidence_interval": {
+              "confidence_level": 0.95,
+              "lower_bound": 803824.8297096806,
+              "upper_bound": 54744005.98179301
+            },
+            "point_estimate": 35747207.06378826,
+            "standard_error": 19994952.868769307
+          }
+        }
+      }
+    },
+    "archive": {
+      "run": 45529298499,
+      "job": 138920321750,
+      "job_url": "https://github.com/edithatogo/kairos/actions/runs/45529298499/job/138920321750",
+      "artifact_url": "https://github.com/edithatogo/kairos/actions/runs/45529298499/artifacts/14983944870",
+      "artifact_sha256": "43f5a18a084c89dbba4a4f711ec5a1fec136bc446c74f30cff6387940b35c54d"
+    }
+  },
+  "hdf5_restart": {
+    "tested_head": "2874d419e47705543ab50140bf8b5b1792e8568f",
+    "archive": {
+      "run": 45529919882,
+      "job": 138922369231,
+      "job_url": "https://github.com/edithatogo/kairos/actions/runs/45529919882/job/138922369231",
+      "artifact_url": "https://github.com/edithatogo/kairos/actions/runs/45529919882/artifacts/14983169495",
+      "artifact_sha256": "6dc639aaa0e75f7d56fc65dce2a3c609af3dca00fd05a389491975b3e8d18a2c"
+    },
+    "runtime": "2874d419e47705543ab50140bf8b5b1792e8568f\nLinux 7.0.0-1017-azure x86_64 GNU/Linux\nPRETTY_NAME=\"Ubuntu 24.04.5 LTS\"\nNAME=\"Ubuntu\"\nVERSION_ID=\"24.04\"\nVERSION=\"24.04.5 LTS (Noble Numbat)\"\nVERSION_CODENAME=noble\nID=ubuntu\nID_LIKE=debian\nHOME_URL=\"https://www.ubuntu.com/\"\nSUPPORT_URL=\"https://help.ubuntu.com/\"\nBUG_REPORT_URL=\"https://bugs.launchpad.net/ubuntu/\"\nPRIVACY_POLICY_URL=\"https://www.ubuntu.com/legal/terms-and-policies/privacy-policy\"\nUBUNTU_CODENAME=noble\nLOGO=ubuntu-logo\nrustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\ncargo 1.99.1 (5f94df478 2026-08-27)\ncc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\nArchitecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 7763 64-Core Processor\nCPU family:                              25\nModel:                                   1\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                4890.85\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves user_shstk clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload umip vaes vpclmulqdq rdpid fsrm\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               64 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                1 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Vulnerable: No microcode\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n               total        used        free      shared  buff/cache   available\nMem:     16760344576  1463631872 12718391296    46546944  2961584128 15296712704\nSwap:     3221221376           0  3221221376\nceph version 19.2.3 (c92aebb279828e9c3c1f5d24613efca272649e62) squid (stable)\nmpirun (Open MPI) 4.1.6\n\nReport bugs to http://www.open-mpi.org/community/help/\nh5dump: Version 2.2.0\n",
+    "kernel_mount": "SOURCE           FSTYPE TARGET                                OPTIONS\n127.0.0.1:6789:/ ceph   /home/runner/work/_temp/track51/mount rw,relatime,fsid=842427ee-f8d5-438c-8a9f-ce17c63610b9,acl,mds_namespace=track51\n",
+    "osd_state": {
+      "epoch": 11,
+      "num_osds": 2,
+      "num_up_osds": 2,
+      "osd_up_since": 1795572134,
+      "num_in_osds": 2,
+      "osd_in_since": 1795572125,
+      "num_remapped_pgs": 0
+    },
+    "checkpoint_generations": {
+      "world-write.h5": {
+        "bytes": 6670,
+        "sha256": "a86f4d51c49a9f2f3a239bc32b58f80aa3437053bbfb53a5354fdc9525284097",
+        "h5dump_header": "HDF5 \"/home/runner/work/_temp/track51/mount/qualification/engine/world\" {\nGROUP \"/\" {\n   DATASET \"blocks\" {\n      DATATYPE  H5T_COMPOUND {\n         H5T_STD_U64LE \"offset_bytes\";\n         H5T_STD_U64LE \"byte_len\";\n         H5T_STD_U64LE \"row_count\";\n      }\n      DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }\n   }\n   DATASET \"checkpoint_id\" {\n      DATATYPE  H5T_STD_U8LE\n      DATASPACE  SIMPLE { ( 18 ) / ( 18 ) }\n   }\n   DATASET \"engine_state\" {\n      DATATYPE  H5T_STD_U8LE\n      DATASPACE  SIMPLE { ( 1038 ) / ( 1038 ) }\n   }\n   DATASET \"legacy_checksum\" {\n      DATATYPE  H5T_STD_U64LE\n      DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }\n   }\n   DATASET \"records\" {\n      DATATYPE  H5T_COMPOUND {\n         H5T_STD_U64LE \"event_id_index\";\n         H5T_STD_U64LE \"entity_id_index\";\n         H5T_STD_U64LE \"time_ticks_hi\";\n         H5T_STD_U64LE \"time_ticks_lo\";\n         H5T_STD_U64LE \"sequence\";\n         H5T_STD_U64LE \"kind_bytes\";\n         H5T_STD_U64LE \"payload_bytes\";\n         H5T_STD_U32LE \"event_id_generation\";\n         H5T_STD_U32LE \"entity_id_generation\";\n         H5T_STD_I32LE \"priority\";\n         H5T_STD_U8LE \"entity_present\";\n         H5T_STD_U8LE \"payload_present\";\n         H5T_STD_U8LE \"status\";\n      }\n      DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }\n   }\n   DATASET \"run_id\" {\n      DATATYPE  H5T_STD_U8LE\n      DATASPACE  SIMPLE { ( 14 ) / ( 14 ) }\n   }\n   DATASET \"schema\" {\n      DATATYPE  H5T_STD_U8LE\n      DATASPACE  SIMPLE { ( 28 ) / ( 28 ) }\n   }\n   DATASET \"schema_fingerprint\" {\n      DATATYPE  H5T_STD_U8LE\n      DATASPACE  SIMPLE { ( 352 ) / ( 352 ) }\n   }\n   DATASET \"sha256\" {\n      DATATYPE  H5T_STD_U8LE\n      DATASPACE  SIMPLE { ( 32 ) / ( 32 ) }\n   }\n   DATASET \"text\" {\n      DATATYPE  H5T_STD_U8LE\n      DATASPACE  SIMPLE { ( 8 ) / ( 8 ) }\n   }\n}\n}\n"
+      },
+      "world-recut.h5": {
+        "bytes": 6670,
+        "sha256": "2b283df0a6dba57465b22a46824161c69e49efa1a91ac76c73955dc9455bf0f6",
+        "h5dump_header": "HDF5 \"/home/runner/work/_temp/track51/mount/qualification/engine/world\" {\nGROUP \"/\" {\n   DATASET \"blocks\" {\n      DATATYPE  H5T_COMPOUND {\n         H5T_STD_U64LE \"offset_bytes\";\n         H5T_STD_U64LE \"byte_len\";\n         H5T_STD_U64LE \"row_count\";\n      }\n      DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }\n   }\n   DATASET \"checkpoint_id\" {\n      DATATYPE  H5T_STD_U8LE\n      DATASPACE  SIMPLE { ( 20 ) / ( 20 ) }\n   }\n   DATASET \"engine_state\" {\n      DATATYPE  H5T_STD_U8LE\n      DATASPACE  SIMPLE { ( 879 ) / ( 879 ) }\n   }\n   DATASET \"legacy_checksum\" {\n      DATATYPE  H5T_STD_U64LE\n      DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }\n   }\n   DATASET \"records\" {\n      DATATYPE  H5T_COMPOUND {\n         H5T_STD_U64LE \"event_id_index\";\n         H5T_STD_U64LE \"entity_id_index\";\n         H5T_STD_U64LE \"time_ticks_hi\";\n         H5T_STD_U64LE \"time_ticks_lo\";\n         H5T_STD_U64LE \"sequence\";\n         H5T_STD_U64LE \"kind_bytes\";\n         H5T_STD_U64LE \"payload_bytes\";\n         H5T_STD_U32LE \"event_id_generation\";\n         H5T_STD_U32LE \"entity_id_generation\";\n         H5T_STD_I32LE \"priority\";\n         H5T_STD_U8LE \"entity_present\";\n         H5T_STD_U8LE \"payload_present\";\n         H5T_STD_U8LE \"status\";\n      }\n      DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }\n   }\n   DATASET \"run_id\" {\n      DATATYPE  H5T_STD_U8LE\n      DATASPACE  SIMPLE { ( 14 ) / ( 14 ) }\n   }\n   DATASET \"schema\" {\n      DATATYPE  H5T_STD_U8LE\n      DATASPACE  SIMPLE { ( 28 ) / ( 28 ) }\n   }\n   DATASET \"schema_fingerprint\" {\n      DATATYPE  H5T_STD_U8LE\n      DATASPACE  SIMPLE { ( 352 ) / ( 352 ) }\n   }\n   DATASET \"sha256\" {\n      DATATYPE  H5T_STD_U8LE\n      DATASPACE  SIMPLE { ( 32 ) / ( 32 ) }\n   }\n   DATASET \"text\" {\n      DATATYPE  H5T_STD_U8LE\n      DATASPACE  SIMPLE { ( 8 ) / ( 8 ) }\n   }\n}\n}\n"
+      }
+    },
+    "test_log": "\nrunning 1 test\ntest hdf5_restores_the_ecs_world_in_a_fresh_process ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.05s\n\n",
+    "record_counts": {
+      "reference": 2,
+      "write": 0,
+      "recut": 1,
+      "resume": 1
+    },
+    "reference_and_restored_sha256": "5d0292cceed31ec768186e26040130d6e13b9c5a8e4f5577dbb27a1dab106cd5",
+    "reference_and_restored_jsonl": "[[2,18446744073709551669,-1,[3,1]],[1,18446744073709551669,0,null],[3,18446744073709551671,0,[1,1]]]\n[[[4,18446744073709551673,0,[4,1]],[5,18446744073709551674,0,[0,0]],[6,18446744073709551675,0,[0,1]],[8,18446744073709551675,0,[1,1]]],{\"world_json\":\"{\\\"version\\\":1,\\\"generations\\\":[1,1,0,1,1,0],\\\"free_indices\\\":[]}\",\"positions\":[[[0,1],5],[[1,1],20],[[2,0],20],[[3,1],0],[[4,1],9],[[5,0],50]],\"rng\":{\"generator\":\"chacha8\",\"version\":1,\"seed\":[22,67,192,88,141,253,220,35,102,67,180,98,218,118,102,177,91,105,143,254,172,34,106,227,228,149,53,173,250,65,149,148],\"stream_id\":0,\"word_pos\":12,\"distribution_provenance\":\"rand_distr_0.6\"}},1222073730199467253]\n"
+  }
+}
