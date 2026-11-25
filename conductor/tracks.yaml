@@ -804,7 +804,7 @@ tracks:
       - allocator-contention-budget
   - id: 51
     name: Parallel I/O, Arrow Record Batches & Checkpoint Export
-    status: In Progress
+    status: Done
     owner: arrow-agent + cloud-agent + performance-agent
     depends_on: ["04", "39", "46"]
     owned_paths:
@@ -813,7 +813,7 @@ tracks:
       - schemas/arrow/
       - examples/telemetry/
       - docs/parallel-io/
-      - conductor/tracks/51-parallel-io-arrow-checkpoint-export/
+      - conductor/archive/51-parallel-io-arrow-checkpoint-export/
     required_gates:
       - phase-closeout-check
       - arrow-recordbatch-real

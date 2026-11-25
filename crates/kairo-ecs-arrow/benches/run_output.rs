@@ -269,6 +269,20 @@ fn bench_contiguous_ipc(c: &mut Criterion) {
         assert_eq!(receipt, expected[idx]);
         black_box(receipt);
     };
+    if let Some(destination) = std::env::var_os("KAIROS_IPC_BENCHMARK_CAPTURE") {
+        let destination = Path::new(&destination);
+        fs::create_dir(destination).expect("new capture directory");
+        for (idx, batch) in batches.iter().enumerate() {
+            write(idx, batch, destination);
+            let mut reference = Vec::new();
+            batch
+                .write_contiguous(&mut reference)
+                .expect("encode retained stream reference");
+            let observed = fs::read(destination.join(format!("part-{idx}.arrows")))
+                .expect("read retained stream");
+            assert!(observed == reference, "retained stream {idx} differs");
+        }
+    }
     let mut group = c.benchmark_group("contiguous_ipc_publication");
     group.throughput(Throughput::Elements(WRITERS * ROWS_PER_STREAM));
     for (name, parallel) in [("serial", false), ("parallel_4", true)] {

@@ -252,6 +252,9 @@ foreach ($id in $tracks.Keys) {
     }
 
     $trackDir = Get-TrackDir $TrackDirsPath $id
+    if ($null -eq $trackDir -and $track.status -eq "Done") {
+        $trackDir = Get-TrackDir (Join-Path $TrackDirsPath "../archive") $id
+    }
     if ($null -eq $trackDir) {
         Add-Issue $issues "wave-progression-check" "missing-track-directory" "Track $id has no directory under $TrackDirsPath."
     } else {

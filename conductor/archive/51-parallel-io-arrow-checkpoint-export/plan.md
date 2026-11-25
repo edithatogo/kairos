@@ -6,34 +6,30 @@ The adapters write native HDF5 and serial ADIOS2 BP5 checkpoints. Both vendor
 readers checked the physical formats and full-width timestamp fields. The
 v2 checkpoint restarts the scheduler and service model from a single artifact.
 Native Arrow IPC exports cover the event log, world snapshot and checkpoint
-metadata. Live parallel filesystem qualification remains open.
+metadata. The mounted CephFS qualification is complete for the named
+workloads. [Live evidence](handoff.md#cephfs-qualification--25-november-2026).
 The local matched write benchmark covers four 16,384-row IPC streams.
 [Raw samples](evidence/contiguous-ipc-apfs-macos-arm64.json).
 [Native format evidence](../../execution/scientific/s14-completion.md).
 
 The [ECS restart extension](handoff.md#successive-ecs-checkpoint-restores)
 proves successive cuts, replacement and resume in separate processes for
-both formats. CAP-51.5 requires an available parallel volume for the
-existing contiguous IPC benchmark. Set `TMPDIR` to an isolated directory on
-the verified target mount when capturing that run.
+both formats. The mounted HDF5 case also retained both checkpoint generations
+and the replay records from fresh processes.
 
 ## Acceptance correction — 3 November 2026
 
 The checked historical tasks below record the contract-baseline work and its
 then-reported review; they do not establish this track's native acceptance.
 Both adapters originally wrote labelled v1 contract bytes and restored
-historical records and their maximum tick. The filesystem manifest remains a
-template. The native acceptance checklist tracks the subsequent work.
+historical records and their maximum tick. The filesystem manifest was a
+template at that milestone. The checklist records the subsequent native work.
 
 - [x] CAP-51.2: Implement and independently read native HDF5 and ADIOS2 checkpoints.
 - [x] CAP-51.3: Qualify real Arrow record batches for the track's specified outputs.
 - [x] CAP-51.4: Prove representative engine restart and final-state parity with the self-contained HDF5 and BP5 service queue.
-- [ ] CAP-51.5: Execute and retain contiguous-write benchmarks and live parallel-filesystem evidence.
-- [ ] CAP-51.6: Complete independent review, exact-source hosted gates and integrator closeout.
-
-The local Polars IPC/Parquet interchange and checkpoint replacement evidence in
-the handoff remain useful but do not substitute for those gates. The track stays
-In Progress; no historical checklist is evidence of native backend execution.
+- [x] CAP-51.5: Execute and retain contiguous-write benchmarks and live parallel-filesystem evidence.
+- [x] CAP-51.6: Complete independent review, exact-source hosted gates and integrator closeout.
 
 ## Phase 0 - TDD baseline
 
@@ -99,4 +95,7 @@ Repository scope: **kairos** and its **careops-sim** consumer (`/Users/doughnut/
 
 Use the [capability reconciliation](../../capability-reconciliation-20261020.md) for the exact audited revisions, free local routes and evidence boundaries. Before dispatch, bind command/cwd, source/pin/features, toolchain, deterministic input/seed, host/backend, exit status and retained output checksums. A structural validator pass cannot close a runtime task.
 
-The [checkpoint recovery and interoperability handoff](handoff.md#checkpoint-recovery-and-interoperability--1-november-2026) records the bounded reconciliation. Physical storage gates remain open.
+The [checkpoint recovery and interoperability handoff](handoff.md#checkpoint-recovery-and-interoperability--1-november-2026)
+records the local qualification as of 1 November. The later
+[CephFS qualification](handoff.md#cephfs-qualification--25-november-2026)
+closed the parallel-filesystem gate for the named workloads.

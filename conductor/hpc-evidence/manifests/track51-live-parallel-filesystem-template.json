@@ -2,57 +2,58 @@
   "schema_version": "kairoecs.hpc.evidence.v1",
   "track_id": "51",
   "task_id": "3.2",
-  "commit_sha": "0000000000000000000000000000000000000000",
-  "pushed_ref": "refs/remotes/origin/replace-with-track51-live-proof-branch",
-  "evidence_class": "live-hpc-template",
-  "capability": "Track-51-live-Lustre-GPFS-or-MPI-IO-parallel-filesystem-proof",
+  "commit_sha": "df9fe1d76b4fbe0d2b32eda50d18d9f568243be1",
+  "pushed_ref": "refs/heads/codex/track51-orangefs-run-20261125",
+  "evidence_class": "live-hpc",
+  "capability": "Mounted CephFS Arrow IPC, two-rank MPI-I/O and HDF5 restart",
   "hardware": {
-    "cpu_model": "Replace-with-compute-node-CPU-model.",
-    "cpu_topology": "Replace-with-socket-core-thread-cache-and-NUMA-topology.",
-    "memory_topology": "Replace-with-NUMA-node-count-memory-size-and-locality-topology.",
-    "accelerator_model": "Replace-with-accelerator-model-or-none.",
-    "driver": "Replace-with-storage-accelerator-and-runtime-driver-versions-or-none."
+    "cpu_model": "Intel Xeon 6975P-C for Arrow/MPI, AMD EPYC 7763 for HDF5",
+    "cpu_topology": "One VM per job, 4 vCPUs, 1 socket, 2 cores, 2 threads per core",
+    "memory_topology": "Single NUMA node per VM, 16464306176 and 16760344576 bytes respectively",
+    "accelerator_model": "none",
+    "driver": "Linux kernel CephFS client and Ceph Squid 19.2.3 BlueStore"
   },
   "system": {
-    "operating_system": "Replace-with-OS-image-kernel-architecture-and-cluster-image."
+    "operating_system": "Hosted Ubuntu 24.04.5 x86-64, Linux 7.0.0-1014-aws and 7.0.0-1017-azure"
   },
   "toolchain": {
-    "rust_toolchain": "Replace-with-rustc-and-cargo-versions.",
-    "compiler": "Replace-with-C-CXX-compiler-and-HDF5-ADIOS2-build-toolchain-versions.",
-    "mpi_implementation": "Replace-with-MPI-implementation-and-version-or-none.",
-    "scheduler": "Replace-with-scheduler-version-partition-and-queue."
+    "rust_toolchain": "Rust 1.99.1 (58cf8f9c3), Cargo 1.99.1 (5f94df478)",
+    "compiler": "Ubuntu GCC 13.3.0, native HDF5 2.2.0 and h5dump 2.2.0",
+    "mpi_implementation": "Open MPI 4.1.6",
+    "scheduler": "GitHub Actions ubuntu-24.04 queue, jobs 138920321750 and 138922369231, one host per job"
   },
   "runtime": {
-    "command": "Replace-with-exact-cargo-bench-test-mpirun-srun-or-scheduler-command.",
+    "command": "bash conductor/tracks/51-parallel-io-arrow-checkpoint-export/evidence/run-cephfs.sh (run 45529298499) and the same command with restart-only (run 45529919882)",
     "environment": {
-      "RUSTFLAGS": "Replace-with-effective-value-or-none.",
-      "LD_LIBRARY_PATH": "Replace-with-effective-value-or-none.",
-      "KAIRO_PARALLEL_IO_STRIPE_COUNT": "Replace-with-effective-stripe-count-or-none.",
-      "KAIRO_PARALLEL_IO_BLOCK_BYTES": "Replace-with-effective-block-size."
+      "TMPDIR": "/home/runner/work/_temp/track51/mount/qualification",
+      "KAIROS_IPC_BENCHMARK_CAPTURE": "/home/runner/work/_temp/track51/mount/qualification/retained",
+      "CARGO_BUILD_JOBS": "2",
+      "CARGO_PROFILE_TEST_DEBUG": "0"
     },
     "feature_flags": [
       "parallel-io",
-      "hdf5",
-      "adios2"
+      "polars-native",
+      "engine-checkpoint",
+      "hdf5"
     ],
-    "input_scenario": "Replace-with-scenario-seed-manifest-checkpoint-manifest-rank-count-block-size-and-writer-format."
+    "input_scenario": "Four deterministic 16384-row Arrow IPC streams, serial and four-writer runs with ten samples each. Two MPI ranks copied one stream. HDF5 spatial-agents.v1 fixture, seed 20261124, reference/write/recut/resume."
   },
   "storage": {
-    "filesystem_or_object_store": "Replace-with-Lustre-GPFS-MPI-IO-or-object-store-details-including-mount-stripe-policy-block-size-rank-count-and-checksum-policy."
+    "filesystem_or_object_store": "Kernel CephFS at /home/runner/work/_temp/track51/mount. Two local BlueStore OSDs in separate backing files, one replica, private loopback. Observed stripe count 2, stripe unit, object size and preferred block size 65536 bytes. Each retained IPC file used both OSDs."
   },
   "result": {
-    "expected": "Replace-with-acceptance-threshold-for-contiguous-block-writes-checkpoint-restart-parity-and-raw-artifact-retention.",
-    "observed": "Replace-with-measured-throughput-rank-count-stripe-or-block-metadata-restart-result-and-artifact-references.",
-    "raw_artifact_path": "Replace-with-immutable-raw-result-path-under-cluster-object-store-or-checked-in-evidence-export.",
-    "checksum": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    "expected": "Both Arrow paths publish identical fixture bytes, MPI copy matches exact bytes across two ranks, both OSDs store each retained stream, and checkpoint replacement and fresh-process replay match uninterrupted execution.",
+    "observed": "Five IPC files at 2179696 bytes each, with 34 observed objects per file. PyArrow checked schema, 65536 source rows and the MPI copy. Criterion estimates 56.649 ms serial and 52.368 ms four writers with overlapping intervals. HDF5 generations and ordered replay records were retained and compared byte for byte.",
+    "raw_artifact_path": "conductor/archive/51-parallel-io-arrow-checkpoint-export/evidence/cephfs-20261125.json",
+    "checksum": "sha256:19aa44388a96fa558f3da1f8214735cf6ef7bbe9d2da54bab0526c3d1d06f26d"
   },
   "review": {
-    "reviewer": "Replace-with-reviewer-name-or-handle.",
-    "evidence_date": "YYYY-MM-DD"
+    "reviewer": "Independent Conductor reviewer /root/candidate_review",
+    "evidence_date": "2026-11-25"
   },
   "waiver": {
-    "status": "template-required",
-    "owner": "Track-51",
-    "expires": "When-replaced-by-reviewed-live-hpc-manifest-for-the-exact-filesystem-and-checkpoint-path-under-proof."
+    "status": "none",
+    "owner": "none",
+    "expires": "none"
   }
 }

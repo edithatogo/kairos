@@ -13,6 +13,7 @@ between two restores and checks new work and cancellation across both cuts.
 | Native Arrow IPC | `cargo test --locked -p kairo-ecs-arrow --features parallel-io,polars-native --test native_parallel_ipc` | Native stream qualification |
 | Independent IPC reader | Set `KAIROS_NATIVE_IPC_DIR` to an existing scratch directory for the native fixture, then run the [PyArrow reader](evidence/verify-native-ipc.py) on that directory | Native stream qualification |
 | Matched contiguous writes | `cargo bench --locked -p kairo-ecs-arrow --features parallel-io,polars-native --bench run_output -- contiguous_ipc_publication --noplot` | Local throughput and physical receipt parity on the selected filesystem |
+| Mounted CephFS publication and restart | [Disposable-runner command and prerequisites](handoff.md#cephfs-qualification--25-november-2026) | Observed stripe and block layout, both OSDs, two-rank MPI-I/O parity, retained HDF5 generations and native replay |
 | HDF5 native roundtrip | `cargo test --locked -p kairo-ecs-arrow --features hdf5 --test maturity_native_io_format` | Native file qualification |
 | HDF5 independent reader | With `KAIROS_H5DUMP` set, run `cargo test --locked -p kairo-ecs-arrow --features hdf5 --test maturity_native_io_format h5dump -- --ignored --nocapture` | Native file qualification |
 | ADIOS2 native roundtrip | `cargo test --locked -p kairo-ecs-arrow --features adios2 --test maturity_native_adios2` | Native file qualification |
@@ -39,6 +40,6 @@ Strict closeout requires `RequireCleanWorkingTree` after each task commit.
   [cross-host receipt](evidence/staged-engine-restart-macos-linux.json).
 
 - Local scaffold gate: run `node scripts/validation/validate-hpc-parity-evidence.mjs` and confirm `conductor/hpc-evidence/manifests/track51-local-arrow-checkpoint-scaffold.json` remains `evidence_class: scaffold`.
-- Done gate: replace `conductor/hpc-evidence/manifests/track51-live-parallel-filesystem-template.json` with a reviewed `live-hpc` manifest before claiming Lustre, GPFS, MPI-I/O, or parallel filesystem throughput proof.
+- Done gate: [reviewed live manifest](../../hpc-evidence/manifests/track51-live-parallel-filesystem-template.json) and [mounted-run evidence](evidence/cephfs-20261125.json).
 - Live proof must record filesystem type, mount, stripe count, stripe size, block size, rank count, scheduler or queue, job ID, launch command, raw artifact path, and `sha256:` checksum.
 - Local filesystem or contract tests are fallback-only evidence for the `parallel-filesystem-evidence` gate.

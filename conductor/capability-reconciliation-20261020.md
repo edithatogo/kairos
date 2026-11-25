@@ -142,7 +142,7 @@ Pending CAP leaves are now in the existing plans for Tracks 22, 29, 48–53, 55 
 - [Track 48 CAP tasks](tracks/48-time-warp-optimistic-rollback-runtime/plan.md#incorporated-capability-follow-up--21-october-2026)
 - [Track 49 CAP tasks](tracks/49-distributed-mpi-grpc-state-synchronization/plan.md#incorporated-capability-follow-up--21-october-2026)
 - [Track 50 CAP tasks](tracks/50-numa-topology-affinity-memory-lifecycle/plan.md#incorporated-capability-follow-up--21-october-2026)
-- [Track 51 CAP tasks](tracks/51-parallel-io-arrow-checkpoint-export/plan.md#incorporated-capability-follow-up--21-october-2026)
+- [Track 51 CAP tasks](archive/51-parallel-io-arrow-checkpoint-export/plan.md#incorporated-capability-follow-up--21-october-2026)
 - [Track 52 CAP tasks](tracks/52-native-gpu-acceleration-persistent-device-memory/plan.md#incorporated-capability-follow-up--21-october-2026)
 - [Track 53 CAP tasks](tracks/53-fmi-cosimulation-master-runtime/plan.md#incorporated-capability-follow-up--21-october-2026)
 - [Track 55 CAP tasks](tracks/55-end-to-end-weak-strong-scaling-certification/plan.md#incorporated-capability-follow-up--21-october-2026)

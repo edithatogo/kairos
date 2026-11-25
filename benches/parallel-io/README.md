@@ -11,4 +11,6 @@ Minimum raw-result fields:
 - raw output path and `sha256:` checksum;
 - expected threshold and observed throughput or restart parity result.
 
-Local filesystem runs are fallback evidence. They may guard the benchmark harness and checkpoint contracts, but they do not satisfy the Track 51 `parallel-filesystem-evidence` gate until a reviewed Lustre, GPFS, or MPI-I/O manifest is recorded.
+The [Track 51 CephFS run](../../conductor/archive/51-parallel-io-arrow-checkpoint-export/handoff.md#cephfs-qualification--25-november-2026)
+records four streams, both OSDs and a two-rank MPI-I/O copy on one VM.
+Local filesystem runs remain useful for regression testing.

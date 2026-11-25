@@ -41,7 +41,7 @@
   "result": {
     "expected": "local-Arrow-checkpoint-contract-tests-pass-with-no-live-HPC-claim",
     "observed": "handoff-records-passing-local-gates-scaffold-only-no-native-or-parallel-filesystem-proof",
-    "raw_artifact_path": "conductor/tracks/51-parallel-io-arrow-checkpoint-export/handoff.md",
+    "raw_artifact_path": "conductor/archive/51-parallel-io-arrow-checkpoint-export/handoff.md",
     "checksum": "not-live"
   },
   "review": {

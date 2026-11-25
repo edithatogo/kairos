@@ -35,7 +35,7 @@ The v1 legacy checksum covers selected fields and cannot independently detect
 every reorder or upper-tick mutation. Use an authenticated external digest if
 the storage or transport integrity contract requires it.
 
-The [Track 51 handoff](../../conductor/tracks/51-parallel-io-arrow-checkpoint-export/handoff.md)
+The [Track 51 handoff](../../conductor/archive/51-parallel-io-arrow-checkpoint-export/handoff.md)
 records the separate native Polars IPC/ZSTD Parquet interchange test and
 independent Apache PyArrow readback. The HDF5 and ADIOS2 adapters use installed
 native libraries. The legacy text format remains available through the explicit
@@ -72,11 +72,20 @@ The service-queue fixture exercises active service, queued jobs, cancelled
 deadlines and the RNG position with both native backends.
 [Native layout and conformance](../adr/0021-native-engine-checkpoint.md).
 
-## Live proof required
+## Mounted CephFS evidence
 
-Before Track 51 can support production parallel filesystem claims, replace `conductor/hpc-evidence/manifests/track51-live-parallel-filesystem-template.json` with a reviewed `live-hpc` manifest that records:
+Track 51 exercised the native IPC writer and collective MPI-I/O on kernel
+CephFS with two file-backed OSDs in one hosted VM. A separate run on the
+same storage layout retained two HDF5 generations and proved successive
+fresh-process restores. The measured timings describe the named workload
+and that VM. Lustre, GPFS, BP5 on CephFS and cluster scaling have separate
+qualification scopes.
+[Reviewed live manifest](../../conductor/hpc-evidence/manifests/track51-live-parallel-filesystem-template.json) ·
+[Raw measurements and restart receipts](../../conductor/archive/51-parallel-io-arrow-checkpoint-export/evidence/cephfs-20261125.json).
 
-- filesystem type and mount details for Lustre, GPFS, MPI-I/O, or the exact object-store adapter under proof;
+For any additional storage target, record the same evidence fields.
+
+- filesystem type and mount details or the exact object-store adapter under proof;
 - stripe count, stripe size, block size, rank count, and writer format;
 - scheduler, queue or partition, job ID, and launch command;
 - Rust, compiler, HDF5, ADIOS2, MPI, and storage client versions;

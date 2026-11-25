@@ -1,5 +1,24 @@
 # Review Report: Track 51 Parallel I/O, Arrow Record Batches & Checkpoint Export
 
+## Mounted filesystem review — 25 November 2026
+
+Independent reviewer `candidate_review` verified the retained archives from
+`df9fe1d76b4fbe0d2b32eda50d18d9f568243be1` and
+`2874d419e47705543ab50140bf8b5b1792e8568f`. The review checked the kernel
+mount, raw samples, schema and source fields, the observed object placements
+and collective MPI-I/O across disjoint byte ranges. The four HDF5 process
+logs independently reproduce the byte-equal reference and resumed outputs.
+[Source and artifacts](evidence/cephfs-20261125.json).
+
+The runner uses a fixed monitor map and waits for both OSDs and the active
+metadata rank. Review called for an early link, replacement and sync test,
+and retention of HDF5 generations and per-process replay records. Those
+checks passed on the two hosted runs. The tested heads had identical crate
+sources, Cargo files and HDF5 preparation.
+
+Acceptance covers the named workloads on single-runner CephFS. The closeout
+PR uses the repository's existing protected checks.
+
 > **Current qualification correction, 3 November 2026:** This historical review
 > describes the contract-baseline slice. Its claims of production readiness and
 > complete plan compliance do not establish native Arrow RecordBatch, HDF5,

@@ -20,6 +20,14 @@ The previously recorded PR 366 draft state is historical: PR 366 merged on 3 Nov
 
 The immediate packet is recorded in [PR 378](https://github.com/edithatogo/kairos/pull/378) and the [implementation record](frontier-implementation-20261107.md). Final merge/check status is read from that PR; no phase or release is inferred from a source commit.
 
+## Track 51 mounted filesystem closeout — 25 November 2026
+
+Track 51 is Done. The hosted CephFS jobs verified four Arrow IPC streams,
+two-rank collective MPI-I/O and two retained HDF5 checkpoint generations.
+The separate fresh-process restores matched uninterrupted execution.
+The archive defines the single-runner scope and retains the source and raw
+measurements. [Archived track](archive/51-parallel-io-arrow-checkpoint-export/handoff.md).
+
 ## Dependency evaluation closeout — 25 November 2026
 
 Tracks 90, 97, 98, 100, 102, 103 and 104 closed the consumer and value

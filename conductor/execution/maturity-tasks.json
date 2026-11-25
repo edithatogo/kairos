@@ -2262,7 +2262,7 @@
       ],
       "read": [
         "conductor/execution/scientific/s14-completion.md",
-        "conductor/tracks/51-parallel-io-arrow-checkpoint-export/spec.md"
+        "conductor/archive/51-parallel-io-arrow-checkpoint-export/spec.md"
       ],
       "write": [
         "crates/kairo-ecs-arrow/Cargo.toml",
