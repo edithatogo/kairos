@@ -1,5 +1,22 @@
 # Track 50 Handoff
 
+## Scheduler page placement calibration — 26 November 2026
+
+The CAP-50.5 probe verified 37,886 resident scheduler pages on node 0
+through reservation, warmup and timing on physical Linux and Apple
+Container. Both hosts rejected the two-node comparison. Colab's
+high-memory CPU profile also exposed one node. The G4, V6E1 and A100
+requests ended during provisioning. Colab reported zero active
+sessions after the probes.
+[Capture and paired-run instructions](evidence/numa-locality/README.md).
+
+Chat `01a1fd18-51c7-7963-a3cc-d262d54582ba` owns this Track 50
+evidence slice in
+`/Users/doughnut/.codex/worktrees/kairos-scientific-evidence-closeout/kairos`
+on `codex/cap-50-5-locality-probe-20261126`. The native scope covers the
+placement calibration and the isolated Colab probes. The next operation
+is the paired comparison on two allowed Linux memory nodes.
+
 ## Reviewed native implementation — 25 November 2026
 
 `HwlocTopology::discover` reads the output of an explicitly selected hwloc

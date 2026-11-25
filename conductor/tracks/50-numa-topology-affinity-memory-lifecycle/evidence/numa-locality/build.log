@@ -1,0 +1,8 @@
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+host: x86_64-unknown-linux-gnu
+LLVM version: 23.1.1
+cargo 1.99.1 (5f94df478 2026-08-27)
+8356a202544fe749e226199cb89a8f5a26261ce63b81a0a78ed82abc84a6afa0  /session/scheduler-locality
+efc54fd69a0b08c42141bc884e982c34757134ead7ed57267df765f98a2b7dca  /session/scheduler-locality.rs
+8c251878f26e96c87469bf28399e99fa2bd29b70a00bd5e5e0d845dc6266f3f6  Cargo.lock

@@ -15,9 +15,11 @@ the reviewed source, installed tools, allocator budgets and C Data lifetimes.
 - [ ] CAP-50.5: Prove multi-node locality and performance, then complete independent
       review and applicable exact-source hosted gates.
 
-The physical NAS, Apple Container and the Colab CPU route each expose one
-online NUMA node. CAP-50.5 needs a native result with page-placement
-observations and matched local and remote timings across two memory nodes.
+The [scheduler placement probe](evidence/numa-locality/README.md) passed
+one-node calibration on physical Linux and Apple Container. Colab's
+standard and high-memory CPU profiles each expose one node. CAP-50.5
+still needs native page placement and matched local and remote timings
+across two memory nodes.
 The entries below preserve the earlier contract and single-node work.
 
 ## Phase 0 - TDD baseline
