@@ -201,9 +201,9 @@ still require their own results.
 
 The method and native execution decisions follow the individual scopes above.
 Comparative performance evidence applies to S11's matched CPU and device
-runs, S12's matched conservative PDES ring, S14's local APFS Arrow IPC writes
+runs, S12's matched conservative PDES ring and PHOLD profiles, S14's local APFS Arrow IPC writes
 and S15's model-specific replay retention experiment. Performance comparisons
 remain open for S01–S10, S13 and S16–S17. Empirical model validity remains
 unassessed across these method and engineering fixtures.
-[PDES timing evidence](tracks/111-measured-performance/handoff.md#matched-ring-and-worker-reuse) ·
+[PDES timing evidence](archive/111-measured-performance/handoff.md#dedicated-qualification) ·
 [APFS timing evidence](execution/scientific/s14-completion.md#native-arrow-ipc)

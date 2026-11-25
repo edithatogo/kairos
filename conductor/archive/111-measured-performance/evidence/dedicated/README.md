@@ -73,7 +73,7 @@ temporary capture directory. The published archives can be analyzed from
 the repository root using the verified checkout-local CPython interpreter.
 
 ```sh
-evidence=conductor/tracks/111-measured-performance/evidence/dedicated
+evidence=conductor/archive/111-measured-performance/evidence/dedicated
 scratch=$(mktemp -d)
 for tape in calibration heldout; do
     mkdir "$scratch/$tape"

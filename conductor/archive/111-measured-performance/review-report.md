@@ -65,7 +65,7 @@ round commit. Phase 0 is accepted against
 
 The reviewed evidence commit is `30ce055aa8cd1ffb403f4c40d8a9d1fab73b86b0`.
 The checks used the same runtime source and lockfile on the Apple M1 Max in
-the [owning checkout](handoff.md#remaining-acceptance).
+the [owning checkout](handoff.md#publication).
 The results below use Rust 1.99.1. The SimPy comparator used its
 qualified checkout-local CPython 3.15.2 and the verified SimPy 4.1.2 wheel.
 

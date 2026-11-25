@@ -48,7 +48,7 @@ From the repository root, use a fresh private Cargo target directory
 
 ```sh
 .venv/bin/python -I scripts/python_runtime.py
-source_dir=conductor/tracks/111-measured-performance/evidence/spatial
+source_dir=conductor/archive/111-measured-performance/evidence/spatial
 compiler=$(rustup which --toolchain 1.99.1 rustc)
 cargo_bin=$(rustup which --toolchain 1.99.1 cargo)
 RUSTC="$compiler" CARGO_TARGET_DIR="$target" "$cargo_bin" build --locked --offline --release \

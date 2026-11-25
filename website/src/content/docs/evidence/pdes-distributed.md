@@ -34,7 +34,7 @@ These are historical measurements, not a current-revision benchmark or a
 comparison with another simulator. Use sequential execution as a measured
 baseline, profile coordination cost, and evaluate persistent workers and larger
 useful work per synchronization round before recommending parallelism.
-See [Track 111](https://github.com/edithatogo/kairos/blob/main/conductor/tracks/111-measured-performance/plan.md).
+See [Track 111](https://github.com/edithatogo/kairos/blob/main/conductor/archive/111-measured-performance/plan.md).
 
 Generated [scaling fixtures](https://github.com/edithatogo/kairos/blob/main/docs/benchmarks/scaling-certification-report.md)
 provide no independent scaling or parity evidence. Preserve exact discrete

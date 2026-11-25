@@ -60,4 +60,4 @@ Placeholders, reference fixtures, missing hardware and failed runs must never
 be converted into measured success. No throughput, efficiency or speedup is
 certified by this page. See the [certification contract](hpc-scaling-certification.md),
 [benchmark policy](benchmark-policy.md) and
-[measured-performance plan](../../conductor/tracks/111-measured-performance/spec.md).
+[measured-performance plan](../../conductor/archive/111-measured-performance/spec.md).

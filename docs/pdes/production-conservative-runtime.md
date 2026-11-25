@@ -6,7 +6,9 @@ certification; these APIs do not assert distributed or cluster scaling.
 
 Enable `pdes-worker-pool` to select the persistent Rayon executor for the
 crate build. Each runtime starts its pool on its first eligible round and
-reuses it across calls. The pool uses at most the LP count or the available
+reuses it across calls. One pool dispatch can execute consecutive rounds
+within a run. Every round retains its own eligibility and ordered commit.
+The pool uses at most the LP count or the available
 parallelism reported by Rust, whichever is smaller. Handler dependencies use
 simulation events so callbacks can finish without waiting for a sibling
 callback. The `pdes` feature alone selects scoped workers. `worker_count`
@@ -85,8 +87,8 @@ and seeds 7, 47 and 24301. Protocol tests additionally cover causality boundarie
 invalid routes and state, sparse progress, poisoning, and adversarial 8-LP
 10,000-tick execution. [Benchmark evidence](benchmark-results.md) records the
 separate throughput measurements and host limits.
-[Worker-pool measurements and raw samples](../../conductor/tracks/111-measured-performance/handoff.md#matched-ring-and-worker-reuse)
-cover the optional executor.
+[Dedicated worker-pool measurements](../../conductor/archive/111-measured-performance/evidence/dedicated/README.md)
+cover the optional executor, with commands for explicit serial and pooled PHOLD runs.
 
 ## Handoff
 

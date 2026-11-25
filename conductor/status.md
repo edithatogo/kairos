@@ -115,16 +115,17 @@ Track 116's neutral exports and standalone fixture cover the provider phases.
 Installed adapter qualification is tracked in the receiving repositories.
 [Fixture evidence](tracks/116-tobac-cohort-microsimulation-contracts/handoff.md#provider-and-standalone-fixture--23-november-2026).
 
-## Track 111 measured performance — 25 November 2026
+## Track 111 measured performance closeout — 25 November 2026
 
-Phase 0 is accepted. The pinned Rust 1.99.1 repeat measured a 23.4% reduction
-in median paired total time for the 32-LP cheap PHOLD case. The FIFO and
-spatial/DES comparisons matched ordered outputs and favoured serial on the
-shared Mac. Native device and recovery receipts record the costs of the
-named configurations. Track 111 remains In Progress for broader safe
-batching, dedicated-runner regression evidence and any subsequent executor
-selection. [Review](tracks/111-measured-performance/review-report.md) ·
-[Remaining acceptance](tracks/111-measured-performance/handoff.md#remaining-acceptance).
+Track 111 is Done. The persistent pool batches consecutive logical rounds
+while preserving per-round eligibility, budgets and ordered commits.
+The primary 32-LP PHOLD case improved by 55.2% against the frozen reference
+and 15.4% against the previous runtime on four exclusive Linux CPUs.
+Both tapes passed the declared gates, and the holdout confirmed all ten
+pre-run executor choices. The independent SimPy and spatial replays
+reproduced their archived result hashes. Track 55 owns wider scaling and
+cross-host restart. [Archived evidence](archive/111-measured-performance/handoff.md) ·
+[Verified implementation](https://github.com/edithatogo/kairos/pull/472).
 
 ## Native I/O and hardware evidence — 23 November 2026
 

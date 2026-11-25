@@ -53,7 +53,7 @@ compiler=$(rustup which --toolchain 1.99.1 rustc)
 cargo_bin=$(rustup which --toolchain 1.99.1 cargo)
 RUSTC="$compiler" CARGO_TARGET_DIR="$target" "$cargo_bin" build --locked --offline \
   --release -p kairo-ecs-pdes --features pdes-worker-pool --example track111_queueing
-.venv/bin/python -I conductor/tracks/111-measured-performance/evidence/queueing/compare.py \
+.venv/bin/python -I conductor/archive/111-measured-performance/evidence/queueing/compare.py \
   "$target/release/examples/track111_queueing" "$wheel" "$receipt" \
   --compiler "$compiler" --cargo "$cargo_bin"
 ```
