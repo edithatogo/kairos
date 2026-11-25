@@ -1,0 +1,20 @@
+{
+  "base": "9d76ca7f4b7f4b5898f2ec77515a7a7639f1478b",
+  "workload": "production --phold with a common 32-LP profile added to the existing four",
+  "seed": 472026,
+  "feature": "pdes-worker-pool",
+  "mixes_per_event": [
+    0,
+    8192
+  ],
+  "process_pairs_per_cost": 10,
+  "warmup_per_process": 1,
+  "timed_repeats_per_process": 2,
+  "order": "alternate base-first/candidate-first; each benchmark alternates serial/pooled",
+  "target": "32 LP, 8 ticks lookahead, 75% remote target, 0 mixes",
+  "adoption": "At least 20% median paired elapsed-time reduction in target; paired CI supports a reduction; no more than 5% median regression in any other measured pooled workload; exact output/counter parity.",
+  "metric": "full elapsed time per benchmark pair; setup and dispatch also retained",
+  "evidence_scope": "shared Apple M1 Max; descriptive; dedicated performance qualification separate",
+  "bootstrap_resamples": 10000,
+  "bootstrap_seed": 111
+}

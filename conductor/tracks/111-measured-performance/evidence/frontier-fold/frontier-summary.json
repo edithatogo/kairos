@@ -1,0 +1,72 @@
+{
+  "mixes=0 lps=4 lookahead=1 remote=25": {
+    "candidate_over_baseline": 0.9818957318138744,
+    "interval_95": [
+      0.8998964699067467,
+      1.0501001138846737
+    ]
+  },
+  "mixes=0 lps=4 lookahead=1 remote=75": {
+    "candidate_over_baseline": 1.0112444258597515,
+    "interval_95": [
+      0.9431381456049849,
+      1.1011319126948456
+    ]
+  },
+  "mixes=0 lps=4 lookahead=8 remote=75": {
+    "candidate_over_baseline": 1.0448198228212633,
+    "interval_95": [
+      0.9909299381246846,
+      1.1381760587115872
+    ]
+  },
+  "mixes=0 lps=8 lookahead=8 remote=75": {
+    "candidate_over_baseline": 1.025322467680904,
+    "interval_95": [
+      0.9816656290718764,
+      1.070061891957738
+    ]
+  },
+  "mixes=0 lps=32 lookahead=8 remote=75": {
+    "candidate_over_baseline": 0.7696206277264581,
+    "interval_95": [
+      0.7027244562055763,
+      0.819790906325896
+    ]
+  },
+  "mixes=8192 lps=4 lookahead=1 remote=25": {
+    "candidate_over_baseline": 0.9924239159473334,
+    "interval_95": [
+      0.9565295128263211,
+      1.0434296635252542
+    ]
+  },
+  "mixes=8192 lps=4 lookahead=1 remote=75": {
+    "candidate_over_baseline": 0.9997155630168827,
+    "interval_95": [
+      0.9133243122975359,
+      1.0883088515886992
+    ]
+  },
+  "mixes=8192 lps=4 lookahead=8 remote=75": {
+    "candidate_over_baseline": 1.007865372023693,
+    "interval_95": [
+      0.9461508860665948,
+      1.1006258330950942
+    ]
+  },
+  "mixes=8192 lps=8 lookahead=8 remote=75": {
+    "candidate_over_baseline": 0.9915077893264281,
+    "interval_95": [
+      0.9732355674860822,
+      1.0216502158664609
+    ]
+  },
+  "mixes=8192 lps=32 lookahead=8 remote=75": {
+    "candidate_over_baseline": 0.8392884168950474,
+    "interval_95": [
+      0.836192541074456,
+      0.9213424395807958
+    ]
+  }
+}
