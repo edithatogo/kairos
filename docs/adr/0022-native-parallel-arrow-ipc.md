@@ -34,4 +34,4 @@ Use the HDF5 or ADIOS2 reader to restore the corresponding native checkpoint.
 The standalone PyArrow reader in the [Track 51 evidence directory](../../conductor/archive/51-parallel-io-arrow-checkpoint-export/evidence/verify-native-ipc.py)
 checks field order, physical types, nullability, values and stream metadata.
 Live filesystem performance requires a run with the target mount and storage
-configuration. [Evidence requirements](../parallel-io/evidence-boundary.md#live-proof-required).
+configuration. [Mounted CephFS evidence](../parallel-io/evidence-boundary.md#mounted-cephfs-evidence).
