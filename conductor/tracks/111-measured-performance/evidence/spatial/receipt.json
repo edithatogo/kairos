@@ -1,0 +1,339 @@
+{
+  "exit_code": 0,
+  "host": {
+    "hw.model": "MacBookPro18,4",
+    "logical_cpus": 10,
+    "machdep.cpu.brand_string": "Apple M1 Max",
+    "platform": "macOS-27.2.1-arm64-arm-64bit-Mach-O"
+  },
+  "model_counts": {
+    "agents": 384,
+    "moves": 3072,
+    "moves_changed_by_signals": 1388,
+    "same_tick_events": 5929,
+    "signals": 3025
+  },
+  "plan": {
+    "cargo_features": [
+      "kairo-ecs-pdes/pdes-worker-pool"
+    ],
+    "opt_level": 3,
+    "seed": 11120261126,
+    "timed_pairs": 10,
+    "warmup_pairs": 1
+  },
+  "runtime": {
+    "python": "3.15.2 (main, Oct 25 2026, 16:57:51) [Clang 21.0.0 (clang-2100.3.34.2)]",
+    "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-apple-darwin\nrelease: 1.99.1\nLLVM version: 23.1.1"
+  },
+  "sha256": {
+    "capture": "8802a42d2ae2a2f4ec81946a1bd4d5e40e563f9b0d9597de80d9a386b0fc0d86",
+    "cargo_lock": "df26476d07b6323f89bb02819aaff00a12f00c15bdd0114c91d082cd088f0637",
+    "executable": "f8143b120903b346ec49a5b22084430965c37fa8c85490986bfc1e7236a010e9",
+    "model": "809b041f4326e92e9a65a650761938c9816a5085b3d45cf64733d77ea6e3c3d1",
+    "ordered_result": "45c72734ebfe3a90adee95fd510d53374066a9fdf8b40ccc592a9fd752fda95f",
+    "tape": "fe8822c5b56c09331e7a736b45f7fe78ff0fbbe44475e3664b869e7635978a9a"
+  },
+  "source_base": "4252ea96bb1cd5d4d2dddc6f5b426bfa3699217f",
+  "summary_paired_pooled_over_serial": {
+    "bootstrap_95": [
+      7.502449010228979,
+      8.604771549776107
+    ],
+    "median": 8.42329660111071
+  },
+  "summary_total_ns": {
+    "pooled": {
+      "bootstrap_95": [
+        32284291.0,
+        37052709.0
+      ],
+      "median": 34911917.0
+    },
+    "serial": {
+      "bootstrap_95": [
+        4186375.0,
+        4353375.0
+      ],
+      "median": 4306792.0
+    }
+  },
+  "timed": [
+    {
+      "metrics": {
+        "pooled": {
+          "cross_region_events": 3025,
+          "dispatch_ns": 37094458,
+          "events": 6097,
+          "setup_ns": 272625,
+          "total_ns": 37367083,
+          "workers": 4
+        },
+        "serial": {
+          "cross_region_events": 3025,
+          "dispatch_ns": 4038792,
+          "events": 6097,
+          "setup_ns": 271625,
+          "total_ns": 4310417,
+          "workers": 1
+        }
+      },
+      "order": [
+        "pooled",
+        "serial"
+      ],
+      "pair": 1
+    },
+    {
+      "metrics": {
+        "pooled": {
+          "cross_region_events": 3025,
+          "dispatch_ns": 35590458,
+          "events": 6097,
+          "setup_ns": 288084,
+          "total_ns": 35878542,
+          "workers": 4
+        },
+        "serial": {
+          "cross_region_events": 3025,
+          "dispatch_ns": 3928750,
+          "events": 6097,
+          "setup_ns": 257625,
+          "total_ns": 4186375,
+          "workers": 1
+        }
+      },
+      "order": [
+        "serial",
+        "pooled"
+      ],
+      "pair": 2
+    },
+    {
+      "metrics": {
+        "pooled": {
+          "cross_region_events": 3025,
+          "dispatch_ns": 32020875,
+          "events": 6097,
+          "setup_ns": 263416,
+          "total_ns": 32284291,
+          "workers": 4
+        },
+        "serial": {
+          "cross_region_events": 3025,
+          "dispatch_ns": 4042333,
+          "events": 6097,
+          "setup_ns": 260834,
+          "total_ns": 4303167,
+          "workers": 1
+        }
+      },
+      "order": [
+        "pooled",
+        "serial"
+      ],
+      "pair": 3
+    },
+    {
+      "metrics": {
+        "pooled": {
+          "cross_region_events": 3025,
+          "dispatch_ns": 34304917,
+          "events": 6097,
+          "setup_ns": 258042,
+          "total_ns": 34562959,
+          "workers": 4
+        },
+        "serial": {
+          "cross_region_events": 3025,
+          "dispatch_ns": 3882375,
+          "events": 6097,
+          "setup_ns": 243834,
+          "total_ns": 4126209,
+          "workers": 1
+        }
+      },
+      "order": [
+        "serial",
+        "pooled"
+      ],
+      "pair": 4
+    },
+    {
+      "metrics": {
+        "pooled": {
+          "cross_region_events": 3025,
+          "dispatch_ns": 36785209,
+          "events": 6097,
+          "setup_ns": 267500,
+          "total_ns": 37052709,
+          "workers": 4
+        },
+        "serial": {
+          "cross_region_events": 3025,
+          "dispatch_ns": 4082041,
+          "events": 6097,
+          "setup_ns": 256417,
+          "total_ns": 4338458,
+          "workers": 1
+        }
+      },
+      "order": [
+        "pooled",
+        "serial"
+      ],
+      "pair": 5
+    },
+    {
+      "metrics": {
+        "pooled": {
+          "cross_region_events": 3025,
+          "dispatch_ns": 30511125,
+          "events": 6097,
+          "setup_ns": 272333,
+          "total_ns": 30783458,
+          "workers": 4
+        },
+        "serial": {
+          "cross_region_events": 3025,
+          "dispatch_ns": 4104375,
+          "events": 6097,
+          "setup_ns": 253375,
+          "total_ns": 4357750,
+          "workers": 1
+        }
+      },
+      "order": [
+        "serial",
+        "pooled"
+      ],
+      "pair": 6
+    },
+    {
+      "metrics": {
+        "pooled": {
+          "cross_region_events": 3025,
+          "dispatch_ns": 30197334,
+          "events": 6097,
+          "setup_ns": 259125,
+          "total_ns": 30456459,
+          "workers": 4
+        },
+        "serial": {
+          "cross_region_events": 3025,
+          "dispatch_ns": 4108000,
+          "events": 6097,
+          "setup_ns": 245375,
+          "total_ns": 4353375,
+          "workers": 1
+        }
+      },
+      "order": [
+        "pooled",
+        "serial"
+      ],
+      "pair": 7
+    },
+    {
+      "metrics": {
+        "pooled": {
+          "cross_region_events": 3025,
+          "dispatch_ns": 42002667,
+          "events": 6097,
+          "setup_ns": 267083,
+          "total_ns": 42269750,
+          "workers": 4
+        },
+        "serial": {
+          "cross_region_events": 3025,
+          "dispatch_ns": 4122167,
+          "events": 6097,
+          "setup_ns": 249792,
+          "total_ns": 4371959,
+          "workers": 1
+        }
+      },
+      "order": [
+        "serial",
+        "pooled"
+      ],
+      "pair": 8
+    },
+    {
+      "metrics": {
+        "pooled": {
+          "cross_region_events": 3025,
+          "dispatch_ns": 33610583,
+          "events": 6097,
+          "setup_ns": 261792,
+          "total_ns": 33872375,
+          "workers": 4
+        },
+        "serial": {
+          "cross_region_events": 3025,
+          "dispatch_ns": 3973208,
+          "events": 6097,
+          "setup_ns": 247833,
+          "total_ns": 4221041,
+          "workers": 1
+        }
+      },
+      "order": [
+        "pooled",
+        "serial"
+      ],
+      "pair": 9
+    },
+    {
+      "metrics": {
+        "pooled": {
+          "cross_region_events": 3025,
+          "dispatch_ns": 34979750,
+          "events": 6097,
+          "setup_ns": 281125,
+          "total_ns": 35260875,
+          "workers": 4
+        },
+        "serial": {
+          "cross_region_events": 3025,
+          "dispatch_ns": 3900042,
+          "events": 6097,
+          "setup_ns": 262916,
+          "total_ns": 4162958,
+          "workers": 1
+        }
+      },
+      "order": [
+        "serial",
+        "pooled"
+      ],
+      "pair": 10
+    }
+  ],
+  "utc": "2026-11-25T10:06:17+00:00",
+  "warmup": {
+    "metrics": {
+      "pooled": {
+        "cross_region_events": 3025,
+        "dispatch_ns": 36576583,
+        "events": 6097,
+        "setup_ns": 308709,
+        "total_ns": 36885292,
+        "workers": 4
+      },
+      "serial": {
+        "cross_region_events": 3025,
+        "dispatch_ns": 4019750,
+        "events": 6097,
+        "setup_ns": 284458,
+        "total_ns": 4304208,
+        "workers": 1
+      }
+    },
+    "order": [
+      "serial",
+      "pooled"
+    ],
+    "pair": 0
+  }
+}
