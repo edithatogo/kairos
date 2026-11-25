@@ -12,18 +12,17 @@ Remove demonstrated overhead, establish a measured serial/parallel/GPU crossover
 ## Phase 1: Implement measured optimizations
 
 - [x] 111.1.1: Benchmark persistent Rayon or fixed Rust workers; eliminate per-round OS-thread creation where accepted. The measured opt-in executor reuses a pool across rounds and horizons.
-- [ ] 111.1.2: Batch eligible events within safe logical-time bounds and reuse buffers without changing ordering or cancellation.
-  The one-pass frontier fold is accepted locally. The wider drain candidate failed the same-LP ordering oracle. [Counterexample and decision](evidence/profiling/README.md#event-batch-boundary).
+- [x] 111.1.2: Batch consecutive logical rounds in one persistent-pool dispatch. Recompute eligibility and commit messages in each round. Reuse the frontier map and staged outbound buffer within the run. Keep the one-event-per-LP rule verified by the [batching counterexample](evidence/profiling/README.md#event-batch-boundary).
 - [x] 111.1.3: Profile tight SoA versus aligned storage and queue alternatives; retain simpler layouts/heap when no net win. The tight-column and compaction profiles support keeping both existing layouts and the compacting heap. [Storage profile](evidence/profiling/README.md#storage-and-checkpoint-boundaries).
 - [x] 111.1.4: Keep independent-world ensembles distinct from parallel execution inside one model. The one-worker and eight-worker ensemble results match. [Review checks](review-report.md#local-validation).
-- [ ] 111.1.review: Independently review this phase, apply accepted fixes, execute the named oracles and record the next-phase decision.
+- [x] 111.1.review: Verify round ordering and add the budget-error and worker-resume regression. [Independent review](review-report.md#phases-13).
 
 ## Phase 2: Crossover and advanced backends
 
 - [x] 111.2.1: Run P1–P5 matrix from performance-programme.md over event cost, message density, lookahead, state size and workers. [Matched workload panel](handoff.md#matched-workload-panel).
 - [x] 111.2.2: Qualify actual GPU model work including setup/transfer and distributed recovery/communication overhead. [Bounded device and transport timings](evidence/backends/README.md).
-- [ ] 111.2.3: Implement a recorded pre-run executor choice only after the crossover rule is independently validated.
-- [ ] 111.2.review: Independently review this phase, apply accepted fixes, execute the named oracles and record the next-phase decision.
+- [x] 111.2.3: Validate the ten recorded choices on an unseen tape and expose explicit serial and pooled benchmark selection. [Executor evidence](evidence/dedicated/README.md#explicit-executor-selection).
+- [x] 111.2.review: Check the raw crossover ratios and include the 32-LP profile in both selected modes. [Independent review](review-report.md#phases-13).
 
 The PHOLD runs vary event cost, message density, lookahead and LP count.
 The held-out panel adds a FIFO comparison with SimPy and a standalone
@@ -34,10 +33,9 @@ and integrated cross-host restart qualification.
 ## Phase 3: Acceptance
 
 - [x] 111.3.1: Pass semantic/replay checks before interpreting speed; publish all measured regimes including slowdowns. [Parity and measured slowdowns](handoff.md#matched-workload-panel).
-- [ ] 111.3.2: Apply predeclared improvement/regression thresholds and dedicated-runner confidence intervals.
-  Both shared-host frontier captures met the local adoption rule. The dedicated environment is unavailable. [Handoff](handoff.md#remaining-acceptance).
+- [x] 111.3.2: Apply predeclared improvement and regression thresholds on four exclusive CPUs of the physical Linux runner. Both tapes satisfy the [baseline and incremental timing gates](evidence/dedicated/README.md#matched-results).
 - [x] 111.3.3: Run held-out workloads and external matched comparators; no universal superiority claims. [Independent SimPy comparison](evidence/queueing/README.md) and [held-out spatial/DES consumer](evidence/spatial/README.md).
-- [ ] 111.3.review: Independently review this phase, apply accepted fixes, execute the named oracles and record the next-phase decision.
+- [x] 111.3.review: Recompute both dedicated captures, confirm exact state and counters, and bind the replay results to their runtime and oracle identities. [Independent review](review-report.md#phases-13).
 
 ## Phase closeout gate
 
