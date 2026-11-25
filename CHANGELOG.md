@@ -88,6 +88,7 @@ Format:
 
 ### Changed
 
+- Conservative PDES computes the inbound safe frontier in one pass over advertised bounds.
 - The pedantic workflow audit runs without network access on GitHub-hosted Linux and uploads its SARIF report afterward.
 - Actions Security Lint fails on high-severity zizmor findings or unsafe checkout credential handling and checks floating refs with Git.
 - Apply all four existing Cargo dependency-policy checks in CI and the local CI recipe. Refresh reviewed action and runtime patches, retain reusable Rust dependencies, and remove the duplicate Linux Conductor workspace test pass. The native suites, exact-base coverage comparison, and 90% core floor still run.

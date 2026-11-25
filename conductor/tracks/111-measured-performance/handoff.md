@@ -1,5 +1,54 @@
 # Handoff
 
+## Matched workload panel
+
+The conservative runtime now folds every advertised bound into its
+destination frontier once. The pinned Rust 1.99.1 repeat matched the tape,
+ordered model state and counters across all 20 fresh process pairs. The
+32-LP cheap PHOLD case took 23.4% less time end to end by the paired
+median. The candidate-to-baseline ratio was 0.766 [0.733, 0.835].
+The largest median increase on the other pinned profiles was 4.7%.
+[Rust 1.99.1 receipt and paired samples](evidence/frontier-fold/README.md#pinned-toolchain-repeat).
+
+The two-station comparison matched 3,435 ordered transitions for 1,024
+arrivals across Kairos Scheduler, conservative PDES and SimPy. The
+four-region spatial consumer matched 6,097 events, including 3,025 delayed
+cross-region signals. Serial led on both of these shared-host workloads.
+The original event-cost sweep includes regimes where the pool wins.
+[SimPy comparison](evidence/queueing/README.md) ·
+[Spatial/DES comparison](evidence/spatial/README.md) ·
+[PHOLD cost sweep](evidence/phold/README.md).
+
+The profile distinguishes thread creation and synchronization, allocator
+traffic and retained heap capacity, tight versus aligned scans, snapshots,
+JSON encoding and local transfer. Native device results include actual
+Metal and CUDA model execution. The transport record measures a physical
+two-host ring residual and crash/restart intervals with explicitly bounded
+timers. The integrated distributed scale and restart matrix remains under
+Track 55. [CPU and storage profiles](evidence/profiling/README.md) ·
+[Device and transport receipts](evidence/backends/README.md).
+
+## Remaining acceptance
+
+Broader per-LP event batching needs a method that satisfies the tested
+ordering and round commit requirements. Draining all currently eligible
+events failed on a handler that inserts an earlier local follow-up.
+Keep the existing one-event selection per process per round.
+[Batching counterexample](evidence/profiling/README.md#event-batch-boundary).
+
+The predeclared comparable dedicated-runner regression run remains open.
+The GitHub repository runner inventory reported zero self-hosted runners
+and the existing NAS and Windows SSH routes timed out. The shared-host
+results support the bounded frontier change. Leave executor choice
+explicit until there is an independently validated crossover rule.
+
+The independent review and its fixes cover the integrated evidence.
+The owning checkout is
+`/Users/doughnut/.codex/worktrees/kairos-scientific-evidence-closeout/kairos` on `codex/track111-measured-performance-20261125`
+under chat `01a1fd18-51c7-7963-a3cc-d262d54582ba`. The next empirical step is to
+run the frozen matched protocol on an available dedicated runner.
+[Review and command results](review-report.md).
+
 ## Matched multiround PHOLD
 
 The optional production benchmark mode uses one seeded tape for the serial
@@ -196,5 +245,10 @@ Use isolated bounded worktrees. The root integration packet combines disjoint ch
 
 ## Phase closeout evidence
 
-No phase is closed. Record $conductor-review, accepted fixes, commit SHA, pushed ref, scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree and the next-phase decision only when they occur. Current planning status is not execution evidence.
+`$conductor-review` accepted Phase 0. The [review report](review-report.md)
+records the accepted fixes, and the [phase ledger](../../phase-closeout.yaml)
+records the evidence commit SHA, pushed ref and next-phase decision.
+`pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`
+verifies the clean publication after integration. The remaining acceptance
+gates above keep the track In Progress.
 
