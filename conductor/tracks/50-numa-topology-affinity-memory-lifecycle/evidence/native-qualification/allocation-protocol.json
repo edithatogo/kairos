@@ -1,0 +1,35 @@
+{
+  "base": "2b72e14ff191a9c35eb427c38985d52c717b9b11",
+  "widths": [
+    256,
+    2048
+  ],
+  "schedulers": 4,
+  "warmup_epochs": 8,
+  "timed_epochs": 256,
+  "cancel_every": 8,
+  "admitted_timed_allocator_calls_per_scheduler": 0,
+  "admitted_bytes_retained_after_drop_per_scheduler": 0,
+  "timing": "Reports the wall time for the same four independent schedulers. Only the reserved arm is subject to the predeclared zero-call and zero-retention budgets.",
+  "checks": "For every dispatch, compare time, insertion sequence, event identity and kind. Verify cancellation and lifetime totals.",
+  "cases": [
+    "growing",
+    "reserved"
+  ],
+  "repeats_per_case": 10,
+  "captured_column_order": [
+    "trial",
+    "setup",
+    "mode",
+    "width",
+    "worker",
+    "scheduled",
+    "warm_allocator_calls",
+    "timed_allocator_calls",
+    "bytes_retained_before_drop",
+    "bytes_retained_after_drop",
+    "worker_ns",
+    "matched_group_ns"
+  ],
+  "synchronization": "Allocation-free atomic start gate outside the measured region. Serial sums the four worker durations. Parallel spans earliest worker start to latest end."
+}

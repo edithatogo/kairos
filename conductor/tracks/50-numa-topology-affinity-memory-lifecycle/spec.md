@@ -8,8 +8,9 @@ contention.
 
 ## Maturity
 
-Spec Approved planning track. No hwloc, affinity, NUMA allocator, or zero-copy
-runtime implementation is claimed by this artifact.
+In Progress. The [native qualifications](evidence/native-qualification/README.md)
+cover hwloc topology, Linux affinity, scheduler reservation and Arrow C Data
+ownership. Multi-node page placement and matched performance remain open.
 
 ## Inputs
 
@@ -19,7 +20,7 @@ runtime implementation is claimed by this artifact.
 
 ## Outputs
 
-- `numa` feature-gated topology discovery backed by `hwloc`.
+- `numa` feature-gated discovery of topology from an explicitly selected hwloc executable.
 - Thread/core affinity controls with safe fallbacks.
 - Event arena and pool allocators for simulation lifecycle reuse.
 - Zero-copy pointer layout documentation and tests for FFI bindings.

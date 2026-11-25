@@ -1,5 +1,27 @@
 # Track 50 Handoff
 
+## Reviewed native implementation — 25 November 2026
+
+`HwlocTopology::discover` reads the output of an explicitly selected hwloc
+2.x executable. On Linux, it agreed with sysfs on every observed CPU mask,
+node, core group and cache record. It also ran against the installed macOS
+tool. The Linux affinity mask changed from 0–7 to 0 and restored to 0–7.
+
+`Scheduler::with_capacity` reserves event and cancellation storage for
+known queue peaks. All 320 reserved workers met the zero-call and
+zero-retention budgets on Linux and macOS. The C stream and PyArrow
+consumers agreed on the exported tick values and verified release after
+dropping their original owners. [Native evidence](evidence/native-qualification/README.md).
+
+Chat `01a1fd18-51c7-7963-a3cc-d262d54582ba` owns this packet in
+`/Users/doughnut/.codex/worktrees/kairos-scientific-evidence-closeout/kairos`
+on `codex/track50-native-qualification-20261125`. Source scope is
+`kairo-ecs-core`, the locked dependency edge and Track 50 evidence.
+Native scope covers the physical Linux NAS, macOS, Apple Container and one
+isolated Colab CPU session. The session has been released. The three
+Linux routes report one NUMA node. The next operation is the matched
+placement comparison on a Linux host exposing multiple memory nodes.
+
 ## Native topology and allocation lifetime
 
 On Linux x86-64 the Intel i3-N300 NAS exposed one NUMA node. The installed

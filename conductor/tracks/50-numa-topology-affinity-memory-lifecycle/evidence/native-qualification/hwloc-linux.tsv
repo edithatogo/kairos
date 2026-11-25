@@ -1,0 +1,29 @@
+allowed	0,1,2,3,4,5,6,7
+node	0	33391505408	0,1,2,3,4,5,6,7
+core	0
+core	1
+core	2
+core	3
+core	4
+core	5
+core	6
+core	7
+cache	3	Unified	6291456	64	0,1,2,3,4,5,6,7
+cache	2	Unified	2097152	64	0,1,2,3
+cache	1	Data	32768	64	0
+cache	1	Instruction	65536	64	0
+cache	1	Data	32768	64	1
+cache	1	Instruction	65536	64	1
+cache	1	Data	32768	64	2
+cache	1	Instruction	65536	64	2
+cache	1	Data	32768	64	3
+cache	1	Instruction	65536	64	3
+cache	2	Unified	2097152	64	4,5,6,7
+cache	1	Data	32768	64	4
+cache	1	Instruction	65536	64	4
+cache	1	Data	32768	64	5
+cache	1	Instruction	65536	64	5
+cache	1	Data	32768	64	6
+cache	1	Instruction	65536	64	6
+cache	1	Data	32768	64	7
+cache	1	Instruction	65536	64	7

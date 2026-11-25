@@ -1,0 +1,9 @@
+Linux 6.18.56 x86_64
+online: 0
+has_cpu: 0
+has_memory: 0
+Cpus_allowed_list:	0-4
+Architecture:                            x86_64
+Model name:                              -
+NUMA node(s):                            1
+NUMA node0 CPU(s):                       0-4

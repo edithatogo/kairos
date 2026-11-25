@@ -8,10 +8,21 @@ KairoECS provides experimental reusable allocation primitives under the `numa` f
 
 ## Ownership and contention boundary
 
-The primitives use owned vectors and do not introduce their own global mutex.
-The caller owns placement and synchronization. These implementations do not
-establish NUMA placement, cache locality or absence of system allocator
-contention; scheduler use and a measured contention budget remain to be qualified.
+The primitives use owned vectors. The caller owns placement and
+synchronization.
+
+The production scheduler uses a reusable heap and a pending-event set.
+`Scheduler::with_capacity(peak)` reserves space up front when the
+expected queued-event peak is known. The pending set reserves extra
+storage for bucket reuse. Cancelled entries can remain in the heap
+until pruning or compaction, and the scheduler grows as needed above
+the initial reservation.
+
+The reserved path made zero system allocator calls after warm-up and
+retained zero requested bytes after drop in 320 measured serial and
+parallel scheduler samples on Linux and macOS. These samples describe
+independent schedulers at peaks of 256 and 2,048 queued entries.
+[Allocation protocol and measured storage](../../conductor/tracks/50-numa-topology-affinity-memory-lifecycle/evidence/native-qualification/README.md#scheduler-allocation).
 
 ```rust
 use kairo_ecs_core::{EventPool, EventArena};

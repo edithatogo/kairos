@@ -33,6 +33,16 @@ assert_eq!(status, KairoEcsLayoutStatus::KAIRO_ECS_LAYOUT_OK);
 3. **Alignment Boundary**: Buffer address must be an exact multiple of the declared alignment (`KAIRO_ECS_LAYOUT_ERR_MISALIGNED`). The caller chooses the declared alignment.
 4. **Explicit Ownership**: Buffers must declare explicit ownership (`Borrowed`, `OwnedByRust`, `OwnedByCaller`). Unspecified ownership is rejected (`KAIRO_ECS_LAYOUT_ERR_OWNERSHIP`).
 
+## Qualified C Data lifetime
+
+On macOS ARM64, a C consumer kept the first two-row `native-data` event
+log batch live after releasing the engine and stream. An installed
+PyArrow consumer imported the same exported tick-buffer address and
+triggered one native release when its final view dropped. The stream
+producer materializes Arrow columns from engine records. The observed
+address equality covers the exported C Data transfer.
+[Compiled consumers and artifact hashes](../../conductor/tracks/50-numa-topology-affinity-memory-lifecycle/evidence/native-qualification/README.md#native-c-data-lifetime).
+
 ## UniFFI and Diplomat Handoff Boundaries
 
 - **UniFFI and Diplomat**: Binding owners must qualify the concrete buffer,

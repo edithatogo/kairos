@@ -1,0 +1,302 @@
+{
+  "implementation": "6569d406dc65bc9a27aa72750273dd9fcdfa8270",
+  "source_for_macos_allocation": "c44a17bca33a3c777da6d2a208dd2e5c134b0bae",
+  "lock_sha256": "8c251878f26e96c87469bf28399e99fa2bd29b70a00bd5e5e0d845dc6266f3f6",
+  "macos_allocation_lock_sha256": "df26476d07b6323f89bb02819aaff00a12f00c15bdd0114c91d082cd088f0637",
+  "working_directory": "/Users/doughnut/.codex/worktrees/kairos-scientific-evidence-closeout/kairos",
+  "rust": "1.99.1 (58cf8f9c3)",
+  "cargo": "1.99.1 (5f94df478)",
+  "macos_allocation_executable_sha256": "4aaa51265b8d0946b1d5520e0eef30e4b65f58c7f3604a7607cddf3723fe4902",
+  "macos_hwloc_executable_sha256": "b6605d86cd3bc021951d525d24a08a57af4706b94654179f72ba1fd1b2e39461",
+  "allocation_probe_sha256": "50d5cde2f1e6bd02ba55a9ddb816c3715ce29ded32846b0052e65055bfa909c5",
+  "linux_image": "rust:1.99.1-slim-trixie@sha256:e97df055c54a05160e7c67ba3b2963de6ddb95903911baf8922dbcd1b394f698",
+  "linux_hwloc_deb_sha256": "625007570898a35c60aa7d0dcc296327514e7e94c671587df16ce6304c1f1338",
+  "linux_hwloc_deb": "hwloc_2.7.0-2ubuntu1_amd64.deb",
+  "linux_hwloc_sysfs_parity": {
+    "online_nodes": 1,
+    "cores": 8,
+    "caches": 19,
+    "records": 29
+  },
+  "allocation": {
+    "macos_arm64": {
+      "growing parallel 256": {
+        "workers": 40,
+        "warm_calls": [
+          22
+        ],
+        "workers_with_timed_allocator_calls": 14,
+        "maximum_timed_allocator_calls": 2,
+        "retained_bytes": [
+          29192,
+          37896
+        ],
+        "post_drop_bytes": [
+          0
+        ],
+        "median_group_ns": 11659021.0
+      },
+      "growing parallel 2048": {
+        "workers": 40,
+        "warm_calls": [
+          31
+        ],
+        "workers_with_timed_allocator_calls": 1,
+        "maximum_timed_allocator_calls": 2,
+        "retained_bytes": [
+          233480,
+          303112
+        ],
+        "post_drop_bytes": [
+          0
+        ],
+        "median_group_ns": 95742292.0
+      },
+      "growing serial 256": {
+        "workers": 40,
+        "warm_calls": [
+          22
+        ],
+        "workers_with_timed_allocator_calls": 16,
+        "maximum_timed_allocator_calls": 2,
+        "retained_bytes": [
+          29192,
+          37896
+        ],
+        "post_drop_bytes": [
+          0
+        ],
+        "median_group_ns": 32648561.5
+      },
+      "growing serial 2048": {
+        "workers": 40,
+        "warm_calls": [
+          31
+        ],
+        "workers_with_timed_allocator_calls": 0,
+        "maximum_timed_allocator_calls": 0,
+        "retained_bytes": [
+          233480
+        ],
+        "post_drop_bytes": [
+          0
+        ],
+        "median_group_ns": 326109479.0
+      },
+      "reserved parallel 256": {
+        "workers": 40,
+        "warm_calls": [
+          2
+        ],
+        "workers_with_timed_allocator_calls": 0,
+        "maximum_timed_allocator_calls": 0,
+        "retained_bytes": [
+          37896
+        ],
+        "post_drop_bytes": [
+          0
+        ],
+        "median_group_ns": 9195437.5
+      },
+      "reserved parallel 2048": {
+        "workers": 40,
+        "warm_calls": [
+          2
+        ],
+        "workers_with_timed_allocator_calls": 0,
+        "maximum_timed_allocator_calls": 0,
+        "retained_bytes": [
+          303112
+        ],
+        "post_drop_bytes": [
+          0
+        ],
+        "median_group_ns": 93308021.0
+      },
+      "reserved serial 256": {
+        "workers": 40,
+        "warm_calls": [
+          2
+        ],
+        "workers_with_timed_allocator_calls": 0,
+        "maximum_timed_allocator_calls": 0,
+        "retained_bytes": [
+          37896
+        ],
+        "post_drop_bytes": [
+          0
+        ],
+        "median_group_ns": 31142667.5
+      },
+      "reserved serial 2048": {
+        "workers": 40,
+        "warm_calls": [
+          2
+        ],
+        "workers_with_timed_allocator_calls": 0,
+        "maximum_timed_allocator_calls": 0,
+        "retained_bytes": [
+          303112
+        ],
+        "post_drop_bytes": [
+          0
+        ],
+        "median_group_ns": 322329750.0
+      }
+    },
+    "linux_x86_64": {
+      "growing parallel 256": {
+        "workers": 40,
+        "warm_calls": [
+          22
+        ],
+        "workers_with_timed_allocator_calls": 6,
+        "maximum_timed_allocator_calls": 2,
+        "retained_bytes": [
+          29200,
+          37904
+        ],
+        "post_drop_bytes": [
+          0
+        ],
+        "median_group_ns": 15662217.5
+      },
+      "growing parallel 2048": {
+        "workers": 40,
+        "warm_calls": [
+          31
+        ],
+        "workers_with_timed_allocator_calls": 1,
+        "maximum_timed_allocator_calls": 2,
+        "retained_bytes": [
+          233488,
+          303120
+        ],
+        "post_drop_bytes": [
+          0
+        ],
+        "median_group_ns": 143620703.0
+      },
+      "growing serial 256": {
+        "workers": 40,
+        "warm_calls": [
+          22
+        ],
+        "workers_with_timed_allocator_calls": 8,
+        "maximum_timed_allocator_calls": 2,
+        "retained_bytes": [
+          29200,
+          37904
+        ],
+        "post_drop_bytes": [
+          0
+        ],
+        "median_group_ns": 54313439.0
+      },
+      "growing serial 2048": {
+        "workers": 40,
+        "warm_calls": [
+          31
+        ],
+        "workers_with_timed_allocator_calls": 2,
+        "maximum_timed_allocator_calls": 2,
+        "retained_bytes": [
+          233488,
+          303120
+        ],
+        "post_drop_bytes": [
+          0
+        ],
+        "median_group_ns": 503817695.0
+      },
+      "reserved parallel 256": {
+        "workers": 40,
+        "warm_calls": [
+          2
+        ],
+        "workers_with_timed_allocator_calls": 0,
+        "maximum_timed_allocator_calls": 0,
+        "retained_bytes": [
+          37904
+        ],
+        "post_drop_bytes": [
+          0
+        ],
+        "median_group_ns": 13576782.5
+      },
+      "reserved parallel 2048": {
+        "workers": 40,
+        "warm_calls": [
+          2
+        ],
+        "workers_with_timed_allocator_calls": 0,
+        "maximum_timed_allocator_calls": 0,
+        "retained_bytes": [
+          303120
+        ],
+        "post_drop_bytes": [
+          0
+        ],
+        "median_group_ns": 127637908.5
+      },
+      "reserved serial 256": {
+        "workers": 40,
+        "warm_calls": [
+          2
+        ],
+        "workers_with_timed_allocator_calls": 0,
+        "maximum_timed_allocator_calls": 0,
+        "retained_bytes": [
+          37904
+        ],
+        "post_drop_bytes": [
+          0
+        ],
+        "median_group_ns": 48933987.5
+      },
+      "reserved serial 2048": {
+        "workers": 40,
+        "warm_calls": [
+          2
+        ],
+        "workers_with_timed_allocator_calls": 0,
+        "maximum_timed_allocator_calls": 0,
+        "retained_bytes": [
+          303120
+        ],
+        "post_drop_bytes": [
+          0
+        ],
+        "median_group_ns": 509640086.5
+      }
+    }
+  },
+  "native_ffi": {
+    "command": "cargo rustc --release --locked --offline -p kairo-ecs-ffi --features native-data --crate-type cdylib",
+    "c_consumer": "C11, Apple clang 21.0.0",
+    "python_consumer": "CPython 3.15.2, PyArrow 26.0.1",
+    "selected_fixture_ticks": [
+      10,
+      20
+    ],
+    "consumer_buffer_address_equal": true,
+    "final_array_release_calls": 1
+  },
+  "placement_inventory": {
+    "physical_nas_memory_nodes": 1,
+    "apple_container_memory_nodes": 1,
+    "colab_cpu_memory_nodes": 1,
+    "colab_cli_version": "0.8.0",
+    "colab_cpu_session_released": true
+  },
+  "exit_codes": {
+    "rust_core_tests": 0,
+    "linux_affinity": 0,
+    "macos_allocation": 0,
+    "linux_allocation": 0,
+    "hwloc_sysfs_comparison": 0,
+    "c_consumer": 0,
+    "pyarrow_consumer": 0,
+    "colab_probe": 0
+  }
+}

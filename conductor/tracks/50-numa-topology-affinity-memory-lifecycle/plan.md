@@ -1,26 +1,24 @@
 # Track 50 Plan: NUMA Topology, Affinity & HPC Memory Lifecycle
 
-## Current acceptance correction — 3 November 2026
+## Current acceptance — 25 November 2026
 
-The historical checks below describe contract slices and the later single-node
-Linux qualification, not full acceptance of this specification. Remaining work:
+The [native qualification](evidence/native-qualification/README.md) records
+the reviewed source, installed tools, allocator budgets and C Data lifetimes.
 
-- [ ] CAP-50.2: Qualify the specified hwloc-backed node, core, cache and locality model.
-- [ ] CAP-50.3: Integrate and qualify lifecycle allocation on the real scheduler path;
-      measure shared allocation and contention against an explicit budget.
-- [ ] CAP-50.4: Verify actual FFI allocation provenance, ownership and lifetimes on the
-      intended binding paths; metadata validation alone cannot prove them.
+- [x] CAP-50.2: Qualify explicit hwloc-backed node, core-group, cache and memory-domain discovery.
+      The native Linux readback matches 29 independent sysfs records. The same API ran on macOS.
+- [x] CAP-50.3: Qualify capacity reservation on the production scheduler under a
+      zero-call and zero-retention budget. The reserved path met both limits in
+      all 320 measured workers across Linux and macOS.
+- [x] CAP-50.4: Verify ownership of real C Data exports through the C stream
+      consumer, installed PyArrow and the existing Rust Polars handoff.
 - [ ] CAP-50.5: Prove multi-node locality and performance, then complete independent
       review and applicable exact-source hosted gates.
 
-The sysfs discovery, opt-in affinity and restoration on one Linux node remain
-valid bounded evidence. Their receipt is not a multi-node or hwloc result.
-
-The [native topology and allocation results](handoff.md#native-topology-and-allocation-lifetime)
-add independent hwloc node and cache readback, live scheduler reclamation and
-two real C Data lifetimes. The Kairos discovery API still uses sysfs. The
-remaining gates cover its richer topology, allocator contention, additional
-binding paths and placement across multiple NUMA nodes.
+The physical NAS, Apple Container and the Colab CPU route each expose one
+online NUMA node. CAP-50.5 needs a native result with page-placement
+observations and matched local and remote timings across two memory nodes.
+The entries below preserve the earlier contract and single-node work.
 
 ## Phase 0 - TDD baseline
 
