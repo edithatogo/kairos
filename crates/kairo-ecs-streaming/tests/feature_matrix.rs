@@ -1,5 +1,21 @@
+use std::time::Duration;
+
 use kairo_ecs_streaming::adapters::InMemoryStream;
-use kairo_ecs_streaming::{EventSink, EventSource, SnapshotProvider, StreamMessage};
+use kairo_ecs_streaming::{
+    EventSink, EventSource, PacingContract, SnapshotProvider, StreamMessage, WallClockPacer,
+};
+
+#[test]
+fn wall_clock_pacing_starts_at_tick_zero() {
+    let tick_duration = Duration::from_millis(10);
+    let tolerance = Duration::from_millis(2);
+    let contract = PacingContract::new(tick_duration, tolerance).expect("valid pacing contract");
+
+    assert_eq!(contract.tick_duration(), tick_duration);
+    assert_eq!(contract.tolerance(), tolerance);
+    let pacer = WallClockPacer::start(contract);
+    assert_eq!(pacer.wait_for_tick(0), Duration::ZERO);
+}
 
 #[test]
 fn in_memory_stream_round_trips_the_full_message() {
