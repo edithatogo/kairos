@@ -10,6 +10,7 @@ import os
 from pathlib import Path
 import platform
 import random
+import re
 import statistics
 import subprocess
 import sys
@@ -164,6 +165,19 @@ def capture(command):
     return subprocess.check_output(command, cwd=REPO)
 
 
+def compiler_receipt(executable, compiler, cargo):
+    rustc = capture([compiler.resolve(strict=True), "-Vv"]).decode().strip()
+    revision = re.search(r"^commit-hash: ([a-f0-9]{40})$", rustc, re.MULTILINE)
+    embedded = {value.decode() for value in re.findall(rb"/rustc/([a-f0-9]{40})/", executable)}
+    if revision is None or embedded != {revision.group(1)}:
+        raise ValueError(f"executable compiler {sorted(embedded)} differs from the selected rustc")
+    return {
+        "rustc": rustc,
+        "rustc_executable_commit": revision.group(1),
+        "cargo": capture([cargo.resolve(strict=True), "-Vv"]).decode().strip(),
+    }
+
+
 def matching_result(outputs):
     reference = outputs["simpy"]["result"]
     for name in ("serial", "pdes"):
@@ -225,7 +239,13 @@ def main():
     parser.add_argument("binary", type=Path)
     parser.add_argument("wheel", type=Path)
     parser.add_argument("receipt", type=Path)
+    parser.add_argument("--compiler", type=Path, required=True)
+    parser.add_argument("--cargo", type=Path, required=True)
     args = parser.parse_args()
+    if args.receipt.exists():
+        raise ValueError("choose a fresh receipt path")
+    executable = args.binary.read_bytes()
+    toolchain = compiler_receipt(executable, args.compiler, args.cargo)
     check_runtime(args.wheel)
     input_bytes = TAPE.read_bytes()
     if input_bytes != frozen_tape():
@@ -257,7 +277,7 @@ def main():
             "cargo_lock": digest((REPO / "Cargo.lock").read_bytes()),
             "rust_example": digest(SOURCE.read_bytes()),
             "oracle": digest(Path(__file__).read_bytes()),
-            "executable": digest(args.binary.read_bytes()),
+            "executable": digest(executable),
             "tape": digest(input_bytes),
             "simpy_wheel": SIMPY_SHA256,
         },
@@ -271,7 +291,7 @@ def main():
         },
         "machine": {"platform": platform.platform(), "cpu_count": os.cpu_count()},
         "runtime": {
-            "rustc": capture(["rustup", "run", "1.99.1", "rustc", "-Vv"]).decode().strip(),
+            **toolchain,
             "python": sys.version,
             "simpy": distribution("simpy").version,
         },

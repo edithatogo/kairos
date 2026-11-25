@@ -49,11 +49,19 @@ file. Run
 
 ```sh
 .venv/bin/python -I scripts/python_runtime.py
-CARGO_TARGET_DIR="$target" rustup run 1.99.1 cargo build --locked --offline \
+compiler=$(rustup which --toolchain 1.99.1 rustc)
+cargo_bin=$(rustup which --toolchain 1.99.1 cargo)
+RUSTC="$compiler" CARGO_TARGET_DIR="$target" "$cargo_bin" build --locked --offline \
   --release -p kairo-ecs-pdes --features pdes-worker-pool --example track111_queueing
 .venv/bin/python -I conductor/tracks/111-measured-performance/evidence/queueing/compare.py \
-  "$target/release/examples/track111_queueing" "$wheel" "$receipt"
+  "$target/release/examples/track111_queueing" "$wheel" "$receipt" \
+  --compiler "$compiler" --cargo "$cargo_bin"
 ```
+
+The commands select the repository's pinned Rust 1.99.1. To reproduce the
+historical capture profile, pass the exact Homebrew Rust 1.100.0 compiler
+(`0ef1bc386059596dada8fb65b50425aab2ea637a`) and keep Cargo 1.99.1.
+The runner verifies the compiler revision embedded in the executable.
 
 The runner launches a fresh process for each engine and validates trace and
 state equality before accepting every sample. One warm-up triplet and ten
@@ -77,9 +85,15 @@ and removed all 363 cancelled timer IDs. Conservative PDES processed
 2,411 events, including the 363 obsolete deadlines, and used up to two
 eligible LPs in a round. SimPy removed 654 queued native requests.
 
-The shared Apple M1 Max ran the release build with Rust 1.99.1 and the
-isolated CPython 3.15.2 installation with SimPy 4.1.2. Serial Kairos had
-the lowest median total time in this workload.
+The shared Apple M1 Max ran Cargo 1.99.1 with Homebrew rustc 1.100.0 for
+both Kairos executors, and the isolated CPython 3.15.2 installation with
+SimPy 4.1.2. Serial Kairos had the lowest median total time in this
+workload.
+
+The original receipt queried rustup's compiler while Cargo resolved
+rustc from the process path. The original executable's embedded revision
+matched Homebrew rustc 1.100.0. The corrected receipt preserves the
+original measurements and hash of the capture runner.
 
 | Engine | Median total (ms) | Descriptive 95% bootstrap interval (ms) |
 | --- | ---: | ---: |

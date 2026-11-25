@@ -18,9 +18,17 @@
     "units": "ns",
     "warmup_triplets": 1
   },
+  "provenance_correction": {
+    "observation": "Rust compiler commit matched from source paths in the original release executable.",
+    "original_receipt_sha256": "9bfe75fc68552921a5a76ff4db4ded04366e0020c1e367f75c9cfc4733a85ff6",
+    "original_rustc_label": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-apple-darwin\nrelease: 1.99.1\nLLVM version: 23.1.1",
+    "utc": "2026-11-25T10:09:16+00:00"
+  },
   "runtime": {
+    "cargo": "cargo 1.99.1 (5f94df478 2026-08-27)\nrelease: 1.99.1\ncommit-hash: 5f94df4789f005f9a352888e8355ffc645b7ed0e\ncommit-date: 2026-08-27\nhost: aarch64-apple-darwin\nlibgit2: 1.9.6 (sys:0.21.0 vendored)\nlibcurl: 8.7.1 (sys:0.4.90+curl-8.21.0 system ssl:(SecureTransport) LibreSSL/3.3.6)\nssl: OpenSSL 3.6.3 9 Jun 2026\nos: Mac OS 27.2.1 [64-bit]",
     "python": "3.15.2 (main, Oct 25 2026, 16:57:51) [Clang 21.0.0 (clang-2100.3.34.2)]",
-    "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-apple-darwin\nrelease: 1.99.1\nLLVM version: 23.1.1",
+    "rustc": "rustc 1.100.0 (0ef1bc386 2026-11-09) (Homebrew)\nbinary: rustc\ncommit-hash: 0ef1bc386059596dada8fb65b50425aab2ea637a\ncommit-date: 2026-11-09\nhost: aarch64-apple-darwin\nrelease: 1.100.0\nLLVM version: 23.1.6",
+    "rustc_executable_commit": "0ef1bc386059596dada8fb65b50425aab2ea637a",
     "simpy": "4.1.2"
   },
   "samples": [
