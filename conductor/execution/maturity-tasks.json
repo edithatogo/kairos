@@ -2666,6 +2666,35 @@
       "obligation": "S17"
     },
     {
+      "id": "S17.arrivalhorizon",
+      "title": "Reject unrepresentable boundary arrivals before departure",
+      "parent": "110:S17",
+      "kind": "implementation",
+      "executor": "local",
+      "requires": [
+        "S17.boundaryarrivalorder"
+      ],
+      "read": [
+        "conductor/execution/scientific/s17-completion.md",
+        "conductor/contracts/versioning-compatibility.md"
+      ],
+      "write": [
+        "crates/kairo-ecs-des/src/boundary.rs",
+        "crates/kairo-ecs-des/tests/boundary_channel_transit_delay.rs",
+        "docs/design/boundary-channels.md",
+        "docs/adr/0013-scheduled-movement-and-committed-usage.md"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": ["cargo", "test", "--locked", "-p", "kairo-ecs-des", "--test", "boundary_channel_transit_delay"]
+        }
+      ],
+      "acceptance": "A seeded departure arriving at the largest representable tick keeps its scheduled time and sampled RNG position. A departure one tick later reports overflow and leaves the transfer, channel capacity, wakeup preview and RNG position intact.",
+      "stop": "Qualify checked arrival arithmetic for an already sampled, representable delay in a forward-only boundary channel.",
+      "obligation": "S17"
+    },
+    {
       "id": "S05.bounds",
       "title": "Reject Sobol dimension/index exhaustion before arithmetic",
       "parent": "110:S05",

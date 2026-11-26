@@ -104,3 +104,13 @@ Arrival batches follow scheduled arrival order, with departure order at
 equal ticks. The receiver acknowledges a delivered transfer according to
 the model's handover policy.
 [Boundary scheduling contract](../design/boundary-channels.md#6-coordinated-boundary-wakeups)
+
+## Representable boundary arrivals
+
+`BoundaryChannel::depart` checks the scheduled arrival before committing
+the departure and sampled random stream. The last representable tick is
+valid. An arrival beyond it returns `BoundaryError::ArrivalOverflow`.
+The new variant changes exhaustive matches on the experimental
+`kairo-ecs-des` Rust error enum. Valid delay sampling and scheduled
+timestamps retain their meaning.
+[Boundary error migration](../design/boundary-channels.md#7-arrival-tick-overflow)
