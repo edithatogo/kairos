@@ -106,8 +106,8 @@ Departure accepts an arrival at the maximum representable tick. A sampled
 delay that would put the arrival beyond that tick returns
 `BoundaryError::ArrivalOverflow`. The operation, free channel capacity,
 pending wakeups and caller's random stream are preserved on this error.
-The caller can cancel the transfer or select a feasible delay according
-to its handover policy.
+The model can cancel the transfer or route it through a channel with a
+feasible delay.
 
 For the next prerelease built from this source, Rust callers matching
 every experimental `kairo-ecs-des::BoundaryError` variant must handle

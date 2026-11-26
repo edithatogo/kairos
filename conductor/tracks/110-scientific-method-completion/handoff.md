@@ -2,6 +2,39 @@
 
 Updated 27 November 2026. Status **In Progress**.
 
+## S17 boundary arrival horizon — 27 November 2026
+
+`BoundaryChannel::depart` accepts an arrival at the largest representable
+tick. When the sampled delay would overflow, it returns
+`BoundaryError::ArrivalOverflow` and preserves the transfer, capacity,
+wakeup preview and caller's random stream.
+[Arrival contract and migration](../../../docs/design/boundary-channels.md#7-arrival-tick-overflow)
+
+The seed-17 fixture starts the stream mid-buffer. It compares a departure
+that arrives exactly at `u128::MAX` with a departure one tick later. The
+first case consumes the same draw as direct sampling. The second preserves
+the reserved envelope, the original checkpoint and the next raw draw.
+The baseline regression panicked on the unchecked addition and exited `101`.
+[Boundary fixture](../../../crates/kairo-ecs-des/tests/boundary_channel_transit_delay.rs)
+
+Review replaced the stream clone with the existing cursor and seek
+operations so only overflow rewinds the stream. The migration note now
+describes cancellation or routing through a different channel.
+Independent review accepted `42c88eb0c03e8cc7b9d1109211fc3885bf2e7a14` after
+rerunning 17 tests across boundary transit, native ABM, and entity and
+staged resource conservation. All passed.
+
+The workspace-root commands below exited `0` on macOS ARM64 with Rust and
+Cargo 1.99.1. The DES and ABM suite passed 126 tests.
+
+```sh
+cargo test --locked --offline -j 4 -p kairo-ecs-des -p kairo-ecs-abm --all-features
+cargo clippy --locked --offline -j 4 -p kairo-ecs-des -p kairo-ecs-abm \
+    --all-targets --all-features -- -D warnings
+RUSTDOCFLAGS="-D warnings" cargo doc --locked --offline -j 4 \
+    -p kairo-ecs-des --all-features --no-deps
+```
+
 ## S17 overdue boundary arrivals — 27 November 2026
 
 `BoundaryChannel::collect_arrivals` returns due transfers by scheduled

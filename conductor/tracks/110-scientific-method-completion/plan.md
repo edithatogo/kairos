@@ -73,6 +73,7 @@ Close every stated scientific/advanced method with a correct implementation and 
   - [x] S17 coordinated occupancy verified a censored lease at a reached and drained model endpoint while the allocator was idle. [Execution and review](handoff.md#s17-occupancy-at-a-model-observation-tick--26-november-2026)
   - [x] S17 boundary wakeups verified scheduled expiry and arrivals alongside ABM updates, followed by lease release on acknowledgement. [Execution and review](handoff.md#s17-boundary-wakeups--26-november-2026)
   - [x] S17 overdue boundary arrivals verified scheduled arrival order and stable ties when native DES catches up with ABM. [Execution and review](handoff.md#s17-overdue-boundary-arrivals--27-november-2026)
+  - [x] S17 boundary arrival horizon verified the largest representable arrival and overflow rejection with the transfer and RNG state preserved. [Execution and review](handoff.md#s17-boundary-arrival-horizon--27-november-2026)
 - [x] 110.2.4: Record the distinct evidence limits for analytical correctness, native execution, comparative performance and empirical validity. [Current dispositions](../../scientific-completion.md#limits-on-performance-and-empirical-claims)
 - [ ] 110.2.review: Independently review this phase, apply accepted fixes, execute the named oracles and record the next-phase decision.
 
