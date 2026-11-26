@@ -1,5 +1,5 @@
 use kairo_ecs_cli::ensemble::{AbcPopulation, AbcSmcCalibrator, AbcSmcConfig, AbcSmcError};
-use kairo_ecs_rng::rand_distr::StandardUniform;
+use kairo_ecs_rng::rand_distr::{Poisson, StandardUniform};
 use kairo_ecs_rng::DeterministicStream;
 
 fn config(particles: usize) -> AbcSmcConfig {
@@ -154,6 +154,45 @@ fn simulation_based_ranks_match_the_analytic_posterior_cdfs() {
     assert!(observations.iter().all(|count| *count >= 12));
     assert!(quartiles.iter().all(|count| (7..=25).contains(count)));
     assert!(rmse <= 0.065);
+}
+
+#[test]
+fn held_out_poisson_count_matches_analytic_posterior_and_prediction() {
+    let inverse_e = (-1.0_f64).exp();
+    let normalizer = 2.0 - 5.0 * inverse_e;
+    let reference_mean = (6.0 - 16.0 * inverse_e) / normalizer;
+    let reference_zero = (1.0 - 5.0 * inverse_e.powi(2)) / (4.0 * normalizer);
+    let tolerance = 0.025;
+
+    let calibrator = AbcSmcCalibrator::new(config(384), vec![(0.0, 1.0)]).unwrap();
+    let mut absolute_errors = [0.0; 2];
+    for seed in 8100..8112 {
+        let fit = calibrator
+            .run(seed, |theta, rng| {
+                let rate = theta[0];
+                let simulated = if rate == 0.0 {
+                    0.0
+                } else {
+                    rng.sample::<f64, _>(Poisson::new(rate).unwrap())
+                };
+                (simulated - 2.0).abs()
+            })
+            .unwrap();
+        let posterior = fit.last().unwrap();
+        assert_eq!(posterior.tolerance, 0.0);
+        assert!(posterior
+            .particles
+            .iter()
+            .all(|particle| particle.discrepancy == 0.0));
+        absolute_errors[0] += (expectation(posterior, |rate| rate) - reference_mean).abs();
+        absolute_errors[1] += (expectation(posterior, |rate| (-rate).exp()) - reference_zero).abs();
+    }
+
+    let mean_absolute_errors = absolute_errors.map(|error| error / 12.0);
+    eprintln!("ABC Poisson held-out mean absolute errors {mean_absolute_errors:?}");
+    assert!(mean_absolute_errors.iter().all(|error| *error <= tolerance));
+    assert!((0.5 - reference_mean).abs() > tolerance);
+    assert!((1.0 - inverse_e - reference_zero).abs() > tolerance);
 }
 
 #[test]

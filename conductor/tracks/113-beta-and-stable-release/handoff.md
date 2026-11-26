@@ -3,18 +3,42 @@
 ## Native core v1 decision — 25 November 2026
 
 The independent engineering review accepts the `native-core-v1` qualification
-evidence for `e2875387ce45c34cd19716ea66f0102251a6aa6f`. Phase 0 is
-pending maintainer acceptance of the [scope and replay change](../../release/beta-scope.md).
+evidence for `e2875387ce45c34cd19716ea66f0102251a6aa6f`. On 25 November 2026 the
+maintainer approved the [scope and replay change](../../release/beta-scope.md)
+in chat `01a21056-b5b2-7591-9981-88554b9d38ec`, satisfying Gate 9 for that exact
+candidate.
 The selected profile uses Rust 1.99.1, C ABI v1 and CPython 3.15.2 on Linux
 x86-64 GNU and macOS ARM64. ChaCha8 changes the seeded alpha replay draws.
 The profiled core uses serial execution and preserves the documented boundary
 for other bindings, platforms and experimental capabilities.
 
-Integration chat `01a1fd18-51c7-7963-a3cc-d262d54582ba` records the Track 109
-and 113 decisions from `/Users/doughnut/.codex/worktrees/kairos-native-beta-closeout/kairos`
-on `codex/native-core-v1-acceptance-20261125`. The scope is both track records, the
-phase ledger and status. Hosted access covers installation, policy and
-provenance readback. The next operation is integration of the reviewed records.
+This accepts the qualification decision, not publication, re-versioning,
+another candidate, additional platforms, or a consumer pin. The original
+alpha archive remains the reference for exact SplitMix64 replay. The
+maintainer decision can be integrated without rebuilding the already qualified
+artifact bytes; any changed artifact must qualify on its own evidence.
+
+## Approval packet reconciliation — 26 November 2026
+
+Chat `01a21056-b5b2-7591-9981-88554b9d38ec` owns the scoped 109/113
+decision files in
+`/Users/doughnut/.codex/worktrees/kairos-ponytail-simplification/kairos`.
+It recovered the prior reviewed proposal from `d528c1e8` on verified main
+`56c74b83`. The native scope is read-only evidence from the frozen
+installation and attestation runs; no releases or pins were changed.
+
+Next: the main integrator can close only Track 113 Phase 0 in the shared
+ledger, recording maintainer acceptance and retaining the tested candidate
+`e2875387` as the evidence source. Synchronize the track metadata and current
+status; keep Tracks 109 and 113 In Progress. Phase 1, stable acceptance and
+separately authorized publication are not claimed.
+
+The earlier engineering integration by chat
+`01a1fd18-51c7-7963-a3cc-d262d54582ba` ran from
+`/Users/doughnut/.codex/worktrees/kairos-native-beta-closeout/kairos`
+on `codex/native-core-v1-acceptance-20261125`. It recorded the track
+decisions, phase ledger and status in [PR #460](https://github.com/edithatogo/kairos/pull/460).
+The installation, policy and provenance readbacks below retain that scope.
 
 ### Exact artifacts
 
@@ -24,6 +48,31 @@ The existing verifier matched all six archive paths to the receipts and to the
 attestation's signed subject inventory. GitHub attestation verification passed for
 all five distinct digests and the signed SPDX 2.3 document matched the retained
 SBOM. [Attestation run](https://github.com/edithatogo/kairos/actions/runs/45053462090).
+
+The approval packet re-downloaded both installation bundles and ran
+`packaging/scripts/verify_native_beta_evidence.py` with repository-local
+Python 3.15.2. The installed receipts and all six archive paths match the
+five distinct SHA-256 digests below and the signed SPDX inventory. The tested
+wheel is `kairo_ecs-0.1.0-py3-none-any.whl` in each target bundle, not a new
+prerelease-versioned wheel. Do not rename or repack it as a beta registry
+package. The publication choice, version and authority must be recorded
+separately; new package bytes require new installation and provenance checks.
+Both original hosted installation bundles and the signed provenance bundle
+were still available at the 26 November readback. Use those source-bound
+receipts; the previous checkout's ignored download directory was not
+retained by startup cleanup.
+
+### Held-out SDK use
+
+On macOS ARM64 with Rust 1.99.1, a separate locked, offline Cargo consumer
+resolved only the core and types crates from the approved SDK archive. Its
+four-job FIFO model dispatched all eight expected arrival/completion events
+in order, including a departure before a same-tick arrival. The hand-derived
+completion ticks were 3, 5, 6 and 9. The 25 November local run is historical:
+its ignored raw fixture and trace were not retained by startup cleanup.
+Do not count it toward Phase 1 acceptance. It does not establish independent
+beta use, release-candidate recovery, an additional platform, or the stable
+gate.
 
 | Target | Package | SHA-256 |
 | --- | --- | --- |
