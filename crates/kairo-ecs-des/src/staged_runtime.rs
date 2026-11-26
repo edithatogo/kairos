@@ -6,7 +6,7 @@ use crate::usage::{
     valid_usage_label, CommittedUsageWindow, OccupancySlice, StagedUsageSource, UsageBoundary,
     STAGED_USAGE_VERSION,
 };
-use kairo_ecs_core::Scheduler;
+use kairo_ecs_core::{ScheduledEventPreview, Scheduler};
 use kairo_ecs_types::{
     DispatchedEvent, EntityId, EventId, EventKind, ScheduleRequest, SimTime, StepOutcome,
 };
@@ -145,6 +145,15 @@ pub enum StagedDispatch {
     Allocation(SimTime),
     /// One model event is ready for its handler.
     Model(DispatchedEvent),
+}
+
+/// Experimental preview of the next dispatch across staged allocation and the model scheduler.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum StagedDispatchPreview {
+    /// An allocation action is next at this tick.
+    Allocation(SimTime),
+    /// A model event is next in its own scheduler.
+    Model(ScheduledEventPreview),
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -523,6 +532,42 @@ impl StagedResourceRuntime {
         Ok(dispatched)
     }
 
+    /// Preview the next live event across the allocator and the model scheduler.
+    ///
+    /// The earliest event through the inclusive `time_limit` wins. Allocation
+    /// runs first at an equal tick. The selected event stays queued so the
+    /// owning dispatcher can run it. Preview may prune cancelled entries.
+    /// Both schedulers keep their clocks, counters and live pending events.
+    /// Preview again after scheduling, cancelling or dispatching any event.
+    /// Returns `Ok(None)` when both queues have no event due.
+    ///
+    /// # Errors
+    ///
+    /// An eligible event earlier than either scheduler's current tick yields
+    /// [`StagedRuntimeError::InvalidState`].
+    pub fn peek_with_scheduler(
+        &mut self,
+        scheduler: &mut Scheduler,
+        time_limit: SimTime,
+    ) -> Result<Option<StagedDispatchPreview>, StagedRuntimeError> {
+        let allocation_tick = self.next_event_time();
+        let model = scheduler.peek_next();
+        let (at, preview) = match (allocation_tick, model) {
+            (Some(at), model) if model.is_none_or(|event| at <= event.at) => {
+                (at, StagedDispatchPreview::Allocation(at))
+            }
+            (_, Some(event)) => (event.at, StagedDispatchPreview::Model(event)),
+            _ => return Ok(None),
+        };
+        if at > time_limit {
+            return Ok(None);
+        }
+        if at < self.now().max(scheduler.now()) {
+            return Err(StagedRuntimeError::InvalidState);
+        }
+        Ok(Some(preview))
+    }
+
     /// Dispatch at most one event across the allocator and the model scheduler.
     ///
     /// The earliest live event through the inclusive `time_limit` wins.
@@ -532,6 +577,7 @@ impl StagedResourceRuntime {
     /// handler that reads the model scheduler's clock from a model event at
     /// the reaction tick.
     /// Returns `Ok(None)` when both queues have no event due.
+    /// Use [`Self::peek_with_scheduler`] when the model dispatches its own events.
     ///
     /// # Errors
     ///
@@ -543,28 +589,22 @@ impl StagedResourceRuntime {
         scheduler: &mut Scheduler,
         time_limit: SimTime,
     ) -> Result<Option<StagedDispatch>, StagedRuntimeError> {
-        let allocation_tick = self.next_event_time();
-        let model_tick = scheduler.peek_next().map(|event| event.at);
-        let next_tick = allocation_tick.into_iter().chain(model_tick).min();
-        let Some(at) = next_tick.filter(|tick| *tick <= time_limit) else {
-            return Ok(None);
-        };
-        if at < self.now().max(scheduler.now()) {
-            return Err(StagedRuntimeError::InvalidState);
-        }
-
-        if Some(at) == allocation_tick {
-            if self.run_until_or_for(at, 1)? != 1 {
-                return Err(StagedRuntimeError::InvalidState);
+        match self.peek_with_scheduler(scheduler, time_limit)? {
+            Some(StagedDispatchPreview::Allocation(at)) => {
+                if self.run_until_or_for(at, 1)? != 1 {
+                    return Err(StagedRuntimeError::InvalidState);
+                }
+                Ok(Some(StagedDispatch::Allocation(at)))
             }
-            return Ok(Some(StagedDispatch::Allocation(at)));
+            Some(StagedDispatchPreview::Model(_)) => {
+                let event = scheduler
+                    .step()
+                    .into_dispatched()
+                    .ok_or(StagedRuntimeError::InvalidState)?;
+                Ok(Some(StagedDispatch::Model(event)))
+            }
+            None => Ok(None),
         }
-
-        let event = scheduler
-            .step()
-            .into_dispatched()
-            .ok_or(StagedRuntimeError::InvalidState)?;
-        Ok(Some(StagedDispatch::Model(event)))
     }
 
     /// Export a sealed historical window from this forward-only scheduler.

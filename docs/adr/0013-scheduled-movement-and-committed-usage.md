@@ -48,3 +48,14 @@ starts movement on allocation, runs the due allocator requests before the
 arrival, and releases the lease before the next model event at that tick.
 The earlier waiter is admitted first and the later tick's request remains
 scheduled.
+
+## Preview for a model-owned dispatcher
+
+`StagedResourceRuntime::peek_with_scheduler` and `StagedDispatchPreview` are
+additive experimental Rust APIs in `kairo-ecs-des`. Both the preview and
+`step_with_scheduler` use the same ordering and clock checks. The preview
+leaves live events and clocks in place, so a model such as
+`BehaviorSimulation` can run its own handler through its regular dispatcher.
+Scheduling, cancellation or dispatch can change which event is next. Take a
+new preview after such changes.
+[Native behavior conformance case](../../crates/kairo-ecs-abm/tests/abm_behavior_update_v1.rs)
