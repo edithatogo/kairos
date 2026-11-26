@@ -172,9 +172,17 @@ The opt-in Rust CLI exports retained dispatches through the replay cursor in
 event-log v2 IPC. PyArrow 26.0.1 independently decoded the stream produced
 after four steps and a rewind. It contained the single retained dispatch at
 sequence 2 and tick 1. This export covers completed dispatch records.
-Production model qualification and browser integration remain open.
 [Arrow stream](tracks/110-scientific-method-completion/evidence/s15-retained-dispatches.arrow) ·
 [Execution and readback receipt](tracks/110-scientific-method-completion/evidence/native-qualification-20261125.json)
+
+On the staged DES allocator workload, each debugger step dispatched one
+live allocator action. Rewind restored the state between two same-tick
+submissions. The parent and an edited fork each replayed the same dispatch
+suffix and allocator checkpoint bytes recorded on their own timelines.
+The branch withdrew a queued request, admitted the next request at tick 4,
+and kept the parent's queue and leases isolated. Browser integration and
+additional production workloads remain open.
+[Staged allocator reproduction and review](tracks/110-scientific-method-completion/handoff.md#s15-staged-allocator-replay--26-november-2026)
 
 ## S16 transport and telemetry qualification
 

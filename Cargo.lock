@@ -2327,6 +2327,7 @@ dependencies = [
  "criterion",
  "kairo-ecs-arrow",
  "kairo-ecs-core",
+ "kairo-ecs-des",
  "kairo-ecs-rng",
  "kairo-ecs-types",
  "serde",

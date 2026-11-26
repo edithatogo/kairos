@@ -26,8 +26,13 @@ name = "kairo-ecs-debug"
 path = "src/main.rs"
 
 [dev-dependencies]
+kairo-ecs-des = { path = "../kairo-ecs-des", version = "0.1.0", features = ["checkpoint-json"] }
 criterion = "0.8.2"
 tempfile = "3.27.0"
+
+[[example]]
+name = "staged_allocator_replay"
+test = true
 
 [[bench]]
 name = "reconstruct"
