@@ -1,5 +1,38 @@
 # Handoff
 
+## CPU checkpoint branching — 26 November 2026
+
+The [protocol and fixture](branching-protocol.md) were frozen together in
+`bc02f0e842aab7f05857868f13c654041aeeaa35` after an independent source
+review. The review added exact live entity rosters and a check of the
+restored intervention clock before the next dispatch.
+
+The primary run passed all 12 replicates, 9100 through 9111, with Rust
+1.99.1 on macOS ARM64. The two branches matched their separate tick-zero
+replays in dispatch order, raw draws, cursor positions and final state.
+Retiring entity (1, 0) left the control intact. Its successor (1, 1) reused
+the slot and started its service cursor at zero. A's second addressed
+service draw matched across both arms. Resetting A's cursor caused exactly
+its first draw to repeat. The inserted routing event shifted A's second
+draw from word 4 to word 6 in the same-seed global-stream control.
+
+The [frozen Cargo selector](branching-protocol.md#run) exited zero in
+`/Users/doughnut/.codex/worktrees/kairos-ponytail-simplification/kairos`.
+The primary log includes the source and toolchain digests and all replicate
+outcomes. It is retained at `/Volumes/PortableSSD/kairos-ponytail-batch.vDfOUaPn/evidence/branch-primary.log`,
+SHA-256 `0862d0654e9c24f489119a8a989da60955e0dc13096dbc390f8df1650706b4af`.
+
+An independent runner rebuilt and ran the same selector offline with Rust
+and Cargo 1.99.1 in `/Volumes/PortableSSD/kairos-ponytail-batch.vDfOUaPn/branch-reproduction`. It verified the two
+frozen source digests before and after the run, exited zero and reproduced all
+12 results on macOS ARM64. The receipt at
+`/Volumes/PortableSSD/kairos-ponytail-batch.vDfOUaPn/evidence/branch-reproduced.log` has SHA-256 `5236af4bfdf41b061b918dcd92a4e3039db90a2ee7a35c6c01b6680e99d19cb3`.
+
+Chat `01a21056-b5b2-7591-9981-88554b9d38ec` owns this fixture and evidence.
+The result concerns replay semantics for the frozen CPU workload. Timing
+and broader lifecycle, rollback and hybrid evaluation remain open. Track 115
+remains In Progress.
+
 ## Proposed non-HPC checkpoint comparison — 25 November 2026
 
 The [branching protocol draft](branching-protocol.md) defines a held-out
