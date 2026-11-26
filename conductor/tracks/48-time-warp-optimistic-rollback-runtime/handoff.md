@@ -1,3 +1,11 @@
+## Local cluster recovery — 26 November 2026
+
+The CAP-48 reference and both durable-admission restart cases passed on two
+Apple Container guests on one Mac at `c538ba3a`. Both restart cases
+reproduced the uninterrupted run's retained state and matched the native
+serial oracle. Track 48 retains its accepted scope in the registry.
+[Run evidence](../50-numa-topology-affinity-memory-lifecycle/evidence/local-simulations-20261126.md#two-worker-rollback-and-restart)
+
 ## Track49 native amendment accepted — 3 November 2026
 
 [Track49 qualification](../49-distributed-mpi-grpc-state-synchronization/native-runtime-qualification-20261103.md)
