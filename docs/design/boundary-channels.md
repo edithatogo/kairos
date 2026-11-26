@@ -99,3 +99,18 @@ first and preserves departure order at equal ticks. The model can schedule
 receiving ABM events in that order at the current coordinated tick. The
 envelopes retain their scheduled arrival ticks.
 [Executable DES and ABM case](../../crates/kairo-ecs-abm/tests/abm_behavior_update_v1.rs)
+
+### 7. Arrival tick overflow
+
+Departure accepts an arrival at the maximum representable tick. A sampled
+delay that would put the arrival beyond that tick returns
+`BoundaryError::ArrivalOverflow`. The operation, free channel capacity,
+pending wakeups and caller's random stream are preserved on this error.
+The model can cancel the transfer or route it through a channel with a
+feasible delay.
+
+For the next prerelease built from this source, Rust callers matching
+every experimental `kairo-ecs-des::BoundaryError` variant must handle
+`ArrivalOverflow`. Successful departures use the same delay distribution
+and seeded samples.
+[Transit fixture](../../crates/kairo-ecs-des/tests/boundary_channel_transit_delay.rs)

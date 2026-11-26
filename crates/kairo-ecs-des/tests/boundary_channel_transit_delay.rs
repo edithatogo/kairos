@@ -270,3 +270,57 @@ fn late_departure_retry_removes_expired_arrival() {
         TransferState::Expired
     );
 }
+
+#[test]
+fn boundary_arrival_horizon_preserves_transfer_and_rng() {
+    let tick = SimTime::from_ticks;
+    let limit = tick(u128::MAX);
+    let distribution = TransitDelayDistribution::Uniform {
+        min: tick(1),
+        max: tick(2),
+    };
+    let mut initial_stream = DeterministicStream::new(17);
+    let _ = initial_stream.next_u32();
+    let mut sampled_stream = initial_stream.clone();
+    let delay = distribution.sample(&mut sampled_stream);
+    let last_departure = limit.ticks() - delay.ticks();
+
+    for (departure, fits) in [(last_departure, true), (last_departure + 1, false)] {
+        let mut channel = BoundaryChannel::new("handover", 1, distribution);
+        let mut rng = initial_stream.clone();
+        let before = rng.checkpoint();
+        let operation = HandoverOperationId::new(1);
+        channel
+            .request_transfer(HandoverEnvelope::new(
+                operation,
+                EntityId::new(1, 0),
+                (),
+                "sender",
+                "receiver",
+                tick(departure),
+                None,
+            ))
+            .unwrap();
+        channel.reserve(operation).unwrap();
+        let reserved = channel.get_envelope(operation).unwrap().clone();
+
+        let result = channel.depart(operation, tick(departure), &mut rng);
+        if fits {
+            assert_eq!(result, Ok(limit));
+            assert_eq!(channel.next_event_time(), Some(limit));
+            assert_eq!(rng.checkpoint(), sampled_stream.checkpoint());
+        } else {
+            let error = result.unwrap_err();
+            assert_eq!(error, BoundaryError::ArrivalOverflow(operation));
+            assert_eq!(
+                error.to_string(),
+                "arrival tick exceeds the simulation time range for HandoverOp(1)"
+            );
+            assert_eq!(channel.get_envelope(operation), Some(&reserved));
+            assert_eq!(channel.available_channel_capacity(), 1);
+            assert_eq!(channel.next_event_time(), None);
+            assert_eq!(rng.checkpoint(), before);
+            assert_eq!(rng.next_u64(), initial_stream.next_u64());
+        }
+    }
+}

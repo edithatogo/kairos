@@ -150,6 +150,7 @@ pub enum BoundaryError {
     TransferExpired(HandoverOperationId),
     TransferCancelled(HandoverOperationId),
     DestinationUnavailable(String),
+    ArrivalOverflow(HandoverOperationId),
 }
 
 impl fmt::Display for BoundaryError {
@@ -180,6 +181,12 @@ impl fmt::Display for BoundaryError {
             Self::TransferCancelled(op) => write!(f, "handover transfer cancelled: {}", op),
             Self::DestinationUnavailable(dest) => {
                 write!(f, "handover destination unavailable: {}", dest)
+            }
+            Self::ArrivalOverflow(op_id) => {
+                write!(
+                    f,
+                    "arrival tick exceeds the simulation time range for {op_id}"
+                )
             }
         }
     }
@@ -293,6 +300,9 @@ impl<T: Clone> BoundaryChannel<T> {
     }
 
     /// Departs an entity into transit across the channel, sampling transit delay.
+    ///
+    /// If the arrival would overflow, returns [`BoundaryError::ArrivalOverflow`]
+    /// and preserves the transfer and the caller's stream.
     pub fn depart(
         &mut self,
         op_id: HandoverOperationId,
@@ -331,8 +341,12 @@ impl<T: Clone> BoundaryChannel<T> {
             });
         }
 
+        let word_pos = rng.word_pos();
         let delay = self.delay_distribution.sample(rng);
-        let arrival_time = SimTime::from_ticks(now.ticks() + delay.ticks());
+        let Some(arrival_time) = now.checked_add(SimDuration::from_ticks(delay.ticks())) else {
+            rng.set_word_pos(word_pos);
+            return Err(BoundaryError::ArrivalOverflow(op_id));
+        };
 
         env.state = TransferState::InTransit;
         env.depart_at = Some(now);
