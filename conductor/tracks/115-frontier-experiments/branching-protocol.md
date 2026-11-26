@@ -1,12 +1,11 @@
-# Checkpoint Branching: Proposed Held-Out Protocol
+# Checkpoint Branching Held-Out Protocol
 
-**State: Draft, not executed.** This is the first CPU-only comparison for the
+This is the first CPU-only comparison for the
 [policy-branching question](../../frontier-programme-20261107.md). It tests
 semantics before any runtime, memory, variance-reduction or novelty claim.
-Independently review and freeze the final input tape, runner source, supported
-checkpoint formats and oracle before opening the held-out run. Existing
-[paired-draw evidence](../../execution/scientific/s06-completion.md) is a
-previous, narrower result, not this experiment.
+The [Rust fixture and oracle](../../../crates/kairo-ecs-bench/tests/held_out_checkpoint_branching.rs)
+and this protocol are fixed together in the run's source commit. The
+[handoff](handoff.md) records review and execution.
 
 ## Fixture
 
@@ -15,14 +14,24 @@ in order A then B and consume each entity's first service-purpose draw.
 Leave A and B's next services pending at tick 5 with equal priority, A
 inserted first. Save the scheduler, entity/model state and addressed stream
 cursors after both tick-2 dispatches.
-Use root seed 78121 and replicates `9100..9112`; no optimisation data are
-selected from these runs.
+Use root seed 78121 and replicates 9100 through 9111 inclusive. The first
+`next_u64()` from `DeterministicStream::from_seed_u64(78121, replicate)`
+supplies the run seed. Address each ChaCha8 stream by the full entity handle
+and the literal purpose `service` or `routing`. Positions count 32-bit
+words, with two words per recorded draw. A, B and the successor have
+index/generation pairs (0, 0), (1, 0) and (1, 1) respectively. All
+events have priority zero.
+
+Capture the scheduler and world using their v1 JSON formats and each active
+or previously used stream as an RNG checkpoint v1. The fixture keeps the
+service counts per live entity and the ordered draw records in its own
+in-memory checkpoint.
 
 - **Control:** leave both pending services unchanged.
 - **Intervention:** cancel B's pending service, retire B and allocate a new
   generation in its slot. Insert a routing event for B's successor at tick 4,
   consuming one routing-purpose draw, then its service at tick 5 after A.
-  Branches use separate state and handles.
+  Each branch resolves its entity and event handles against its own state.
 - **Restore:** in each arm checkpoint after consuming all events due through
   tick 4, before the tick-5 dispatches. Preserve the actual last dispatch
   clock in the control arm, which has no event at tick 4. Restore into fresh
@@ -40,12 +49,12 @@ selected from these runs.
    ordered dispatches, final model and entity state, and raw integer draws.
    A's second service draw must also agree across arms. Probe that changes in
    one fork leave the other fork unchanged.
-3. For the missing-cursor control, assert that A resumes at the wrong draw
-   index specifically after restore. In the global-stream control, use the
-   same stream in both arms; the inserted routing draw at tick 4 must shift
-   A's second service draw across those arms. Ordinary differences between
-   unrelated stream seeds do not pass either negative control. Retain all
-   mismatches.
+3. Set only A's service cursor to word 0 at the control's second cut. Its
+   tick-5 draw must repeat its tick-2 draw, with both of B's draws intact.
+   In a separate full replay, give both arms the same initial global stream.
+   Require the same tick-2 prefix. The inserted routing draw must consume
+   the control arm's word-4 draw and shift A's tick-5 draw to word 6. Retain
+   the first failed assertion for every failing replicate.
 
 Require zero failures on the frozen event, identity and replay comparisons
 and reproduce the result independently. Only after semantic acceptance may
@@ -54,3 +63,11 @@ predeclared matched timing protocol. The fixture cannot establish
 general model validity, empirical treatment effects, scientific novelty or
 performance superiority. Automatic executor selection, full rollback and
 hybrid evaluation remain separate gates.
+
+## Run
+
+```bash
+cargo test --locked -p kairo-ecs-bench --features engine-checkpoint \
+  --test held_out_checkpoint_branching -- \
+  --exact checkpoint_branches_match_full_replay_with_addressed_streams --nocapture
+```
