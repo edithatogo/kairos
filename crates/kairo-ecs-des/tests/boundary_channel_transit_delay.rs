@@ -279,14 +279,15 @@ fn boundary_arrival_horizon_preserves_transfer_and_rng() {
         min: tick(1),
         max: tick(2),
     };
-    let seed = 17;
-    let mut sampled_stream = DeterministicStream::new(seed);
+    let mut initial_stream = DeterministicStream::new(17);
+    let _ = initial_stream.next_u32();
+    let mut sampled_stream = initial_stream.clone();
     let delay = distribution.sample(&mut sampled_stream);
     let last_departure = limit.ticks() - delay.ticks();
 
     for (departure, fits) in [(last_departure, true), (last_departure + 1, false)] {
         let mut channel = BoundaryChannel::new("handover", 1, distribution);
-        let mut rng = DeterministicStream::new(seed);
+        let mut rng = initial_stream.clone();
         let before = rng.checkpoint();
         let operation = HandoverOperationId::new(1);
         channel
@@ -314,6 +315,7 @@ fn boundary_arrival_horizon_preserves_transfer_and_rng() {
             assert_eq!(channel.available_channel_capacity(), 1);
             assert_eq!(channel.next_event_time(), None);
             assert_eq!(rng.checkpoint(), before);
+            assert_eq!(rng.next_u64(), initial_stream.next_u64());
         }
     }
 }

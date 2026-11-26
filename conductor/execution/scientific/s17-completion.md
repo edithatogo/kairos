@@ -10,11 +10,12 @@ tick fits in `SimTime`. Validate the sampled delay against the remaining
 tick range before committing the transfer or advancing the caller's stream.
 Reuse the existing typed tick addition and preserve valid RNG sequences.
 
-For seed 17 and a delay drawn uniformly from one or two ticks, subtract the
-draw from the maximum tick to choose a departure that arrives exactly at
-the maximum. Move departure one tick later for the overflow control. The
-overflow must leave the reserved transfer, free slot, empty wakeup preview
-and stream unchanged. The original unchecked addition fails this control.
+For seed 17, consume one RNG word before drawing a delay of one or two
+ticks. Subtract the delay from the maximum tick to choose a departure that
+arrives exactly at the maximum. Move departure one tick later for the
+overflow control. Overflow must preserve the reserved transfer, free slot,
+empty wakeup preview and next draw from the original stream position. The
+original unchecked addition fails this control.
 [Transit fixture](../../../crates/kairo-ecs-des/tests/boundary_channel_transit_delay.rs)
 
 ## Remaining design

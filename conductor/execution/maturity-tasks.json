@@ -2672,7 +2672,7 @@
       "kind": "implementation",
       "executor": "local",
       "requires": [
-        "S17.boundaryarrivalorder"
+        "S17.boundarywakeups"
       ],
       "read": [
         "conductor/execution/scientific/s17-completion.md",

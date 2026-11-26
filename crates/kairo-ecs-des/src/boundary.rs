@@ -341,12 +341,12 @@ impl<T: Clone> BoundaryChannel<T> {
             });
         }
 
-        let mut sampled_rng = rng.clone();
-        let delay = self.delay_distribution.sample(&mut sampled_rng);
-        let arrival_time = now
-            .checked_add(SimDuration::from_ticks(delay.ticks()))
-            .ok_or(BoundaryError::ArrivalOverflow(op_id))?;
-        *rng = sampled_rng;
+        let word_pos = rng.word_pos();
+        let delay = self.delay_distribution.sample(rng);
+        let Some(arrival_time) = now.checked_add(SimDuration::from_ticks(delay.ticks())) else {
+            rng.set_word_pos(word_pos);
+            return Err(BoundaryError::ArrivalOverflow(op_id));
+        };
 
         env.state = TransferState::InTransit;
         env.depart_at = Some(now);
