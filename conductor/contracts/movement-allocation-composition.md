@@ -59,3 +59,16 @@ in slice order. Priorities and event IDs are local to each queue.
 that slice. Dispatch through that runtime, apply its reaction at the emitted
 tick, and preview again. The [Rust case](../../crates/kairo-ecs-abm/tests/abm_behavior_update_v1.rs)
 uses the staged allocator, `DESContext` and `BehaviorSimulation`.
+
+## Observing occupancy across model queues
+
+Use `committed_usage_with_schedulers` after handling all events and reactions
+through the observation end. Supply the forward-only model queues from the
+same run. A dispatch in the allocator or a model queue can reach the end,
+and every participating queue must have drained live work through it.
+
+The export keeps the half-open occupancy window and censors a lease whose
+release lies beyond the end. A successful export seals the allocator through
+that tick. The [movement case](../../crates/kairo-ecs-abm/tests/movement_allocation.rs)
+observes a held lease while the allocation queue is idle and the arrival
+is still scheduled.
