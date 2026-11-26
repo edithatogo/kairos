@@ -3,10 +3,12 @@ use kairo_ecs_abm::{
     BEHAVIOR_UPDATE_EVENT_KIND,
 };
 use kairo_ecs_des::{
-    DESContext, StagedDispatchPreview, StagedDispatchSelection, StagedRequestState,
-    StagedResourceRuntime, StagedRuntimeError,
+    BoundaryChannel, DESContext, HandoverEnvelope, HandoverOperationId, StagedDispatchPreview,
+    StagedDispatchSelection, StagedRequestState, StagedResourceRuntime, StagedRuntimeError,
+    TransferState, TransitDelayDistribution,
 };
-use kairo_ecs_types::{EventKind, SimTime};
+use kairo_ecs_rng::DeterministicStream;
+use kairo_ecs_types::{EntityId, EventKind, SimTime};
 
 #[derive(Default)]
 struct RecordingBehavior {
@@ -276,4 +278,123 @@ fn coordinated_preview_checks_the_clock_of_an_idle_model_queue() {
         abm.context_mut().scheduler.peek_next().unwrap().id,
         backdated
     );
+}
+
+#[test]
+fn boundary_wakeups_coordinate_with_native_abm_and_lease_release() {
+    let tick = SimTime::from_ticks;
+    let mut des = DESContext::new(7);
+    let mut abm = BehaviorSimulation::new(7, RecordingBehavior::default());
+    let recipient = abm.spawn_agent();
+    let observer = abm.spawn_agent();
+    let observer_event = abm.schedule_update(observer, tick(6));
+    let mut allocation = StagedResourceRuntime::new().unwrap();
+    let resource = allocation.create_resource(1).unwrap();
+    let actor = allocation.spawn_actor().unwrap();
+    let request = allocation.submit(resource, actor, tick(2)).unwrap();
+    assert_eq!(allocation.run_until_or_for(tick(2), 1), Ok(1));
+
+    let mut channel = BoundaryChannel::new("handover", 3, TransitDelayDistribution::Fixed(tick(5)));
+    let accepted = HandoverOperationId::new(1);
+    let expired = HandoverOperationId::new(2);
+    let expired_at_arrival = HandoverOperationId::new(3);
+    let mut rng = DeterministicStream::new(7);
+    for (operation, entity, deadline) in [
+        (accepted, recipient, 7),
+        (expired, EntityId::new(9, 0), 4),
+        (expired_at_arrival, EntityId::new(10, 0), 6),
+    ] {
+        channel
+            .request_transfer(HandoverEnvelope::new(
+                operation,
+                entity,
+                (),
+                "sender",
+                "receiver",
+                allocation.now(),
+                Some(tick(deadline)),
+            ))
+            .unwrap();
+        assert_eq!(
+            channel.depart(operation, allocation.now(), &mut rng),
+            Ok(tick(7))
+        );
+    }
+
+    let preview = |allocation: &mut StagedResourceRuntime,
+                   des: &mut DESContext,
+                   abm: &mut BehaviorSimulation<RecordingBehavior>| {
+        allocation
+            .peek_with_schedulers(
+                &mut [&mut des.scheduler, &mut abm.context_mut().scheduler],
+                tick(7),
+            )
+            .unwrap()
+    };
+    let boundary_event = EventKind::custom(83);
+    let expiry_event = des.schedule_at(channel.next_event_time().unwrap(), 0, boundary_event);
+    assert!(matches!(
+        preview(&mut allocation, &mut des, &mut abm),
+        Some(StagedDispatchSelection::Model { scheduler_index: 0, event })
+            if event.id == expiry_event && event.at == tick(5)
+    ));
+    let expiry = des.step().into_dispatched().unwrap();
+    assert_eq!(expiry.id, expiry_event);
+    assert_eq!(channel.check_expiries(expiry.at), [expired]);
+    assert!(channel.collect_arrivals(expiry.at).is_empty());
+    assert_eq!(channel.available_channel_capacity(), 1);
+
+    let arrival_event = des.schedule_at(channel.next_event_time().unwrap(), 0, boundary_event);
+    assert!(matches!(
+        preview(&mut allocation, &mut des, &mut abm),
+        Some(StagedDispatchSelection::Model { scheduler_index: 1, event })
+            if event.id == observer_event && event.at == tick(6)
+    ));
+    assert_eq!(abm.run_for(1).updates()[0].event.id, observer_event);
+    assert!(matches!(
+        preview(&mut allocation, &mut des, &mut abm),
+        Some(StagedDispatchSelection::Model { scheduler_index: 0, event })
+            if event.id == arrival_event && event.at == tick(7)
+    ));
+    let arrival = des.step().into_dispatched().unwrap();
+    assert_eq!(arrival.id, arrival_event);
+    assert_eq!(channel.check_expiries(arrival.at), [expired_at_arrival]);
+    let arrivals = channel.collect_arrivals(arrival.at);
+    let [delivery] = arrivals.as_slice() else {
+        panic!("only the surviving transfer can arrive");
+    };
+    assert_eq!(delivery.operation_id, accepted);
+    assert_eq!(delivery.state, TransferState::Arrived);
+    assert_eq!(channel.next_event_time(), Some(tick(8)));
+    assert_eq!(
+        allocation.request(request).unwrap().state,
+        StagedRequestState::Active
+    );
+
+    let receipt = abm.schedule_update(delivery.entity, arrival.at);
+    assert!(matches!(
+        preview(&mut allocation, &mut des, &mut abm),
+        Some(StagedDispatchSelection::Model { scheduler_index: 1, event })
+            if event.id == receipt && event.at == tick(7)
+    ));
+    let behavior = abm.run_for(1);
+    let [update] = behavior.updates() else {
+        panic!("the receiver must run exactly one behavior");
+    };
+    assert_eq!((update.event.id, update.agent), (receipt, recipient));
+    let acknowledged = channel.acknowledge(accepted, update.at).unwrap();
+    assert_eq!(acknowledged.state, TransferState::Acknowledged);
+    assert_eq!(acknowledged.acknowledged_at, Some(tick(7)));
+    assert_eq!(allocation.close_request(request, update.at), Ok(true));
+    assert_eq!(
+        preview(&mut allocation, &mut des, &mut abm),
+        Some(StagedDispatchSelection::Allocation(tick(7)))
+    );
+    assert_eq!(allocation.run_until_or_for(tick(7), 1), Ok(1));
+    assert_eq!(allocation.resource(resource).unwrap().available, 1);
+    assert_eq!(
+        channel.get_envelope(expired).unwrap().state,
+        TransferState::Expired
+    );
+    assert_eq!(channel.next_event_time(), None);
 }

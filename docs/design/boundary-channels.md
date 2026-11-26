@@ -79,3 +79,18 @@ When destination capacity is exhausted (`total_committed == capacity`), new inta
 Single-scheduler two-depot accounting guarantees:
 $$\text{Origin Entities} + \text{In-Transit Envelopes} + \text{Destination Entities} = \text{Total Entities}$$
 at every tick. Duplicate messages or retry attempts with the same `HandoverOperationId` produce no duplicate allocations or entity losses.
+
+### 6. Coordinated boundary wakeups
+
+The experimental `BoundaryChannel::next_event_time` previews the earliest
+pending arrival or expiry. A timeout includes its deadline tick. Expiry is due
+at the next representable tick, so a maximum-tick deadline adds no expiry.
+An arrived transfer can still expire until acknowledgement.
+
+Use the preview to schedule a native DES event. Recompute the wakeup when a
+channel operation changes, and replace a pending wakeup if its tick changes.
+At dispatch, call `check_expiries` and then `collect_arrivals` with the emitted
+tick. These calls apply expiry before arrivals due at that same tick. Expiry
+batches report IDs in ascending order. The caller handles the returned
+operations and schedules any receiving ABM events or lease reactions.
+[Executable DES and ABM case](../../crates/kairo-ecs-abm/tests/abm_behavior_update_v1.rs)

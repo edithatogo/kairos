@@ -206,3 +206,32 @@ fn test_boundary_channel_expiry_and_cancellation() {
     let cancelled = channel.cancel(op2).unwrap();
     assert_eq!(cancelled.state, TransferState::Cancelled);
 }
+
+#[test]
+fn boundary_wakeup_includes_live_expiries_and_excludes_terminal_operations() {
+    let tick = SimTime::from_ticks;
+    let mut channel = BoundaryChannel::new("timed", 4, TransitDelayDistribution::Fixed(tick(1)));
+    for (id, timeout) in [(9, 2), (5, 2), (3, 2), (7, 2), (1, 0), (2, u128::MAX)] {
+        channel
+            .request_transfer(HandoverEnvelope::new(
+                HandoverOperationId::new(id),
+                EntityId::new(id, 0),
+                (),
+                "sender",
+                "receiver",
+                tick(0),
+                Some(tick(timeout)),
+            ))
+            .unwrap();
+    }
+    channel.cancel(HandoverOperationId::new(1)).unwrap();
+
+    assert_eq!(channel.next_event_time(), Some(tick(3)));
+    assert!(channel.check_expiries(tick(2)).is_empty());
+    assert_eq!(
+        channel.check_expiries(tick(3)),
+        [3, 5, 7, 9].map(HandoverOperationId::new)
+    );
+    assert_eq!(channel.next_event_time(), None);
+    assert!(channel.check_expiries(tick(u128::MAX)).is_empty());
+}
