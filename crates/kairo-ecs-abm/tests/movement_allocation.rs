@@ -181,6 +181,12 @@ fn arrival_releases_porter_at_its_dispatch_tick() {
 #[test]
 fn allocator_and_movement_dispatch_in_tick_order() {
     let mut journey = Journey::new();
+    let later_model_event = journey.scheduler.schedule(ScheduleRequest {
+        at: tick(10),
+        priority: 1,
+        entity: Some(journey.actor),
+        kind: EventKind::custom(42),
+    });
     let plan = journey.start().unwrap();
     assert_eq!(plan.depart_at, tick(2));
     assert_eq!(plan.arrive_at, tick(10));
@@ -191,13 +197,6 @@ fn allocator_and_movement_dispatch_in_tick_order() {
             .submit(journey.porter, actor, tick(at))
             .unwrap()
     });
-    let later_model_event = journey.scheduler.schedule(ScheduleRequest {
-        at: plan.arrive_at,
-        priority: 1,
-        entity: Some(journey.actor),
-        kind: EventKind::custom(42),
-    });
-
     assert_eq!(journey.step_through(tick(8)), None);
     assert_eq!(journey.allocation.now(), tick(2));
     assert_eq!(
@@ -225,11 +224,11 @@ fn allocator_and_movement_dispatch_in_tick_order() {
         journey.allocation.request(later).unwrap().state,
         StagedRequestState::Scheduled,
     );
-    assert_eq!(journey.allocation.next_event_time(), Some(tick(11)));
     assert!(matches!(
-        journey.step_through(tick(10)),
+        journey.step_through(tick(11)),
         Some(StagedDispatch::Model(event)) if event.id == later_model_event
     ));
+    assert_eq!(journey.allocation.next_event_time(), Some(tick(11)));
     assert_eq!(journey.step_through(tick(10)), None);
 
     let usage = journey
