@@ -488,13 +488,15 @@ impl StagedResourceRuntime {
     /// Dispatch up to `max_events` live actions through the inclusive time limit.
     ///
     /// Actions at the same tick keep their scheduler order. The allocator clock
-    /// records the last dispatch. Use [`Self::next_event_time`] to check for due
+    /// records the last dispatch. Callers can schedule more actions at the
+    /// limit tick under the usual scheduling and usage rules.
+    /// Use [`Self::next_event_time`] to check for due
     /// work after exhausting the budget.
     ///
     /// # Errors
     ///
-    /// Propagates dispatch errors from [`Self::run_for`]. Earlier dispatches in
-    /// the call have already taken effect.
+    /// Propagates dispatch errors from [`Self::run_for`]. The scheduler may
+    /// consume the failing event. Earlier dispatches have already taken effect.
     pub fn run_until_or_for(
         &mut self,
         time_limit: SimTime,
