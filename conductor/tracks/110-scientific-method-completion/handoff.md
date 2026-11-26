@@ -2,6 +2,46 @@
 
 Updated 26 November 2026. Status **In Progress**.
 
+## S17 boundary wakeups — 26 November 2026
+
+`BoundaryChannel::next_event_time` previews the earliest arrival or expiry
+so a model can schedule boundary work alongside ABM updates. Expiry is due
+on the first tick after the inclusive deadline. Expiry batches return
+operation IDs in ascending order.
+[ADR and compatibility decision](../../../docs/adr/0013-scheduled-movement-and-committed-usage.md#boundary-wakeups-in-coordinated-models)
+
+Three transfers depart at tick 2 with a five-tick delay. One expires at
+tick 5, before an ABM update at tick 6. A second expires at tick 7 before
+arrival processing. The surviving transfer arrives on its deadline at tick
+7. The receiver runs its native ABM behavior at that tick. The model then
+acknowledges the transfer and releases the staged lease. The channel has no
+further due work after acknowledgement. The boundary test also checks
+cancellation, expiry batch order and a deadline at the maximum tick.
+[DES boundary case](../../../crates/kairo-ecs-des/tests/boundary_channel_transit_delay.rs) ·
+[Native receiver case](../../../crates/kairo-ecs-abm/tests/abm_behavior_update_v1.rs)
+
+The baseline fixture build exited `101` with `E0599` for the missing method.
+Review found that a departure retry after the deadline left an expired
+transfer's arrival in the queue. The regression failed with one of two
+channel slots available after expiry. The fix removes the queued arrival,
+returns the slot and keeps the transfer expired. The API docs now specify
+that models handle overdue work at the current coordinated tick.
+
+Independent review accepted `f1ed5137faa51d5c4a11c2276051eed10639b858`
+after rerunning the 13 tests in the ABM behavior, boundary transit and
+entity conservation executables. All three exited `0`.
+
+The workspace-root commands below exited `0` on macOS ARM64 with Rust and
+Cargo 1.99.1. The DES and ABM suite passed 124 tests.
+
+```sh
+cargo test --locked --offline -j 4 -p kairo-ecs-des -p kairo-ecs-abm --all-features
+cargo clippy --locked --offline -j 4 -p kairo-ecs-des -p kairo-ecs-abm \
+    --all-targets --all-features -- -D warnings
+RUSTDOCFLAGS="-D warnings" cargo doc --locked --offline -j 4 \
+    -p kairo-ecs-des --all-features --no-deps
+```
+
 ## S17 occupancy at a model observation tick — 26 November 2026
 
 `committed_usage_with_schedulers` uses a reached observation end across the

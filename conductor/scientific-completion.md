@@ -231,6 +231,12 @@ model observation end, censors the held lease, and preserves its later
 arrival and release.
 [Coordinated occupancy evidence](tracks/110-scientific-method-completion/handoff.md#s17-occupancy-at-a-model-observation-tick--26-november-2026)
 
+A boundary channel can supply the next arrival or expiry tick to a native
+DES scheduler. The coordinated case runs expiry, an ABM update, then arrival.
+The receiver runs at the arrival tick. The model acknowledges the transfer
+and releases its staged lease at that tick.
+[Boundary wakeup evidence](tracks/110-scientific-method-completion/handoff.md#s17-boundary-wakeups--26-november-2026)
+
 General hybrid synchronization and empirical validation of specific models
 still require their own results.
 [DES and movement receipt](tracks/110-scientific-method-completion/evidence/native-qualification-20261125.json) ·
