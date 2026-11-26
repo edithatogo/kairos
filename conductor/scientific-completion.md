@@ -237,6 +237,11 @@ The receiver runs at the arrival tick. The model acknowledges the transfer
 and releases its staged lease at that tick.
 [Boundary wakeup evidence](tracks/110-scientific-method-completion/handoff.md#s17-boundary-wakeups--26-november-2026)
 
+A DES wakeup that collects overdue transfers delivers them to ABM in
+scheduled arrival order. The coordinated case preserves departure order
+at equal arrival ticks and processes receipt at the current tick.
+[Overdue boundary evidence](tracks/110-scientific-method-completion/handoff.md#s17-overdue-boundary-arrivals--27-november-2026)
+
 General hybrid synchronization and empirical validation of specific models
 still require their own results.
 [DES and movement receipt](tracks/110-scientific-method-completion/evidence/native-qualification-20261125.json) ·

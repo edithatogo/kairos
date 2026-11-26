@@ -398,3 +398,83 @@ fn boundary_wakeups_coordinate_with_native_abm_and_lease_release() {
     );
     assert_eq!(channel.next_event_time(), None);
 }
+
+#[test]
+fn overdue_boundary_wakeup_preserves_scheduled_arrival_order() {
+    let tick = SimTime::from_ticks;
+    let mut des = DESContext::new(7);
+    let mut abm = BehaviorSimulation::new(7, RecordingBehavior::default());
+    let [later, first, second, future] = std::array::from_fn(|_| abm.spawn_agent());
+    let mut allocation = StagedResourceRuntime::new().unwrap();
+    let mut channel = BoundaryChannel::new(
+        "handover",
+        4,
+        TransitDelayDistribution::Uniform {
+            min: tick(1),
+            max: tick(5),
+        },
+    );
+    let mut rng = DeterministicStream::new(155);
+    for (id, entity, arrival) in [(1, later, 4), (8, first, 3), (3, second, 3), (4, future, 7)] {
+        let operation = HandoverOperationId::new(id);
+        channel
+            .request_transfer(HandoverEnvelope::new(
+                operation,
+                entity,
+                (),
+                "sender",
+                "receiver",
+                tick(2),
+                None,
+            ))
+            .unwrap();
+        assert_eq!(
+            channel.depart(operation, tick(2), &mut rng),
+            Ok(tick(arrival))
+        );
+    }
+
+    // The receiver has reached tick 5 when the model starts servicing the channel.
+    let observer = abm.spawn_agent();
+    abm.schedule_update(observer, tick(5));
+    assert_eq!(abm.run_for(1).updates()[0].at, tick(5));
+    let due = channel.next_event_time().unwrap();
+    assert_eq!(due, tick(3));
+    let wakeup = des.schedule_at(
+        due.max(abm.context().scheduler.now()),
+        0,
+        EventKind::custom(83),
+    );
+    assert!(matches!(
+        allocation.peek_with_schedulers(
+            &mut [&mut des.scheduler, &mut abm.context_mut().scheduler],
+            tick(5)
+        ),
+        Ok(Some(StagedDispatchSelection::Model { scheduler_index: 0, event }))
+            if event.id == wakeup && event.at == tick(5)
+    ));
+    let event = des.step().into_dispatched().unwrap();
+    assert_eq!(event.id, wakeup);
+    assert!(channel.check_expiries(event.at).is_empty());
+    let arrivals = channel.collect_arrivals(event.at);
+    for arrival in &arrivals {
+        abm.schedule_update(arrival.entity, event.at);
+    }
+
+    assert_eq!(
+        abm.run_for(3)
+            .updates()
+            .iter()
+            .map(|update| (update.at, update.agent))
+            .collect::<Vec<_>>(),
+        [(tick(5), first), (tick(5), second), (tick(5), later)]
+    );
+    assert_eq!(
+        arrivals
+            .iter()
+            .map(|envelope| envelope.arrive_at)
+            .collect::<Vec<_>>(),
+        [Some(tick(3)), Some(tick(3)), Some(tick(4))]
+    );
+    assert_eq!(channel.next_event_time(), Some(tick(7)));
+}

@@ -345,6 +345,9 @@ impl<T: Clone> BoundaryChannel<T> {
     }
 
     /// Collects all envelopes that have reached arrival time by `now`.
+    ///
+    /// Returns arrivals in scheduled arrival order, preserving departure order
+    /// for equal arrival ticks.
     pub fn collect_arrivals(&mut self, now: SimTime) -> Vec<HandoverEnvelope<T>> {
         let mut arrived = Vec::new();
         let mut remaining = Vec::with_capacity(self.in_transit.len());
@@ -364,6 +367,7 @@ impl<T: Clone> BoundaryChannel<T> {
         }
 
         self.in_transit = remaining;
+        arrived.sort_by_key(|env| env.arrive_at);
         arrived
     }
 

@@ -93,6 +93,9 @@ If the due tick has passed, handle the overdue work at the current
 coordinated tick.
 At dispatch, call `check_expiries` and then `collect_arrivals` with the emitted
 tick. These calls apply expiry before arrivals due at that same tick. Expiry
-batches report IDs in ascending order. The caller handles the returned
-operations and schedules any receiving ABM events or lease reactions.
+batches report IDs in ascending order. When collecting arrivals across
+several due ticks, the channel returns the earliest scheduled arrivals
+first and preserves departure order at equal ticks. The model can schedule
+receiving ABM events in that order at the current coordinated tick. The
+envelopes retain their scheduled arrival ticks.
 [Executable DES and ABM case](../../crates/kairo-ecs-abm/tests/abm_behavior_update_v1.rs)

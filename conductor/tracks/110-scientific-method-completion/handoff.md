@@ -1,6 +1,37 @@
 # Handoff
 
-Updated 26 November 2026. Status **In Progress**.
+Updated 27 November 2026. Status **In Progress**.
+
+## S17 overdue boundary arrivals — 27 November 2026
+
+`BoundaryChannel::collect_arrivals` returns due transfers by scheduled
+arrival tick and preserves departure insertion order at a tie. The model
+schedules receiver updates at the current coordinated tick. Each envelope
+retains its scheduled arrival tick.
+[Boundary scheduling contract](../../../docs/design/boundary-channels.md#6-coordinated-boundary-wakeups)
+
+Four transfers depart at tick 2 and are due at ticks 4, 3, 3 and 7. The model
+starts servicing the channel after ABM reaches tick 5. A native DES wakeup
+at tick 5 collects the three due transfers. The ABM runner receives both
+tick-3 transfers in departure order, then the tick-4 transfer. All three
+receiver updates run at tick 5. The tick-7 transfer stays queued.
+[Executable DES and ABM case](../../../crates/kairo-ecs-abm/tests/abm_behavior_update_v1.rs)
+
+Before the fix, the focused test exited `101` because the tick-4
+transfer reached the receiver first. Independent review accepted
+`9d4fce2359de9c8045b180efec2a6d250df20a0c` after rerunning 14 tests
+across ABM behavior, boundary transit and entity conservation. All passed.
+
+The workspace-root commands below exited `0` on macOS ARM64 with Rust and
+Cargo 1.99.1. The DES and ABM suite passed 125 tests.
+
+```sh
+cargo test --locked --offline -j 4 -p kairo-ecs-des -p kairo-ecs-abm --all-features
+cargo clippy --locked --offline -j 4 -p kairo-ecs-des -p kairo-ecs-abm \
+    --all-targets --all-features -- -D warnings
+RUSTDOCFLAGS="-D warnings" cargo doc --locked --offline -j 4 \
+    -p kairo-ecs-des --all-features --no-deps
+```
 
 ## S17 boundary wakeups — 26 November 2026
 
