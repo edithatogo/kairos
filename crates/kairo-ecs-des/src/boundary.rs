@@ -386,8 +386,8 @@ impl<T: Clone> BoundaryChannel<T> {
         arrived
     }
 
-    /// Acknowledges transfer completion by receiver.
-    /// Finalizes custody handover and releases channel resources.
+    /// Acknowledges transfer completion at or after its scheduled arrival.
+    /// Accepts due in-transit or arrived transfers and releases channel resources.
     pub fn acknowledge(
         &mut self,
         op_id: HandoverOperationId,
@@ -398,7 +398,9 @@ impl<T: Clone> BoundaryChannel<T> {
             .get_mut(&op_id)
             .ok_or(BoundaryError::OperationNotFound(op_id))?;
 
-        if env.state != TransferState::Arrived && env.state != TransferState::InTransit {
+        if !matches!(env.state, TransferState::InTransit | TransferState::Arrived)
+            || env.arrive_at.is_none_or(|arrival| now < arrival)
+        {
             return Err(BoundaryError::InvalidStateTransition {
                 op_id,
                 current: env.state,
