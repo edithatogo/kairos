@@ -68,6 +68,7 @@ Close every stated scientific/advanced method with a correct implementation and 
   - S17 covers [DES and ABM boundary and movement cases](../../scientific-completion.md#s17-resource-and-boundary-qualification). General hybrid synchronization and empirical model validation remain open.
   - [x] S17 bounded allocator dispatch verified an inclusive limit, a same-tick budget, and movement arrival with later allocator work still scheduled. [Execution and review](handoff.md#s17-bounded-allocator-dispatch--26-november-2026)
   - [x] S17 coordinated allocator and model dispatch verified event order across DES and ABM, same-tick lease release, and rejection of backdated events. [Execution and review](handoff.md#s17-coordinated-allocator-and-model-dispatch--26-november-2026)
+  - [x] S17 native behavior dispatch verified that the scheduler preview leaves the selected ABM event queued for its own runner, and the model releases the lease at the emitted update tick. [Execution and review](handoff.md#s17-native-behavior-dispatch--26-november-2026)
 - [x] 110.2.4: Record the distinct evidence limits for analytical correctness, native execution, comparative performance and empirical validity. [Current dispositions](../../scientific-completion.md#limits-on-performance-and-empirical-claims)
 - [ ] 110.2.review: Independently review this phase, apply accepted fixes, execute the named oracles and record the next-phase decision.
 

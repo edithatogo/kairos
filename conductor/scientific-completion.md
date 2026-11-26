@@ -213,6 +213,12 @@ model event also takes precedence over a later eligible allocation. The
 allocator fixture checks backdated work in both queues.
 [Coordinated dispatch evidence](tracks/110-scientific-method-completion/handoff.md#s17-coordinated-allocator-and-model-dispatch--26-november-2026)
 
+The scheduler preview extends this ordering to native ABM behavior updates.
+`BehaviorSimulation` dispatches the selected event and invokes the agent's
+handler once. The model uses the emitted update tick to release the lease.
+The later allocator request stays scheduled for its own tick.
+[Native behavior evidence](tracks/110-scientific-method-completion/handoff.md#s17-native-behavior-dispatch--26-november-2026)
+
 General hybrid synchronization and empirical validation of specific models
 still require their own results.
 [DES and movement receipt](tracks/110-scientific-method-completion/evidence/native-qualification-20261125.json) ·

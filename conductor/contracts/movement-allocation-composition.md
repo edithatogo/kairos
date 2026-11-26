@@ -32,3 +32,18 @@ The Rust fixture checks a lease admission that starts movement, allocator
 requests before and at the arrival, and a lease release before the next
 same-tick model event. It also covers cancellation, replanning, actor
 retirement and failure to start, with occupancy and capacity assertions.
+
+## Dispatching through the model's own runner
+
+Use `StagedResourceRuntime::peek_with_scheduler` when the model runs its own
+event handlers during dispatch. The preview applies the same clock, limit and
+tie rules and leaves both queues ready to dispatch. For
+`StagedDispatchPreview::Allocation(at)`, run the allocator through `at` with
+an event budget of one. For `StagedDispatchPreview::Model`, let the model
+dispatch its next event, for example with `BehaviorSimulation::run_for(1)`.
+Apply the reaction at that dispatch tick, then preview again.
+
+The [ABM behavior fixture](../../crates/kairo-ecs-abm/tests/abm_behavior_update_v1.rs)
+uses this sequence to execute an agent update and close its lease at the
+same tick. A preview describes the current queues. Preview again after
+intervening scheduling, cancellation or dispatch.

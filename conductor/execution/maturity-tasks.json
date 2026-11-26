@@ -2489,6 +2489,42 @@
       "obligation": "S17"
     },
     {
+      "id": "S17.behavior",
+      "title": "Coordinate staged allocation with native ABM behavior dispatch",
+      "parent": "110:S17",
+      "kind": "implementation",
+      "executor": "local",
+      "requires": [],
+      "read": [
+        "conductor/tracks/110-scientific-method-completion/spec.md",
+        "crates/kairo-ecs-abm/src/lib.rs",
+        "crates/kairo-ecs-core/src/lib.rs"
+      ],
+      "write": [
+        "crates/kairo-ecs-des/src/staged_runtime.rs",
+        "crates/kairo-ecs-abm/tests/abm_behavior_update_v1.rs",
+        "conductor/contracts/movement-allocation-composition.md",
+        "docs/adr/0013-scheduled-movement-and-committed-usage.md"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-abm",
+            "--test",
+            "abm_behavior_update_v1"
+          ]
+        }
+      ],
+      "acceptance": "Preview chooses the earliest live event through an inclusive tick, with allocation first at a tie. The selected ABM event stays queued for BehaviorSimulation to execute once. The model reacts to the emitted update by closing the lease at its tick. Later work stays scheduled.",
+      "stop": "Return the exact source and executed behavior case. Limit qualification to two forward-only queues in one process.",
+      "obligation": "S17"
+    },
+    {
       "id": "S05.bounds",
       "title": "Reject Sobol dimension/index exhaustion before arithmetic",
       "parent": "110:S05",
