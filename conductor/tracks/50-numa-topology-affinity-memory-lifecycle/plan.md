@@ -17,10 +17,13 @@ the reviewed source, installed tools, allocator budgets and C Data lifetimes.
 
 The [scheduler placement probe](evidence/numa-locality/README.md) passed
 one-node calibration on physical Linux and Apple Container. Colab's
-standard and high-memory CPU profiles each expose one node. CAP-50.5
-still needs native page placement and matched local and remote timings
-across two memory nodes.
-The entries below preserve the earlier contract and single-node work.
+standard and high-memory CPU profiles each expose one node.
+
+The 26 November 2026 emulation run verified page placement on two guest
+nodes and passed Kairos's Linux topology and affinity tests. CAP-50.5 still
+needs native page placement and matched local and remote timings across two
+hardware-backed NUMA nodes.
+[Emulation evidence](evidence/local-simulations-20261126.md#emulated-numa)
 
 ## Phase 0 - TDD baseline
 
