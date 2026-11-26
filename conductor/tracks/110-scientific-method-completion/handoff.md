@@ -2,6 +2,41 @@
 
 Updated 26 November 2026. Status **In Progress**.
 
+## S17 separate DES and ABM queues — 26 November 2026
+
+The experimental `StagedResourceRuntime::peek_with_schedulers` selects the
+earliest live event through an inclusive tick across the allocator and an
+ordered slice of model schedulers. Equal ticks favour allocation, then model
+slice order. The returned model queue index identifies the dispatcher.
+[ADR and compatibility decision](../../../docs/adr/0013-scheduled-movement-and-committed-usage.md#preview-across-multiple-model-queues)
+
+The case starts with a tick-4 event in each queue. The DES and ABM events
+have the same local ID and different priorities. Allocation takes the first
+turn, then `DESContext` dispatches the completion. The model uses that tick
+to schedule an ABM follow-up. `BehaviorSimulation` with seed 7 dispatches the
+original update. The model reacts by releasing the lease before the follow-up
+at the same tick. The DES and allocation events at tick 6 stay scheduled.
+A negative case leaves the idle DES clock at tick 8 and offers an ABM event
+at tick 7. The preview rejects that event and leaves it pending.
+[Executable native cases](../../../crates/kairo-ecs-abm/tests/abm_behavior_update_v1.rs)
+
+The baseline fixture build exited `101` with `E0432` and `E0599` for the
+missing selection type and method. Independent scheduler and API review of
+`5b347a17e3135ee326ba96559d1bd166c9c83214` reran 14 tests across the behavior,
+movement and allocator conservation executables. All exited `0`. The
+review accepted the source and the compatibility of single-queue dispatch.
+
+The workspace-root commands below exited `0` on macOS ARM64 with Rust and
+Cargo 1.99.1. The DES and ABM suite passed 120 tests.
+
+```sh
+cargo test --locked --offline -j 4 -p kairo-ecs-des -p kairo-ecs-abm --all-features
+cargo clippy --locked --offline -j 4 -p kairo-ecs-des -p kairo-ecs-abm \
+    --all-targets --all-features -- -D warnings
+RUSTDOCFLAGS="-D warnings" cargo doc --locked --offline -j 4 \
+    -p kairo-ecs-des --all-features --no-deps
+```
+
 ## S17 native behavior dispatch — 26 November 2026
 
 `StagedResourceRuntime::peek_with_scheduler` applies the coordinated
