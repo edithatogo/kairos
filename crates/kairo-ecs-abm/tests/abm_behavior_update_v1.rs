@@ -3,9 +3,9 @@ use kairo_ecs_abm::{
     BEHAVIOR_UPDATE_EVENT_KIND,
 };
 use kairo_ecs_des::{
-    BoundaryChannel, DESContext, HandoverEnvelope, HandoverOperationId, StagedDispatchPreview,
-    StagedDispatchSelection, StagedRequestState, StagedResourceRuntime, StagedRuntimeError,
-    TransferState, TransitDelayDistribution,
+    BoundaryChannel, BoundaryError, DESContext, HandoverEnvelope, HandoverOperationId,
+    StagedDispatchPreview, StagedDispatchSelection, StagedRequestState, StagedResourceRuntime,
+    StagedRuntimeError, TransferState, TransitDelayDistribution,
 };
 use kairo_ecs_rng::DeterministicStream;
 use kairo_ecs_types::{EntityId, EventKind, SimTime};
@@ -327,11 +327,12 @@ fn boundary_wakeups_coordinate_with_native_abm_and_lease_release() {
         allocation
             .peek_with_schedulers(
                 &mut [&mut des.scheduler, &mut abm.context_mut().scheduler],
-                tick(7),
+                tick(8),
             )
             .unwrap()
     };
     let boundary_event = EventKind::custom(83);
+    let retry_event = des.schedule_at(tick(8), 0, boundary_event);
     let expiry_event = des.schedule_at(channel.next_event_time().unwrap(), 0, boundary_event);
     assert!(matches!(
         preview(&mut allocation, &mut des, &mut abm),
@@ -397,6 +398,32 @@ fn boundary_wakeups_coordinate_with_native_abm_and_lease_release() {
         TransferState::Expired
     );
     assert_eq!(channel.next_event_time(), None);
+
+    assert!(matches!(
+        preview(&mut allocation, &mut des, &mut abm),
+        Some(StagedDispatchSelection::Model { scheduler_index: 0, event })
+            if event.id == retry_event && event.at == tick(8)
+    ));
+    let retry = des.step().into_dispatched().unwrap();
+    assert_eq!(retry.id, retry_event);
+    let checkpoint = rng.checkpoint();
+    assert_eq!(
+        channel.depart(accepted, retry.at, &mut rng),
+        Err(BoundaryError::TransferExpired(accepted))
+    );
+    assert_eq!(channel.get_envelope(accepted), Some(&acknowledged));
+    assert_eq!(
+        channel.request_transfer(delivery.clone()),
+        Ok(TransferState::Acknowledged)
+    );
+    assert_eq!(rng.checkpoint(), checkpoint);
+    assert_eq!(channel.available_channel_capacity(), 3);
+    assert!(channel.collect_arrivals(retry.at).is_empty());
+    assert_eq!(channel.next_event_time(), None);
+    assert_eq!(
+        allocation.request(request).unwrap().state,
+        StagedRequestState::Released
+    );
 }
 
 #[test]

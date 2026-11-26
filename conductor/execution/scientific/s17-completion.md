@@ -18,6 +18,16 @@ empty wakeup preview and next draw from the original stream position. The
 original unchecked addition fails this control.
 [Transit fixture](../../../crates/kairo-ecs-des/tests/boundary_channel_transit_delay.rs)
 
+## Late departure retry after acknowledgement
+
+In the native wakeup fixture, ABM acknowledges the transfer and releases
+its staged lease at tick 7. A queued DES retry at tick 8 returns
+`TransferExpired` and preserves the acknowledged envelope and RNG cursor.
+A duplicate request reads back `Acknowledged`, the channel has no further
+arrivals or wakeups, and the lease is still released. Live transfers can
+still expire after their deadline.
+[Native DES and ABM case](../../../crates/kairo-ecs-abm/tests/abm_behavior_update_v1.rs)
+
 ## Remaining design
 
 The workpack records the arrival-horizon leaf separately from the closure
