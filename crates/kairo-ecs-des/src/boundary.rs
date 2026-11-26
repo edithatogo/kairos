@@ -303,6 +303,7 @@ impl<T: Clone> BoundaryChannel<T> {
     ///
     /// If the arrival would overflow, returns [`BoundaryError::ArrivalOverflow`]
     /// and preserves the transfer and the caller's stream.
+    /// A departure after its deadline also preserves any terminal outcome.
     pub fn depart(
         &mut self,
         op_id: HandoverOperationId,
@@ -321,13 +322,13 @@ impl<T: Clone> BoundaryChannel<T> {
             .get_mut(&op_id)
             .ok_or(BoundaryError::OperationNotFound(op_id))?;
 
-        if let Some(timeout) = env.timeout {
-            if now > timeout {
+        if env.timeout.is_some_and(|timeout| now > timeout) {
+            if !env.state.is_terminal() {
                 env.state = TransferState::Expired;
                 self.completed_ops.insert(op_id);
                 self.in_transit.retain(|entry| entry.operation_id != op_id);
-                return Err(BoundaryError::TransferExpired(op_id));
             }
+            return Err(BoundaryError::TransferExpired(op_id));
         }
 
         if env.state != TransferState::Reserved
