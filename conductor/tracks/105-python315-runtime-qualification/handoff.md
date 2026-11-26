@@ -1,5 +1,42 @@
 # Handoff
 
+## Installed lock and runtime readback — 25–26 November 2026
+
+On main `6e908df`, [all four managed inventory jobs and native readback](https://github.com/edithatogo/kairos/actions/runs/45591282880)
+and [binding CI](https://github.com/edithatogo/kairos/actions/runs/45591282570)
+passed. The inventory verifies package presence; it still does not prove
+resolved managed edges or extras.
+
+The same four inventory jobs, trusted submit and native readback succeeded
+again at `56c74b83` on 26 November.
+[Exact hosted run](https://github.com/edithatogo/kairos/actions/runs/45808254074).
+This is installed package presence, not a managed resolution graph.
+
+The repository's native SPDX 2.3 export contained 98 PyPI entries, including
+`jsonschema 4.26.0` and `referencing 0.37.0`, but no dependency relationship
+between PyPI entries. The local archive tree includes that edge. The export
+cannot qualify managed edges; this is not evidence about unexported internals.
+
+On macOS ARM64, four fresh checkout-local CPython 3.15.2 environments
+installed the bootstrap, archive, package and Gym locks with `uv 0.13.9`,
+public binary wheels and `--require-hashes`. Their installed counts were
+36, 5, 27 and 9. The corresponding maintained direct inputs matched each
+installed version. Every environment verified its real prefix and an
+interpreter subprocess; `uv pip check` and `uv pip tree --strict
+--show-version-specifiers` passed. All 16 focused runtime and policy unittest
+cases passed on 25 November. Startup cleanup did not retain those ignored
+environment and log directories. Use the retained hosted runs for exact
+current-main inventory evidence; the older local result is not a substitute
+for managed edges or extras.
+
+Chat `01a21056-b5b2-7591-9981-88554b9d38ec` owns this local readback in
+`/Users/doughnut/.codex/worktrees/kairos-ponytail-simplification/kairos`,
+limited to these four isolated lock profiles and the existing hosted runs.
+No graph submission was repeated and no active environment was replaced.
+Next: qualify managed transitive edges and applicable extras, and reconcile
+the remaining active-entry-point and provider checks. Accelerator and live
+HPC execution were not attempted. Track 105 remains In Progress.
+
 ## Python 3.15.2 handover and provider readback
 
 Integration chat `01a1fd18-51c7-7963-a3cc-d262d54582ba` owns the active

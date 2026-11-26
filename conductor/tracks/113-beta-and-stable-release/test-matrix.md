@@ -2,7 +2,7 @@
 
 | Gate | Required evidence | Current acceptance |
 |---|---|---|
-| Beta | Every enumerated required gate has candidate-specific evidence or the capability is excluded. | [Engineering evidence accepted](handoff.md#native-core-v1-decision--25-november-2026). Maintainer acceptance pending. |
+| Beta | Every enumerated required gate has candidate-specific evidence or the capability is excluded. | Phase 0 closed for `e2875387` with [engineering and maintainer acceptance](handoff.md#native-core-v1-decision--25-november-2026). |
 | Installed packages | [Native beta installed artifacts workflow](../../../.github/workflows/native-beta.yml) executes the Rust, C and Python artifacts on Linux x86-64 and macOS ARM64. | Both selected platform receipts passed at `e2875387`. |
 | Installed CareOps | The pinned public CareOps lease-contention case runs against the same installed SDK from both legs of the matrix. | Passed with the same shared SDK digest on both targets. |
 | Candidate provenance | [Release Attestations](../../../.github/workflows/release-attestations.yml) verifies the selected installed run, both receipt digests, and all six package paths before scanning the contents and signing the SPDX SBOM. | The downloaded bundle and signed SBOM were verified against all five distinct tested digests. |

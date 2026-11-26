@@ -2,7 +2,8 @@
 
 Release a precisely scoped beta, then an independently reproducible and compatible stable core, without implying all experimental modules are complete.
 
-Status: Spec Approved. Created 7 November 2026 from the maintainer's approved request.
+Track status is **In Progress**. Phase 0 closed for the selected candidate.
+Created 7 November 2026 from the maintainer's approved request.
 
 - [Specification](spec.md)
 - [Plan](plan.md)

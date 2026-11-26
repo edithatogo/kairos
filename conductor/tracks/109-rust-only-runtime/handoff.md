@@ -28,6 +28,11 @@ The [runtime inventory](../../../bindings/runtime-policy.json) states the
 current boundary for each. The release candidate decision is recorded in
 [Track 113](../113-beta-and-stable-release/handoff.md).
 
+The maintainer accepted this exact two-platform beta and its seeded replay
+break on 25 November 2026. This closes the beta-specific 109 support decision,
+not the wider binding work. Track 109 does not claim installed support for
+the remaining hosts, platforms or adapter operations.
+
 ## Registration history — 7 November 2026
 
 Updated 7 November 2026. Status: In Progress; no implementation phase is accepted by this registration.

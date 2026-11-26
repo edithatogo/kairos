@@ -1,5 +1,27 @@
 # Handoff
 
+## Proposed non-HPC checkpoint comparison — 25 November 2026
+
+The [branching protocol draft](branching-protocol.md) defines a held-out
+entity-lifecycle comparison against full replay with conventional CRN, with
+negative controls for draw order and cursor restoration. It has not been run
+or preregistered. The existing claim-validation result is unchanged. Next:
+independently review and freeze the implementation, source, fixture and
+oracle before measuring the held-out cases. No new claim, paper, executor
+selection or phase advancement follows from the draft.
+
+Independent protocol review separated cursor restoration from dispatch-order
+controls and required a pre-fork draw by the retired generation. Those
+changes are reflected in the draft; review of the frozen runnable case and
+preregistration are still pending.
+
+Chat `01a21056-b5b2-7591-9981-88554b9d38ec` owns the protocol draft in
+`/Users/doughnut/.codex/worktrees/kairos-ponytail-simplification/kairos`;
+the draft was recovered unchanged from `d528c1e8` on 26 November.
+No native operation was run for this draft. The separately qualified
+[Track 111 performance scope](../../archive/111-measured-performance/handoff.md)
+is closed; its evidence does not accept this protocol or its results.
+
 ## Claim validation experiment
 
 The protocol and harness were committed as `d8ba90e` before evaluation.
