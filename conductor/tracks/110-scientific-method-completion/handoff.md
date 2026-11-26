@@ -2,6 +2,44 @@
 
 Updated 26 November 2026. Status **In Progress**.
 
+## S17 bounded allocator dispatch — 26 November 2026
+
+The experimental `StagedResourceRuntime::run_until_or_for` dispatches live
+actions through an inclusive tick and returns their count within the supplied
+budget. A partially drained tick can be resumed in scheduler order. The model
+can schedule additional actions at the limit tick under the usual scheduling
+and usage rules.
+[ADR and compatibility decision](../../../docs/adr/0013-scheduled-movement-and-committed-usage.md#bounded-allocator-dispatch)
+
+The capacity-one allocator test checks zero budget, a split same-tick pair,
+a cancelled close before a future request, stale lease rejection and FIFO
+promotion. Its ticks exceed 64 bits. In the movement test, an arrival at tick
+10 closes the journey's lease at that tick. The waiter from tick 9 is admitted,
+the request from tick 10 stays queued, and the request at tick 11 stays
+scheduled. The journey's occupancy window records eight occupied unit ticks.
+[Allocator case](../../../crates/kairo-ecs-des/tests/maturity_resource_conservation.rs) ·
+[Movement case](../../../crates/kairo-ecs-abm/tests/movement_allocation.rs)
+
+The baseline test build exited `101` with `E0599` for the missing allocator
+method. Independent API and conformance review of
+`717b4751069f84f9334bb0fd19dedec2cdaa37d1` reran both cases. The review asked
+for the Rustdoc to make same-tick scheduling after a drain explicit. The
+movement case already checks that the release can be added at the drained
+tick. The correction in `6c7699cd42b5d1797d8cb8f256f3fe80d7deea51` explains
+that boundary and what happens when a dispatch returns an error.
+The reviewer checked the corrected Rustdoc and accepted the change.
+
+From the workspace root, Rust and Cargo 1.99.1 on macOS ARM64 ran the
+following commands with exit `0`. The scoped suite passed 116 tests.
+
+```sh
+cargo test --locked -j 4 -p kairo-ecs-des -p kairo-ecs-abm --all-features
+cargo clippy --locked --offline -j 4 -p kairo-ecs-des -p kairo-ecs-abm \
+    --all-targets --all-features -- -D warnings
+RUSTDOCFLAGS="-D warnings" cargo doc --locked --offline -j 4 \
+    -p kairo-ecs-des --all-features --no-deps
+```
+
 ## S15 staged allocator replay — 26 November 2026
 
 The experimental debugger example drives the real `StagedResourceRuntime`

@@ -77,13 +77,7 @@ impl Journey {
     }
 
     fn drain_allocation_through(&mut self, at: SimTime) {
-        while self
-            .allocation
-            .next_event_time()
-            .is_some_and(|event| event <= at)
-        {
-            assert_eq!(self.allocation.run_for(1), Ok(1));
-        }
+        self.allocation.run_until_or_for(at, u64::MAX).unwrap();
     }
 
     fn start(&mut self) -> Result<MovementPlan, MovementError> {
@@ -175,6 +169,48 @@ fn arrival_releases_porter_at_its_dispatch_tick() {
         MovementArrivalOutcome::Arrived
     );
     journey.verify_completion(Some(DESTINATION), 8, 10);
+}
+
+#[test]
+fn arrival_drains_due_requests_and_preserves_future_work() {
+    let mut journey = Journey::new();
+    journey.start().unwrap();
+    let [prior, tied, later] = [9, 10, 11].map(|at| {
+        let actor = journey.allocation.spawn_actor().unwrap();
+        journey
+            .allocation
+            .submit(journey.porter, actor, tick(at))
+            .unwrap()
+    });
+
+    assert_eq!(
+        journey.dispatch_arrival().outcome,
+        MovementArrivalOutcome::Arrived,
+    );
+    let state = journey.allocation.resource(journey.porter).unwrap();
+    assert_eq!(state.capacity, 1);
+    assert_eq!(state.available, 0);
+    assert_eq!(
+        state.active,
+        [journey.allocation.request(prior).unwrap().lease.unwrap()]
+    );
+    assert_eq!(state.queued, [tied]);
+    assert_eq!(
+        journey.allocation.request(later).unwrap().state,
+        StagedRequestState::Scheduled,
+    );
+    assert_eq!(journey.allocation.next_event_time(), Some(tick(11)));
+
+    let usage = journey
+        .allocation
+        .committed_usage(journey.porter, tick(0), tick(10))
+        .unwrap();
+    assert_eq!(usage.occupied_unit_ticks, 8);
+    assert_eq!(usage.occupancy.len(), 1);
+    let row = &usage.occupancy[0];
+    assert_eq!(row.request, journey.request.entity_id());
+    assert_eq!(row.admission.at, tick(2));
+    assert_eq!(row.release.unwrap().at, tick(10));
 }
 
 #[test]
