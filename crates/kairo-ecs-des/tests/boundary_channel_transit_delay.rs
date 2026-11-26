@@ -310,7 +310,12 @@ fn boundary_arrival_horizon_preserves_transfer_and_rng() {
             assert_eq!(channel.next_event_time(), Some(limit));
             assert_eq!(rng.checkpoint(), sampled_stream.checkpoint());
         } else {
-            assert_eq!(result, Err(BoundaryError::ArrivalOverflow(operation)));
+            let error = result.unwrap_err();
+            assert_eq!(error, BoundaryError::ArrivalOverflow(operation));
+            assert_eq!(
+                error.to_string(),
+                "arrival tick exceeds the simulation time range for HandoverOp(1)"
+            );
             assert_eq!(channel.get_envelope(operation), Some(&reserved));
             assert_eq!(channel.available_channel_capacity(), 1);
             assert_eq!(channel.next_event_time(), None);
