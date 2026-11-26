@@ -119,6 +119,17 @@ fn scenario() -> ReplaySession<AllocatorModel> {
     )
 }
 
+fn check_replay(
+    session: &mut ReplaySession<AllocatorModel>,
+    suffix: [(DispatchedEvent, Vec<u8>); 2],
+) {
+    for (event, checkpoint) in suffix {
+        assert_eq!(session.step().unwrap(), Some(event));
+        assert_eq!(session.model().checkpoint(), checkpoint);
+    }
+    assert_eq!(session.step().unwrap(), None);
+}
+
 fn verify_rewind_and_replay() {
     let mut session = scenario();
     let [holder, head, tail] = session.model().requests;
@@ -148,11 +159,10 @@ fn verify_rewind_and_replay() {
     session.seek(1).unwrap();
     assert_eq!(session.current_event(), Some(first));
     assert_eq!(session.model().checkpoint(), after_first);
-    for (event, checkpoint) in [(second, after_second), (release, after_release)] {
-        assert_eq!(session.step().unwrap(), Some(event));
-        assert_eq!(session.model().checkpoint(), checkpoint);
-    }
-    assert_eq!(session.step().unwrap(), None);
+    check_replay(
+        &mut session,
+        [(second, after_second), (release, after_release)],
+    );
 }
 
 fn verify_fork_isolation() {
@@ -170,9 +180,12 @@ fn verify_fork_isolation() {
     let parent_checkpoint = model.checkpoint();
 
     let mut branch = parent.fork(|model, scheduler| {
+        // A local holder request could replace its pending close at tick eight.
         assert_eq!(
-            model.allocator.release(parent_lease, tick(4)),
-            Err(StagedRuntimeError::InvalidState),
+            model
+                .allocator
+                .close_request(parent_lease.request_id(), tick(4)),
+            Err(StagedRuntimeError::UnknownRequest),
         );
         assert!(model
             .allocator
@@ -181,16 +194,29 @@ fn verify_fork_isolation() {
         model.schedule_next(scheduler);
     });
 
-    assert_eq!(branch.step().unwrap().unwrap().at, tick(4));
+    let branch_position = branch.position();
+    let branch_checkpoint = branch.model().checkpoint();
+    let withdrawal = branch.step().unwrap().unwrap();
+    assert_eq!(withdrawal.at, tick(4));
     branch.model().check_resource(0, &[holder, tail], &[]);
     let model = branch.model();
     assert_eq!(
         model.allocator.request(model.request(head)).unwrap().state,
         StagedRequestState::Released,
     );
-    assert_eq!(branch.step().unwrap().unwrap().at, tick(8));
+    let after_withdrawal = model.checkpoint();
+    let release = branch.step().unwrap().unwrap();
+    assert_eq!(release.at, tick(8));
     branch.model().check_resource(2, &[tail], &[]);
+    let after_release = branch.model().checkpoint();
     assert_eq!(branch.step().unwrap(), None);
+
+    branch.seek(branch_position).unwrap();
+    assert_eq!(branch.model().checkpoint(), branch_checkpoint);
+    check_replay(
+        &mut branch,
+        [(withdrawal, after_withdrawal), (release, after_release)],
+    );
 
     assert_eq!(parent.model().checkpoint(), parent_checkpoint);
     parent.model().check_resource(1, &[holder], &[head, tail]);
