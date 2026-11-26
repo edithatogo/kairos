@@ -672,16 +672,48 @@ impl StagedResourceRuntime {
         start: SimTime,
         end: SimTime,
     ) -> Result<CommittedUsageWindow, StagedRuntimeError> {
+        self.committed_usage_with_schedulers(resource, start, end, &mut [])
+    }
+
+    /// Export occupancy at a coordinated observation tick in a forward-only run.
+    ///
+    /// One participating scheduler must have reached `end`. All queues,
+    /// including the allocator, must have finished live work through that
+    /// tick. Supply the model schedulers from the same run and finish their
+    /// handlers and reactions before exporting. This lets a model observe
+    /// through an interval when the allocator is idle.
+    ///
+    /// A successful export seals allocation through `end`. Event previews
+    /// may prune cancelled entries. Clocks retain their last dispatch ticks.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`StagedRuntimeError::InvalidUsageWindow`] for reversed or empty
+    /// bounds, an unreached endpoint, or live work due through `end`. Returns
+    /// the same resource, provenance and overflow errors as
+    /// [`Self::committed_usage`].
+    pub fn committed_usage_with_schedulers(
+        &mut self,
+        resource: StagedResourceId,
+        start: SimTime,
+        end: SimTime,
+        schedulers: &mut [&mut Scheduler],
+    ) -> Result<CommittedUsageWindow, StagedRuntimeError> {
         let resource_record = self
             .resources
             .get(&resource)
             .ok_or(StagedRuntimeError::UnknownResource)?;
+        let reached =
+            self.now() >= end || schedulers.iter().any(|scheduler| scheduler.now() >= end);
         if start >= end
-            || end > self.now()
+            || !reached
             || self
                 .scheduler
                 .peek_next()
                 .is_some_and(|event| event.at <= end)
+            || schedulers
+                .iter_mut()
+                .any(|scheduler| scheduler.peek_next().is_some_and(|event| event.at <= end))
         {
             return Err(StagedRuntimeError::InvalidUsageWindow);
         }

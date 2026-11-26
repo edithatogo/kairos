@@ -72,3 +72,19 @@ All participating queues use a common time unit and retain their positions.
 The latest dispatch tick across all queues, including idle ones, sets the
 lower bound. Each owner dispatches its selected event. The qualified case
 uses one allocator and two model queues in a single process.
+
+## Committed usage at a model observation tick
+
+`StagedResourceRuntime::committed_usage_with_schedulers` is an additive
+experimental Rust API in `kairo-ecs-des`. It uses the existing occupancy
+format, interval calculation and seal. When a model queue reaches the
+observation end while the allocator is idle, the export can use that tick.
+An eligible event in any participating queue blocks export, even when
+another clock has already reached the end. Finish the handlers and their
+reactions through the endpoint before observing.
+
+The clocks retain their actual dispatch ticks. A successful export clips
+occupancy and seals the allocator through the endpoint. The
+[conformance case](../../crates/kairo-ecs-abm/tests/movement_allocation.rs)
+checks an unreached endpoint, due same-tick model work, a censored lease
+and later arrival with release.

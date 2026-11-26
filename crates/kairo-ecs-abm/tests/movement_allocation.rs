@@ -5,8 +5,8 @@ use kairo_ecs_abm::{
 };
 use kairo_ecs_core::Scheduler;
 use kairo_ecs_des::{
-    StagedDispatch, StagedRequestId, StagedRequestState, StagedResourceId, StagedResourceRuntime,
-    StagedUsageSource,
+    DESContext, StagedDispatch, StagedDispatchSelection, StagedRequestId, StagedRequestState,
+    StagedResourceId, StagedResourceRuntime, StagedRuntimeError, StagedUsageSource,
 };
 use kairo_ecs_state::World;
 use kairo_ecs_types::{EntityId, EventKind, ScheduleRequest, SimTime};
@@ -176,6 +176,83 @@ fn arrival_releases_porter_at_its_dispatch_tick() {
         MovementArrivalOutcome::Arrived
     );
     journey.verify_completion(Some(DESTINATION), 8, 10);
+}
+
+#[test]
+fn coordinated_usage_seals_a_quiet_allocator_window() {
+    let mut journey = Journey::new();
+    let plan = journey.start().unwrap();
+    let mut des = DESContext::new(0);
+    let cutoff = tick(6);
+    let export = |journey: &mut Journey, des: &mut DESContext, end| {
+        journey.allocation.committed_usage_with_schedulers(
+            journey.porter,
+            tick(0),
+            end,
+            &mut [&mut des.scheduler, &mut journey.scheduler],
+        )
+    };
+    assert_eq!(
+        export(&mut journey, &mut des, cutoff),
+        Err(StagedRuntimeError::InvalidUsageWindow)
+    );
+
+    let observation = des.schedule_at(cutoff, 0, EventKind::custom(42));
+    let pending_model_event = journey.scheduler.schedule(ScheduleRequest {
+        at: cutoff,
+        priority: 0,
+        entity: Some(journey.actor),
+        kind: EventKind::custom(43),
+    });
+    assert!(matches!(
+        journey.allocation.peek_with_schedulers(
+            &mut [&mut des.scheduler, &mut journey.scheduler],
+            cutoff,
+        ),
+        Ok(Some(StagedDispatchSelection::Model { scheduler_index: 0, event }))
+            if event.id == observation
+    ));
+    assert_eq!(des.step().into_dispatched().unwrap().id, observation);
+    assert_eq!(
+        export(&mut journey, &mut des, cutoff),
+        Err(StagedRuntimeError::InvalidUsageWindow)
+    );
+    assert!(journey.scheduler.cancel(pending_model_event));
+
+    let des_before = des.scheduler.stats();
+    let abm_before = journey.scheduler.stats();
+    let window = export(&mut journey, &mut des, cutoff).unwrap();
+    assert_eq!(des.scheduler.stats(), des_before);
+    assert_eq!(journey.scheduler.stats(), abm_before);
+    assert_eq!(journey.allocation.now(), tick(2));
+    assert_eq!(window.occupied_unit_ticks, 4);
+    let [held] = window.occupancy.as_slice() else {
+        panic!("the window must contain the live porter lease");
+    };
+    assert_eq!(
+        (held.start, held.end, held.quantity, held.release),
+        (tick(2), cutoff, 1, None)
+    );
+    assert_eq!(
+        journey.allocation.close_request(journey.request, cutoff),
+        Err(StagedRuntimeError::InvalidReleaseTime)
+    );
+
+    let arrival_observation = des.schedule_at(plan.arrive_at, 0, EventKind::custom(42));
+    assert_eq!(
+        des.step().into_dispatched().unwrap().id,
+        arrival_observation
+    );
+    assert_eq!(
+        export(&mut journey, &mut des, plan.arrive_at),
+        Err(StagedRuntimeError::InvalidUsageWindow)
+    );
+    assert_eq!(
+        journey.dispatch_arrival(&plan).outcome,
+        MovementArrivalOutcome::Arrived
+    );
+    journey.verify_completion(Some(DESTINATION), 8, 10);
+    assert_eq!(export(&mut journey, &mut des, cutoff).unwrap(), window);
 }
 
 #[test]

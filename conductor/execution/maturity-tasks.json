@@ -2564,6 +2564,44 @@
       "obligation": "S17"
     },
     {
+      "id": "S17.usagewindow",
+      "title": "Seal occupancy at a coordinated model observation tick",
+      "parent": "110:S17",
+      "kind": "implementation",
+      "executor": "local",
+      "requires": [
+        "S17.modelqueues"
+      ],
+      "read": [
+        "conductor/tracks/110-scientific-method-completion/spec.md",
+        "conductor/contracts/movement-resource-usage.md",
+        "crates/kairo-ecs-core/src/lib.rs"
+      ],
+      "write": [
+        "crates/kairo-ecs-des/src/staged_runtime.rs",
+        "crates/kairo-ecs-abm/tests/movement_allocation.rs",
+        "conductor/contracts/movement-allocation-composition.md",
+        "docs/adr/0013-scheduled-movement-and-committed-usage.md"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-abm",
+            "--test",
+            "movement_allocation"
+          ]
+        }
+      ],
+      "acceptance": "A dispatch reaches the observation end while the allocator is idle. Reports wait for all due work through that endpoint across the participating schedulers. The result censors the live lease and seals the endpoint while preserving the later movement and release.",
+      "stop": "Qualify forward-only occupancy in one process with fixed participant queues.",
+      "obligation": "S17"
+    },
+    {
       "id": "S05.bounds",
       "title": "Reject Sobol dimension/index exhaustion before arithmetic",
       "parent": "110:S05",
