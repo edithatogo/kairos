@@ -66,6 +66,7 @@ Close every stated scientific/advanced method with a correct implementation and 
   - [x] S15 staged DES allocator replay verified rewind within a same-tick pair, replay of the edited fork and isolation of the parent queue and leases. [Execution and review](handoff.md#s15-staged-allocator-replay--26-november-2026)
   - S16 covers [two OS process TCP and Tonic IPC](../../scientific-completion.md#s16-transport-and-telemetry-qualification). Browser and broker transports remain open.
   - S17 covers [DES and ABM boundary and movement cases](../../scientific-completion.md#s17-resource-and-boundary-qualification). General hybrid synchronization and empirical model validation remain open.
+  - [x] S17 bounded allocator dispatch verified an inclusive limit, a same-tick budget, and movement arrival with later allocator work still scheduled. [Execution and review](handoff.md#s17-bounded-allocator-dispatch--26-november-2026)
 - [x] 110.2.4: Record the distinct evidence limits for analytical correctness, native execution, comparative performance and empirical validity. [Current dispositions](../../scientific-completion.md#limits-on-performance-and-empirical-claims)
 - [ ] 110.2.review: Independently review this phase, apply accepted fixes, execute the named oracles and record the next-phase decision.
 

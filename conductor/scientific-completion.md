@@ -200,6 +200,11 @@ accepted application protocol for resynchronization and commands.
 Thirteen native DES and ABM cases passed for tick and tie ordering,
 conservation, idempotency, queue backpressure and transfer expiry. Movement
 cases cover arrival, replanning, cancellation and staged lease cleanup.
+The bounded staged allocator dispatch also passed a movement arrival case
+with prior and same-tick waiters. The earlier waiter was admitted when the
+lease closed at arrival, and the next tick's request stayed scheduled.
+[Bounded dispatch evidence](tracks/110-scientific-method-completion/handoff.md#s17-bounded-allocator-dispatch--26-november-2026)
+
 General hybrid synchronization and empirical validation of specific models
 still require their own results.
 [DES and movement receipt](tracks/110-scientific-method-completion/evidence/native-qualification-20261125.json) ·
