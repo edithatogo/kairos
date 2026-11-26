@@ -205,6 +205,14 @@ with prior and same-tick waiters. The earlier waiter was admitted when the
 lease closed at arrival, and the next tick's request stayed scheduled.
 [Bounded dispatch evidence](tracks/110-scientific-method-completion/handoff.md#s17-bounded-allocator-dispatch--26-november-2026)
 
+The coordinated step dispatches one eligible event across the staged DES
+allocator and the ABM model scheduler. In the movement fixture, admission
+starts the journey at tick 2. At tick 10, allocation runs before the arrival,
+and the arrival's lease release runs before the next model event. A due
+model event also takes precedence over a later eligible allocation. The
+allocator fixture checks backdated work in both queues.
+[Coordinated dispatch evidence](tracks/110-scientific-method-completion/handoff.md#s17-coordinated-allocator-and-model-dispatch--26-november-2026)
+
 General hybrid synchronization and empirical validation of specific models
 still require their own results.
 [DES and movement receipt](tracks/110-scientific-method-completion/evidence/native-qualification-20261125.json) ·

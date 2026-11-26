@@ -2,6 +2,44 @@
 
 Updated 26 November 2026. Status **In Progress**.
 
+## S17 coordinated allocator and model dispatch — 26 November 2026
+
+The experimental `StagedResourceRuntime::step_with_scheduler` dispatches one
+live event through an inclusive tick across the staged DES allocator and
+the ABM model scheduler. Allocation wins equal-tick ties. The model handles
+the returned dispatch before taking the next step. The step rejects eligible
+backdated work before dispatch in either queue.
+[ADR and compatibility decision](../../../docs/adr/0013-scheduled-movement-and-committed-usage.md#coordinating-allocator-and-model-dispatch)
+
+The movement oracle starts the journey on admission at tick 2. It observes
+allocator requests at ticks 9 and 10, the arrival at tick 10, the lease close
+at tick 10, then a lower-priority model event from that tick. The first queued
+request receives the lease. The request at tick 11 stays scheduled even when
+the step can dispatch through tick 11. The occupancy window still records
+eight occupied unit ticks. The allocator oracle checks both directions of
+clock skew and verifies that the rejected event stays pending.
+[Movement case](../../../crates/kairo-ecs-abm/tests/movement_allocation.rs) ·
+[Allocator case](../../../crates/kairo-ecs-des/tests/maturity_resource_conservation.rs)
+
+The regression build on the baseline exited `101` with `E0599` for the missing
+step. Independent scheduler and API review of
+`cad001c7888b5195fdfcf3470f4fe9fe96bbadde` reran the seven movement tests and
+both allocator tests. The regression correction in
+`faf81f6e01f431e06d56feca66fd7c5c884d7802` lets both queues compete for the
+last dispatch and gives the lower-priority model event an earlier insertion
+time. ADR 0013 names the affected Rust crate.
+
+The following commands exited `0` from the workspace root on macOS ARM64
+with Rust and Cargo 1.99.1. The DES and ABM suite passed 117 tests.
+
+```sh
+cargo test --locked --offline -j 4 -p kairo-ecs-des -p kairo-ecs-abm --all-features
+cargo clippy --locked --offline -j 4 -p kairo-ecs-des -p kairo-ecs-abm \
+    --all-targets --all-features -- -D warnings
+RUSTDOCFLAGS="-D warnings" cargo doc --locked --offline -j 4 \
+    -p kairo-ecs-des --all-features --no-deps
+```
+
 ## S17 bounded allocator dispatch — 26 November 2026
 
 The experimental `StagedResourceRuntime::run_until_or_for` dispatches live

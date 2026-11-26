@@ -32,11 +32,11 @@ before a future live event.
 ## Coordinating allocator and model dispatch
 
 `StagedResourceRuntime::step_with_scheduler` is an additive experimental Rust
-API. It selects one live event through an inclusive limit. Allocation takes
-precedence at a tie. Each scheduler retains its priority and insertion order.
-The model gets an allocation tick or the original model event and applies its
-reaction before requesting the next step. A one-event budget lets the model
-pause even during a chain of same-tick reactions.
+API in `kairo-ecs-des`. It selects one live event through an inclusive limit.
+Allocation takes precedence at a tie. Each scheduler retains its priority
+and insertion order. The model gets an allocation tick or the original model
+event and applies its reaction before requesting the next step. A one-event
+budget lets the model pause even during a chain of same-tick reactions.
 
 An eligible event earlier than either last dispatch is rejected before taking
 effect. That check catches backdated work accepted by a lagging scheduler.
