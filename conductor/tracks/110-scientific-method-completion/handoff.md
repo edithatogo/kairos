@@ -1,6 +1,53 @@
 # Handoff
 
-Updated 25 November 2026. Status **In Progress**.
+Updated 26 November 2026. Status **In Progress**.
+
+## S15 staged allocator replay — 26 November 2026
+
+The experimental debugger example drives the real `StagedResourceRuntime`
+through `ReplaySession`. Each debugger wakeup dispatches one live allocator
+action at its scheduled tick. Cloning the model restores the versioned
+allocator checkpoint with fresh handle ownership. The model uses entity IDs
+to bind handles to the restored allocator.
+[Runnable Rust example](../../../crates/kairo-ecs-debug/examples/staged_allocator_replay.rs)
+
+Two requests at tick 2 queue behind a two-unit lease. The normal path releases
+that lease at tick 8 and admits both requests in order. Rewinding between the
+tick-2 dispatches restores the exact allocator checkpoint. Replaying the
+suffix reproduces the debugger dispatches and allocator checkpoint bytes.
+The fork withdraws the head request at tick 4, admits the waiting tail, and
+replays its edited timeline. The parent's allocator checkpoint is identical
+before the fork and after both branch passes. Its queue then follows the
+original tick-8 path.
+
+Independent native replay review covered `763f039c4a5c9d3335f27207086ef8e9f1650472`.
+It found that the original foreign-lease test could fail because a release
+was already scheduled and that the edited branch ran only forward.
+The corrected source `f5993fec162628997c78428e0359bd11bed118d4` tests an
+earlier close with the foreign request handle and rewinds the edited fork.
+The reviewer reran the corrected example and its two tests and accepted
+both fixes.
+
+From the workspace root, Rust and Cargo 1.99.1 on macOS ARM64 ran the
+following commands with exit `0`. The test suite passed 83 cases.
+
+```sh
+cargo test --locked --offline -j 4 -p kairo-ecs-debug -p kairo-ecs-des \
+    --features kairo-ecs-des/checkpoint-json
+cargo run --locked --offline -j 4 -p kairo-ecs-debug --example staged_allocator_replay
+cargo clippy --locked --offline -j 4 -p kairo-ecs-debug -p kairo-ecs-des \
+    --all-targets --features kairo-ecs-des/checkpoint-json -- -D warnings
+```
+
+The executable reported both checks.
+
+```text
+Staged allocator rewind and replay passed.
+Staged allocator fork isolation passed.
+```
+
+The example source SHA-256 is
+`9ad48eb372963e19aa8b57276eb5271a15db2f64ac93741b560374efd52e5d49`.
 
 ## Bounded scientific and native qualification
 

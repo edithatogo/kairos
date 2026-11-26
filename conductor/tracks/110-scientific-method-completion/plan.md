@@ -62,7 +62,8 @@ Close every stated scientific/advanced method with a correct implementation and 
 - [x] 110.2.1: Record S09 fixed-shape float32 ONNX CPU and affine inference, and S10 Rust-owned queue with scalar/batch and installed host checks. [Scope and receipts](../../scientific-completion.md#qualified-s05s10-scopes)
 - [x] 110.2.2: Route S11–S14 through the existing GPU, distributed, FMI and storage owners and record their bounded native results. [Hardware and method evidence](../../scientific-completion.md#s11-apple-metal-and-cuda-model-qualification)
 - [ ] 110.2.3: Complete S15 actual state branching/debugging, S16 real streaming/browser transport and S17 hybrid/resource semantics.
-  - S15 covers [checkpoint-backed replay, branch isolation and retained Arrow IPC export](../../scientific-completion.md#s15-native-debugger-qualification). Browser integration and production model replay remain open.
+  - S15 covers [checkpoint-backed replay, branch isolation and retained Arrow IPC export](../../scientific-completion.md#s15-native-debugger-qualification). Browser integration and additional production workloads remain open.
+  - [x] S15 staged DES allocator replay verified rewind within a same-tick pair, replay of the edited fork and isolation of the parent queue and leases. [Execution and review](handoff.md#s15-staged-allocator-replay--26-november-2026)
   - S16 covers [two OS process TCP and Tonic IPC](../../scientific-completion.md#s16-transport-and-telemetry-qualification). Browser and broker transports remain open.
   - S17 covers [DES and ABM boundary and movement cases](../../scientific-completion.md#s17-resource-and-boundary-qualification). General hybrid synchronization and empirical model validation remain open.
 - [x] 110.2.4: Record the distinct evidence limits for analytical correctness, native execution, comparative performance and empirical validity. [Current dispositions](../../scientific-completion.md#limits-on-performance-and-empirical-claims)
