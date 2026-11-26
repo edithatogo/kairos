@@ -9,9 +9,9 @@ Prior candidate work is preserved in [the evidence snapshot](prior-qualification
 
 ## Phase 0 — Baseline and retained evidence
 
-- [ ] Task 0.1: Inventory every active Python entry point, subprocess, package, CI/container/helper path and live environment; classify historical or synthetic exceptions explicitly.
+- [x] Task 0.1: Inventory every active Python entry point, subprocess, package, CI/container/helper path and live environment; classify historical or synthetic exceptions explicitly. See [the 27 November inventory](inventory-20261127.md).
 - [x] Task 0.2: Reconcile retained candidate evidence and source hashes with current main and current owners. See the [25 November handover](handoff.md#python-3152-handover-and-provider-readback).
-- [ ] Task 0.3: Freeze exact path ownership, interpreter/dependency targets, required platform checks and safe terminal handover criteria.
+- [x] Task 0.3: Freeze exact path ownership, interpreter/dependency targets, required platform checks and safe terminal handover criteria. See [safe terminal handover criteria](inventory-20261127.md#4-safe-terminal-handover-criteria-task-03).
 - [ ] Task 0.4: Conductor — review and verify phase (workflow.md); record evidence, unresolved targets and next-phase decision.
 
 ## Phase 1 — Complete and qualify the candidate

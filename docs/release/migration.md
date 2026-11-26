@@ -39,3 +39,14 @@ combinators formerly associated with the broader runtime.
 
 The migration remains alpha until API review, conformance fixtures and consumer
 acceptance pass. No parent dependency pin is implied by this note.
+
+## Native-core-v1 beta candidate: SplitMix64 to ChaCha8 replay
+
+The `native-core-v1` candidate (`e2875387`) switches deterministic RNG draws from
+SplitMix64 (`v0.4.0-alpha.1`) to ChaCha8 across Linux x86-64 GNU and macOS ARM64
+(Rust 1.99.1, C ABI v1, CPython 3.15.2). Alpha event-ordering, cancellation, and
+zero-delay fixtures pass unchanged; seeded draw baselines (for example, seed `7`,
+entity `42`, generation `0`: `58,032,735` -> `4,087,599,687`) must be
+regenerated when migrating from `v0.4.0-alpha.1`. Retain the alpha archive for
+exact historical SplitMix64 replay. See
+[Native core beta scope](../../conductor/release/beta-scope.md).

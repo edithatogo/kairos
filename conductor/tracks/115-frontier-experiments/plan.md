@@ -4,7 +4,7 @@ Evaluate specific research advances beyond established ingredients with falsifia
 
 ## Phase 0: Protocol
 
-- [ ] 115.0.1: Review primary comparator literature and identify exact capability/assumption differences.
+- [ ] 115.0.1: Review primary comparator literature and identify exact capability/assumption differences. [First frontier comparison protocol](../../research/first-frontier-comparison.md) (`K06.frontier`) predeclares the comparator, metrics, held-out workloads, and stopping rule.
 - [ ] 115.0.2: Pre-register hypotheses/endpoints/resource budgets for execution planning, branching/CRN and executable claim contracts.
 - [ ] 115.0.3: Freeze baseline implementations, input datasets/licences, precision contracts and held-out splits.
 - [ ] 115.0.review: Independently review this phase, apply accepted fixes, execute the named oracles and record the next-phase decision.
