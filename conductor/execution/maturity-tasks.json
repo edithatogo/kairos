@@ -2637,6 +2637,35 @@
       "obligation": "S17"
     },
     {
+      "id": "S17.boundaryarrivalorder",
+      "title": "Dispatch overdue handovers in scheduled arrival order",
+      "parent": "110:S17",
+      "kind": "implementation",
+      "executor": "local",
+      "requires": [
+        "S17.boundarywakeups"
+      ],
+      "read": [
+        "conductor/tracks/110-scientific-method-completion/spec.md",
+        "conductor/contracts/movement-allocation-composition.md"
+      ],
+      "write": [
+        "crates/kairo-ecs-des/src/boundary.rs",
+        "crates/kairo-ecs-abm/tests/abm_behavior_update_v1.rs",
+        "docs/design/boundary-channels.md",
+        "docs/adr/0013-scheduled-movement-and-committed-usage.md"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": ["cargo", "test", "--locked", "-p", "kairo-ecs-abm", "--test", "abm_behavior_update_v1", "overdue_boundary_wakeup_preserves_scheduled_arrival_order"]
+        }
+      ],
+      "acceptance": "A late DES wakeup at tick 5 delivers scheduled arrivals in tick-3, tick-3, tick-4 order to native ABM. Equal arrival ticks preserve departure order. Receipt events use tick 5 and a later arrival remains queued.",
+      "stop": "Qualify forward-only catch-up for one channel and one native ABM receiver queue.",
+      "obligation": "S17"
+    },
+    {
       "id": "S05.bounds",
       "title": "Reject Sobol dimension/index exhaustion before arithmetic",
       "parent": "110:S05",
