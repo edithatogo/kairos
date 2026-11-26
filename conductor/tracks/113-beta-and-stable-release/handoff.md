@@ -27,11 +27,14 @@ It recovered the prior reviewed proposal from `d528c1e8` on verified main
 `56c74b83`. The native scope is read-only evidence from the frozen
 installation and attestation runs; no releases or pins were changed.
 
-Next: the main integrator can close only Track 113 Phase 0 in the shared
-ledger, recording maintainer acceptance and retaining the tested candidate
-`e2875387` as the evidence source. Synchronize the track metadata and current
-status; keep Tracks 109 and 113 In Progress. Phase 1, stable acceptance and
-separately authorized publication are not claimed.
+Integration chat `01a1fd18-51c7-7963-a3cc-d262d54582ba` applied the exact
+approval packet `c5be1e59dbdf9c704356cdd51ebcbde3de150a30` in
+`/Users/doughnut/.codex/worktrees/kairos-track113-phase0.TDJaOM/kairos`
+on `codex/track113-phase0-20261126`. It reconciled the Track 113 phase ledger,
+metadata, plan, test matrix and current Conductor status. Phase 0 closed
+with `e2875387` as the installed evidence source. Phase 1 qualification is
+next. Tracks 109 and 113 remain In Progress.
+[Phase ledger](../../phase-closeout.yaml)
 
 The earlier engineering integration by chat
 `01a1fd18-51c7-7963-a3cc-d262d54582ba` ran from

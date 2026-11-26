@@ -1991,9 +1991,9 @@ entries:
 
   - track_id: "113"
     phase: "0"
-    state: pending
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Independent review accepted the e2875387 scoped engineering evidence, including both installed CareOps receipts, exact package digests, signed SPDX, full Cargo policy and package dry runs. Maintainer acceptance of the support and replay boundary is pending."
+    review_result: "Independent review accepted the e2875387 scoped engineering evidence, including both installed CareOps receipts, exact package digests, signed SPDX, full Cargo policy and package dry runs. The maintainer accepted the support matrix, seeded replay break and experimental scope on 25 November 2026, satisfying Gate 9."
     fixes_applied: true
     validation_commands:
       - "node scripts/validation/validate-frontier-evidence.mjs"
@@ -2002,10 +2002,10 @@ entries:
       - "gh attestation verify on the five distinct package digests against SPDX from 45053462090"
       - "cargo deny --locked check advisories bans licenses sources on exact candidate source"
       - "build_release_manifest.py --check, Cargo types package verifier and Python build/Twine checks on exact candidate source"
-    git_status: "Verified exact source on protected main."
+    git_status: "Verified the installed candidate source on protected main. Approval packet source c5be1e59dbdf9c704356cdd51ebcbde3de150a30."
     commit_sha: "e2875387ce45c34cd19716ea66f0102251a6aa6f"
     pushed_ref: "origin/main"
-    next_phase_decision: "Retain the verified native-core-v1 artifacts. Record maintainer acceptance of the concrete scope and replay break before advancing to Phase 1."
+    next_phase_decision: "Retain the verified native-core-v1 artifacts for Phase 1 qualification. Track 113 remains In Progress. Publication requires a separate maintainer decision."
 
   - track_id: "114"
     phase: "3"

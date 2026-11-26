@@ -153,8 +153,9 @@ scaling still require target evidence.
 Track 109 closed host-core retirement and accepted the frozen Rust, C ABI v1
 and CPython 3.15.2 surfaces on Linux x86-64 GNU and macOS ARM64. Track 113
 verified the installed `e2875387` candidate packages and signed SBOM.
-Gate 9 awaits the maintainer decision on the support matrix and replay
-change. [Native runtime acceptance](tracks/109-rust-only-runtime/handoff.md#native-runtime-acceptance--25-november-2026) ·
+The maintainer accepted Gate 9 on 25 November. Track 113 Phase 0 closed
+on 26 November for that candidate. Tracks 109 and 113 remain In Progress.
+[Native runtime acceptance](tracks/109-rust-only-runtime/handoff.md#native-runtime-acceptance--25-november-2026) ·
 [Candidate decision and digests](tracks/113-beta-and-stable-release/handoff.md#native-core-v1-decision--25-november-2026).
 
 ## Security PR reconciliation — 25 November 2026
