@@ -225,6 +225,12 @@ and the preview identifies the owner even when the event IDs match. A
 separate case rejects a backdated event against the clock of an idle queue.
 [Separate model queue evidence](tracks/110-scientific-method-completion/handoff.md#s17-separate-des-and-abm-queues--26-november-2026)
 
+A coordinated forward export can close a usage window while the allocator
+is idle. The movement case reports four occupied porter unit-ticks at the
+model observation end, censors the held lease, and preserves its later
+arrival and release.
+[Coordinated occupancy evidence](tracks/110-scientific-method-completion/handoff.md#s17-occupancy-at-a-model-observation-tick--26-november-2026)
+
 General hybrid synchronization and empirical validation of specific models
 still require their own results.
 [DES and movement receipt](tracks/110-scientific-method-completion/evidence/native-qualification-20261125.json) ·

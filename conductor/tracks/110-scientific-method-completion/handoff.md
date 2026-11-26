@@ -2,6 +2,43 @@
 
 Updated 26 November 2026. Status **In Progress**.
 
+## S17 occupancy at a model observation tick — 26 November 2026
+
+`committed_usage_with_schedulers` uses a reached observation end across the
+staged allocator and the model queues. Every participating queue must have
+drained live work through the endpoint. A successful export seals allocation
+at that tick and keeps the clocks at their actual dispatch ticks.
+[ADR and compatibility decision](../../../docs/adr/0013-scheduled-movement-and-committed-usage.md#committed-usage-at-a-model-observation-tick)
+
+The porter lease starts at tick 2. The fixture rejects an export before the
+model reaches tick 6 and again while a model event is due at tick 6. After
+cancellation of that event, the allocator is still at tick 2 and the DES
+clock establishes the endpoint. The export returns four occupied unit-ticks
+and leaves the lease's release absent. The seal rejects a new close at tick 6.
+An export through tick 10 is rejected while the arrival is due. The arrival
+still dispatches and releases the lease at tick 10. Reading the tick-6 window
+again returns the same rows and total.
+[Executable movement case](../../../crates/kairo-ecs-abm/tests/movement_allocation.rs)
+
+The baseline build exited `101` with `E0599` for the missing method.
+Independent review of `277f7c459c9c1cc25197eb110afb252ddf6c346c` reran
+15 movement, standalone occupancy and optimistic occupancy tests on the same
+pinned binaries. All passed. The review accepted the seal behavior and
+compatibility of the existing export paths.
+
+The workspace-root commands below exited `0` on macOS ARM64 with Rust and
+Cargo 1.99.1. The DES and ABM suite passed 121 tests. The task-local toolchain
+reported optional debug-info stripping warnings from `rust-objcopy`. The
+emitted test executables ran successfully.
+
+```sh
+cargo test --locked --offline -j 4 -p kairo-ecs-des -p kairo-ecs-abm --all-features
+cargo clippy --locked --offline -j 4 -p kairo-ecs-des -p kairo-ecs-abm \
+    --all-targets --all-features -- -D warnings
+RUSTDOCFLAGS="-D warnings" cargo doc --locked --offline -j 4 \
+    -p kairo-ecs-des --all-features --no-deps
+```
+
 ## S17 separate DES and ABM queues — 26 November 2026
 
 The experimental `StagedResourceRuntime::peek_with_schedulers` selects the

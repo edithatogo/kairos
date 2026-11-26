@@ -70,6 +70,7 @@ Close every stated scientific/advanced method with a correct implementation and 
   - [x] S17 coordinated allocator and model dispatch verified event order across DES and ABM, same-tick lease release, and rejection of backdated events. [Execution and review](handoff.md#s17-coordinated-allocator-and-model-dispatch--26-november-2026)
   - [x] S17 native behavior dispatch verified that the scheduler preview leaves the selected ABM event queued for its own runner, and the model releases the lease at the emitted update tick. [Execution and review](handoff.md#s17-native-behavior-dispatch--26-november-2026)
   - [x] S17 separate DES and ABM queues verified ordered dispatch with a staged allocator, routing by queue index and rejection behind an idle participant's clock. [Execution and review](handoff.md#s17-separate-des-and-abm-queues--26-november-2026)
+  - [x] S17 coordinated occupancy verified a censored lease at a reached and drained model endpoint while the allocator was idle. [Execution and review](handoff.md#s17-occupancy-at-a-model-observation-tick--26-november-2026)
 - [x] 110.2.4: Record the distinct evidence limits for analytical correctness, native execution, comparative performance and empirical validity. [Current dispositions](../../scientific-completion.md#limits-on-performance-and-empirical-claims)
 - [ ] 110.2.review: Independently review this phase, apply accepted fixes, execute the named oracles and record the next-phase decision.
 
