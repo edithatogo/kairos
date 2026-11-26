@@ -1,5 +1,41 @@
 # Handoff
 
+## Local package extras — 26 November 2026
+
+The local extras check passed on macOS ARM64. Three clean CPython 3.15.2
+environments each installed one declared extra from the built project wheels.
+`uv 0.13.10` resolved the installs offline against binary wheels downloaded
+with the hashes in the existing bootstrap and Gym locks. The tested wheels
+were built from `c5be1e59`. The lockfiles, consumer tests and native queue
+build inputs matched main at `200efc23`.
+
+| Extra requested | Installed dependency readback | Existing consumer checks |
+| --- | --- | --- |
+| `kairo-ecs[arrow]` | PyArrow 26.0.0 | 4 Arrow tests passed |
+| `kairo-gym[gymnasium]` | Gymnasium 1.4.0 | 3 native queue tests passed |
+| `kairo-gym[pettingzoo]` | PettingZoo 1.24.3, with Gymnasium 1.4.0 as its dependency | 2 native queue tests passed |
+
+All three probes verified the interpreter prefix, import paths, installed
+versions and applicable dependency metadata. `uv pip check` and the strict
+installed tree passed in each environment. The two queue profiles exercised
+their upstream API checks and seeded replay using the Rust 1.99.1
+`rl-queue` binary. Pytest 9.2.0 was added from the bootstrap lock after the
+Arrow runtime dependency readback.
+
+Chat `01a21056-b5b2-7591-9981-88554b9d38ec` owns this local evidence in
+`/Users/doughnut/.codex/worktrees/kairos-ponytail-simplification/kairos`.
+The first Arrow copy ran out of space on the internal disk. The successful
+installs and consumers ran to exit zero in the isolated Git worktree at
+`/Volumes/PortableSSD/kairos-ponytail-batch.vDfOUaPn/main-baseline`. The runs selected
+`bindings/python/tests/test_arrow.py` with pytest and
+`test_native_queue.py` with unittest's `gymnasium` and `pettingzoo`
+selectors. The dependency readback, consumer logs and input digests are
+listed in `/Volumes/PortableSSD/kairos-ponytail-batch.vDfOUaPn/evidence/python/results.sha256`, SHA-256
+`568aa7f136e05fb053f7695534daca39c279ae5c22301111a5b2b8a602f57904`.
+
+GitHub's managed transitive edges and extras still require provider evidence.
+Track 105 remains In Progress.
+
 ## Installed lock and runtime readback — 25–26 November 2026
 
 On main `6e908df`, [all four managed inventory jobs and native readback](https://github.com/edithatogo/kairos/actions/runs/45591282880)
