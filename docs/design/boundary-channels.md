@@ -98,6 +98,11 @@ several due ticks, the channel returns the earliest scheduled arrivals
 first and preserves departure order at equal ticks. The model can schedule
 receiving ABM events in that order at the current coordinated tick. The
 envelopes retain their scheduled arrival ticks.
+
+Acknowledgement requires the scheduled arrival to be due at the receiver's
+tick. An early call returns `InvalidStateTransition` and preserves the
+envelope, channel capacity and pending arrival. The receiver can
+acknowledge a due transfer directly while its state is `InTransit`.
 [Executable DES and ABM case](../../crates/kairo-ecs-abm/tests/abm_behavior_update_v1.rs)
 
 ### 7. Arrival tick overflow

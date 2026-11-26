@@ -351,7 +351,21 @@ fn boundary_wakeups_coordinate_with_native_abm_and_lease_release() {
         Some(StagedDispatchSelection::Model { scheduler_index: 1, event })
             if event.id == observer_event && event.at == tick(6)
     ));
-    assert_eq!(abm.run_for(1).updates()[0].event.id, observer_event);
+    let observer_update = abm.run_for(1);
+    let early_event = &observer_update.updates()[0].event;
+    assert_eq!(early_event.id, observer_event);
+    let in_transit = channel.get_envelope(accepted).unwrap().clone();
+    assert_eq!(
+        channel.acknowledge(accepted, early_event.at),
+        Err(BoundaryError::InvalidStateTransition {
+            op_id: accepted,
+            current: TransferState::InTransit,
+            attempted: TransferState::Acknowledged,
+        })
+    );
+    assert_eq!(channel.get_envelope(accepted), Some(&in_transit));
+    assert_eq!(channel.available_channel_capacity(), 1);
+    assert_eq!(channel.next_event_time(), Some(tick(7)));
     assert!(matches!(
         preview(&mut allocation, &mut des, &mut abm),
         Some(StagedDispatchSelection::Model { scheduler_index: 0, event })

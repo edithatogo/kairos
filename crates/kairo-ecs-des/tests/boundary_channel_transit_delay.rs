@@ -162,6 +162,17 @@ fn test_boundary_channel_bounded_capacity_backpressure() {
             current: 2,
         }
     );
+
+    let due = SimTime::from_ticks(100);
+    let direct = channel
+        .acknowledge(HandoverOperationId::new(1), due)
+        .unwrap();
+    assert_eq!(direct.state, TransferState::Acknowledged);
+    assert_eq!(direct.acknowledged_at, Some(due));
+    assert_eq!(channel.available_channel_capacity(), 1);
+    let remaining = channel.collect_arrivals(due);
+    assert_eq!(remaining.len(), 1);
+    assert_eq!(remaining[0].operation_id, HandoverOperationId::new(2));
 }
 
 #[test]
