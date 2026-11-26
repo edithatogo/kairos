@@ -4,8 +4,9 @@ A model associates its `MovementId` with the `StagedRequestId` that supplies
 the journey's lease. It owns the decision to request resources, choose a route,
 and keep or relinquish a lease across replanning.
 
-Use one model clock. Process allocation events due through the current tick
-using `StagedResourceRuntime::next_event_time` and `run_for`. Inspect the
+Use one model clock. Call `StagedResourceRuntime::run_until_or_for` with the
+current tick and an event budget. If `next_event_time` still reports work due
+through that tick, drain it before moving to the next model action. Inspect the
 request state and start movement only after admission. When the model
 dispatches an arrival, cancels a movement, retires the actor, abandons an
 unavailable replacement route or fails to schedule a move, call
