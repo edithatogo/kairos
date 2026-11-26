@@ -89,6 +89,8 @@ An arrived transfer can still expire until acknowledgement.
 
 Use the preview to schedule a native DES event. Recompute the wakeup when a
 channel operation changes, and replace a pending wakeup if its tick changes.
+If the due tick has passed, handle the overdue work at the current
+coordinated tick.
 At dispatch, call `check_expiries` and then `collect_arrivals` with the emitted
 tick. These calls apply expiry before arrivals due at that same tick. Expiry
 batches report IDs in ascending order. The caller handles the returned

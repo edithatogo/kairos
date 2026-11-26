@@ -99,6 +99,7 @@ DES queue alongside ABM updates and staged resource events.
 At a wakeup, process expiry before collecting arrivals. Expiry batches
 return operation IDs in ascending order so simultaneous expiry reactions
 are reproducible. A model refreshes its scheduled wakeup when it changes
-channel state. The receiver acknowledges a delivered transfer according
-to the model's handover policy.
+channel state and handles overdue ticks at the current coordinated tick.
+The receiver acknowledges a delivered transfer according to the model's
+handover policy.
 [Boundary scheduling contract](../design/boundary-channels.md#6-coordinated-boundary-wakeups)

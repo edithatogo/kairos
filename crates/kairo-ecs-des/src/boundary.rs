@@ -1,7 +1,7 @@
 #![forbid(unsafe_code)]
 
 use kairo_ecs_rng::DeterministicStream;
-use kairo_ecs_types::{EntityId, SimTime};
+use kairo_ecs_types::{EntityId, SimDuration, SimTime};
 use std::collections::{HashMap, HashSet};
 use std::fmt;
 
@@ -235,20 +235,17 @@ impl<T: Clone> BoundaryChannel<T> {
     /// if that tick is representable. Terminal transfers have no due work.
     ///
     /// A model can schedule a wakeup at this tick and refresh it when channel
-    /// state changes. At dispatch, call [`Self::check_expiries`] before
+    /// state changes. Handle overdue work at the current coordinated tick.
+    /// At dispatch, call [`Self::check_expiries`] before
     /// [`Self::collect_arrivals`] to apply expiry before same-tick arrivals.
     pub fn next_event_time(&self) -> Option<SimTime> {
-        let next_arrival = self.in_transit.iter().filter_map(|env| env.arrive_at).min();
-        let next_expiry = self
+        let arrivals = self.in_transit.iter().filter_map(|env| env.arrive_at);
+        let expiries = self
             .ledger
             .values()
             .filter(|env| !env.state.is_terminal())
-            .filter_map(|env| {
-                let deadline = env.timeout?;
-                deadline.ticks().checked_add(1).map(SimTime::from_ticks)
-            })
-            .min();
-        next_arrival.into_iter().chain(next_expiry).min()
+            .filter_map(|env| env.timeout?.checked_add(SimDuration::from_ticks(1)));
+        arrivals.chain(expiries).min()
     }
 
     pub fn get_envelope(&self, op_id: HandoverOperationId) -> Option<&HandoverEnvelope<T>> {
@@ -318,6 +315,7 @@ impl<T: Clone> BoundaryChannel<T> {
             if now > timeout {
                 env.state = TransferState::Expired;
                 self.completed_ops.insert(op_id);
+                self.in_transit.retain(|entry| entry.operation_id != op_id);
                 return Err(BoundaryError::TransferExpired(op_id));
             }
         }

@@ -235,3 +235,38 @@ fn boundary_wakeup_includes_live_expiries_and_excludes_terminal_operations() {
     assert_eq!(channel.next_event_time(), None);
     assert!(channel.check_expiries(tick(u128::MAX)).is_empty());
 }
+
+#[test]
+fn late_departure_retry_removes_expired_arrival() {
+    let tick = SimTime::from_ticks;
+    let mut channel =
+        BoundaryChannel::new("handover", 2, TransitDelayDistribution::Fixed(tick(10)));
+    let mut rng = DeterministicStream::new(17);
+    let operation = HandoverOperationId::new(1);
+    channel
+        .request_transfer(HandoverEnvelope::new(
+            operation,
+            EntityId::new(1, 0),
+            (),
+            "sender",
+            "receiver",
+            tick(0),
+            Some(tick(1)),
+        ))
+        .unwrap();
+
+    assert_eq!(channel.depart(operation, tick(0), &mut rng), Ok(tick(10)));
+    assert_eq!(channel.next_event_time(), Some(tick(2)));
+    assert_eq!(
+        channel.depart(operation, tick(2), &mut rng),
+        Err(BoundaryError::TransferExpired(operation))
+    );
+
+    assert_eq!(channel.available_channel_capacity(), 2);
+    assert_eq!(channel.next_event_time(), None);
+    assert!(channel.collect_arrivals(tick(10)).is_empty());
+    assert_eq!(
+        channel.get_envelope(operation).unwrap().state,
+        TransferState::Expired
+    );
+}
