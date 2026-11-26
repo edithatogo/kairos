@@ -59,3 +59,16 @@ leaves live events and clocks in place, so a model such as
 Scheduling, cancellation or dispatch can change which event is next. Take a
 new preview after such changes.
 [Native behavior conformance case](../../crates/kairo-ecs-abm/tests/abm_behavior_update_v1.rs)
+
+## Preview across multiple model queues
+
+`StagedResourceRuntime::peek_with_schedulers` and `StagedDispatchSelection`
+are additive experimental Rust APIs in `kairo-ecs-des`. An eligible event is
+selected by tick, then allocator precedence or model slice order. The
+returned queue index distinguishes events with the same ID in separate
+schedulers. The single-scheduler preview uses the same selector.
+
+All participating queues use a common time unit and retain their positions.
+The latest dispatch tick across all queues, including idle ones, sets the
+lower bound. Each owner dispatches its selected event. The qualified case
+uses one allocator and two model queues in a single process.

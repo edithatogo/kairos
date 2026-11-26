@@ -156,6 +156,20 @@ pub enum StagedDispatchPreview {
     Model(ScheduledEventPreview),
 }
 
+/// Experimental selection of the next dispatch across allocation and multiple model queues.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum StagedDispatchSelection {
+    /// An allocation action is next at this tick.
+    Allocation(SimTime),
+    /// A model event is next in the selected scheduler.
+    Model {
+        /// Zero-based position in the supplied scheduler slice.
+        scheduler_index: usize,
+        /// The next live event in that scheduler.
+        event: ScheduledEventPreview,
+    },
+}
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct StagedRequestSnapshot {
     pub actor: StagedActorId,
@@ -550,22 +564,62 @@ impl StagedResourceRuntime {
         scheduler: &mut Scheduler,
         time_limit: SimTime,
     ) -> Result<Option<StagedDispatchPreview>, StagedRuntimeError> {
-        let allocation_tick = self.next_event_time();
-        let model = scheduler.peek_next();
-        let (at, preview) = match (allocation_tick, model) {
-            (Some(at), model) if model.is_none_or(|event| at <= event.at) => {
-                (at, StagedDispatchPreview::Allocation(at))
+        Ok(self
+            .peek_with_schedulers(&mut [scheduler], time_limit)?
+            .map(|selection| match selection {
+                StagedDispatchSelection::Allocation(at) => StagedDispatchPreview::Allocation(at),
+                StagedDispatchSelection::Model { event, .. } => StagedDispatchPreview::Model(event),
+            }))
+    }
+
+    /// Preview the next live event across allocation and the supplied model schedulers.
+    ///
+    /// The time limit is inclusive. At equal ticks, allocation comes first,
+    /// then model schedulers in slice order. Each queue keeps its own priority
+    /// and insertion order. Keep the same schedulers in the same order for
+    /// the run, including idle queues, and use a common time unit.
+    ///
+    /// The owning dispatcher runs the selected event. Preview leaves live
+    /// events, clocks and counters in place and may prune cancelled entries.
+    /// Preview again after scheduling, cancelling or dispatching work.
+    /// Returns `Ok(None)` when no event is due through the limit.
+    ///
+    /// # Errors
+    ///
+    /// An eligible event earlier than any participating clock yields
+    /// [`StagedRuntimeError::InvalidState`].
+    pub fn peek_with_schedulers(
+        &mut self,
+        schedulers: &mut [&mut Scheduler],
+        time_limit: SimTime,
+    ) -> Result<Option<StagedDispatchSelection>, StagedRuntimeError> {
+        let mut latest_tick = self.now();
+        let mut next = self
+            .next_event_time()
+            .map(|at| (at, StagedDispatchSelection::Allocation(at)));
+        for (scheduler_index, scheduler) in schedulers.iter_mut().enumerate() {
+            latest_tick = latest_tick.max(scheduler.now());
+            let Some(event) = scheduler.peek_next() else {
+                continue;
+            };
+            if next.is_none_or(|(at, _)| event.at < at) {
+                next = Some((
+                    event.at,
+                    StagedDispatchSelection::Model {
+                        scheduler_index,
+                        event,
+                    },
+                ));
             }
-            (_, Some(event)) => (event.at, StagedDispatchPreview::Model(event)),
-            _ => return Ok(None),
-        };
-        if at > time_limit {
-            return Ok(None);
         }
-        if at < self.now().max(scheduler.now()) {
+
+        let Some((at, selection)) = next.filter(|(tick, _)| *tick <= time_limit) else {
+            return Ok(None);
+        };
+        if at < latest_tick {
             return Err(StagedRuntimeError::InvalidState);
         }
-        Ok(Some(preview))
+        Ok(Some(selection))
     }
 
     /// Dispatch at most one event across the allocator and the model scheduler.

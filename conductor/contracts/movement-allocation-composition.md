@@ -47,3 +47,15 @@ The [ABM behavior fixture](../../crates/kairo-ecs-abm/tests/abm_behavior_update_
 uses this sequence to execute an agent update and close its lease at the
 same tick. A preview describes the current queues. Preview again after
 intervening scheduling, cancellation or dispatch.
+
+## Coordinating separate model queues
+
+Use `peek_with_schedulers` when DES and ABM have separate model schedulers.
+Supply them in a fixed order and retain idle queues so their clocks still
+participate. Allocation comes first at a tie, followed by the model queues
+in slice order. Priorities and event IDs are local to each queue.
+
+`StagedDispatchSelection::Model` identifies the owning queue by its index in
+that slice. Dispatch through that runtime, apply its reaction at the emitted
+tick, and preview again. The [Rust case](../../crates/kairo-ecs-abm/tests/abm_behavior_update_v1.rs)
+uses the staged allocator, `DESContext` and `BehaviorSimulation`.

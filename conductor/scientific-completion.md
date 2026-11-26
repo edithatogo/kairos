@@ -219,6 +219,12 @@ handler once. The model uses the emitted update tick to release the lease.
 The later allocator request stays scheduled for its own tick.
 [Native behavior evidence](tracks/110-scientific-method-completion/handoff.md#s17-native-behavior-dispatch--26-november-2026)
 
+A three-queue case coordinates staged allocation with a separate native
+DES scheduler and ABM runner. Model queue order breaks ties after allocation,
+and the preview identifies the owner even when the event IDs match. A
+separate case rejects a backdated event against the clock of an idle queue.
+[Separate model queue evidence](tracks/110-scientific-method-completion/handoff.md#s17-separate-des-and-abm-queues--26-november-2026)
+
 General hybrid synchronization and empirical validation of specific models
 still require their own results.
 [DES and movement receipt](tracks/110-scientific-method-completion/evidence/native-qualification-20261125.json) ·

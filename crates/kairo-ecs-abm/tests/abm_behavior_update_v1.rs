@@ -2,8 +2,11 @@ use kairo_ecs_abm::{
     AgentBehavior, BehaviorContext, BehaviorDecision, BehaviorSimulation,
     BEHAVIOR_UPDATE_EVENT_KIND,
 };
-use kairo_ecs_des::{StagedDispatchPreview, StagedRequestState, StagedResourceRuntime};
-use kairo_ecs_types::SimTime;
+use kairo_ecs_des::{
+    DESContext, StagedDispatchPreview, StagedDispatchSelection, StagedRequestState,
+    StagedResourceRuntime, StagedRuntimeError,
+};
+use kairo_ecs_types::{EventKind, SimTime};
 
 #[derive(Default)]
 struct RecordingBehavior {
@@ -138,4 +141,139 @@ fn staged_allocator_preserves_native_behavior_dispatch() {
         panic!("expected one recorded behavior update");
     };
     assert_eq!((*at, *kind), (4, BEHAVIOR_UPDATE_EVENT_KIND));
+}
+
+#[test]
+fn staged_allocator_coordinates_separate_des_and_abm_queues() {
+    let at = SimTime::from_ticks(4);
+    let later = SimTime::from_ticks(6);
+    let mut des = DESContext::new(7);
+    let completion_id = des.schedule_at(at, 10, EventKind::custom(82));
+    let future_des_id = des.schedule_at(later, 0, EventKind::custom(82));
+    let mut abm = BehaviorSimulation::new(7, RecordingBehavior::default());
+    let agent = abm.spawn_agent();
+    let update_id = abm.schedule_update(agent, at);
+    assert_eq!(completion_id, update_id);
+
+    let mut allocator = StagedResourceRuntime::new().unwrap();
+    let resource = allocator.create_resource(1).unwrap();
+    let actor = allocator.spawn_actor().unwrap();
+    let future_actor = allocator.spawn_actor().unwrap();
+    let request = allocator.submit(resource, actor, at).unwrap();
+    let future_request = allocator.submit(resource, future_actor, later).unwrap();
+
+    assert_eq!(
+        allocator.peek_with_schedulers(
+            &mut [&mut des.scheduler, &mut abm.context_mut().scheduler],
+            at,
+        ),
+        Ok(Some(StagedDispatchSelection::Allocation(at)))
+    );
+    assert_eq!(allocator.run_until_or_for(at, 1), Ok(1));
+    assert_eq!(
+        allocator.request(request).unwrap().state,
+        StagedRequestState::Active
+    );
+
+    let Some(StagedDispatchSelection::Model {
+        scheduler_index: 0,
+        event,
+    }) = allocator
+        .peek_with_schedulers(
+            &mut [&mut des.scheduler, &mut abm.context_mut().scheduler],
+            at,
+        )
+        .unwrap()
+    else {
+        panic!("the DES queue must have precedence at the shared tick");
+    };
+    let completion = des.step().into_dispatched().unwrap();
+    assert_eq!(
+        (event.id, event.at, event.kind),
+        (completion_id, at, EventKind::custom(82))
+    );
+    assert_eq!((completion.id, completion.at), (event.id, event.at));
+    let follow_up_id = abm.schedule_update(agent, completion.at);
+
+    let Some(StagedDispatchSelection::Model {
+        scheduler_index: 1,
+        event,
+    }) = allocator
+        .peek_with_schedulers(
+            &mut [&mut des.scheduler, &mut abm.context_mut().scheduler],
+            later,
+        )
+        .unwrap()
+    else {
+        panic!("the earlier ABM event must win even when all queues are eligible");
+    };
+    assert_eq!(
+        (event.id, event.at, event.kind.code()),
+        (update_id, at, BEHAVIOR_UPDATE_EVENT_KIND)
+    );
+    let behavior = abm.run_for(1);
+    let [update] = behavior.updates() else {
+        panic!("the ABM runner must invoke one behavior");
+    };
+    assert_eq!((update.event.id, update.at), (event.id, event.at));
+    assert_eq!(allocator.close_request(request, update.at), Ok(true));
+    assert_eq!(
+        allocator.peek_with_schedulers(
+            &mut [&mut des.scheduler, &mut abm.context_mut().scheduler],
+            at,
+        ),
+        Ok(Some(StagedDispatchSelection::Allocation(at)))
+    );
+    assert_eq!(allocator.run_until_or_for(at, 1), Ok(1));
+    assert_eq!(allocator.resource(resource).unwrap().available, 1);
+    assert!(matches!(
+        allocator.peek_with_schedulers(
+            &mut [&mut des.scheduler, &mut abm.context_mut().scheduler],
+            at,
+        ),
+        Ok(Some(StagedDispatchSelection::Model { scheduler_index: 1, event }))
+            if event.id == follow_up_id
+    ));
+    let follow_up = abm.run_for(1);
+    assert_eq!(follow_up.updates()[0].event.id, follow_up_id);
+    assert_eq!(
+        allocator.peek_with_schedulers(
+            &mut [&mut des.scheduler, &mut abm.context_mut().scheduler],
+            at,
+        ),
+        Ok(None)
+    );
+    assert_eq!(des.scheduler.peek_next().unwrap().id, future_des_id);
+    assert_eq!(
+        allocator.request(future_request).unwrap().state,
+        StagedRequestState::Scheduled
+    );
+}
+
+#[test]
+fn coordinated_preview_checks_the_clock_of_an_idle_model_queue() {
+    let tick = SimTime::from_ticks;
+    let mut des = DESContext::new(7);
+    des.schedule_at(tick(8), 0, EventKind::custom(82));
+    assert_eq!(des.step().into_dispatched().unwrap().at, tick(8));
+    assert_eq!(des.scheduler.pending_events(), 0);
+
+    let mut abm = BehaviorSimulation::new(7, RecordingBehavior::default());
+    let agent = abm.spawn_agent();
+    let backdated = abm.schedule_update(agent, tick(7));
+    let model_before = abm.context().scheduler.stats();
+    let mut allocator = StagedResourceRuntime::new().unwrap();
+
+    assert_eq!(
+        allocator.peek_with_schedulers(
+            &mut [&mut abm.context_mut().scheduler, &mut des.scheduler],
+            tick(8),
+        ),
+        Err(StagedRuntimeError::InvalidState)
+    );
+    assert_eq!(abm.context().scheduler.stats(), model_before);
+    assert_eq!(
+        abm.context_mut().scheduler.peek_next().unwrap().id,
+        backdated
+    );
 }
