@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
+use kairo_ecs_core::Scheduler;
 use kairo_ecs_des::{StagedRequestState, StagedResourceRuntime, StagedRuntimeError};
-use kairo_ecs_types::SimTime;
+use kairo_ecs_types::{EventKind, ScheduleRequest, SimTime};
 
 #[test]
 fn bounded_dispatch_preserves_ties_cancelled_actions_and_future_requests() {
@@ -56,4 +57,45 @@ fn bounded_dispatch_preserves_ties_cancelled_actions_and_future_requests() {
 
     assert_eq!(runtime.run_for(1), Ok(1));
     assert_eq!(runtime.resource(resource).unwrap().queued, [future]);
+}
+
+#[test]
+fn coordinated_dispatch_rejects_backdated_work_on_either_queue() {
+    let tick = SimTime::from_ticks;
+    let mut runtime = StagedResourceRuntime::new().unwrap();
+    let resource = runtime.create_resource(1).unwrap();
+    let actor = runtime.spawn_actor().unwrap();
+    let mut model = Scheduler::new();
+    let model_request = ScheduleRequest {
+        at: tick(8),
+        priority: 0,
+        entity: None,
+        kind: EventKind::custom(1),
+    };
+    model.schedule(model_request);
+    assert_eq!(model.step().into_dispatched().unwrap().at, tick(8));
+
+    let request = runtime.submit(resource, actor, tick(7)).unwrap();
+    assert_eq!(
+        runtime.step_with_scheduler(&mut model, tick(8)),
+        Err(StagedRuntimeError::InvalidState)
+    );
+    assert_eq!(runtime.now(), tick(0));
+    assert_eq!(model.now(), tick(8));
+    assert_eq!(runtime.next_event_time(), Some(tick(7)));
+    assert_eq!(
+        runtime.request(request).unwrap().state,
+        StagedRequestState::Scheduled
+    );
+
+    runtime.submit(resource, actor, tick(9)).unwrap();
+    assert_eq!(runtime.run_until_or_for(tick(9), 2), Ok(2));
+    let backdated = model.schedule(model_request);
+    assert_eq!(
+        runtime.step_with_scheduler(&mut model, tick(9)),
+        Err(StagedRuntimeError::InvalidState)
+    );
+    assert_eq!(runtime.now(), tick(9));
+    assert_eq!(model.now(), tick(8));
+    assert_eq!(model.peek_next().unwrap().id, backdated);
 }
