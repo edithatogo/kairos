@@ -2602,6 +2602,41 @@
       "obligation": "S17"
     },
     {
+      "id": "S17.boundarywakeups",
+      "title": "Schedule boundary transfer wakeups with DES and ABM events",
+      "parent": "110:S17",
+      "kind": "implementation",
+      "executor": "local",
+      "requires": [
+        "S17.modelqueues"
+      ],
+      "read": [
+        "conductor/tracks/110-scientific-method-completion/spec.md",
+        "conductor/tracks/68-inter-unit-boundary-channels-handover-sinks/spec.md",
+        "conductor/contracts/movement-allocation-composition.md"
+      ],
+      "write": [
+        "crates/kairo-ecs-des/src/boundary.rs",
+        "crates/kairo-ecs-des/tests/boundary_channel_transit_delay.rs",
+        "crates/kairo-ecs-abm/tests/abm_behavior_update_v1.rs",
+        "docs/design/boundary-channels.md",
+        "docs/adr/0013-scheduled-movement-and-committed-usage.md"
+      ],
+      "checks": [
+        {
+          "cwd": ".",
+          "argv": ["cargo", "test", "--locked", "-p", "kairo-ecs-des", "--test", "boundary_channel_transit_delay"]
+        },
+        {
+          "cwd": ".",
+          "argv": ["cargo", "test", "--locked", "-p", "kairo-ecs-abm", "--test", "abm_behavior_update_v1"]
+        }
+      ],
+      "acceptance": "Schedule a native DES event at the earliest live channel arrival or expiry tick. The receiver handles an earlier ABM event, receives the surviving transfer at its deadline, and closes the staged lease after acknowledgement. Cancelled operations and unrepresentable expiry ticks add no wakeup.",
+      "stop": "Qualify caller-owned boundary wakeups across fixed forward-only queues in one process.",
+      "obligation": "S17"
+    },
+    {
       "id": "S05.bounds",
       "title": "Reject Sobol dimension/index exhaustion before arithmetic",
       "parent": "110:S05",

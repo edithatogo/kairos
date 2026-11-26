@@ -206,3 +206,67 @@ fn test_boundary_channel_expiry_and_cancellation() {
     let cancelled = channel.cancel(op2).unwrap();
     assert_eq!(cancelled.state, TransferState::Cancelled);
 }
+
+#[test]
+fn boundary_wakeup_includes_live_expiries_and_excludes_terminal_operations() {
+    let tick = SimTime::from_ticks;
+    let mut channel = BoundaryChannel::new("timed", 4, TransitDelayDistribution::Fixed(tick(1)));
+    for (id, timeout) in [(9, 2), (5, 2), (3, 2), (7, 2), (1, 0), (2, u128::MAX)] {
+        channel
+            .request_transfer(HandoverEnvelope::new(
+                HandoverOperationId::new(id),
+                EntityId::new(id, 0),
+                (),
+                "sender",
+                "receiver",
+                tick(0),
+                Some(tick(timeout)),
+            ))
+            .unwrap();
+    }
+    channel.cancel(HandoverOperationId::new(1)).unwrap();
+
+    assert_eq!(channel.next_event_time(), Some(tick(3)));
+    assert!(channel.check_expiries(tick(2)).is_empty());
+    assert_eq!(
+        channel.check_expiries(tick(3)),
+        [3, 5, 7, 9].map(HandoverOperationId::new)
+    );
+    assert_eq!(channel.next_event_time(), None);
+    assert!(channel.check_expiries(tick(u128::MAX)).is_empty());
+}
+
+#[test]
+fn late_departure_retry_removes_expired_arrival() {
+    let tick = SimTime::from_ticks;
+    let mut channel =
+        BoundaryChannel::new("handover", 2, TransitDelayDistribution::Fixed(tick(10)));
+    let mut rng = DeterministicStream::new(17);
+    let operation = HandoverOperationId::new(1);
+    channel
+        .request_transfer(HandoverEnvelope::new(
+            operation,
+            EntityId::new(1, 0),
+            (),
+            "sender",
+            "receiver",
+            tick(0),
+            Some(tick(1)),
+        ))
+        .unwrap();
+
+    assert_eq!(channel.depart(operation, tick(0), &mut rng), Ok(tick(10)));
+    assert_eq!(channel.next_event_time(), Some(tick(2)));
+    assert_eq!(
+        channel.depart(operation, tick(2), &mut rng),
+        Err(BoundaryError::TransferExpired(operation))
+    );
+
+    assert_eq!(channel.available_channel_capacity(), 2);
+    assert_eq!(channel.next_event_time(), None);
+    assert!(channel.collect_arrivals(tick(10)).is_empty());
+    assert_eq!(
+        channel.get_envelope(operation).unwrap().state,
+        TransferState::Expired
+    );
+}

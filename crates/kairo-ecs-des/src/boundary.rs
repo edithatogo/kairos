@@ -1,7 +1,7 @@
 #![forbid(unsafe_code)]
 
 use kairo_ecs_rng::DeterministicStream;
-use kairo_ecs_types::{EntityId, SimTime};
+use kairo_ecs_types::{EntityId, SimDuration, SimTime};
 use std::collections::{HashMap, HashSet};
 use std::fmt;
 
@@ -229,6 +229,25 @@ impl<T: Clone> BoundaryChannel<T> {
         self.max_in_transit.saturating_sub(self.in_transit.len())
     }
 
+    /// Preview the earliest live arrival or expiry tick.
+    ///
+    /// A timeout includes the deadline tick. Expiry is due at its successor
+    /// if that tick is representable. Terminal transfers have no due work.
+    ///
+    /// A model can schedule a wakeup at this tick and refresh it when channel
+    /// state changes. Handle overdue work at the current coordinated tick.
+    /// At dispatch, call [`Self::check_expiries`] before
+    /// [`Self::collect_arrivals`] to apply expiry before same-tick arrivals.
+    pub fn next_event_time(&self) -> Option<SimTime> {
+        let arrivals = self.in_transit.iter().filter_map(|env| env.arrive_at);
+        let expiries = self
+            .ledger
+            .values()
+            .filter(|env| !env.state.is_terminal())
+            .filter_map(|env| env.timeout?.checked_add(SimDuration::from_ticks(1)));
+        arrivals.chain(expiries).min()
+    }
+
     pub fn get_envelope(&self, op_id: HandoverOperationId) -> Option<&HandoverEnvelope<T>> {
         self.ledger.get(&op_id)
     }
@@ -296,6 +315,7 @@ impl<T: Clone> BoundaryChannel<T> {
             if now > timeout {
                 env.state = TransferState::Expired;
                 self.completed_ops.insert(op_id);
+                self.in_transit.retain(|entry| entry.operation_id != op_id);
                 return Err(BoundaryError::TransferExpired(op_id));
             }
         }
@@ -425,6 +445,7 @@ impl<T: Clone> BoundaryChannel<T> {
     }
 
     /// Checks for and transitions expired transfers whose timeout has passed.
+    /// Returns their operation IDs in ascending order.
     pub fn check_expiries(&mut self, now: SimTime) -> Vec<HandoverOperationId> {
         let mut expired = Vec::new();
         for (op_id, env) in &mut self.ledger {
@@ -438,6 +459,7 @@ impl<T: Clone> BoundaryChannel<T> {
             }
         }
 
+        expired.sort_unstable();
         for &op_id in &expired {
             self.completed_ops.insert(op_id);
             self.in_transit.retain(|e| e.operation_id != op_id);

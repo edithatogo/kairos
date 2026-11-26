@@ -88,3 +88,18 @@ occupancy and seals the allocator through the endpoint. The
 [conformance case](../../crates/kairo-ecs-abm/tests/movement_allocation.rs)
 checks an unreached endpoint, due same-tick model work, a censored lease
 and later arrival with release.
+
+## Boundary wakeups in coordinated models
+
+`BoundaryChannel::next_event_time` is an additive experimental Rust API in
+`kairo-ecs-des`. It previews the earliest pending arrival or first tick past
+a live transfer's inclusive deadline. A model can schedule that tick in its
+DES queue alongside ABM updates and staged resource events.
+
+At a wakeup, process expiry before collecting arrivals. Expiry batches
+return operation IDs in ascending order so simultaneous expiry reactions
+are reproducible. A model refreshes its scheduled wakeup when it changes
+channel state and handles overdue ticks at the current coordinated tick.
+The receiver acknowledges a delivered transfer according to the model's
+handover policy.
+[Boundary scheduling contract](../design/boundary-channels.md#6-coordinated-boundary-wakeups)
