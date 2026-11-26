@@ -2520,7 +2520,7 @@
           ]
         }
       ],
-      "acceptance": "Preview chooses the earliest live event through an inclusive tick, with allocation first at a tie. The selected ABM event stays queued for BehaviorSimulation to execute once. Its handler triggers a lease close at the same tick, and later work stays queued.",
+      "acceptance": "Preview chooses the earliest live event through an inclusive tick, with allocation first at a tie. The selected ABM event stays queued for BehaviorSimulation to execute once. The model reacts to the emitted update by closing the lease at its tick. Later work stays scheduled.",
       "stop": "Return the exact source and executed behavior case. Limit qualification to two forward-only queues in one process.",
       "obligation": "S17"
     },

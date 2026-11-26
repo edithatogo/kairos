@@ -2,6 +2,42 @@
 
 Updated 26 November 2026. Status **In Progress**.
 
+## S17 native behavior dispatch — 26 November 2026
+
+`StagedResourceRuntime::peek_with_scheduler` applies the coordinated
+ordering through an inclusive tick. It leaves live events queued, so
+`BehaviorSimulation::run_for(1)` can dispatch its own event and invoke the
+agent's behavior. The preview and the direct step use the same ordering and
+checks against both clocks.
+[ADR and compatibility decision](../../../docs/adr/0013-scheduled-movement-and-committed-usage.md#preview-for-a-model-owned-dispatcher)
+
+The fixture uses seed 7. It skips a cancelled model event at tick 1 and
+selects allocation first at the tick-4 tie. It then previews the original
+ABM event at tick 4 even with the allocator's tick-6 request in range.
+The selected event remains pending and the model scheduler's counters and
+clock match the values from before preview. The ABM runner invokes the
+behavior once. The model reacts to the resulting `BehaviorUpdate` by closing
+the lease at tick 4. Capacity returns to one, and the tick-6 request stays
+scheduled.
+[Executable behavior fixture](../../../crates/kairo-ecs-abm/tests/abm_behavior_update_v1.rs)
+
+The baseline build exited `101` with `E0432` and `E0599` for the missing
+preview type and method. Independent scheduler and API review of
+`f720d4a7f1ae2b68049ab2a5dba022fafbed75ad` reran 12 tests across the ABM behavior,
+movement and DES conservation executables. All three exited `0`. The reviewer
+accepted the code and confirmed that the model owns the lease-close reaction.
+
+The workspace-root commands below exited `0` on macOS ARM64 with Rust and
+Cargo 1.99.1. The DES and ABM suite passed 118 tests.
+
+```sh
+cargo test --locked --offline -j 4 -p kairo-ecs-des -p kairo-ecs-abm --all-features
+cargo clippy --locked --offline -j 4 -p kairo-ecs-des -p kairo-ecs-abm \
+    --all-targets --all-features -- -D warnings
+RUSTDOCFLAGS="-D warnings" cargo doc --locked --offline -j 4 \
+    -p kairo-ecs-des --all-features --no-deps
+```
+
 ## S17 coordinated allocator and model dispatch — 26 November 2026
 
 The experimental `StagedResourceRuntime::step_with_scheduler` dispatches one
