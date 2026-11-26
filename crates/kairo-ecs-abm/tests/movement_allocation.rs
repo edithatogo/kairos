@@ -5,10 +5,11 @@ use kairo_ecs_abm::{
 };
 use kairo_ecs_core::Scheduler;
 use kairo_ecs_des::{
-    StagedRequestId, StagedRequestState, StagedResourceId, StagedResourceRuntime, StagedUsageSource,
+    StagedDispatch, StagedRequestId, StagedRequestState, StagedResourceId, StagedResourceRuntime,
+    StagedUsageSource,
 };
 use kairo_ecs_state::World;
-use kairo_ecs_types::{EntityId, EventKind, ScheduleRequest, SimTime, StepOutcome};
+use kairo_ecs_types::{EntityId, EventKind, ScheduleRequest, SimTime};
 use std::num::NonZeroU128;
 
 const ORIGIN: EntityId = EntityId::new(1, 0);
@@ -76,17 +77,21 @@ impl Journey {
         }
     }
 
-    fn drain_allocation_through(&mut self, at: SimTime) {
-        self.allocation.run_until_or_for(at, u64::MAX).unwrap();
+    fn step_through(&mut self, at: SimTime) -> Option<StagedDispatch> {
+        self.allocation
+            .step_with_scheduler(&mut self.scheduler, at)
+            .unwrap()
     }
 
     fn start(&mut self) -> Result<MovementPlan, MovementError> {
-        self.at_model_event(2);
+        let Some(StagedDispatch::Allocation(now)) = self.step_through(tick(2)) else {
+            panic!("the porter request must dispatch first");
+        };
+        assert_eq!(now, tick(2));
         assert_eq!(
             self.allocation.request(self.request).unwrap().state,
             StagedRequestState::Active
         );
-        let now = self.scheduler.now();
         let plan = self.movement.schedule(
             &mut self.scheduler,
             &self.world,
@@ -112,15 +117,17 @@ impl Journey {
             entity: Some(self.actor),
             kind: EventKind::custom(42),
         });
-        assert!(matches!(self.scheduler.step(), StepOutcome::Dispatched(event) if event.id == id));
-        self.drain_allocation_through(tick(at));
+        assert!(matches!(
+            self.step_through(tick(at)),
+            Some(StagedDispatch::Model(event)) if event.id == id
+        ));
     }
 
-    fn dispatch_arrival(&mut self) -> MovementArrival {
-        let StepOutcome::Dispatched(event) = self.scheduler.step() else {
+    fn dispatch_arrival(&mut self, plan: &MovementPlan) -> MovementArrival {
+        let Some(StagedDispatch::Model(event)) = self.step_through(plan.arrive_at) else {
             panic!("arrival must be queued");
         };
-        self.drain_allocation_through(event.at);
+        assert_eq!(event.id, plan.arrival_event);
         let resolved = self
             .movement
             .on_arrival(&self.world, &self.topology, event)
@@ -131,12 +138,12 @@ impl Journey {
 
     fn close(&mut self, at: SimTime) {
         assert_eq!(self.allocation.close_request(self.request, at), Ok(true));
-        self.drain_allocation_through(at);
+        assert_eq!(self.step_through(at), Some(StagedDispatch::Allocation(at)));
     }
 
     fn verify_completion(&mut self, location: Option<EntityId>, duration: u128, end: u128) {
         assert_eq!(self.movement.location(&self.world, self.actor), location);
-        assert_eq!(self.scheduler.step(), StepOutcome::Empty);
+        assert_eq!(self.scheduler.pending_events(), 0);
         let resource = self.allocation.resource(self.porter).unwrap();
         assert_eq!(resource.available, 1);
         assert!(resource.active.is_empty() && resource.queued.is_empty());
@@ -163,18 +170,26 @@ impl Journey {
 #[test]
 fn arrival_releases_porter_at_its_dispatch_tick() {
     let mut journey = Journey::new();
-    journey.start().unwrap();
+    let plan = journey.start().unwrap();
     assert_eq!(
-        journey.dispatch_arrival().outcome,
+        journey.dispatch_arrival(&plan).outcome,
         MovementArrivalOutcome::Arrived
     );
     journey.verify_completion(Some(DESTINATION), 8, 10);
 }
 
 #[test]
-fn arrival_drains_due_requests_and_preserves_future_work() {
+fn allocator_and_movement_dispatch_in_tick_order() {
     let mut journey = Journey::new();
-    journey.start().unwrap();
+    let later_model_event = journey.scheduler.schedule(ScheduleRequest {
+        at: tick(10),
+        priority: 1,
+        entity: Some(journey.actor),
+        kind: EventKind::custom(42),
+    });
+    let plan = journey.start().unwrap();
+    assert_eq!(plan.depart_at, tick(2));
+    assert_eq!(plan.arrive_at, tick(10));
     let [prior, tied, later] = [9, 10, 11].map(|at| {
         let actor = journey.allocation.spawn_actor().unwrap();
         journey
@@ -182,9 +197,19 @@ fn arrival_drains_due_requests_and_preserves_future_work() {
             .submit(journey.porter, actor, tick(at))
             .unwrap()
     });
-
+    assert_eq!(journey.step_through(tick(8)), None);
+    assert_eq!(journey.allocation.now(), tick(2));
     assert_eq!(
-        journey.dispatch_arrival().outcome,
+        journey.step_through(tick(10)),
+        Some(StagedDispatch::Allocation(tick(9)))
+    );
+    assert_eq!(
+        journey.step_through(tick(10)),
+        Some(StagedDispatch::Allocation(tick(10)))
+    );
+    assert_eq!(journey.scheduler.now(), tick(0));
+    assert_eq!(
+        journey.dispatch_arrival(&plan).outcome,
         MovementArrivalOutcome::Arrived,
     );
     let state = journey.allocation.resource(journey.porter).unwrap();
@@ -199,7 +224,12 @@ fn arrival_drains_due_requests_and_preserves_future_work() {
         journey.allocation.request(later).unwrap().state,
         StagedRequestState::Scheduled,
     );
+    assert!(matches!(
+        journey.step_through(tick(11)),
+        Some(StagedDispatch::Model(event)) if event.id == later_model_event
+    ));
     assert_eq!(journey.allocation.next_event_time(), Some(tick(11)));
+    assert_eq!(journey.step_through(tick(10)), None);
 
     let usage = journey
         .allocation
@@ -275,7 +305,7 @@ fn successful_replan_keeps_the_same_lease_until_new_arrival() {
         0
     );
     assert_eq!(
-        journey.dispatch_arrival().outcome,
+        journey.dispatch_arrival(&replacement).outcome,
         MovementArrivalOutcome::Arrived
     );
     journey.verify_completion(Some(DESTINATION), 10, 12);

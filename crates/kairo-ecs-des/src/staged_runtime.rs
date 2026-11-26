@@ -7,7 +7,9 @@ use crate::usage::{
     STAGED_USAGE_VERSION,
 };
 use kairo_ecs_core::Scheduler;
-use kairo_ecs_types::{EntityId, EventId, EventKind, ScheduleRequest, SimTime, StepOutcome};
+use kairo_ecs_types::{
+    DispatchedEvent, EntityId, EventId, EventKind, ScheduleRequest, SimTime, StepOutcome,
+};
 use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::fmt;
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -134,6 +136,15 @@ pub enum StagedRuntimeError {
     MissingUsageSource,
     InvalidUsageWindow,
     UsageOverflow,
+}
+
+/// Experimental result of a dispatch across staged allocation and the model scheduler.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum StagedDispatch {
+    /// One allocation action executed at this tick.
+    Allocation(SimTime),
+    /// One model event is ready for its handler.
+    Model(DispatchedEvent),
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -510,6 +521,50 @@ impl StagedResourceRuntime {
             dispatched += self.run_for(1)?;
         }
         Ok(dispatched)
+    }
+
+    /// Dispatch at most one event across the allocator and the model scheduler.
+    ///
+    /// The earliest live event through the inclusive `time_limit` wins.
+    /// Allocation runs first at an equal tick. Each queue keeps its scheduler
+    /// order. Only the selected scheduler advances. Use the returned event's
+    /// tick to schedule reactions, including work at the same tick. Run a
+    /// handler that reads the model scheduler's clock from a model event at
+    /// the reaction tick.
+    /// Returns `Ok(None)` when both queues have no event due.
+    ///
+    /// # Errors
+    ///
+    /// An eligible event earlier than either scheduler's current tick yields
+    /// [`StagedRuntimeError::InvalidState`] before dispatch. Allocation errors
+    /// follow [`Self::run_until_or_for`], including consumption of a failing event.
+    pub fn step_with_scheduler(
+        &mut self,
+        scheduler: &mut Scheduler,
+        time_limit: SimTime,
+    ) -> Result<Option<StagedDispatch>, StagedRuntimeError> {
+        let allocation_tick = self.next_event_time();
+        let model_tick = scheduler.peek_next().map(|event| event.at);
+        let next_tick = allocation_tick.into_iter().chain(model_tick).min();
+        let Some(at) = next_tick.filter(|tick| *tick <= time_limit) else {
+            return Ok(None);
+        };
+        if at < self.now().max(scheduler.now()) {
+            return Err(StagedRuntimeError::InvalidState);
+        }
+
+        if Some(at) == allocation_tick {
+            if self.run_until_or_for(at, 1)? != 1 {
+                return Err(StagedRuntimeError::InvalidState);
+            }
+            return Ok(Some(StagedDispatch::Allocation(at)));
+        }
+
+        let event = scheduler
+            .step()
+            .into_dispatched()
+            .ok_or(StagedRuntimeError::InvalidState)?;
+        Ok(Some(StagedDispatch::Model(event)))
     }
 
     /// Export a sealed historical window from this forward-only scheduler.
