@@ -50,6 +50,11 @@ jobs:
       archive_zip_sha256: ${{ steps.dispatch-pins.outputs.archive_zip_sha256 }}
       archive_zip_bytes: ${{ steps.dispatch-pins.outputs.archive_zip_bytes }}
     steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@aebdcf6156ab6691adf63218240e476564a1ed4c # v2.23.0
+        with:
+          egress-policy: audit
+
       - name: Enforce trusted manual main invocation
         shell: bash
         run: |
@@ -249,6 +254,11 @@ jobs:
       PIN_ARCHIVE_ZIP_SHA256: ${{ needs.acquire.outputs.archive_zip_sha256 }}
       PIN_ARCHIVE_ZIP_BYTES: ${{ needs.acquire.outputs.archive_zip_bytes }}
     steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@aebdcf6156ab6691adf63218240e476564a1ed4c # v2.23.0
+        with:
+          egress-policy: audit
+
       - name: Enforce trusted manual main invocation
         shell: bash
         run: |

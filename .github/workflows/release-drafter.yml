@@ -18,4 +18,9 @@ jobs:
     name: release-drafter
     runs-on: ubuntu-latest
     steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@aebdcf6156ab6691adf63218240e476564a1ed4c # v2.23.0
+        with:
+          egress-policy: audit
+
       - run: echo "Release drafter workflow initialized for governance coverage."
